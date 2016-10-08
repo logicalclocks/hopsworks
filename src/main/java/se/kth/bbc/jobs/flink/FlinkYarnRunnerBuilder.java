@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
@@ -78,12 +80,15 @@ public class FlinkYarnRunnerBuilder {
     private Path flinkConfigurationPath;
     private Path flinkLoggingConfigurationPath; // optional
     private Path flinkJarPath;
-    private String dynamicPropertiesEncoded;
+    private StringBuilder dynamicPropertiesEncoded;
     private boolean detached;
-    private boolean streamingMode;
+    private boolean streamingMode = true;
     private int parallelism;
-    private String customName = null;
-
+    private String customName = null;  
+    private final Map<String, String> sysProps = new HashMap<>();
+    private String sessionId;//used by Kafka
+    private String kafkaAddress;
+    private String restEndpoint;
     public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
         if (appJarPath == null || appJarPath.isEmpty()) {
             throw new IllegalArgumentException(
@@ -95,7 +100,7 @@ public class FlinkYarnRunnerBuilder {
         }
         this.appJarPath = appJarPath;
     }
-
+ 
     public FlinkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
         this.jobArgs.addAll(Arrays.asList(jobArgs));
         return this;
@@ -183,11 +188,11 @@ public class FlinkYarnRunnerBuilder {
         this.streamingMode = streamingMode;
     }
     
-    public void setDynamicPropertiesEncoded(String dynamicPropertiesEncoded) {
+    public void setDynamicPropertiesEncoded(StringBuilder dynamicPropertiesEncoded) {
         this.dynamicPropertiesEncoded = dynamicPropertiesEncoded;
     }
 
-    public String getDynamicPropertiesEncoded() {
+    public StringBuilder getDynamicPropertiesEncoded() {
         return this.dynamicPropertiesEncoded;
     }
 
@@ -223,6 +228,20 @@ public class FlinkYarnRunnerBuilder {
             this.extraFiles.addAll(projectLocalResources);
         }
         return this;
+    }
+    public FlinkYarnRunnerBuilder addSystemProperty(String name, String value) {
+      sysProps.put(name, value);
+      return this;
+    }
+    public void setSessionId(String sessionId) {
+      this.sessionId = sessionId;
+    }
+
+    public void setKafkaAddress(String kafkaAddress) {
+      this.kafkaAddress = kafkaAddress;
+    }
+    public void setRestEndpoint(String restEndpoint) {
+      this.restEndpoint = restEndpoint;
     }
     public void isReadyForDeployment() throws YarnDeploymentException {
         if (taskManagerCount <= 0) {
@@ -315,11 +334,23 @@ public class FlinkYarnRunnerBuilder {
                         Settings.FLINK_DEFAULT_CONF_FILE,
                 LocalResourceVisibility.PUBLIC.toString(), 
                 LocalResourceType.FILE.toString(), null), false);
-               
+        StringBuilder shipfilesPaths = new StringBuilder();
+        String shipfiles = "";
         //Add extra files to local resources, use filename as key
         for (LocalResourceDTO dto : extraFiles) {
                 builder.addLocalResource(dto, false);
+                builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+                  "$PWD/" + dto.getName());
+                shipfilesPaths.append(dto.getPath());
+                shipfilesPaths.append(",");
         }
+        if(shipfilesPaths.length()>0){
+          shipfiles = shipfilesPaths.substring(0, shipfilesPaths.lastIndexOf(","));
+        }
+        addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
+        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
+        
         //Set Flink ApplicationMaster env parameters
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
@@ -328,14 +359,25 @@ public class FlinkYarnRunnerBuilder {
 
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, "hdfs://"+nameNodeIpPort+
                 "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
-        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, "");
+        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, shipfiles);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, jobUser);
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
                
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
         builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
-        if (dynamicPropertiesEncoded != null) {
-            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES, dynamicPropertiesEncoded);
+        if(!sysProps.isEmpty()){
+          dynamicPropertiesEncoded = new StringBuilder();
+        }
+        for (String s : sysProps.keySet()) {
+          String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+          builder.addJavaOption(option);
+          //dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
+        }
+        
+        if (dynamicPropertiesEncoded.length()>0) {
+            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES,  
+                    dynamicPropertiesEncoded.substring(0, dynamicPropertiesEncoded.
+                lastIndexOf("@@")));
         }
 
         // Set up resource type requirements for ApplicationMaster
@@ -346,6 +388,8 @@ public class FlinkYarnRunnerBuilder {
         builder.setJobType(JobType.FLINK);
         builder.setAppJarPath(appJarPath);
         builder.setParallelism(parallelism);
+        
+        
         String name;
         if (customName == null) {
             name = "Flink session with " + taskManagerCount + " TaskManagers";
@@ -385,5 +429,40 @@ public class FlinkYarnRunnerBuilder {
             super(message, cause);
         }
     }
+    
+     /**
+   * Taken from Apache Spark code: Escapes a string for inclusion in a command
+   * line executed by Yarn. Yarn executes commands
+   * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
+   * really work. The
+   * argument is enclosed in single quotes and some key characters are escaped.
+   * <p/>
+   * @param s A single argument.
+   * @return Argument quoted for execution via Yarn's generated shell script.
+   */
+  private String escapeForShell(String s) {
+    if (s != null) {
+      StringBuilder escaped = new StringBuilder("'");
+      for (int i = 0; i < s.length(); i++) {
+        switch (s.charAt(i)) {
+          case '$':
+            escaped.append("\\$");
+            break;
+          case '"':
+            escaped.append("\\\"");
+            break;
+          case '\'':
+            escaped.append("'\\''");
+            break;
+          default:
+            escaped.append(s.charAt(i));
+            break;
+        }
+      }
+      return escaped.append("'").toString();
+    } else {
+      return s;
+    }
+  }
 
 }

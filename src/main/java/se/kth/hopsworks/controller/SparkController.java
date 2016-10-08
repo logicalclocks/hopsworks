@@ -2,7 +2,6 @@ package se.kth.hopsworks.controller;
 
 import io.hops.hdfs.HdfsLeDescriptors;
 import io.hops.hdfs.HdfsLeDescriptorsFacade;
-import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
@@ -41,8 +40,6 @@ public class SparkController {
           getName());
 
   @EJB
-  private DistributedFsService fops;
-  @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
@@ -80,9 +77,7 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } else if (!isSparkJarAvailable()) {
-      throw new IllegalStateException("Spark is not installed on this system.");
-    }
+    } 
 
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     UserGroupInformation proxyUser = ugiService.getProxyUser(username);
@@ -96,7 +91,8 @@ public class SparkController {
                   hdfsLeDescriptorsFacade.getSingleEndpoint(),
                   settings.getSparkUser(), job.getProject().getName() + "__"
                   + user.getUsername(),
-                  settings.getKafkaConnectStr());
+                  settings.getKafkaConnectStr(),
+                  settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
@@ -130,68 +126,20 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } else if (!isSparkJarAvailable()) {
-      throw new IllegalStateException("Spark is not installed on this system.");
-    }
+    } 
+//    else if (!isSparkJarAvailable()) {
+//      throw new IllegalStateException("Spark is not installed on this system.");
+//    }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
             getHadoopDir(), settings.getSparkDir(),
             hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-            settings.getKafkaConnectStr());
+            settings.getKafkaConnectStr(),
+            settings.getRestEndpoint());
 
     submitter.stopExecution(sparkjob, appid);
 
-  }
-
-  /**
-   * Check if the Spark jars are in HDFS. If it's not, try and copy it there
-   * from the local filesystem. If it's still
-   * not there, then return false.
-   * <p/>
-   * @return
-   */
-  public boolean isSparkJarAvailable() {
-    boolean isInHdfs;
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = fops.getDfsOps();
-      try {
-        String sparkInHdfsPath = settings.getHdfsSparkJarPath();
-        // don't need the NN ip:port here - just going to DB
-//    sparkInHdfsPath = sparkInHdfsPath.replaceFirst("hdfs:/*user",
-//          "hdfs://" + hdfsLeDescriptorsFacade.getSingleEndpoint() + "/user");
-        isInHdfs = dfso.exists(sparkInHdfsPath);
-      } catch (IOException e) {
-        logger.log(Level.WARNING, "Cannot get Spark jar file from HDFS: {0}",
-                settings.getHdfsSparkJarPath());
-        //Can't connect to HDFS: return false
-        return false;
-      }
-      if (isInHdfs) {
-        return true;
-      }
-
-      File localSparkJar = new File(settings.getLocalSparkJarPath());
-      if (localSparkJar.exists()) {
-        try {
-          String hdfsJarPath = settings.getHdfsSparkJarPath();
-          dfso.copyToHDFSFromLocal(false, settings.getLocalSparkJarPath(),
-                  hdfsJarPath);
-        } catch (IOException e) {
-          return false;
-        }
-      } else {
-        logger.log(Level.WARNING, "Cannot find Spark jar file locally: {0}",
-                settings.getLocalSparkJarPath());
-        return false;
-      }
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-    return true;
   }
 
   /**

@@ -77,7 +77,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.users = success.data;
                 }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 21});
+                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 10});
                    });
               
             };
@@ -157,7 +157,7 @@ angular.module('hopsWorksApp')
                     self.schemaVersions[i] = Math.max.apply(null, self.schemas[i].versions);
                 }
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 21});
+                 growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 10});
                  });
             
                 
@@ -176,9 +176,9 @@ angular.module('hopsWorksApp')
                  function (success) {
                      self.listSchemas();
                  }, function (error) {
-                 growl.error(error.data.errorMsg, {title: 'Schema is not removed', ttl: 5000, referenceId: 21});
+                 growl.error(error.data.errorMsg, {title: 'Schema is not removed', ttl: 5000, referenceId: 10});
                  });
-                }, function (cancelled) {
+                }, function (error) {
                     growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                     });
             };

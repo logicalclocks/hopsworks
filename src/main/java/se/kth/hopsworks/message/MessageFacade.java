@@ -151,4 +151,12 @@ public class MessageFacade extends AbstractFacade<Message> {
     }
   }
 
+  
+//  public void persist(Message entity) {
+//    em.persist(entity);
+//    //entity.setId(em.merge(entity).getId());
+//    em.flush();
+//  }
+
+  
 }

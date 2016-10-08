@@ -21,29 +21,20 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
-import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
 import io.hops.kafka.PartitionDetailsDTO;
 import io.hops.kafka.SchemaDTO;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
 import java.util.logging.Level;
-import javax.json.JsonObject;
 import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
 //import org.apache.avro.Schema;
-import org.apache.avro.*;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
@@ -56,15 +47,7 @@ public class KafkaService {
     @EJB
     private ProjectFacade projectFacade;
     @EJB
-    private ActivityFacade activityFacade;
-    @EJB
-    private UserManager userBean;
-    @EJB
     private NoCacheResponse noCacheResponse;
-    @EJB
-    private AsynchronousJobExecutor async;
-    @EJB
-    private UserFacade userfacade;
     @EJB
     private KafkaFacade kafkaFacade;
     @EJB
@@ -103,7 +86,7 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopics(@Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -123,7 +106,7 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getSharedTopics(@Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -185,14 +168,20 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopicDetails(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
 
-        List<PartitionDetailsDTO> topic = kafka.getTopicDetails(project, topicName);
+        List<PartitionDetailsDTO> topic;
+        try {
+          topic = kafka.getTopicDetails(project, topicName);
+        } catch (Exception ex) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    "Error while retrieving topic details. Please try again!");
+        }
 
         GenericEntity<List<PartitionDetailsDTO>> topics
                 = new GenericEntity<List<PartitionDetailsDTO>>(topic) {
@@ -208,7 +197,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response topicDefaultValues(
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -230,7 +219,7 @@ public class KafkaService {
             @PathParam("topic") String topicName,
             @PathParam("projId") int projectId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         if (this.projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -251,7 +240,7 @@ public class KafkaService {
             @PathParam("topic") String topicName,
             @PathParam("projectId") int projectId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         kafkaFacade.unShareTopic(topicName, this.projectId, projectId);
@@ -267,7 +256,7 @@ public class KafkaService {
     public Response unShareTopicFromProject(
             @PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         kafkaFacade.unShareTopic(topicName, this.projectId);
@@ -282,7 +271,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response topicIsSharedTo(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         List<SharedProjectDTO> projectDtoList = kafkaFacade
                 .topicIsSharedTo(topicName, this.projectId);
@@ -301,7 +290,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response aclUsers(@PathParam("topicName") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -327,7 +316,7 @@ public class KafkaService {
     public Response addAclsToTopic(@PathParam("topic") String topicName,
             AclDTO aclDto,
             @Context SecurityContext sc, @Context HttpServletRequest req)
-            throws AppException, Exception {
+            throws AppException {
         JsonResponse json = new JsonResponse();
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -359,7 +348,7 @@ public class KafkaService {
     public Response removeAclsFromTopic(@PathParam("topic") String topicName,
             @PathParam("aclId") int aclId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -387,7 +376,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopicAcls(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -418,7 +407,7 @@ public class KafkaService {
     public Response updateTopicAcls(@PathParam("topic") String topicName,
             @PathParam("aclId") String aclId, AclDTO aclDto,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -450,7 +439,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response ValidateSchemaForTopics(SchemaDTO schemaData,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -481,7 +470,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
     public Response addTopicSchema(SchemaDTO schemaData,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -516,7 +505,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getSchemaForTopics(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -525,9 +514,6 @@ public class KafkaService {
         }
 
         SchemaDTO schemaDto = kafka.getSchemaForTopic(topicName);
-//        GenericEntity<List<SchemaDTO>> schema
-//                = new GenericEntity<List<SchemaDTO>>(schemaDto) {
-//        };
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 schemaDto).build();
     }
@@ -540,7 +526,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response listSchemasForTopics(
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -565,8 +551,7 @@ public class KafkaService {
     public Response getSchemaContent( @PathParam("schemaName") String schemaName,
             @PathParam("schemaVersion") Integer schemaVersion,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
-        JsonResponse json = new JsonResponse();
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -574,9 +559,6 @@ public class KafkaService {
         }
 
         SchemaDTO schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
-//        GenericEntity<List<SchemaDTO>> schemas
-//                = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
-//        };
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 schemaDtos).build();
     }
@@ -589,7 +571,7 @@ public class KafkaService {
     public Response deleteSchema(@PathParam("schemaName") String schemaName,
             @PathParam("version") Integer version,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {

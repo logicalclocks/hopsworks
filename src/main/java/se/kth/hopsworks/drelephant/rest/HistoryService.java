@@ -8,8 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import static java.util.Collections.list;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -363,7 +361,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         while(itr.hasNext()) {
             JobHeuristicDetailsDTO obj = itr.next();
          
-            if(obj.getTotalSeverity().equals("LOW") && ((obj.getAmMemory()* obj.getAmVcores() <= defaultAmMemory * defaultAmVcores) &&
+            if((obj.getTotalSeverity().equals("LOW") || obj.getTotalSeverity().equals("NONE")) && ((obj.getAmMemory()* obj.getAmVcores() <= defaultAmMemory * defaultAmVcores) &&
                (obj.getNumberOfExecutors() * obj.getExecutorMemory()<= defaultNumOfExecutors * defaultExecutorsMemory))){
                 defaultAmMemory = obj.getAmMemory();
                 defaultAmVcores = obj.getAmVcores();
@@ -407,7 +405,7 @@ public Response Heuristics(JobDetailDTO jobDetailDTO,
         while(itr.hasNext()) {
          JobHeuristicDetailsDTO obj = itr.next();
          
-         if(obj.getTotalSeverity().equals("LOW") && (obj.getAmMemory()> defaultAmMemory || 
+         if((obj.getTotalSeverity().equals("LOW") || obj.getTotalSeverity().equals("NONE")) && (obj.getAmMemory()> defaultAmMemory || 
                   obj.getAmVcores() > defaultAmVcores || obj.getNumberOfExecutors() > defaultNumOfExecutors || 
                   obj.getExecutorMemory() > defaultExecutorsMemory)){
              defaultAmMemory = obj.getAmMemory();

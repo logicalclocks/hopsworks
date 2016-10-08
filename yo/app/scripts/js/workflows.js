@@ -1022,7 +1022,7 @@ function form(node){
   var addRemoveDirs = addButton("Remove Directory", function(){createRmDir($('#rm_dirs'))})
   var addConfigurations = addButton("Add Configuration", function(){createConfiguration($('#configurations'))})
 
-  var buttonMenu = $('<ul class="dropdown-menu"></ul>')
+  var buttonMenu = $('<ul class="uib-dropdown-menu"></ul>')
 
   buttonMenu.append($('<li></li>').append(addArgs))
   buttonMenu.append($('<li></li>').append(addXml))
@@ -1032,7 +1032,7 @@ function form(node){
 
   var options = $('<div class="form-group"></div>')
   var buttons = $('<div class="btn-group col-sm-4"></div>')
-  buttons.append($('<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Advance <span class="caret"></span></button>')).append(buttonMenu)
+  buttons.append($('<button type="button" class="btn btn-default uib-dropdown-toggle" data-toggle="uib-dropdown" aria-haspopup="true" aria-expanded="false">Advance <span class="caret"></span></button>')).append(buttonMenu)
   options.append(buttons)
   var tables = $('<select id = "tables"></select>')
   options.append($('<div class="col-sm-3"></div>').append(tables))

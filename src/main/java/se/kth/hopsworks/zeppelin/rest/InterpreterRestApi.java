@@ -51,9 +51,6 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import org.apache.zeppelin.dep.Repository;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
-import org.apache.zeppelin.notebook.Notebook;
-import org.apache.zeppelin.notebook.NotebookAuthorization;
-import org.apache.zeppelin.search.SearchService;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
@@ -65,7 +62,6 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
-import se.kth.hopsworks.zeppelin.socket.NotebookServer;
 import se.kth.hopsworks.zeppelin.util.LivyMsg;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
@@ -344,7 +340,7 @@ public class InterpreterRestApi {
    * @return
    */
   @GET
-  public Response listInterpreter(String message) {
+  public Response listInterpreter() {
     Map<String, RegisteredInterpreter> m = Interpreter.registeredInterpreters;
     return new JsonResponse(Status.OK, "", m).build();
   }

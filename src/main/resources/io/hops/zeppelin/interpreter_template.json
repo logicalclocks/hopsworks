@@ -1,65 +1,14 @@
 {
   "interpreterSettings": {
-    "2BGJXJQS3": {
-      "id": "2BGJXJQS3",
-      "name": "md",
-      "group": "md",
-      "properties": {},
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.markdown.Markdown",
-          "name": "md"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BEYYPCM3": {
-      "id": "2BEYYPCM3",
-      "name": "phoenix",
-      "group": "phoenix",
-      "properties": {
-        "phoenix.user": "",
-        "phoenix.jdbc.url": "jdbc:phoenix:localhost:2181:/hbase-unsecure",
-        "phoenix.password": "",
-        "phoenix.max.result": "1000",
-        "phoenix.driver.name": "org.apache.phoenix.jdbc.PhoenixDriver"
-      },
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.phoenix.PhoenixInterpreter",
-          "name": "sql"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BEDURUYB": {
-      "id": "2BEDURUYB",
-      "name": "sh",
-      "group": "sh",
-      "properties": {},
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.shell.ShellInterpreter",
-          "name": "sh"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BDS1B11V": {
-      "id": "2BDS1B11V",
+    "2BR3N2DWS": {
+      "id": "2BR3N2DWS",
       "name": "psql",
       "group": "psql",
       "properties": {
-        "postgresql.password": "",
         "postgresql.driver.name": "org.postgresql.Driver",
-        "postgresql.max.result": "1000",
+        "postgresql.password": "",
         "postgresql.url": "jdbc:postgresql://localhost:5432/",
+        "postgresql.max.result": "1000",
         "postgresql.user": "gpadmin"
       },
       "interpreterGroup": [
@@ -68,26 +17,59 @@
           "name": "sql"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BH7U5XFC": {
-      "id": "2BH7U5XFC",
+    "2BTHHFNS8": {
+      "id": "2BTHHFNS8",
+      "name": "flink",
+      "group": "flink",
+      "properties": {
+        "port": "6123",
+        "host": "local"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.flink.FlinkInterpreter",
+          "name": "flink"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BRKFTME2": {
+      "id": "2BRKFTME2",
       "name": "spark",
       "group": "spark",
       "properties": {
-        "spark.cores.max": "",
-        "master": "yarn-client",
-        "zeppelin.spark.maxResult": "1000",
-        "zeppelin.dep.localrepo": "local-repo",
-        "spark.app.name": "%%projectName%%-Zeppelin",
-        "spark.executor.memory": "512m",
-        "zeppelin.spark.useHiveContext": "true",
-        "zeppelin.spark.concurrentSQL": "false",
+        "spark.executor.memory": "",
         "args": "",
+        "zeppelin.spark.printREPLOutput": "true",
+        "spark.cores.max": "",
+        "zeppelin.dep.additionalRemoteRepository": "spark-packages,http://dl.bintray.com/spark-packages/maven,false;",
+        "zeppelin.spark.sql.stacktrace": "false",
+        "zeppelin.spark.importImplicit": "true",
+        "zeppelin.spark.concurrentSQL": "false",
+        "zeppelin.spark.useHiveContext": "true",
         "zeppelin.pyspark.python": "python",
-        "zeppelin.dep.additionalRemoteRepository": "spark-packages,http://dl.bintray.com/spark-packages/maven,false;"
+        "zeppelin.dep.localrepo": "local-repo",
+        "zeppelin.R.knitr": "true",
+        "zeppelin.spark.maxResult": "1000",
+        "master": "yarn-client",
+        "spark.app.name": "%%projectName%%-Zeppelin",
+        "zeppelin.R.image.width": "100%",
+        "zeppelin.R.render.options": "out.format \u003d \u0027html\u0027, comment \u003d NA, echo \u003d FALSE, results \u003d \u0027asis\u0027, message \u003d F, warning \u003d F",
+        "zeppelin.R.cmd": "R"
       },
       "interpreterGroup": [
         {
@@ -99,6 +81,10 @@
           "name": "pyspark"
         },
         {
+          "class": "org.apache.zeppelin.spark.SparkRInterpreter",
+          "name": "r"
+        },
+        {
           "class": "org.apache.zeppelin.spark.SparkSqlInterpreter",
           "name": "sql"
         },
@@ -107,60 +93,219 @@
           "name": "dep"
         }
       ],
+      "dependencies": [],
       "option": {
         "remote": true,
         "perNoteSession": false,
-        "perNoteProcess": true
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BFCSS97Q": {
-      "id": "2BFCSS97Q",
-      "name": "lens",
-      "group": "lens",
+    "2BUUUTAJD": {
+      "id": "2BUUUTAJD",
+      "name": "elasticsearch",
+      "group": "elasticsearch",
       "properties": {
-        "lens.session.cluster.user": "default",
-        "zeppelin.lens.maxResults": "1000",
-        "lens.client.dbname": "default",
-        "lens.query.enable.persistent.resultset": "false",
-        "zeppelin.lens.maxThreads": "10",
-        "lens.server.base.url": "http://\u003chostname\u003e:\u003cport\u003e/lensapi",
-        "zeppelin.lens.run.concurrent": "true"
+        "elasticsearch.port": "9300",
+        "elasticsearch.result.size": "10",
+        "elasticsearch.cluster.name": "elasticsearch",
+        "elasticsearch.host": "localhost"
       },
       "interpreterGroup": [
         {
-          "class": "org.apache.zeppelin.lens.LensInterpreter",
-          "name": "lens"
+          "class": "org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter",
+          "name": "elasticsearch"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BGZXVSUP": {
-      "id": "2BGZXVSUP",
-      "name": "kylin",
-      "group": "kylin",
+    "2BR8UJC54": {
+      "id": "2BR8UJC54",
+      "name": "md",
+      "group": "md",
+      "properties": {},
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.markdown.Markdown",
+          "name": "md"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BRFGHA7U": {
+      "id": "2BRFGHA7U",
+      "name": "cassandra",
+      "group": "cassandra",
       "properties": {
-        "kylin.api.password": "KYLIN",
-        "kylin.query.limit": "5000",
-        "kylin.api.user": "ADMIN",
-        "kylin.query.offset": "0",
-        "kylin.query.project": "default",
-        "kylin.query.ispartial": "true",
-        "kylin.api.url": "http://\u003chost\u003e:\u003cport\u003e/kylin/api/query"
+        "cassandra.query.default.consistency": "ONE",
+        "cassandra.pooling.max.connection.per.host.local": "8",
+        "cassandra.load.balancing.policy": "DEFAULT",
+        "cassandra.pooling.new.connection.threshold.local": "100",
+        "cassandra.credentials.password": "none",
+        "cassandra.native.port": "9042",
+        "cassandra.hosts": "localhost",
+        "cassandra.pooling.core.connection.per.host.local": "2",
+        "cassandra.retry.policy": "DEFAULT",
+        "cassandra.pooling.pool.timeout.millisecs": "5000",
+        "cassandra.protocol.version": "4",
+        "cassandra.pooling.new.connection.threshold.remote": "100",
+        "cassandra.pooling.core.connection.per.host.remote": "1",
+        "cassandra.pooling.max.request.per.connection.remote": "256",
+        "cassandra.cluster": "Test Cluster",
+        "cassandra.pooling.max.request.per.connection.local": "1024",
+        "cassandra.speculative.execution.policy": "DEFAULT",
+        "cassandra.compression.protocol": "NONE",
+        "cassandra.query.default.fetchSize": "5000",
+        "cassandra.keyspace": "system",
+        "cassandra.pooling.idle.timeout.seconds": "120",
+        "cassandra.credentials.username": "none",
+        "cassandra.socket.tcp.no_delay": "true",
+        "cassandra.max.schema.agreement.wait.second": "10",
+        "cassandra.query.default.serial.consistency": "SERIAL",
+        "cassandra.interpreter.parallelism": "10",
+        "cassandra.socket.connection.timeout.millisecs": "5000",
+        "cassandra.pooling.max.connection.per.host.remote": "2",
+        "cassandra.pooling.heartbeat.interval.seconds": "30",
+        "cassandra.reconnection.policy": "DEFAULT",
+        "cassandra.socket.read.timeout.millisecs": "12000"
       },
       "interpreterGroup": [
         {
-          "class": "org.apache.zeppelin.kylin.KylinInterpreter",
-          "name": "kylin"
+          "class": "org.apache.zeppelin.cassandra.CassandraInterpreter",
+          "name": "cassandra"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BEFUZ6WV": {
-      "id": "2BEFUZ6WV",
+    "2BR88G7AT": {
+      "id": "2BR88G7AT",
+      "name": "jdbc",
+      "group": "jdbc",
+      "properties": {
+        "phoenix.user": "phoenixuser",
+        "hive.url": "jdbc:hive2://localhost:10000",
+        "default.driver": "org.postgresql.Driver",
+        "phoenix.driver": "org.apache.phoenix.jdbc.PhoenixDriver",
+        "hive.user": "hive",
+        "psql.password": "",
+        "psql.user": "phoenixuser",
+        "psql.url": "jdbc:postgresql://localhost:5432/",
+        "default.user": "gpadmin",
+        "phoenix.hbase.client.retries.number": "1",
+        "phoenix.url": "jdbc:phoenix:localhost:2181:/hbase-unsecure",
+        "tajo.url": "jdbc:tajo://localhost:26002/default",
+        "tajo.driver": "org.apache.tajo.jdbc.TajoDriver",
+        "psql.driver": "org.postgresql.Driver",
+        "default.password": "",
+        "zeppelin.jdbc.concurrent.use": "true",
+        "hive.password": "",
+        "hive.driver": "org.apache.hive.jdbc.HiveDriver",
+        "common.max_count": "1000",
+        "phoenix.password": "",
+        "zeppelin.jdbc.concurrent.max_connection": "10",
+        "default.url": "jdbc:postgresql://localhost:5432/"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.jdbc.JDBCInterpreter",
+          "name": "sql"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BRWXKZV6": {
+      "id": "2BRWXKZV6",
+      "name": "file",
+      "group": "file",
+      "properties": {
+        "hdfs.user": "hdfs",
+        "hdfs.maxlength": "1000",
+        "hdfs.url": "http://localhost:50070/webhdfs/v1/"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.file.HDFSFileInterpreter",
+          "name": "hdfs"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BURHZ6JA": {
+      "id": "2BURHZ6JA",
+      "name": "hbase",
+      "group": "hbase",
+      "properties": {
+        "zeppelin.hbase.test.mode": "false",
+        "hbase.ruby.sources": "lib/ruby",
+        "hbase.home": "/usr/lib/hbase/"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.hbase.HbaseInterpreter",
+          "name": "hbase"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BTEYEBH7": {
+      "id": "2BTEYEBH7",
+      "name": "sh",
+      "group": "sh",
+      "properties": {
+        "shell.command.timeout.millisecs": "60000"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.shell.ShellInterpreter",
+          "name": "sh"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BQY2HE4W": {
+      "id": "2BQY2HE4W",
       "name": "ignite",
       "group": "ignite",
       "properties": {
@@ -180,12 +325,65 @@
           "name": "ignitesql"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BGCV4TVA": {
-      "id": "2BGCV4TVA",
+    "2BS64GNXY": {
+      "id": "2BS64GNXY",
+      "name": "lens",
+      "group": "lens",
+      "properties": {
+        "lens.session.cluster.user": "default",
+        "zeppelin.lens.maxResults": "1000",
+        "lens.query.enable.persistent.resultset": "false",
+        "lens.client.dbname": "default",
+        "zeppelin.lens.maxThreads": "10",
+        "lens.server.base.url": "http://\u003chostname\u003e:\u003cport\u003e/lensapi",
+        "zeppelin.lens.run.concurrent": "true"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.lens.LensInterpreter",
+          "name": "lens"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BQWQ32CK": {
+      "id": "2BQWQ32CK",
+      "name": "alluxio",
+      "group": "alluxio",
+      "properties": {
+        "alluxio.master.port": "19998",
+        "alluxio.master.hostname": "localhost"
+      },
+      "interpreterGroup": [
+        {
+          "class": "org.apache.zeppelin.alluxio.AlluxioInterpreter",
+          "name": "alluxio"
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
+      }
+    },
+    "2BRBC89PN": {
+      "id": "2BRBC89PN",
       "name": "angular",
       "group": "angular",
       "properties": {},
@@ -195,105 +393,56 @@
           "name": "angular"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BDYCQSE5": {
-      "id": "2BDYCQSE5",
-      "name": "tajo",
-      "group": "tajo",
+    "2BSMV3RNQ": {
+      "id": "2BSMV3RNQ",
+      "name": "python",
+      "group": "python",
       "properties": {
-        "tajo.jdbc.uri": "jdbc:tajo://localhost:26002/default"
+        "zeppelin.python": "python"
       },
       "interpreterGroup": [
         {
-          "class": "org.apache.zeppelin.tajo.TajoInterpreter",
-          "name": "tql"
+          "class": "org.apache.zeppelin.python.PythonInterpreter",
+          "name": "python"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     },
-    "2BG698ZCT": {
-      "id": "2BG698ZCT",
-      "name": "hive",
-      "group": "hive",
-      "properties": {
-        "default.password": "",
-        "default.user": "hive",
-        "default.driver": "org.apache.hive.jdbc.HiveDriver",
-        "default.url": "jdbc:hive2://localhost:10000",
-        "common.max_count": "1000"
-      },
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.hive.HiveInterpreter",
-          "name": "hql"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BEKM3AD1": {
-      "id": "2BEKM3AD1",
-      "name": "elasticsearch",
-      "group": "elasticsearch",
-      "properties": {
-        "elasticsearch.result.size": "10",
-        "elasticsearch.port": "9300",
-        "elasticsearch.cluster.name": "elasticsearch",
-        "elasticsearch.host": "localhost"
-      },
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter",
-          "name": "elasticsearch"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BEV8PXJ5": {
-      "id": "2BEV8PXJ5",
-      "name": "flink",
-      "group": "flink",
-      "properties": {
-        "port": "6123",
-        "host": "local"
-      },
-      "interpreterGroup": [
-        {
-          "class": "org.apache.zeppelin.flink.FlinkInterpreter",
-          "name": "flink"
-        }
-      ],
-      "option": {
-        "remote": true
-      }
-    },
-    "2BN395SS2": {
-      "id": "2BN395SS2",
+    "2BRWND7YH": {
+      "id": "2BRWND7YH",
       "name": "livy",
       "group": "livy",
       "properties": {
-        "zeppelin.livy.master": "yarn",
-        "zeppelin.livy.spark.maxResult": "1000",
-        "zeppelin.livy.url": "%%livy_url%%",
+        "livy.spark.driver.cores": "",
+        "zeppelin.livy.principal": "",
+        "zeppelin.livy.keytab": "",
+        "livy.spark.executor.instances": "",
+        "livy.spark.driver.memory": "",
+        "livy.spark.dynamicAllocation.enabled": "",
+        "zeppelin.livy.concurrentSQL": "false",
+        "livy.spark.dynamicAllocation.cachedExecutorIdleTimeout": "",
+        "zeppelin.livy.spark.sql.maxResult": "1000",
         "livy.spark.master": "yarn",
-        "livy.spark.driver.cores": "2",
-        "livy.spark.driver.memory": "512m",
-        "livy.spark.executor.instances": "1",
-        "livy.spark.executor.cores": "1",
-        "livy.spark.executor.memory": "512m",
-        "livy.spark.dynamicAllocation.enabled": "true",
-        "livy.spark.dynamicAllocation.cachedExecutorIdleTimeout": "60s",
-        "livy.spark.dynamicAllocation.minExecutors": "1",
-        "livy.spark.dynamicAllocation.initialExecutors": "1",
-        "livy.spark.dynamicAllocation.maxExecutors": "500"
+        "livy.spark.executor.cores": "",
+        "livy.spark.executor.memory": "",
+        "zeppelin.livy.url": "%%livy_url%%",
+        "livy.spark.dynamicAllocation.initialExecutors": "",
+        "livy.spark.dynamicAllocation.minExecutors": "",
+        "livy.spark.dynamicAllocation.maxExecutors": ""
       },
       "interpreterGroup": [
         {
@@ -317,56 +466,56 @@
       "option": {
         "remote": true,
         "perNoteSession": false,
-        "perNoteProcess": false
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
-    },    
-    "2BGUXW9ZV": {
-      "id": "2BGUXW9ZV",
-      "name": "cassandra",
-      "group": "cassandra",
+    },
+    "2BRUKTWZH": {
+      "id": "2BRUKTWZH",
+      "name": "kylin",
+      "group": "kylin",
       "properties": {
-        "cassandra.query.default.consistency": "ONE",
-        "cassandra.pooling.max.connection.per.host.local": "8",
-        "cassandra.load.balancing.policy": "DEFAULT",
-        "cassandra.pooling.new.connection.threshold.local": "100",
-        "cassandra.credentials.password": "none",
-        "cassandra.native.port": "9042",
-        "cassandra.hosts": "localhost",
-        "cassandra.pooling.core.connection.per.host.local": "2",
-        "cassandra.retry.policy": "DEFAULT",
-        "cassandra.pooling.pool.timeout.millisecs": "5000",
-        "cassandra.protocol.version": "3",
-        "cassandra.pooling.new.connection.threshold.remote": "100",
-        "cassandra.pooling.core.connection.per.host.remote": "1",
-        "cassandra.pooling.max.request.per.connection.remote": "256",
-        "cassandra.cluster": "Test Cluster",
-        "cassandra.pooling.max.request.per.connection.local": "1024",
-        "cassandra.speculative.execution.policy": "DEFAULT",
-        "cassandra.compression.protocol": "NONE",
-        "cassandra.query.default.fetchSize": "5000",
-        "cassandra.pooling.idle.timeout.seconds": "120",
-        "cassandra.keyspace": "system",
-        "cassandra.max.schema.agreement.wait.second": "10",
-        "cassandra.socket.tcp.no_delay": "true",
-        "cassandra.credentials.username": "none",
-        "cassandra.socket.connection.timeout.millisecs": "5000",
-        "cassandra.interpreter.parallelism": "10",
-        "cassandra.query.default.serial.consistency": "SERIAL",
-        "cassandra.pooling.max.connection.per.host.remote": "2",
-        "cassandra.pooling.heartbeat.interval.seconds": "30",
-        "cassandra.reconnection.policy": "DEFAULT",
-        "cassandra.socket.read.timeout.millisecs": "12000"
+        "kylin.api.user": "ADMIN",
+        "kylin.query.limit": "5000",
+        "kylin.api.password": "KYLIN",
+        "kylin.query.offset": "0",
+        "kylin.query.project": "default",
+        "kylin.api.url": "http://\u003chost\u003e:\u003cport\u003e/kylin/api/query",
+        "kylin.query.ispartial": "true"
       },
       "interpreterGroup": [
         {
-          "class": "org.apache.zeppelin.cassandra.CassandraInterpreter",
-          "name": "cassandra"
+          "class": "org.apache.zeppelin.kylin.KylinInterpreter",
+          "name": "kylin"
         }
       ],
+      "dependencies": [],
       "option": {
-        "remote": true
+        "remote": true,
+        "perNoteSession": false,
+        "perNoteProcess": false,
+        "isExistingProcess": false
       }
     }
   },
-  "interpreterBindings": {}
+  "interpreterBindings": { },
+  "interpreterRepositories": [
+    {
+      "id": "central",
+      "type": "default",
+      "url": "http://repo1.maven.org/maven2/",
+      "releasePolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "daily",
+        "checksumPolicy": "warn"
+      },
+      "mirroredRepositories": [],
+      "repositoryManager": false
+    }
+  ]
 }

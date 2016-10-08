@@ -111,11 +111,13 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
     
     public JobsHistory updateJobHistory(Execution exec, long duration){
         JobsHistory obj = em.find(JobsHistory.class, exec.getId());
-        obj.setAppId(exec.getAppId());
-        obj.setExecutionDuration(duration);
-        obj.setState(exec.getState());
-        obj.setFinalStatus(exec.getFinalStatus());
-        em.merge(obj);
+        if(obj!=null){
+          obj.setAppId(exec.getAppId());
+          obj.setExecutionDuration(duration);
+          obj.setState(exec.getState());
+          obj.setFinalStatus(exec.getFinalStatus());
+          em.merge(obj);
+        }
         return obj;   
     }
 

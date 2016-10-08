@@ -4,10 +4,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$modalStack', '$location', '$routeParams', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService',
-          function ($scope, $rootScope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
 
             var self = this;
@@ -21,6 +21,7 @@ angular.module('hopsWorksApp')
             self.projectMembers = [];
             self.tourService = TourService;
             self.location = $location;
+            self.cloak = true;
 
             self.role = "";
 
@@ -28,6 +29,7 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
+//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
               self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
             $scope.activeService = "home";
 
@@ -75,6 +77,16 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.activeTensorflow = function() {
+              if ($location.url().indexOf("") !== -1) {
+              }
+              return false;
+            };
+
+
+
+
+
             getEndpoint();
 
             var getCurrentProject = function () {
@@ -111,7 +123,7 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
 
-                        $cookies.projectID = self.pId;
+                        $cookies.put("projectID",self.pId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
@@ -214,7 +226,7 @@ angular.module('hopsWorksApp')
                                 if (success.errorMsg) {
                                   growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
                                 }
-                                $modalStack.getTop().key.close();
+                                $uibModalStack.getTop().key.close();
                               }, function (error) {
                         self.working = false;
                         growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -223,7 +235,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalStack.getTop().key.dismiss();
+              $uibModalStack.getTop().key.dismiss();
             };
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;
@@ -247,6 +259,10 @@ angular.module('hopsWorksApp')
 
             self.goToWorklows = function () {
                self.goToUrl('workflows');
+            };
+            
+            self.goToTensorflow = function () {
+               self.goToUrl('tensorflow');
             };
 
 	      
@@ -342,6 +358,10 @@ angular.module('hopsWorksApp')
 
             self.showKafka = function () {
               return showService("Kafka");
+            };
+            
+            self.showTensorflow = function () {
+              return showService("Tensorflow");
             };
 	      
             self.showWorkflows = function () {

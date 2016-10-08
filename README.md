@@ -41,11 +41,12 @@ We recommend that you visit www.karamel.io (or www.hops.io) to deploy a Hopswork
 NodeJS server, bower.
 
 ```
-sudo apt-get install node
+sudo apt install nodejs-legacy
 sudo apt-get install npm
 sudo npm cache clean
 # You must have a version of bower > 1.54
 sudo npm install bower -g
+sudo npm install grunt -g
 ```
 
 ## Build with Maven

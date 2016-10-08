@@ -1,15 +1,15 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$modalInstance','$cookies',
-          function (UserService, $location, $scope, md5, growl, $modalInstance, $cookies) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies) {
 
             var self = this;
             self.working = false;
             self.credentialWorking = false;
             self.twoFactorWorking = false;
             self.noPassword = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.emailHash = '';
             self.master = {};
             self.masterTwoFactor = {};
@@ -132,7 +132,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
           }]);

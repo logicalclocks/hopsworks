@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
             self.projects = [];
             self.currentPage = 1;
             self.showTours = false;
-            self.showTutorials = false;
             self.showPublicDatasets = false;
             $scope.creating = {"spark" : false, "zeppelin" : false};
             self.exampleProjectID;

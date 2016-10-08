@@ -96,7 +96,9 @@ public class KafkaFacade {
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
-            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName()));
+            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
         }
         return topics;
     }
@@ -725,20 +727,33 @@ public class KafkaFacade {
     public void deleteSchema(String schemaName, Integer version)
             throws AppException {
 
-        //get the bean and remove it
-        SchemaTopics schema = em.find(SchemaTopics.class,
-                new SchemaTopicsPK(schemaName, version));
+        //Check if schema is currently used by a topic.
+        List<ProjectTopics> topics = em.createNamedQuery(
+                "ProjectTopics.findBySchemaVersion", ProjectTopics.class)
+                .setParameter("schema_name", schemaName)
+                .setParameter("schema_version", version)
+                .getResultList();
+        if(topics != null && !topics.isEmpty()){
+          //Create a list of topic names to display to user
+          throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                     "Schema is currently used by topics" );
+        } else {
+          //get the bean and remove it
+          SchemaTopics schema = em.find(SchemaTopics.class,
+                  new SchemaTopicsPK(schemaName, version));
 
-        if (schema == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Schema: " + schemaName + " not found in database");
-        }
+          if (schema == null) {
+              throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                      "Schema: " + schemaName + " not found in database");
+          }
 
-        try {
-            em.remove(schema);
-        } catch (Exception ex) {
-            throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                    ex.getMessage());
+          try {
+              em.remove(schema);
+              em.flush();
+          } catch (Exception ex) {
+              throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                      ex.getMessage());
+          }
         }
     }
 

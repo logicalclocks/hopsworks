@@ -5,8 +5,8 @@
 
 var mainModule = angular.module('hopsWorksApp')
         .controller('ModifyFieldCtrl',
-                ['$cookies', '$scope', '$modalInstance', 'MetadataActionService',
-                  function ($cookies, $scope, $modalInstance, MetadataActionService) {
+                ['$cookies', '$scope', '$uibModalInstance', 'MetadataActionService',
+                  function ($cookies, $scope, $uibModalInstance, MetadataActionService) {
 
                     var self = this;
 
@@ -23,7 +23,7 @@ var mainModule = angular.module('hopsWorksApp')
 
                     self.items = [];
 
-                    MetadataActionService.fetchFieldTypes($cookies['email'])
+                    MetadataActionService.fetchFieldTypes($cookies.get('email'))
                             .then(function (response) {
                               console.log(JSON.stringify(response));
                               var content = JSON.parse(response.board);
@@ -38,7 +38,7 @@ var mainModule = angular.module('hopsWorksApp')
                               });
                             });
 
-                    MetadataActionService.isFieldEmpty($cookies['email'], $scope.field.id)
+                    MetadataActionService.isFieldEmpty($cookies.get('email'), $scope.field.id)
                             .then(function (response) {
 
                               if (response.board !== "EMPTY") {
@@ -82,7 +82,7 @@ var mainModule = angular.module('hopsWorksApp')
                           fieldTypeContent = self.multiSelectItems;
                       }
 
-                      $modalInstance.close({id: $scope.field.id, title: self.fieldName, details: $scope.field.details,
+                      $uibModalInstance.close({id: $scope.field.id, title: self.fieldName, details: $scope.field.details,
                         editing: $scope.field.editing, find: $scope.field.find, required: $scope.field.required,
                         sizefield: $scope.field.sizefield, description: self.fieldDescription,
                         fieldtypeid: self.selectedItem.id, fieldtypeContent: fieldTypeContent, position: $scope.field.position});
@@ -95,7 +95,7 @@ var mainModule = angular.module('hopsWorksApp')
                     };
 
                     self.cancel = function () {
-                      $modalInstance.dismiss('canceled');
+                      $uibModalInstance.dismiss('canceled');
                     };
 
                     self.update = function () {

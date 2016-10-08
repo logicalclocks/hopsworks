@@ -2,29 +2,37 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams','$route', 'ModalService', 'growl', '$location',
+          'DataSetService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$showdown',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
                   $showdown) {
 
             var self = this;
+            self.itemsPerPage = 50;
             self.working = false;
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
+
+            // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
-            self.selectedList = []; //The index of the selected file in the files array.
-            self.fileDetail; //The details about the currently selected file.
-            self.sharedPath; //The details about the currently selected file.
+//            self.fileDetail = null; //The details about the currently selected file.
+            self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
+            $scope.all_selected = false;
+            self.selectedFiles = {}; //Selected files
+
+
+            self.dir_timing;
+
             $scope.isPublic = true;
-            
+
             $scope.tgState = true;
 
             $scope.status = {
@@ -56,7 +64,7 @@ angular.module('hopsWorksApp')
                 return self.pathArray.length - 1;
               }
               return displayPathLen;
-            }
+            };
 
             self.cutBreadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
@@ -66,14 +74,6 @@ angular.module('hopsWorksApp')
                 return true;
               }
               return false;
-            };
-
-            self.selectInode = function (inode) {
-              // add to selectedList
-            };
-
-            self.selectInode = function (inode) {
-              // splice
             };
 
             $scope.sort = function (keyname) {
@@ -98,6 +98,7 @@ angular.module('hopsWorksApp')
               }
             });
 
+
             self.isShared = function () {
               var top = self.pathArray[0].split("::");
               if (top.length === 1) {
@@ -105,7 +106,7 @@ angular.module('hopsWorksApp')
               }
               return true;
             };
-            
+
             self.sharedDatasetPath = function () {
               var top = self.pathArray[0].split("::");
               if (top.length === 1) {
@@ -117,11 +118,11 @@ angular.module('hopsWorksApp')
               self.sharedPathArray = new Array(self.pathArray.length + 1);
               self.sharedPathArray[0] = top[0];
               self.sharedPathArray[1] = top[1];
-              for (var i=1; i<pathArray.length; i++ ) {
-                self.sharedPathArray[i+1] = pathArray[i];
+              for (var i = 1; i < pathArray.length; i++) {
+                self.sharedPathArray[i + 1] = pathArray[i];
               }
               return self.sharedPathArray;
-            };            
+            };
 
 
             /*
@@ -142,28 +143,6 @@ angular.module('hopsWorksApp')
               });
             };
 
-            $scope.$on("copyFromCharonToHdfs", function (event, args) {
-              var newPathArray = self.pathArray;
-              //Convert into a path
-              var newPath = getPath(newPathArray);
-              self.working = true;
-              //Get the contents and load them
-              dataSetService.getContents(newPath).then(
-                      function (success) {
-                        //Reset the selected file
-                        self.selected = null;
-                        self.fileDetail = null;
-                        //Set the current files and path
-                        self.files = success.data;
-                        self.pathArray = newPathArray;
-                        self.working = false;
-                        console.log(success);
-                      }, function (error) {
-                self.working = false;
-                console.log("Error getting the contents of the path " + getPath(newPathArray));
-                console.log(error);
-              });
-            });
 
             /**
              * Get the contents of the directory at the path with the given path components and load it into the frontend.
@@ -175,7 +154,7 @@ angular.module('hopsWorksApp')
               var newPathArray;
               if (pathComponents) {
                 newPathArray = pathComponents;
-              } else if (self.routeParamArray){
+              } else if (self.routeParamArray) {
                 newPathArray = self.pathArray.concat(self.routeParamArray);
               } else {
                 newPathArray = self.pathArray;
@@ -183,36 +162,38 @@ angular.module('hopsWorksApp')
               //Convert into a path
               var newPath = getPath(newPathArray);
               self.working = true;
+              self.dir_timing = new Date().getTime();
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
                       function (success) {
                         //Reset the selected file
                         self.selected = null;
-                        self.fileDetail = null;
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
                         self.working = false;
                         console.log(success);
+//                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
+                        console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
                       }, function (error) {
-                        if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
-                          var popped = newPathArray.pop();
-                          console.log(popped);
-                          self.openDir({name:popped, dir:false, underConstruction:false});
-                          self.pathArray = newPathArray;
-                          self.routeParamArray = [];
-                          //growl.info(error.data.errorMsg, {title: 'Info', ttl: 2000});
-                          getDirContents();
-                        } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
-                          self.routeParamArray = [];
-                          //$route.updateParams({fileName:''});
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                          getDirContents();
-                        }
-                        self.working = false;
-                        console.log("Error getting the contents of the path " 
-                                     + getPath(newPathArray));
-                        console.log(error);
+                if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
+                  var popped = newPathArray.pop();
+                  console.log(popped);
+                  self.openDir({name: popped, dir: false, underConstruction: false});
+                  self.pathArray = newPathArray;
+                  self.routeParamArray = [];
+                  //growl.info(error.data.errorMsg, {title: 'Info', ttl: 2000});
+                  getDirContents();
+                } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
+                  self.routeParamArray = [];
+                  //$route.updateParams({fileName:''});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  getDirContents();
+                }
+                self.working = false;
+                console.log("Error getting the contents of the path "
+                        + getPath(newPathArray));
+                console.log(error);
               });
             };
 
@@ -228,10 +209,10 @@ angular.module('hopsWorksApp')
               if ($routeParams.datasetName && $routeParams.fileName) {
                 //file name is set: get the contents
                 var paths = $routeParams.fileName.split("/");
-                paths.forEach(function(entry) {
+                paths.forEach(function (entry) {
                   self.routeParamArray.push(entry);
-                });               
-              } 
+                });
+              }
               getDirContents();
               $scope.tgState = true;
             };
@@ -298,6 +279,14 @@ angular.module('hopsWorksApp')
               removeInode(getPath(removePathArray));
             };
 
+            self.deleteSelected = function () {
+              var removePathArray = self.pathArray.slice(0);
+              for(var fileName in self.selectedFiles){
+                removePathArray.push(fileName);
+                removeInode(getPath(removePathArray));
+              }
+            };
+
             /**
              * Makes the dataset public for anybody within the local cluster or any outside cluster.
              * @param id inodeId
@@ -319,8 +308,8 @@ This will make all its files available for any registered user to download and p
               );
 
             };
-            
-             self.removePublic = function (id) {
+
+            self.removePublic = function (id) {
 
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\
 This will make all its files unavailable to other projects unless you share it explicitly.').then(
@@ -335,8 +324,8 @@ This will make all its files unavailable to other projects unless you share it e
 
                       }
               );
-            };           
-            
+            };
+
 
             self.parentPathArray = function () {
               var newPathArray = self.pathArray.slice(0);
@@ -357,24 +346,25 @@ This will make all its files unavailable to other projects unless you share it e
               var filePath = getPath(previewPathArray);
               //If filename is README.md then try fetching it without the modal
               if (fileName.endsWith("README.md") && !preview) {
-                dataSetService.filePreview(filePath).then(
+                dataSetService.filePreview(filePath, "head").then(
                         function (success) {
-                            var fileDetails = JSON.parse(success.data.data);
-                            var content = fileDetails.filePreviewDTO[0].content;
-                            $scope.readme = $showdown.makeHtml(content);
+                          var fileDetails = JSON.parse(success.data.data);
+                          var content = fileDetails.filePreviewDTO[0].content;
+                          $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
-                          $scope.readme = null;
+                  //To hide README from UI
+                  $scope.readme = null;
                 });
               } else {
-                ModalService.filePreview('lg', fileName, filePath, self.projectId).then(
+                ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
                         function (success) {
 
                         }, function (error) {
                 });
               }
             };
-           
-            
+
+
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
                       "problem selecting file").then(
@@ -401,6 +391,55 @@ This will make all its files unavailable to other projects unless you share it e
 
             };
 
+
+            self.isSelectedFiles = function () {
+              return Object.keys(self.selectedFiles).length;
+            };
+
+            self.moveSelected = function () {
+              //Check if we are to move one file or many
+              if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
+                if (self.selected !== null && self.selected !== undefined) {
+                  self.move(self.selected.id, self.selected.name);
+                }
+              } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
+
+                ModalService.selectDir('lg', "/[^]*/",
+                        "problem selecting file").then(
+                        function (success) {
+                          var destPath = success;
+                          // Get the relative path of this DataSet, relative to the project home directory
+                          // replace only first occurrence 
+                          var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                          //var finalPath = relPath + "/" + name;
+                          var names = [];
+                          var i = 0;
+                          //Check if have have multiple files 
+                          for (var name in self.selectedFiles) {
+                            names[i] = name;
+                            i++;
+                          }
+
+                          for (var name in self.selectedFiles) {
+                            dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
+                                    function (success) {
+                                      //If we moved the last file
+                                      if (name === names[names.length - 1]) {
+                                        getDirContents();
+                                        for (var i = 0; i < names.length; i++) {
+                                          delete self.selectedFiles[names[i]];
+                                        }
+                                        self.all_selected = false;
+                                      }
+                                    }, function (error) {
+                              growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 2});
+                            });
+                          }
+                        }, function (error) {
+                  //The user changed their mind.
+                });
+              }
+            };
 
             self.rename = function (inodeId) {
 
@@ -562,23 +601,125 @@ This will make all its files unavailable to other projects unless you share it e
               getDirContents(newPathArray);
             };
 
+            self.menustyle = {
+                "opacity" : 0.2
+            };
+  
             /**
              * Select an inode; updates details panel.
              * @param {type} selectedIndex
              * @param {type} file
              * @returns {undefined}
              */
-            self.select = function (selectedIndex, file) {
-              self.selected = selectedIndex;
-              self.fileDetail = file;
-//              $scope.readme = null;
+            self.select = function (selectedIndex, file, event) {
+
+              // 1. Turn off the selected file at the top of the browser.
+              // Add existing selected file (idempotent, if already added)
+              // If file already selected, deselect it.
+              if (event.ctrlKey) {
+
+              } else {
+                self.selectedFiles = {}
+              }
+              if (self.isSelectedFiles() > 0) {
+                self.selected = null;
+              } else {
+                self.selected = file.name;
+              }
+              self.selectedFiles[file.name] = file;
+              self.selectedFiles[file.name].selectedIndex = selectedIndex;
+              self.menustyle.opacity = 1.0;
             };
 
-            self.deselect = function () {
+            self.haveSelected = function (file) {
+              if (file === undefined || file === null || file.name === undefined || file.name === null) {
+                return false;
+              }
+              if (file.name in self.selectedFiles) {
+                return true;
+              }
+              return false;
+            };
+
+
+            self.selectAll = function () {
+              var i = 0;
+              var min = Math.min(self.itemsPerPage, self.files.length);
+              for (i = 0; i < min; i++) {
+                var f = self.files[i];
+                self.selectedFiles[f.name] = f;
+                self.selectedFiles[f.name].selectedIndex = i;
+              }
+              self.menustyle.opacity = 1;
               self.selected = null;
-              self.fileDetail = null;
+              self.all_selected = true;
+
+            };
+           
+            //TODO: Move files to hdfs trash folder
+             self.trashSelected = function () {
+
+            
+               
+            };
+
+            self.deleteSelected = function () {
+              var i = 0;
+              var names = [];
+              for (var name in self.selectedFiles) {
+                names[i] = name;
+                self.deleteFile(name);
+              }
+              for (var i = 0; i < names.length; i++) {
+                delete self.selectedFiles[names[i]];
+              }
+              self.all_selected = false;
+              self.selected = null;
+            };
+
+
+            self.deselect = function (selectedIndex, file, event) {
+              var i = 0;
+              if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
+                for (var name in self.selectedFiles) {
+                  if (file.name === name) {
+                    delete self.selectedFiles[name];
+                    //break;
+                  }
+                }
+              } else {
+                if(event.ctrlKey){
+                for (var name in self.selectedFiles) {
+                  if (file.name === name) {
+                    delete self.selectedFiles[name];
+                      break;
+                    }
+                  } 
+                } else {
+                  for (var name in self.selectedFiles) {
+                    if (file.name !== name) {
+                      delete self.selectedFiles[name];
+                    //break;
+                    }
+                  }
+                }
+              }
+              if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
+                self.menustyle.opacity = 0.2;
+                self.selected = null;
+              } else if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
+                self.menustyle.opacity = 1.0;
+                self.selected = file.name;
+              }
+              self.all_selected = false;
+
+            };
+
+            self.deselectAll = function () {
+              self.selectedFiles = {};
+              self.selected = null;
               self.sharedPath = null;
-              //$scope.readme = null;
+              self.menustyle.opacity = 0.2;
             };
 
             self.toggleLeft = buildToggler('left');

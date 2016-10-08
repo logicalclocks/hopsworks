@@ -14,26 +14,25 @@
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
-    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
-    <link rel="stylesheet" href="bower_components/angular-growl-v2/build/angular-growl.css" />
-    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
-    <link rel="stylesheet" href="bower_components/angular-chart.js/dist/angular-chart.css" />
-    <link rel="stylesheet" href="bower_components/select2/select2.css" />
-    <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
-    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
-    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css" />
-    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.style.css" />
-    <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
-    <link rel="stylesheet" href="bower_components/angular-multi-select/isteven-multi-select.css" />
     <link rel="stylesheet" href="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.css" />
     <link rel="stylesheet" href="bower_components/jstree/dist/themes/default/style.css" />
     <link rel="stylesheet" href="bower_components/ng-prettyjson/src/ng-prettyjson.css" />
+    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css" />
+    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+    <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
+    <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
+    <link rel="stylesheet" href="bower_components/select2/select2.css" />
+    <link rel="stylesheet" href="bower_components/v-accordion/dist/v-accordion.css" />
+    <link rel="stylesheet" href="bower_components/angular-growl-v2/build/angular-growl.css" />
+    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
+    <link rel="stylesheet" href="bower_components/isteven-angular-multiselect/isteven-multi-select.css" />
     <link rel="stylesheet" href="bower_components/angular-awesome-slider/dist/css/angular-awesome-slider.min.css" />
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+    <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/nav.css">
-    <link rel="stylesheet" href="styles/timeline.css">
     <link rel="stylesheet" href="styles/project_sidebar.css">
     <link rel="stylesheet" href="styles/form.css">
     <link rel="stylesheet" href="styles/style.css">
@@ -62,37 +61,28 @@
     <!-- endbuild -->
     <!-- build:js(.) scripts/vendor.js -->
     <!-- bower:js -->
-    <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/jquery/jquery.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-    <script src="bower_components/angular-animate/angular-animate.js"></script>
-    <script src="bower_components/angular-aria/angular-aria.js"></script>
-    <script src="bower_components/angular-material/angular-material.js"></script>
-    <script src="bower_components/flow.js/dist/flow.js"></script>
-    <script src="bower_components/ng-flow/dist/ng-flow.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/affix.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/alert.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/button.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/carousel.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/collapse.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/dropdown.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/tab.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/transition.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/scrollspy.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/modal.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/tooltip.js"></script>
+    <script src="bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap/popover.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-websocket/angular-websocket.min.js"></script>
     <script src="bower_components/angular-md5/angular-md5.js"></script>
-    <script src="bower_components/angular-growl-v2/build/angular-growl.js"></script>
-    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="bower_components/angular-messages/angular-messages.js"></script>
-    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
-    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
     <script src="bower_components/angular-touch/angular-touch.js"></script>
     <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
     <script src="bower_components/angular-resource/angular-resource.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
-    <script src="bower_components/Chart.js/Chart.js"></script>
-    <script src="bower_components/angular-chart.js/dist/angular-chart.js"></script>
-    <script src="bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
-    <script src="bower_components/select2/select2.js"></script>
-    <script src="bower_components/angular-ui-select2/src/select2.js"></script>
-    <script src="bower_components/angular-ui-select/dist/select.js"></script>
-    <script src="bower_components/moment/moment.js"></script>
-    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
-    <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
-    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
-    <script src="bower_components/angular-multi-select/isteven-multi-select.js"></script>
-    <script src="bower_components/angular-tour/dist/angular-tour-tpls.min.js"></script>
     <script src="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.js"></script>
     <script src="bower_components/clipboard/dist/clipboard.js"></script>
     <script src="bower_components/ngclipboard/dist/ngclipboard.js"></script>
@@ -113,13 +103,34 @@
     <script src="bower_components/qtip2/jquery.qtip.js"></script>
     <script src="bower_components/qtip2/basic/jquery.qtip.js"></script>
     <script src="bower_components/cytoscape-qtip/cytoscape-qtip.js"></script>
-    <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
     <script src="bower_components/ng-prettyjson/src/ng-prettyjson.js"></script>
     <script src="bower_components/ng-prettyjson/src/ng-prettyjson-tmpl.js"></script>
-    <script src="bower_components/angular-awesome-slider/dist/angular-awesome-slider.js"></script>
-    <script src="bower_components/angular-resizable/src/angular-resizable.js"></script>
     <script src="bower_components/showdown/dist/showdown.js"></script>
     <script src="bower_components/ng-showdown/dist/ng-showdown.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
+    <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
+    <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <script src="bower_components/select2/select2.js"></script>
+    <script src="bower_components/angular-ui-select2/src/select2.js"></script>
+    <script src="bower_components/angular-tour/dist/angular-tour-tpls.min.js"></script>
+    <script src="bower_components/angular-resizable/src/angular-resizable.js"></script>
+    <script src="bower_components/v-accordion/dist/v-accordion.js"></script>
+    <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
+    <script src="bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
+    <script src="bower_components/flow.js/dist/flow.js"></script>
+    <script src="bower_components/ng-flow/dist/ng-flow.js"></script>
+    <script src="bower_components/angular-growl-v2/build/angular-growl.js"></script>
+    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
+    <script src="bower_components/isteven-angular-multiselect/isteven-multi-select.js"></script>
+    <script src="bower_components/angular-awesome-slider/dist/angular-awesome-slider.js"></script>
+    <script src="bower_components/angular-aria/angular-aria.js"></script>
+    <script src="bower_components/angular-material/angular-material.js"></script>
+    <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -140,7 +151,6 @@
     <script src="scripts/controllers/memberCtrl.js"></script>
     <script src="scripts/controllers/history.js"></script>
     <script src="scripts/controllers/historyDetailCtrl.js"></script>
-    <script src="scripts/controllers/heuristicResultsCtrl.js"></script>
     <script src="scripts/controllers/home.js"></script>
     <script src="scripts/controllers/login.js"></script>
     <script src="scripts/controllers/main.js"></script>
@@ -180,6 +190,7 @@
     <script src="scripts/controllers/workflowcreator.js"></script>
     <script src="scripts/controllers/uberCtrl.js"></script>    
     <script src="scripts/controllers/kafkaCtrl.js"></script>    
+    <script src="scripts/controllers/tensorflowCtrl.js"></script>    
     <script src="scripts/controllers/selectProjectCtrl.js"></script>    
     <script src="scripts/controllers/createTopicCtrl.js"></script>    
     <script src="scripts/controllers/createAclCtrl.js"></script> 
@@ -187,7 +198,7 @@
     <script src="scripts/controllers/schemaViewContentCtrl.js"></script>
     <script src="scripts/controllers/schemaUpdateContentCtrl.js"></script>
     <script src="scripts/controllers/filePreviewCtrl.js"></script>
-    
+
 
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
@@ -220,6 +231,7 @@
     <script src="scripts/services/MessageService.js"></script>
     <script src="scripts/services/VariablesService.js"></script>
     <script src="scripts/services/BiobankingService.js"></script>
+    <script src="scripts/services/TensorflowService.js"></script>
     <script src="scripts/services/LocalFsService.js"></script>
     <script src="scripts/services/TourService.js"></script>
     <script src="scripts/services/workflowservice.js"></script>

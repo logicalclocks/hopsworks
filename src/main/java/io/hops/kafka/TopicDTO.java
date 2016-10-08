@@ -38,6 +38,12 @@ public class TopicDTO implements Serializable {
         this.numOfPartitions = numOfPartitions;
     }
 
+    public TopicDTO(String name, String schemaName, int schemaVersion) {
+        this.name = name;
+        this.schemaName = schemaName;
+        this.schemaVersion = schemaVersion;
+    }
+    
     public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions, String schemaName, int schemaVersion) {
         this.name = name;
         this.numOfReplicas = numOfReplicas;

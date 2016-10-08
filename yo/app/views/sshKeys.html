@@ -54,10 +54,10 @@
 
                 <!--<div class="control-group col-md-offset-1">-->
                 <label style="color: black;">Registered Ssh Keys</label>
-                <accordion close-others="false">
-                    <accordion-group ng-repeat="key in keys track by $index" is-disabled="true"
+                <div uib-accordion close-others="false">
+                    <div uib-accordion-group ng-repeat="key in keys track by $index" is-disabled="true"
                                      is-open="keys[$index].status">
-                        <accordion-heading>
+                        <div uib-accordion-heading>
             <span class="col-xs-1 col-sm-1 col-md-1 col-lg-1 pull-left"
                   ng-click="keys[$index].status = !keys[$index].status">
               <i class="fa fa-key"></i>
@@ -69,10 +69,10 @@
             </span>
                             <br/>
 
-                        </accordion-heading>
+                        </div>
                         <p class="col-md-10 col-lg-12">{{keys[$index].publicKey}}</p>
-                    </accordion-group>
-                </accordion>
+                    </div>
+                </div>
             </div>
         </div>
 
