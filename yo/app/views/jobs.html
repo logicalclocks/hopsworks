@@ -234,7 +234,7 @@
                                   <button 
                                     uib-tooltip="Delete"
                                     ng-click="jobsCtrl.toggle(job, $index);
-                                    jobsCtrl.deleteJob(job.id); $event.stopPropagation();"
+                                    jobsCtrl.deleteJob(job.id, job.name); $event.stopPropagation();"
                                     type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                                   </button>
                                   <button uib-tooltip="Job UI"
@@ -242,7 +242,7 @@
                                           ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                             $event.stopPropagation();">                                            
                                   </button>
-                                  <div uib-dropdown class="btn-group" role="group">
+                                  <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
                                     <button type="button" 
                                             uib-dropdown-toggle class="btn btn-default glyphicon"
                                             style="font-family: sans-serif;"
