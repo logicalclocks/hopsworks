@@ -279,13 +279,13 @@ angular.module('hopsWorksApp')
               removeInode(getPath(removePathArray));
             };
 
-            self.deleteSelected = function () {
-              var removePathArray = self.pathArray.slice(0);
-              for(var fileName in self.selectedFiles){
-                removePathArray.push(fileName);
-                removeInode(getPath(removePathArray));
-              }
-            };
+//            self.deleteSelected = function () {
+//              var removePathArray = self.pathArray.slice(0);
+//              for(var fileName in self.selectedFiles){
+//                removePathArray.push(fileName);
+//                removeInode(getPath(removePathArray));
+//              }
+//            };
 
             /**
              * Makes the dataset public for anybody within the local cluster or any outside cluster.
@@ -674,6 +674,7 @@ This will make all its files unavailable to other projects unless you share it e
                 delete self.selectedFiles[names[i]];
               }
               self.all_selected = false;
+              self.selectedFiles = {}
               self.selected = null;
             };
 

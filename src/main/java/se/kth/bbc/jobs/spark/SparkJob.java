@@ -16,7 +16,7 @@ import se.kth.hopsworks.util.Settings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.
- * <p/>
+ * 
  * @author stig
  */
 public class SparkJob extends YarnJob {
@@ -97,7 +97,7 @@ public class SparkJob extends YarnJob {
 
     runnerbuilder.setSessionId(jobconfig.getjSessionId());
     runnerbuilder.setKafkaAddress(kafkaAddress);
-    
+    runnerbuilder.setRestEndpoint(restEndpoint);
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);

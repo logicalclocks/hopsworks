@@ -20,7 +20,7 @@ import se.kth.hopsworks.util.Settings;
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
  * for any Spark job to be started and builds a YarnRunner instance.
- * <p/>
+ * 
  * @author stig
  */
 public class SparkYarnRunnerBuilder {
@@ -47,6 +47,7 @@ public class SparkYarnRunnerBuilder {
   private String classPath;
   private String sessionId;//used by Kafka
   private String kafkaAddress;
+  private String restEndpoint;
   private JobType jobType;
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass, JobType jobType) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -115,7 +116,7 @@ public class SparkYarnRunnerBuilder {
             builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
         builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-            "$PWD/"+dto.getName());
+            "$PWD/"+dto.getName()+":"+dto.getName());
     }
   
     //Set Spark specific environment variables
@@ -128,7 +129,7 @@ public class SparkYarnRunnerBuilder {
 
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-
+    addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
     //If DynamicExecutors are not enabled, set the user defined number 
     //of executors
     if(dynamicExecutors){
@@ -396,7 +397,10 @@ public class SparkYarnRunnerBuilder {
     this.kafkaAddress = kafkaAddress;
   }
   
-
+  public void setRestEndpoint(String restEndpoint) {
+    this.restEndpoint = restEndpoint;
+  }
+  
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
     envVars.put(name, value);
     return this;
