@@ -10,7 +10,7 @@
 
 
       <div class="overlay" ></div>
-      <section layout="row" flex>
+      <section>
 
         <div ng-include="'navProject.html'"></div>
 
@@ -24,7 +24,7 @@
           <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
             <!--<div class="col-md-2 pull-left" style="margin-top: -17px; margin-left: -25px;">-->
             <!--<div class="row">-->
-            <div layout="row">
+            <div layout="row" >
               <div flex="15">
 <!--                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
                 <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>-->
@@ -65,7 +65,7 @@
                 </button>
               </div>
               <div flex style="margin-top: 5px; margin-left: -15px;"ng-show="datasetsCtrl.selected !== null && !datasetsCtrl.isShared()" >
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
+                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}></span><span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
               </div>
             </div>
             <div layout="row"  ng-show="datasetsCtrl.selected !== null && datasetsCtrl.isShared()">
@@ -75,13 +75,15 @@
                 </button>        
               </div>
               <div flex>
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects<span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
+                <span id="fileRef2">hdfs://{{projectCtrl.endpoint}}/Projects</span><span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
               </div>
             </div>
           </div>
           <!--</div>-->
-          <div flex layout="column">
-          <div layout="row" style="margin-left:-35px;">
+          <!--<div flex layout="column">-->
+       
+          <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
+          <div class="row row-no-margin-left col-lg-12" layout="row" ng-show="mainCtrl.searchReturned === ''">
 
             <md-button class="md-icon-button md-primary"  ng-show="datasetsCtrl.isSelectedFiles() === 0 && !datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
               <md-tooltip md-direction="right">
@@ -112,12 +114,12 @@
             </md-button>
 
 
-            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
+<!--            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
               <md-icon md-svg-icon="images/delete.svg"></md-icon>
               <md-tooltip md-direction="right">
                 Recycle Bin
               </md-tooltip>                    
-            </md-button>
+            </md-button>-->
 
             <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
               <md-icon md-svg-icon="images/folder.svg"></md-icon>
@@ -143,13 +145,11 @@
               </md-tooltip>                    
             </md-button>
           </div>
-          <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
-          <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;" ng-class="{'sidenav-open': datasetsCtrl.tgState}">
+          <div class="row row-no-margin-left col-md-12" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;" >
             <!--<div flex="100">-->
-              <md-content layout-padding style="margin-left: -50px; margin-top: 6px; min-width: 1238px; margin-right: 20%;" layout="column" flex  >
+              <!--<md-content layout-padding style="margin-left: -50px; margin-top: 6px; min-width: 1238px; margin-right: 20%;" layout="column" flex  >-->
            
-
-                <div class="ds-content" ng-class="{'ds-content.sidenav-open': datasetsCtrl.tgState}">
+                <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}"  style="margin-top: -5px; margin-left:-7px;">
                                                    
                   <div class="table-responsive" style="overflow: hidden;">
                     <table class="table table-bordred table-hover" >
@@ -173,8 +173,8 @@
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('size')">File size
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-<!--                      <th></th>
-                      <th></th>-->
+                      <th></th>
+                      <!--<th></th>-->
                         </tr>
                       </thead>
 
@@ -398,12 +398,12 @@ ng-show="!file.dir"
                     </dir-pagination-controls>
                   </div>
                 </div>
-              </md-content>
-            <!--</div>-->
-          </div>
+     <!--</md-content>-->
+            </div>
+         
+              
 
-
-            <div style="margin-top: 80px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+         <div style="margin-top: 80px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 95%;">
                 <div class="file-manager">
                     <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
@@ -784,7 +784,7 @@ ng-show="!file.dir"
                             <h2 style="margin:0;">
                               <span>Metadata manager</span>
                             </h2>
-                            <span flex></span>
+                            <span></span>
                             <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
                                     ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
                                     class="btn btn-success">
@@ -912,9 +912,7 @@ ng-show="!file.dir"
                 </div>
               </div>
             </div>
-          </div>
         </div>
-                      </section>        
-                  </div>
+                    </section>        
                 </div>
               </div>
