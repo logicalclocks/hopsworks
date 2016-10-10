@@ -39,7 +39,7 @@ angular.module('hopsWorksApp')
                 return true;
               }
               return false;
-            }
+            };
 
             
             // Load all projects
@@ -240,14 +240,11 @@ angular.module('hopsWorksApp')
                           $scope.creating['spark'] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
-
-
                       },
                       function (error) {
                         $scope.creating['spark'] = false;
-                        growl.info("problem", {title: 'Info', ttl: 5000});
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
-
               );
             };
 
