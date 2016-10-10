@@ -93,9 +93,10 @@ build/Release
 .idea/
 #We have our own custom grunt-usemin component we want to include
 #It handles <md-icon> and other material fixes when minimizing html/js
+!yo/node_modules/
 
 yo/node_modules/*
-
+!yo/node_modules/grunt-usemin/
 
 ## File-based project format:
 *.ipr
