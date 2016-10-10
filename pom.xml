@@ -152,17 +152,17 @@
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.1-SNAPSHOT</version>  
+      <version>0.6.3-SNAPSHOT</version>  
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
