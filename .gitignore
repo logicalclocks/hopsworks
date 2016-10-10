@@ -91,12 +91,8 @@ build/Release
 
 ## Directory-based project format:
 .idea/
-#We have our own custom grunt-usemin component we want to include
-#It handles <md-icon> and other material fixes when minimizing html/js
-!yo/node_modules/
 
-yo/node_modules/*
-!yo/node_modules/grunt-usemin/
+yo/node_modules
 
 ## File-based project format:
 *.ipr
