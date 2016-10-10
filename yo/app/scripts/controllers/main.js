@@ -21,11 +21,11 @@ angular.module('hopsWorksApp')
             else {
               self.searchType = "global";
             }
-            self.isAdmin = $cookies['isAdmin'];
+            self.isAdmin = $cookies.get('isAdmin');
             
             self.goToAdminPage = function () {
               $window.location.href = '/hopsworks/security/protected/admin/adminIndex.xhtml';
-            }
+            };
 
             self.getEmailHash = function(email) {
               return md5.createHash(email || '');
@@ -276,5 +276,5 @@ angular.module('hopsWorksApp')
                 var datePicker = function () {
                     $(function () {
                         $('#datetimepicker1').datetimepicker();
-                    })};
+                    });};
             }]);

@@ -96,7 +96,6 @@ build/Release
 !yo/node_modules/
 
 yo/node_modules/*
-!yo/node_modules/grunt-usemin/
 
 
 ## File-based project format:

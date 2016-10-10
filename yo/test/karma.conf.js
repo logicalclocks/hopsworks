@@ -82,10 +82,10 @@ module.exports = function (config) {
       'bower_components/angular-growl-v2/build/angular-growl.js',
       'bower_components/angular-xeditable/dist/js/xeditable.js',
       'bower_components/isteven-angular-multiselect/isteven-multi-select.js',
-      'bower_components/angular-awesome-slider/dist/angular-awesome-slider.js',
       'bower_components/angular-aria/angular-aria.js',
       'bower_components/angular-material/angular-material.js',
       'bower_components/angular-material-data-table/dist/md-data-table.js',
+      'bower_components/angularjs-slider/dist/rzslider.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',
