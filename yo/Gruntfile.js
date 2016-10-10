@@ -231,21 +231,21 @@ module.exports = function (grunt) {
           '<%= yeoman.dist %>/images',
           '<%= yeoman.dist %>/styles'
         ],
-patterns: {
-  html: [
-    [
-      /<md-icon[^\>]*[^\>\S]+=['"]([^'"\)#]+)(#.+)?["']/gm,
-      'Update the HTML with the new your-directive-name-here images'
-    ]
-  ],
-  js: [
-    [
-      /(images\/.*?\.(?:gif|jpeg|jpg|png|webp))/gm,
-      'Update the JS to reference our revved images'
-    ]
-  ]
-}
-      },
+        patterns: {
+          html: [
+            [
+              /<md-icon[^\>]*[^\>\S]+md-svg-icon=['"]([^'"\)#]+)(#.+)?["']/gm,
+              'Update the HTML with the new your-directive-name-here images'
+            ]
+          ],
+          js: [
+            [
+              /(images\/.*?\.(?:gif|jpeg|jpg|png|webp))/gm,
+              'Update the JS to reference our revved images'
+            ]
+          ]
+        }
+      }
     },
     // The following *-min tasks will produce minified files in the dist folder
     // By default, your `index.html`'s <!-- Usemin block --> will take care of

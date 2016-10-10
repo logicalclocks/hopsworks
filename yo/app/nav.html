@@ -97,7 +97,7 @@
               {{mainCtrl.email}} <b class="caret"></b>
             </a>
             <ul uib-dropdown-menu class="dropdown-menu">
-              <li ng-show="mainCtrl.checkIfAdmin()"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
+              <li ng-show="mainCtrl.isAdmin"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
               <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <!--<li><a ng-click="mainCtrl.sshKeysModal()"><i class="fa fa-key"></i> Ssh Keys</a></li>-->
               <li><a href="#/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>

@@ -854,14 +854,11 @@ public class ProjectController {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
+    String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
     try {
-      File dir = new File(settings.getSparkExampleDir() + "/");
-      File[] file = dir.listFiles(new FilenameFilter() {
-          @Override
-          public boolean accept(File dir, String name) {
-              return name.matches("spark-examples(.*).jar");
-          }
-      });
+      File dir = new File(exampleDir);
+      File[] file = dir.listFiles((File dir1, String name) ->
+              name.matches("spark-examples(.*).jar"));
       if (file.length == 0) {
         throw new IllegalStateException("No spark-examples*.jar was found in " 
                 + dir.getAbsolutePath());
