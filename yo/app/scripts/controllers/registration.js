@@ -7,7 +7,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.newUser = {
               firstName: '',
               lastName: '',

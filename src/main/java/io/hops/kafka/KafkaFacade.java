@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.common.TopicExistsException;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import kafka.javaapi.TopicMetadataRequest;
@@ -84,7 +85,7 @@ public class KafkaFacade {
 
     /**
      * Get all the Topics for the given project.
-     * <p/>
+     * 
      * @param projectId
      * @return
      */
@@ -105,7 +106,7 @@ public class KafkaFacade {
 
     /**
      * Get all shared Topics for the given project.
-     * <p/>
+     * 
      * @param projectId
      * @return
      */
@@ -225,7 +226,7 @@ public class KafkaFacade {
                 AdminUtils.createTopic(zkUtils, topicName,
                         topicDto.getNumOfPartitions(),
                         topicDto.getNumOfReplicas(),
-                        new Properties());
+                        new Properties(), RackAwareMode.Enforced$.MODULE$);
             }
         } catch (TopicExistsException ex) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
@@ -880,13 +881,13 @@ public class KafkaFacade {
                         leaders.put(partId, partitionMetadata.leader().host());
 
                         //list the replicas of the parition
-                        replicas.put(partId, new ArrayList<String>());
+                        replicas.put(partId, new ArrayList<>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.replicas()) {
                             replicas.get(partId).add(broker.host());
                         }
 
                         //list the insync replicas of the parition
-                        inSyncReplicas.put(partId, new ArrayList<String>());
+                        inSyncReplicas.put(partId, new ArrayList<>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.isr()) {
                             inSyncReplicas.get(partId).add(broker.host());
                         }
@@ -932,6 +933,7 @@ public class KafkaFacade {
 
     public class ZookeeperWatcher implements Watcher {
 
+        @Override
         public void process(WatchedEvent we) {
         }
     }

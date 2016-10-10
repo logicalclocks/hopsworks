@@ -5,8 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('EnterNameCtrl', ['$scope', '$modalInstance', 'title', 'newName',
-          function ($scope, $modalInstance,  title, newName) {
+        .controller('EnterNameCtrl', ['$scope', '$uibModalInstance', 'title', 'newName',
+          function ($scope, $uibModalInstance,  title, newName) {
             
             var self = this;
 
@@ -14,15 +14,15 @@ angular.module('hopsWorksApp')
             self.title = title;
             
             self.ok = function () {
-              $modalInstance.close({newName: self.newName});
+              $uibModalInstance.close({newName: self.newName});
             };
 
             self.cancel = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
             
             self.reject = function () {
-              $modalInstance.dismiss('reject');
+              $uibModalInstance.dismiss('reject');
             };
 
           }]);

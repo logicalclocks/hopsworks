@@ -1,8 +1,8 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-    .controller('SshKeysCtrl', ['UserService', '$location', '$scope', 'growl', '$modalInstance',
-        function (UserService, $location, $scope, growl, $modalInstance) {
+    .controller('SshKeysCtrl', ['UserService', '$location', '$scope', 'growl', '$uibModalInstance',
+        function (UserService, $location, $scope, growl, $uibModalInstance) {
 
             var self = this;
             self.working = false;
@@ -90,7 +90,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-                $modalInstance.dismiss('cancel');
+                $uibModalInstance.dismiss('cancel');
             };
 
 

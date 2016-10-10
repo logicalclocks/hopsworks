@@ -10,7 +10,7 @@
                         <div class="content-wrapper">
                             <h3>
                                 <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                                    <button class="btn btn-sm btn-success" ng-click="workflowCtrl.newWorkflowModal()" dropdown-toggle="" type="button" id="newWorkflow" aria-haspopup="true" aria-expanded="true">
+                                    <button class="btn btn-sm btn-success" ng-click="workflowCtrl.newWorkflowModal()" uib-dropdown-toggle="" type="button" id="newWorkflow" aria-haspopup="true" aria-expanded="true">
                                         Create New Workflow
                                     </button>
                                 </div>
@@ -36,7 +36,7 @@
                                 <td>{{workflow.createdAt}}</td>
                                 <td>{{workflow.updatedAt}}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-success" ng-click="workflowExecutionCtrl.create(workflow.id)" dropdown-toggle="" type="button" aria-haspopup="true" aria-expanded="true">
+                                    <button class="btn btn-sm btn-success" ng-click="workflowExecutionCtrl.create(workflow.id)" uib-dropdown-toggle="" type="button" aria-haspopup="true" aria-expanded="true">
                                         Run
                                     </button>
                                 </td>

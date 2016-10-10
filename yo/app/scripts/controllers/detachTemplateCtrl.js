@@ -5,8 +5,8 @@
 
 var mainModule = angular.module('hopsWorksApp')
         .controller('DetachTemplateCtrl',
-                ['$modalInstance', '$routeParams', 'file', 'templateId', 'DataSetService',
-                  function ($modalInstance, $routeParams, file, templateId, DataSetService) {
+                ['$uibModalInstance', '$routeParams', 'file', 'templateId', 'DataSetService',
+                  function ($uibModalInstance, $routeParams, file, templateId, DataSetService) {
 
                     var self = this;
 
@@ -35,7 +35,7 @@ var mainModule = angular.module('hopsWorksApp')
                         return false;
                       }
 
-                      $modalInstance.close({templateId: self.selectedTemplate.templateId, fileId: self.fileId});
+                      $uibModalInstance.close({templateId: self.selectedTemplate.templateId, fileId: self.fileId});
                     };
 
                     self.hitEnter = function (evt) {
@@ -45,7 +45,7 @@ var mainModule = angular.module('hopsWorksApp')
                     };
 
                     self.cancel = function () {
-                      $modalInstance.dismiss('canceled');
+                      $uibModalInstance.dismiss('canceled');
                     };
 
                     self.update = function () {

@@ -4,11 +4,11 @@
 'use strict';
 
 angular.module('hopsWorksApp').controller('NewlistCtrl',
-        ['$scope', '$modalInstance', '$location', function ($scope, $modalInstance, $location) {
+        ['$scope', '$uibModalInstance', '$location', function ($scope, $uibModalInstance, $location) {
 
             /* handle the close button */
             $scope.close = function () {
-              $modalInstance.close();
+              $uibModalInstance.close();
               //$location.path('/metaDesign');
             };
 
@@ -18,6 +18,6 @@ angular.module('hopsWorksApp').controller('NewlistCtrl',
                 return false;
               }
               var listId = -1;
-              $modalInstance.close({id: listId, name: this.name, cards: []});
+              $uibModalInstance.close({id: listId, name: this.name, cards: []});
             };
           }]);

@@ -8,14 +8,14 @@ angular.module('hopsWorksApp')
 
           // Keep all pending requests here until they get responses
           var callbacks = [];
-          var projectID = $cookies.projectID;
+          var projectID = $cookies.get('projectID');
           var isopen=false;
           //generic
           var ws;
 
           function init(){ 
-             if(projectID !== $cookies.projectID){
-                 projectID = $cookies.projectID;
+             if(projectID !== $cookies.get("projectID")){
+                 projectID = $cookies.get("projectID");
                  isopen=false;
              }
              if(!isopen) {                 

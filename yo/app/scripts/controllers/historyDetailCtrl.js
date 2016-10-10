@@ -3,8 +3,8 @@
  * Controller for the job detail dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('HistoryDetailCtrl', ['$scope', '$modalInstance', '$interval', 'job', 'HistoryService',
-          function ($scope, $modalInstance, $interval, job, HistoryService) {
+        .controller('HistoryDetailCtrl', ['$scope', '$uibModalInstance', '$interval', 'job', 'HistoryService',
+          function ($scope, $uibModalInstance, $interval, job, HistoryService) {
 
             var self = this;
             self.details;
@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
             self.getDetails = function () {

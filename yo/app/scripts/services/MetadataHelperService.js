@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
               fetchAvailableTemplates: function () {
                 var defer = $q.defer();
 
-                MetadataActionService.fetchTemplates($cookies['email'])
+                MetadataActionService.fetchTemplates($cookies.get("email"))
                         .then(function (data) {
                           if (data !== null && data.status !== "ERROR" && 
                               data.board !== null && data.board !== {}) {

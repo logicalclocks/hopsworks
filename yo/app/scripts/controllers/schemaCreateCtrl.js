@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('SchemaCreateCtrl', ['$modalInstance', 'KafkaService', 'growl', 'projectId', 
-          function ($modalInstance, KafkaService, growl, projectId) {
+        .controller('SchemaCreateCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 
+          function ($uibModalInstance, KafkaService, growl, projectId) {
 
             var self = this;
             self.projectId = projectId;
@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
 
               KafkaService.createSchema(self.projectId, schemaDetail).then(
                       function (success) {
-                          $modalInstance.close(success);
+                          $uibModalInstance.close(success);
                       }, function (error) {
                           self.message = error.data.errorMsg;
                           self.validSchema="invalid";
@@ -82,7 +82,7 @@ angular.module('hopsWorksApp')
             };
             
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

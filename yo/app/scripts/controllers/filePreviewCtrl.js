@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
-          function ($modalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId, mode) {
+        .controller('FilePreviewCtrl', ['$uibModalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
+          function ($uibModalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId, mode) {
             var self = this;
             self.modes = ['head','tail'];
             self.filePath = filePath;
@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
             self.fetchFile(mode);
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

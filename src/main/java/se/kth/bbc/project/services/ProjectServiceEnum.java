@@ -10,6 +10,7 @@ public enum ProjectServiceEnum {
   SSH("Ssh"),
   KAFKA("Kafka"),
   WORKFLOWS("Workflows"),
+  TENSORFLOW("Tensorflow"),
   HISTORY("History"),
   //  BIOBANKING("Biobanking"),
   JOBS("Jobs");

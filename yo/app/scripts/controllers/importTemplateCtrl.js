@@ -5,8 +5,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ImportTemplateCtrl',
-                ['$scope', '$modalInstance', 'growl', 'flowFactory',
-                  function ($scope, $modalInstance, growl, flowFactory) {
+                ['$scope', '$uibModalInstance', 'growl', 'flowFactory',
+                  function ($scope, $uibModalInstance, growl, flowFactory) {
 
                     var self = this;
                     self.model = {};
@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
                     };
 
                     self.close = function () {
-                      $modalInstance.dismiss('cancel');
+                      $uibModalInstance.dismiss('cancel');
                       console.log("closing the window");
                     };
 

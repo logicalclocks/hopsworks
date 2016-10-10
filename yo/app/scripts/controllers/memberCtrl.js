@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MemberCtrl', ['$scope', '$timeout', '$modalStack', 'MembersService', 'projectId', 'UserService',
-          function ($scope, $timeout, $modalStack, MembersService, projectId, UserService) {
+        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', 'MembersService', 'projectId', 'UserService',
+          function ($scope, $timeout, $uibModalStack, MembersService, projectId, UserService) {
             var self = this;
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
@@ -173,6 +173,6 @@ angular.module('hopsWorksApp')
             }
 
             self.close = function () {
-              $modalStack.getTop().key.dismiss();
+              $uibModalStack.getTop().key.dismiss();
             };
           }]);

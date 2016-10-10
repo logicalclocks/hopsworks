@@ -12,7 +12,7 @@
   <name>HopsWorks</name>
 
   <properties>
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -25,11 +25,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>de.hu-berlin.wbi.cuneiform</groupId>
-      <artifactId>cuneiform-core</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-    </dependency> 
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
@@ -115,7 +110,7 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_2.10</artifactId>
-      <version>0.9.0.1</version>
+      <version>0.10.0.1</version>
       <type>jar</type>
     </dependency>
     <dependency>
