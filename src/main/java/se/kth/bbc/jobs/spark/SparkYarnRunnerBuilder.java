@@ -95,17 +95,21 @@ public class SparkYarnRunnerBuilder {
             "__spark_libs__", hdfsSparkJarPath,
             LocalResourceVisibility.PRIVATE.toString(), 
             LocalResourceType.ARCHIVE.toString(), null), false);
+//    builder.addLocalResource(new LocalResourceDTO(
+//            "__spark_conf__", "hdfs:///user/glassfish/spark-conf.zip",
+//            LocalResourceVisibility.PRIVATE.toString(), 
+//            LocalResourceType.ARCHIVE.toString(), null), false);
     
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
-            LocalResourceVisibility.PRIVATE.toString(), 
+            LocalResourceVisibility.APPLICATION.toString(), 
             LocalResourceType.FILE.toString(), null), 
             !appJarPath.startsWith("hdfs:"));
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-            "$PWD:$PWD/__spark_conf__:__spark_libs__/*"
-            +":"+Settings.SPARK_LOCRSC_APP_JAR
-    );
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
+    StringBuilder extraClassPathFiles = new StringBuilder();
+    StringBuilder listOfFiles = new StringBuilder();
+    
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
         if(dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) ||
@@ -116,9 +120,14 @@ public class SparkYarnRunnerBuilder {
             builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
         }
         builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-            "$PWD/"+dto.getName()+":"+dto.getName());
+            dto.getName());
+       extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
+       
     }
-  
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
+            "$PWD/__spark_conf__:__spark_conf__:__spark_libs__/*"
+            +":"+Settings.SPARK_LOCRSC_APP_JAR
+    );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
@@ -126,7 +135,13 @@ public class SparkYarnRunnerBuilder {
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
-
+    
+//    addSystemProperty("spark.yarn.dist.jars",listOfJars.toString().substring(
+//            0,listOfJars.length()-1 ));
+//    addSystemProperty("spark.yarn.dist.files",listOfFiles.toString().substring(
+//            0,listOfFiles.length()-1 ));
+    addSystemProperty("spark.executor.extraClassPath",extraClassPathFiles.toString().substring(
+            0,extraClassPathFiles.length()-1));
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
@@ -165,6 +180,16 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(executorCores));
 
+    //Set executor extraJavaOptions to make parameters available to executors
+    builder.addJavaOption("'-Dspark.executor.extraJavaOptions="
+            + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
+            + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
+            + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
+            + "-Djava.library.path=/srv/hadoop/lib/native/ -D" +
+            Settings.KAFKA_SESSIONID_ENV_VAR+"="+sessionId+" -D" +
+            Settings.KAFKA_BROKERADDR_ENV_VAR+"="+kafkaAddress+" -D" +
+            Settings.KAFKA_REST_ENDPOINT_ENV_VAR+"="+restEndpoint+" -D" +
+            Settings.KAFKA_PROJECTID_ENV_VAR+"="+sysProps.get(Settings.KAFKA_PROJECTID_ENV_VAR)+"'");
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
@@ -199,6 +224,7 @@ public class SparkYarnRunnerBuilder {
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
+    //amargs.append(" --properties-file __spark_conf__/spark-defaults.conf");
     builder.amArgs(amargs.toString());
     
     //Set up Yarn properties
