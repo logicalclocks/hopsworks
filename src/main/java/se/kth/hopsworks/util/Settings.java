@@ -27,6 +27,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
@@ -170,6 +171,7 @@ public class Settings {
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
+      KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
@@ -631,6 +633,15 @@ public class Settings {
   
   public static final int ZK_PORT = 2181; 
  
+  // Kibana
+  private String KIBANA_IP = "10.0.2.15";
+  public static final int KIBANA_PORT = 5601;
+
+  public synchronized String getKibanaUri() {
+    checkCache();
+    return "http://" + KIBANA_IP+":"+KIBANA_PORT;
+  }
+
   // Zookeeper 
   private String ZK_IP = "10.0.2.15";
 
