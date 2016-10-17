@@ -194,6 +194,16 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
             executorCores));
 
+    //Set executor extraJavaOptions to make parameters available to executors
+    builder.addJavaOption("'-Dspark.executor.extraJavaOptions="
+            + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
+            + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
+            + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
+            + "-Djava.library.path=/srv/hadoop/lib/native/ -D" +
+            Settings.KAFKA_SESSIONID_ENV_VAR+"="+sessionId+" -D" +
+            Settings.KAFKA_BROKERADDR_ENV_VAR+"="+kafkaAddress+" -D" +
+            Settings.KAFKA_REST_ENDPOINT_ENV_VAR+"="+restEndpoint+" -D" +
+            Settings.KAFKA_PROJECTID_ENV_VAR+"="+sysProps.get(Settings.KAFKA_PROJECTID_ENV_VAR)+"'");
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
