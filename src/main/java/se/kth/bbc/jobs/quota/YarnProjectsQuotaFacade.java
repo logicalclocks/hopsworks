@@ -75,10 +75,10 @@ public class YarnProjectsQuotaFacade extends
     }
   }
 
-  public YarnRunningPrice getPrice() {
+  public YarnPriceMultiplicator getMultiplicator() {
     try {
-      TypedQuery<YarnRunningPrice> query = em.
-          createNamedQuery("YarnRunningPrice.findLatest", YarnRunningPrice.class).setMaxResults(1);
+      TypedQuery<YarnPriceMultiplicator> query = em.
+          createNamedQuery("YarnPriceMultiplicator.findAll", YarnPriceMultiplicator.class).setMaxResults(1);
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;

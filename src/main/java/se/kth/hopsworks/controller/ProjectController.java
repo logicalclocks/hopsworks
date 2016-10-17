@@ -33,7 +33,7 @@ import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
 import se.kth.bbc.jobs.quota.YarnProjectsQuota;
 import se.kth.bbc.jobs.quota.YarnProjectsQuotaFacade;
-import se.kth.bbc.jobs.quota.YarnRunningPrice;
+import se.kth.bbc.jobs.quota.YarnPriceMultiplicator;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -877,15 +877,14 @@ public class ProjectController {
 
   }
 
-  public YarnRunningPrice getYarnPrice() {
-    YarnRunningPrice price = yarnProjectsQuotaFacade.getPrice();
-    if (price == null) {
-      price = new YarnRunningPrice();
-      price.setPrice(Settings.DEFAULT_YARN_PRICE);
-      price.setTime(System.currentTimeMillis());
-      price.setId("-1");
+  public YarnPriceMultiplicator getYarnMultiplicator() {
+    YarnPriceMultiplicator multiplicator = yarnProjectsQuotaFacade.getMultiplicator();
+    if (multiplicator == null) {
+      multiplicator = new YarnPriceMultiplicator();
+      multiplicator.setMultiplicator(Settings.DEFAULT_YARN_MULTIPLICATOR);
+      multiplicator.setId("-1");
     }
-    return price;
+    return multiplicator;
   }
 
 }

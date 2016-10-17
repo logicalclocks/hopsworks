@@ -140,8 +140,10 @@ public class SparkYarnRunnerBuilder {
 //            0,listOfJars.length()-1 ));
 //    addSystemProperty("spark.yarn.dist.files",listOfFiles.toString().substring(
 //            0,listOfFiles.length()-1 ));
-    addSystemProperty("spark.executor.extraClassPath",extraClassPathFiles.toString().substring(
+    if(extraClassPathFiles.toString().length()>0){
+      addSystemProperty("spark.executor.extraClassPath",extraClassPathFiles.toString().substring(
             0,extraClassPathFiles.length()-1));
+    }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
