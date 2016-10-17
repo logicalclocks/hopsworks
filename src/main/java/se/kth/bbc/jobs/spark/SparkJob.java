@@ -16,20 +16,20 @@ import se.kth.hopsworks.util.Settings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.
- * 
+ *
  * @author stig
  */
 public class SparkJob extends YarnJob {
 
   private static final Logger logger = Logger.
-      getLogger(SparkJob.class.getName());
+          getLogger(SparkJob.class.getName());
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
 
   private final String sparkUser; //must be glassfish
   protected SparkYarnRunnerBuilder runnerbuilder;
-  
+
   /**
    *
    * @param job
@@ -44,15 +44,15 @@ public class SparkJob extends YarnJob {
    * @param restEndpoint
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
-      Users user, final String hadoopDir,
-      final String sparkDir, final String nameNodeIpPort, String sparkUser,
-      String jobUser, String kafkaAddress, String restEndpoint) {
+          Users user, final String hadoopDir,
+          final String sparkDir, final String nameNodeIpPort, String sparkUser,
+          String jobUser, String kafkaAddress, String restEndpoint) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress,
             restEndpoint);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
-          "JobDescription must contain a SparkJobConfiguration object. Received: "
-          + job.getJobConfig().getClass());
+              "JobDescription must contain a SparkJobConfiguration object. Received: "
+              + job.getJobConfig().getClass());
     }
     this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
@@ -68,27 +68,28 @@ public class SparkJob extends YarnJob {
     }
     //If runnerbuilder is not null, it has been instantiated by child class,
     //i.e. AdamJob
-    if(runnerbuilder==null){
+    if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(
-        jobconfig.getJarPath(), jobconfig.getMainClass(),
+              jobconfig.getJarPath(), jobconfig.getMainClass(),
               JobType.SPARK);
-        runnerbuilder.setJobName(jobconfig.getAppName());
+      runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
-      if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
-              String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-              runnerbuilder.addAllJobArgs(jobArgs);
-      }  
+      if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
+        String[] jobArgs = jobconfig.getArgs().trim().split(" ");
+        runnerbuilder.addAllJobArgs(jobArgs);
+      }
     }
-   
+
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
-    if(jobconfig.isDynamicExecutors()){
+    if (jobconfig.isDynamicExecutors()) {
       runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
       runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
       runnerbuilder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
-      runnerbuilder.setNumberOfExecutorsInit(jobconfig.getNumberOfExecutorsInit());
+      runnerbuilder.setNumberOfExecutorsInit(jobconfig.
+              getNumberOfExecutorsInit());
     }
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
@@ -101,34 +102,39 @@ public class SparkJob extends YarnJob {
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
-    if(jobSystemProperties != null && !jobSystemProperties.isEmpty()){
-      for(Entry<String,String> jobSystemProperty: jobSystemProperties.entrySet()){
-        runnerbuilder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
+    if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
+      for (Entry<String, String> jobSystemProperty : jobSystemProperties.
+              entrySet()) {
+        runnerbuilder.addSystemProperty(jobSystemProperty.getKey(),
+                jobSystemProperty.getValue());
       }
     }
 
+    //Set Kafka params
+    runnerbuilder.setKafkaJob(jobconfig.isKafka());
+    runnerbuilder.setKafkaTopics(jobconfig.getKafkaTopics());
     try {
       runner = runnerbuilder.
-          getYarnRunner(jobDescription.getProject().getName(),
-              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
+              getYarnRunner(jobDescription.getProject().getName(),
+                      sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
 
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-          "Failed to create YarnRunner.", e);
+              "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-        jobDescription.
-        getProject().
-        getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
+            jobDescription.
+            getProject().
+            getName())
+            + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-        jobDescription.
-        getProject().
-        getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
+            jobDescription.
+            getProject().
+            getName())
+            + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -142,9 +148,9 @@ public class SparkJob extends YarnJob {
       monitor = null;
     }
   }
-  
+
   @Override
-  protected void stopJob(String appid){
+  protected void stopJob(String appid) {
     super.stopJob(appid);
   }
 
