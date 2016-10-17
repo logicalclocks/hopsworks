@@ -176,4 +176,26 @@
     <url-pattern>/security/*</url-pattern>
     <url-pattern>/index.xhtml</url-pattern>
   </filter-mapping>
+  
+  <!-- Kibana proxy servlet -->
+      <servlet>
+        <servlet-name>ProxyServlet</servlet-name>
+        <servlet-class>io.hops.kibana.ProxyServlet</servlet-class>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://localhost:5601/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProxyServlet</servlet-name>
+        <url-pattern>/ps/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProxyServlet</servlet-name>
+        <url-pattern>/ps</url-pattern>
+    </servlet-mapping>
 </web-app>
