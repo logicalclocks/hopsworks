@@ -202,6 +202,7 @@ public class SparkYarnRunnerBuilder {
             + "-Djava.library.path=/srv/hadoop/lib/native/ -D" +
             Settings.KAFKA_SESSIONID_ENV_VAR+"="+sessionId+" -D" +
             Settings.KAFKA_BROKERADDR_ENV_VAR+"="+kafkaAddress+" -D" +
+            Settings.KAFKA_JOB_TOPICS_ENV_VAR+"="+kafkaTopics+" -D" +
             Settings.KAFKA_REST_ENDPOINT_ENV_VAR+"="+restEndpoint+" -D" +
             Settings.KAFKA_PROJECTID_ENV_VAR+"="+sysProps.get(Settings.KAFKA_PROJECTID_ENV_VAR)+"'");
     //Set up command
