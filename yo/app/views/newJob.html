@@ -21,20 +21,18 @@
         </div>
         <div uib-accordion close-others="false" >
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
-            <div class="row">
               <md-input-container  class="md-block">
                 <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
                 <input name="jobname" type="text" id="jobname"
                        ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
               </md-input-container>
-            </div>
           </div>
 
           <!-- Select the type of job -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
                                is-open="newJobCtrl.accordion2.isOpen" 
                                ng-show="newJobCtrl.accordion2.visible">
-            <div class="row btn-group">
+            <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
@@ -47,12 +45,9 @@
                                is-open="newJobCtrl.accordion3.isOpen" 
                                ng-show="newJobCtrl.accordion3.visible">
             <!-- Adam, Spark and Flink  -->
-            <md-input-container style="height: 50px" class="md-block">
-
-              <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
-                <span>Select...</span>
-              </button>
-            </md-input-container>
+            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
+              <span>Select...</span>
+            </button>
             <!-- ADAM -->
             <table ng-show="newJobCtrl.jobtype === 2">
               <tr ng-repeat="command in newJobCtrl.adamState.commandList">
@@ -381,10 +376,10 @@
             tourtip="Click Next OR name the job yourself by typing in the field below"
             tourtip-step="0"
             tourtip-element="#inputJobName"
-            tourtip-placement="top"
+            tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.nameFilledIn()"
-            tourtip-offset-vertical="16"
+            tourtip-offset-vertical="-26"
             ></virtual-step>
             <virtual-step
             ng-hide="true"    
@@ -400,7 +395,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.jobTypeSpark()"
-            tourtip-offset-vertical="-13"
+            tourtip-offset-vertical="-70"
             tourtip-offset-horizontal="-6"
             ng-if="newJobCtrl.accordion2.visible"
             ></virtual-step>
@@ -418,7 +413,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
-            tourtip-offset-vertical="-13"
+            tourtip-offset-vertical="-65"
             tourtip-offset-horizontal="-5"
             ng-if="newJobCtrl.accordion3.visible"
             ></virtual-step>
@@ -437,6 +432,7 @@
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.chooseParameters()"
             tourtip-offset-vertical="10"
+            tourtip-offset-horizontal="550"
             ng-if="newJobCtrl.accordion4.visible"
             ></virtual-step>
             <virtual-step
@@ -444,10 +440,10 @@
             tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
             tourtip-step="7"
             tourtip-element="#moreConfigs"
-            tourtip-placement="top"
+            tourtip-placement="bottom"
             tourtip-next-label="Create Job"
             on-proceed="newJobCtrl.createJob()"
-            tourtip-offset-vertical="10"
+            tourtip-offset-vertical="-65"
             tourtip-offset-horizontal="-10"
             ng-if="newJobCtrl.accordion5.visible"
             ></virtual-step>

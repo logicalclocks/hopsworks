@@ -653,14 +653,15 @@ This will make all its files unavailable to other projects unless you share it e
               self.menustyle.opacity = 1;
               self.selected = null;
               self.all_selected = true;
-
+              if (Object.keys(self.selectedFiles).length === 1 
+                  && self.selectedFiles.constructor === Object) {
+                self.selected = Object.keys(self.selectedFiles)[0];
+              }
             };
            
             //TODO: Move files to hdfs trash folder
-             self.trashSelected = function () {
+            self.trashSelected = function () {
 
-            
-               
             };
 
             self.deleteSelected = function () {
@@ -674,7 +675,7 @@ This will make all its files unavailable to other projects unless you share it e
                 delete self.selectedFiles[names[i]];
               }
               self.all_selected = false;
-              self.selectedFiles = {}
+              self.selectedFiles = {};
               self.selected = null;
             };
 
@@ -739,18 +740,13 @@ This will make all its files unavailable to other projects unless you share it e
               return debounceFn;
             };
             
-            self.getSelectedPath = function (endpiont, projectName, selectedFile) {
+            self.getSelectedPath = function (endpiont, selectedFile) {
               if (self.isSelectedFiles() !== 1) {
                 return "";
               }
-              if (self.isShared()) {
-                var path = self.sharedDatasetPath();
-                return "hdfs://"+endpiont+"/Projects/"+getPath(path)+"/"+selectedFile.name;               
-              } else {
-                return "hdfs://"+endpiont+"/Projects/"+projectName+"/"+getPath(self.pathArray)+"/"+selectedFile.name;
-              }
+              return "hdfs://"+endpiont+selectedFile.path;               
             };
-
+            
           }]);
 
 /**

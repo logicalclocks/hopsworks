@@ -70,7 +70,7 @@
                       <div class="col-md-4 pull-right" ng-show="datasetsCtrl.isSelectedFiles() === 1">
                         <div class=" input-group">
                           <input id="fileRef" type="text" class="form-control" 
-                                 value="{{datasetsCtrl.getSelectedPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName, datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
+                                 value="{{datasetsCtrl.getSelectedPath(projectCtrl.endpoint, datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
                           <span class="input-group-btn">
                             <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
                                     ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
@@ -83,7 +83,7 @@
                   </div>              
                 </div>            
                 <!--end Tool bar -->
-                <div class="table-responsive" style="overflow: hidden; padding-right: 40px;">
+                <div class="table-responsive" style="overflow: hidden; padding-right: 30px;">
                   <table class="table table-bordred table-hover" >
                     <thead>
                       <tr>
@@ -746,7 +746,7 @@
 
           </div>        
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </div>

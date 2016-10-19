@@ -4,7 +4,10 @@ body {
   font-size: 14px;
   line-height: 1.52857;
   padding: 0;
-  min-width: 600px;
+  min-width: 800px;
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
 }
 
 h2 {
@@ -459,4 +462,12 @@ th:focus {
 tbody > tr > td {
   padding: 6px !important;
   vertical-align: middle !important;
+}
+
+md-input-container {
+  margin-bottom: 0px !important;
+}
+
+.md-errors-spacer {
+  min-height: 0px !important;
 }
