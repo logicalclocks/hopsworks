@@ -120,30 +120,32 @@ ul.dropdown-messages a:hover  {
 }
 
 .ds-content {
-  transition: all 0.2s ease-in-out;
-  -webkit-transition: all 0.2s ease-in-out;
+  width: 100%;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 .ds-content.sidenav-open {
-  /*padding-right: 330px;*/
   width: 80%;
 }
 .ds-sidenav {
   width: 0;
   overflow: hidden;
   position: fixed;
-  /*left: 1535px;*/
-  left: 80%;
-  top: 125px;
+  right: 0;/*start from right*/
+  top: 110px;
   bottom: 0;
-  transition: all 0.2s ease-in-out;
-  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(0,0,0,.2);
   -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
-  background: #fff;
+  background: rgb(250,250,250);
   z-index: 10;
 }
 .ds-sidenav.open {
-  /*width: 300px;*/
     width: 20%;
 }
 
