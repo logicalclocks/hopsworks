@@ -49,7 +49,7 @@
       <li ng-click="projectCtrl.goToTensorflow()" ng-show="projectCtrl.showTensorflow()">
         <a>
           Tensorflow
-          <img ng-show="projectCtrl.activeService != 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200_bw.png"/> 
+          <img ng-show="projectCtrl.activeService !== 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200_bw.png"/> 
           <img ng-show="projectCtrl.activeService === 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200.png"/> 
         </a>
       </li>
@@ -79,7 +79,7 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role == 'Data owner'" ng-show="projectCtrl.cloak">
+      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'" ng-show="projectCtrl.cloak">
         <a>
           Metadata Designer<span
           class="sub_icon fa fa-edit fa-lg pull-right"></span>
