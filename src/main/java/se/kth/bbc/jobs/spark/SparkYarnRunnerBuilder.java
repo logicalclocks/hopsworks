@@ -101,10 +101,6 @@ public class SparkYarnRunnerBuilder {
             "__spark_libs__", hdfsSparkJarPath,
             LocalResourceVisibility.PRIVATE.toString(),
             LocalResourceType.ARCHIVE.toString(), null), false);
-//    builder.addLocalResource(new LocalResourceDTO(
-//            "__spark_conf__", "hdfs:///user/glassfish/spark-conf.zip",
-//            LocalResourceVisibility.PRIVATE.toString(), 
-//            LocalResourceType.ARCHIVE.toString(), null), false);
 
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
@@ -114,7 +110,6 @@ public class SparkYarnRunnerBuilder {
             !appJarPath.startsWith("hdfs:"));
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
-    StringBuilder listOfFiles = new StringBuilder();
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
@@ -142,13 +137,11 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
 
-//    addSystemProperty("spark.yarn.dist.jars",listOfJars.toString().substring(
-//            0,listOfJars.length()-1 ));
-//    addSystemProperty("spark.yarn.dist.files",listOfFiles.toString().substring(
-//            0,listOfFiles.length()-1 ));
-    addSystemProperty("spark.executor.extraClassPath", extraClassPathFiles.
-            toString().substring(
-                    0, extraClassPathFiles.length() - 1));
+    if (extraClassPathFiles.length() > 0) {
+      addSystemProperty(Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
+              extraClassPathFiles.
+              toString().substring(0, extraClassPathFiles.length() - 1));
+    }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.KAFKA_JOB_ENV_VAR, Boolean.toString(kafkaJob));
@@ -199,12 +192,13 @@ public class SparkYarnRunnerBuilder {
             + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
             + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
             + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
-            + "-Djava.library.path=/srv/hadoop/lib/native/ -D" +
-            Settings.KAFKA_SESSIONID_ENV_VAR+"="+sessionId+" -D" +
-            Settings.KAFKA_BROKERADDR_ENV_VAR+"="+kafkaAddress+" -D" +
-            Settings.KAFKA_JOB_TOPICS_ENV_VAR+"="+kafkaTopics+" -D" +
-            Settings.KAFKA_REST_ENDPOINT_ENV_VAR+"="+restEndpoint+" -D" +
-            Settings.KAFKA_PROJECTID_ENV_VAR+"="+sysProps.get(Settings.KAFKA_PROJECTID_ENV_VAR)+"'");
+            + "-Djava.library.path=/srv/hadoop/lib/native/ -D"
+            + Settings.KAFKA_SESSIONID_ENV_VAR + "=" + sessionId + " -D"
+            + Settings.KAFKA_BROKERADDR_ENV_VAR + "=" + kafkaAddress + " -D"
+            + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=" + kafkaTopics + " -D"
+            + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + restEndpoint + " -D"
+            + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + sysProps.get(
+                    Settings.KAFKA_PROJECTID_ENV_VAR) + "'");
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);

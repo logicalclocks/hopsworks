@@ -234,6 +234,8 @@ public class Settings {
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
+  public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
+
   public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
   public static final String SPARK_CACHE_TIMESTAMPS = "spark.yarn.cache.timestamps";
