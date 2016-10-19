@@ -7,8 +7,8 @@
   <div growl reference="1" class="pull-right" ></div>
 
   <form role="form" name="projectForm" ng-submit="projectCreatorCtrl.createProject()" novalidate class="form-validate">
-    <div layout="row">
-      <div flex="66" >
+    <div class="row">
+      <div class="col-md-8">
         <fieldset>
 
           <div class="control-group" flex>
@@ -84,17 +84,18 @@
         </fieldset>
       </div>
 
-      <div flex="33" layout="column">
-        <h3 flex style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
+      <div class="col-md-4">
+        <h3>Services</h3>
         <fieldset class="standard">
           <div class="control-group col-md-offset-2" flex>
-            <md-checkbox class="md-primary" ng-checked="true" 
-                         ng-repeat="projectType in projectCreatorCtrl.projectTypes"
-                         ng-click="projectCreatorCtrl.exists(projectType)" 
-                         aria-label="projectType"
-                         tabindex="4">
-              {{ projectType}}
-            </md-checkbox>
+            <div class="row" ng-repeat="projectType in projectCreatorCtrl.projectTypes">
+              <md-checkbox class="md-primary" ng-checked="true"                          
+                           ng-click="projectCreatorCtrl.exists(projectType)" 
+                           aria-label="projectType"
+                           tabindex="4">
+                {{ projectType}}
+              </md-checkbox>
+            </div>
           </div>
         </fieldset>
       </div>

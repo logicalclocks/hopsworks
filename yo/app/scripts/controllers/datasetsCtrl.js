@@ -118,8 +118,8 @@ angular.module('hopsWorksApp')
               self.sharedPathArray = new Array(self.pathArray.length + 1);
               self.sharedPathArray[0] = top[0];
               self.sharedPathArray[1] = top[1];
-              for (var i = 1; i < pathArray.length; i++) {
-                self.sharedPathArray[i + 1] = pathArray[i];
+              for (var i = 1; i < self.pathArray.length; i++) {
+                self.sharedPathArray[i + 1] = self.pathArray[i];
               }
               return self.sharedPathArray;
             };
@@ -589,7 +589,7 @@ This will make all its files unavailable to other projects unless you share it e
             };
             self.goToDataSetsDir = function () {
               $location.path('/project/' + self.projectId + '/datasets');
-            }
+            };
             /**
              * Go to the folder at the index in the pathArray array.
              * @param {type} index
@@ -619,7 +619,7 @@ This will make all its files unavailable to other projects unless you share it e
               if (event.ctrlKey) {
 
               } else {
-                self.selectedFiles = {}
+                self.selectedFiles = {};
               }
               if (self.isSelectedFiles() > 0) {
                 self.selected = null;
@@ -689,18 +689,18 @@ This will make all its files unavailable to other projects unless you share it e
                   }
                 }
               } else {
-                if(event.ctrlKey){
-                for (var name in self.selectedFiles) {
-                  if (file.name === name) {
-                    delete self.selectedFiles[name];
+                if (event.ctrlKey) {
+                  for (var name in self.selectedFiles) {
+                    if (file.name === name) {
+                      delete self.selectedFiles[name];
                       break;
                     }
-                  } 
+                  }
                 } else {
                   for (var name in self.selectedFiles) {
                     if (file.name !== name) {
                       delete self.selectedFiles[name];
-                    //break;
+                      //break;
                     }
                   }
                 }
@@ -710,7 +710,7 @@ This will make all its files unavailable to other projects unless you share it e
                 self.selected = null;
               } else if (Object.keys(self.selectedFiles).length === 1 && self.selectedFiles.constructor === Object) {
                 self.menustyle.opacity = 1.0;
-                self.selected = file.name;
+                self.selected = Object.keys(self.selectedFiles)[0];
               }
               self.all_selected = false;
 
@@ -737,8 +737,19 @@ This will make all its files unavailable to other projects unless you share it e
                         });
               }, 300);
               return debounceFn;
-            }
-            ;
+            };
+            
+            self.getSelectedPath = function (endpiont, projectName, selectedFile) {
+              if (self.isSelectedFiles() !== 1) {
+                return "";
+              }
+              if (self.isShared()) {
+                var path = self.sharedDatasetPath();
+                return "hdfs://"+endpiont+"/Projects/"+getPath(path)+"/"+selectedFile.name;               
+              } else {
+                return "hdfs://"+endpiont+"/Projects/"+projectName+"/"+getPath(self.pathArray)+"/"+selectedFile.name;
+              }
+            };
 
           }]);
 
