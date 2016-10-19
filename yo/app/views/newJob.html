@@ -256,6 +256,16 @@
               <div class="text-right col-md-4">Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
             </div>
+              
+            <div class="row" ng-show="newJobCtrl.jobtype === 1">
+              <div class="text-right col-md-4">Kafka <i class="fa fa-info-circle" uib-tooltip="Indicates a Spark Kafka job." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.kafka"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.kafka">
+              <div class="text-right col-md-4">Kafka Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this Spark job will use." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="text" ng-show="newJobCtrl.runConfig.kafka" ng-model="newJobCtrl.runConfig.kafkaTopics" class="form-control"></div>
+            </div>    
+
             <!-- Flink -->
             <div class="row" ng-show="newJobCtrl.jobtype === 3">
               <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" uib-tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
@@ -298,7 +308,7 @@
                     <th style="width: 20%">
                       <strong>Name</strong><i class="fa fa-info-circle" uib-tooltip="The name of the jar as it will appear in the Yarn distributed cache. By default, the filename of the resource." style="margin-left: 10px"></i>  
                     </th>
-                    <th style="width: 30%">
+                    <th style="width: 40%">
                       <strong>Path</strong> <i class="fa fa-info-circle" uib-tooltip="The HDFS path to the selected jar file." style="margin-left: 10px"></i>
                     </th>
                     <th style="width: 10%">
@@ -309,7 +319,7 @@
                       <label class="control-label">Resource Type</label>    
                       <i class="fa fa-info-circle" uib-tooltip="The Type of your Local Resource. Default is 'File'." style="margin-left: 10px"></i>
                     </th>
-                    <th style="width: 30%">
+                    <th style="width: 20%" ng-show="newJobCtrl.resourceType === 'pattern'">
                       <label class="control-label">Pattern</label>
                       <i class="fa fa-info-circle" uib-tooltip="The Pattern of your Local Resource, provide it when 'Type' is 'Pattern'." style="margin-left: 10px"></i>
 
@@ -336,14 +346,14 @@
                       </select>
                     </td> 
                     <td>
-                      <select name="type" ng-model="resource.type" ng-init="resource.type = 'file'">
+                      <select name="type" ng-model="resource.type" ng-init="resource.type = 'file'" ng-change="newJobCtrl.setResourceType(resource.type)">
                         <option value="archive">Archive</option>
                         <option value="file">File</option>
                         <option value="pattern">Pattern</option>
                       </select>
                     </td>
-                    <td >
-                      <input type="text" ng-model="resource.pattern" ng-show="resource.type == 'pattern'">
+                    <td ng-show="resource.type == 'pattern'">
+                      <input type="text" ng-model="resource.pattern" >
                     </td>
                     <td>
                       <i class="fa fa-times-circle" uib-tooltip="Remove this library." ng-click="newJobCtrl.removeLibrary(resource.name)"></i>

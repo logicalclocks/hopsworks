@@ -791,6 +791,9 @@ public class Settings {
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
   public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
+  public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
+  public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
+
   //Used to retrieve schema by KafkaUtil
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";
   
