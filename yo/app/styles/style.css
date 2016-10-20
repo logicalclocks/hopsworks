@@ -1,3 +1,7 @@
+html {
+  background-color: #FFFFFF !important;
+}
+
 body {
   height: 95%;
   font-family: "Source Sans Pro", sans-serif;
@@ -5,7 +9,7 @@ body {
   line-height: 1.52857;
   padding: 0;
   min-width: 800px;
-  overflow: hidden;
+  overflow: auto;
   width: 100%;
   margin: 0;
 }
