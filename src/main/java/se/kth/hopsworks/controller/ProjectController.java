@@ -713,7 +713,7 @@ public class ProjectController {
    * @throws AppException
    */
   public void deleteMemberFromTeam(Project project, String email,
-    String toRemoveEmail) throws AppException {
+          String toRemoveEmail) throws AppException, IOException {
     Users userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

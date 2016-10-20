@@ -1,6 +1,9 @@
 package se.kth.hopsworks.rest;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -46,6 +49,9 @@ public class ProjectMembers {
     return projectId;
   }
 
+  private final static Logger logger = Logger.getLogger(ProjectMembers.class.
+            getName());
+  
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
@@ -152,7 +158,13 @@ public class ProjectMembers {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.EMAIL_EMPTY);
     }
-    projectController.deleteMemberFromTeam(project, owner, email);
+    
+    try {
+        projectController.deleteMemberFromTeam(project, owner, email);
+    } catch (IOException ex) {
+        //FIXME: take an action?
+        logger.log(Level.WARNING, "Error while trying to delete a member from team", ex);
+    }
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
