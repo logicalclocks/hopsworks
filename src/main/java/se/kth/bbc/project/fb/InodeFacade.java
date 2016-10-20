@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -139,7 +140,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      Inode next = findByParentAndName(curr, p[i]);
+      int partitionId = HopsUtils.calculatePartitionId(curr.getInodePK().getParentId(), p[i], (short) i);
+      Inode next = findByInodePK(curr, p[i], partitionId);
       if (next == null) {
         return null;
       } else {
@@ -198,14 +200,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * <p/>
    * @param parent
    * @param name
+   * @param partitionId
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Inode findByParentAndName(Inode parent, String name) {
+  public Inode findByInodePK(Inode parent, String name, int partitionId) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
-    q.setParameter("inodePk", new InodePK(parent.getId(), name));
+    q.setParameter("inodePk", new InodePK(parent.getId(), name, partitionId));
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {

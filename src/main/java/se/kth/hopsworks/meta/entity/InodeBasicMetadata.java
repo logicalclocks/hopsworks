@@ -26,10 +26,10 @@ import se.kth.bbc.project.fb.Inode;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "InodeBasicMetadata.findAll",
-          query = "SELECT m FROM InodeBasicMetadata m"),
+      query = "SELECT m FROM InodeBasicMetadata m"),
   @NamedQuery(name = "InodeBasicMetadata.findById",
-          query
-          = "SELECT m FROM InodeBasicMetadata m WHERE m.inode.inodePK.parentId = :id AND m.inode.inodePK.name = :name")})
+      query
+      = "SELECT m FROM InodeBasicMetadata m WHERE m.inode.inodePK.parentId = :id AND m.inode.inodePK.name = :name")})
 public class InodeBasicMetadata implements Serializable, EntityIntf {
 
   @Id
@@ -39,10 +39,9 @@ public class InodeBasicMetadata implements Serializable, EntityIntf {
   private Integer id;
 
   @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-            referencedColumnName = "name")
+    @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+    @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")
   })
   @OneToOne(optional = false)
   private Inode inode;

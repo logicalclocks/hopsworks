@@ -87,7 +87,7 @@ import se.kth.hopsworks.meta.entity.Template;
           = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
   @NamedQuery(name = "Inode.findRootByName",
           query
-          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name")})
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name AND i.inodePK.partitionId=0")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -175,12 +175,12 @@ public class Inode implements Serializable {
   //copy constructor
   public Inode(Inode inode) {
     this(new InodePK(inode.getInodePK().getParentId(), inode.getInodePK().
-            getName()), inode.getId(), inode.getQuotaEnabled(), inode.
+            getName(), inode.getInodePK().getPartitionId()), inode.getId(), inode.getQuotaEnabled(), inode.
             getUnderConstruction());
   }
 
-  public Inode(int parentId, String name) {
-    this.inodePK = new InodePK(parentId, name);
+  public Inode(int parentId, String name, int partitionId) {
+    this.inodePK = new InodePK(parentId, name, partitionId);
   }
 
   public InodePK getInodePK() {

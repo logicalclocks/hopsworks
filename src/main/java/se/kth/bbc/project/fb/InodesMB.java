@@ -15,6 +15,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -83,7 +84,8 @@ public class InodesMB implements Serializable {
   }
 
   public void cdDown(String name) {
-    Inode kid = inodes.findByParentAndName(cwd, name);
+
+    Inode kid = inodes.findByInodePK(cwd, name, cwd.getInodePK().getParentId());
     if (kid != null && kid.isDir()) {
       cwdParent = cwd;
       cwd = kid;
@@ -169,7 +171,8 @@ public class InodesMB implements Serializable {
     Inode curr = root;
     for (int i = 1; i < p.length; i++) {
       String s = p[i];
-      Inode next = inodes.findByParentAndName(curr, s);
+      int partitionId = HopsUtils.calculatePartitionId(curr.getInodePK().getParentId(), s, i);
+      Inode next = inodes.findByInodePK(curr, s, partitionId);
       curr = next;
     }
     cwd = curr;

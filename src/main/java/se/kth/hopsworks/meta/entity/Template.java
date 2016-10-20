@@ -35,11 +35,11 @@ import se.kth.bbc.project.fb.Inode;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Template.findAll",
-          query = "SELECT t FROM Template t"),
+      query = "SELECT t FROM Template t"),
   @NamedQuery(name = "Template.findById",
-          query = "SELECT t FROM Template t WHERE t.id = :templateid"),
+      query = "SELECT t FROM Template t WHERE t.id = :templateid"),
   @NamedQuery(name = "Template.findByName",
-          query = "SELECT t FROM Template t WHERE lower(t.name) = :name")})
+      query = "SELECT t FROM Template t WHERE lower(t.name) = :name")})
 public class Template implements Serializable, EntityIntf, Comparable<Template> {
 
   private static final long serialVersionUID = 1L;
@@ -52,27 +52,26 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 250)
+      max = 250)
   @Column(name = "name")
   private String name;
 
   @OneToMany(mappedBy = "template",
-          targetEntity = MTable.class,
-          fetch = FetchType.LAZY,
-          cascade = CascadeType.ALL)
+      targetEntity = MTable.class,
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL)
   private List<MTable> tables;
 
   @JoinTable(name = "hopsworks.meta_template_to_inode",
-          inverseJoinColumns = {
-            @JoinColumn(name = "inode_pid",
-                    referencedColumnName = "parent_id"),
-            @JoinColumn(name = "inode_name",
-                    referencedColumnName = "name")
-          },
-          joinColumns = {
-            @JoinColumn(name = "template_id",
-                    referencedColumnName = "templateid")
-          })
+      inverseJoinColumns = {
+        @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+        @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+        @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")
+      },
+      joinColumns = {
+        @JoinColumn(name = "template_id",
+            referencedColumnName = "templateid")
+      })
   @ManyToMany(fetch = FetchType.EAGER)
   private Collection<Inode> inodes;
 
@@ -152,7 +151,7 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
     }
     Template other = (Template) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+        equals(other.id))) {
       return false;
     }
     return true;
@@ -161,7 +160,7 @@ public class Template implements Serializable, EntityIntf, Comparable<Template> 
   @Override
   public String toString() {
     return "se.kth.meta.entity.Templates[ templateid=" + id + " name=" + name
-            + " ]";
+        + " ]";
   }
 
   @Override

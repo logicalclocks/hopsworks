@@ -1,10 +1,10 @@
 package se.kth.bbc.lims;
 
+import com.google.common.base.CharMatcher;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.StringReader;
 import java.util.Scanner;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.context.FacesContext;
 import javax.json.Json;
@@ -84,6 +84,18 @@ public final class Utils {
     return path;
   }
 
+  
+  /**
+   * The root '/' is considered '0', so the answer is incorrect for root, but 
+   * that doesn't matter. '/blah.txt' should return '1'.
+   * @param path
+   * @return 
+   */
+  public static int pathLen(String path) {
+    return CharMatcher.is('/').countIn(path);
+  }
+  
+  
   /**
    * Checks if a given file contains actual json content.
    * <p/>
