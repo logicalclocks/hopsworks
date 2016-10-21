@@ -31,6 +31,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.workflows.Workflow;
 
 /**

@@ -108,7 +108,7 @@ public class DatasetController {
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
     Inode ds = inodes.findByInodePK(parent, dataSetName,
-        HopsUtils.dataSetPartitionId(parent.getInodePK().getParentId(), dataSetName));
+        HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -130,7 +130,7 @@ public class DatasetController {
       try {
 
         ds = inodes.findByInodePK(parent, dataSetName, 
-            HopsUtils.dataSetPartitionId(parent.getInodePK().getParentId(), dataSetName));
+            HopsUtils.dataSetPartitionId(parent, dataSetName));
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
 

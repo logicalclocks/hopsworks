@@ -102,7 +102,7 @@ public class UploadService {
     for (int i = 3; i < pathArray.length; i++) {
       if (parent != null) {
         int pathLen = pathArray.length;
-        int partitionId = HopsUtils.calculatePartitionId(parent.getInodePK().getParentId(), pathArray[i], pathLen);
+        int partitionId = HopsUtils.calculatePartitionId(parent.getId(), pathArray[i], pathLen);
         parent = inodes.findByInodePK(parent, pathArray[i], partitionId);
       } else {
         FolderNameValidator.isValidName(pathArray[i]);
@@ -182,7 +182,7 @@ public class UploadService {
 
         int pathLen = Utils.pathLen(this.path) - 1;
         int partitionId
-            = HopsUtils.calculatePartitionId(this.fileParent.getInodePK().getParentId(), fileName, pathLen);
+            = HopsUtils.calculatePartitionId(this.fileParent.getId(), fileName, pathLen);
         parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
         if (parent != null) {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -341,7 +341,7 @@ public class UploadService {
           //find the corresponding inode
           Inode parent = this.inodes.getInodeAtPath(this.path);
           int pathLen = Utils.pathLen(this.path);
-          int partitionId = HopsUtils.calculatePartitionId(parent.getInodePK().getParentId(), fileName, pathLen);
+          int partitionId = HopsUtils.calculatePartitionId(parent.getId(), fileName, pathLen);
           Inode file = this.inodes.findByInodePK(parent, fileName, partitionId);
 
           InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);

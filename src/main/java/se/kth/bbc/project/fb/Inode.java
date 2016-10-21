@@ -87,7 +87,7 @@ import se.kth.hopsworks.meta.entity.Template;
           = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
   @NamedQuery(name = "Inode.findRootByName",
           query
-          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name AND i.inodePK.partitionId=0")})
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -391,6 +391,6 @@ public class Inode implements Serializable {
   public void setHdfsGroup(HdfsGroups hdfsGroup) {
     this.hdfsGroup = hdfsGroup;
   }
-
+  
   
 }

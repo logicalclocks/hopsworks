@@ -1,14 +1,19 @@
 package se.kth.hopsworks.util;
 
+import se.kth.bbc.project.fb.Inode;
+
 /**
  * Utility methods.
  * <p>
  */
 public class HopsUtils {
 
-  public static final int ROOT_DIR_PARTITION_KEY = 1;
+  public static final int ROOT_DIR_PARTITION_KEY = 0;
   public static final short ROOT_DIR_DEPTH = 0;
   public static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
+  public static int ROOT_INODE_ID = 1;
+  public static int PROJECTS_DIR_DEPTH = 1;
+  public static String PROJECTS_DIR_NAME = "Projects";
 
   /**
    *
@@ -30,12 +35,12 @@ public class HopsUtils {
     return parentId;
   }  
 
-  public static int projectPartitionId(int parentId, String name) {
-    return parentId;
+  public static int projectPartitionId(String name) {
+    return calculatePartitionId(ROOT_INODE_ID, PROJECTS_DIR_NAME, PROJECTS_DIR_DEPTH);
   }
-
-  public static int dataSetPartitionId(int parentId, String name) {
-    return parentId;
+  
+  public static int dataSetPartitionId(Inode parent, String name) {
+    return parent.getId();
   }  
   
   public static int calculatePartitionId(int parentId, String name, int depth) {

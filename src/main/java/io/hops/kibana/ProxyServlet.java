@@ -151,6 +151,7 @@ public class ProxyServlet extends HttpServlet {
   }
 
   protected void initTarget() throws ServletException {
+    // TODO - should get the Kibana URI from Settings.java
 //    targetUri = Settings.getKibanaUri();
     targetUri = getConfigParam(P_TARGET_URI);
     if (targetUri == null)

@@ -247,7 +247,7 @@ public class DataSetService {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     Inode inode = inodes.findByInodePK(parent, dataSet.getName(),
-        HopsUtils.dataSetPartitionId(parent.getInodePK().getParentId(), dataSet.getName()));
+        HopsUtils.dataSetPartitionId(parent, dataSet.getName()));
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
     if (ds == null) {//if parent id and project are not the same it is a shared ds.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -1080,7 +1080,7 @@ public class DataSetService {
       dsName = shardDS[1];
       Inode parent = inodes.getProjectRoot(projectName);
       Inode dsInode = inodes.findByInodePK(parent, dsName,
-          HopsUtils.dataSetPartitionId(parent.getInodePK().getParentId(), dsName));
+          HopsUtils.dataSetPartitionId(parent, dsName));
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -1096,7 +1096,7 @@ public class DataSetService {
     } else if (parts != null) {
       dsName = parts[0];
       Inode parent = inodes.getProjectRoot(this.project.getName());
-      Inode dsInode = inodes.findByInodePK(parent, dsName, HopsUtils.dataSetPartitionId(parent.getInodePK().getParentId(), dsName));
+      Inode dsInode = inodes.findByInodePK(parent, dsName, HopsUtils.dataSetPartitionId(parent, dsName));
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
