@@ -252,8 +252,8 @@ public class Utils {
 
       //get the inode
       Inode parent = this.inodeFacade.findById(itc.getInodePid());
-      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
-              getInodeName());
+      Inode inode = this.inodeFacade.findByInodePK(parent, itc.
+              getInodeName(), parent.getInodePK().getParentId());
 
       //create a metadata tuple attached to be attached to an inodeid
       TupleToFile ttf = new TupleToFile(-1, inode);
@@ -305,8 +305,8 @@ public class Utils {
 
       //get the inode
       Inode parent = this.inodeFacade.findById(itc.getInodePid());
-      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
-              getInodeName());
+      Inode inode = this.inodeFacade.findByInodePK(parent, itc.
+              getInodeName(), parent.getInodePK().getParentId());
 
       Metadata metadata = this.metadataFacade.getMetadataById(metaId);
       metadata.setData(metaObj);
@@ -340,8 +340,7 @@ public class Utils {
 
       //get the inode
       Inode parent = this.inodeFacade.findById(itc.getInodePid());
-      Inode inode = this.inodeFacade.findByParentAndName(parent, itc.
-              getInodeName());
+      Inode inode = this.inodeFacade.findByInodePK(parent, itc.getInodeName(), parent.getInodePK().getParentId());
 
       Metadata metadata = this.metadataFacade.getMetadataById(metaId);
       metadata.setData(metaObj);

@@ -1,508 +1,453 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
-
-
   <div id="wrapper" ngCloak
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
-
     <div ng-controller="MetadataCtrl as metadataCtrl">
-
-
-      <div class="overlay" ></div>
-      <section layout="row" flex>
-
+      <div style="overflow: auto;">
         <div ng-include="'navProject.html'"></div>
-
         <div layout="column" layout-fill="" layout-align="top center">
           <div ng-show="mainCtrl.searchReturned !== ''">
             <div id="projectSearchResults">
               <div ng-include="'views/searchResult.html'"></div>
             </div>
           </div>
-
           <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">
-            <!--<div class="col-md-2 pull-left" style="margin-top: -17px; margin-left: -25px;">-->
-            <!--<div class="row">-->
-            <div layout="row">
-              <div flex="15">
-<!--                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()">New Folder</button>
-                <button type="button" class="btn btn-sm btn-success" ng-click="datasetsCtrl.uploadFile()">Upload File(s)</button>-->
-                  <md-button class="md-icon-button md-primary" aria-label="New Folder" ng-click="datasetsCtrl.newDataSetModal()" >
-                    <md-tooltip md-direction="bottom">
-                      Create New Folder
-                    </md-tooltip>                                        
-                    <md-icon md-svg-icon="images/folder_new.svg"></md-icon>
-                  </md-button>
-                  <md-button class="md-icon-button md-primary md-button browser newfolder" aria-label="Upload File" ng-click="datasetsCtrl.uploadFile()" >
-                    <md-tooltip md-direction="bottom">
-                      Upload file(s)
-                    </md-tooltip>                                                            
-                    <md-icon md-svg-icon="images/cloud_upload.svg"></md-icon>
-                  </md-button>
-              </div>
-              <div flex="65" style="margin-top: 10px;">
+            <h3>
+              <div flex="65">
                 <a ng-click="datasetsCtrl.goToDataSetsDir()">DataSets</a>
                 <span ng-show="datasetsCtrl.pathArray.length > 10">...</span>
                 <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - 1 - datasetsCtrl.breadcrumbLen()) track by $index">
-                  <span>> </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
+                  <span> / </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
                 </span>
-              </div>
-
-              <div flex="15" style="margin-top: 5px; margin-right: 1px;">
-                <input type="text" ng-model="search" 
-                       class="form-control" placeholder="Filter" 
-                       >
-              </div>                
-              <div flex layout-align="right" style="margin-left: 10px;">
+              </div>               
+              <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>
               </div>
-            </div>
-            <div layout="row"  >
-              <div flex="5" style="margin-bottom: 1px; margin-left: 12px; margin-top: -1px;font-size: 16px;">
-                <button style="margin-left: 1px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                        data-clipboard-target="#fileRef" ng-disabled="datasetsCtrl.isSelectedFiles() !== 1"><i class="fa fa-clipboard icon-resize-small"></i>
-                </button>
-              </div>
-              <div flex style="margin-top: 5px; margin-left: -15px;"ng-show="datasetsCtrl.selected !== null && !datasetsCtrl.isShared()" >
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects/{{projectCtrl.currentProject.projectName}}<span data-ng-repeat="path in datasetsCtrl.pathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
-              </div>
-            </div>
-            <div layout="row"  ng-show="datasetsCtrl.selected !== null && datasetsCtrl.isShared()">
-              <div flex="10" style="margin-bottom: 1px; margin-left: -25px; margin-top: -1px;font-size: 16px;">
-                <button style="margin-left: 0px; " class="btn btn-default" ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                        data-clipboard-target="#fileRef"><i class="fa fa-clipboard icon-resize-small"></i>
-                </button>        
-              </div>
-              <div flex>
-                <span id="fileRef">hdfs://{{projectCtrl.endpoint}}/Projects<span data-ng-repeat="path in datasetsCtrl.sharedPathArray track by $index">/{{path}}</span><span>/{{datasetsCtrl.selected}}</span>
-              </div>
-            </div>
-          </div>
-          <!--</div>-->
-          <div flex layout="column">
-          <div layout="row" style="margin-left:-35px;">
+            </h3>
+            <div style="margin-top: 15px;">
+            <div class="row row-no-margin-left col-md-12" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;" >           
+              <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}"  style="margin-top: -5px; margin-left:-7px;">
+                <!--Tool bar -->
+                <div class="row"  style="padding-right:30px;">
+                  <div class="col-lg-4 col-md-4 col-sm-4">
+                    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                      <div class="btn-group" role="group" aria-label="First group">
+                        <button type="button" class="btn btn-default fa fa-level-up" title="Go to parent directory" 
+                                ng-click="datasetsCtrl.back()"></button>
+                        <button type="button" class="btn btn-default fa fa-plus" title="New folder"
+                                ng-click="datasetsCtrl.newDataSetModal()"></button>
+                        <button type="button" class="btn btn-default fa fa-cloud-upload" title="Upload"
+                                ng-click="datasetsCtrl.uploadFile()"></button>
+                      </div>
+                      <div class="btn-group" role="group" aria-label="Second group" ng-show="datasetsCtrl.isSelectedFiles() > 0">
+                        <button type="button" class="btn btn-default fa fa-trash-o" title="Delete"
+                                ng-click="datasetsCtrl.deleteSelected();"></button>
+                        <button type="button" class="btn btn-default fa fa-arrows" title="Move"
+                                ng-click="datasetsCtrl.moveSelected();"></button>
 
-            <md-button class="md-icon-button md-primary"  ng-show="datasetsCtrl.isSelectedFiles() === 0 && !datasetsCtrl.all_selected" aria-label="Select All" ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();">
-              <md-tooltip md-direction="right">
-                Select All
-              </md-tooltip>                    
-              <md-icon md-svg-icon="images/checkbox_false.svg"></md-icon>
-            </md-button>
-            <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
-              <md-tooltip md-direction="right">
-                De-Select All
-              </md-tooltip>                    
-              <md-icon md-svg-icon="images/checkbox_intermediate.svg"  ></md-icon>
-            </md-button>
-            <md-button class="md-icon-button md-primary" ng-show="datasetsCtrl.all_selected" aria-label="De-Select All" ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();">
-              <md-tooltip md-direction="right">
-                De-Select All
-              </md-tooltip>                    
-              <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
-            </md-button>
-            
-            
-            
-            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.deleteSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
-              <md-icon md-svg-icon="images/delete_forever.svg"></md-icon>
-              <md-tooltip md-direction="right">
-                Delete
-              </md-tooltip>                    
-            </md-button>
-
-
-            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.trashSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0" ng-disabled="1==1">
-              <md-icon md-svg-icon="images/delete.svg"></md-icon>
-              <md-tooltip md-direction="right">
-                Recycle Bin
-              </md-tooltip>                    
-            </md-button>
-
-            <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.moveSelected();" ng-show="datasetsCtrl.isSelectedFiles() > 0">
-              <md-icon md-svg-icon="images/folder.svg"></md-icon>
-              <md-tooltip md-direction="right">
-                Move
-              </md-tooltip>                    
-            </md-button>
-          
-            
-            <md-button  class="md-icon-button md-primary" ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
-                        !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
-              <md-icon md-svg-icon="images/download.svg"></md-icon>
-              <md-tooltip md-direction="right">
-                Download file
-              </md-tooltip>                    
-            </md-button>
-            
-             <md-button class="md-icon-button md-primary" ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
-                        !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
-              <md-icon md-svg-icon="images/preview.svg"></md-icon>
-              <md-tooltip md-direction="right">
-                Preview
-              </md-tooltip>                    
-            </md-button>
-          </div>
-          <!--<div class="row row-no-margin-left" ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;">-->
-          <div flex ng-show="mainCtrl.searchReturned === ''" ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;" ng-class="{'sidenav-open': datasetsCtrl.tgState}">
-            <!--<div flex="100">-->
-              <md-content layout-padding style="margin-left: -50px; margin-top: 6px; min-width: 1238px; margin-right: 20%;" layout="column" flex  >
-           
-
-                <div class="ds-content" ng-class="{'ds-content.sidenav-open': datasetsCtrl.tgState}">
-                                                   
-                  <div class="table-responsive" style="overflow: hidden;">
-                    <table class="table table-bordred table-hover" >
-
-                      <thead>
-                      <tr>
-                        <th ng-click="datasetsCtrl.back()">
-                          <md-button style="margin-bottom: -7px;"  class="md-icon-button md-primary" aria-label="Back">  
- 
-                            <md-icon md-svg-icon="images/back.svg" ></md-icon>
-                          </md-button>
-                        </th>
-
-                      <th ng-click="sort('dir')">Type
-                        <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('name')">Name
-                        <span class="glyphicon sort-icon" ng-show="sortKey == 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('owner')">Owner
-                        <span class="glyphicon sort-icon" ng-show="sortKey == 'owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('modification')">Last modified
-                        <span class="glyphicon sort-icon" ng-show="sortKey == 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('size')">File size
-                        <span class="glyphicon sort-icon" ng-show="sortKey == 'size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-<!--                      <th></th>
-                      <th></th>-->
-                        </tr>
-                      </thead>
-
-                      <tbody ng-model="datasetsCtrl.files">
-<!--                        <tr>
-                          <td style="width:15px;height:15px;">
-                            <div ng-click="all_selected = false; datasetsCtrl.deselectAll();" ng-show="all_selected">
-                              <i class="fa fa-square" aria-hidden="true"></i>
-                            </div>                             
-                            <div ng-click="all_selected = true; datasetsCtrl.selectAll();" ng-show="!all_selected">
-                              <i class="fa fa-square-o" aria-hidden="true"></i>
-                            </div>                             
-
-
-
-                          </td>
-
-                          <td ng-click="datasetsCtrl.back()" style="padding: 0px" colspan="5">&nbsp &nbsp
-                            <a style="font-siglyphicon-expandze:60px">..</a>
-                          </td>
-                          <td>
-                                                        <i ng-if="datasetsCtrl.working"
-                                                           title="Fetching files in this folder"
-                                                           style="color: lightgrey; margin-top:3px;"
-                                                           class="fa fa-spinner fa-spin pull-right" >
-                                                        </i>
-                          </td>
-                        </tr>-->
-                        <tr
-                          dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:datasetsCtrl.itemsPerPage"
-                          context-menu
-                          data-target="menu-{{ $index}}"
-                          ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true}"
-                          id="table-{{ $index}}">
-                          <td>
-
-<!--
-style="background-color: lightgrey;"
-
-<md-button class="md-icon-button md-primary" aria-label="Select Directory" ng-show="file.dir" >
-                    <md-tooltip md-direction="right">
-                      Select Directory
-                    </md-tooltip>                    
-                    <md-icon md-svg-icon="images/checkbox_false.svg" ng-show="datasetsCtrl.haveSelected(file) === false"></md-icon>
-                    <md-icon md-svg-icon="images/checkbox_true.svg" ng-show="datasetsCtrl.haveSelected(file) === true"></md-icon>
-ng-show="!file.dir" 
-                  </md-button>-->
-<!--                  <md-button class="md-icon-button md-primary" aria-label="Select File" >
-                    <md-tooltip md-direction="right">
-                      Select 
-                    </md-tooltip>                    
-                    <md-icon md-svg-icon="images/checkbox_false.svg" ng-show="datasetsCtrl.haveSelected(file) === false" 
-                             ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();"></md-icon>
-                    <md-icon md-svg-icon="images/checkbox_true.svg" ng-show="datasetsCtrl.haveSelected(file) === true" 
-                             ng-click="datasetsCtrl.deselect($index, file, $event);"></md-icon>
-                  </md-button>-->
-<md-button class="md-icon-button md-primary" aria-label="Select File" ng-show="!datasetsCtrl.haveSelected(file)" 
-                             ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" >
-                    <md-tooltip md-direction="right">
-                      Select 
-                    </md-tooltip>                    
-                    <md-icon md-svg-icon="images/checkbox_false.svg" ></md-icon>
-                  </md-button>
-                   <md-button class="md-icon-button md-primary" aria-label="De-Select File" ng-show="datasetsCtrl.haveSelected(file)" 
-                             ng-click="datasetsCtrl.deselect($index, file, $event);">
-                    <md-tooltip md-direction="right">
-                      De-Select 
-                    </md-tooltip>                    
-                    <md-icon md-svg-icon="images/checkbox_true.svg" ></md-icon>
-                  </md-button>
-
-                      
-                            
-<!--                            <div uib-tooltip="Select directory metadata."  tooltip-placement="right" ng-show="file.dir">
-                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
-                            </div>                             
-                            <div  uib-tooltip="Select file metadata."  tooltip-placement="right" ng-show="!file.dir">
-                              <i class="fa" ng-class="{ 'fa-square': datasetsCtrl.selected === $index, 'fa-square-o': datasetsCtrl.selected !== $index }" aria-hidden="true"></i>
-                            </div>
-                          </td>-->
-                          <td ng-click="datasetsCtrl.openDir(file)">
-                            <div>
-                              <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
-                                 ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === file.name,  'glyphicon-folder-open': datasetsCtrl.selected !== file.name}"
-                                 style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
-                              <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
-                                 style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
-                            </div>
-                          </td>
-                          <td ng-click="datasetsCtrl.openDir(file)">
-                            <div>{{file.name}}</div></td>
-                          <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
-                          </td>
-                          <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
-                          </td>
-                          <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td>
-
-                          <td  uib-dropdown class="position-fixed" id="menu-{{ $index}}">
-                              <ul uib-dropdown-menu class="dropdown-amore" role="menu">
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.dir">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.filePreview(file.name, true)"
-                                     data-toggle="uib-tooltip" title="Click to display a preview of a text file."
-                                     >
-                                    <span><i class="fa fa-camera-retro" ></i>
-                                      Preview</span>
-                                  </a>
-                                </li>
-                                <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1"></li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() === 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.deleteFile(file.name)">
-                                    <span><i class="fa fa-trash"></i>
-                                      Remove</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.deleteSelected()">
-                                    <span><i class="fa fa-trash"></i>
-                                      Remove</span>
-                                  </a>
-                                </li>
-                                <li class="divider" ng-show="datasetsCtrl.isSelectedFiles() <= 1"></li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() === 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     
-                                     ng-click="datasetsCtrl.move(file.id, file.name)">
-                                    <span><i class="fa fa-arrows"></i>
-                                      Move</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.moveSelected()">
-                                    <span><i class="fa fa-arrows"></i>
-                                      Move</span>
-                                  </a>
-                                </li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.rename(file.id)">
-                                    <span><i class="fa fa-edit"></i>
-                                      Rename</span>
-                                  </a>
-                                </li>                                  
-
-                                <!--                                <li>
-                                                                  <a class="pointer"
-                                                                     role="menuitem"
-                                                                     tabindex="1"
-                                                                     ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
-                                                                    <span><i class="fa fa-file-archive-o"></i>
-                                                                      Compress</span>
-                                                                  </a>
-                                                                </li>-->
-
-                                <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1 "></li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="3"
-                                     ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
-                                    <span><i class="fa fa-upload"></i>
-                                      Add metadata</span>
-                                  </a>
-                                </li>
-
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="4"
-                                     ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
-                                    <span><i class="fa fa-download"></i>
-                                      Remove metadata</span>
-                                  </a>
-                                </li>
-
-
-                              </ul>
-                            <!--</div>-->
-                          </td>
-
-                          <td style="margin:0px;width:25px;" ng-if="(file.underConstruction && !datasetsCtrl.working) ||
-                             (file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
-                            <!--                              <i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
-                                                             title="This file is compressed"
-                                                             style="color: lightgrey; margin-top:3px;"
-                                                             class="glyphicon glyphicon-compressed">
-                                                          </i>-->
-                            <i ng-if="file.underConstruction && !datasetsCtrl.working"
-                               title="File under construction"
-                               style="color: lightgrey; margin-top:3px;"
-                               class="glyphicon glyphicon-transfer">
-                            </i>
-                            <i ng-if="file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
-                               title="Fetching files in this dir"
-                               style="color: lightgrey; margin-top:3px;"
-                               class="fa fa-spinner fa-spin pull-right">
-                            </i>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <dir-pagination-controls
-                      max-size="5"
-                      direction-links="true"
-                      boundary-links="true" >
-                    </dir-pagination-controls>
+                      </div>
+                      <div class="btn-group" role="group" aria-label="Third group" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
+                                                                        !datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir">
+                        <button type="button" class="btn btn-default fa fa-cloud-download" title="Download file"
+                                ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])"></button>
+                        <button type="button" class="btn btn-default fa fa-camera" title="Preview"
+                                ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)"></button>
+                      </div>
+                    </div>
                   </div>
+                  <div class="col-lg-8 col-md-8 col-sm-8">
+                    <div class="row">
+                      <div class="col-md-4 pull-right">
+                        <div class="input-group">
+                          <input type="text" class="form-control" 
+                                 ng-model="search"placeholder="Filter...">
+                          <span class="input-group-btn">
+                            <button class="btn btn-default fa fa-filter icon-resize-small" type="button" title="Filter"></button>
+                          </span>
+                        </div>
+                      </div>
+                      <div class="col-md-4 pull-right" ng-show="datasetsCtrl.isSelectedFiles() === 1">
+                        <div class=" input-group">
+                          <input id="fileRef" type="text" class="form-control" 
+                                 value="{{datasetsCtrl.getSelectedPath(projectCtrl.endpoint, datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
+                          <span class="input-group-btn">
+                            <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
+                                    ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                                    data-clipboard-target="#fileRef" title="Copy hdfs path">
+                            </button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>              
+                </div>            
+                <!--end Tool bar -->
+                <div class="table-responsive" style="overflow: hidden; padding-right: 30px;">
+                  <table class="table table-bordred table-hover" >
+                    <thead>
+                      <tr>
+                        <th>
+                          <md-button class="md-icon-button md-primary"  ng-show="datasetsCtrl.isSelectedFiles() === 0 && !datasetsCtrl.all_selected" 
+                                   aria-label="Select All" 
+                                   ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();"
+                                   style="margin-bottom: -10px">
+                            <md-tooltip md-direction="right">
+                              Select All
+                            </md-tooltip>                    
+                            <md-icon md-svg-icon="images/checkbox_false.svg"></md-icon>
+                          </md-button>
+                          <md-button class="md-icon-button md-primary" 
+                               ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.all_selected" 
+                               aria-label="De-Select All" 
+                               ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                               style="margin-bottom: -10px">
+                            <md-tooltip md-direction="right">
+                              De-Select All
+                            </md-tooltip>                    
+                            <md-icon md-svg-icon="images/checkbox_intermediate.svg"  ></md-icon>
+                          </md-button>
+                          <md-button class="md-icon-button md-primary" 
+                               ng-show="datasetsCtrl.all_selected" 
+                               aria-label="De-Select All" 
+                               ng-click="datasetsCtrl.all_selected = false; datasetsCtrl.deselectAll();"
+                               style="margin-bottom: -10px">
+                            <md-tooltip md-direction="right">
+                              De-Select All
+                            </md-tooltip>                    
+                            <md-icon md-svg-icon="images/checkbox_true.svg"  ></md-icon>
+                          </md-button>
+                        </th>                       
+                        <th ng-click="sort('dir')">Type
+                          <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                        <th ng-click="sort('name')">Name
+                          <span class="glyphicon sort-icon" ng-show="sortKey === 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                        <th ng-click="sort('owner')">Owner
+                          <span class="glyphicon sort-icon" ng-show="sortKey === 'owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                        <th ng-click="sort('modification')">Last modified
+                          <span class="glyphicon sort-icon" ng-show="sortKey === 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                        <th ng-click="sort('size')">File size
+                          <span class="glyphicon sort-icon" ng-show="sortKey === 'size'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody ng-model="datasetsCtrl.files">
+                      <tr
+                        dir-paginate="file in datasetsCtrl.files | orderBy:sortKey:reverse | filter:search | itemsPerPage:datasetsCtrl.itemsPerPage"
+                        context-menu
+                        data-target="menu-{{ $index}}"
+                        ng-class="{ 'highlight': datasetsCtrl.haveSelected(file) === true}"
+                        id="table-{{ $index}}">
+                        <td>
+                          <md-button class="md-icon-button md-primary" aria-label="Select File" ng-show="!datasetsCtrl.haveSelected(file)" 
+                               ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file); datasetsCtrl.openMetadata(); datasetsCtrl.sharedDatasetPath();" >
+                            <md-tooltip md-direction="right">
+                              Select 
+                            </md-tooltip>                    
+                            <md-icon md-svg-icon="images/checkbox_false.svg" ></md-icon>
+                          </md-button>
+                          <md-button class="md-icon-button md-primary" aria-label="De-Select File" ng-show="datasetsCtrl.haveSelected(file)" 
+                               ng-click="datasetsCtrl.deselect($index, file, $event);">
+                            <md-tooltip md-direction="right">
+                              De-Select 
+                            </md-tooltip>                    
+                            <md-icon md-svg-icon="images/checkbox_true.svg" ></md-icon>
+                          </md-button>
+                        <td ng-click="datasetsCtrl.openDir(file)">
+                          <div>
+                            <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right" ng-show="file.dir" class="glyphicon"
+                               ng-class="{ 'glyphicon-folder-close': datasetsCtrl.selected === file.name,  'glyphicon-folder-open': datasetsCtrl.selected !== file.name}"
+                               style="padding-right: 5px; color: #757575; float: left;margin-top: 4px;"></i>
+                            <i uib-tooltip="Download file" tooltip-placement="right" ng-show="!file.dir" class="glyphicon glyphicon-cloud-download" 
+                               style="padding-right: 5px; color: #757575;float: left;margin-top: 4px;"></i>
+                          </div>
+                        </td>
+                        <td ng-click="datasetsCtrl.openDir(file)">
+                          <div>{{file.name}}</div></td>
+                        <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
+                        </td>
+                        <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"></span>
+                        </td>
+                        <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)">{{(file.size == 0? '_': projectCtrl.sizeOnDisk(file.size))}}</td> 
+                        <td ng-click="datasetsCtrl.openDir(file)"> <i class="glyphicon"
+                                                                      ng-class="{ 'glyphicon-hourglass': file.underConstruction === 1}"></i></td>
+                        <td uib-dropdown class="position-fixed" id="menu-{{ $index}}" style="border-top: none">
+                          <ul uib-dropdown-menu class="dropdown-amore" role="menu">
+                            <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.dir">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+                                 ng-click="datasetsCtrl.filePreview(file.name, true)"
+                                 data-toggle="uib-tooltip" title="Click to display a preview of a text file."
+                                 >
+                                <span><i class="fa fa-camera-retro" ></i>
+                                  Preview</span>
+                              </a>
+                            </li>
+                            <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.dir"></li>
+                            <li ng-show="datasetsCtrl.isSelectedFiles() === 0">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+                                 ng-click="datasetsCtrl.deleteFile(file.name)">
+                                <span><i class="fa fa-trash"></i>
+                                  Remove</span>
+                              </a>
+                            </li>
+                            <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+                                 ng-click="datasetsCtrl.deleteSelected()">
+                                <span><i class="fa fa-trash"></i>
+                                  Remove</span>
+                              </a>
+                            </li>
+                            <li class="divider" ng-show="datasetsCtrl.isSelectedFiles() <= 1"></li>
+                            <li ng-if="datasetsCtrl.isSelectedFiles() === 0">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+
+                                 ng-click="datasetsCtrl.move(file.id, file.name)">
+                                <span><i class="fa fa-arrows"></i>
+                                  Move</span>
+                              </a>
+                            </li>
+                            <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+                                 ng-click="datasetsCtrl.moveSelected()">
+                                <span><i class="fa fa-arrows"></i>
+                                  Move</span>
+                              </a>
+                            </li>
+                            <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="5"
+                                 ng-click="datasetsCtrl.rename(file.id)">
+                                <span><i class="fa fa-edit"></i>
+                                  Rename</span>
+                              </a>
+                            </li>                                  
+                            <!--li>
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="1"
+                                 ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
+                                <span><i class="fa fa-file-archive-o"></i>
+                                  Compress</span>
+                              </a>
+                            </li-->
+                            <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1"></li>
+                            <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="3"
+                                 ng-click="metadataCtrl.attachTemplate(file); $event.stopPropagation();">
+                                <span><i class="fa fa-upload"></i>
+                                  Add metadata</span>
+                              </a>
+                            </li>
+                            <li ng-show="datasetsCtrl.isSelectedFiles() <= 1">
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="4"
+                                 ng-click="metadataCtrl.detachTemplate(file); $event.stopPropagation();">
+                                <span><i class="fa fa-download"></i>
+                                  Remove metadata</span>
+                              </a>
+                            </li>
+                          </ul>
+                        </td>
+                        <td style="margin:0px;width:25px;" 
+                            ng-if="(file.underConstruction && !datasetsCtrl.working) ||
+                            (file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
+                          <!--<i ng-if="$index >= 5 && (!file.underConstruction && !datasetsCtrl.working)"
+                                title="This file is compressed"
+                                style="color: lightgrey; margin-top:3px;"
+                                class="glyphicon glyphicon-compressed">
+                              </i>-->
+                          <i ng-if="file.underConstruction && !datasetsCtrl.working"
+                             title="File under construction"
+                             style="color: lightgrey; margin-top:3px;"
+                             class="glyphicon glyphicon-transfer">
+                          </i>
+                          <i ng-if="file.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
+                             title="Fetching files in this dir"
+                             style="color: lightgrey; margin-top:3px;"
+                             class="fa fa-spinner fa-spin pull-right">
+                          </i>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <dir-pagination-controls
+                    max-size="5"
+                    direction-links="true"
+                    boundary-links="true" >
+                  </dir-pagination-controls>
                 </div>
-              </md-content>
-            <!--</div>-->
-          </div>
-
-
-            <div style="margin-top: 80px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+              </div>
+            </div>
+            <!--Side nave -->
+            <div style="height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 95%;">
                 <div class="file-manager">
-                    <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
-                      <md-tabs md-dynamic-height md-border-bottom>
-                        <md-tab label="Details">
-                          <div ng-show="datasetsCtrl.selected === null">
-                            <div class="file">
-                              <div class="icon">
-                                <i class="glyphicon glyphicon-folder-open"></i>
-                              </div>  
-                              Select a file or folder to view its details.
-                            </div>           
-                          </div>
-                          <table id="mytable1" ng-show="datasetsCtrl.selected !== null && datasetsCtrl.selected !== undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
-                            <tr style="background-color: #fafafa">
-                              <td style="color:lightgrey;">Size</td>
-                              <td style="color: grey;">{{(datasetsCtrl.selectedFiles[datasetsCtrl.selected].size == 0? '_': projectCtrl.sizeOnDisk(datasetsCtrl.selectedFiles[datasetsCtrl.selected].size))}}</td>
-                            </tr>
+                  <md-content class="md-padding" style="padding-top: 0px; min-width: 250px;">
+                    <md-tabs md-dynamic-height md-border-bottom>
+                      <md-tab label="Details">
+                        <div ng-show="datasetsCtrl.selected === null">
+                          <div class="file">
+                            <div class="icon">
+                              <i class="glyphicon glyphicon-folder-open"></i>
+                            </div>  
+                            Select a file or folder to view its details.
+                          </div>           
+                        </div>
+                        <table id="mytable1" ng-show="datasetsCtrl.selected !== null && datasetsCtrl.selected !== undefined" class="table table-bordred table-striped" style="margin-top: 16px;">
+                          <tr style="background-color: #fafafa">
+                            <td style="color:lightgrey;">Size</td>
+                            <td style="color: grey;">{{(datasetsCtrl.selectedFiles[datasetsCtrl.selected].size == 0? '_': projectCtrl.sizeOnDisk(datasetsCtrl.selectedFiles[datasetsCtrl.selected].size))}}</td>
+                          </tr>
 
-                            <tr style="background-color: #fafafa">
-                              <td style="color:lightgrey;">Description</td>
-                              <td style="color: grey;">{{datasetsCtrl.selected}}</td>
-                            </tr>
+                          <tr style="background-color: #fafafa">
+                            <td style="color:lightgrey;">Description</td>
+                            <td style="color: grey;">{{datasetsCtrl.selected}}</td>
+                          </tr>
 
-                            <tr style="background-color: #fafafa">
-                              <td style="color: lightgrey;">Type</td>
-                              <td ng-show="!datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir" style="color: grey;">File</td>
-                              <td ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir" style="color: grey;">Directory</td>
-                            </tr>
+                          <tr style="background-color: #fafafa">
+                            <td style="color: lightgrey;">Type</td>
+                            <td ng-show="!datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir" style="color: grey;">File</td>
+                            <td ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].dir" style="color: grey;">Directory</td>
+                          </tr>
 
-                            <tr style="background-color: #fafafa">
-                              <td style="color:lightgrey;">Last changed</td>
-                              <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].modification| date:'short'}}</td>
-                            </tr>
+                          <tr style="background-color: #fafafa">
+                            <td style="color:lightgrey;">Last changed</td>
+                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].modification| date:'short'}}</td>
+                          </tr>
 
-                            <tr style="background-color: #fafafa">
-                              <td style="color:lightgrey;">Owner</td>
-                              <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].owner}}
-                                <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{datasetsCtrl.selectedFiles[datasetsCtrl.selected].email}}</span>
-                              </td>
-                            </tr>
-                            <!--                                  <tr style="background-color: #fafafa">
-                                                                <td style="color:lightgrey;">Permission</td>
-                                                                <td style="color: grey;">{{datasetsCtrl.fileDetail.permission}}</td>
-                                                              </tr>-->
-                          </table>
-
-                          <!--div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
-                            <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
-                              class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
-                          </div-->
-                          <!--METADATA PRESENTATION SECTION-->
-                          <div id="board" ng-show="datasetsCtrl.selected !== null -1 && datasetsCtrl.selected != undefined" style="font-family: Times New Roman;">
-                            <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
-                              <div style="display: inline-block">
-                                <div style="display: inline-block"><h4>No extended metadata available.</h4></div>
-                                <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
-                                  <i class="fa fa-exclamation-circle"></i>
-                                </span>
-                              </div>
+                          <tr style="background-color: #fafafa">
+                            <td style="color:lightgrey;">Owner</td>
+                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].owner}}
+                              <span style=" color: #757575; font-size: 12px; padding-left: 5px;"> {{datasetsCtrl.selectedFiles[datasetsCtrl.selected].email}}</span>
+                            </td>
+                          </tr>
+                          <!--<tr style="background-color: #fafafa">
+                                    <td style="color:lightgrey;">Permission</td>
+                                    <td style="color: grey;">{{datasetsCtrl.fileDetail.permission}}</td>
+                              </tr>-->
+                        </table>
+                        <!--div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
+                          <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
+                            class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
+                        </div-->
+                        <!--METADATA PRESENTATION SECTION-->
+                        <div id="board" ng-show="datasetsCtrl.selected !== null - 1 && datasetsCtrl.selected != undefined" style="font-family: Times New Roman;">
+                          <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
+                            <div style="display: inline-block">
+                              <div style="display: inline-block"><h4>No extended metadata available.</h4></div>
+                              <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                <i class="fa fa-exclamation-circle"></i>
+                              </span>
                             </div>
-                            <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
-                              <div class="input-group-lg" align="left"  style="height: 70%">
-                                <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'" 
-                                     style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
-                                  <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
-                                    <label style="font-size: 16px;">{{table.name}}</label>
-                                    <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
-                                  </div>
-                                  <div id="metadatadiv{{$index}}" class="uib-collapse in">
-                                    <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
-                                      <div class="panel panel-default">
-                                        <div>
-                                          <label>{{field.tagName}}</label>
-                                          <span class="field-info" uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
-                                            <i class="fa fa-exclamation-circle"></i>
-                                          </span>  
-                                          <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
+                          </div>
+                          <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
+                            <div class="input-group-lg" align="left"  style="height: 70%">
+                              <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'" 
+                                   style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                                <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
+                                  <label style="font-size: 16px;">{{table.name}}</label>
+                                  <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
+                                </div>
+                                <div id="metadatadiv{{$index}}" class="uib-collapse in">
+                                  <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
+                                    <div class="panel panel-default">
+                                      <div>
+                                        <label>{{field.tagName}}</label>
+                                        <span class="field-info" uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                          <i class="fa fa-exclamation-circle"></i>
+                                        </span>  
+                                        <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
+
+                                      </div>
+                                    </div>
+
+                                    <div  class="pull-left " style="padding-bottom: 0;">
+                                      <div ng-repeat="card in table.inputcontent">
+                                        <!--text input field type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                 tooltips title="{{card.description}}"
+                                                 ng-show="true"
+                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
+                                                 ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id, card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
 
                                         </div>
-                                      </div>
 
+                                        <!--single select list input type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                            <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                            <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                              <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                              <small>
+                                                <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                              </small>
+                                            </ui-select-choices>
+                                          </ui-select>
+                                          <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                        </div>
+
+                                        <!--multi select list input type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <div
+                                            isteven-multi-select
+                                            input-model="card.fieldtypeContent"
+                                            output-model="metadataCtrl.metaData[card.id]"
+                                            button-label="value"
+                                            item-label="value"
+                                            tick-property="ticked"
+                                            output-properties="value"
+                                            style="display:inline-block"
+                                            >
+                                          </div>
+                                          <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                        </div>                                                        
+                                      </div>
+                                    </div>
+                                    <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
+                                    <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
+                                      <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
+                                        <div style="display:inline-block" >
+                                          <label style="font-weight: normal">{{value.data}}</label>                                                          
+                                        </div>
+                                        <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
+                                          <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
+                                          <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
+                                        </div>
+                                        <br>
+                                      </div>
                                       <div  class="pull-left " style="padding-bottom: 0;">
                                         <div ng-repeat="card in table.inputcontent">
                                           <!--text input field type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
                                                    tooltips title="{{card.description}}"
                                                    ng-show="true"
-                                                   ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
-                                                   ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id, card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
-
+                                                   ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>
-
                                           <!--single select list input type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
                                               <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                               <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
                                                 <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
@@ -511,156 +456,131 @@ ng-show="!file.dir"
                                                 </small>
                                               </ui-select-choices>
                                             </ui-select>
-                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>
-
                                           <!--multi select list input type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <div
-                                              isteven-multi-select
-                                              input-model="card.fieldtypeContent"
-                                              output-model="metadataCtrl.metaData[card.id]"
-                                              button-label="value"
-                                              item-label="value"
-                                              tick-property="ticked"
-                                              output-properties="value"
-                                              style="display:inline-block"
-                                              >
-                                            </div>
-                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                              <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                              <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                <small>
+                                                  <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                </small>
+                                              </ui-select-choices>
+                                            </ui-select>
+                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>                                                        
                                         </div>
                                       </div>
-
-                                      <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>                                             
-
-
-
-
-                                      <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
-                                        <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
-                                          <div style="display:inline-block" >
-                                            <label style="font-weight: normal">{{value.data}}</label>                                                          
-                                          </div>
-                                          <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
-                                            <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
-                                            <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
-                                          </div>
-                                          <br>
-                                        </div>
-
-
-                                        <div  class="pull-left " style="padding-bottom: 0;">
-                                          <div ng-repeat="card in table.inputcontent">
-                                            <!--text input field type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
-                                                     tooltips title="{{card.description}}"
-                                                     ng-show="true"
-                                                     ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-
-                                            </div>
-
-                                            <!--single select list input type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
-                                                <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                                  <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                                  <small>
-                                                    <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                                  </small>
-                                                </ui-select-choices>
-                                              </ui-select>
-                                              <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-                                            </div>
-
-                                            <!--multi select list input type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
-                                                <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                                  <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                                  <small>
-                                                    <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                                  </small>
-                                                </ui-select-choices>
-                                              </ui-select>
-                                              <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-                                            </div>                                                        
-                                          </div>
-                                        </div>
-                                        <div style="width: 100%; height: 35px;" ng-show="metadataCtrl.visibilityInfo[value.id]"></div>    
-
-
-
-
-
-                                      </div>
-
+                                      <div style="width: 100%; height: 35px;" ng-show="metadataCtrl.visibilityInfo[value.id]"></div>    
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-
-
-
-                          <div id="board" ng-show="datasetsCtrl.selected > -1 && datasetsCtrl.selected !== undefined" style="font-family: Times New Roman;">
-                            <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
-                              <div style="display: inline-block">
-                                <div style="display: inline-block"><h4>No extended metadata.</h4></div>
-                                <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
-                                  <i class="fa fa-exclamation-circle"></i>
-                                </span>
-                              </div>
+                        </div>
+                        <div id="board" ng-show="datasetsCtrl.selected > - 1 && datasetsCtrl.selected !== undefined" style="font-family: Times New Roman;">
+                          <div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px">
+                            <div style="display: inline-block">
+                              <div style="display: inline-block"><h4>No extended metadata.</h4></div>
+                              <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+                                <i class="fa fa-exclamation-circle"></i>
+                              </span>
                             </div>
-                            <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
-                              <div class="input-group-lg" align="left" style="height: 70%">
-                                <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'"
-                                     style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
-                                  <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
-                                    <label style="font-size: 16px;">{{table.name}}</label>
-                                    <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
-                                  </div>
-                                  <div id="metadatadiv{{$index}}" class="uib-collapse in">
-                                    <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
-                                      <div class="panel panel-default">
-                                        <div>
-                                          <label>{{field.tagName}}</label>
-                                          <span class="field-info" tooltip-placement="right"
-                                                uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
-                                            <i class="fa fa-exclamation-circle"></i>
-                                          </span>
-                                          <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
-
+                          </div>
+                          <div class="" height="80%" ng-hide="metadataCtrl.noTemplates">
+                            <div class="input-group-lg" align="left" style="height: 70%">
+                              <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'"
+                                   style="background-color:#FAFAFA;padding-bottom:10px;padding-top: 10px; border-bottom: dashed #d5d5d5 thin;">
+                                <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px">
+                                  <label style="font-size: 16px;">{{table.name}}</label>
+                                  <button type="button" class="btn btn-default btn-xs pull-right" style="background-color:#D8D8D8;margin-right: 10px;margin-top: 5px" data-toggle="uib-collapse" data-target="#metadatadiv{{$index}}"><i class="fa fa-ellipsis-v"></i></button>
+                                </div>
+                                <div id="metadatadiv{{$index}}" class="uib-collapse in">
+                                  <div ng-repeat="field in table.rest" style="padding-left: 15px;padding-top:15px;font-size: 15px;">
+                                    <div class="panel panel-default">
+                                      <div>
+                                        <label>{{field.tagName}}</label>
+                                        <span class="field-info" tooltip-placement="right"
+                                              uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px;padding-left:3px">
+                                          <i class="fa fa-exclamation-circle"></i>
+                                        </span>
+                                        <a style="color: green;padding-left: 10px " ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"><i class="fa fa-plus"></i></a>
+                                      </div>
+                                    </div>
+                                    <div  class="pull-left " style="padding-bottom: 0;">
+                                      <div ng-repeat="card in table.inputcontent">
+                                        <!--text input field type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                 tooltips title="{{card.description}}"
+                                                 ng-show="true"
+                                                 ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
+                                                 ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id, card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                        </div>
+                                        <!--single select list input type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                            <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                            <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                              <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                              <small>
+                                                <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                              </small>
+                                            </ui-select-choices>
+                                          </ui-select>
+                                          <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                        </div>
+                                        <!--multi select list input type-->
+                                        <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+                                          <div
+                                            isteven-multi-select
+                                            input-model="card.fieldtypeContent"
+                                            output-model="metadataCtrl.metaData[card.id]"
+                                            button-label="value"
+                                            item-label="value"
+                                            tick-property="ticked"
+                                            output-properties="value"
+                                            style="display:inline-block">
+                                          </div>
+                                          <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
+                                          <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                         </div>
                                       </div>
-
+                                    </div>
+                                    <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
+                                    <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
+                                      <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
+                                        <div style="display:inline-block" >
+                                          <label style="font-weight: normal">{{value.data}}</label>
+                                        </div>
+                                        <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
+                                          <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
+                                          <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
+                                        </div>
+                                        <br>
+                                      </div>
                                       <div  class="pull-left " style="padding-bottom: 0;">
                                         <div ng-repeat="card in table.inputcontent">
                                           <!--text input field type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
                                                    tooltips title="{{card.description}}"
                                                    ng-show="true"
-                                                   ng-model="metadataCtrl.metaData[card.id]"  style="width: 100px"
-                                                   ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.createMetadata(table.id, card.id);" ><span class="glyphicon glyphicon-ok"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
-
+                                                   ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>
-
                                           <!--single select list input type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 150px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
                                               <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
                                               <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
                                                 <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
@@ -669,252 +589,164 @@ ng-show="!file.dir"
                                                 </small>
                                               </ui-select-choices>
                                             </ui-select>
-                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>
-
                                           <!--multi select list input type-->
-                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                            <div
-                                              isteven-multi-select
-                                              input-model="card.fieldtypeContent"
-                                              output-model="metadataCtrl.metaData[card.id]"
-                                              button-label="value"
-                                              item-label="value"
-                                              tick-property="ticked"
-                                              output-properties="value"
-                                              style="display:inline-block"
-                                              >
-                                            </div>
-                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></span></button>
-                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"><span class="glyphicon glyphicon-remove"></span></button>
+                                          <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
+                                            <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
+                                              <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                              <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                <small>
+                                                  <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                </small>
+                                              </ui-select-choices>
+                                            </ui-select>
+                                            <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
+                                            <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
                                           </div>
                                         </div>
                                       </div>
-
-                                      <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
-
-
-
-
-                                      <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
-                                        <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
-                                          <div style="display:inline-block" >
-                                            <label style="font-weight: normal">{{value.data}}</label>
-                                          </div>
-                                          <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
-                                            <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
-                                            <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
-                                          </div>
-                                          <br>
-                                        </div>
-
-
-                                        <div  class="pull-left " style="padding-bottom: 0;">
-                                          <div ng-repeat="card in table.inputcontent">
-                                            <!--text input field type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <input placeholder="{{value.data}}" class="fillInMetadataInput" id="sizeFieldInput"
-                                                     tooltips title="{{card.description}}"
-                                                     ng-show="true"
-                                                     ng-model="metadataCtrl.metaDataDetail[value.id]"  style="width: 100px"/>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.updateMetadata(value);" ><span class="glyphicon glyphicon-ok"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-
-                                            </div>
-
-                                            <!--single select list input type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 2" style="min-width: 125px;" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
-                                                <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                                  <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                                  <small>
-                                                    <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                                  </small>
-                                                </ui-select-choices>
-                                              </ui-select>
-                                              <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-                                            </div>
-
-                                            <!--multi select list input type-->
-                                            <div ng-if="field.tagName === card.title && card.fieldtypeid === 3" ng-show="metadataCtrl.visibilityInfo[value.id]">
-                                              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]" theme="select2" ng-disabled="disabled" style="min-width: 100px;" required>
-                                                <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                                  <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                                  <small>
-                                                    <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                                  </small>
-                                                </ui-select-choices>
-                                              </ui-select>
-                                              <button class="btn btn-default btn-xs"><span class="glyphicon glyphicon-ok" ng-click="metadataCtrl.updateMetadata(value);"></span></button>
-                                              <button class="btn btn-default btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, false);"><span class="glyphicon glyphicon-remove"></span></button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <div style="width: 100%; height: 35px;" ng-show="metadataCtrl.visibilityInfo[value.id]"></div>
-
-
-                                      </div>
-
+                                      <div style="width: 100%; height: 35px;" ng-show="metadataCtrl.visibilityInfo[value.id]"></div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-
-
-                        </md-tab>
-                        <md-tab label="Activity">
-
-                        </md-tab>
-                      </md-tabs>
-
-                      <!-- Add Metadata -->
-                      <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
-                                  style="margin-top: 0px;">
-
-                        <md-toolbar class="md-theme-light"
-                                    style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
-
-                          <div class="md-toolbar-tools">
-                            <h2 style="margin:0;">
-                              <span>Metadata manager</span>
-                            </h2>
-                            <span flex></span>
-                            <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
-                                    ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
-                                    class="btn btn-success">
-                              <i class="fa fa-save"></i>
-                              Save
-                            </button>
-                          </div>
-
-                        </md-toolbar>
-                        <md-content layout-padding>
-                          <p>Associating metadata to: <a><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
-
-                          <label class="control-label" ng-show="metadataCtrl.noTemplates">
-                            <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
-                          </label>
-                          <p></p>
-
-                          <div class="pull-left" ng-if="!metadataCtrl.noTemplates">
-                            Select a template to add metadata to:
-                            <ui-select ng-model="metadataCtrl.selectedTemplate" theme="select2" 
-                                       ng-disabled="metadataCtrl.noTemplates"
-                                       on-select="metadataCtrl.updateMetadataTabs()" style="min-width: 15em;">
-
-                              <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
-
-                              <ui-select-choices repeat="template in metadataCtrl.currentFileTemplates | filter: $select.search">
-                                <small>
-                                  <span ng-bind-html="'' + template.templateName | highlight: $select.search"></span>
-                                </small>
-                              </ui-select-choices>
-                            </ui-select>
-                          </div>
-
-                          <div style="margin-top: 10em;">
-                            <uib-tabset justified="false">
-                              <uib-tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
-                                       disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
-                                       style="padding-left: 1em;z-index: 0;">
-
-                                <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
-                                      style="padding:0em 1em 50em 1em;">
-
-                                  <ul class="card-list" ng-model="column.cards">
-                                    <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
-                                      <div style="padding-bottom: 0;">
-
-                                        <!--The table section-->
-                                        <div class="row col-md-15" style="padding-bottom: 0;">
-                                          <!--The row section-->
-                                          <div class="col-md-12" style="padding-bottom: 0;">
-                                            <div tabindex="1" class="col-md-2">
-                                              <span class="card-title pull-right btn btn-xs"
-                                                    style="font-size: 1em">{{card.title}}</span>
+                        </div>
+                      </md-tab>
+                      <md-tab label="Activity">
+                      </md-tab>
+                    </md-tabs>
+                    <!-- Add Metadata -->
+                    <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
+                                style="margin-top: 0px;">
+                      <md-toolbar class="md-theme-light"
+                                  style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
+                        <div class="md-toolbar-tools">
+                          <h2 style="margin:0;">
+                            <span>Metadata manager</span>
+                          </h2>
+                          <span></span>
+                          <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
+                                  ng-click="metadataCtrl.submitMetadata(metadataCtrl.metaData); datasetsCtrl.close()"
+                                  class="btn btn-success">
+                            <i class="fa fa-save"></i>
+                            Save
+                          </button>
+                        </div>
+                      </md-toolbar>
+                      <md-content layout-padding>
+                        <p>Associating metadata to: <a><b>'{{metadataCtrl.currentFile.name}}'</b></a></p>
+                        <label class="control-label" ng-show="metadataCtrl.noTemplates">
+                          <font color="red">There is no template attached to file {{metadataCtrl.currentFile.name}}</font>
+                        </label>
+                        <p></p>
+                        <div class="pull-left" ng-if="!metadataCtrl.noTemplates">
+                          Select a template to add metadata to:
+                          <ui-select ng-model="metadataCtrl.selectedTemplate" theme="select2" 
+                                     ng-disabled="metadataCtrl.noTemplates"
+                                     on-select="metadataCtrl.updateMetadataTabs()" style="min-width: 15em;">
+                            <ui-select-match placeholder="Select a template...">{{$select.selected.templateName}}</ui-select-match>
+                            <ui-select-choices repeat="template in metadataCtrl.currentFileTemplates | filter: $select.search">
+                              <small>
+                                <span ng-bind-html="'' + template.templateName | highlight: $select.search"></span>
+                              </small>
+                            </ui-select-choices>
+                          </ui-select>
+                        </div>
+                        <div style="margin-top: 10em;">
+                          <uib-tabset justified="false">
+                            <uib-tab ng-repeat="tab in metadataCtrl.tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+                                     disabled="tab.disabled" select="metadataCtrl.onTabSelect(tab)"
+                                     style="padding-left: 1em;z-index: 0;">
+                              <form name="{{tab.title}}{{$index}}" ng-submit="metadataCtrl.submitMetadata(metadataCtrl.metaData)"
+                                    style="padding:0em 1em 50em 1em;">
+                                <ul class="card-list" ng-model="column.cards">
+                                  <li ng-repeat="card in tab.cards" style="padding-bottom: 0;">
+                                    <div style="padding-bottom: 0;">
+                                      <!--The table section-->
+                                      <div class="row col-md-15" style="padding-bottom: 0;">
+                                        <!--The row section-->
+                                        <div class="col-md-12" style="padding-bottom: 0;">
+                                          <div tabindex="1" class="col-md-2">
+                                            <span class="card-title pull-right btn btn-xs"
+                                                  style="font-size: 1em">{{card.title}}</span>
+                                          </div>
+                                          <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
+                                            <span class="field-info pull-left" tooltip-placement="right"
+                                                  uib-tooltip="{{card.description}}">
+                                              <i class="fa fa-exclamation-circle"></i>
+                                            </span>
+                                          </div>
+                                          <div tabindex="3" class="pull-left col-md-9" style="padding-bottom: 0;">
+                                            <!--text input field type-->
+                                            <div ng-if="card.fieldtypeid === 1">
+                                              <input value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                     tooltips title="{{card.description}}"
+                                                     ng-show="true"
+                                                     ng-model="metadataCtrl.metaData[card.id]"/>
                                             </div>
-
-                                            <div tabindex="2" class="col-md-1" style="padding-bottom: 0;">
-                                              <span class="field-info pull-left" tooltip-placement="right"
-                                                    uib-tooltip="{{card.description}}">
-                                                <i class="fa fa-exclamation-circle"></i>
-                                              </span>
+                                            <!--single select list input type-->
+                                            <div ng-if="card.fieldtypeid === 2">
+                                              <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                                <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                  <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                  <small>
+                                                    <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                  </small>
+                                                </ui-select-choices>
+                                              </ui-select>
                                             </div>
-
-                                            <div tabindex="3" class="pull-left col-md-9" style="padding-bottom: 0;">
-                                              <!--text input field type-->
-                                              <div ng-if="card.fieldtypeid === 1">
-                                                <input value="" class="fillInMetadataInput" id="sizeFieldInput"
-                                                       tooltips title="{{card.description}}"
-                                                       ng-show="true"
-                                                       ng-model="metadataCtrl.metaData[card.id]"/>
-                                              </div>
-
-                                              <!--single select list input type-->
-                                              <div ng-if="card.fieldtypeid === 2">
-
-                                                <ui-select ng-model="metadataCtrl.metaData[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
-                                                  <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
-                                                  <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
-                                                    <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
-                                                    <small>
-                                                      <span ng-bind-html="''+item.value | highlight: $select.search"></span>
-                                                    </small>
-                                                  </ui-select-choices>
-                                                </ui-select>
-                                              </div>
-
-                                              <!--multi select list input type-->
-                                              <div ng-if="card.fieldtypeid === 3">
-                                                <div
-                                                  isteven-multi-select
-                                                  input-model="card.fieldtypeContent"
-                                                  output-model="metadataCtrl.metaData[card.id]"
-                                                  button-label="value"
-                                                  item-label="value"
-                                                  tick-property="ticked"
-                                                  output-properties="value"
-                                                  >
-                                                </div>
+                                            <!--multi select list input type-->
+                                            <div ng-if="card.fieldtypeid === 3">
+                                              <div isteven-multi-select
+                                                   input-model="card.fieldtypeContent"
+                                                   output-model="metadataCtrl.metaData[card.id]"
+                                                   button-label="value"
+                                                   item-label="value"
+                                                   tick-property="ticked"
+                                                   output-properties="value">
                                               </div>
                                             </div>
                                           </div>
                                         </div>
-                                        <hr>
                                       </div>
-                                    </li>
-                                  </ul>
-                                  <hr/>
-                                  <div>
-                                    <button class="btn btn-default">
-                                      <i class="glyphicon glyphicon-floppy-save"></i>
-                                      Save
-                                    </button>
-                                    <button class="btn btn-default" type="button"
-                                            ng-click="datasetsCtrl.close()">
-                                      <i class="glyphicon glyphicon-chevron-left"></i>
-                                      Back
-                                    </button>
-                                  </div>
-                                </form>
-                              </uib-tab>
-                            </uib-tabset>
-                          </div>
-                        </md-content>
-                      </md-sidenav>
-                    </md-content>
+                                      <hr>
+                                    </div>
+                                  </li>
+                                </ul>
+                                <hr/>
+                                <div>
+                                  <button class="btn btn-default">
+                                    <i class="glyphicon glyphicon-floppy-save"></i>
+                                    Save
+                                  </button>
+                                  <button class="btn btn-default" type="button"
+                                          ng-click="datasetsCtrl.close()">
+                                    <i class="glyphicon glyphicon-chevron-left"></i>
+                                    Back
+                                  </button>
+                                </div>
+                              </form>
+                            </uib-tab>
+                          </uib-tabset>
+                        </div>
+                      </md-content>
+                    </md-sidenav>
+                  </md-content>
                 </div>
               </div>
             </div>
+            <!--End Side nave -->
           </div>
+
+          </div>        
         </div>
-                      </section>        
-                  </div>
-                </div>
-              </div>
+      </section>
+    </div>
+  </div>
+</div>

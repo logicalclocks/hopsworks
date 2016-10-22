@@ -47,9 +47,9 @@ angular.module('hopsWorksApp')
                         $location.path('/');
                         AuthService.isAdmin().then(
                             function (success) {
-                              $cookies.isAdmin = 1;
+                              $cookies.put("isAdmin", 1);
                           },function (error) {
-                              $cookies.isAdmin = 0;
+                              $cookies.put("isAdmin", 0);
                         });
                       }, function (error) {
                         self.working = false;

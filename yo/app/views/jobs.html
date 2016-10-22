@@ -234,7 +234,7 @@
                                   <button 
                                     uib-tooltip="Delete"
                                     ng-click="jobsCtrl.toggle(job, $index);
-                                    jobsCtrl.deleteJob(job.id); $event.stopPropagation();"
+                                    jobsCtrl.deleteJob(job.id, job.name); $event.stopPropagation();"
                                     type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                                   </button>
                                   <button uib-tooltip="Job UI"
@@ -242,7 +242,7 @@
                                           ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                             $event.stopPropagation();">                                            
                                   </button>
-                                  <div uib-dropdown class="btn-group" role="group">
+                                  <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
                                     <button type="button" 
                                             uib-dropdown-toggle class="btn btn-default glyphicon"
                                             style="font-family: sans-serif;"
@@ -365,7 +365,8 @@
     tourtip-placement="bottom"
     tourtip-next-label="Next"
     on-proceed="jobsCtrl.newJob()"
-    tourtip-offset-vertical="-13"
+    tourtip-offset-vertical="-65"
+    tourtip-offset-horizontal="38"
     ></virtual-step>
   <virtual-step
     class="ng-scope"
@@ -381,7 +382,7 @@
     tourtip-placement="bottom"
     tourtip-next-label="Done"
     on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
-    tourtip-offset-vertical="-37"
+    tourtip-offset-vertical="-65"
     ></virtual-step>
 </tour>
 

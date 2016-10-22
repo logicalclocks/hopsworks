@@ -1,10 +1,17 @@
+html {
+  background-color: #FFFFFF !important;
+}
+
 body {
   height: 95%;
   font-family: "Source Sans Pro", sans-serif;
   font-size: 14px;
   line-height: 1.52857;
   padding: 0;
-  min-width: 600px;
+  min-width: 800px;
+  overflow: auto;
+  width: 100%;
+  margin: 0;
 }
 
 h2 {
@@ -446,4 +453,25 @@ div.cust .jslider div.jslider-bg i{
 
 .md-button.browser.newfolder {
   color: darkslategray;
+}
+
+td:focus {
+  outline: none !important;
+}
+
+th:focus {
+  outline: none !important;
+}
+
+tbody > tr > td {
+  padding: 6px !important;
+  vertical-align: middle !important;
+}
+
+md-input-container {
+  margin-bottom: 0px !important;
+}
+
+.md-errors-spacer {
+  min-height: 0px !important;
 }

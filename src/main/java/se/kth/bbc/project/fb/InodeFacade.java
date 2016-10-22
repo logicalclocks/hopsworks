@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -11,6 +13,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -21,6 +25,8 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
+  private final static Logger logger = Logger.getLogger(InodeFacade.class.getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -135,12 +141,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
     //Get the right root node
     Inode curr = getRootNode(p[0]);
     if (curr == null) {
+      logger.log(Level.WARNING, "Could not resolve root inode at path: {0}", path);
       return null;
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      Inode next = findByParentAndName(curr, p[i]);
+      int partitionId = HopsUtils.calculatePartitionId(curr.getId(), p[i], i+1);
+      Inode next = findByInodePK(curr, p[i], partitionId);
       if (next == null) {
+        logger.log(Level.WARNING, "Could not resolve inode at path: {0} and path-component " + i, path);
         return null;
       } else {
         curr = next;
@@ -151,11 +160,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
+    int partitionId = HopsUtils.projectPartitionId(name);
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
     query.setParameter("name", name);
+    query.setParameter("parentId", HopsUtils.ROOT_INODE_ID);
+    query.setParameter("partitionId", partitionId);
     try {
       return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
     } catch (NoResultException e) {
+        logger.log(Level.WARNING, "Could not resolve root inode with name: {0} and partition_id" + partitionId, name);
       return null;
     }
   }
@@ -198,14 +211,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * <p/>
    * @param parent
    * @param name
+   * @param partitionId
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Inode findByParentAndName(Inode parent, String name) {
+  public Inode findByInodePK(Inode parent, String name, int partitionId) {
 
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
-    q.setParameter("inodePk", new InodePK(parent.getId(), name));
+    q.setParameter("inodePk", new InodePK(parent.getId(), name, partitionId));
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {

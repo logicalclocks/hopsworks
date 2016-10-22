@@ -71,7 +71,7 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
-import se.kth.hopsworks.util.Utils;
+import se.kth.hopsworks.util.HopsUtils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -246,7 +246,8 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    Inode inode = inodes.findByParentAndName(parent, dataSet.getName());
+    Inode inode = inodes.findByInodePK(parent, dataSet.getName(),
+        HopsUtils.dataSetPartitionId(parent, dataSet.getName()));
     Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
     if (ds == null) {//if parent id and project are not the same it is a shared ds.
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -744,7 +745,7 @@ public class DataSetService {
       FilePreviewDTO filePreviewDTO = null;
       //If it is an image smaller than 10MB download it
       //otherwise thrown an error
-      if (Utils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
+      if (HopsUtils.isInEnum(fileExtension, FilePreviewImageTypes.class)) {
         int imageSize = (int) udfso.getFileStatus(new org.apache.hadoop.fs.Path(
                 path)).getLen();
         if (udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen()
@@ -1078,7 +1079,8 @@ public class DataSetService {
       projectName = shardDS[0];
       dsName = shardDS[1];
       Inode parent = inodes.getProjectRoot(projectName);
-      Inode dsInode = inodes.findByParentAndName(parent, dsName);
+      Inode dsInode = inodes.findByInodePK(parent, dsName,
+          HopsUtils.dataSetPartitionId(parent, dsName));
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -1094,7 +1096,7 @@ public class DataSetService {
     } else if (parts != null) {
       dsName = parts[0];
       Inode parent = inodes.getProjectRoot(this.project.getName());
-      Inode dsInode = inodes.findByParentAndName(parent, dsName);
+      Inode dsInode = inodes.findByInodePK(parent, dsName, HopsUtils.dataSetPartitionId(parent, dsName));
       this.dataset = datasetFacade.findByProjectAndInode(this.project, dsInode);
       if (this.dataset == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

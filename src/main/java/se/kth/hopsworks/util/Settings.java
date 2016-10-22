@@ -27,6 +27,7 @@ public class Settings {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
@@ -38,7 +39,6 @@ public class Settings {
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
-  private static final String VARIABLE_SPARK_EXAMPLES_DIR = "spark_example_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
@@ -150,7 +150,6 @@ public class Settings {
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
-      SPARK_EXAMPLES_DIR = setDirVar(VARIABLE_SPARK_EXAMPLES_DIR, SPARK_EXAMPLES_DIR);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
@@ -172,6 +171,7 @@ public class Settings {
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
+      KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_IP = setIpVar(VARIABLE_KAFKA_IP, KAFKA_IP);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
@@ -220,8 +220,7 @@ public class Settings {
    * Default Directory locations
    */
   private String SPARK_DIR = "/srv/spark";
-  private String SPARK_EXAMPLES_DIR = "/lib";
-  public static final String SPARK_VERSION = "1.6.1";
+  public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV = "spark.yarn.historyServer.address";
@@ -235,6 +234,8 @@ public class Settings {
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
+  public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
+
   public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
   public static final String SPARK_CACHE_TIMESTAMPS = "spark.yarn.cache.timestamps";
@@ -251,11 +252,6 @@ public class Settings {
   public synchronized String getSparkConfDir(){
       checkCache();
       return SPARK_CONF_DIR;
-  }
-  
-  public synchronized String getSparkExampleDir(){
-      checkCache();
-      return SPARK_EXAMPLES_DIR;
   }
   
   private String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
@@ -452,7 +448,7 @@ public class Settings {
   public static final String ENV_KEY_YARN_CONF = "YARN_CONF_DIR";
   public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
-  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 512;
+  public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 1024;
   public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
   public static final String HADOOP_HOME_KEY = "HADOOP_HOME";
@@ -639,6 +635,15 @@ public class Settings {
   
   public static final int ZK_PORT = 2181; 
  
+  // Kibana
+  private String KIBANA_IP = "10.0.2.15";
+  public static final int KIBANA_PORT = 5601;
+
+  public synchronized String getKibanaUri() {
+    checkCache();
+    return "http://" + KIBANA_IP+":"+KIBANA_PORT;
+  }
+
   // Zookeeper 
   private String ZK_IP = "10.0.2.15";
 
@@ -788,6 +793,9 @@ public class Settings {
   public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
   public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
+  public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
+  public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
+
   //Used to retrieve schema by KafkaUtil
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";
   

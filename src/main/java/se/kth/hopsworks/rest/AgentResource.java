@@ -11,7 +11,6 @@ import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -38,7 +37,7 @@ import javax.ws.rs.core.SecurityContext;
  */
 @Path("/agentresource")
 @Stateless
-@RolesAllowed({"AGENT"})
+@RolesAllowed({"HOPS_ADMIN","AGENT"})
 public class AgentResource {
 
   @EJB
