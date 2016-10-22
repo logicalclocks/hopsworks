@@ -160,15 +160,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    int rootId = HopsUtils.ROOT_INODE_ID;
     int partitionId = HopsUtils.projectPartitionId(name);
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
     query.setParameter("name", name);
-    query.setParameter("parentId", rootId);
+    query.setParameter("parentId", HopsUtils.ROOT_INODE_ID);
     query.setParameter("partitionId", partitionId);
     try {
       return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
     } catch (NoResultException e) {
+        logger.log(Level.WARNING, "Could not resolve root inode with name: {0} and partition_id" + partitionId, name);
       return null;
     }
   }

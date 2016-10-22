@@ -101,12 +101,10 @@ public class Inode implements Serializable {
   private BigInteger modificationTime;
   @Column(name = "access_time")
   private BigInteger accessTime;
-  @JoinColumn(name = "user_id",
-          referencedColumnName = "id")
+  @JoinColumn(name = "user_id", referencedColumnName = "id")
   @OneToOne
   private HdfsUsers hdfsUser;
-  @JoinColumn(name = "group_id",
-          referencedColumnName = "id")
+  @JoinColumn(name = "group_id", referencedColumnName = "id")
   @OneToOne
   private HdfsGroups hdfsGroup;
   @Column(name = "permission")
@@ -129,25 +127,26 @@ public class Inode implements Serializable {
   private String symlink;
   @Basic(optional = false)
   @NotNull
+//  @Converter(name = "byteConverter", converterClass = se.kth.bbc.project.fb.ByteConverter.class)
+//  @Convert("byteConverter")
   @Column(name = "quota_enabled")
-  @Converter(name = "byteConverter",
-          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
-  @Convert("byteConverter")
-  private Byte quotaEnabled;
+  private boolean quotaEnabled;
   @Basic(optional = false)
   @NotNull
   @Column(name = "under_construction")
-  @Converter(name = "byteConverter",
-          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
-  @Convert("byteConverter")
-  private Byte underConstruction;
+  private boolean underConstruction;
   @Column(name = "subtree_locked")
-  @Converter(name = "byteConverter",
-          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
-  @Convert("byteConverter")
-  private Byte subtreeLocked;
+  private boolean subtreeLocked;  
+  @Column(name = "meta_enabled")
+  @NotNull
+  private boolean metaEnabled;
+  @Column(name = "is_dir")
+  @NotNull
+  private boolean dir;
+
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "size")
@@ -164,19 +163,22 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public Inode(InodePK inodePK, int id, byte quotaEnabled,
-          byte underConstruction) {
+  public Inode(InodePK inodePK, int id, boolean quotaEnabled,
+          boolean underConstruction, boolean subtreeLocked, boolean metaEnabled, boolean dir) {
     this.inodePK = inodePK;
     this.id = id;
     this.quotaEnabled = quotaEnabled;
     this.underConstruction = underConstruction;
+    this.subtreeLocked = subtreeLocked;
+    this.metaEnabled = metaEnabled;
+    this.dir = dir;
   }
 
   //copy constructor
   public Inode(Inode inode) {
     this(new InodePK(inode.getInodePK().getParentId(), inode.getInodePK().
-            getName(), inode.getInodePK().getPartitionId()), inode.getId(), inode.getQuotaEnabled(), inode.
-            getUnderConstruction());
+            getName(), inode.getInodePK().getPartitionId()), inode.getId(), inode.isQuotaEnabled(), inode.
+            isUnderConstruction(), inode.isSubtreeLocked(), inode.isMetaEnabled(), inode.isDir());
   }
 
   public Inode(int parentId, String name, int partitionId) {
@@ -271,29 +273,6 @@ public class Inode implements Serializable {
     this.symlink = symlink;
   }
 
-  public byte getQuotaEnabled() {
-    return quotaEnabled;
-  }
-
-  public void setQuotaEnabled(byte quotaEnabled) {
-    this.quotaEnabled = quotaEnabled;
-  }
-
-  public byte getUnderConstruction() {
-    return underConstruction;
-  }
-
-  public void setUnderConstruction(byte underConstruction) {
-    this.underConstruction = underConstruction;
-  }
-
-  public Byte getSubtreeLocked() {
-    return subtreeLocked;
-  }
-
-  public void setSubtreeLocked(Byte subtreeLocked) {
-    this.subtreeLocked = subtreeLocked;
-  }
 
   public BigInteger getSubtreeLockOwner() {
     return subtreeLockOwner;
@@ -372,10 +351,6 @@ public class Inode implements Serializable {
     return "se.kth.bbc.project.fb.Inode[ inodePK= " + inodePK + " ]";
   }
 
-  public boolean isDir() {
-    return header.equals(BigInteger.ZERO);
-  }
-
   public HdfsUsers getHdfsUser() {
     return hdfsUser;
   }
@@ -391,6 +366,49 @@ public class Inode implements Serializable {
   public void setHdfsGroup(HdfsGroups hdfsGroup) {
     this.hdfsGroup = hdfsGroup;
   }
-  
+
+  public void setDir(boolean dir) {
+    this.dir = dir;
+  }
+
+  public boolean isDir() {
+//    return header.equals(BigInteger.ZERO);
+    return dir;
+  }
+
+  public boolean isMetaEnabled() {
+    return metaEnabled;
+  }
+
+  public void setMetaEnabled(boolean metaEnabled) {
+    this.metaEnabled = metaEnabled;
+  }
+
+  public boolean isQuotaEnabled() {
+    return quotaEnabled;
+  }
+
+  public void setQuotaEnabled(boolean quotaEnabled) {
+    this.quotaEnabled = quotaEnabled;
+  }
+
+
+  public boolean isSubtreeLocked() {
+    return subtreeLocked;
+  }
+
+  public void setSubtreeLocked(boolean subtreeLocked) {
+    this.subtreeLocked = subtreeLocked;
+  }
+
+  public boolean isUnderConstruction() {
+    return underConstruction;
+  }
+
+  public void setUnderConstruction(boolean underConstruction) {
+    this.underConstruction = underConstruction;
+  }
+
+
   
 }
