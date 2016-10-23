@@ -20,11 +20,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobSubmissionResult;
-import org.apache.flink.client.program.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.yarn.FlinkYarnCluster;
+import org.apache.flink.yarn.AbstractYarnClusterDescriptor;
+import org.apache.flink.yarn.YarnClusterClient;
+import org.apache.flink.yarn.YarnClusterDescriptor;
 
 
 import org.apache.hadoop.conf.Configuration;
@@ -186,104 +187,107 @@ public class YarnRunner {
         
         //If it is a Flink job, copy the job jar locally and submit the job.
         if(jobType == JobType.FLINK){
-            int retries = 0;
-            int maxRetries = 60;
-            //Wait for the job manager to start, so the runner is aware of its port.
-            while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
-                logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
-                retries++;
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
-                }
-            }
-            if(yarnClient.getApplicationReport(appId).getRpcPort() < 1){
-                throw new FlinkYarnRunnerBuilder.YarnDeploymentException("Cound not determine Flink JobManager port");
-            }
-            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
-
-            String[] args  = {};
-            if(amArgs!=null && !amArgs.isEmpty()){
-                args = amArgs.trim().split(" ");
-            }
-            /*Copy the appjar to the localOS as it is needed by the Flink client
-            *Create path in local /tmp to store the appjar
-            *To distinguish between jars for different job executions, add the 
-            *current system time in the filename. This jar is removed after
-            *the job is finished.*/
-            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
-            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
-            File tmpDir = new File(localPathAppJarDir);
-            if(!tmpDir.exists()){
-                tmpDir.mkdir();
-            }
-            //Copy job jar locaclly so that Flink client has access to it
-            //in YarnRunner
-            FileSystem fs = FileSystem.get(conf);
-            fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
-            //app.jar path 
-            File file = new File(localPathAppJarDir+ "/"+appJarName);
-           
-            Path sessionFilesDir = new Path(localResourcesBasePath);
-            org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
-            FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
-            cluster.connectToCluster();
-            InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
-            //Wait for slots to be allocated
-            int slotWait = 0;
-            while(cluster.getClusterStatus() == null && slotWait < 60){
-                try {
-                    Thread.sleep(1000);
-                    logger.log(Level.INFO, "Waiting for Flink cluster to be allocated");
-                    slotWait++;
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
-            slotWait = 0;
-            while(cluster.getClusterStatus().getNumberOfSlots() < 1 && slotWait < 60){
-                try {
-                    Thread.sleep(1000);
-                    logger.log(Level.INFO, "Waiting for Flink slots to be allocated");
-                    slotWait++;
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-
-            }
-
-            org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
-            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
-            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
-            Client client = new Client(clientConf);
-            try {
-                List<URL> classpaths = new ArrayList<>();
-                //Copy Flink jar to local machine and pass it to the classpath
-                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
-                classpaths.add(flinkURL);
-                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
-                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
-                classpaths.add(libURL);
-                classpaths.add(libURL3);
-                
-                PackagedProgram program = new PackagedProgram(file, classpaths, args);
-                client.setPrintStatusDuringExecution(false);
-
-                JobSubmissionResult res =  client.runDetached(program, parallelism);
-                JobID jobId = res.getJobID();
-                FlinkJob.jobsClusterInfo.put(appId.toString(), new FlinkJob.FlinkClusterInfo(jobId, client));
-                cluster.stopAfterJob(jobId);
-            }   catch (ProgramInvocationException ex) {
-              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
-              //Kill the flink job here
-               Runtime rt = Runtime.getRuntime();
-               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
-            } finally{
-              //Remove local flink app jar
-               FileUtils.deleteDirectory(localPathAppJarDir);
-               logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
-            }
+//            int retries = 0;
+//            int maxRetries = 60;
+//            //Wait for the job manager to start, so the runner is aware of its port.
+//            while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
+//                logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+//                retries++;
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
+//                }
+//            }
+//            if(yarnClient.getApplicationReport(appId).getRpcPort() < 1){
+//                throw new FlinkYarnRunnerBuilder.YarnDeploymentException("Cound not determine Flink JobManager port");
+//            }
+//            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+//
+//            String[] args  = {};
+//            if(amArgs!=null && !amArgs.isEmpty()){
+//                args = amArgs.trim().split(" ");
+//            }
+//            /*Copy the appjar to the localOS as it is needed by the Flink client
+//            *Create path in local /tmp to store the appjar
+//            *To distinguish between jars for different job executions, add the 
+//            *current system time in the filename. This jar is removed after
+//            *the job is finished.*/
+//            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
+//            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+//            File tmpDir = new File(localPathAppJarDir);
+//            if(!tmpDir.exists()){
+//                tmpDir.mkdir();
+//            }
+//            //Copy job jar locaclly so that Flink client has access to it
+//            //in YarnRunner
+//            FileSystem fs = FileSystem.get(conf);
+//            fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
+//            //app.jar path 
+//            File file = new File(localPathAppJarDir+ "/"+appJarName);
+//           
+//            Path sessionFilesDir = new Path(localResourcesBasePath);
+//            org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
+//            //AbstractYarnClusterDescriptor cluster = new YarnClusterDescriptor(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
+//            AbstractYarnClusterDescriptor cluster = new YarnClusterDescriptor();
+//            cluster.
+//            cluster.connectToCluster();
+//            InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
+//            //Wait for slots to be allocated
+//            int slotWait = 0;
+//            while(cluster.getClusterStatus() == null && slotWait < 60){
+//                try {
+//                    Thread.sleep(1000);
+//                    logger.log(Level.INFO, "Waiting for Flink cluster to be allocated");
+//                    slotWait++;
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            slotWait = 0;
+//            while(cluster.getClusterStatus().getNumberOfSlots() < 1 && slotWait < 60){
+//                try {
+//                    Thread.sleep(1000);
+//                    logger.log(Level.INFO, "Waiting for Flink slots to be allocated");
+//                    slotWait++;
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, null, ex);
+//                }
+//
+//            }
+//
+//            org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
+//            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
+//            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
+//            YarnClusterClient client = new YarnClusterClient(clientConf);
+//            
+//            try {
+//                List<URL> classpaths = new ArrayList<>();
+//                //Copy Flink jar to local machine and pass it to the classpath
+//                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
+//                classpaths.add(flinkURL);
+//                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
+//                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
+//                classpaths.add(libURL);
+//                classpaths.add(libURL3);
+//                
+//                PackagedProgram program = new PackagedProgram(file, classpaths, args);
+//                client.setPrintStatusDuringExecution(false);
+//
+//                JobSubmissionResult res =  client.runDetached(program, parallelism);
+//                JobID jobId = res.getJobID();
+//                FlinkJob.jobsClusterInfo.put(appId.toString(), new FlinkJob.FlinkClusterInfo(jobId, client));
+//                cluster.stopAfterJob(jobId);
+//            }   catch (ProgramInvocationException ex) {
+//              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
+//              //Kill the flink job here
+//               Runtime rt = Runtime.getRuntime();
+//               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
+//            } finally{
+//              //Remove local flink app jar
+//               FileUtils.deleteDirectory(localPathAppJarDir);
+//               logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
+//            }
         }
         yarnClient.close();
         

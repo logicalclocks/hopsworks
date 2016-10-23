@@ -274,11 +274,11 @@ public class Settings {
     checkCache();
     return FLINK_DIR;
   }
-  private final String FLINK_CONF_DIR = FLINK_DIR + "/conf";
+  private final String FLINK_CONF_DIR = FLINK_DIR + "conf";
 
   public String getFlinkConfDir() {
     String flinkDir = getFlinkDir();
-    return flinkDir + FLINK_CONF_DIR;
+    return flinkDir + File.separator + FLINK_CONF_DIR;
   }
   private final String FLINK_CONF_FILE = FLINK_CONF_DIR + "/flink-conf.yaml";
  
