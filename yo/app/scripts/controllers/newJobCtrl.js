@@ -21,6 +21,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.tourService = TourService;
             self.flinkjobtype;
+            self.resourceType;
             //Set services as attributes 
             self.ModalService = ModalService;
             self.growl = growl;
@@ -28,7 +29,10 @@ angular.module('hopsWorksApp')
             // keep the proposed configurations
             self.autoConfigResult;
 
-
+            self.setResourceType = function(type){
+              self.resourceType = type;
+            };
+            
             //Set some (semi-)constants
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,

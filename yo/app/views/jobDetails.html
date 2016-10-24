@@ -49,7 +49,7 @@
     </div>
     <div uib-accordion-group heading="Configuration">    
       <!-- Spark configuration -->
-      <div ng-show="jobDetailCtrl.job.runConfig.type == 'sparkJobConfiguration'">
+      <div ng-show="jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration'">
         <div class="row">
           <div>
             <strong>Job details</strong>
@@ -116,7 +116,7 @@
         </div>
       </div>
       <!-- Flink configuration -->
-      <div ng-show="jobDetailCtrl.job.runConfig.type == 'flinkJobConfiguration'">
+      <div ng-show="jobDetailCtrl.job.runConfig.type === 'flinkJobConfiguration'">
         <div class="row">
           <div>
             <strong>Job details</strong>
@@ -171,7 +171,7 @@
         </div>
       </div>
       <!-- Adam configuration -->
-      <div ng-show="jobDetailCtrl.job.runConfig.type == 'adamJobConfiguration'">
+      <div ng-show="jobDetailCtrl.job.runConfig.type === 'adamJobConfiguration'">
         <div class="row">
           <h3>{{jobDetailCtrl.job.runConfig.selectedCommand.description}}</h3>
         </div>
