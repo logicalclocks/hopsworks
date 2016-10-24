@@ -210,6 +210,9 @@ public class ZeppelinResource {
     //pid value can only be extended up to a theoretical maximum of 
     //32768 for 32 bit systems or 4194304 for 64 bit:
     byte[] pid = new byte[8];
+    if (file == null) {
+      return null;
+    }
     try {
       file.getContent().getInputStream().read(pid);
       file.close();
