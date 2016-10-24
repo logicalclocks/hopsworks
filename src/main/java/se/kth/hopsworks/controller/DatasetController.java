@@ -29,6 +29,7 @@ import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.HopsUtils;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -106,7 +107,8 @@ public class DatasetController {
             + project.getName();
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
-    Inode ds = inodes.findByParentAndName(parent, dataSetName);
+    Inode ds = inodes.findByInodePK(parent, dataSetName,
+        HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -127,7 +129,8 @@ public class DatasetController {
       dfso.setMetaEnabled(dsPath);
       try {
 
-        ds = inodes.findByParentAndName(parent, dataSetName);
+        ds = inodes.findByInodePK(parent, dataSetName, 
+            HopsUtils.dataSetPartitionId(parent, dataSetName));
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
 
@@ -257,7 +260,7 @@ public class DatasetController {
       String folderName = pathParts[pathParts.length - 1];
 
       //find the corresponding inode
-      Inode folder = this.inodes.findByParentAndName(parent, folderName);
+      Inode folder = this.inodes.findByInodePK(parent, folderName, parent.getInodePK().getParentId());
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
               searchable);
       this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);

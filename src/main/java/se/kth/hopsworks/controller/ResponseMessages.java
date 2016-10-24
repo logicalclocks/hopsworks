@@ -3,6 +3,7 @@ package se.kth.hopsworks.controller;
 public class ResponseMessages {
 
   //response for validation error
+  public final static String INTERNAL_SERVER_ERROR = "Internal Server Error. Please report a bug.";
   public final static String USER_DOES_NOT_EXIST = "User does not exist.";
   public final static String USER_WAS_NOT_FOUND
           = "Ops! The operation failed. User not found";

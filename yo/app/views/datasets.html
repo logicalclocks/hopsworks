@@ -8,11 +8,8 @@
     <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay" ></div>
-      <section layout="row" flex>
-
-        <md-content flex layout-padding>
+      <section>
           <div ng-include="'navProject.html'"></div>
-
           <div layout="column" layout-fill layout-align="top center" >
             <div ng-show="mainCtrl.searchReturned !== ''">
               <div id="projectSearchResults">
@@ -21,19 +18,8 @@
             </div>
 
             <div class="content-wrapper" style="background-color: white;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
-              <h3>
-                <div class="col-lg-3" style="margin-top: -17px;">
-                  <!--                  <button class="btn btn-sm btn-success" ng-click="datasetsCtrl.newDataSetModal()" uib-dropdown-toggle type="button" id="newDataSet" aria-haspopup="true" aria-expanded="true">
-                                      Create New DataSet
-                                    </button>-->
-                  <md-button class="md-icon-button md-primary" aria-label="New Folder" ng-click="datasetsCtrl.newDataSetModal()" >
-                    <md-tooltip md-direction="right">
-                      Create New Dataset
-                    </md-tooltip>                    
-                    <md-icon md-svg-icon="images/folder_new.svg"></md-icon>
-                  </md-button>
-                </div>
-                <div class="col-lg-6" style="max-width: 550px; " >
+              <h3>               
+                <div flex="65">
                   Filter: 
                   <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
                   <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
@@ -41,13 +27,13 @@
                   <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
                   <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
                 </div>
-                <div class="col-md-1 col-lg-1 pull-right" style="margin-top: -18px;">
+                <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
                   </hamburger-toggle>
                 </div>
               </h3>
-
-              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;" >
+              <div layout="row">
+               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;" >
 
                 <div class="row row-no-margin-left" style="margin-top: 15px;">
                   <div class="col-lg-12">
@@ -190,10 +176,9 @@
                   </div>
                 </div>
               </div>
-            </div><!--content wrapper -->
+              </div>
+              </div><!--content wrapper -->
           </div>
-          <div flex></div>
-        </md-content>
 
 
         <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left"
@@ -334,7 +319,7 @@
 
         <!--<div class="col-lg-4" style="border-left: 1px dashed lightgrey; padding-left: 0px;">-->
         <div ng-show="mainCtrl.searchReturned === ''">
-          <div style="margin-top: 1px; height: 95%;" class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+          <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
             <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: -25px; height: 95%;">
               <div class="file-manager">
                 <div>
