@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.jobs.quota.YarnRunningPrice;
+import se.kth.bbc.jobs.quota.YarnPriceMultiplicator;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
@@ -692,18 +692,18 @@ public class ProjectService {
   }
 
   @GET
-  @Path("{id}/price")
+  @Path("{id}/multiplicator")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response getCurrentPrice(
+  public Response getCurrentMultiplicator(
           @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    YarnRunningPrice price = projectController.getYarnPrice();
+    YarnPriceMultiplicator multiplicator = projectController.getYarnMultiplicator();
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            price).build();
+            multiplicator).build();
   }
 
   @GET
