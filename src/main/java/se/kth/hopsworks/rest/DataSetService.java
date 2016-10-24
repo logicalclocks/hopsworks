@@ -565,7 +565,12 @@ public class DataSetService {
     }
     //remove the group associated with this dataset if the dataset is toplevel ds 
     if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
-      hdfsUsersBean.deleteDatasetGroup(this.dataset);
+        try {
+            hdfsUsersBean.deleteDatasetGroup(this.dataset);
+        } catch (IOException ex) {
+            //FIXME: take an action?
+            logger.log(Level.WARNING, "Error while trying to delete a dataset group", ex);
+        }
     }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
