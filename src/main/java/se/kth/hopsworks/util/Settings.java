@@ -814,7 +814,7 @@ public class Settings {
   public static String MESSAGE_DS_REQ_SUBJECT = "Dataset access request.";
   
   // QUOTA
-  public static final float DEFAULT_YARN_PRICE = 1.0f;
+  public static final float DEFAULT_YARN_MULTIPLICATOR = 1.0f;
 
   /**
    * Returns the maximum image size in bytes that can be previewed in the 

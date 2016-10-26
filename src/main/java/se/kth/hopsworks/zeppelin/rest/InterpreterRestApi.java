@@ -286,11 +286,10 @@ public class InterpreterRestApi {
             findByAppuserAndAppState(session.getProxyUser(),
                     "RUNNING");
     try {
-      if (yarnAppStates.size() > 1) {
-        zeppelinResource.deleteLivySession(sessionId);
-      } else if (this.user.getUsername().equals(username)) {
+      zeppelinResource.deleteLivySession(sessionId);
+      if (this.user.getUsername().equals(username) && yarnAppStates.size() == 1) {
         zeppelinConf.getReplFactory().restart(settingId);
-      } else {
+      } else if (yarnAppStates.size() == 1) {
         Users u = userFacade.findByUsername(username);
         if (u == null) {
           throw new AppException(Status.BAD_REQUEST.getStatusCode(),

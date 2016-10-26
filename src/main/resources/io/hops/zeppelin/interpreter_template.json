@@ -65,7 +65,7 @@
         "zeppelin.dep.localrepo": "local-repo",
         "zeppelin.R.knitr": "true",
         "zeppelin.spark.maxResult": "1000",
-        "master": "yarn-client",
+        "master": "yarn",
         "spark.app.name": "%%projectName%%-Zeppelin",
         "zeppelin.R.image.width": "100%",
         "zeppelin.R.render.options": "out.format \u003d \u0027html\u0027, comment \u003d NA, echo \u003d FALSE, results \u003d \u0027asis\u0027, message \u003d F, warning \u003d F",
@@ -96,7 +96,7 @@
       "dependencies": [],
       "option": {
         "remote": true,
-        "perNoteSession": false,
+        "perNoteSession": true,
         "perNoteProcess": false,
         "isExistingProcess": false
       }
@@ -436,7 +436,6 @@
         "zeppelin.livy.concurrentSQL": "false",
         "livy.spark.dynamicAllocation.cachedExecutorIdleTimeout": "",
         "zeppelin.livy.spark.sql.maxResult": "1000",
-        "livy.spark.master": "yarn",
         "livy.spark.executor.cores": "",
         "livy.spark.executor.memory": "",
         "zeppelin.livy.url": "%%livy_url%%",
@@ -465,7 +464,7 @@
       "dependencies": [],
       "option": {
         "remote": true,
-        "perNoteSession": false,
+        "perNoteSession": true,
         "perNoteProcess": false,
         "isExistingProcess": false
       }
