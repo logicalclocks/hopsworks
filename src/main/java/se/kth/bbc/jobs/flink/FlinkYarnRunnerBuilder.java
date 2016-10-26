@@ -332,7 +332,7 @@ public class FlinkYarnRunnerBuilder {
     //TODO: Change the cluster to use files from hdfs
     cluster.setConfigurationDirectory(flinkConfDir);
     cluster.setConfigurationFilePath(new Path(flinkConfFile));
-    cluster.setDetachedMode(true);
+    cluster.setDetachedMode(detached);
     
     org.apache.flink.configuration.Configuration flinkConf
             = new org.apache.flink.configuration.Configuration();
@@ -343,7 +343,8 @@ public class FlinkYarnRunnerBuilder {
     cluster.setTaskManagerSlots(taskManagerSlots);
     cluster.setQueue(jobManagerQueue);
     cluster.setLocalJarPath(new Path("file://"+flinkDir+"/flink.jar"));
-    
+    builder.setFlinkCluster(cluster);
+//    cluster.setZookeeperNamespace();
     
 //        //Set Jar Path
 //        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 

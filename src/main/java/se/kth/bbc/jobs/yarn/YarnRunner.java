@@ -18,14 +18,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobSubmissionResult;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
-import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.yarn.AbstractYarnClusterDescriptor;
-import org.apache.flink.yarn.YarnClusterClient;
-import org.apache.flink.yarn.YarnClusterDescriptor;
 
 
 import org.apache.hadoop.conf.Configuration;
@@ -49,8 +44,8 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
-import se.kth.bbc.jobs.flink.FlinkJob;
-import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
+import se.kth.bbc.jobs.flink.YarnClusterClient;
+import se.kth.bbc.jobs.flink.YarnClusterDescriptor;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.lims.Utils;
@@ -77,7 +72,7 @@ public class YarnRunner {
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
-  
+  private YarnClusterDescriptor flinkCluster;
   
   private String appJarPath;
   private String localJarPath; //Used by flink
@@ -123,9 +118,11 @@ public class YarnRunner {
    */
   public YarnMonitor startAppMaster() throws YarnException, IOException, URISyntaxException {
     logger.info("Starting application master.");
-
-    //Get application id
-    yarnClient.start();
+    YarnClient newClient = YarnClient.createYarnClient();
+    YarnMonitor monitor = null;
+    if(jobType == JobType.SPARK || jobType == JobType.ADAM){
+        //Get application id
+        yarnClient.start();
 
         YarnClientApplication app = yarnClient.createApplication();
         GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
@@ -181,12 +178,32 @@ public class YarnRunner {
         logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
         yarnClient.submitApplication(appContext);
         // Create a new client for monitoring
-        YarnClient newClient = YarnClient.createYarnClient();
-        newClient.init(conf);
-        YarnMonitor monitor = new YarnMonitor(appId, newClient);
+        monitor = new YarnMonitor(appId, newClient);newClient.init(conf);
+
+    } else if(jobType == JobType.FLINK){
+        YarnClusterClient client = flinkCluster.deploy();
+        String[] args  = {};
+        if(amArgs!=null && !amArgs.isEmpty()){
+            args = amArgs.trim().split(" ");
+        }
+        /*Copy the appjar to the localOS as it is needed by the Flink client
+        *Create path in local /tmp to store the appjar
+        *To distinguish between jars for different job executions, add the 
+        *current system time in the filename. This jar is removed after
+        *the job is finished.*/
+        String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
+        String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+        File tmpDir = new File(localPathAppJarDir);
+        if(!tmpDir.exists()){
+            tmpDir.mkdir();
+        }
+        //Copy job jar locaclly so that Flink client has access to it
+        //in YarnRunner
+        FileSystem fs = FileSystem.get(conf);
+        fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
+        //app.jar path 
+        File file = new File(localPathAppJarDir+ "/"+appJarName);
         
-        //If it is a Flink job, copy the job jar locally and submit the job.
-        if(jobType == JobType.FLINK){
 //            int retries = 0;
 //            int maxRetries = 60;
 //            //Wait for the job manager to start, so the runner is aware of its port.
@@ -261,33 +278,31 @@ public class YarnRunner {
 //            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
 //            YarnClusterClient client = new YarnClusterClient(clientConf);
 //            
-//            try {
-//                List<URL> classpaths = new ArrayList<>();
-//                //Copy Flink jar to local machine and pass it to the classpath
-//                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
-//                classpaths.add(flinkURL);
-//                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
-//                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
-//                classpaths.add(libURL);
-//                classpaths.add(libURL3);
-//                
-//                PackagedProgram program = new PackagedProgram(file, classpaths, args);
-//                client.setPrintStatusDuringExecution(false);
-//
-//                JobSubmissionResult res =  client.runDetached(program, parallelism);
-//                JobID jobId = res.getJobID();
-//                FlinkJob.jobsClusterInfo.put(appId.toString(), new FlinkJob.FlinkClusterInfo(jobId, client));
-//                cluster.stopAfterJob(jobId);
-//            }   catch (ProgramInvocationException ex) {
-//              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
-//              //Kill the flink job here
-//               Runtime rt = Runtime.getRuntime();
-//               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
-//            } finally{
-//              //Remove local flink app jar
-//               FileUtils.deleteDirectory(localPathAppJarDir);
-//               logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
-//            }
+            try {
+                List<URL> classpaths = new ArrayList<>();
+                //Copy Flink jar to local machine and pass it to the classpath
+                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
+                classpaths.add(flinkURL);
+                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
+                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
+                classpaths.add(libURL);
+                classpaths.add(libURL3);
+                
+                PackagedProgram program = new PackagedProgram(file, classpaths, args);
+
+                JobSubmissionResult res =  client.run(program, parallelism);
+            }   catch (ProgramInvocationException ex) {
+              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
+              //Kill the flink job here
+               Runtime rt = Runtime.getRuntime();
+               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
+            } finally{
+              //Remove local flink app jar
+               FileUtils.deleteDirectory(localPathAppJarDir);
+               logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
+            }
+          monitor = new YarnMonitor(appId, newClient);newClient.init(conf);
+
         }
         yarnClient.close();
         
@@ -601,6 +616,7 @@ public class YarnRunner {
     this.amJarPath = builder.amJarPath;
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
+    this.flinkCluster = builder.flinkCluster;
     this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
@@ -690,6 +706,7 @@ public class YarnRunner {
     private JobType jobType;
     //Flink parallelism
     private int parallelism;
+    private YarnClusterDescriptor flinkCluster;
     private String appJarPath;
     //Optional attributes
     // Queue for App master
@@ -823,6 +840,11 @@ public class YarnRunner {
     public void setParallelism(int parallelism){
         this.parallelism = parallelism;
     }
+
+    public void setFlinkCluster(YarnClusterDescriptor flinkCluster) {
+      this.flinkCluster = flinkCluster;
+    }
+    
     
     public void setAppJarPath(String path){
         this.appJarPath = path;
