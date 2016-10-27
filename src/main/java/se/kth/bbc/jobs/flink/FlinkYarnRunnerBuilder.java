@@ -421,31 +421,31 @@ public class FlinkYarnRunnerBuilder {
 //        builder.amVCores(jobManagerCores);
 //        builder.amQueue(jobManagerQueue);
 //        
-//        builder.setJobType(JobType.FLINK);
-//        builder.setAppJarPath(appJarPath);
-//        builder.setParallelism(parallelism);
+        builder.setJobType(JobType.FLINK);
+        builder.setAppJarPath(appJarPath);
+        builder.setParallelism(parallelism);
 //        
 //        
-//        String name;
-//        if (customName == null) {
-//            name = "Flink session with " + taskManagerCount + " TaskManagers";
-//            if (detached) {
-//                name += " (detached)";
-//            }
-//        } else {
-//            name = customName;
-//        }
+        String name;
+        if (customName == null) {
+            name = "Flink session with " + taskManagerCount + " TaskManagers";
+            if (detached) {
+                name += " (detached)";
+            }
+        } else {
+            name = customName;
+        }
 //        
 //        //Set name of application
-//        builder.appName(name);
+        builder.appName(name);
 //        
 //        //Set up command
-//        StringBuilder amargs = new StringBuilder("");                
-//        //Pass job arguments
-//        for (String s : jobArgs) {
-//          amargs.append(" ").append(s);
-//        }
-//        builder.amArgs(amargs.toString());
+        StringBuilder amargs = new StringBuilder("");                
+        //Pass job arguments
+        for (String s : jobArgs) {
+          amargs.append(" ").append(s);
+        }
+        builder.amArgs(amargs.toString());
     return builder.build(hadoopDir, flinkDir, nameNodeIpPort, JobType.FLINK);
   }
 
