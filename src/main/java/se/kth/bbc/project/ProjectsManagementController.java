@@ -27,6 +27,7 @@ import java.util.List;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.rest.AppException;
 
@@ -94,12 +95,19 @@ public class ProjectsManagementController {
   /**
    *
    * @param projectname
-   * @param quotaInGBs size of quota for project subtree in HDFS in GBs
+   * @param quotaInGBs size of quota for project subtree in HDFS in MBs
    * @throws IOException
    */
-  public void setHdfsSpaceQuota(String projectname, long quotaInGBs) throws IOException {
-    projectController.setHdfsSpaceQuota(projectname, quotaInGBs);
+  public void setHdfsSpaceQuota(String projectname, long quotaInMBs,
+          DistributedFileSystemOps dfso) throws IOException {
+    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
   }
+  
+  public void setHdfsNumFilesQuota(String projectname, long quotaInMBs,
+          DistributedFileSystemOps dfso) throws IOException {
+//    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
+  }
+  
 
   public List<ProjectsManagement> getAllProjects() {
     return projectsManagementFacade.findAll();

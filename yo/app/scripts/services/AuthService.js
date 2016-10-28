@@ -6,6 +6,10 @@
 angular.module('hopsWorksApp')
         .factory('AuthService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
             var service = {
+                
+              isAdmin: function () {
+                return $http.get('/api/auth/isAdmin');
+              },
               session: function () {
                 return $http.get('/api/auth/session');
               },

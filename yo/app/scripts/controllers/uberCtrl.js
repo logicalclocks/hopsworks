@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('UberCtrl', ['$modalInstance',  'title', 'msg', 'price',
-          function ($modalInstance, title, msg, price) {
+        .controller('UberCtrl', ['$uibModalInstance',  'title', 'msg', 'price',
+          function ($uibModalInstance, title, msg, price) {
 
             var self = this;
             self.title = title;
@@ -10,15 +10,15 @@ angular.module('hopsWorksApp')
             self.price = price;
             
             self.ok = function () {
-              $modalInstance.close();
+              $uibModalInstance.close();
             };
 
             self.cancel = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
             
             self.reject = function () {
-              $modalInstance.dismiss('reject');
+              $uibModalInstance.dismiss('reject');
             };
 
           }]);

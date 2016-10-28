@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MemberCtrl', ['$scope', '$timeout', '$modalStack', 'MembersService', 'projectId', 'UserService',
-          function ($scope, $timeout, $modalStack, MembersService, projectId, UserService) {
+        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', 'MembersService', 'projectId', 'UserService',
+          function ($scope, $timeout, $uibModalStack, MembersService, projectId, UserService) {
             var self = this;
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
@@ -28,7 +28,18 @@ angular.module('hopsWorksApp')
                     function (success) {
                       self.cards = success.data;
                       // remove my own 'card' from the list of members
-                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === self.myCard.email) {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }
+                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                          if (self.cards[i].email === "agent@hops.io") {
+                            self.cards.splice(i, 1);
+                            break;
+                          }
+                      }                      
                     }, function (error) {
               self.errorMsg = error.data.msg;
             }
@@ -162,6 +173,6 @@ angular.module('hopsWorksApp')
             }
 
             self.close = function () {
-              $modalStack.getTop().key.dismiss();
+              $uibModalStack.getTop().key.dismiss();
             };
           }]);

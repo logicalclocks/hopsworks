@@ -21,21 +21,20 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
-import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.users.UserFacade;
 import io.hops.kafka.KafkaFacade;
 import io.hops.kafka.PartitionDetailsDTO;
 import io.hops.kafka.SchemaDTO;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
+import java.util.logging.Level;
+import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
+//import org.apache.avro.Schema;
 import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
@@ -48,15 +47,7 @@ public class KafkaService {
     @EJB
     private ProjectFacade projectFacade;
     @EJB
-    private ActivityFacade activityFacade;
-    @EJB
-    private UserManager userBean;
-    @EJB
     private NoCacheResponse noCacheResponse;
-    @EJB
-    private AsynchronousJobExecutor async;
-    @EJB
-    private UserFacade userfacade;
     @EJB
     private KafkaFacade kafkaFacade;
     @EJB
@@ -95,7 +86,7 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopics(@Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -115,7 +106,7 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getSharedTopics(@Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -175,16 +166,22 @@ public class KafkaService {
     @Path("/details/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response getDetailsTopic(@PathParam("topic") String topicName,
+    public Response getTopicDetails(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
 
-        List<PartitionDetailsDTO> topic = kafka.getTopicDetails(project, topicName);
+        List<PartitionDetailsDTO> topic;
+        try {
+          topic = kafka.getTopicDetails(project, topicName);
+        } catch (Exception ex) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    "Error while retrieving topic details. Please try again!");
+        }
 
         GenericEntity<List<PartitionDetailsDTO>> topics
                 = new GenericEntity<List<PartitionDetailsDTO>>(topic) {
@@ -200,7 +197,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response topicDefaultValues(
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -222,7 +219,7 @@ public class KafkaService {
             @PathParam("topic") String topicName,
             @PathParam("projId") int projectId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         if (this.projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -243,7 +240,7 @@ public class KafkaService {
             @PathParam("topic") String topicName,
             @PathParam("projectId") int projectId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         kafkaFacade.unShareTopic(topicName, this.projectId, projectId);
@@ -259,7 +256,7 @@ public class KafkaService {
     public Response unShareTopicFromProject(
             @PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         kafkaFacade.unShareTopic(topicName, this.projectId);
@@ -271,12 +268,13 @@ public class KafkaService {
     @GET
     @Path("/{topic}/sharedwith")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response topicIsSharedTo(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
-        List<SharedProjectDTO> projectDtoList = kafkaFacade.topicIsSharedTo(topicName, this.projectId);
+        List<SharedProjectDTO> projectDtoList = kafkaFacade
+                .topicIsSharedTo(topicName, this.projectId);
 
         GenericEntity<List<SharedProjectDTO>> projectDtos
                 = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {
@@ -292,7 +290,7 @@ public class KafkaService {
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response aclUsers(@PathParam("topicName") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -316,8 +314,9 @@ public class KafkaService {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
     public Response addAclsToTopic(@PathParam("topic") String topicName,
-            AclDTO aclDto, @Context SecurityContext sc, @Context HttpServletRequest req)
-            throws AppException, Exception {
+            AclDTO aclDto,
+            @Context SecurityContext sc, @Context HttpServletRequest req)
+            throws AppException {
         JsonResponse json = new JsonResponse();
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -326,7 +325,13 @@ public class KafkaService {
 
         try {
             kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
-        } catch (Exception e) {
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Problem adding ACL to topic.");
         }
@@ -343,7 +348,7 @@ public class KafkaService {
     public Response removeAclsFromTopic(@PathParam("topic") String topicName,
             @PathParam("aclId") int aclId,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -352,6 +357,9 @@ public class KafkaService {
 
         try {
             kafkaFacade.removeAclsFromTopic(topicName, aclId);
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
         } catch (Exception e) {
             throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
                     "Topic acl not found in database");
@@ -365,10 +373,10 @@ public class KafkaService {
     @GET
     @Path("/acls/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getTopicAcls(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -399,18 +407,60 @@ public class KafkaService {
     public Response updateTopicAcls(@PathParam("topic") String topicName,
             @PathParam("aclId") String aclId, AclDTO aclDto,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
         }
-
-        kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
-
+        
+        try {
+             kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId), aclDto);
+        } catch(EntityExistsException ex){
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "This ACL definition already existes in database.");
+        }catch (IllegalArgumentException ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Wrong imput values");
+        }catch (Exception ex) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Problem adding ACL to topic.");
+        }
+        
         json.setSuccessMessage("TopicAcl updated successfuly");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    }
+    
+    //validate the new schema
+    @POST
+    @Path("/schema/validate")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response ValidateSchemaForTopics(SchemaDTO schemaData,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
+        JsonResponse json = new JsonResponse();
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+        switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
+
+            case INVALID:
+                json.setErrorMsg("schema is invalid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            case INCOMPATIBLE:
+                json.setErrorMsg("schema is not backward compatible");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            default:
+                json.setSuccessMessage("schema is valid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                        json).build();
+        }
     }
     
     @POST
@@ -418,9 +468,9 @@ public class KafkaService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response updateTopicSchema(SchemaDTO schamaData,
+    public Response addTopicSchema(SchemaDTO schemaData,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -428,20 +478,34 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafkaFacade.updateSchemaForTopics(schamaData);
+        //String schemaContent = schemaData.getContents();
+        switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
 
-        json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+            case INVALID:
+                json.setErrorMsg("schema is invalid");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            case INCOMPATIBLE:
+                json.setErrorMsg("schema is not backward compatible");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(
+                        json).build();
+            default:
+                kafkaFacade.addSchemaForTopics(schemaData);
+                
+                json.setSuccessMessage("Schema for Topic created/updated successfuly");
+                return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        }
     }
 
-    //when do we need this api?
+    //when do we need this api? It's used when the KafKa clients want to access
+    // the schema for a give topic which a message is published to and consumerd from
     @GET
     @Path("/schema/{topic}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response getSchemaForTopics(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -449,21 +513,20 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        List<SchemaDTO> schemaDto = kafka.getSchemaForTopic(topicName);
-        GenericEntity<List<SchemaDTO>> schema
-                = new GenericEntity<List<SchemaDTO>>(schemaDto) {
-        };
+        SchemaDTO schemaDto = kafka.getSchemaForTopic(topicName);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-                schema).build();
+                schemaDto).build();
     }
-
+    
+    //This API used is to select a schema and its version from the list
+    //of available schemas when creating a topic. 
     @GET
     @Path("/schemas")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
     public Response listSchemasForTopics(
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -478,15 +541,37 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 schemas).build();
     }
-
-    @DELETE
-    @Path("/schema/{schema}/{version}")
+    
+    //This API used to select a schema and its version from the list
+    //of available schemas when listing all the available schemas.
+    @GET
+    @Path("/showSchema/{schemaName}/{schemaVersion}")
     @Produces(MediaType.APPLICATION_JSON)
     @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-    public Response deleteSchemaForTopics(@PathParam("schema") String schemaName,
+    public Response getSchemaContent( @PathParam("schemaName") String schemaName,
+            @PathParam("schemaVersion") Integer schemaVersion,
+            @Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+
+        SchemaDTO schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                schemaDtos).build();
+    }
+
+    //delete the specified version of the given schema.
+    @DELETE
+    @Path("/removeSchema/{schemaName}/{version}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+    public Response deleteSchema(@PathParam("schemaName") String schemaName,
             @PathParam("version") Integer version,
             @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException, Exception {
+            @Context HttpServletRequest req) throws AppException {
         JsonResponse json = new JsonResponse();
 
         if (projectId == null) {
@@ -494,11 +579,11 @@ public class KafkaService {
                     "Incomplete request!");
         }
 
-        kafka.deleteSchemaForTopics(schemaName, version);
-        json.setSuccessMessage("Schema for topic removed successfuly");
+        kafka.deleteSchema(schemaName, version);
+        json.setSuccessMessage("Schema version for topic removed successfuly");
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
     }
-    
-}
+
+} 

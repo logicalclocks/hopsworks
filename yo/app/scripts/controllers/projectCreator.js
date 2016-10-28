@@ -1,11 +1,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCreatorCtrl', ['$modalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
-          function ($modalInstance, $scope, ProjectService, UserService, growl) {
+        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
+          function ($uibModalInstance, $scope, ProjectService, UserService, growl) {
 
             var self = this;
-            
+
             self.working = false;
             self.card = {};
             self.myCard = {};
@@ -13,10 +13,13 @@ angular.module('hopsWorksApp')
 
             self.projectMembers = [];
             self.projectTeam = [];
+//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
+//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
             self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
-//            self.projectTypes = ['JOBS', 'ZEPPELIN', 'BIOBANKING', 'CHARON', 'SSH']; 
-
+//            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
+//            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
             self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
+
             self.projectName = '';
             self.projectDesc = '';
 
@@ -35,7 +38,18 @@ angular.module('hopsWorksApp')
                                     function (success) {
                                       self.cards = success.data;
                                       // remove my own 'card' from the list of members
-                                      self.cards.splice(self.cards.indexOf(self.myCard), 1);
+                                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                                        if (self.cards[i].email === self.myCard.email) {
+                                          self.cards.splice(i, 1);
+                                          break;
+                                        }
+                                      }
+                                      for (var i = 0, len = self.cards.length; i < len; i++) {
+                                        if (self.cards[i].email === "agent@hops.io") {
+                                          self.cards.splice(i, 1);
+                                          break;
+                                        }
+                                      }
                                     }, function (error) {
                               self.errorMsg = error.data.msg;
                             });
@@ -77,7 +91,7 @@ angular.module('hopsWorksApp')
             self.removeMember = function (member) {
               self.projectMembers.splice(self.projectMembers.indexOf(member), 1);
             };
-                   
+
             self.createProject = function () {
               self.working = true;
               $scope.newProject = {
@@ -102,15 +116,16 @@ angular.module('hopsWorksApp')
                           });
 
                         }
-                        $modalInstance.close($scope.newProject);
+                        $uibModalInstance.close($scope.newProject);
                       }, function (error) {
-                self.working = false;
+                          self.working = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
               }
               );
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
           }]);

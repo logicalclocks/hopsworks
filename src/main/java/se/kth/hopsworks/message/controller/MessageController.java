@@ -8,6 +8,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import org.elasticsearch.common.Strings;
 import se.kth.hopsworks.message.Message;
 import se.kth.hopsworks.message.MessageFacade;
 import se.kth.hopsworks.user.model.Users;
@@ -117,12 +118,39 @@ public class MessageController {
     newMsg.setPreview(preview);
     messageFacade.save(newMsg);
   }
+  
+  /**
+   * Sends a message to a single user
+   * <p>
+   * @param msg
+   */
+  public void send(Message msg) {
+    Date now = new Date();
+    if (msg.getTo() == null) {
+      throw new IllegalArgumentException("No recipient specified.");
+    }
+    if (Strings.isNullOrEmpty(msg.getContent())) {
+      throw new IllegalArgumentException("Message is empty.");
+    }
+    if (msg.getContent().length() > MAX_MESSAGE_SIZE) {
+      throw new IllegalArgumentException("Message too long.");
+    }
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(now);
+    String dateAndWriter = "On " + date + ", " + msg.getFrom().getFname() + 
+            " " + msg.getFrom().getLname() + " wrote: <br><br>";
+    msg.setDateSent(now);
+    String message = REPLY_SEPARATOR + dateAndWriter + msg.getContent();
+    msg.setContent(message);
+    
+    messageFacade.save(msg);
+  }
 
   /**
    * Sends message to multiple users.
    * <p>
    * @param recipients list of the receivers
    * @param from the sender
+   * @param subject
    * @param msg the message text
    * @param requestPath requestPath if the message is a request this will
    * contain the path
@@ -142,12 +170,20 @@ public class MessageController {
     }
     for (Users u : recipients) {
       Message newMsg
-              = new Message(from, u, recipients, now, msg, true, false);
+              = new Message(from, u, now, msg, true, false); //  recipients, 
       newMsg.setPath(requestPath);
       newMsg.setSubject(subject);
       messageFacade.save(newMsg);
     }
 
+  }
+  
+  /**
+   * Removes a message entity from the persistent storage.
+   * @param msg 
+   */
+  public void remove(Message msg) {
+    messageFacade.remove(msg);
   }
 
 }

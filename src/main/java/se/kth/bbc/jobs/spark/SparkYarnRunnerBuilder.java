@@ -1,12 +1,15 @@
 package se.kth.bbc.jobs.spark;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -17,7 +20,7 @@ import se.kth.hopsworks.util.Settings;
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
  * for any Spark job to be started and builds a YarnRunner instance.
- * <p/>
+ *
  * @author stig
  */
 public class SparkYarnRunnerBuilder {
@@ -30,7 +33,11 @@ public class SparkYarnRunnerBuilder {
   private String jobName = "Untitled Spark Job";
   private List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
+  private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
+  private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
+  private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
+  private boolean dynamicExecutors;
   private String executorMemory = "512m";
   private int driverMemory = 1024; // in MB
   private int driverCores = 1;
@@ -38,9 +45,16 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
-  private String sparkHistoryServerIp;
   private String sessionId;//used by Kafka
-  public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
+  private String kafkaAddress;
+  private boolean kafkaJob;
+  private String kafkaTopics;
+
+  private String restEndpoint;
+  private JobType jobType;
+
+  public SparkYarnRunnerBuilder(String appJarPath, String mainClass,
+          JobType jobType) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
               "Path to application jar cannot be empty!");
@@ -51,6 +65,7 @@ public class SparkYarnRunnerBuilder {
     }
     this.appJarPath = appJarPath;
     this.mainClass = mainClass;
+    this.jobType = jobType;
   }
 
   /**
@@ -58,6 +73,7 @@ public class SparkYarnRunnerBuilder {
    * <p/>
    * @param project name of the project
    * @param sparkUser
+   * @param jobUser
    * @param hadoopDir
    * @param sparkDir
    * @param nameNodeIpPort
@@ -65,95 +81,162 @@ public class SparkYarnRunnerBuilder {
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project, String sparkUser,
-          final String hadoopDir, final String sparkDir, final String nameNodeIpPort)
+          String jobUser,
+          final String hadoopDir, final String sparkDir,
+          final String nameNodeIpPort)
           throws IOException {
 
-    String sparkClasspath = Settings.getSparkDefaultClasspath(sparkDir);
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
-
-    //TODO: include driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
+    builder.setJobType(jobType);
 
-    //Set Spark staging directory
-//    String stagingPath = File.separator + "user" + File.separator + Utils.
-//            getYarnUser() + File.separator + Settings.SPARK_STAGING_DIR
-//            + File.separator + YarnRunner.APPID_PLACEHOLDER;
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR + File.separator
             + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
-    //Add Spark jar
     builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_LOCRSC_SPARK_JAR, hdfsSparkJarPath,
-            LocalResourceVisibility.PUBLIC.toString(), 
-            LocalResourceType.FILE.toString(), null), false);
-    //Add app jar
-    builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_LOCRSC_APP_JAR, appJarPath, 
-            LocalResourceVisibility.PUBLIC.toString(), 
-            LocalResourceType.FILE.toString(), null), 
-            !appJarPath.startsWith("hdfs:"));
+            "__spark_libs__", hdfsSparkJarPath,
+            LocalResourceVisibility.PRIVATE.toString(),
+            LocalResourceType.ARCHIVE.toString(), null), false);
 
-     
+    //Add app jar  
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
+            LocalResourceVisibility.APPLICATION.toString(),
+            LocalResourceType.FILE.toString(), null),
+            !appJarPath.startsWith("hdfs:"));
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
+    StringBuilder extraClassPathFiles = new StringBuilder();
+
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
-        if(dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) ||
-              dto.getName().equals(Settings.KAFKA_T_CERTIFICATE)){
-            //TODO: Change to true, so that certs are removed
-            //Error with sticky bit on /user/glassfish
-            builder.addLocalResource(dto, false);
-        } else{
-            builder.addLocalResource(dto, false);
-        }
-    }
-  
+      if (dto.getName().equals(Settings.KAFKA_K_CERTIFICATE) || dto.getName().
+              equals(Settings.KAFKA_T_CERTIFICATE)) {
+        //Set deletion to true so that certs are removed
+        builder.addLocalResource(dto, true);
+      } else {
+        builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
+      }
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+              dto.getName());
+      extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
 
+    }
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+            "$PWD/__spark_conf__:__spark_conf__:__spark_libs__/*"
+            + ":" + Settings.SPARK_LOCRSC_APP_JAR
+    );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
-    builder.addToAppMasterEnvironment("SPARK_USER", sparkUser); 
-//    builder.addToAppMasterEnvironment("SPARK_USER", );
-    // TODO - Change spark user here
-//    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-      //Removed local Spark classpath
-//    if (classPath == null || classPath.isEmpty()) {
-//      builder.addToAppMasterEnvironment("CLASSPATH", sparkClasspath);
-//    } else {
-//      builder.addToAppMasterEnvironment("CLASSPATH", classPath + ":"
-//              + sparkClasspath);
-//    }
+    builder.addToAppMasterEnvironment("SPARK_USER", jobUser);
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
+    
+//    addSystemProperty("spark.yarn.dist.jars",listOfJars.toString().substring(
+//            0,listOfJars.length()-1 ));
+//    addSystemProperty("spark.yarn.dist.files",listOfFiles.toString().substring(
+//            0,listOfFiles.length()-1 ));
+    if(extraClassPathFiles.toString().length()>0){
+      addSystemProperty("spark.executor.extraClassPath",extraClassPathFiles.toString().substring(
+            0,extraClassPathFiles.length()-1));
+
+    }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
-    addSystemProperty(Settings.SPARK_HISTORY_SERVER_ENV, sparkHistoryServerIp);
+    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+    addSystemProperty(Settings.KAFKA_JOB_ENV_VAR, Boolean.toString(kafkaJob));
+    addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
+
+    addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
+    //If DynamicExecutors are not enabled, set the user defined number 
+    //of executors
+    if (dynamicExecutors) {
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(
+              dynamicExecutors));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
+              String.valueOf(numberOfExecutorsMin));
+      //TODO: Fill in the init and max number of executors. Should it be a per job
+      //or global setting?
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
+              String.valueOf(numberOfExecutorsMax));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
+              String.valueOf(numberOfExecutorsInit));
+      //Dynamic executors requires the shuffle service to be enabled
+      addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
+      //spark.shuffle.service.enabled
+    } else {
+      addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(
+              numberOfExecutors));
+    }
+
+    List<String> jobSpecificProperties = new ArrayList<>();
+    jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
+    jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
+    jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
+    jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);
+    jobSpecificProperties.add(Settings.SPARK_DRIVER_CORES_ENV);
+    jobSpecificProperties.add(Settings.SPARK_EXECUTOR_MEMORY_ENV);
+    jobSpecificProperties.add(Settings.SPARK_EXECUTOR_CORES_ENV);
+
+    //These properties are set sot that spark history server picks them up
+    addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(
+            driverMemory) + "m");
+    addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(
+            driverCores));
+    addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
+    addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
+            executorCores));
+
+    //Set executor extraJavaOptions to make parameters available to executors
+    builder.addJavaOption("'-Dspark.executor.extraJavaOptions="
+            + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
+            + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
+            + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
+            + "-Djava.library.path=/srv/hadoop/lib/native/ -D"
+            + Settings.KAFKA_SESSIONID_ENV_VAR + "=" + sessionId + " -D"
+            + Settings.KAFKA_BROKERADDR_ENV_VAR + "=" + kafkaAddress + " -D"
+            + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=" + kafkaTopics + " -D"
+            + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + restEndpoint + " -D"
+            + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + sysProps.get(
+                    Settings.KAFKA_PROJECTID_ENV_VAR) + "'");
+    //Set up command
+    StringBuilder amargs = new StringBuilder("--class ");
+    amargs.append(mainClass);
+
+    Properties sparkProperties = new Properties();
+    InputStream is = null;
+    try {
+      is = new FileInputStream(sparkDir + "/" + Settings.SPARK_CONFIG_FILE);
+      sparkProperties.load(is);
+      //For every property that is in the spark configuration file but is not
+      //already set, create a java system property.
+      for (String property : sparkProperties.stringPropertyNames()) {
+        if (!jobSpecificProperties.contains(property) && sparkProperties.
+                getProperty(property) != null && !sparkProperties.getProperty(
+                property).isEmpty()) {
+          addSystemProperty(property,
+                  sparkProperties.getProperty(property).trim());
+        }
+      }
+    } finally {
+      if (is != null) {
+        is.close();
+      }
+    }
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
     }
 
     //Add local resources to spark environment too
-    builder.addCommand(new SparkSetEnvironmentCommand());
-
-   
-    //Set up command
-    StringBuilder amargs = new StringBuilder("--class ");
-    amargs.append(mainClass);
-
-//    amargs.append(" --properties-file");
-//    amargs.append(" /srv/spark/conf/spark-defaults.conf");
-    // spark 1.5.x replaced --num-executors with --properties-file
-    // https://fossies.org/diffs/spark/1.4.1_vs_1.5.0/
-    // amargs.append(" --num-executors ").append(numberOfExecutors);
-    amargs.append(" --executor-cores ").append(executorCores);
-    amargs.append(" --executor-memory ").append(executorMemory);
-    
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
+    //amargs.append(" --properties-file __spark_conf__/spark-defaults.conf");
     builder.amArgs(amargs.toString());
 
     //Set up Yarn properties
@@ -207,14 +290,15 @@ public class SparkYarnRunnerBuilder {
     this.extraFiles.add(dto);
     return this;
   }
-   public SparkYarnRunnerBuilder addExtraFiles(List<LocalResourceDTO> projectLocalResources) {
-    if(projectLocalResources != null &&!projectLocalResources.isEmpty()){
-        this.extraFiles.addAll(projectLocalResources);
+
+  public SparkYarnRunnerBuilder addExtraFiles(
+          List<LocalResourceDTO> projectLocalResources) {
+    if (projectLocalResources != null && !projectLocalResources.isEmpty()) {
+      this.extraFiles.addAll(projectLocalResources);
     }
     return this;
   }
 
-  
   public SparkYarnRunnerBuilder setNumberOfExecutors(int numberOfExecutors) {
     if (numberOfExecutors < 1) {
       throw new IllegalArgumentException(
@@ -231,6 +315,43 @@ public class SparkYarnRunnerBuilder {
     }
     this.executorCores = executorCores;
     return this;
+  }
+
+  public boolean isDynamicExecutors() {
+    return dynamicExecutors;
+  }
+
+  public void setDynamicExecutors(boolean dynamicExecutors) {
+    this.dynamicExecutors = dynamicExecutors;
+  }
+
+  public int getNumberOfExecutorsMin() {
+    return numberOfExecutorsMin;
+  }
+
+  public void setNumberOfExecutorsMin(int numberOfExecutorsMin) {
+    this.numberOfExecutorsMin = numberOfExecutorsMin;
+  }
+
+  public int getNumberOfExecutorsMax() {
+    return numberOfExecutorsMax;
+  }
+
+  public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
+    if (numberOfExecutorsMax > Settings.SPARK_MAX_EXECS) {
+      throw new IllegalArgumentException(
+              "Maximum number of  executors cannot be greate than:"
+              + Settings.SPARK_MAX_EXECS);
+    }
+    this.numberOfExecutorsMax = numberOfExecutorsMax;
+  }
+
+  public int getNumberOfExecutorsInit() {
+    return numberOfExecutorsInit;
+  }
+
+  public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
+    this.numberOfExecutorsInit = numberOfExecutorsInit;
   }
 
   public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
@@ -304,12 +425,24 @@ public class SparkYarnRunnerBuilder {
     this.driverQueue = driverQueue;
   }
 
-  public void setSparkHistoryServerIp(String sparkHistoryServerIp) {
-    this.sparkHistoryServerIp = sparkHistoryServerIp;
+  public void setSessionId(String sessionId) {
+    this.sessionId = sessionId;
   }
 
-  public void setSessionId(String sessionId) {
-      this.sessionId = sessionId;
+  public void setKafkaAddress(String kafkaAddress) {
+    this.kafkaAddress = kafkaAddress;
+  }
+
+  public void setKafkaJob(boolean isKafkaJob) {
+    this.kafkaJob = isKafkaJob;
+  }
+
+  public void setKafkaTopics(String kafkaTopics) {
+    this.kafkaTopics = kafkaTopics;
+  }
+
+  public void setRestEndpoint(String restEndpoint) {
+    this.restEndpoint = restEndpoint;
   }
 
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
@@ -341,7 +474,7 @@ public class SparkYarnRunnerBuilder {
    * @param s A single argument.
    * @return Argument quoted for execution via Yarn's generated shell script.
    */
-  private String escapeForShell(String s) {
+  public static String escapeForShell(String s) {
     if (s != null) {
       StringBuilder escaped = new StringBuilder("'");
       for (int i = 0; i < s.length(); i++) {

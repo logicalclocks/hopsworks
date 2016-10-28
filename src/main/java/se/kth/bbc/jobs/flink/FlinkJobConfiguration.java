@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Contains Flink-specific run information for a Flink job, on top of Yarn
@@ -12,8 +13,6 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     private String jarPath;
-    private String localJarPath;
-    private String appJarPath;
     private String mainClass;
     private String args;
     private String flinkConfDir;
@@ -41,6 +40,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
 
     public FlinkJobConfiguration() {
         super();
+        super.setAmMemory(Settings.FLINK_APP_MASTER_MEMORY);
     }
 
     /**
@@ -59,15 +59,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     public void setJarPath(String jarPath) {
         this.jarPath = jarPath;
     }
-
-    public String getLocalJarPath() {
-        return localJarPath;
-    }
-
-    public void setLocalJarPath(String localJarPath) {
-        this.localJarPath = localJarPath;
-    }
-
     
     /**
      * Get the name of the main class to be executed.
@@ -167,14 +158,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         this.flinkjobtype = flinkjobtype;
     }
 
-    public String getAppJarPath() {
-        return appJarPath;
-    }
-
-    public void setAppJarPath(String localJarPath) {
-        this.appJarPath = localJarPath;
-    }
-
     public int getParallelism() {
         return parallelism;
     }
@@ -230,7 +213,7 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
         if (!Strings.isNullOrEmpty(mainClass)) {
             obj.set(KEY_MAINCLASS, mainClass);
         }
-        if (!Strings.isNullOrEmpty(mainClass)) {
+        if (!Strings.isNullOrEmpty(jarPath)) {
             obj.set(KEY_JARPATH, jarPath);
         }
         //Then: fields that can never be null or emtpy.

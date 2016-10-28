@@ -47,9 +47,9 @@ import se.kth.bbc.project.fb.Inode;
   @NamedQuery(name = "Dataset.findByDescription",
           query
           = "SELECT d FROM Dataset d WHERE d.description = :description"),
-  @NamedQuery(name = "Dataset.findByName",
+  @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
-          = "SELECT d FROM Dataset d WHERE d.name = :name")})
+          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.projectId = :projectId")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -61,10 +61,9 @@ public class Dataset implements Serializable {
   @Column(name = "id")
   private Integer id;
   @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-            referencedColumnName = "name")
+    @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+    @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")
   })
   @ManyToOne(optional = false)
   private Inode inode;
@@ -100,7 +99,11 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "public_ds")
   private boolean publicDs;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "shared")
+  private boolean shared = false;
+  
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
   private Collection<DatasetRequest> datasetRequestCollection;
@@ -188,6 +191,14 @@ public class Dataset implements Serializable {
 
   public void setPublicDs(boolean publicDs) {
     this.publicDs = publicDs;
+  }
+
+  public boolean isShared() {
+    return shared;
+  }
+
+  public void setShared(boolean shared) {
+    this.shared = shared;
   }
     
   public Collection<DatasetRequest> getDatasetRequestCollection() {

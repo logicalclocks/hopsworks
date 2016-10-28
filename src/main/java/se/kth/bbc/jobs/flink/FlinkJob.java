@@ -3,13 +3,25 @@ package se.kth.bbc.jobs.flink;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.flink.api.common.JobID;
+import org.apache.flink.client.program.Client;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.lims.Utils;
+import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.bbc.project.services.ProjectServices;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
@@ -23,8 +35,13 @@ public class FlinkJob extends YarnJob {
              FlinkJob.class.getName());
     private final FlinkJobConfiguration jobconfig;
     private final String flinkDir;
-    private final String flinkUser;
+    private final String flinkUser;    
     private final String JOBTYPE_STREAMING = "Streaming";
+    public static Map<String, FlinkClusterInfo> jobsClusterInfo;
+    
+    static{
+      jobsClusterInfo = new HashMap<>();
+    }
     /**
      *
      * @param job
@@ -36,13 +53,18 @@ public class FlinkJob extends YarnJob {
      * @param flinkConfFile
      * @param nameNodeIpPort
      * @param flinkUser
+     * @param jobUser
+     * @param kafkaAddress
+     * @param restEndpoint
      */
     public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
             Users user, final String hadoopDir,
             final String flinkDir, final String flinkConfDir, 
             final String flinkConfFile,final String nameNodeIpPort, 
-            String flinkUser) {
-        super(job, services, user, hadoopDir, nameNodeIpPort);
+            String flinkUser, String jobUser, String kafkaAddress, 
+            String restEndpoint) {
+        super(job, services, user, jobUser, hadoopDir, nameNodeIpPort,
+                kafkaAddress, restEndpoint);
         if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
             throw new IllegalArgumentException(
                     "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -56,14 +78,15 @@ public class FlinkJob extends YarnJob {
     }
 
     @Override
-    protected boolean setupJob() {
+    protected boolean setupJob(DistributedFileSystemOps dfso) {
+        super.setupJob(dfso);
         //Then: actually get to running.
         if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
             jobconfig.setAppName("Untitled Flink Job");
         }
         
         FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(
-                jobconfig.getJarPath(), jobconfig.getMainClass(), jobconfig.getLocalJarPath());
+                jobconfig.getJarPath(), jobconfig.getMainClass());
         //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
         /*If you do not want to keep the Flink YARN client running all the time, 
          its also possible to start a detached YARN session. The parameter for
@@ -78,8 +101,8 @@ public class FlinkJob extends YarnJob {
         //Flink specific conf object
         flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
                 jobconfig.getFlinkConfDir()));
-        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
-                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
+//        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
+//                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
         
         flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
         flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
@@ -91,16 +114,35 @@ public class FlinkJob extends YarnJob {
         flinkBuilder.setJobManagerMemory(jobconfig.getAmMemory());
         flinkBuilder.setJobManagerCores(jobconfig.getAmVCores());
         flinkBuilder.setJobManagerQueue(jobconfig.getAmQueue());
-        flinkBuilder.setAppJarPath(jobconfig.getAppJarPath());
+        flinkBuilder.setAppJarPath(jobconfig.getJarPath());
+        flinkBuilder.setSessionId(jobconfig.getjSessionId());
+        flinkBuilder.setKafkaAddress(kafkaAddress);
+        flinkBuilder.setRestEndpoint(restEndpoint);
         flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
+        //Set project specific resources, i.e. Kafka certificates
+        flinkBuilder.addExtraFiles(projectLocalResources);
         if(jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()){
             String[] jobArgs = jobconfig.getArgs().trim().split(" ");
             flinkBuilder.addAllJobArgs(jobArgs);
         } 
+        if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
+          for (Map.Entry<String, String> jobSystemProperty : jobSystemProperties.
+                  entrySet()) {
+            //If the properties are the Kafka certificates, append glassfish path
+            if(jobSystemProperty.getKey().equals(Settings.KAFKA_K_CERTIFICATE) ||
+                 jobSystemProperty.getKey().equals(Settings.KAFKA_T_CERTIFICATE)){
+              flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
+                   "/srv/glassfish/domain1/config/"+jobSystemProperty.getValue());
+            } else {
+            flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
+                   jobSystemProperty.getValue());
+            }
+          }
+        }
         try {
             runner = flinkBuilder.
            getYarnRunner(jobDescription.getProject().getName(),
-               flinkUser, hadoopDir, flinkDir, nameNodeIpPort);
+               flinkUser, jobUser, hadoopDir, flinkDir, nameNodeIpPort);
 
         } catch (IOException e) {
           logger.log(Level.SEVERE,
@@ -114,14 +156,12 @@ public class FlinkJob extends YarnJob {
                 jobDescription.
                 getProject().
                 getName())
-                + Settings.FLINK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-                + File.separator + "stdout.log";
+                + Settings.FLINK_DEFAULT_OUTPUT_PATH;
         String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
                 jobDescription.
                 getProject().
                 getName())
-                + Settings.FLINK_DEFAULT_OUTPUT_PATH + getExecution().getId()
-                + File.separator + "stderr.log";
+                + Settings.FLINK_DEFAULT_OUTPUT_PATH;
         setStdOutFinalDestination(stdOutFinalDestination);
         setStdErrFinalDestination(stdErrFinalDestination);
         return true;
@@ -134,6 +174,118 @@ public class FlinkJob extends YarnJob {
           monitor.close();
           monitor = null;
         }
+        //Remove local files required for the job (Kafka certs etc.)
+        //Search for other jobs using Kafka in the same project. If any active
+        //ones are found
+        
+        Collection<ProjectServices> projectServices = jobDescription.getProject().
+            getProjectServicesCollection();
+        Iterator<ProjectServices> iter = projectServices.iterator();
+        boolean removeKafkaCerts = true;
+        while (iter.hasNext()) {
+          ProjectServices projectService = iter.next();
+          //If the project is of type KAFKA
+          if (projectService.getProjectServicesPK().getService()
+                  == ProjectServiceEnum.KAFKA) {
+            List<Execution> execs = services.getExecutionFacade().
+                findForProjectByType(jobDescription.getProject(), JobType.FLINK);
+            if(execs!=null){
+              execs.addAll(services.getExecutionFacade().
+                    findForProjectByType(jobDescription.getProject(), JobType.SPARK));
+            }
+            //Find if this project has running jobs
+            if(execs!=null && !execs.isEmpty()){
+             for(Execution exec : execs){
+                if(!exec.getState().isFinalState()){
+                  removeKafkaCerts = false;
+                  break;
+               }
+              }
+            }
+          }
+        }
+        if(removeKafkaCerts){
+          String k_certName = jobDescription.getProject().getName() + "__"
+                + jobDescription.getProject().getOwner().getUsername()
+                + "__kstore.jks";
+          String t_certName = jobDescription.getProject().getName() + "__"
+                  + jobDescription.getProject().getOwner().getUsername()
+                  + "__tstore.jks";
+          File k_cert = new File("/srv/glassfish/domain1/config/"+k_certName);
+          File t_cert = new File("/srv/glassfish/domain1/config/"+t_certName);
+          if(k_cert.exists()){
+            k_cert.delete();
+          }
+          if(t_cert.exists()){
+            t_cert.delete();
+          }
+        }
+
     }
 
+    @Override
+    protected void stopJob(String appid){
+      
+        //Stop flink cluster first
+        logger.log(Level.SEVERE, "jobsClusterInfo:{0}", jobsClusterInfo);
+        if(jobsClusterInfo.containsKey(appid) &&  jobsClusterInfo.get(appid).getJobId()!=null){
+          try {
+            JobID jobIdToStop = jobsClusterInfo.get(appid).getJobId();
+            Client flinkClusterToStop = jobsClusterInfo.get(appid).getClient();
+            
+            //flinkClusterToStop.endSession(jobIdToStop);
+            flinkClusterToStop.cancel(jobIdToStop);
+            jobsClusterInfo.remove(appid);
+          } catch (Exception ex) {
+            try {
+              logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex);
+              //super.stopJob(appid);
+              Runtime rt = Runtime.getRuntime();
+              Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+            } catch (IOException ex1) {
+
+              logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex1);
+            }
+            }
+        }  else {
+          try {
+            Runtime rt = Runtime.getRuntime();
+            Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill "+appid);
+          } catch (IOException ex1) {
+            logger.log(Level.SEVERE, "Unable to stop flink cluster with appID:"+appid, ex1);
+          }
+        }
+    }
+    
+    /**
+     * Pojo with information about running Fink Clusters. 
+     * Utilized by YarnRunner and FlinkJob to propertly stop flink cluster.
+     */
+    public static class FlinkClusterInfo {
+
+      private JobID jobId;
+      private Client client;
+
+      public FlinkClusterInfo(JobID jobId, Client client) {
+        this.jobId = jobId;
+        this.client = client;
+      }
+
+      public JobID getJobId() {
+        return jobId;
+      }
+
+      public void setJobId(JobID jobId) {
+        this.jobId = jobId;
+      }
+
+      public Client getClient() {
+        return client;
+      }
+
+      public void setClient(Client client) {
+        this.client = client;
+      }
+
+    }
 }

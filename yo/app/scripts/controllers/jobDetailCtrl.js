@@ -3,8 +3,8 @@
  * Controller for the job detail dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('JobDetailCtrl', ['$scope', '$modalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location',
-          function ($scope, $modalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location) {
+        .controller('JobDetailCtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location',
+          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location) {
 
             var self = this;
             this.job = job;
@@ -66,16 +66,14 @@ angular.module('hopsWorksApp')
             };
 
             this.setupInfo = function () {
-              if (self.job.runConfig.type == "cuneiformJobConfiguration") {
-                self.jobtype = "Cuneiform";
-                self.execFile = job.runConfig.wf.name;
-              } else if (self.job.runConfig.type == "sparkJobConfiguration") {
+
+              if (self.job.runConfig.type === "sparkJobConfiguration") {
                 self.jobtype = "Spark";
                 self.execFile = getFileName(job.runConfig.jarPath);
-              } else if (self.job.runConfig.type == "adamJobConfiguration") {
+              } else if (self.job.runConfig.type === "adamJobConfiguration") {
                 self.jobtype = "ADAM";
                 self.execFile = job.runConfig.selectedCommand.command;
-              } else if (self.job.runConfig.type == "flinkJobConfiguration") {
+              } else if (self.job.runConfig.type === "flinkJobConfiguration") {
                 self.jobtype = "Flink";
                 self.execFile = getFileName(job.runConfig.jarPath);
               }
@@ -109,7 +107,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
             /**

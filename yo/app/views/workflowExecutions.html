@@ -1,0 +1,117 @@
+<div ng-controller="ProjectCtrl as projectCtrl">
+    <div ng-controller="MainCtrl as mainCtrl">
+        <div ng-include="'nav.html'"></div>
+        <div id="wrapper" class="toggled">
+            <div class="overlay"></div>
+            <section>
+                <div class="content-wrapper">
+                    <div style="height: 60%">
+                      <div ng-controller="MetadataCtrl as metadataCtrl">
+                          <div ng-controller="DatasetsCtrl as datasetsCtrl">
+
+                              <div ng-include="'navProject.html'"></div>
+                              <div class="content-wrapper">
+                                  <h3>
+                                      <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+                                          <button class="btn btn-sm btn-info" ng-click="projectCtrl.goToWorklows()" uib-dropdown-toggle="" type="button" id="newWorkflow" aria-haspopup="true" aria-expanded="true">
+                                              Back
+                                          </button>
+                                      </div>
+                                  </h3>
+                              </div>
+
+                              <table class="table table-hover">
+                                  <thead>
+                                  <tr>
+                                      <th>ID</th>
+                                      <th>Jobs</th>
+                                      <th>Created At</th>
+                                      <th>Error</th>
+                                  </tr>
+                                  </thead>
+                                  <tbody>
+                                  <tr ng-repeat="execution in workflowExecutionCtrl.executions" ng-click="workflowExecutionCtrl.selectIndex($index, execution)" ng-class="{'active':$index == workflowExecutionCtrl.selectedIndex}">
+                                      <td>{{execution.id}}</td>
+                                      <td><a ng-click="workflowExecutionCtrl.goToJobs(execution.id)" >Show</a></td>
+                                      <td>{{execution.workflowTimestamp}}</td>
+                                      <td>{{execution.error}}</td>
+                                  </tr>
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                    </div>
+                    <div style="height: 35%;overflow: auto;">
+                      <div style="max-height: 50%;padding-top: 10px" ng-show="workflowExecutionCtrl.hasSelectExecution">
+
+                        <ul class="nav nav-tabs">
+                          <li class="active"><button class="btn btn-default"
+                                                     data-toggle="tab"
+                                                     data-target="#logs">
+                              Default Logs</button></li>
+                          <li><button class="btn btn-default"
+                                      data-toggle="tab"
+                                      data-target="#errors"
+                                      >Error Logs</button></li>
+                          <li><button class="btn btn-default"
+                                      data-toggle="tab"
+                                      data-target="#audits"
+                                      >Audit Logs</button></li>
+
+                        </ul>
+
+                        <div class="tab-content" >
+                          <div id="logs" class="tab-pane fade in active">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                                <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
+                                                {{item.default}}
+                                  </textarea>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div id="errors" class="tab-pane fade">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                                <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="15" placeholer="No error information available" readonly>
+                                                {{item.error}}
+                                  </textarea>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div id="audits" class="tab-pane fade">
+                            <div uib-accordion close-others="true">
+                              <div uib-accordion-group ng-repeat="item in workflowExecutionCtrl.selectedExecutionLogs" heading="{{item.time}}">
+                                <div style="overflow-y: auto">
+                                  <textarea class="form-control" rows="15" placeholer="No log information available" readonly>
+                                                {{item.audit}}
+                                  </textarea>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- <div class="tab-content" >
+                          <div id="logs" class="tab-pane fade in active">
+                            <textarea class="form-control" rows="15" placeholer="No log information available" readonly>{{workflowExecutionCtrl.selectedExecutionLogs.default}}</textarea>
+                          </div>
+                          <div id="errs" class="tab-pane fade">
+                            <textarea class="form-control" rows="15" placeholer="No error information available" readonly>{{workflowExecutionCtrl.selectedExecutionLogs.error}}</textarea>
+                          </div>
+                          <div id="audit" class="tab-pane fade">
+                            <textarea class="form-control" rows="15" placeholer="No audit information available" readonly>{{workflowExecutionCtrl.selectedExecutionLogs.audit}}</textarea>
+                          </div>
+                        </div> -->
+
+                      </div>
+                    </div>
+                </div>
+          </section>
+        </div>
+    </div>
+</div>

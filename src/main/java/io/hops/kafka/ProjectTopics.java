@@ -1,15 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package io.hops.kafka;
 
 import java.io.Serializable;
 import java.util.Collection;
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -19,8 +12,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -36,14 +27,15 @@ import se.kth.bbc.project.Project;
 @NamedQueries({
     @NamedQuery(name = "ProjectTopics.findAll", query = "SELECT p FROM ProjectTopics p"),
     @NamedQuery(name = "ProjectTopics.findByTopicName", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.topicName = :topicName"),
-    @NamedQuery(name = "ProjectTopics.findByProjectId", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId")})
+    @NamedQuery(name = "ProjectTopics.findByProjectId", query = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId"),
+    @NamedQuery(name = "ProjectTopics.findBySchemaVersion", query = "SELECT p FROM ProjectTopics p WHERE p.schemaTopics.schemaTopicsPK.name = :schema_name AND p.schemaTopics.schemaTopicsPK.version = :schema_version")})
 public class ProjectTopics implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
     private Collection<TopicAcls> topicAclsCollection;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
-    private Collection<TopicAcls> topicAcls1Collection;
+    
     @JoinColumns({
         @JoinColumn(name = "schema_name", referencedColumnName = "name"),
         @JoinColumn(name = "schema_version", referencedColumnName = "version")})
@@ -53,7 +45,6 @@ public class ProjectTopics implements Serializable {
     @ManyToOne(optional = false)
     private Project project;
     
-    private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected ProjectTopicsPK projectTopicsPK;
 
@@ -80,17 +71,6 @@ public class ProjectTopics implements Serializable {
 
     public void setProjectTopicsPK(ProjectTopicsPK projectTopicsPK) {
         this.projectTopicsPK = projectTopicsPK;
-    }
-
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<TopicAcls> getTopicAcls1Collection() {
-        return topicAcls1Collection;
-    }
-
-    public void setTopicAcls1Collection(Collection<TopicAcls> topicAcls1Collection) {
-        this.topicAcls1Collection = topicAcls1Collection;
     }
 
     public SchemaTopics getSchemaTopics() {

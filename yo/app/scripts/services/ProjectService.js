@@ -40,7 +40,7 @@ angular.module('hopsWorksApp')
                'method': 'GET'
                       },
               "uberPrice":{
-               url: '/api/project/:id/price',
+               url: '/api/project/:id/multiplicator',
                'method': 'GET'
                       },
               "getProjectInfo": {

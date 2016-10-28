@@ -2,12 +2,12 @@
  * Created by AMore on 2015-05-15.
  */
 angular.module('hopsWorksApp').controller('NewListCtrl',
-        ['$scope', '$modalInstance', function ($scope, $modalInstance) {
+        ['$scope', '$uibModalInstance', function ($scope, $uibModalInstance) {
 
 
             /* handle the close button */
             $scope.close = function () {
-              $modalInstance.close();
+              $uibModalInstance.close();
               //$location.path('/metaDesign');
             };
 
@@ -17,7 +17,7 @@ angular.module('hopsWorksApp').controller('NewListCtrl',
                 return false;
               }
               var listId = -1;
-              $modalInstance.close({id: listId, name: this.name});
+              $uibModalInstance.close({id: listId, name: this.name});
             };
 
           }]);

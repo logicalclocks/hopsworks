@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('ViewPublicDatasetCtrl', ['$modalInstance', 'ProjectService', 'DataSetService', 'growl', 'projects', 'datasetDto',
-          function ($modalInstance, ProjectService, DataSetService, growl, projects, datasetDto) {
+        .controller('ViewPublicDatasetCtrl', ['$uibModalInstance', 'ProjectService', 'growl', 'projects', 'datasetDto',
+          function ($uibModalInstance, ProjectService, growl, projects, datasetDto) {
 
             var self = this;
             self.projects = projects;
@@ -16,16 +16,14 @@ angular.module('hopsWorksApp')
                 'inodeId': self.dataset.inodeId, 'projectName': self.dataset.projectName}).$promise.then(
                       function (success) {
                         growl.success("Dataset Imported", {title: 'Success', ttl: 1500});
-                        $modalInstance.close(success);
+                        $uibModalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
               });
             };
 
-            var dataSetService = DataSetService(self.projectId);
-
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

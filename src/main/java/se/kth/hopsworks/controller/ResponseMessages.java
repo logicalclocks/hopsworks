@@ -1,12 +1,9 @@
 package se.kth.hopsworks.controller;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 public class ResponseMessages {
 
   //response for validation error
+  public final static String INTERNAL_SERVER_ERROR = "Internal Server Error. Please report a bug.";
   public final static String USER_DOES_NOT_EXIST = "User does not exist.";
   public final static String USER_WAS_NOT_FOUND
           = "Ops! The operation failed. User not found";
@@ -45,7 +42,7 @@ public class ResponseMessages {
   public final static String TOS_NOT_AGREED
           = "You must agree to our terms of use.";
 
-  //success response 
+  //success response
   public final static String CREATED_ACCOUNT
           = "You have successfully created an account,\n"
           + "but you might need to wait until your account has been approved \n"
@@ -105,10 +102,6 @@ public class ResponseMessages {
           = " The selected user is not a team member in this project.";
   public final static String ROLE_NOT_SET = "Role cannot be empty.";
   public final static String CONSENT_ALREADY_EXISTS = "Duplicate error. There is already a consent form in the Project with the same name";
-  
-  public final static String CHARON_SITE_ALREADY_EXISTS = "Duplicate error. This site is already registered in the Project.";
-  public final static String CHARON_BAD_SITE = "Bad site name.";
-  public final static String CHARON_SHARE_ALREADY_EXISTS = "Duplicate error. This shared path is already registered in the Project.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
@@ -161,4 +154,19 @@ public class ResponseMessages {
           = "Elasticsearch type does not exist";
   public final static String ELASTIC_SERVER_NOT_AVAILABLE
           = "The Elasticsearch Server is either down or misconfigured.";
+
+  //Workflow
+  public final static String WORKFLOW_NOT_FOUND
+          = "Workflow not found.";
+  public final static String NODE_NOT_FOUND
+          = "Node not found.";
+  public final static String EDGE_NOT_FOUND
+          = "Edge not found.";
+  public final static String WOKFLOW_EXECUTION_NOT_FOUND
+        = "Execution not found.";
+  public final static String WOKFLOW_JOB_NOT_FOUND
+        = "Job not found.";
+  
+  public final static String JOB_DETAILS
+          = "Details for a job";
 }

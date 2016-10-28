@@ -50,7 +50,7 @@
                                          rows="25"
                                          paginator="true"
                                          paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                                         rowsPerPageTemplate="15,25,35,45,55">
+                                         rowsPerPageTemplate="25,50,75,100,500">
 
                                 <p:ajax event="rowEdit"
                                         listener="#{projectsmanagement.onRowEdit}"
@@ -79,8 +79,8 @@
                                         <f:facet name="input">
                                             <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%">
                                                 <f:validateLongRange
-                                                        maximum="100000"
-                                                        minimum="1" />
+                                                        maximum="100000000"
+                                                        minimum="0" />
                                             </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
@@ -111,8 +111,8 @@
                                             <p:inputText
                                                 value="#{projectsmanagement.hdfsquota}" style="width:100%">
                                                 <f:validateLongRange
-                                                    maximum="10000000000"
-                                                    minimum="1" />
+                                                    maximum="10000000000000"
+                                                    minimum="0" />
                                             </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
@@ -141,8 +141,8 @@
                                             <p:inputText
                                                 value="#{projectsmanagement.hdfsNsquota}" style="width:100%">
                                                 <f:validateLongRange
-                                                    maximum="100000000"
-                                                    minimum="1" />
+                                                    maximum="10000000000"
+                                                    minimum="-1" />
                                             </p:inputText>
                                         </f:facet>
                                     </p:cellEditor>
@@ -156,8 +156,6 @@
                                     <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.projectname)}" />
                                 </p:column>
 
-                                
-                                
                                 <p:column id="useremailColumn"
                                           filterBy="#{project.username}"
                                           sortBy="#{project.username}"

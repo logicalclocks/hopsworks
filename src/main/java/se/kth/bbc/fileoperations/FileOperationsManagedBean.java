@@ -9,10 +9,14 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 
 //TODO: report errors to user!!! seems to be going wrong!
 /**
@@ -20,15 +24,14 @@ import se.kth.bbc.lims.Utils;
  * uploading, creating files and directories. Methods do not care about the
  * specific implementation of the file system (i.e. separation between DB and FS
  * is not made here).
- *
- * @author stig
+ * <p>
  */
 @ManagedBean(name = "fileOperationsMB") //Not sure it makes sense to have it as an MB. Perhaps functionality should be split between an MB and EJB
 @RequestScoped
 public class FileOperationsManagedBean implements Serializable {
 
   @EJB
-  private FileOperations fileOps;
+  private DistributedFsService fileOps;
 
   private String newFolderName;
   private static final Logger logger = Logger.getLogger(
@@ -37,14 +40,18 @@ public class FileOperationsManagedBean implements Serializable {
   /**
    * Download the file at the specified inode.
    *
+   * @param path
    * @return StreamedContent of the file to be downloaded.
    */
   public StreamedContent downloadFile(String path) {
 
     StreamedContent sc = null;
+    DistributedFileSystemOps dfso = null;
+    InputStream is = null;
     try {
       //TODO: should convert to try-with-resources? or does that break streamedcontent?
-      InputStream is = fileOps.getInputStream(path);
+      dfso = fileOps.getDfsOps();
+      is = dfso.open(path);
       String extension = Utils.getExtension(path);
       String filename = Utils.getFileName(path);
 
@@ -55,6 +62,17 @@ public class FileOperationsManagedBean implements Serializable {
               Level.SEVERE, null, ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Download failed.");
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          logger.log(Level.SEVERE, "Error while closing stream.", ex);
+        }
+      }
+      if (dfso != null) {
+        dfso.close();
+      }
     }
     return sc;
   }
@@ -69,13 +87,15 @@ public class FileOperationsManagedBean implements Serializable {
    */
   public void mkDir(String path) {
     String location;
+    DistributedFileSystemOps dfso = null;
     if (path.endsWith(File.separator)) {
       location = path + newFolderName;
     } else {
       location = path + File.separator + newFolderName;
     }
     try {
-      boolean success = fileOps.mkDir(location);
+      dfso = fileOps.getDfsOps();
+      boolean success = dfso.mkdir(location);
       if (success) {
         newFolderName = null;
       } else {
@@ -87,6 +107,10 @@ public class FileOperationsManagedBean implements Serializable {
               Level.SEVERE, null, ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Failed to create folder.");
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 
@@ -99,24 +123,38 @@ public class FileOperationsManagedBean implements Serializable {
   }
 
   public void deleteFile(String path) {
+    DistributedFileSystemOps dfso = null;
+    Path location = new Path(path);
     try {
-      fileOps.rm(path);
+      dfso = fileOps.getDfsOps();
+      dfso.rm(location, false);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
               Level.SEVERE, "Failed to remove file.", ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Remove failed.");
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 
   public void deleteFolderRecursive(String path) {
+    DistributedFileSystemOps dfso = null;
+    Path location = new Path(path);
     try {
-      fileOps.rmRecursive(path);
+      dfso = fileOps.getDfsOps();
+      dfso.rm(location, true);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
               Level.SEVERE, "Failed to remove file.", ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Remove failed.");
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 }

@@ -1,28 +1,36 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$modalInstance',
-          function (UserService, $location, $scope, md5, growl, $modalInstance) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$uibModalInstance','$cookies',
+          function (UserService, $location, $scope, md5, growl, $uibModalInstance, $cookies) {
 
             var self = this;
             self.working = false;
             self.credentialWorking = false;
-
+            self.twoFactorWorking = false;
+            self.noPassword = false;
+            self.otp = $cookies.get('otp');
             self.emailHash = '';
             self.master = {};
-
+            self.masterTwoFactor = {};
             self.user = {
               firstName: '',
               lastName: '',
               email: '',
               telephoneNum: '',
-              registeredon: ''
+              registeredon: '',
+              twoFactor: ''
             };
 
             self.loginCredes = {
               oldPassword: '',
               newPassword: '',
               confirmedPassword: ''
+            };
+            
+            self.twoFactorAuth = {
+              password: '',
+              twoFactor: ''
             };
 
             self.profile = function () {
@@ -31,6 +39,7 @@ angular.module('hopsWorksApp')
                         self.user = success.data;
                         self.emailHash = md5.createHash(self.user.email || '');
                         self.master = angular.copy(self.user);
+                        self.twoFactorAuth.twoFactor = self.master.twoFactor;
                       },
                       function (error) {
                         self.errorMsg = error.data.errorMsg;
@@ -51,7 +60,7 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                         self.working = false;
                         self.errorMsg = error.data.errorMsg;
-                        growl.error("Could not update your profile.", {title: 'Error', ttl: 5000, referenceId: 1});
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
               });
             };
 
@@ -65,9 +74,56 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                           self.credentialWorking = false;
                           self.errorMsg = error.data.errorMsg;
-                          growl.error("Could not update your password.", {title: 'Error', ttl: 5000, referenceId: 1});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
                 });
               }
+            };
+            
+            self.changeTwoFactor = function() {
+              if (self.twoFactorAuth.twoFactor !== self.master.twoFactor) {
+                self.twoFactorWorking = true;
+                UserService.changeTwoFactor(self.twoFactorAuth).then(
+                        function (success) {
+                          self.twoFactorWorking = false;
+                          self.twoFactorAuth.password = '';
+                          if (success.data.QRCode !== undefined) {
+                            self.close();
+                            $location.path("/qrCode/" + success.data.QRCode);
+                            $location.replace();
+                          } else if (success.data.successMessage !== undefined) { 
+                            self.master.twoFactor = false;
+                            growl.success(success.data.successMessage, {title: 'Success', ttl: 5000, referenceId: 1});
+                          }
+                        }, function (error) {
+                          self.twoFactorWorking = false;
+                          self.errorMsg = error.data.errorMsg;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                });
+              }
+            };
+            
+            self.getQR = function() {
+                if (self.twoFactorAuth.password === undefined || 
+                    self.twoFactorAuth.password === '') {
+                    self.noPassword = true;
+                    return;
+                }
+                self.noPassword = false;
+                self.twoFactorWorking = true;
+                UserService.getQR(self.twoFactorAuth.password).then(
+                        function (success) {
+                          self.twoFactorWorking = false;
+                          self.twoFactorAuth.password = '';
+                          if (success.data.QRCode !== undefined) {
+                            self.close();
+                            $location.path("/qrCode/" + success.data.QRCode);
+                            $location.replace();
+                          } 
+                        }, function (error) {
+                          self.twoFactorWorking = false;
+                          self.errorMsg = error.data.errorMsg;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                });
             };
 
             self.reset = function () {
@@ -76,7 +132,7 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
           }]);

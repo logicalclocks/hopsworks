@@ -230,7 +230,21 @@ module.exports = function (grunt) {
           '<%= yeoman.dist %>',
           '<%= yeoman.dist %>/images',
           '<%= yeoman.dist %>/styles'
-        ]
+        ],
+        patterns: {
+          html: [
+            [
+              /<md-icon[^\>]*[^\>\S]+md-svg-icon=['"]([^'"\)#]+)(#.+)?["']/gm,
+              'Update the HTML with the new your-directive-name-here images'
+            ]
+          ],
+          js: [
+            [
+              /(images\/.*?\.(?:gif|jpeg|jpg|png|webp))/gm,
+              'Update the JS to reference our revved images'
+            ]
+          ]
+        }
       }
     },
     // The following *-min tasks will produce minified files in the dist folder
@@ -277,8 +291,15 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             cwd: '<%= yeoman.bower %>',
-            src: '**/*.{png,jpg,jpeg,gif}',
+            src: '*/*.{png,jpg,jpeg,gif}',
             dest: '<%= yeoman.dist %>/styles'
+          }, {// <-- this will copy some unnecessary images to the styles folder 
+            // but is needed to copy images used by vendros .css. 
+            expand: true,
+            flatten: true,
+            cwd: '<%= yeoman.bower %>',
+            src: '**/img/*.{png,jpg,jpeg,gif}',
+            dest: '<%= yeoman.dist %>/img'
           }
         ]
       }
@@ -309,6 +330,9 @@ module.exports = function (grunt) {
             dest: '<%= yeoman.dist %>'
           }]
       }
+    },
+    fixmaterial: {
+ 
     },
     // ng-annotate tries to make the code safe for minification automatically
     // by using the Angular long form for dependency injection.
@@ -429,7 +453,7 @@ module.exports = function (grunt) {
     'uglify',
     'filerev',
     'usemin'
- //   'htmlmin'
+//    'htmlmin'
   ]);
 
   grunt.registerTask('default', [

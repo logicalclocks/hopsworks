@@ -2,17 +2,19 @@ package se.kth.hopsworks.controller;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
 import se.kth.bbc.security.ua.SecurityQuestion;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.users.UserDTO;
+import se.kth.hopsworks.users.UserFacade;
 
-/**
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
- */
 @Stateless
 public class UserValidator {
+
+  @EJB
+  private UserFacade userBean;
 
   public static final int PASSWORD_MIN_LENGTH = 6;
   public static final int PASSWORD_MAX_LENGTH = 255;
@@ -75,6 +77,21 @@ public class UserValidator {
               ResponseMessages.SEC_A_EMPTY);
     }
 
+    return true;
+  }
+
+  public boolean isValidNewUser(UserDTO newUser) throws AppException {
+    isValidEmail(newUser.getEmail());
+    isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
+    isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
+    if (newUser.getToS()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.TOS_NOT_AGREED);
+    }
+    if (userBean.findByEmail(newUser.getEmail()) != null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.USER_EXIST);
+    }
     return true;
   }
 

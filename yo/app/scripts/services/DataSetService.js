@@ -98,6 +98,9 @@ angular.module('hopsWorksApp')
                 removeDataSetDir: function (fileName) {
                   return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 },
+                filePreview: function (filePath, mode) {
+                  return $http.get('/api/project/' + id + '/dataset/filePreview/' + filePath +"?mode="+mode);
+                },
                 move: function (srcInodeId, fullPath) {
                   
                   var moveOp = { 

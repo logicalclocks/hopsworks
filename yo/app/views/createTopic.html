@@ -1,86 +1,80 @@
 
 <div class="modal-header">
-    <button class="close" ng-click="createTopicCtrl.close()" data-dismiss="modal" aria-hidden="true"
-            type="button">&times;</button>
-    <h2 class="modal-title">Enter Topic Details</h2>
+  <button class="close" ng-click="createTopicCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Enter Topic Details</h2>
 </div>
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
-    
 
-    <form role="form" name="createTopicForm" 
-          ng-submit="createTopicCtrl.createTopic()" novalidate
-          class="form-validate">                                                                                                                              
-        <div class="view-info">
-            <div class="col-md-12">
-                <label class="control-label">Topic Name</label><br>
-                <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.topicName" placeholder="New Topic Name">
-                </div>
-            </div>
-            <div ng-if="createTopicCtrl.topicName_wrong_value === -1" style="color: red">{{"Topic Name shouldn't be empty"}}</div>
-            <div class="col-md-12">
-                <label class="control-label">Number of partitions</label><br>
-                <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_partitions" placeholder="num_paritions">
-                </div>
-            </div>
-            <div class="col-md-12">
-                <label class="control-label">Number of Replicas</label><br>
-                <div class="col-sm-12">
-                    <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_replicas" placeholder="partitioning_factor">
-                </div>
-            </div>
-            <div ng-if="createTopicCtrl.replication_wrong_value === -1" style="color: red">{{"Currently, maximum number of replicas should be "+createTopicCtrl.max_num_replicas}}</div>
-            
-            
-            <div class="row" style="padding-left: 30px">
-                <div class="col-sm-6">
-                    <label class="control-label">Schemas</label><br>
-                   <ui-select style="min-width: 400px;" name="schema_name" theme="select2"
-                              style="margin-left: 10px" ng-model="createTopicCtrl.schema"  required>
 
-                    <ui-select-match placeholder="Select a schema for this topic">{{$select.selected.name}}</ui-select-match>
-
-                    <ui-select-choices repeat="item in createTopicCtrl.schemas | filter: $select.search">
-                    <div ng-bind-html="item.name | highlight: $select.search"></div>
-                    </ui-select-choices>
-
-                </ui-select><br>
-              </div>
-<!--      <span ng-show="(createTopicForm.$submitted || createTopicCtrl.schemaName.$dirty) & amp;
-          & amp;
-          createTopicCtrl.schemaName.$error.required"
-            class="text-danger ng-hide">
-        Choose a schema-->
-      </span>
-            <div class="col-sm-6">
-                <label class="control-label">Versions</label><br>
-                   <ui-select style="min-width: 200px;" name="schema_name" theme="select2" style="margin-left: 10px"
-                      ng-model="createTopicCtrl.schemaVersion"  required>
-
-                    <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
-
-                    <ui-select-choices repeat="item in createTopicCtrl.schema.versions | filter: $select.search">
-                    <div ng-bind-html="item | highlight: $select.search"></div>
-                    </ui-select-choices>
-
-                </ui-select><br>
-              </div>
-                
-                
-            </div>
-            <br>
+  <form role="form" name="createTopicForm" 
+        ng-submit="createTopicCtrl.createTopic()" novalidate
+        class="form-validate">                                                                                                                              
+    <div class="view-info">
+      <div class="col-md-12">
+        <label class="control-label">Topic Name</label><br>
+        <div class="col-sm-12">
+          <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.topicName" placeholder="New Topic Name">
         </div>
-        <div class="row"></div>
-        <hr />
-        <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-
-            <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit">
-                Create
-            <i ng-if="createTopicCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-            </button>
+      </div>
+      <div ng-if="createTopicCtrl.topicName_wrong_value === -1" style="color: red">{{"Topic Name shouldn't be empty"}}</div>
+      <div class="col-md-12">
+        <label class="control-label">Number of partitions</label><br>
+        <div class="col-sm-12">
+          <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_partitions" placeholder="num_paritions">
         </div>
-    </form>
+      </div>
+      <div class="col-md-12">
+        <label class="control-label">Number of Replicas</label><br>
+        <div class="col-sm-12">
+          <input type="text" class="form-control" id="topicName" ng-model="createTopicCtrl.num_replicas" placeholder="partitioning_factor">
+        </div>
+      </div>
+      <div ng-if="createTopicCtrl.replication_wrong_value === -1" style="color: red">{{"Currently, maximum number of replicas should be " + createTopicCtrl.max_num_replicas}}</div>
+
+
+      <div class="row" style="padding-left: 30px">
+        <div class="col-sm-6">
+          <label class="control-label">Schemas</label><br>
+          <ui-select style="min-width: 400px;" name="schema_name" theme="select2"
+                     style="margin-left: 10px" ng-model="createTopicCtrl.schema"  required>
+
+            <ui-select-match placeholder="Select a schema for this topic">{{$select.selected.name}}</ui-select-match>
+
+            <ui-select-choices repeat="item in createTopicCtrl.schemas | filter: $select.search">
+              <div ng-bind-html="item.name | highlight: $select.search"></div>
+            </ui-select-choices>
+
+          </ui-select><br>
+        </div>
+        <div class="col-sm-6">
+          <label class="control-label">Versions</label><br>
+          <ui-select style="min-width: 200px;" name="schema_name" theme="select2" style="margin-left: 10px"
+                     ng-model="createTopicCtrl.schemaVersion"  required>
+
+            <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+            <ui-select-choices repeat="item in createTopicCtrl.schema.versions | orderBy: version:true | filter: $select.search">
+              <div ng-bind-html="item | highlight: $select.search"></div>
+            </ui-select-choices>
+          </ui-select><br>
+        </div>
+        <!--<div ng-if="createTopicCtrl.topicSchema_wrong_value === -1" style="color: red">{{"Please select schema name and its version''}}</div>-->
+        <div ng-if="createTopicCtrl.topicSchema_wrong_value === -1" style="color: red">{{"Please select schema name and its version"}}</div>
+      
+
+      </div>
+      <br>
+    </div>
+    <div class="row"></div>
+    <!--<hr />-->
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+      <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
+      <button class="btn btn-primary" type="submit">
+        <i ng-if="createTopicCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Create
+      </button>
+    </div>
+  </form>
 </div>

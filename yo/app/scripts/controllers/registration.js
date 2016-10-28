@@ -7,7 +7,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.newUser = {
               firstName: '',
               lastName: '',
@@ -19,6 +19,7 @@ angular.module('hopsWorksApp')
               securityAnswer: '',
               ToS: '',
               authType: 'Mobile',
+              twoFactor: true,
               orgName: '',
               dep: '',
               street: '',
@@ -37,16 +38,13 @@ angular.module('hopsWorksApp')
               if ($scope.registerForm.$valid) {
                 self.working = true;
                 console.log(self.otp);
-                if (self.otp === 'false') {
+                if (self.otp === 'false' || !self.newUser.twoFactor) {
                   AuthService.register(self.newUser).then(
                           function (success) {
                             self.user = angular.copy(empty);
                             $scope.registerForm.$setPristine();
-                            
                             self.successMessage = success.data.successMessage;
-                            
                             self.working = false;
-                            
                             //$location.path('/login');
                           }, function (error) {
                              self.working = false;
@@ -55,8 +53,7 @@ angular.module('hopsWorksApp')
                 }else  if (self.newUser.authType === 'Mobile') {
                   AuthService.register(self.newUser).then(
                           function (success) {
-                            self.user = angular.copy(empty);
-                         
+                            self.user = angular.copy(empty);                         
                             $scope.registerForm.$setPristine();
                             self.successMessage = success.data.successMessage;
                             self.working = false;

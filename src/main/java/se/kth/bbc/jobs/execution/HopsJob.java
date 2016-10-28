@@ -12,9 +12,9 @@ import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobsHistory;
 import se.kth.bbc.jobs.model.description.JobDescription;
-import se.kth.hopsworks.certificates.UserCertsFacade;
-import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 
 /**
@@ -42,6 +42,7 @@ public abstract class HopsJob {
 
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
+  private JobsHistory jobHistory;
   private boolean initialized = false;
 
   //Service provider providing access to facades
@@ -60,6 +61,7 @@ public abstract class HopsJob {
    * services.
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
+   * @param nameNodeIpPort
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
@@ -118,11 +120,13 @@ public abstract class HopsJob {
    * @param finalStatus
    */
   protected final void updateFinalStatus(JobFinalStatus finalStatus) {
-    execution = services.getExecutionFacade().updateFinalStatus(execution, finalStatus);
+    execution = services.getExecutionFacade().updateFinalStatus(execution,
+            finalStatus);
   }
 
   protected final void updateProgress(float progress) {
-    execution = services.getExecutionFacade().updateProgress(execution, progress);
+    execution = services.getExecutionFacade().
+            updateProgress(execution, progress);
   }
 
   /**
@@ -135,11 +139,14 @@ public abstract class HopsJob {
    * @param appId
    * @param inputFiles
    * @param outputFiles
+   * @param finalStatus
+   * @param progress
    */
   protected final void updateExecution(JobState state,
           long executionDuration, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> inputFiles,
-          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus, float progress) {
+          Collection<JobOutputFile> outputFiles, JobFinalStatus finalStatus,
+          float progress) {
     Execution upd = services.getExecutionFacade().updateAppId(execution, appId);
     upd = services.getExecutionFacade().updateExecutionTime(upd,
             executionDuration);
@@ -150,6 +157,11 @@ public abstract class HopsJob {
     upd = services.getExecutionFacade().updateFinalStatus(upd, finalStatus);
     upd = services.getExecutionFacade().updateProgress(upd, progress);
     this.execution = upd;
+  }
+
+  protected final void updateJobHistoryApp(long executiontime){
+      
+    services.getJobsHistoryFacade().updateJobHistory(execution, executiontime);
   }
 
   /**
@@ -169,21 +181,42 @@ public abstract class HopsJob {
       this.hdfsUser.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
         public Void run() {
-          long starttime = System.currentTimeMillis();
-          boolean proceed = setupJob();
-          if (!proceed) {
+          DistributedFileSystemOps dfso = null;
+          DistributedFileSystemOps udfso = null;
+          try {
+            dfso = services.getFsService().getDfsOps();
+            udfso = services.getFileOperations(hdfsUser.getUserName());
+            long starttime = System.currentTimeMillis();
+            boolean proceed = setupJob(dfso);
+            if (!proceed) {
+              long executiontime = System.currentTimeMillis() - starttime;
+              updateExecution(JobState.INITIALIZATION_FAILED, executiontime,
+                      null, null,
+                      null, null, null, null, 0);
+              cleanup();
+              return null;
+            } else {
+              updateState(JobState.STARTING_APP_MASTER);
+            }
+            runJob(udfso, dfso);
             long executiontime = System.currentTimeMillis() - starttime;
-            updateExecution(JobState.INITIALIZATION_FAILED, executiontime, null, null,
-                null, null, null, null, 0);
+            updateExecution(null, executiontime, null, null, null, null, null,
+                    null, 0);
+            updateJobHistoryApp(executiontime);
             cleanup();
             return null;
-          } else {
-            updateState(JobState.STARTING_APP_MASTER);
+          } catch (IOException e) {
+            logger.log(Level.SEVERE,
+                    "Exception while trying to get hdfsUser name for execution "
+                    + getExecution(), e);
+          } finally {
+            if (dfso != null) {
+              dfso.close();
+            }
+            if (udfso != null) {
+              udfso.close();
+            }
           }
-          runJob();
-          long executiontime = System.currentTimeMillis() - starttime;
-          updateExecution(null, executiontime, null, null, null, null, null, null, 0);
-          cleanup();
           return null;
         }
       });
@@ -200,10 +233,11 @@ public abstract class HopsJob {
    * Called before runJob, should setup the job environment to allow it to be
    * run.
    * <p/>
+   * @param dfso
    * @return False if execution should be aborted. Cleanup() is still executed
    * in that case.
    */
-  protected abstract boolean setupJob();
+  protected abstract boolean setupJob(DistributedFileSystemOps dfso);
 
   /**
    * Takes care of the execution of the job. Called by execute() after
@@ -211,8 +245,12 @@ public abstract class HopsJob {
    * Note that this method should update the Execution object correctly and
    * persistently, since this object is used to check the status of (running)
    * jobs.
+   *
+   * @param udfso
+   * @param dfso
    */
-  protected abstract void runJob();
+  protected abstract void runJob(DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso);
 
   protected abstract void stopJob(String appid);
 

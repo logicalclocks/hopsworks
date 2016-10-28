@@ -40,7 +40,8 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
     StringBuilder fileTimestamps = new StringBuilder();
     StringBuilder fileSizes = new StringBuilder();
     StringBuilder fileVisibilities = new StringBuilder();
-
+    StringBuilder fileTypes = new StringBuilder();
+    
     StringBuilder archiveUris = new StringBuilder();
     StringBuilder archiveTimestamps = new StringBuilder();
     StringBuilder archiveSizes = new StringBuilder();
@@ -53,50 +54,51 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
         URI sparkUri = destPath.toUri();
         URI pathURI = new URI(sparkUri.getScheme(), sparkUri.getAuthority(),
                 sparkUri.getPath(), null, resource.getKey());
-        if (resource.getValue().getType() == LocalResourceType.FILE) {
+//        if (resource.getValue().getType() == LocalResourceType.FILE) {
           fileUris.append(pathURI.toString()).append(",");
           fileTimestamps.append(resource.getValue().getTimestamp()).append(",");
           fileSizes.append(resource.getValue().getSize()).append(",");
-          fileVisibilities.append(resource.getValue().getVisibility()).append(
-                  ",");
-        } else {
-          archiveUris.append(pathURI.toString()).append(",");
-          archiveTimestamps.append(resource.getValue().getTimestamp()).append(
-                  ",");
-          archiveSizes.append(resource.getValue().getSize()).append(",");
-          archiveVisibilities.append(resource.getValue().getVisibility()).
-                  append(",");
-        }
+          fileVisibilities.append(resource.getValue().getVisibility()).append(",");
+          fileTypes.append(resource.getValue().getType().toString()).append(",");
+//        } else {
+//          archiveUris.append(pathURI.toString()).append(",");
+//          archiveTimestamps.append(resource.getValue().getTimestamp()).append(
+//                  ",");
+//          archiveSizes.append(resource.getValue().getSize()).append(",");
+//          archiveVisibilities.append(resource.getValue().getVisibility()).
+//                  append(",");
+//        }
       } catch (URISyntaxException e) {
         logger.log(Level.SEVERE, "Failed to add LocalResource " + resource
                 + " to Spark Environment.", e);
       }
     }
-
-    if (fileUris.length() > 1) {
-      env.put("SPARK_YARN_CACHE_FILES", fileUris.substring(0, fileUris.length()
-              - 1));
-      env.put("SPARK_YARN_CACHE_FILES_TIME_STAMPS", fileTimestamps.substring(0,
-              fileTimestamps.length() - 1));
-      env.put("SPARK_YARN_CACHE_FILES_FILE_SIZES", fileSizes.substring(0,
-              fileSizes.length() - 1));
-      env.put("SPARK_YARN_CACHE_FILES_VISIBILITIES", fileVisibilities.substring(
-              0, fileVisibilities.length() - 1));
-    }
-    if (archiveUris.length() > 1) {
-      env.put("SPARK_YARN_CACHE_ARCHIVES", archiveUris.substring(0, archiveUris.
-              length()
-              - 1));
-      env.put("SPARK_YARN_CACHE_ARCHIVES_TIME_STAMPS", archiveTimestamps.
-              substring(0,
-                      archiveTimestamps.length() - 1));
-      env.put("SPARK_YARN_CACHE_ARCHIVES_FILE_SIZES", archiveSizes.substring(0,
-              archiveSizes.length() - 1));
-      env.put("SPARK_YARN_CACHE_ARCHIVES_VISIBILITIES", archiveVisibilities.
-              substring(0,
-                      archiveVisibilities.length() - 1));
-    }
     
+//    if (fileUris.length() > 1) {
+      env.put("CACHED_FILES", fileUris.substring(0, fileUris.length()
+              - 1));
+      env.put("CACHED_FILES_TIMESTAMPS", fileTimestamps.substring(0,
+              fileTimestamps.length() - 1));
+      env.put("CACHED_FILES_SIZES", fileSizes.substring(0,
+              fileSizes.length() - 1));
+      env.put("CACHED_FILES_VISIBILITIES", fileVisibilities.substring(
+              0, fileVisibilities.length() - 1));
+      env.put("CACHED_FILES_TYPES", fileTypes.substring(
+              0, fileTypes.length() - 1));
+//    }
+//    if (archiveUris.length() > 1) {
+//      env.put("SPARK_YARN_CACHE_ARCHIVES", archiveUris.substring(0, archiveUris.
+//              length()
+//              - 1));
+//      env.put("SPARK_YARN_CACHE_ARCHIVES_TIME_STAMPS", archiveTimestamps.
+//              substring(0,
+//                      archiveTimestamps.length() - 1));
+//      env.put("SPARK_YARN_CACHE_ARCHIVES_FILE_SIZES", archiveSizes.substring(0,
+//              archiveSizes.length() - 1));
+//      env.put("SPARK_YARN_CACHE_ARCHIVES_VISIBILITIES", archiveVisibilities.
+//              substring(0,
+//                      archiveVisibilities.length() - 1));
+//    }
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
             launchContext.getLocalResources(), env, launchContext.getCommands(),
             null, null, null);

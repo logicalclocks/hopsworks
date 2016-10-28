@@ -3,7 +3,9 @@ package se.kth.hopsworks.hdfs.fileoperations;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,12 +21,15 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.UserGroupInformation;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
+import se.kth.hopsworks.hdfsUsers.model.HdfsGroups;
 import se.kth.hopsworks.util.Settings;
 
 @Stateless
 public class DistributedFsService {
 
-  private static final Logger logger = Logger.getLogger(DistributedFsService.class.
+  private static final Logger logger = Logger.getLogger(
+          DistributedFsService.class.
           getName());
 
   @EJB
@@ -33,7 +38,9 @@ public class DistributedFsService {
   private InodeFacade inodes;
   @EJB
   private UserGroupInformationService ugiService;
-  
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+
   private Configuration conf;
   private String hadoopConfDir;
 
@@ -42,6 +49,7 @@ public class DistributedFsService {
 
   @PostConstruct
   public void init() {
+    System.setProperty("hadoop.home.dir", settings.getHadoopDir());
     hadoopConfDir = settings.getHadoopConfDir();
     //Get the configuration file at found path
     File hadoopConfFile = new File(hadoopConfDir, "core-site.xml");
@@ -75,7 +83,7 @@ public class DistributedFsService {
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
   }
-  
+
   @PreDestroy
   public void preDestroy() {
     conf.clear();
@@ -104,7 +112,31 @@ public class DistributedFsService {
     }
     UserGroupInformation ugi;
     try {
-      ugi = ugiService.getProxyUser(username);
+      ugi = UserGroupInformation.createProxyUser(username, UserGroupInformation.
+              getLoginUser());
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      return null;
+    }
+    return new DistributedFileSystemOps(ugi, conf);
+  }
+  public DistributedFileSystemOps getDfsOpsForTesting(String username) {
+    if (username == null || username.isEmpty()) {
+      throw new NullPointerException("username not set.");
+    }
+    //Get hdfs groups
+        Collection<HdfsGroups> groups = hdfsUsersFacade.findByName(username).getHdfsGroupsCollection();
+        String[] userGroups = new String[groups.size()];
+        Iterator<HdfsGroups> iter = groups.iterator();
+        int i=0;
+        while(iter.hasNext()){
+          userGroups[i] = iter.next().getName();
+          i++;
+        }
+    UserGroupInformation ugi;
+    try {
+      ugi = UserGroupInformation.createProxyUserForTesting(username, UserGroupInformation.
+              getLoginUser(), userGroups);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       return null;
@@ -148,7 +180,7 @@ public class DistributedFsService {
     }
     return false;
   }
-  
+
   /**
    * Get the inode for a given path.
    * <p/>
@@ -181,6 +213,20 @@ public class DistributedFsService {
         }
       }
       return retList;
+    } else {
+      return Collections.EMPTY_LIST;
+    }
+  }
+
+  /**
+   * Returns a list of inodes if the path is a directory empty list otherwise.
+   * @param path
+   * @return 
+   */
+  public List<Inode> getChildInodes(String path) {
+    Inode inode = inodes.getInodeAtPath(path);
+    if (inode.isDir()) {
+      return inodes.getChildren(inode);
     } else {
       return Collections.EMPTY_LIST;
     }

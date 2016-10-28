@@ -3,8 +3,8 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('SelectFileCtrl', ['$modalInstance', 'growl', 'regex', 'errorMsg',
-          function ($modalInstance, growl, regex, errorMsg) {
+        .controller('SelectFileCtrl', ['$uibModalInstance', 'growl', 'regex', 'errorMsg',
+          function ($uibModalInstance, growl, regex, errorMsg) {
 
             var self = this;
 
@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
 
             /**
@@ -43,11 +43,11 @@ angular.module('hopsWorksApp')
                 }
                 growl.error(errorMsg, {title: msg, ttl: 10000});
               } else {
-                $modalInstance.close(selectedFilePath);
+                $uibModalInstance.close(selectedFilePath);
               }
             };
 
-            self.dblClick = function (datasetsCtrl, file) {
+            self.click = function (datasetsCtrl, file) {
               if (file.dir) {
                 self.select(file.path, true);
                 datasetsCtrl.openDir(file);

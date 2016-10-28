@@ -1,20 +1,18 @@
 package se.kth.hopsworks.meta.wscomm.message;
 
-import java.io.StringReader;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.InodeTableComposite;
+import se.kth.hopsworks.util.JsonUtil;
 
 /**
- * Represents a generic metadata message. It may be about fetching table
- * metadata or inode metadata, or about updating table metadata depending on its
- * subclasses
+ * Represents a generic metadata message. It may be about fetching table metadata or inode metadata, or about updating
+ * table metadata depending on its subclasses
  * <p/>
  * @author vangelis
  */
@@ -64,41 +62,24 @@ public class MetadataMessage implements Message {
   }
 
   /**
-   * Instantiates the custom entity InodeTableComposite to pass table id and
-   * inode id to protocol. This way raw data can be filtered by table id and
-   * inode id and be grouped in the front end.
+   * Instantiates the custom entity InodeTableComposite to pass table id and inode id to protocol. This way raw data can
+   * be filtered by table id and inode id and be grouped in the front end.
    *
    * @return the list with the RawData objects
    */
   @Override
   public List<EntityIntf> parseSchema() {
-    JsonObject obj = Json.createReader(new StringReader(this.message)).
-            readObject();
-
-    List<EntityIntf> list = null;
-
-    try {
-      int inodePid = obj.getInt("inodepid");
-      String inodeName = obj.getString("inodename");
-      int tableid = obj.getInt("tableid");
-
-      InodeTableComposite itc = new InodeTableComposite(tableid, inodePid,
-              inodeName);
-
-      list = new LinkedList<>();
+    List<EntityIntf> list = new ArrayList<>();
+    InodeTableComposite itc = JsonUtil.parseSchemaHeader(this.message);
+    if (itc != null) {
       list.add(itc);
-    } catch (NullPointerException e) {
-      logger.log(Level.SEVERE,
-              "Inodepid or inodename or tableid not present in the message");
     }
-
     return list;
   }
 
   /**
-   * A message that translates into an inode mutation (add row in
-   * hdfs_metadata_log table). It is being used both by StoreMetadataMessage and
-   * UpdateMetadataMessage.
+   * A message that translates into an inode mutation (add row in hdfs_metadata_log table). It is being used both by
+   * StoreMetadataMessage and UpdateMetadataMessage.
    * <p/>
    * @param inode
    * @return

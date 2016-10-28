@@ -71,14 +71,14 @@ public class YarnProjectsQuotaFacade extends
     YarnProjectsQuota project = findByProjectName(projectname);
     if (project != null) {
       project.setQuotaRemaining(quota);
+      em.persist(project);
     }
-    em.merge(project);
   }
 
-  public YarnRunningPrice getPrice() {
+  public YarnPriceMultiplicator getMultiplicator() {
     try {
-      TypedQuery<YarnRunningPrice> query = em.
-          createNamedQuery("YarnRunningPrice.findLatest", YarnRunningPrice.class).setMaxResults(1);
+      TypedQuery<YarnPriceMultiplicator> query = em.
+          createNamedQuery("YarnPriceMultiplicator.findAll", YarnPriceMultiplicator.class).setMaxResults(1);
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;

@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('CreateTopicCtrl', ['$modalInstance', 'KafkaService', 'growl', 'projectId', 
-          function ($modalInstance, KafkaService, growl, projectId) {
+        .controller('CreateTopicCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 
+          function ($uibModalInstance, KafkaService, growl, projectId) {
 
             var self = this;
             self.projectId = projectId;
@@ -11,7 +11,7 @@ angular.module('hopsWorksApp')
             self.max_num_replicas;
             self.topicName_wrong_value = 1;
             self.replication_wrong_value = 1;
-            self.wrong_schema
+            self.topicSchema_wrong_value = 1;
             self.wrong_values = 1;
             self.working = false;
             
@@ -57,7 +57,16 @@ angular.module('hopsWorksApp')
                 self.topicName_wrong_value = 1;
               }
               
-              if(self.wrong_values ===-1){
+              if(!self.schema || !self.schemaVersion){
+                self.topicSchema_wrong_value = -1;
+                self.wrong_values=-1;
+              }
+              else{
+                self.topicSchema_wrong_value = 1;
+              }
+              
+              if(self.wrong_values === -1){
+                  self.working = false;
                   return;
               }
               
@@ -71,7 +80,7 @@ angular.module('hopsWorksApp')
               KafkaService.createTopic(self.projectId, topicDetails).then(
                       function (success) {
                         self.working = false;
-                          $modalInstance.close(success);
+                          $uibModalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to create topic', ttl: 5000});
                         self.working = false;
@@ -79,7 +88,6 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
-

@@ -48,13 +48,21 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
               },
               
-              getSchemasForTopics: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/schemas');
+              validateSchema: function (projectId, schemaDetails){
+                  var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/kafka/schema/validate',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: schemaDetails
+                };
+                return $http(req);
               },
+              
               /**
                * Create a new schema for topics in the given project, of the given type. 
-               * @param {type} projectId 
-               * @param {type} type
+               * @param {type} projectId
                * @param {type} schemaDetails The configuration of the newly created topic.
                * @returns {undefined} The newly created topic object.
                */
@@ -69,10 +77,22 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
+              
+              getSchemasForTopics: function (projectId){
+                return $http.get('/api/project/' + projectId + '/kafka/schemas');
+              },
+              
+              getSchemaContent: function (projectId, schemaName, schemaVersion){
+                return $http.get('/api/project/' + projectId + '/kafka/showSchema/'+schemaName+'/'+schemaVersion);
+              },
+              
+              deleteSchema: function(projectId, schemaName, schemaVersion){
+                    return $http.delete('/api/project/' + projectId + '/kafka/removeSchema/'+schemaName+'/'+schemaVersion);
+              },
+              
               /**
                * Create a new Topic in the given project, of the given type. 
                * @param {type} projectId 
-               * @param {type} type
                * @param {type} topicDetails The configuration of the newly created topic.
                * @returns {undefined} The newly created topic object.
                */

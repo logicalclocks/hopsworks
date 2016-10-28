@@ -22,6 +22,7 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfsUsers.HdfsGroupsFacade;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
@@ -60,22 +61,24 @@ public class HdfsUsersController {
      * exist, and gets added to the group <code>projectName</code>.
      * <p>
      * @param project
+   * @param dfso
      * @throws java.io.IOException
      */
-    public void addProjectFolderOwner(Project project) throws IOException {
-        String owner = getHdfsUserName(project, project.getOwner());
-        String projectPath = File.separator + settings.DIR_ROOT + File.separator
-                + project.getName();
-        Path location = new Path(projectPath);
-        //FsPermission(FsAction u, FsAction g, FsAction o) 775
-        //Gives owner and group all access and read, execute for others
-        //This means group is for data_owners and others for data_scientist
-        //This means every body can see the content of a project.
-        FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-                FsAction.READ_EXECUTE);// 775
-        dfsService.getDfsOps().setOwner(location, owner, project.getName());
-        dfsService.getDfsOps().setPermission(location, fsPermission);
-    }
+  public void addProjectFolderOwner(Project project,
+          DistributedFileSystemOps dfso) throws IOException {
+    String owner = getHdfsUserName(project, project.getOwner());
+    String projectPath = File.separator + settings.DIR_ROOT + File.separator
+            + project.getName();
+    Path location = new Path(projectPath);
+    //FsPermission(FsAction u, FsAction g, FsAction o) 775
+    //Gives owner and group all access and read, execute for others
+    //This means group is for data_owners and others for data_scientist
+    //This means every body can see the content of a project.
+    FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
+            FsAction.READ_EXECUTE);// 775
+    dfso.setOwner(location, owner, project.getName());
+    dfso.setPermission(location, fsPermission);
+  }
 
     /**
      * Adds a new member to the project. This will create a new user in HDFS
@@ -178,7 +181,7 @@ public class HdfsUsersController {
      * @throws java.io.IOException
      */
     public void addDatasetUsersGroups(Users owner, Project project,
-            Dataset dataset) throws IOException {
+            Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
         if (owner == null || project == null || project.getProjectTeamCollection()
                 == null || dataset == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
@@ -189,7 +192,7 @@ public class HdfsUsersController {
                 + project.getName() + File.separator + dataset.getInode().
                 getInodePK().getName();
         Path location = new Path(dsPath);
-        dfsService.getDfsOps().setOwner(location, dsOwner, datasetGroup);
+        dfso.setOwner(location, dsOwner, datasetGroup);
 
         String hdfsUsername;
         HdfsUsers hdfsUser;
@@ -466,6 +469,26 @@ public class HdfsUsersController {
     }
 
     /**
+     * Returns the username given a hdfs username
+     * <p>
+     * @param hdfsUser
+     * @return
+     */
+    public String getUserName(String hdfsUser) {
+        return hdfsUser.split(USER_NAME_DELIMITER)[1];
+    }
+
+    /**
+     * Returns the project name given a hdfs username
+     * <p>
+     * @param hdfsUser
+     * @return
+     */
+    public String getProjectName(String hdfsUser) {
+        return hdfsUser.split(USER_NAME_DELIMITER)[0];
+    }
+    
+    /**
      * If the dataset is shared with this project we will get a group name that
      * does not exist.
      * <p>
@@ -479,6 +502,21 @@ public class HdfsUsersController {
         }
         return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().
                 getName();
+    }
+    
+     /**
+     * If the dataset is shared with this project we will get a group name that
+     * does not exist.
+     * <p>
+     * @param project
+     * @param dataSetName
+     * @return
+     */
+    public String getHdfsGroupName(Project project, String dataSetName) {
+        if (project == null || dataSetName == null) {
+            return null;
+        }
+        return project.getName() + USER_NAME_DELIMITER + dataSetName;
     }
 
     /**

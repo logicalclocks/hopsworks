@@ -51,7 +51,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   /**
    * Finds all instances of a dataset. i.e if a dataset is shared it is going
-   * to be present in the parent project and in the project it is shard with.
+   * to be present in the parent project and in the project it is shared with.
    * <p/>
    * @param inode
    * @return
@@ -63,10 +63,10 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     return query.getResultList();
   }
 
-  public Dataset findByName(String name) {
-    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByName",
+  public Dataset findByNameAndProjectId(Project project, String name) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByNameAndProjectId",
             Dataset.class);
-    query.setParameter("name", name);
+    query.setParameter("name", name).setParameter("projectId", project);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {

@@ -11,48 +11,50 @@
         {{card.title}}
         <span ng-show="card.required"
               class="fa fa-asterisk"
-              tooltip="This field is mandatory"></span>
+              uib-tooltip="This field is mandatory"></span>
         <span ng-show="card.find"
               class="fa fa-search"
-              tooltip="This field is searchable"></span>
+              uib-tooltip="This field is searchable"></span>
       </span>
 
       <div class="btn-group pull-right">
         <a data-no-drag
            class="removeButton btn pull-right"
-           tooltip="delete this field"
+           uib-tooltip="delete this field"
            title="delete card"
            style="width: 20px; height: 20px;padding:2px;"
            ng-click="metadataCtrl.checkDeleteField(column, card)">
           <i class="fa fa-trash-o"></i>
         </a>
 
-        <a class="btn dropdown-toggle" data-toggle="dropdown"
-           style="width: 20px; height: 20px;padding:2px;"
-           tooltip="configure this field">
-          <i class="fa fa-cog"></i>
-        </a>
+        <div uib-dropdown  class="dropdown position-fixed" id="menu-{{$card.title}}"> 
+          <a class="btn" uib-dropdown-toggle 
+             style="width: 20px; height: 20px;padding:2px;"
+             uib-tooltip="configure this field">
+            <i class="fa fa-cog"></i>
+          </a>
 
-        <ul class="dropdown-menu dropdown-amore">
-          <li>
-            <a ng-click="metadataCtrl.makeSearchable(card);
-              $event.stopPropagation()">
-              <i class="searchable-{{card.find}} fa fa-search"></i> Searchable
-            </a>
-          </li>
-          <li>
-            <a ng-click="metadataCtrl.makeRequired(card);
-              $event.stopPropagation()">
-              <i class="required-{{card.required}} fa fa-asterisk"></i> Required
-            </a>
-          </li>
-          <li class="divider"></li>
-          <li>
-            <a ng-click="metadataCtrl.modifyField(column, card)">
-              <i class="fa fa-edit"></i> Edit field...
-            </a>
-          </li>
-        </ul>
+          <ul uib-dropdown-menu class="dropdown-amore">
+            <li>
+              <a ng-click="metadataCtrl.makeSearchable(card);
+                $event.stopPropagation()">
+                <i class="searchable-{{card.find}} fa fa-search"></i> Searchable
+              </a>
+            </li>
+            <li>
+              <a ng-click="metadataCtrl.makeRequired(card);
+                $event.stopPropagation()">
+                <i class="required-{{card.required}} fa fa-asterisk"></i> Required
+              </a>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <a ng-click="metadataCtrl.modifyField(column, card)">
+                <i class="fa fa-edit"></i> Edit field...
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

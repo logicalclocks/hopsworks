@@ -39,21 +39,25 @@ angular.module('hopsWorksApp')
             self.topicName = "";
             self.numReplicas = "";
             self.numPartitions = "";
-//            self.userEmail = "admin@kth.se";
             self.projectName = "";
             self.userEmail = "";
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
             self.role = "*";
-            self.activeId = -1;
-            self.activeShare = -1;
+           // self.activeId = -1;
             self.selectedProjectName="";
             
             self.users =[];
             self.project;
+           
+            self.showTopics = 1;
+            self.showSchemas = -1;
+            self.schemas = [];
+           // self.schemaVersion;
+            self.schemaVersions = [];
             
-
+           
             
 
             self.selectAcl = function (acl, topicName) {
@@ -73,7 +77,7 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.users = success.data;
                 }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 21});
+                    growl.error(error.data.errorMsg, {title: 'Could not load ACL users', ttl: 5000, referenceId: 10});
                    });
               
             };
@@ -89,7 +93,6 @@ angular.module('hopsWorksApp')
                 KafkaService.updateTopicAcl(self.projectId, topicName, aclId, acl).then(
                         function(success){
                             self.getAclsForTopic(topicName);
-                            
                         }, function(error){
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                             
@@ -100,11 +103,11 @@ angular.module('hopsWorksApp')
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
                         self.topics = success.data;
+                        self.numTopicsUsed = self.topics.length;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
-
 
             self.getAllSharedTopics = function () {
               KafkaService.getSharedTopics(self.projectId).then(
@@ -125,10 +128,10 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error  dfjdsfjldfj', ttl: 5000});
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                });
             };
-                
+            
             /**
              * Navigate to the new job page.
              * @returns {undefined}
@@ -137,14 +140,77 @@ angular.module('hopsWorksApp')
 
               ModalService.createSchema('lg', self.projectId).then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New schema added successfully project.', ttl: 2000});
-                          self.getAllTopics();
-
+                          growl.success(success.data.successMessage, {title: 'New schema added successfully.', ttl: 2000});
+                          self.listSchemas();
                       }, function (error) {
                 //The user changed their mind.
               });
-
             };
+            
+            self.listSchemas = function () {
+                
+                KafkaService.getSchemasForTopics(self.projectId).then(
+                 function (success) {
+                 self.schemas = success.data;
+                 var size = self.schemas.length;
+                for(var i =0; i<size;i++){
+                    self.schemaVersions[i] = Math.max.apply(null, self.schemas[i].versions);
+                }
+                 }, function (error) {
+                 growl.error(error.data.errorMsg, {title: 'Could not get schemas for topic', ttl: 5000, referenceId: 10});
+                 });
+            
+                
+            };
+            
+            self.deleteSchema = function(schemaName, index){
+                
+                if(!self.schemaVersions[index]>0){
+                  growl.info("Delete aborted", {title: 'Schema version not selected', ttl: 2000});  
+                    return;
+                }
+                 ModalService.confirm("sm", "Delete Schema (" + schemaName + ")",
+                      "Do you really want to delete this Scehma? This action cannot be undone.")
+                      .then(function (success) {
+                          KafkaService.deleteSchema(self.projectId, schemaName, self.schemaVersions[index]).then(
+                 function (success) {
+                     self.listSchemas();
+                 }, function (error) {
+                 growl.error(error.data.errorMsg, {title: 'Schema is not removed', ttl: 5000, referenceId: 10});
+                 });
+                }, function (error) {
+                    growl.info("Delete aborted", {title: 'Info', ttl: 2000});
+                    });
+            };
+            
+            self.viewSchemaContent = function(schemaName, index){
+                
+                if(!self.schemaVersions[index]>0){
+                     growl.info("Please select schema version", {title: 'Schema version not selected', ttl: 2000});
+                return;
+                }
+                
+               ModalService.viewSchemaContent('lg', self.projectId, schemaName, self.schemaVersions[index]).then(
+                      function (success) {
+                         
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+            
+            self.updateSchemaContent = function(schema){
+                
+                //increment the version number
+                self.version = Math.max.apply(null,schema.versions);
+                
+                 ModalService.updateSchemaContent('lg', self.projectId, schema.name, self.version).then(
+                      function (success) {
+                         self.listSchemas();
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+            
             /**
              * Navigate to the new job page.
              * @returns {undefined}
@@ -159,7 +225,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
                           self.getAllTopics();
-
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -181,7 +246,6 @@ angular.module('hopsWorksApp')
                         growl.info("Delete aborted", {title: 'Info', ttl: 2000});
                       });
             };
-
 
             self.getAclsForTopic = function (topicName) {
               KafkaService.getAclsForTopic(self.projectId, topicName).then(
@@ -205,9 +269,7 @@ angular.module('hopsWorksApp')
                           growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 2000});
                           self.getAclsForTopic(topicName);
                       }, function (error) {
-                //The user changed their mind.
                 growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
-
               });
             };
 
@@ -221,13 +283,11 @@ angular.module('hopsWorksApp')
 
             };
             
-            
             self.shareTopic = function(topicName) {
-              ModalService.selectProject('lg', "/[^]*/",
+              ModalService.selectProject('lg', true, self.projectId,
                       "Select a Project to share the topic with.").then(
                       function (success) {
                         var destProj = success.projectId;
-                        if(destProj!==self.projectId){
                         KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
@@ -236,14 +296,9 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
 
-                        }else{
-                            growl.info(success.name+" is owner of topic.", {title:success.getname+"Topic not shared", ttl:500});
-                            
-                        }
                       }, function (error) {
                 //The user changed their mind.
               });
-
             };
             
             //operation done from topic
@@ -256,8 +311,6 @@ angular.module('hopsWorksApp')
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
-
-
             };
             
             //operation done from project
@@ -285,12 +338,23 @@ angular.module('hopsWorksApp')
                 });
             };
 
-             self.init = function(){
+            self.init = function(){
                 self.getAllTopics();
-                self.getAllSharedTopics();
+                self.getAllSharedTopics();              
              };
             
-            self.init();              
+            self.init();
+
+            self.showTopic = function(){
+              self.showSchemas = -1;
+              self.showTopics = 1;
+            };
+            
+            self.showSchema = function(){
+              self.showSchemas = 1;
+              self.showTopics = -1;
+              self.listSchemas();
+            };
               
           }]);
 

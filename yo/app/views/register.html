@@ -56,7 +56,7 @@
                   <label class="text-muted">Phone Number</label>
                   <input name="phone_number" placeholder="Phone" autocomplete="on"
                          ng-model="regCtrl.newUser.telephoneNum"
-                         ng-pattern="/[+, ,-,0-9]*$/"
+                         ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/"
                          class="form-control "
                          type="text">
                   <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
@@ -83,7 +83,7 @@
                 <div class="form-group has-feedback">
                   <label class="text-muted">Confirm Password</label>
                   <input name="user_password_confirm" ng-model="regCtrl.newUser.repeatedPassword"
-                         match="regCtrl.newUser.chosenPassword"
+                         match="id-password"
                          class="form-control" type="password">
                   <span class="fa fa-lock form-control-feedback text-muted"></span>               
                 </div>
@@ -94,9 +94,10 @@
                     <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
                           class="text-danger ng-hide">This field is required</span>
                     <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
-                          class="text-danger ng-hide">Password should be at least 6 characters long and should including one uppercase letter,
-                        one special character and/or alphanumeric characters. </span>                 
-                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
+                          class="text-danger ng-hide">Your password should be at least 6 characters long.</span>   
+                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern &amp;&amp; !registerForm.user_password.$error.minlength"
+                          class="text-danger ng-hide">Your password should contain at least one lower case letter [a-z], one upper case letter [A-Z] and one numeric character [0-9].</span>   
+                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$error.pwmatch &amp;&amp; !(registerForm.user_password.$error.minlength || registerForm.user_password.$error.pattern)"
                           class="text-danger ng-hide">The two passwords you entered do not match</span>
                   </div>
             </div>
@@ -135,12 +136,12 @@
                 <div class=" col-xs-6 col-sm-6 col-md-6 text-center">
 
                     <div class="form-group has-feedback">
-                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted" tooltip="This will allow you to use your mobile QR scanner for two-factor authentication.">
+                      <label class="col-xs-6 col-sm-6 col-md-6 text-muted" uib-tooltip="This will allow you to use your mobile QR scanner for two-factor authentication.">
                         <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType"  value="Mobile" >
                         Mobile 
                       </label>
                       <label class="col-xs-6 col-sm-6 col-md-6 text-muted"
-                             tooltip="A YubiKey is a small device that you can use for two-factor authentication.
+                             uib-tooltip="A YubiKey is a small device that you can use for two-factor authentication.
                              This means the service will request proof that you have your YubiKey
                              in addition to your regular username and password.">
                         <input name="sec_type" type="radio" ng-model="regCtrl.newUser.authType" value="Yubikey">
@@ -231,21 +232,31 @@
             <hr>-->
             </div>
             <div class="row">
-              <div class="checkbox c-checkbox pull-left col-md-6">
-                <label>
-                  <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
-                         type="checkbox">
-                  <span class="fa fa-check"></span>I agree with the <a href=""
-                                                                       data-target="#tosModal"
-                                                                       data-toggle="modal">terms</a>
-                </label>
+              <div class="col-md-6">
+                <div class="checkbox c-checkbox pull-left">
+                  <label>
+                    <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
+                           type="checkbox">
+                    <span class="fa fa-check"></span>I agree with the <a href=""
+                                                                         data-target="#tosModal"
+                                                                         data-toggle="modal">terms</a>
+                  </label>
 
-                <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) &amp;&amp; registerForm.user_agreed.$error.required"
-                     class="text-danger ng-hide">You must agree to the terms
+                  <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) &amp;&amp; registerForm.user_agreed.$error.required"
+                       class="text-danger ng-hide">You must agree to the terms
+                  </div>
                 </div>
-
               </div>
-            </div>
+              <div class="col-md-6">
+                <div class="checkbox c-checkbox" ng-if="regCtrl.otp === 'true'">
+                  <label>
+                  <input name="2FactorAuth" ng-model="regCtrl.newUser.twoFactor"
+                           type="checkbox">
+                  <span class="fa fa-check"></span>Enable Two Factor Authentication.
+                  </label>
+                </div>
+              </div>
+              </div>
             <div class="row">
 
               <div class="col-md-12">

@@ -2,22 +2,23 @@ package se.kth.hopsworks.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
+import javax.ws.rs.core.Response;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
-import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.InodeBasicMetadataFacade;
@@ -25,8 +26,10 @@ import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.HopsUtils;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -41,8 +44,6 @@ public class DatasetController {
   @EJB
   private InodeFacade inodes;
   @EJB
-  private FileOperations fileOps;
-  @EJB
   private TemplateFacade templates;
   @EJB
   private DatasetFacade datasetFacade;
@@ -51,9 +52,7 @@ public class DatasetController {
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private DistributedFsService dfsSingleton;
+  private HdfsUsersController hdfsUsersBean;  
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -71,7 +70,10 @@ public class DatasetController {
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
    * @param globallyVisible
+   * @param dfso
+   * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
+   * @throws se.kth.hopsworks.rest.AppException
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
    * @throws IOException if the creation of the dataset failed.
@@ -79,8 +81,9 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean globallyVisible)
-          throws IOException {
+          boolean globallyVisible, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso)
+          throws IOException, AppException {
     //Parameter checking.
     if (user == null) {
       throw new NullPointerException(
@@ -95,7 +98,8 @@ public class DatasetController {
     try {
       FolderNameValidator.isValidName(dataSetName);
     } catch (ValidationException e) {
-      throw new IllegalArgumentException("Invalid folder name for DataSet.", e);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid folder name for DataSet: "+e.getMessage());
     }
     //Logic
     boolean success;
@@ -103,12 +107,12 @@ public class DatasetController {
             + project.getName();
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
-    Inode ds = inodes.findByParentAndName(parent, dataSetName);
+    Inode ds = inodes.findByInodePK(parent, dataSetName,
+        HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
-      throw new IllegalStateException(
-              "Invalid folder name for DataSet creation. "
-              + ResponseMessages.FOLDER_NAME_EXIST);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid folder name for DataSet: " +  ResponseMessages.FOLDER_NAME_EXIST);
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Permission hdfs dfs -chmod 750 or 755
@@ -118,14 +122,15 @@ public class DatasetController {
             : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
             group, global, globallyVisible);
-    success = createFolder(dsPath, templateId, username, fsPermission);
-
+    success = createFolder(dsPath, templateId, username, fsPermission, dfso,
+            udfso);
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
-      this.fileOps.setMetaEnabled(dsPath);
+      dfso.setMetaEnabled(dsPath);
       try {
 
-        ds = inodes.findByParentAndName(parent, dataSetName);
+        ds = inodes.findByInodePK(parent, dataSetName, 
+            HopsUtils.dataSetPartitionId(parent, dataSetName));
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
 
@@ -135,12 +140,13 @@ public class DatasetController {
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
         // creates a dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS);
+        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
+     
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
         try {
-          fileOps.rmRecursive(dsPath);//if dataset persist fails rm ds folder.
+          dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
           throw failed;
         } catch (IOException ex) {
           throw new IOException(
@@ -169,6 +175,8 @@ public class DatasetController {
    * created directory.
    * @param description The description of the directory
    * @param searchable Defines if the directory can be searched upon
+   * @param dfso
+   * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
    * @throws IllegalArgumentException If:
@@ -184,7 +192,8 @@ public class DatasetController {
    */
   public void createSubDirectory(Users user, Project project, String datasetName,
           String dsRelativePath, int templateId, String description,
-          boolean searchable) throws IOException {
+          boolean searchable, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso) throws IOException {
 
     //Preliminary
     while (dsRelativePath.startsWith("/")) {
@@ -225,8 +234,6 @@ public class DatasetController {
     }
 
     //Check if the given dataset exists.
-    Inode projectRoot = inodes.getProjectRoot(project.getName());
-    
     String parentPath = fullPath;
     // strip any trailing '/' in the pathname
     while (parentPath != null && parentPath.length() > 0 && parentPath.charAt(parentPath.length()-1)=='/') {
@@ -242,7 +249,8 @@ public class DatasetController {
 
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
-    boolean success = this.createFolder(fullPath, templateId, username, null);
+    boolean success = this.createFolder(fullPath, templateId, username, null,
+            dfso, udfso);
 
     //if the folder was created successfully, persist basic metadata to it -
     //description and searchable attribute
@@ -252,7 +260,7 @@ public class DatasetController {
       String folderName = pathParts[pathParts.length - 1];
 
       //find the corresponding inode
-      Inode folder = this.inodes.findByParentAndName(parent, folderName);
+      Inode folder = this.inodes.findByInodePK(parent, folderName, parent.getInodePK().getParentId());
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
               searchable);
       this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);
@@ -265,15 +273,16 @@ public class DatasetController {
    * @param path
    * @param user
    * @param project
+   * @param udfso
    * @return
    * @throws java.io.IOException
    */
-  public boolean deleteDataset(String path, Users user, Project project) throws
+  public boolean deleteDataset(String path, Users user, Project project,
+          DistributedFileSystemOps udfso) throws
           IOException {
     boolean success;
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     Path location = new Path(path);
-    success = dfsSingleton.getDfsOps(username).rm(location, true);
+    success = udfso.rm(location, true);
     return success;
   }
 
@@ -286,13 +295,15 @@ public class DatasetController {
    * @param user
    * @param project
    * @param pemission
+   * @param udfso
    * @throws IOException
    */
   public void changePermission(String path, Users user, Project project,
-          FsPermission pemission) throws IOException {
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+          FsPermission pemission, DistributedFileSystemOps udfso) throws
+          IOException {
+  
     Path location = new Path(path);
-    dfsSingleton.getDfsOps(username).setPermission(location, pemission);
+    udfso.setPermission(location, pemission);
   }
 
   /**
@@ -307,19 +318,20 @@ public class DatasetController {
    * @throws IOException
    */
   private boolean createFolder(String path, int template, String username,
-          FsPermission fsPermission) throws IOException {
+          FsPermission fsPermission, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso) throws IOException {
     boolean success = false;
     Path location = new Path(path);
     DistributedFileSystemOps dfs;
     if (fsPermission == null) {
-      fsPermission = dfsSingleton.getDfsOps().getParentPermission(location);
+      fsPermission = dfso.getParentPermission(location);
     }
     try {
       //create the folder in the file system
       if (username == null) {
-        dfs = dfsSingleton.getDfsOps();
+        dfs = dfso;
       } else {
-        dfs = dfsSingleton.getDfsOps(username);
+        dfs = udfso;
       }
       success = dfs.mkdir(location, fsPermission);
       if (success) {
@@ -343,5 +355,40 @@ public class DatasetController {
       throw new IOException("Could not attach template to folder. ", e);
     }
     return success;
+  }
+  
+  /**
+   * Generates a markdown style README file for a given Dataset.
+   * @param udfso
+   * @param dsName
+   * @param description
+   * @param project 
+   */
+  public void generateReadme(DistributedFileSystemOps udfso, String dsName,
+          String description, String project) {
+    if (udfso != null) {
+      String readmeFile, readMeFilePath;
+      //Generate README.md for the Default Datasets
+      readmeFile = String.format(Settings.README_TEMPLATE, dsName,
+              description);
+      readMeFilePath = "/Projects/" + project + "/"
+              + dsName + "/README.md";
+
+      try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
+        fsOut.writeBytes(readmeFile);
+        fsOut.flush();
+        udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath),
+                new FsPermission(FsAction.ALL,
+                FsAction.READ_EXECUTE,
+                FsAction.NONE));
+      } catch (IOException ex) {
+        logger.log(Level.WARNING, "README.md could not be generated for project"
+                + " {0} and dataset {1}.", new Object[]{project, dsName});
+      }
+    } else {
+      logger.log(Level.WARNING, "README.md could not be generated for project"
+              + " {0} and dataset {1}. DFS client was null", new Object[]{project,
+        dsName});
+    }
   }
 }

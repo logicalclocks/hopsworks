@@ -1,0 +1,163 @@
+<!-- Displays the defined jobs in the current project -->
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="HistoryCtrl as historyCtrl">
+    <div class="overlay"></div>
+    <div ng-controller="ProjectCtrl as projectCtrl">
+      <div ng-include="'navProject.html'"></div>
+    </div>
+    <section>
+      <div class="content-wrapper">
+
+        <!-- Page Content -->
+        <div style="min-width: 1420px">
+          <div style="height: 60%">
+            <div style="max-height: 95%;">
+              <div style="float: left;width: 90%;">
+              </div>
+              <div style="float: left;width: 100%;">
+                <div>
+                  <input style="float: left;width: 45%;margin: 0px 10px;"
+                         type="text"
+                         ng-model="historyCtrl.searchFilter"
+                         uib-tooltip="Search using the 'Search Field' or use the drop down menu to select the Type and the second
+                         menu to set the Value that you search for." 
+                         tooltip-placement="bottom"
+                         placeholder="Search Field" class="form-control" autofocus/>
+                </div>
+                <div class="input-group-btn search-panel pull-left" style="width: 10%;">
+                  <button type="button" style="width: 100%;"
+                          uib-dropdown-toggle class="btn btn-default"
+                          data-toggle="uib-dropdown" id="filterByButton">
+                    <span id="search_concept">{{name}}</span>
+                    <span class="caret"></span>
+                  </button>
+                  <ul uib-dropdown-menu class="dropdown-menu" role="menu">
+                    <li ng-repeat="choice in searchChoices">                            
+                      <a ng-click="historyCtrl.selectFirstForm(choice.name, choice.searchName);">{{choice.name}}</a>        
+                    </li>               
+                  </ul>
+                </div>
+                <div class="input-group-btn search-panel pull-left" style="width: 10%; margin-left: 10px" ng-hide="!fisrtFormSelected">
+                  <li ng-repeat="choice in searchChoices" ng-if="choice.searchName === searchName">                                     
+                    <button type="button" style="width: 100%;"
+                            uib-dropdown-toggle class="btn btn-default"
+                            data-toggle="uib-dropdown" id="filterByType"
+                            ng-hide="!fisrtFormSelected">
+                      <span id="search_concept">{{valueType}}</span>
+                      <span class="caret"></span>
+                    </button>
+                    <ul uib-dropdown-menu class="dropdown-menu" role="menu">
+                      <li ng-repeat="(key, value) in choice.values">                            
+                        <a ng-click="historyCtrl.selectSecondForm(value.type, value.id);">{{value.type}}</a>        
+                      </li> 
+                    </ul>
+                  </li>
+                </div> 
+                <div class="pull-left" style="width: 10%; margin-left: 10px" ng-show="!fisrtFormSelected">
+                  &nbsp;
+                </div>    
+                <div>
+                  <div class="btn-group" style="float: left;width: 10%; margin-bottom: 0px;margin-left: 10px" id="buttonSearch">
+                    <button style="width: 80%;margin-left: 15px" ng-click="historyCtrl.clear()" class="btn btn-primary glyphicon glyphicon-erase">  Clear  </button>
+                  </div>
+                </div>
+                <div>    
+                  <label style="float: left; margin-left: 15px; margin-top: 7px;">jobs per page:</label>
+                  <input style="float: left; margin-left: 10px; width: 5%;" type="number" min="1" max="25" class="form-control" ng-model="pageSize">
+                </div>
+              </div>
+              <div style="height: 12%"></div>
+              <table class="table table-hover">
+                <thead>
+                <th ng-click="sort('yarnAppResult.id')" style="width: 15%">
+                  Job ID
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.id'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                </th>
+                <th ng-click="sort('yarnAppResult.name')" style="width: 10%">
+                  Name
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.name'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                </th>
+                <th ng-click="sort('yarnAppResult.username')" style="width: 10%">
+                  Owner
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.username'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                </th>
+                <th ng-click="sort('totalExecutionDuration')" style="width: 10%">
+                  Total Duration (MM:SS)
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'totalExecutionDuration'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
+                </th>
+                <th ng-click="sort('yarnAppResult.jobType')" style="width: 10%">
+                  Job Type
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.jobType'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                </th>
+                <th ng-click="sort('yarnAppResult.severity')" style="width: 10%">
+                  Job Severity
+                  <span class="glyphicon sort-icon" ng-show="sortType == 'yarnAppResult.severity'" ng-class="{'glyphicon glyphicon-sort-by-alphabet':sortReverse,'glyphicon glyphicon-sort-by-alphabet-alt':!sortReverse}"></span>
+                </th>
+                <!--                <th ng-click="sort('score')" style="width: 10%">
+                                  Heuristic scores
+                                <span class="glyphicon sort-icon" ng-show="sortType == 'score'" ng-class="{'glyphicon glyphicon-sort-by-order':sortReverse,'glyphicon glyphicon-sort-by-order-alt':!sortReverse}"></span>
+                                </th>-->
+                <th style="width: 10%">
+                  Details
+                </th>
+                </thead>
+                <tbody>
+                  <tr dir-paginate ="job in historyCtrl.jobs | orderBy:sortType:sortReverse | filter:historyCtrl.searchFilter | filter:filterJobs | itemsPerPage:pageSize ">
+                    <td>
+                      {{job.yarnAppResult.id}}
+                    </td>
+                    <td>
+                      {{job.yarnAppResult.name}}
+                    </td>
+                    <td>
+                      {{job.ownerFullName}}
+                    </td>
+                    <td>
+                      {{convertMS(job.totalExecutionDuration)}}
+                    </td>
+                    <td>
+                      {{job.yarnAppResult.jobType}}
+                    </td>
+                    <td>
+                      <div class="text-right col-md-4" style="margin-top: 8px">
+                        <span ng-if="job.yarnAppResult.severity == '0'" class="label label-primary">NONE</span>
+                        <span ng-if="job.yarnAppResult.severity == '1'" class="label label-success">LOW</span>
+                        <span ng-if="job.yarnAppResult.severity == '2'" class="label label-info">MODERATE</span>
+                        <span ng-if="job.yarnAppResult.severity == '3'" class="label label-warning">SEVERE</span>
+                        <span ng-if="job.yarnAppResult.severity == '4'" class="label label-danger">CRITICAL</span>
+                      </div>
+                    </td>
+                    <!--                    <td>
+                                            {{job.score}}
+                                        </td>-->
+                    <td>
+                      <span class="field-info" uib-tooltip="Job Details" style="padding-top: 5px;padding-left:3px">
+                        <button style=""
+                                ng-click="historyCtrl.showDetails(job);"
+                                class="btn btn-info glyphicon glyphicon-list-alt">
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <dir-pagination-controls
+                max-size="5"
+                direction-links="true"
+                boundary-links="true" >
+              </dir-pagination-controls>  
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+  </div>
+  <!-- /#wrapper -->
+</div>
+
+

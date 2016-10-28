@@ -6,21 +6,22 @@
 
   <groupId>se.kth.hop</groupId>
   <artifactId>hopsworks</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <packaging>war</packaging>
 
   <name>HopsWorks</name>
 
   <properties>
-    <java.version>1.7</java.version>
-    <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>1.8</java.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
     <glassfish.passwd>adminpw</glassfish.passwd>           
+    <glassfish.port>8080</glassfish.port>
+    <glassfish.admin_port>4848</glassfish.admin_port>
+    <glassfish.domain>domain1</glassfish.domain>
   </properties>
 
   <dependencies>
@@ -28,38 +29,16 @@
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
     -->
-
-    <!--
-	<dependency> 
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-bean</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <version>2.2.2</version>
-      </dependency>
-    -->
     <dependency> 
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-inject-bean</artifactId>
       <version>2.6.0</version>
     </dependency>
-    
     <dependency>
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-inject-plexus</artifactId>
       <version>2.6.0</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>de.hu-berlin.wbi.cuneiform</groupId>
-      <artifactId>cuneiform-core</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-    </dependency>
+    </dependency> 
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
@@ -129,32 +108,38 @@
     </dependency>
     
     <dependency>
-     <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.10</artifactId>
-      <version>0.9.0.1</version>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.11</artifactId>
+      <version>0.10.0.1</version>
       <type>jar</type>
     </dependency>
     <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>1.7.21</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.21</version>
     </dependency>
     <dependency>
       <groupId>com.101tec</groupId>
       <artifactId>zkclient</artifactId>
-      <version>0.7</version>
+      <version>0.9</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>3.4.5</version>
+      <version>3.4.7</version>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
           <artifactId>netty</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
+    <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>1.7.7</version>
     </dependency>
 
     <!--end of io.hops -->
@@ -166,24 +151,18 @@
     <!--Zeppelin dependencies -->
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
-      <artifactId>zeppelin</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>
-      <type>pom</type>     
-    </dependency>
-    <dependency>
-      <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>  
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.0-incubating-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
@@ -197,8 +176,7 @@
       <artifactId>shiro-web</artifactId>
       <version>1.2.3</version>
     </dependency>
-    <!--End of Zeppelin dependencies -->
-    <!--Elastic dependency-->
+    
     <dependency>
       <groupId>org.quartz-scheduler</groupId>
       <artifactId>quartz</artifactId>
@@ -218,276 +196,551 @@
       <artifactId>elasticsearch</artifactId>
       <version>2.1.2</version>
     </dependency>
+
     <dependency>
-    <groupId>org.apache.flink</groupId>
-    <artifactId>flink-clients_2.10</artifactId>
-    <version>1.0.3</version>
+      <groupId>org.apache.oozie</groupId>
+      <artifactId>oozie-client</artifactId>
+      <version>4.2.0</version>
       <exclusions>
-       <exclusion>
-        <groupId>org.apache.flink</groupId>
-        <artifactId>flink-shaded-hadoop2</artifactId>
-       </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.oozie</groupId>
+          <artifactId>oozie-hadoop-auth</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_2.10</artifactId>
+      <version>1.0.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-shaded-hadoop2</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>io.netty</groupId>
           <artifactId>netty-all</artifactId>
         </exclusion>
       </exclusions>
-     </dependency> 
-     <dependency>
+    </dependency> 
+    <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-yarn_2.10</artifactId>
       <version>1.0.3</version>
-        <exclusions>
-         <exclusion>
+      <exclusions>
+        <exclusion>
           <groupId>org.apache.flink</groupId>
           <artifactId>flink-shaded-hadoop2</artifactId>
-         </exclusion>
-        </exclusions>
-    </dependency> 
-  </dependencies>
-  <build>
-    <finalName>hopsworks</finalName>
-    <plugins>
-<!---
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.15</version>
-        <executions>
-          <execution>
-            <id>validate</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
-          <suppressionsFileExpression>/checkstyle.suppressions.file</suppressionsFileExpression>
-          <configLocation>/tools/maven/checkstyle.xml</configLocation>
-          <logViolationsToConsole>true</logViolationsToConsole>
-          <failsOnError>true</failsOnError>
-          <consoleOutput>true</consoleOutput>
-        </configuration>
-      </plugin>
--->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <compilerArguments>
-            <endorseddirs>${endorsed.dir}</endorseddirs>
-          </compilerArguments>
-        </configuration>
-      </plugin>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-      <!--
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-war-plugin</artifactId>
-              <version>2.3</version>
-              <configuration>
-                <failOnMissingWebXml>false</failOnMissingWebXml>
-                <webResources>
-                  <resource>
-                    <directory>yo/dist</directory>
-                  </resource>
-                </webResources>
-              </configuration>
-            </plugin>
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.1</version>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${endorsed.dir}</outputDirectory>
-              <silent>true</silent>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>javax</groupId>
-                  <artifactId>javaee-endorsed-api</artifactId>
-                  <version>7.0</version>
-                  <type>jar</type>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!--
-                        <plugin>
-                              <groupId>org.codehaus.cargo</groupId>
-                              <artifactId>cargo-maven2-plugin</artifactId>
-                              <version>1.4.17</version>
-                              <executions>
-                                  <execution>
-                                      <phase>install</phase>
-                                      <goals>
-                                          <goal>redeploy</goal>
-                                      </goals>
-                                  </execution>
-                              </executions>
-                                      <configuration>
-                                          <container>
-                                              <containerId>glassfish4x</containerId>
-                                              <type>remote</type>
-                                              <log>target/cargo.log</log>
-                                              <logLevel>debug</logLevel>
-                                          </container>
-                                          <configuration>
-                                              <type>runtime</type>
-                                              <properties>
-                                               <cargo.hostname>${glassfish.hostname}</cargo.hostname>
-                                               <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
-                                               <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
-                                               <cargo.servlet.port>8081</cargo.servlet.port>                           
-                                               <cargo.glassfish.domain.name>domain1</cargo.glassfish.domain.name>
-                                               <cargo.runtime.args>force=true</cargo.runtime.args>
-                                               <cargo.protocol>https</cargo.protocol>
-                                               <cargo.glassfish.admin.port>4849</cargo.glassfish.admin.port>
-                                              </properties>
-                                          </configuration>
-                                      </configuration>
-                              <dependencies>
-                                  <dependency>
-                                      <groupId>org.glassfish.main.deployment</groupId>
-                                      <artifactId>deployment-client</artifactId>
-                                      <version>4.1.1</version>
-                                  </dependency>            
-                              </dependencies>
-                          </plugin>
-      -->
-    </plugins>
-  </build>
-
-
-  <profiles>
-    <profile>
-      <id>dist</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>    
-      <!-- Profile for generating all maven artifacts and documentation. -->
-      <build>
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.2</version>
+    </dependency>
+<!--    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-filesystem_2.10</artifactId>
+      <version>1.0.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-shaded-hadoop2</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>-->
+<!--    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-java_2.10</artifactId>
+      <version>1.0.3</version>
+      <type>jar</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-shaded-hadoop2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>-->
+<!--    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-java_2.10</artifactId>
+      <version>1.0.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-shaded-hadoop2</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+        <dependency>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>flink-connector-kafka-base_2.10</artifactId>
+          <version>1.0.3</version>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.zookeeper</groupId>
+              <artifactId>zookeeper</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency> -->
+    </dependencies>
+    <build>
+        <finalName>hopsworks</finalName>
         <plugins>
+            <!---
+                  <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.15</version>
+                    <executions>
+                      <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                          <goal>check</goal>
+                        </goals>
+                      </execution>
+                    </executions>
+                    <configuration>
+                      <suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
+                      <suppressionsFileExpression>/checkstyle.suppressions.file</suppressionsFileExpression>
+                      <configLocation>/tools/maven/checkstyle.xml</configLocation>
+                      <logViolationsToConsole>true</logViolationsToConsole>
+                      <failsOnError>true</failsOnError>
+                      <consoleOutput>true</consoleOutput>
+                    </configuration>
+                  </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <compilerArguments>
+                        <endorseddirs>${endorsed.dir}</endorseddirs>
+                    </compilerArguments>
+                </configuration>
+            </plugin>
 
-          <!--yeoman-maven-plugin -->
-          <plugin>    
-            <groupId>com.github.trecloux</groupId>
-            <artifactId>yeoman-maven-plugin</artifactId>
-            <version>0.5</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>build</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <!--end yeoman-maven-plugin -->
-
-          <!--maven war plugin -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-war-plugin</artifactId>
-            <version>2.6</version>
-            <configuration>
-              <overlays>
-                <overlay>
-                  <groupId>org.apache.zeppelin</groupId>
-                  <artifactId>zeppelin-web</artifactId>
-                  <type>war</type>
-                  <targetPath>zeppelin</targetPath>
-                </overlay>
-              </overlays>
-              <failOnMissingWebXml>false</failOnMissingWebXml>
-              <webResources>
-                <resource>
-                  <directory>yo/dist</directory>
-                </resource>
-              </webResources>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-clean-plugin</artifactId>
-            <version>2.5</version>
-            <configuration>
-              <filesets>
-                <fileset>
-                  <directory>yo/dist</directory>
-                </fileset>
-              </filesets>
-            </configuration>
-          </plugin>
-
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.1</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${endorsed.dir}</outputDirectory>
+                            <silent>true</silent>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>javax</groupId>
+                                    <artifactId>javaee-endorsed-api</artifactId>
+                                    <version>7.0</version>
+                                    <type>jar</type>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-      </build>
-    </profile>
-  </profiles>
+    </build>
 
-  <repositories>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>https://repository.apache.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>prime-repo</id>
-      <name>PrimeFaces Maven Repository</name>
-      <url>http://repository.primefaces.org</url>
-      <layout>default</layout>
-    </repository>             
-    <repository>
-      <id>sics-snapshot-repository</id>
-      <name>SICS Release Repository</name>
-      <url>http://kompics.sics.se/maven/snapshotrepository</url>
-      <releases>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>sics-release-repository</id>
-      <name>SICS Release Repository</name>
-      <url>http://kompics.sics.se/maven/repository</url>
-      <releases>
-      </releases>
-    </repository>
-    <repository>  
-      <id>maven2-repository.dev.java.net</id>
-      <name>Java.net Repository for Maven</name>
-      <url>http://download.java.net/maven/2</url>
-    </repository>
-    <repository>
-      <id>glassfish</id>
-      <url>http://download.java.net/maven/glassfish</url>
-    </repository>
-    <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/groups/public</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>glassfish</id>
-      <url>http://download.java.net/maven/glassfish</url>
-    </pluginRepository>
-  </pluginRepositories>    
+
+    <profiles>
+        <profile>
+            <id>dist</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>    
+            <!-- Profile for generating all maven artifacts and documentation. -->
+            <build>
+                <plugins>
+
+                    <!--yeoman-maven-plugin -->
+                    <plugin>    
+                        <groupId>com.github.trecloux</groupId>
+                        <artifactId>yeoman-maven-plugin</artifactId>
+                        <version>0.5</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!--end yeoman-maven-plugin -->
+
+                    <!--maven war plugin -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>2.6</version>
+                        <configuration>
+                            <overlays>
+                                <overlay>
+                                    <groupId>org.apache.zeppelin</groupId>
+                                    <artifactId>zeppelin-web</artifactId>
+                                    <type>war</type>
+                                    <targetPath>zeppelin</targetPath>
+                                </overlay>
+                            </overlays>
+                            <failOnMissingWebXml>false</failOnMissingWebXml>
+                            <webResources>
+                                <resource>
+                                    <directory>yo/dist</directory>
+                                </resource>
+                            </webResources>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <version>2.5</version>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>yo/dist</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>deploy</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>    
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.cargo</groupId>
+                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <version>1.4.17</version>
+                        <executions>
+                            <execution>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>redeploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <container>
+                                <containerId>glassfish4x</containerId>
+                                <type>remote</type>
+                                <log>target/cargo.log</log>
+                                <logLevel>debug</logLevel>
+                            </container>
+                            <configuration>
+                                <type>runtime</type>
+                                <properties>
+                                    <cargo.hostname>${glassfish.hostname}</cargo.hostname>
+                                    <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
+                                    <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
+                                    <cargo.servlet.port>${glassfish.port}</cargo.servlet.port>                           
+                                    <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
+                                    <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
+                                    <cargo.runtime.args>force=true</cargo.runtime.args>
+                                    <cargo.protocol>http</cargo.protocol>
+                                </properties>
+                            </configuration>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.glassfish.main.deployment</groupId>
+                                <artifactId>deployment-client</artifactId>
+                                <version>4.1.1</version>
+                            </dependency>            
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jruby-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation> 
+            <dependencies>  
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>rspec-core</artifactId>
+                    <version>3.3.0</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>airborne</artifactId>
+                    <version>0.2.5</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>activerecord-jdbcmysql-adapter</artifactId>
+                    <version>1.3.20</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>activerecord</artifactId>
+                    <version>4.2.6</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>jdbc-mysql</artifactId>
+                    <version>5.1.37</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>net-ssh</artifactId>
+                    <version>2.1.0</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>session</artifactId>
+                    <version>3.2.0</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>launchy</artifactId>
+                    <version>2.4.3</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>dotenv</artifactId>
+                    <version>2.1.1</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>rubygems</groupId>
+                    <artifactId>net-ssh-shell</artifactId>
+                    <version>0.2.0</version>
+                    <type>gem</type>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <!-- Doesn't work if the deployment client and the server are on different OS types. 
+                    https://codehaus-cargo.atlassian.net/browse/CARGO-1335 -->
+                    <plugin>
+                        <groupId>org.codehaus.cargo</groupId>
+                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <version>1.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>deploy-war</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>redeploy</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>undeploy-war</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>undeploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <container>
+                                <containerId>glassfish4x</containerId>
+                                <type>remote</type>
+                                <log>target/cargo.log</log>
+                                <logLevel>debug</logLevel>
+                            </container>
+                            <configuration>
+                                <type>runtime</type>
+                                <properties>
+                                    <cargo.hostname>${glassfish.hostname}</cargo.hostname>
+                                    <cargo.remote.username>${glassfish.admin}</cargo.remote.username>
+                                    <cargo.remote.password>${glassfish.passwd}</cargo.remote.password>
+                                    <cargo.servlet.port>${glassfish.port}</cargo.servlet.port> 
+                                    <cargo.glassfish.domain.name>${glassfish.domain}</cargo.glassfish.domain.name>
+                                    <cargo.glassfish.admin.port>${glassfish.admin_port}</cargo.glassfish.admin.port>
+                                    <cargo.runtime.args>force=true</cargo.runtime.args>
+                                    <cargo.protocol>http</cargo.protocol>
+                                </properties>
+                            </configuration>
+                            <deployables>
+                                <deployable>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <type>war</type>
+                                    <location>${basedir}/target/hopsworks.war</location>
+                                    <properties>
+                                        <context>${project.artifactId}</context>
+                                    </properties>
+                                </deployable>
+                            </deployables>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.glassfish.main.deployment</groupId>
+                                <artifactId>deployment-client</artifactId>
+                                <version>4.1.1</version>
+                            </dependency>            
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>de.saumya.mojo</groupId>
+                        <artifactId>gem-maven-plugin</artifactId>
+                        <version>1.1.5</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>initialize</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <jrubyVersion>9.1.2.0</jrubyVersion>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>de.saumya.mojo</groupId>
+                        <artifactId>rspec-maven-plugin</artifactId>
+                        <version>1.1.5</version>
+                        <configuration>
+                            <specSourceDirectory>${basedir}/test/spec</specSourceDirectory>
+                            <launchDirectory>${basedir}/test</launchDirectory>
+                            <testReportDirectory>${basedir}</testReportDirectory>
+                            <reportName>/orders-test-report.html</reportName>
+                            <jrubyVersion>9.1.2.0</jrubyVersion>
+                        </configuration>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>test</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <repositories>
+        <repository>
+            <id>apache.snapshots</id>
+            <name>Apache Development Snapshot Repository</name>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>prime-repo</id>
+            <name>PrimeFaces Maven Repository</name>
+            <url>http://repository.primefaces.org</url>
+            <layout>default</layout>
+        </repository>             
+        <repository>
+            <id>sics-snapshot-repository</id>
+            <name>SICS Release Repository</name>
+            <url>http://kompics.sics.se/maven/snapshotrepository</url>
+            <releases>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>sics-release-repository</id>
+            <name>SICS Release Repository</name>
+            <url>http://kompics.sics.se/maven/repository</url>
+            <releases>
+            </releases>
+        </repository>
+        <!--repository>  
+          <id>maven2-repository.dev.java.net</id>
+          <name>Java.net Repository for Maven</name>
+          <url>http://download.java.net/maven/2</url>
+        </repository>
+        <repository>
+          <id>glassfish</id>
+          <url>http://download.java.net/maven/glassfish</url>
+        </repository-->
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+        </repository>
+        <repository>
+            <id>rubygems-release</id>
+            <url>http://rubygems-proxy.torquebox.org/releases</url>
+        </repository>
+    </repositories>
+    <!--pluginRepositories>
+      <pluginRepository>
+        <id>glassfish</id>
+        <url>http://download.java.net/maven/glassfish</url>
+      </pluginRepository>
+    </pluginRepositories-->    
 
 </project>

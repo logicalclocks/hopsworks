@@ -44,6 +44,10 @@ public class TicketContainer {
   private Map<String, Entry> sessions = new ConcurrentHashMap<>();
 
   public static final TicketContainer instance = new TicketContainer();
+  
+  public synchronized void invalidate(String principal) {
+    sessions.remove(principal);
+  }
 
   /**
    * For test use
@@ -65,6 +69,9 @@ public class TicketContainer {
    * @return
    */
   public synchronized String getTicket(String principal) {
+    if (principal == null) {
+      return  "anonymous";
+    }
     Entry entry = sessions.get(principal);
     String ticket;
     if (entry == null) {

@@ -26,7 +26,7 @@ angular.module('hopsWorksApp')
               /**
                * Get all the jobs in the current project for the given type.
                * @param {type} projectId
-               * @param {type} type The name of the job type (e.g. Cuneiform, Spark, Adam)
+               * @param {type} type The name of the job type (e.g. Flink, Spark, Adam)
                * @returns {unresolved} A list of defined jobs in the given project of the requested type.
                */
               getByProjectAndType: function (projectId, type) {
@@ -110,6 +110,24 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
               },
               /**
+               * Get the job ui of the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getExecutionUI: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/ui');
+              },
+              /**
+               * Get the yarn ui of the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getYarnUI: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/yarnui');
+              },
+              /**
                * Get the current status of all jobs in the given project.
                * @param {type} projectId
                * @returns {unresolved}
@@ -125,6 +143,15 @@ angular.module('hopsWorksApp')
                */
               showLog: function (projectId, jobId) {
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/showlog');
+              },
+              /**
+               * Retrieve the logs associated to a certain job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {undefined} Log infrormation json.
+               */
+              retryLog: function (projectId, appId, type) {
+                return $http.get('/api/project/' + projectId + '/jobs/retryLogAggregation/' + appId + '/' + type);
               },
               /**
                * Delete a job 
