@@ -224,7 +224,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-clients_2.10</artifactId>
+      <artifactId>flink-clients_2.11</artifactId>
       <version>1.0.3</version>
       <exclusions>
         <exclusion>
@@ -239,7 +239,7 @@
     </dependency> 
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-yarn_2.10</artifactId>
+      <artifactId>flink-yarn_2.11</artifactId>
       <version>1.0.3</version>
       <exclusions>
         <exclusion>
