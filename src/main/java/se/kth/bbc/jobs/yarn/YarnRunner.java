@@ -178,14 +178,29 @@ public class YarnRunner {
         logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
         yarnClient.submitApplication(appContext);
         // Create a new client for monitoring
-        monitor = new YarnMonitor(appId, newClient);newClient.init(conf);
+        newClient.init(conf);
+        monitor = new YarnMonitor(appId, newClient);
+        yarnClient.close();
 
     } else if(jobType == JobType.FLINK){
         YarnClusterClient client = flinkCluster.deploy();
+        appId = client.getApplicationId();
+        fillInAppid(appId.toString());
+        newClient.init(conf);
+        monitor = new YarnMonitor(appId, newClient);
         String[] args  = {};
-        if(amArgs!=null && !amArgs.isEmpty()){
-            args = amArgs.trim().split(" ");
+        if (amArgs != null) {
+          if (!javaOptions.isEmpty()) {
+            amArgs += " -kafka_params \"";
+            for (String s : javaOptions) {
+              amArgs += s+",";
+            }
+            amArgs = amArgs.substring(0,amArgs.length()-1);
+            amArgs+="\"";
+          }
         }
+        args = amArgs.trim().split(" ");
+
         /*Copy the appjar to the localOS as it is needed by the Flink client
         *Create path in local /tmp to store the appjar
         *To distinguish between jars for different job executions, add the 
@@ -277,19 +292,18 @@ public class YarnRunner {
 //            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
 //            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
 //            YarnClusterClient client = new YarnClusterClient(clientConf);
-//            
+            
             try {
                 List<URL> classpaths = new ArrayList<>();
                 //Copy Flink jar to local machine and pass it to the classpath
                 URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
-                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
-                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
-                classpaths.add(libURL);
-                classpaths.add(libURL3);
+//                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
+//                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
+//                classpaths.add(libURL);
+//                classpaths.add(libURL3);
                 
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
-
                 JobSubmissionResult res =  client.run(program, parallelism);
             }   catch (ProgramInvocationException ex) {
               logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
@@ -301,13 +315,12 @@ public class YarnRunner {
                FileUtils.deleteDirectory(localPathAppJarDir);
                logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
             }
-          monitor = new YarnMonitor(appId, newClient);newClient.init(conf);
 
         }
-        yarnClient.close();
         
     //Clean up some
     //removeAllNecessary();
+    flinkCluster = null;
     yarnClient = null;
     appId = null;
     appContext = null;
@@ -555,20 +568,10 @@ public class YarnRunner {
     //vargs.add(" -Dlog4j.configuration=file:log4j.properties");
     //vargs.add(" -Dlog.file=/srv/hadoop/logs/userlogs/jobmanager1.out") ;   
     //Add jvm options
-    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
-      amArgs+=" -kafka_params \"";
-    }
     for (String s : javaOptions) {
       vargs.add(s);
-      if(jobType == JobType.FLINK){
-        amArgs += s+",";
-      }
     }
-    if(jobType == JobType.FLINK && !javaOptions.isEmpty()){
-      amArgs = amArgs.substring(0,amArgs.length()-1);
-      amArgs+="\"";
-    }  
-      
+          
     // Set class name
     vargs.add(amMainClass);
     // Set params for Application Master
@@ -1162,6 +1165,9 @@ public class YarnRunner {
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
       setDefaultConfValues(conf);
+      if(jobType == JobType.FLINK){
+        flinkCluster.setConf(conf);
+      }
     }
 
     public static void addPathToConfig(Configuration conf, File path) {

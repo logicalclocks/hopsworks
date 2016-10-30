@@ -92,7 +92,7 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 	private static final int MIN_JM_MEMORY = 768; // the minimum memory should be higher than the min heap cutoff
 	private static final int MIN_TM_MEMORY = 768;
 
-	private Configuration conf = new YarnConfiguration();
+	private Configuration conf = null;
 
 	/**
 	 * Files (usually in a distributed file system) used for the YARN session of Flink.
@@ -367,23 +367,23 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 
 		try {
 
-			UserGroupInformation.setConfiguration(conf);
-			UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-
-			if (UserGroupInformation.isSecurityEnabled()) {
-				if (!ugi.hasKerberosCredentials()) {
-					throw new YarnDeploymentException("In secure mode. Please provide Kerberos credentials in order to authenticate. " +
-						"You may use kinit to authenticate and request a TGT from the Kerberos server.");
-				}
-				return ugi.doAs(new PrivilegedExceptionAction<YarnClusterClient>() {
-					@Override
-					public YarnClusterClient run() throws Exception {
+//			UserGroupInformation.setConfiguration(conf);
+//			UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+//
+//			if (UserGroupInformation.isSecurityEnabled()) {
+//				if (!ugi.hasKerberosCredentials()) {
+//					throw new YarnDeploymentException("In secure mode. Please provide Kerberos credentials in order to authenticate. " +
+//						"You may use kinit to authenticate and request a TGT from the Kerberos server.");
+//				}
+//				return ugi.doAs(new PrivilegedExceptionAction<YarnClusterClient>() {
+//					@Override
+//					public YarnClusterClient run() throws Exception {
 						return deployInternal();
-					}
-				});
-			} else {
-				return deployInternal();
-			}
+//					}
+//				});
+//			} else {
+//				return deployInternal();
+//			}
 		} catch (Exception e) {
 			throw new RuntimeException("Couldn't deploy Yarn cluster", e);
 		}
@@ -1077,5 +1077,11 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 			sessionFilesDir,
 			perJobCluster);
 	}
+  
+  // Hopsworks methods
+  //////////////////////////////////////////////////////////////
+  public void setConf(Configuration conf){
+    this.conf = conf;
+  }
 }
 

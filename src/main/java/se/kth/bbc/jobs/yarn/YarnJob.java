@@ -409,10 +409,11 @@ public abstract class YarnJob extends HopsJob {
                   getStdOutPath(),
                   stdOutFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
+          String[] desiredLogTypes = {"out"};
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
-                  stdOutFinalDestination, "out");
+                  stdOutFinalDestination, desiredLogTypes);
 
         } else {
           udfso.renameInHdfs(
@@ -429,10 +430,11 @@ public abstract class YarnJob extends HopsJob {
                   getStdErrPath(),
                   stdErrFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
+          String[] desiredLogTypes = {"err",".log"};
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
-                  stdErrFinalDestination, "err");
+                  stdErrFinalDestination, desiredLogTypes);
         } else {
           udfso.renameInHdfs(
                   runner.

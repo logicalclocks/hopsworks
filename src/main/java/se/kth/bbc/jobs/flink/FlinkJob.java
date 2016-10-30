@@ -91,7 +91,7 @@ public class FlinkJob extends YarnJob {
      * that is called -d or --detached. In that case, the Flink YARN client
      * will only submit Flink to the cluster and then close itself.
      */
-    flinkBuilder.setDetachedMode(false);
+    flinkBuilder.setDetachedMode(true);
     flinkBuilder.setName(jobconfig.getAppName());
     flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
     flinkBuilder.setConfigurationFilePath(new Path(

@@ -171,7 +171,7 @@ public class YarnClusterClient extends ClusterClient {
 	/*
 	 * Tells the Cluster to monitor the status of JobId and stop itself once the specified job has finished.
 	 */
-	private void stopAfterJob(JobID jobID) {
+	public void stopAfterJob(JobID jobID) {
 		Preconditions.checkNotNull(jobID, "The job id must not be null");
 		try {
 			Future<Object> replyFuture =
@@ -532,7 +532,7 @@ public class YarnClusterClient extends ClusterClient {
 	}
 
 	public ApplicationId getApplicationId() {
-		return appId;
+		return this.appId;
 	}
 
 	private static class LazApplicationClientLoader {

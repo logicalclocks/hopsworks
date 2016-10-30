@@ -790,8 +790,9 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
+            String[] desiredLogTypes = {"out"};
             YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                    hdfsLogPath, "out");
+                    hdfsLogPath, desiredLogTypes);
           }
         }
       } else if (type.equals("err")) {
@@ -804,8 +805,9 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
+            String[] desiredLogTypes = {"err", ".log"};
             YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                    hdfsErrPath, "err");
+                    hdfsErrPath, desiredLogTypes);
           }
         }
       }

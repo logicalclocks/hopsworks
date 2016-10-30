@@ -333,7 +333,7 @@ public class FlinkYarnRunnerBuilder {
     cluster.setConfigurationDirectory(flinkConfDir);
     cluster.setConfigurationFilePath(new Path(flinkConfFile));
     cluster.setDetachedMode(detached);
-    
+
     org.apache.flink.configuration.Configuration flinkConf
             = new org.apache.flink.configuration.Configuration();
     cluster.setFlinkConfiguration(flinkConf);
@@ -342,10 +342,15 @@ public class FlinkYarnRunnerBuilder {
     cluster.setTaskManagerMemory(taskManagerMemoryMb);
     cluster.setTaskManagerSlots(taskManagerSlots);
     cluster.setQueue(jobManagerQueue);
-    cluster.setLocalJarPath(new Path("file://"+flinkDir+"/flink.jar"));
+    cluster.setLocalJarPath(new Path("file://" + flinkDir + "/flink.jar"));
+    /*
+     * Split propertes with "@@"
+     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
+     */
+//    cluster.setDynamicPropertiesEncoded();
     builder.setFlinkCluster(cluster);
 //    cluster.setZookeeperNamespace();
-    
+
 //        //Set Jar Path
 //        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
 //            "$PWD:$PWD/"+Settings.FLINK_DEFAULT_CONF_FILE + ":$PWD/"+Settings.FLINK_LOCRSC_FLINK_JAR);
@@ -383,10 +388,10 @@ public class FlinkYarnRunnerBuilder {
 //        if(shipfilesPaths.length()>0){
 //          shipfiles = shipfilesPaths.substring(0, shipfilesPaths.lastIndexOf(","));
 //        }
-//        addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
-//        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-//        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
-//        
+        addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
+        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
+        
 //        //Set Flink ApplicationMaster env parameters
 //        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
 //        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
@@ -401,51 +406,56 @@ public class FlinkYarnRunnerBuilder {
 //               
 //        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
 //        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
-//        if(!sysProps.isEmpty()){
-//          dynamicPropertiesEncoded = new StringBuilder();
-//        }
-//        for (String s : sysProps.keySet()) {
-//          String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
-//          builder.addJavaOption(option);
-//          //dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
-//        }
+    if (!sysProps.isEmpty()) {
+      dynamicPropertiesEncoded = new StringBuilder();
+    }
+    for (String s : sysProps.keySet()) {
+      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+      builder.addJavaOption(option);
+      dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
+    }
 //        
-//        if (dynamicPropertiesEncoded.length()>0) {
+    if (dynamicPropertiesEncoded.length() > 0) {
 //            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES,  
 //                    dynamicPropertiesEncoded.substring(0, dynamicPropertiesEncoded.
 //                lastIndexOf("@@")));
-//        }
+      cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
+              dynamicPropertiesEncoded.
+              lastIndexOf("@@")));
+    }
 //
 //        // Set up resource type requirements for ApplicationMaster
 //        builder.amMemory(jobManagerMemoryMb);
 //        builder.amVCores(jobManagerCores);
 //        builder.amQueue(jobManagerQueue);
 //        
-        builder.setJobType(JobType.FLINK);
-        builder.setAppJarPath(appJarPath);
-        builder.setParallelism(parallelism);
+    builder.setJobType(JobType.FLINK);
+    builder.setAppJarPath(appJarPath);
+    builder.setParallelism(parallelism);
+   
 //        
 //        
-        String name;
-        if (customName == null) {
-            name = "Flink session with " + taskManagerCount + " TaskManagers";
-            if (detached) {
-                name += " (detached)";
-            }
-        } else {
-            name = customName;
-        }
+    String name;
+    if (customName == null) {
+      name = "Flink session with " + taskManagerCount + " TaskManagers";
+      if (detached) {
+        name += " (detached)";
+      }
+    } else {
+      name = customName;
+    }
 //        
-//        //Set name of application
-        builder.appName(name);
+//    //Set name of application
+//    builder.appName(name);
+     cluster.setName(name);
 //        
 //        //Set up command
-        StringBuilder amargs = new StringBuilder("");                
-        //Pass job arguments
-        for (String s : jobArgs) {
-          amargs.append(" ").append(s);
-        }
-        builder.amArgs(amargs.toString());
+    StringBuilder amargs = new StringBuilder("");
+    //Pass job arguments
+    for (String s : jobArgs) {
+      amargs.append(" ").append(s);
+    }
+    builder.amArgs(amargs.toString());
     return builder.build(hadoopDir, flinkDir, nameNodeIpPort, JobType.FLINK);
   }
 
