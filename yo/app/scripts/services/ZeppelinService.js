@@ -3,20 +3,38 @@
 angular.module('hopsWorksApp')
         .factory('ZeppelinService', ['$http', '$websocket', function ($http, $websocket) {
             var websocketCalls = {};
-            websocketCalls.ws = $websocket(getZeppelinWsBaseURL());
-            websocketCalls.ws.reconnectIfNotNormalClose = true;
+            var setUp = function () {            
+              websocketCalls.ws = $websocket(getZeppelinWsBaseURL());
+              websocketCalls.ws.reconnectIfNotNormalClose = true;
 
-            websocketCalls.sendNewEvent = function (data) {
-              console.log('Send >> %o, %o', data.op, data);
-              websocketCalls.ws.send(JSON.stringify(data));
-            };  
-            
-            websocketCalls.isConnected = function () {
-              return (websocketCalls.ws.socket.readyState === 1);
+              websocketCalls.sendNewEvent = function (data) {
+                console.log('Send >> %o, %o', data.op, data);
+                websocketCalls.ws.send(JSON.stringify(data));
+              };
+
+              websocketCalls.isConnected = function () {
+                return (websocketCalls.ws.socket.readyState === 1);
+              };
             };
-
+            var destroy = function () {
+              if (websocketCalls.isConnected) {
+               websocketCalls.ws.close();
+              }
+              websocketCalls = {};
+            };
+            setUp();
             return {
+              wsSetup: function () {
+                setUp();
+              },
+              wsDestroy: function () {
+                destroy();
+              },
               websocket: function () {
+                if (angular.equals(websocketCalls, {}) || 
+                   !websocketCalls.isConnected) {
+                  setUp();
+                }
                 return websocketCalls;
               },
               settings: function () {

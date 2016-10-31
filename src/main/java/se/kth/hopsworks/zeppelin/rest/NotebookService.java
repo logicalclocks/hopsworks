@@ -52,17 +52,17 @@ public class NotebookService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "Could not find remote user.");
     }
+    String userRole = projectTeamBean.findCurrentRole(project, user);
+    if (userRole == null) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+              "You curently have no role in this project!");
+    }
+    
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
             getName(), user.getEmail());
     if (zeppelinConf == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");
-    }
-    String userRole = projectTeamBean.findCurrentRole(project, user);
-
-    if (userRole == null) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "You curently have no role in this project!");
     }
     notebookRestApi.setParms(project, userRole, zeppelinConf);
     return notebookRestApi;
