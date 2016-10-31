@@ -137,6 +137,7 @@ public class NotebookServer implements
     this.notebook = this.conf.getNotebook();
     connectedSockets.add(conn);
     this.session.getUserProperties().put("projectID", this.project.getId());
+    unicast(new Message(OP.CREATED_SOCKET), conn);
   }
 
   @OnMessage

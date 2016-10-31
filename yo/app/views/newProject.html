@@ -19,21 +19,17 @@
                      ng-pattern="projectCreatorCtrl.regex"
                      autofocus="autofocus"
                      ng-maxlength="88"
-                     required
-                     >
+                     required >
             </md-input-container>
-            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) & amp; & amp;
-              projectForm.project_name.$error.required"
+            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) && projectForm.project_name.$error.required"
                   class="text-danger ng-hide">This field is required</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) & amp; & amp;
-              projectForm.project_name.$error.pattern"
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.pattern"
                   class="text-danger ng-hide">Invalid project name. Spaces
               in project names and special characters such as __, /, \, ?,
               *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) & amp; & amp;
-              projectForm.project_name.$error.maxlength"
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.maxlength"
                   class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>
 
             <p></p>
