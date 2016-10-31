@@ -4,6 +4,8 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,10 +13,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.addPathToConfig;
+import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.setDefaultConfValues;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.Settings;
 
@@ -343,10 +352,7 @@ public class FlinkYarnRunnerBuilder {
     cluster.setTaskManagerSlots(taskManagerSlots);
     cluster.setQueue(jobManagerQueue);
     cluster.setLocalJarPath(new Path("file://" + flinkDir + "/flink.jar"));
-    /*
-     * Split propertes with "@@"
-     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
-     */
+
 //    cluster.setDynamicPropertiesEncoded();
     builder.setFlinkCluster(cluster);
 //    cluster.setZookeeperNamespace();
@@ -377,64 +383,66 @@ public class FlinkYarnRunnerBuilder {
 //                LocalResourceType.FILE.toString(), null), false);
 //        StringBuilder shipfilesPaths = new StringBuilder();
 //        String shipfiles = "";
-//        //Add extra files to local resources, use filename as key
-//        for (LocalResourceDTO dto : extraFiles) {
-//                builder.addLocalResource(dto, false);
-//                builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-//                  "$PWD/" + dto.getName());
-//                shipfilesPaths.append(dto.getPath());
-//                shipfilesPaths.append(",");
-//        }
-//        if(shipfilesPaths.length()>0){
-//          shipfiles = shipfilesPaths.substring(0, shipfilesPaths.lastIndexOf(","));
-//        }
-        addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
-        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
-        
-//        //Set Flink ApplicationMaster env parameters
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_APP_ID, YarnRunner.APPID_PLACEHOLDER);
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_COUNT, String.valueOf(taskManagerCount));
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_TM_MEMORY, String.valueOf(taskManagerMemoryMb));
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_SLOTS, String.valueOf(taskManagerSlots));
-//
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.FLINK_JAR_PATH, "hdfs://"+nameNodeIpPort+
-//                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR);
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_SHIP_FILES, shipfiles);
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_USERNAME, jobUser);
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_CLIENT_HOME_DIR, "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/");
-//               
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DETACHED, String.valueOf(detached));
-//        builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_STREAMING_MODE, String.valueOf(streamingMode));
+    //Add extra files to local resources, use filename as key
+    //Get filesystem
+    Configuration conf = new Configuration();
+//    YarnRunner.Builder.setConfiguration(hadoopDir, nameNodeIpPort, conf);
+//    FileSystem fs = FileSystem.get(conf);
+    FileSystem fs = null;
+    try {
+      fs = FileSystem.get(new URI("hdfs://10.0.2.15:8020"),conf);
+      //Set the Configuration object for the returned YarnClient
+    } catch (URISyntaxException ex) {
+      Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
+
+    for (LocalResourceDTO dto : extraFiles) {
+      String pathToResource = dto.getPath();
+      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+              "hdfs://" + nameNodeIpPort + "/Projects");
+      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+              "hdfs://" + nameNodeIpPort + "/user");
+      Path src = new Path(pathToResource);
+      FileStatus scFileStat = fs.getFileStatus(src);
+      LocalResource resource = LocalResource.newInstance(ConverterUtils.
+              getYarnUrlFromPath(src),
+              LocalResourceType.valueOf(dto.getType().toUpperCase()),
+              LocalResourceVisibility.valueOf(dto.getVisibility().toUpperCase()),
+              scFileStat.getLen(),
+              scFileStat.getModificationTime(),
+              dto.getPattern());
+      cluster.addHopsworksResource(dto.getName(), resource);
+    }
+
+    addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
+    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+    addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
+
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
     }
     for (String s : sysProps.keySet()) {
       String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
-      dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).append("@@");
+      cluster.addHopsworksParam(option);
+      dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
+              append("@@");
     }
-//        
+
+    /*
+     * Split propertes with "@@"
+     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
+     */
     if (dynamicPropertiesEncoded.length() > 0) {
-//            builder.addToAppMasterEnvironment(FlinkYarnRunnerBuilder.ENV_DYNAMIC_PROPERTIES,  
-//                    dynamicPropertiesEncoded.substring(0, dynamicPropertiesEncoded.
-//                lastIndexOf("@@")));
       cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
               dynamicPropertiesEncoded.
               lastIndexOf("@@")));
     }
-//
-//        // Set up resource type requirements for ApplicationMaster
-//        builder.amMemory(jobManagerMemoryMb);
-//        builder.amVCores(jobManagerCores);
-//        builder.amQueue(jobManagerQueue);
-//        
     builder.setJobType(JobType.FLINK);
     builder.setAppJarPath(appJarPath);
     builder.setParallelism(parallelism);
-   
-//        
-//        
+
     String name;
     if (customName == null) {
       name = "Flink session with " + taskManagerCount + " TaskManagers";
@@ -444,12 +452,8 @@ public class FlinkYarnRunnerBuilder {
     } else {
       name = customName;
     }
-//        
-//    //Set name of application
-//    builder.appName(name);
-     cluster.setName(name);
-//        
-//        //Set up command
+    cluster.setName(name);
+    //Set up command
     StringBuilder amargs = new StringBuilder("");
     //Pass job arguments
     for (String s : jobArgs) {

@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import static org.apache.flink.configuration.ConfigConstants.ENV_FLINK_LIB_DIR;
@@ -137,8 +138,9 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
    */
   //////////////////////////////////////////////////
   List<Path> hopsLocalResources = new ArrayList<>();
-  //////////////////////////////////////////////////
-
+  List<String> hopsworksParams = new ArrayList<>();
+  Map<String,LocalResource> hopsworksResources = new HashMap();
+  
   public List<Path> getHopsLocalResources() {
     return hopsLocalResources;
   }
@@ -147,7 +149,31 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
     this.hopsLocalResources = hopsLocalResources;
   }
 
+  public List<String> getHopsworksParams() {
+    return hopsworksParams;
+  }
+
+  public void setHopsworksParams(List<String> hopsworksParams) {
+    this.hopsworksParams = hopsworksParams;
+  }
   
+  public void addHopsworksParam(String hopsworksParam) {
+    hopsworksParams.add(hopsworksParam);
+  }
+
+  public Map<String,LocalResource> getHopsworksResources() {
+    return hopsworksResources;
+  }
+
+  public void setHopsworksResources(Map<String,LocalResource> hopsworksResources) {
+    this.hopsworksResources = hopsworksResources;
+  }
+  
+  public void addHopsworksResource(String name, LocalResource resource) {
+    this.hopsworksResources.put(name, resource);
+  }
+  
+  //////////////////////////////////////////////////
   
 	public AbstractYarnClusterDescriptor() {
 		// for unit tests only
@@ -615,10 +641,6 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 			Path remotePath =
 				Utils.setupLocalResource(fs, appId.toString(), shipLocalPath, shipResources, fs.getHomeDirectory());
 
-      /*
-       * Add Hops LocalResources paths here
-       * 
-       */
 			paths.add(remotePath);
 
 			localResources.put(shipFile.getName(), shipResources);
@@ -632,8 +654,25 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 
 			envShipFileList.append(remotePath).append(",");
 		}
-
-		// Setup jar for ApplicationMaster
+    ////////////////////////////////////////////////////////////////////////////
+    /*
+     * Add Hops LocalResources paths here
+     * 
+     */
+    //Add it to localResources
+    for(Entry<String, LocalResource> entry :hopsworksResources.entrySet()){
+      localResources.put(entry.getKey(), entry.getValue());
+          //Append name to classPathBuilder
+      classPathBuilder.append(entry.getKey()); 
+      classPathBuilder.append(File.pathSeparator);    
+    }
+    
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+// Setup jar for ApplicationMaster
 		LocalResource appMasterJar = Records.newRecord(LocalResource.class);
 		LocalResource flinkConf = Records.newRecord(LocalResource.class);
 		Path remotePathJar =
@@ -1047,6 +1086,11 @@ public abstract class AbstractYarnClusterDescriptor implements ClusterDescriptor
 				amCommand += " -Dlog4j.configuration=file:" + CONFIG_FILE_LOG4J_NAME;
 			}
 		}
+    //Loop through Hopsworks properties and add them to env
+    for(String envProperty : hopsworksParams){
+      amCommand += " " +envProperty.replace("\'", "");
+    }
+    
 
 		amCommand += " " + getApplicationMasterClass().getName() + " "
 			+ " 1>"
