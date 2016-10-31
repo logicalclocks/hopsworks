@@ -208,19 +208,14 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
               var payload;
-              console.log('Receive event << %o', event);
               if (event.data) {
                 payload = angular.fromJson(event.data);
               }
               console.log('Receive << %o, %o', payload.op, payload);
               var op = payload.op;
-              var data = payload.data;
-              if (op === 'NOTE') {
+              //var data = payload.data;
+              if (op === 'CREATED_SOCKET') {
                 load();
-                console.log('NOTE', data.note);
-              } else if (op === 'NOTES_INFO') {
-                load();
-                console.log('NOTES_INFO', data);
               } 
             });
             
@@ -243,6 +238,11 @@ angular.module('hopsWorksApp')
                 startLoading("Restarting zeppelin...");
                 $route.reload();
               }
-            });                          
+            }); 
+            
+            $scope.$on("$destroy", function () {
+              console.log('closeing ws');
+              ZeppelinService.wsDestroy();
+            });
 
           }]);

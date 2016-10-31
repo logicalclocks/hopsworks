@@ -1,7 +1,6 @@
 package se.kth.hopsworks.zeppelin.server;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -107,7 +106,7 @@ public class ZeppelinConfigFactory {
       return null;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);
+    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);    
     return userConfig;
   }
 
