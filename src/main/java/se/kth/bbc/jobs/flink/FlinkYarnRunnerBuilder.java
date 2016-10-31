@@ -385,36 +385,35 @@ public class FlinkYarnRunnerBuilder {
 //        String shipfiles = "";
     //Add extra files to local resources, use filename as key
     //Get filesystem
-    Configuration conf = new Configuration();
-//    YarnRunner.Builder.setConfiguration(hadoopDir, nameNodeIpPort, conf);
-//    FileSystem fs = FileSystem.get(conf);
-    FileSystem fs = null;
-    try {
-      fs = FileSystem.get(new URI("hdfs://10.0.2.15:8020"),conf);
-      //Set the Configuration object for the returned YarnClient
-    } catch (URISyntaxException ex) {
-      Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
-              log(Level.SEVERE, null, ex);
+    if (!extraFiles.isEmpty()) {
+      Configuration conf = new Configuration();
+      FileSystem fs = null;
+      try {
+        fs = FileSystem.get(new URI("hdfs://"+nameNodeIpPort), conf);
+        //Set the Configuration object for the returned YarnClient
+      } catch (URISyntaxException ex) {
+        Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
+      for (LocalResourceDTO dto : extraFiles) {
+        String pathToResource = dto.getPath();
+        pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+                "hdfs://" + nameNodeIpPort + "/Projects");
+        pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+                "hdfs://" + nameNodeIpPort + "/user");
+        Path src = new Path(pathToResource);
+        FileStatus scFileStat = fs.getFileStatus(src);
+        LocalResource resource = LocalResource.newInstance(ConverterUtils.
+                getYarnUrlFromPath(src),
+                LocalResourceType.valueOf(dto.getType().toUpperCase()),
+                LocalResourceVisibility.valueOf(dto.getVisibility().
+                        toUpperCase()),
+                scFileStat.getLen(),
+                scFileStat.getModificationTime(),
+                dto.getPattern());
+        cluster.addHopsworksResource(dto.getName(), resource);
+      }
     }
-
-    for (LocalResourceDTO dto : extraFiles) {
-      String pathToResource = dto.getPath();
-      pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
-              "hdfs://" + nameNodeIpPort + "/Projects");
-      pathToResource = pathToResource.replaceFirst("hdfs:/*user",
-              "hdfs://" + nameNodeIpPort + "/user");
-      Path src = new Path(pathToResource);
-      FileStatus scFileStat = fs.getFileStatus(src);
-      LocalResource resource = LocalResource.newInstance(ConverterUtils.
-              getYarnUrlFromPath(src),
-              LocalResourceType.valueOf(dto.getType().toUpperCase()),
-              LocalResourceVisibility.valueOf(dto.getVisibility().toUpperCase()),
-              scFileStat.getLen(),
-              scFileStat.getModificationTime(),
-              dto.getPattern());
-      cluster.addHopsworksResource(dto.getName(), resource);
-    }
-
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
