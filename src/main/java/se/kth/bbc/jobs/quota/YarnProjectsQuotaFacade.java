@@ -15,7 +15,6 @@
  */
 package se.kth.bbc.jobs.quota;
 
-import se.kth.bbc.jobs.quota.YarnProjectsQuota;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 import javax.ejb.Stateless;

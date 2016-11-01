@@ -47,6 +47,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.LocalFsService.class);
     register(se.kth.hopsworks.rest.KafkaService.class);
     register(se.kth.hopsworks.rest.TensorflowService.class);
+    register(se.kth.hopsworks.rest.ClusterUtilisationService.class);
     // register resources and features
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //register(org.glassfish.jersey.filter.LoggingFilter.class);

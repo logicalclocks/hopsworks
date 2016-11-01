@@ -350,3 +350,7 @@
   background: white; }
 .tabsdemoDynamicHeight md-content h1:first-child {
   margin-top: 0; }
+
+.sidebar-nav-static {
+  padding: 10px 15px 10px 30px;
+}
