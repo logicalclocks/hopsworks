@@ -48,19 +48,29 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import javax.faces.bean.ManagedProperty;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.zeppelin.dep.Repository;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.sonatype.aether.RepositoryException;
 import org.sonatype.aether.repository.RemoteRepository;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstate;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
+import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.bbc.security.ua.JobAdministration;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.util.LivyMsg;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
@@ -91,6 +101,8 @@ public class InterpreterRestApi {
   private YarnApplicationstateFacade appStateBean;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private Settings settings;
 
   Gson gson = new Gson();
 
@@ -281,10 +293,12 @@ public class InterpreterRestApi {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
               "You are not authorized to stop this session.");
     }
-    List<YarnApplicationstate> yarnAppStates;
-    yarnAppStates = appStateBean.
-            findByAppuserAndAppState(session.getProxyUser(),
-                    "RUNNING");
+//    List<YarnApplicationstate> yarnAppStates;
+//    yarnAppStates = appStateBean.
+//            findByAppuserAndAppState(session.getProxyUser(),
+//                    "RUNNING");
+    List<JobAdministration.YarnApplicationReport> yarnAppStates;
+    yarnAppStates = fetchJobs(session.getProxyUser());
     try {
       zeppelinResource.deleteLivySession(sessionId);
       if (this.user.getUsername().equals(username) && yarnAppStates.size() == 1) {
@@ -326,9 +340,12 @@ public class InterpreterRestApi {
               + "'").build();
     }
 
+//    InterpreterDTO interpreter = new InterpreterDTO(setting,
+//            !zeppelinResource.isInterpreterRunning(setting, project),
+//            getRunningLivySessions(this.project));
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isInterpreterRunning(setting, project),
-            getRunningLivySessions(this.project));
+            getRunningLivySessionsfromYarnClient(this.project));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
@@ -431,7 +448,8 @@ public class InterpreterRestApi {
               isInterpreterRunning(interpreter, project));
       interpreterDTOs.put(interpreter.getGroup(), interpreterDTO);
       if (interpreter.getGroup().contains("livy")) {
-        interpreterDTO.setSessions(getRunningLivySessions(project));
+        //interpreterDTO.setSessions(getRunningLivySessions(project));
+        interpreterDTO.setSessions(getRunningLivySessionsfromYarnClient(project));
       }
     }
     return interpreterDTOs;
@@ -509,6 +527,135 @@ public class InterpreterRestApi {
     }
 
     return new JsonResponse(Status.OK, "Cache cleared.").build();
+  }
+  
+  //temporary until YarnApplicationstate table fixed
+  private List<LivyMsg.Session> getRunningLivySessionsfromYarnClient(
+          Project project) {
+    List<LivyMsg.Session> sessions = new ArrayList<>();
+    List<ProjectTeam> projectTeam;
+    List<JobAdministration.YarnApplicationReport> yarnAppReport;
+    yarnAppReport = fetchJobs();
+    String hdfsUsername;
+    int id;
+    projectTeam = teambean.findMembersByProject(project);
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
+      for (JobAdministration.YarnApplicationReport report : yarnAppReport) {
+        if (hdfsUsername.equals(report.getUser()) && report.getName().
+                startsWith("livy-session-") && report.getState().equals(
+                "RUNNING")) {
+          try {
+            id = Integer.parseInt(report.getName().substring(
+                    "livy-session-".length()));
+          } catch (NumberFormatException e) {
+            continue;
+          }
+          sessions.add(new LivyMsg.Session(id, member.
+                  getUser().getEmail()));
+        }
+      }
+    }
+    return sessions;
+  }
+  
+  private List<JobAdministration.YarnApplicationReport> fetchJobs() {
+      JobAdministration jobAdmin = new JobAdministration();
+      List<JobAdministration.YarnApplicationReport> reports = new ArrayList<>();
+      YarnClient client = YarnClient.createYarnClient();
+      Configuration conf = setConfiguration(settings.getHadoopDir());
+      client.init(conf);
+      client.start();
+    try {
+      //Create our custom YarnApplicationReport Pojo
+      for (ApplicationReport appReport : client.getApplications()) {
+        reports.add(jobAdmin.new YarnApplicationReport(appReport.getApplicationId().
+                toString(),
+                appReport.getName(), appReport.getUser(), appReport.
+                getStartTime(), appReport.getFinishTime(), appReport.
+                getApplicationId().getClusterTimestamp(),
+                appReport.getApplicationId().getId(), appReport.
+                getYarnApplicationState().name()));
+      }
+    } catch (YarnException | IOException ex) {
+      logger.error("",ex);
+    }
+    return reports;
+  }
+  
+  private List<JobAdministration.YarnApplicationReport> fetchJobs(String username) {
+      JobAdministration jobAdmin = new JobAdministration();
+      List<JobAdministration.YarnApplicationReport> reports = new ArrayList<>();
+      YarnClient client = YarnClient.createYarnClient();
+      Configuration conf = setConfiguration(settings.getHadoopDir());
+      client.init(conf);
+      client.start();
+    try {
+      //Create our custom YarnApplicationReport Pojo
+      for (ApplicationReport appReport : client.getApplications()) {
+        if (username.equals(appReport.getUser()) && appReport.
+                getYarnApplicationState().name().equals("RUNNING")) {
+          reports.add(jobAdmin.new YarnApplicationReport(appReport.getApplicationId().
+                toString(),
+                appReport.getName(), appReport.getUser(), appReport.
+                getStartTime(), appReport.getFinishTime(), appReport.
+                getApplicationId().getClusterTimestamp(),
+                appReport.getApplicationId().getId(), appReport.
+                getYarnApplicationState().name()));
+        }
+      }
+    } catch (YarnException | IOException ex) {
+      logger.error("",ex);
+    }
+    return reports;
+  }
+  private Configuration setConfiguration(String hadoopDir)
+          throws IllegalStateException {
+    //Get the path to the Yarn configuration file from environment variables
+    String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
+//      If not found in environment variables: warn and use default,
+    if (yarnConfDir == null) {
+      yarnConfDir = Settings.getYarnConfDir(hadoopDir);
+
+    }
+
+    org.apache.hadoop.fs.Path confPath = new org.apache.hadoop.fs.Path(yarnConfDir);
+    File confFile = new File(confPath + File.separator
+            + Settings.DEFAULT_YARN_CONFFILE_NAME);
+    if (!confFile.exists()) {
+      throw new IllegalStateException("No Yarn conf file");
+    }
+
+    //Also add the hadoop config
+    String hadoopConfDir = System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR);
+    //If not found in environment variables: warn and use default
+    if (hadoopConfDir == null) {
+      hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
+    }
+    confPath = new org.apache.hadoop.fs.Path(hadoopConfDir);
+    File hadoopConf = new File(confPath + "/"
+            + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
+    if (!hadoopConf.exists()) {
+      throw new IllegalStateException("No Hadoop conf file");
+    }
+
+    //And the hdfs config
+    File hdfsConf = new File(confPath + "/"
+            + Settings.DEFAULT_HDFS_CONFFILE_NAME);
+    if (!hdfsConf.exists()) {
+      throw new IllegalStateException("No HDFS conf file");
+    }
+
+    //Set the Configuration object for the returned YarnClient
+    Configuration conf = new Configuration();
+    conf.addResource(new org.apache.hadoop.fs.Path(confFile.getAbsolutePath()));
+    conf.addResource(new org.apache.hadoop.fs.Path(hadoopConf.getAbsolutePath()));
+    conf.addResource(new org.apache.hadoop.fs.Path(hdfsConf.getAbsolutePath()));
+
+    YarnRunner.Builder.addPathToConfig(conf, confFile);
+    YarnRunner.Builder.addPathToConfig(conf, hadoopConf);
+    YarnRunner.Builder.setDefaultConfValues(conf);
+    return conf;
   }
 
 }

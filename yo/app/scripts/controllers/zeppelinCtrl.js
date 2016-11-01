@@ -217,6 +217,8 @@ angular.module('hopsWorksApp')
               if (op === 'CREATED_SOCKET') {
                 load();
                 loaded = true;
+              } else if (loaded && op === 'NOTES_INFO') {
+                getNotesInProject("Loading notebooks...");
               } 
             });
             

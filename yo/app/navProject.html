@@ -87,8 +87,8 @@
       </li>
       <br>
       <div class="sidebar-nav-static" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
-        <small ng-show="clusterUtilCtrl.utilisation > 1" style="color: #ddd;"><em>Cluster Utilisation is at: {{clusterUtilCtrl.utilisation}}%</em></small>
-        <small ng-show="clusterUtilCtrl.utilisation < 1"style="color: #ddd;"><em>Cluster Utilisation unknown</em></small>
+        <small ng-show="clusterUtilCtrl.utilisation > 1" style="color: #ddd; font-size: 80%;"><em>Cluster Utilisation is at: {{clusterUtilCtrl.utilisation}}%</em></small>
+        <small ng-show="clusterUtilCtrl.utilisation < 1" style="color: #ddd;"><em>Cluster Utilisation unknown</em></small>
         <div class="progress" style="height: 10px;"               
              uib-tooltip="If this bar is orange (> 50%), consider allocating less resources for your application. 
                           If this bar is red (> 80%), consider running your jobs at a later time. "
