@@ -33,11 +33,11 @@ public class YarnLogUtil {
    * @param dfs
    * @param src aggregated yarn log path
    * @param dst destination path to copy to
-   * @param desiredLogType stderr or stdout
+   * @param desiredLogTypes stderr or stdout or stdlog
    */
   public static void copyAggregatedYarnLogs(DistributedFileSystemOps dfs,
           String src, String dst,
-          String desiredLogType) {
+          String[] desiredLogTypes) {
     long wait = dfs.getConf().getLong(
             YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
     wait = (wait > 0 ? wait : 86400);
@@ -59,7 +59,9 @@ public class YarnLogUtil {
                   + wait + " seconds.");
           break;
         case SUCCESS:
-          writeLogs(dfs, srcs, writer, desiredLogType);
+          for(String desiredLogType : desiredLogTypes){
+            writeLogs(dfs, srcs, writer, desiredLogType);
+          }
           break;
       }
     } catch (Exception ex) {
