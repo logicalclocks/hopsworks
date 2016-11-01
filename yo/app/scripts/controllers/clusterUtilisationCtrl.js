@@ -15,9 +15,9 @@ angular.module('hopsWorksApp')
               ClusterUtilService.getYarnmultiplicator().then(
                       function (success) {
                         self.utilisation = parseFloat(success.data.multiplicator - 0.8).toFixed(4)*100;
-                        if (self.utilisation <= 60) {
+                        if (self.utilisation <= 50) {
                           self.progressBarClass = 'progress-bar-success';
-                        } else if (self.utilisation < 80) {
+                        } else if (self.utilisation <= 80) {
                           self.progressBarClass = 'progress-bar-warning';
                         } else {
                           self.progressBarClass = 'progress-bar-danger';
