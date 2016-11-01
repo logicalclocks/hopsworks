@@ -19,6 +19,7 @@ angular.module('hopsWorksApp')
             self.selectedInterpreter;
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
+            var loaded = false;
 
             self.deselect = function () {
               self.selected = null;
@@ -103,7 +104,6 @@ angular.module('hopsWorksApp')
                 self.interpretersRefreshing = false;
               }, function (error) {
                 self.interpretersRefreshing = false;
-                console.log('refresh-->',error);
               });
             };
 
@@ -216,6 +216,7 @@ angular.module('hopsWorksApp')
               //var data = payload.data;
               if (op === 'CREATED_SOCKET') {
                 load();
+                loaded = true;
               } 
             });
             
@@ -243,6 +244,13 @@ angular.module('hopsWorksApp')
             $scope.$on("$destroy", function () {
               console.log('closeing ws');
               ZeppelinService.wsDestroy();
+              loaded = false;
             });
-
+            
+            //refresh interpreter status when we return to zeppelin dashbord. 
+            window.onfocus = function () {
+              if (loaded) {
+                refresh();                
+              }
+            };
           }]);
