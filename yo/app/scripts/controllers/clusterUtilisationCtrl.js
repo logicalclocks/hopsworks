@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ClusterUtilisationCtrl', ['$scope', '$routeParams','$interval', 'growl', 'ClusterUtilService',
-          function ($scope, $routeParams, $interval, growl, ClusterUtilService) {
+        .controller('ClusterUtilisationCtrl', ['$scope', '$routeParams','$interval', 'ClusterUtilService',
+          function ($scope, $routeParams, $interval, ClusterUtilService) {
             var self = this;
             self.pId = $routeParams.projectID;
             self.utilisation = 0.0;
@@ -14,7 +14,8 @@ angular.module('hopsWorksApp')
             var getClusterUtilisation = function () {
               ClusterUtilService.getYarnmultiplicator().then(
                       function (success) {
-                        self.utilisation = parseFloat(success.data.multiplicator - 0.8).toFixed(4)*100;
+                        var usage = parseFloat(success.data.multiplicator - 0.8).toFixed(4)*100;
+                        self.utilisation = Math.min(usage, 100);
                         if (self.utilisation <= 50) {
                           self.progressBarClass = 'progress-bar-success';
                         } else if (self.utilisation <= 80) {
