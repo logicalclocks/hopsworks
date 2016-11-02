@@ -1,5 +1,6 @@
 package se.kth.hopsworks.hdfs.fileoperations;
 
+import io.hops.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +41,9 @@ public class DistributedFsService {
   private UserGroupInformationService ugiService;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
-
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  
   private Configuration conf;
   private String hadoopConfDir;
 
@@ -82,6 +85,9 @@ public class DistributedFsService {
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
+    conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.getSingleEndpoint());
+//    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
+//    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
   }
 
   @PreDestroy

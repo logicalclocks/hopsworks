@@ -395,6 +395,9 @@ public class FlinkYarnRunnerBuilder {
         Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
                 log(Level.SEVERE, null, ex);
       }
+      if(fs == null){
+        throw new YarnDeploymentException("Could not connect to filesystem");
+      }
       for (LocalResourceDTO dto : extraFiles) {
         String pathToResource = dto.getPath();
         pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
