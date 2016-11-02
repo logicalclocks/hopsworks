@@ -310,7 +310,7 @@ angular.module('hopsWorksApp')
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              if(self.getJobType() === "SPARK"){
+              if(self.getJobType() === "SPARK" || self.getJobType() === "ADAM"){
                 self.runConfig.selectedMinExecutors = self.sliderOptions.min;
                 self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
               }
