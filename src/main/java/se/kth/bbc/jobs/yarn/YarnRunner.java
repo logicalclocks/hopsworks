@@ -189,16 +189,16 @@ public class YarnRunner {
         newClient.init(conf);
         monitor = new YarnMonitor(appId, newClient);
         String[] args  = {};
-//        if (amArgs != null) {
-//          if (!javaOptions.isEmpty()) {
-//            amArgs += " -kafka_params \"";
-//            for (String s : javaOptions) {
-//              amArgs += s+",";
-//            }
-//            amArgs = amArgs.substring(0,amArgs.length()-1);
-//            amArgs+="\"";
-//          }
-//        }
+        if (amArgs != null) {
+          if (!javaOptions.isEmpty()) {
+            amArgs += " --kafka_params \"";
+            for (String s : javaOptions) {
+              amArgs += s+",";
+            }
+            amArgs = amArgs.substring(0,amArgs.length()-1);
+            amArgs+="\"";
+          }
+        }
         args = amArgs.trim().split(" ");
 
         /*Copy the appjar to the localOS as it is needed by the Flink client

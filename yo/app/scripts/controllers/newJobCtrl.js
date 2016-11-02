@@ -310,8 +310,10 @@ angular.module('hopsWorksApp')
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              self.runConfig.selectedMinExecutors = self.sliderOptions.min;
-              self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+              if(self.getJobType() === "SPARK"){
+                self.runConfig.selectedMinExecutors = self.sliderOptions.min;
+                self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+              }
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
