@@ -21,8 +21,11 @@ angular.module('hopsWorksApp')
             else {
               self.searchType = "global";
             }
-            self.isAdmin = $cookies.get('isAdmin');
             
+            self.isAdmin = function () {
+              return $cookies.get('isAdmin');
+            };
+                              
             self.goToAdminPage = function () {
               $window.location.href = '/hopsworks/security/protected/admin/adminIndex.xhtml';
             };

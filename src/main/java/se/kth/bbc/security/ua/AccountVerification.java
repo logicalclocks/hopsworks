@@ -36,10 +36,12 @@ public class AccountVerification {
 
     @PostConstruct
     public void init() {
+      if (key != null) {
         username = key.substring(0, AuthenticationConstants.USERNAME_LENGTH);
         // get the 8 char username
         String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH, key.length());
         valid = validateKey(secret);
+      }
     }
 
     private boolean validateKey(String key) {
