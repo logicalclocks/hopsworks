@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "dependencies": {
     "bootstrap": "^3.3.7",
-    "bootstrap-sass-official": "~3.1.0",
     "angular": "~1.5.x",
     "angular-websocket": "~1.0.13",
     "angular-md5": "~0.1.7",
