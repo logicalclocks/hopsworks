@@ -85,8 +85,9 @@
         <fieldset class="standard">
           <div class="control-group col-md-offset-2" flex>
             <div class="row" ng-repeat="projectType in projectCreatorCtrl.projectTypes">
-              <md-checkbox class="md-primary" ng-checked="true"                          
-                           ng-click="projectCreatorCtrl.exists(projectType)" 
+              <md-checkbox class="md-primary" 
+                           ng-checked="projectCreatorCtrl.exists(projectType)"
+                           ng-click="projectCreatorCtrl.addSelected(projectType)"
                            aria-label="projectType"
                            tabindex="4">
                 {{ projectType}}

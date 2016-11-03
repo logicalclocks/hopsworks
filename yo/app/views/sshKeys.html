@@ -55,7 +55,7 @@
                 <!--<div class="control-group col-md-offset-1">-->
                 <label style="color: black;">Registered Ssh Keys</label>
                 <div uib-accordion close-others="false">
-                    <div uib-accordion-group ng-repeat="key in keys track by $index" is-disabled="true"
+                    <div uib-accordion-group class="panel-default" ng-repeat="key in keys track by $index" is-disabled="true"
                                      is-open="keys[$index].status">
                         <div uib-accordion-heading>
             <span class="col-xs-1 col-sm-1 col-md-1 col-lg-1 pull-left"
