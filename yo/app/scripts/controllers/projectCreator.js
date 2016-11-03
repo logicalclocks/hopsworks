@@ -77,14 +77,18 @@ angular.module('hopsWorksApp')
             });
 
 
-            self.exists = function exists(projectType) {
+            self.addSelected = function exists(projectType) {
               var idx = self.selectionProjectTypes.indexOf(projectType);
-
               if (idx > -1) {
                 self.selectionProjectTypes.splice(idx, 1);
               } else {
                 self.selectionProjectTypes.push(projectType);
               }
+            };
+            
+            self.exists = function exists(projectType) {
+              var idx = self.selectionProjectTypes.indexOf(projectType);
+              return idx > -1;
             };
 
 

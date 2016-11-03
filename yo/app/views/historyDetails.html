@@ -8,7 +8,7 @@
 <div class="modal-body">
 
   <div uib-accordion close-others="false">
-    <div uib-accordion-group heading="Job Details" ng-click="historyDetailCtrl.getDetails();">
+    <div uib-accordion-group class="panel-default" heading="Job Details" ng-click="historyDetailCtrl.getDetails();">
         <div>
           <div class="row">
             <div class="text-right col-md-4">Application Id<i class="fa fa-info-circle" uib-tooltip="The application Id uniquely defines an application." style="margin-left: 10px"></i></div>
@@ -60,7 +60,7 @@
           </div>
         </div>
     </div>
-    <div uib-accordion-group heading="Configuration" ng-click="historyDetailCtrl.getConfiguration();">
+    <div uib-accordion-group class="panel-default" heading="Configuration" ng-click="historyDetailCtrl.getConfiguration();">
       <div>
         <div class="row">
           <div>
@@ -115,7 +115,7 @@
         </div>
       </div>
     </div>  
-    <div uib-accordion-group heading="Heuristic Results" ng-click="historyDetailCtrl.getDetails();">    
+    <div uib-accordion-group class="panel-default" heading="Heuristic Results" ng-click="historyDetailCtrl.getDetails();">    
       <table class="table chrome-table">
         <thead>
           <tr>

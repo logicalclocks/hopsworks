@@ -8,7 +8,7 @@
 <div class="modal-body">
 
   <div uib-accordion close-others="false">
-    <div uib-accordion-group heading="Schedule">
+    <div uib-accordion-group class="panel-default" heading="Schedule">
     
     <div>
         <div ng-show="jobDetailCtrl.hasJobScheduled">
@@ -47,7 +47,7 @@
         </div>
     </div>
     </div>
-    <div uib-accordion-group heading="Configuration">    
+    <div uib-accordion-group  class="panel-default" heading="Configuration">    
       <!-- Spark configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration'">
         <div class="row">
@@ -226,7 +226,7 @@
         </div>
       </div>
     </div>
-    <div uib-accordion-group heading="Execution history">
+    <div uib-accordion-group  class="panel-default" heading="Execution history">
       <span ng-show="!jobDetailCtrl.showExecutions">
         There are no registered executions for this job.
       </span>
