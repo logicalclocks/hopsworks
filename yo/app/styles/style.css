@@ -72,6 +72,8 @@ a:focus {
 }
 .panel-heading {
   border-color: #cfdbe2;
+  background-color: #3a3f51;		
+  color: #fff;
   border-bottom: 0 none;
   font-size: 14px;
   border-bottom: 1px solid transparent;
