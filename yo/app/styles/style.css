@@ -72,7 +72,7 @@ a:focus {
 }
 .panel-heading {
   border-color: #cfdbe2;
-  background-color: #3a3f51;
+  background-color: #3a3f51;		
   color: #fff;
   border-bottom: 0 none;
   font-size: 14px;
@@ -474,4 +474,8 @@ md-input-container {
 
 .md-errors-spacer {
   min-height: 0px !important;
+}
+
+*:focus {
+    outline: none;
 }
