@@ -545,6 +545,24 @@ public class DistributedFileSystemOps {
   }
 
   /**
+   * Flush all cache entries related to the specified user.
+   * @param user
+   * @throws IOException 
+   */
+  public void flushCachedUser(String user) throws IOException{
+      dfs.flushCacheUser(user);
+  }
+  
+  /**
+   * Flush all cache entries related to the specified group.
+   * @param group
+   * @throws IOException 
+   */
+  public void flushCachedGroup(String group) throws IOException{
+      dfs.flushCacheGroup(group);
+  }
+  
+  /**
    * Closes the distributed file system.
    */
   public void close() {

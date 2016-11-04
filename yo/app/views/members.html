@@ -44,7 +44,7 @@
                    theme="select2" class="form-control" 
                    style="min-width: 300px;">
 
-          <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+          <ui-select-match placeholder="Add members..."  style="height:24px;">{{$select.selected.email}}</ui-select-match>
           <ui-select-choices
             repeat="card in memberCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
 

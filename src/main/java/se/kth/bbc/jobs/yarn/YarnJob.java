@@ -3,6 +3,7 @@ package se.kth.bbc.jobs.yarn;
 import java.io.File;
 import java.io.IOException;
 import com.google.common.io.Files;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.execution.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServices;
@@ -62,6 +64,7 @@ public abstract class YarnJob extends HopsJob {
   protected Map<String, String> jobSystemProperties;
 
   protected String kafkaAddress;
+  protected String restEndpoint;
   protected final String jobUser;
 
   /**
@@ -73,12 +76,13 @@ public abstract class YarnJob extends HopsJob {
    * @param hadoopDir
    * @param nameNodeIpPort
    * @param kafkaAddress
+   * @param restEndpoint
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
           Users user, String jobUser, String hadoopDir, String nameNodeIpPort,
-          String kafkaAddress) {
+          String kafkaAddress, String restEndpoint) {
     super(job, services, user, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -87,6 +91,7 @@ public abstract class YarnJob extends HopsJob {
     }
     logger.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
     this.kafkaAddress = kafkaAddress;
+    this.restEndpoint = restEndpoint;
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();
     this.jobUser = jobUser;
@@ -142,7 +147,7 @@ public abstract class YarnJob extends HopsJob {
       logger.log(Level.SEVERE, "Permission denied:- {0}", ex.getMessage());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
-    } catch (YarnException | IOException e) {
+    } catch (YarnException | IOException  | URISyntaxException e) {
       logger.log(Level.SEVERE,
               "Failed to start application master for execution "
               + getExecution()
@@ -214,18 +219,33 @@ public abstract class YarnJob extends HopsJob {
                 String.valueOf(projectService.getProject().getId()));
       }
 
-      try {
+      try {        
+        String k_certName = projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__kstore.jks";
+        String t_certName = projectService.getProject().getName() + "__"
+                + projectService.getProject().getOwner().getUsername()
+                + "__tstore.jks";
+        
         kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
-                localTmpDir + "/" + projectService.getProject().getName() + "__"
-                + projectService.getProject().getOwner().getUsername()
-                + "__kstore.jks"));
+                localTmpDir + "/" + k_certName));
         kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
-                localTmpDir + "/" + projectService.getProject().getName() + "__"
-                + projectService.getProject().getOwner().getUsername()
-                + "__tstore.jks"));
-
+                localTmpDir + "/" + t_certName));
         // if file doesnt exists, then create it
         try {
+          //If it is a Flink job, copy the certificates into the glassfish dir
+          if (jobDescription.getJobType() == JobType.FLINK) {
+            File f_k_cert = new File("/srv/glassfish/domain1/config/"
+                    + k_certName);
+            File t_k_cert = new File("/srv/glassfish/domain1/config/"
+                    + t_certName);
+            if (!f_k_cert.exists()) {
+              Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE),
+                      f_k_cert);
+              Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE),
+                      t_k_cert);
+            }
+          }
           for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
             if (!entry.getValue().exists()) {
               entry.getValue().createNewFile();
@@ -389,10 +409,11 @@ public abstract class YarnJob extends HopsJob {
                   getStdOutPath(),
                   stdOutFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
+          String[] desiredLogTypes = {"out"};
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
-                  stdOutFinalDestination, "out");
+                  stdOutFinalDestination, desiredLogTypes);
 
         } else {
           udfso.renameInHdfs(
@@ -409,10 +430,11 @@ public abstract class YarnJob extends HopsJob {
                   getStdErrPath(),
                   stdErrFinalDestination);
         } else if (runner.areLogPathsAggregated()) {
+          String[] desiredLogTypes = {"err",".log"};
           YarnLogUtil.copyAggregatedYarnLogs(
                   udfso, runner.
                   getStdOutPath(),
-                  stdErrFinalDestination, "err");
+                  stdErrFinalDestination, desiredLogTypes);
         } else {
           udfso.renameInHdfs(
                   runner.
@@ -458,8 +480,9 @@ public abstract class YarnJob extends HopsJob {
   @Override
   //DOESN'T WORK FOR NOW
   protected void stopJob(String appid) {
+    YarnClient yarnClient = null;
     try {
-      YarnClient yarnClient = new YarnClientImpl();
+      yarnClient = new YarnClientImpl();
       yarnClient.init(conf);
       yarnClient.start();
       ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
@@ -468,6 +491,14 @@ public abstract class YarnJob extends HopsJob {
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
+    } finally {
+      if(yarnClient!=null){
+        try {
+          yarnClient.close();
+        } catch (IOException ex) {
+          logger.log(Level.WARNING, "Could not close yarn client for killing yarn job");
+        }
+      }
     }
   }
 }

@@ -50,17 +50,17 @@ public class DownloadService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException, AccessControlException {
     FSDataInputStream stream;
-    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
     try {
       if (username != null) {
-        dfso = dfs.getDfsOps(username);
-        stream = dfso.open(new Path(this.path));
+        udfso = dfs.getDfsOps(username);
+        stream = udfso.open(new Path(this.path));
       } else {
-        dfso = dfs.getDfsOps();
-        stream = dfso.open(new Path(this.path));
+        udfso = dfs.getDfsOps();
+        stream = udfso.open(new Path(this.path));
       }    
       Response.ResponseBuilder response = Response.ok(buildOutputStream(stream,
-              dfso));
+              udfso));
       response.header("Content-disposition", "attachment;");
       
       return response.build();

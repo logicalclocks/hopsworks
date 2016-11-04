@@ -54,8 +54,7 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>AppScriptServlet</servlet-name>
-    <url-pattern>/zeppelin/scripts/scripts.js</url-pattern>
-    <url-pattern>/zeppelin/scripts/app.js</url-pattern>
+    <url-pattern>/zeppelin/scripts/scripts.6ddd912ca4c10818.js</url-pattern>
   </servlet-mapping>
   <!-- declare the roles relevant for our webapp -->
   <security-role>
@@ -177,4 +176,26 @@
     <url-pattern>/security/*</url-pattern>
     <url-pattern>/index.xhtml</url-pattern>
   </filter-mapping>
+  
+  <!-- Kibana proxy servlet -->
+      <servlet>
+        <servlet-name>ProxyServlet</servlet-name>
+        <servlet-class>io.hops.kibana.ProxyServlet</servlet-class>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://localhost:5601/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProxyServlet</servlet-name>
+        <url-pattern>/ps/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProxyServlet</servlet-name>
+        <url-pattern>/ps</url-pattern>
+    </servlet-mapping>
 </web-app>

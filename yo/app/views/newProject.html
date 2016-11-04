@@ -11,29 +11,25 @@
       <div class="col-md-8">
         <fieldset>
 
-          <div class="control-group col-md-offset-1">
+          <div class="control-group" flex>
             <label for="projectname" style="color: black;">Name</label>
-            <md-input-container style="height: 50px">
+            <md-input-container style="height: 50px" class="md-block">
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
                      ng-pattern="projectCreatorCtrl.regex"
                      autofocus="autofocus"
                      ng-maxlength="88"
-                     required
-                     >
+                     required >
             </md-input-container>
-            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.required"
-              class="text-danger ng-hide">This field is required</span>
+            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) && projectForm.project_name.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.pattern"
-                    class="text-danger ng-hide">Invalid project name. Spaces
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.pattern"
+                  class="text-danger ng-hide">Invalid project name. Spaces
               in project names and special characters such as __, /, \, ?,
               *, :, |, ', ", <, >, %, (, ), &, ;, #, are not allowed.</span>
 
-            <span ng-show="(projectForm.project_name.$dirty) &amp;&amp;
-                  projectForm.project_name.$error.maxlength"
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.maxlength"
                   class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>
 
             <p></p>
@@ -51,7 +47,7 @@
             <div class="controls">
 
               <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
-                         style="min-wsnidth: 300px;" tabindex="3">
+                         style="min-width: 300px;" tabindex="3">
 
                 <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
                 <ui-select-choices
@@ -85,19 +81,19 @@
       </div>
 
       <div class="col-md-4">
-        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
-
-        <fieldset>
-          <div class="control-group col-md-offset-2">
-              <md-checkbox class="md-primary" ng-checked="true"
-                         ng-repeat="projectType in projectCreatorCtrl.projectTypes"
-                         ng-click="projectCreatorCtrl.exists(projectType)" tabindex="4">
-              {{ projectType}}
-
-            </md-checkbox>
+        <h3>Services</h3>
+        <fieldset class="standard">
+          <div class="control-group col-md-offset-2" flex>
+            <div class="row" ng-repeat="projectType in projectCreatorCtrl.projectTypes">
+              <md-checkbox class="md-primary" 
+                           ng-checked="projectCreatorCtrl.exists(projectType)"
+                           ng-click="projectCreatorCtrl.addSelected(projectType)"
+                           aria-label="projectType"
+                           tabindex="4">
+                {{ projectType}}
+              </md-checkbox>
+            </div>
           </div>
-
-
         </fieldset>
       </div>
     </div>
@@ -107,9 +103,9 @@
       <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
       <button class="btn btn-primary" type="submit" 
               ng-disabled="projectForm.project_name.$error.required
-              || projectCreatorCtrl.working
-              || projectForm.project_name.$error.pattern
-              || projectForm.project_name.$error.maxlength" tabindex="6">
+                        || projectCreatorCtrl.working
+                        || projectForm.project_name.$error.pattern
+                        || projectForm.project_name.$error.maxlength" tabindex="6">
         <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
         Create
       </button>

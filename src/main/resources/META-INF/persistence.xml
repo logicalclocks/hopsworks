@@ -62,7 +62,6 @@
     <class>se.kth.bbc.project.ProjectsManagement</class>
     <class>se.kth.bbc.project.ProjectPaymentsHistory</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsQuota</class>
-    <class>se.kth.bbc.jobs.quota.YarnRunningPrice</class>
     <class>se.kth.bbc.jobs.quota.YarnProjectsDailyCost</class>
     <class>se.kth.hopsworks.workflows.Workflow</class>
     <class>se.kth.hopsworks.workflows.WorkflowExecution</class>
@@ -87,6 +86,13 @@
     <class>io.hops.kmon.alert.Alert</class>
     <class>io.hops.kmon.role.Role</class>
     <class>io.hops.kmon.command.Command</class>
+    <class>io.hops.tf.TfClusters</class>
+    <class>io.hops.tf.TfExecutions</class>
+    <class>io.hops.tf.TfFifoQueue</class>
+    <class>io.hops.tf.TfJobs</class>
+    <class>io.hops.tf.TfResources</class>
+    <class>io.hops.tf.TfTasks</class>
+    <class>se.kth.bbc.jobs.quota.YarnPriceMultiplicator</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

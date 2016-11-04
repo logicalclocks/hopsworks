@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.common.TopicExistsException;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import kafka.javaapi.TopicMetadataRequest;
@@ -84,7 +85,7 @@ public class KafkaFacade {
 
     /**
      * Get all the Topics for the given project.
-     * <p/>
+     * 
      * @param projectId
      * @return
      */
@@ -96,14 +97,16 @@ public class KafkaFacade {
         List<ProjectTopics> res = query.getResultList();
         List<TopicDTO> topics = new ArrayList<>();
         for (ProjectTopics pt : res) {
-            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName()));
+            topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+            pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
         }
         return topics;
     }
 
     /**
      * Get all shared Topics for the given project.
-     * <p/>
+     * 
      * @param projectId
      * @return
      */
@@ -223,7 +226,7 @@ public class KafkaFacade {
                 AdminUtils.createTopic(zkUtils, topicName,
                         topicDto.getNumOfPartitions(),
                         topicDto.getNumOfReplicas(),
-                        new Properties());
+                        new Properties(), RackAwareMode.Enforced$.MODULE$);
             }
         } catch (TopicExistsException ex) {
             throw new AppException(Response.Status.FOUND.getStatusCode(),
@@ -303,6 +306,12 @@ public class KafkaFacade {
                     topicName + " alread marked for deletion.");
         } finally {
             zkClient.close();
+          try {
+            zkConnection.close();
+          } catch (InterruptedException ex) {
+            Logger.getLogger(KafkaFacade.class.getName()).
+                    log(Level.SEVERE, null, ex);
+          }
         }
     }
 
@@ -719,20 +728,33 @@ public class KafkaFacade {
     public void deleteSchema(String schemaName, Integer version)
             throws AppException {
 
-        //get the bean and remove it
-        SchemaTopics schema = em.find(SchemaTopics.class,
-                new SchemaTopicsPK(schemaName, version));
+        //Check if schema is currently used by a topic.
+        List<ProjectTopics> topics = em.createNamedQuery(
+                "ProjectTopics.findBySchemaVersion", ProjectTopics.class)
+                .setParameter("schema_name", schemaName)
+                .setParameter("schema_version", version)
+                .getResultList();
+        if(topics != null && !topics.isEmpty()){
+          //Create a list of topic names to display to user
+          throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                     "Schema is currently used by topics" );
+        } else {
+          //get the bean and remove it
+          SchemaTopics schema = em.find(SchemaTopics.class,
+                  new SchemaTopicsPK(schemaName, version));
 
-        if (schema == null) {
-            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-                    "Schema: " + schemaName + " not found in database");
-        }
+          if (schema == null) {
+              throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                      "Schema: " + schemaName + " not found in database");
+          }
 
-        try {
-            em.remove(schema);
-        } catch (Exception ex) {
-            throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                    ex.getMessage());
+          try {
+              em.remove(schema);
+              em.flush();
+          } catch (Exception ex) {
+              throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                      ex.getMessage());
+          }
         }
     }
 
@@ -859,13 +881,13 @@ public class KafkaFacade {
                         leaders.put(partId, partitionMetadata.leader().host());
 
                         //list the replicas of the parition
-                        replicas.put(partId, new ArrayList<String>());
+                        replicas.put(partId, new ArrayList<>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.replicas()) {
                             replicas.get(partId).add(broker.host());
                         }
 
                         //list the insync replicas of the parition
-                        inSyncReplicas.put(partId, new ArrayList<String>());
+                        inSyncReplicas.put(partId, new ArrayList<>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.isr()) {
                             inSyncReplicas.get(partId).add(broker.host());
                         }
@@ -911,6 +933,7 @@ public class KafkaFacade {
 
     public class ZookeeperWatcher implements Watcher {
 
+        @Override
         public void process(WatchedEvent we) {
         }
     }

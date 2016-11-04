@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('FileUploadCtrl', ['$modalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory',
-          function ($modalInstance, $scope, projectId, path, templateId, growl, flowFactory) {
+        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory',
+          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory) {
 
             var self = this;
             self.model = {};

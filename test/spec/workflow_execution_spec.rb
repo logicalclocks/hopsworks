@@ -68,7 +68,7 @@ describe "Workflow Execution" do
   end
 
   before(:all){with_valid_project}
-
+  after (:all){clean_projects}
   describe "#show" do
     context 'without authentication' do
       around :example do |example|
@@ -88,7 +88,7 @@ describe "Workflow Execution" do
       end
       it "should return the workflow" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}"
-        expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+        expect_json(errorMsg: ->(value){ expect(value).to be_nil})
         expect_json_types(id: :int, workflowTimestamp: :int, userId: :int, jobIds: :array, snapshot: :object)
         expect_json_keys('snapshot', [:edges, :nodes])
         expect_status(200)
@@ -121,7 +121,7 @@ describe "Workflow Execution" do
       end
       it "should return the workflow" do
         get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/logs"
-        expect_json_types :array
+        expect_json_types :array_of_objects
         expect_json_types('*', default: :string, error: :string, audit: :string, time: :string)
         expect_status(200)
       end
@@ -153,7 +153,7 @@ describe "Workflow Execution" do
         context "with valid params" do
           it "should create a new execution" do
             post "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
-            expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+            expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :int, workflowId: :int, userId: :int)
             expect_status(200)
           end
@@ -192,7 +192,7 @@ describe "Workflow Execution" do
         context "with valid params" do
           it "should create a new execution" do
             post "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
-            expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+            expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :int, workflowId: :int, userId: :int)
             expect_status(200)
           end

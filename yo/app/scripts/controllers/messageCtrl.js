@@ -1,10 +1,10 @@
 'use strict';
 angular.module('hopsWorksApp')
-    .controller('MessageCtrl', ['$scope','$cookies','$modalInstance','MessageService','RequestService','growl','md5','selected',
-        function ($scope, $cookies, $modalInstance, MessageService, RequestService, growl, md5, selected) {
+    .controller('MessageCtrl', ['$scope','$cookies','$uibModalInstance','MessageService','RequestService','growl','md5','selected',
+        function ($scope, $cookies, $uibModalInstance, MessageService, RequestService, growl, md5, selected) {
 
             var self = this;
-            self.email = $cookies['email'];
+            self.email = $cookies.get('email');
             self.refreshing = false;
             self.loading = false;
             self.loadingMsg = false;
@@ -140,6 +140,6 @@ angular.module('hopsWorksApp')
             };
 
             self.close = function () {
-                $modalInstance.dismiss('cancel');
+                $uibModalInstance.dismiss('cancel');
             };
         }]);

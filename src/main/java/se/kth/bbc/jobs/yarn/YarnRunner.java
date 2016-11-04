@@ -13,18 +13,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobSubmissionResult;
-import org.apache.flink.client.program.Client;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
-import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.runtime.yarn.FlinkYarnClusterStatus;
-import org.apache.flink.yarn.FlinkYarnCluster;
 
 
 import org.apache.hadoop.conf.Configuration;
@@ -36,7 +32,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.LocalResource;
@@ -49,8 +44,10 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
-import se.kth.bbc.jobs.flink.FlinkYarnRunnerBuilder;
+import se.kth.bbc.jobs.flink.YarnClusterClient;
+import se.kth.bbc.jobs.flink.YarnClusterDescriptor;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.IoUtils;
@@ -75,6 +72,8 @@ public class YarnRunner {
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
+  private YarnClusterDescriptor flinkCluster;
+  
   private String appJarPath;
   private String localJarPath; //Used by flink
   private final String amJarLocalName;
@@ -100,7 +99,7 @@ public class YarnRunner {
   private final List<String> javaOptions;
   private final List<String> filesToRemove;
   private String hadoopDir;
-  private String sparkDir;
+  private String serviceDir;
   private String nameNodeIpPort;
 
   private boolean readyToSubmit = false;
@@ -115,13 +114,15 @@ public class YarnRunner {
    * @return The received ApplicationId identifying the application.
    * @throws YarnException
    * @throws IOException Can occur upon opening and moving execution and input files.
+   * @throws java.net.URISyntaxException
    */
-  public YarnMonitor startAppMaster() throws YarnException, IOException {
+  public YarnMonitor startAppMaster() throws YarnException, IOException, URISyntaxException {
     logger.info("Starting application master.");
-
-    //Get application id
-    yarnClient.start();
-    //if(!isFlink){
+    YarnClient newClient = YarnClient.createYarnClient();
+    YarnMonitor monitor = null;
+    if(jobType == JobType.SPARK || jobType == JobType.ADAM){
+        //Get application id
+        yarnClient.start();
 
         YarnClientApplication app = yarnClient.createApplication();
         GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
@@ -177,106 +178,149 @@ public class YarnRunner {
         logger.log(Level.INFO, "Submitting application {0} to applications manager.", appId);
         yarnClient.submitApplication(appContext);
         // Create a new client for monitoring
-        YarnClient newClient = YarnClient.createYarnClient();
         newClient.init(conf);
-        YarnMonitor monitor = new YarnMonitor(appId, newClient);
+        monitor = new YarnMonitor(appId, newClient);
+        yarnClient.close();
+
+    } else if(jobType == JobType.FLINK){
+        YarnClusterClient client = flinkCluster.deploy();
+        appId = client.getApplicationId();
+        fillInAppid(appId.toString());
+        newClient.init(conf);
+        monitor = new YarnMonitor(appId, newClient);
+        String[] args  = {};
+        if (amArgs != null) {
+          if (!javaOptions.isEmpty()) {
+            amArgs += " --kafka_params \"";
+            for (String s : javaOptions) {
+              amArgs += s+",";
+            }
+            amArgs = amArgs.substring(0,amArgs.length()-1);
+            amArgs+="\"";
+          }
+        }
+        args = amArgs.trim().split(" ");
+
+        /*Copy the appjar to the localOS as it is needed by the Flink client
+        *Create path in local /tmp to store the appjar
+        *To distinguish between jars for different job executions, add the 
+        *current system time in the filename. This jar is removed after
+        *the job is finished.*/
+        String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
+        String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+        File tmpDir = new File(localPathAppJarDir);
+        if(!tmpDir.exists()){
+            tmpDir.mkdir();
+        }
+        //Copy job jar locaclly so that Flink client has access to it
+        //in YarnRunner
+        FileSystem fs = FileSystem.get(conf);
+        fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
+        //app.jar path 
+        File file = new File(localPathAppJarDir+ "/"+appJarName);
         
-        //If it is a Flink job, copy the job jar locally and submit the job.
-        if(jobType == JobType.FLINK){
-            int retries = 0;
-            int maxRetries = 60;
-            //Wait for the job manager to start, so the runner is aware of its port.
-            while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
-                logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
-                retries++;
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
-                }
-            }
-            if(yarnClient.getApplicationReport(appId).getRpcPort() < 1){
-                throw new FlinkYarnRunnerBuilder.YarnDeploymentException("Cound not determine Flink JobManager port");
-            }
-            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
-
-            String[] args  = {};
-            if(amArgs!=null && !amArgs.isEmpty()){
-                args = amArgs.trim().split(" ");
-            }
-            /*Copy the appjar to the localOS as it is needed by the Flink client
-            *Create path in local /tmp to store the appjar
-            *To distinguish between jars for different job executions, add the 
-            *current system time in the filename. This jar is removed after
-            *the job is finished.*/
-            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
-            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
-            File tmpDir = new File(localPathAppJarDir);
-            if(!tmpDir.exists()){
-                tmpDir.mkdir();
-            }
-            //Copy job jar locaclly so that Flink client has access to it
-            //in YarnRunner
-            FileSystem fs = FileSystem.get(conf);
-            fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
-            //app.jar path 
-            File file = new File(localPathAppJarDir+ "/"+appJarName);
-           
-            Path sessionFilesDir = new Path(localResourcesBasePath);
-            org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
-            FlinkYarnCluster cluster = new FlinkYarnCluster(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
-            cluster.connectToCluster();
-            InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
-            //Wait for slots to be allocated
-            int slotWait = 0;
-            while(cluster.getClusterStatus() == null && slotWait < 60){
-                try {
-                    Thread.sleep(1000);
-                    logger.log(Level.INFO, "Waiting for Flink cluster to be allocated");
-                    slotWait++;
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
-            slotWait = 0;
-            while(cluster.getClusterStatus().getNumberOfSlots() < 1 && slotWait < 60){
-                try {
-                    Thread.sleep(1000);
-                    logger.log(Level.INFO, "Waiting for Flink slots to be allocated");
-                    slotWait++;
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-
-            }
-
-            org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
-            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
-            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
-            Client client = new Client(clientConf);
+//            int retries = 0;
+//            int maxRetries = 60;
+//            //Wait for the job manager to start, so the runner is aware of its port.
+//            while(yarnClient.getApplicationReport(appId).getRpcPort() < 1 && retries<maxRetries){
+//                logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+//                retries++;
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, "Error while waitingfor AppReport rpcPort to be set");
+//                }
+//            }
+//            if(yarnClient.getApplicationReport(appId).getRpcPort() < 1){
+//                throw new FlinkYarnRunnerBuilder.YarnDeploymentException("Cound not determine Flink JobManager port");
+//            }
+//            logger.log(Level.INFO, "AppReport rpcPort is:{0}", yarnClient.getApplicationReport(appId).getRpcPort());
+//
+//            String[] args  = {};
+//            if(amArgs!=null && !amArgs.isEmpty()){
+//                args = amArgs.trim().split(" ");
+//            }
+//            /*Copy the appjar to the localOS as it is needed by the Flink client
+//            *Create path in local /tmp to store the appjar
+//            *To distinguish between jars for different job executions, add the 
+//            *current system time in the filename. This jar is removed after
+//            *the job is finished.*/
+//            String localPathAppJarDir = "/tmp/"+appJarPath.substring(appJarPath.indexOf("Projects"), appJarPath.lastIndexOf("/"))+"/"+appId;
+//            String appJarName = appJarPath.substring(appJarPath.lastIndexOf("/")).replace("/","");
+//            File tmpDir = new File(localPathAppJarDir);
+//            if(!tmpDir.exists()){
+//                tmpDir.mkdir();
+//            }
+//            //Copy job jar locaclly so that Flink client has access to it
+//            //in YarnRunner
+//            FileSystem fs = FileSystem.get(conf);
+//            fs.copyToLocalFile(new Path(appJarPath), new Path(localPathAppJarDir+ "/"+appJarName));
+//            //app.jar path 
+//            File file = new File(localPathAppJarDir+ "/"+appJarName);
+//           
+//            Path sessionFilesDir = new Path(localResourcesBasePath);
+//            org.apache.flink.configuration.Configuration flinkConf = new org.apache.flink.configuration.Configuration();
+//            //AbstractYarnClusterDescriptor cluster = new YarnClusterDescriptor(yarnClient, appId, conf, flinkConf, sessionFilesDir, false);
+//            AbstractYarnClusterDescriptor cluster = new YarnClusterDescriptor();
+//            cluster.
+//            cluster.connectToCluster();
+//            InetSocketAddress jobManagerAddress = cluster.getJobManagerAddress();
+//            //Wait for slots to be allocated
+//            int slotWait = 0;
+//            while(cluster.getClusterStatus() == null && slotWait < 60){
+//                try {
+//                    Thread.sleep(1000);
+//                    logger.log(Level.INFO, "Waiting for Flink cluster to be allocated");
+//                    slotWait++;
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            slotWait = 0;
+//            while(cluster.getClusterStatus().getNumberOfSlots() < 1 && slotWait < 60){
+//                try {
+//                    Thread.sleep(1000);
+//                    logger.log(Level.INFO, "Waiting for Flink slots to be allocated");
+//                    slotWait++;
+//                } catch (InterruptedException ex) {
+//                    logger.log(Level.SEVERE, null, ex);
+//                }
+//
+//            }
+//
+//            org.apache.flink.configuration.Configuration clientConf = new org.apache.flink.configuration.Configuration();
+//            clientConf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, jobManagerAddress.getPort());
+//            clientConf.setString(ConfigConstants.JOB_MANAGER_IPC_ADDRESS_KEY, jobManagerAddress.getHostName());
+//            YarnClusterClient client = new YarnClusterClient(clientConf);
+            
             try {
                 List<URL> classpaths = new ArrayList<>();
                 //Copy Flink jar to local machine and pass it to the classpath
-                URL flinkURL = new File("/srv/flink/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
+                URL flinkURL = new File(serviceDir+"/"+Settings.FLINK_LOCRSC_FLINK_JAR).toURI().toURL();
                 classpaths.add(flinkURL);
+//                URL libURL = new File(serviceDir+"/lib/kafka-util-0.1.jar").toURI().toURL();
+//                URL libURL3= new File(serviceDir+"/lib/flink-connector-filesystem_2.10-1.0.3.jar").toURI().toURL();
+//                classpaths.add(libURL);
+//                classpaths.add(libURL3);
+                
                 PackagedProgram program = new PackagedProgram(file, classpaths, args);
-                client.setPrintStatusDuringExecution(false);
-
-                JobSubmissionResult res =  client.runDetached(program, parallelism);
-                JobID jobId = res.getJobID();
-                cluster.stopAfterJob(jobId);
-            } catch (ProgramInvocationException ex) {
-                logger.log(Level.SEVERE, "Error while Flink Client submits jobs: {0}", ex.getMessage());
+                JobSubmissionResult res =  client.run(program, parallelism);
+            }   catch (ProgramInvocationException ex) {
+              logger.log(Level.WARNING, "Error while submitting Flink job to cluster",ex);
+              //Kill the flink job here
+               Runtime rt = Runtime.getRuntime();
+               Process pr = rt.exec(hadoopDir+"/bin/yarn application -kill "+appId.toString());
             } finally{
               //Remove local flink app jar
                FileUtils.deleteDirectory(localPathAppJarDir);
                logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
             }
+
         }
-        yarnClient.close();
         
     //Clean up some
     //removeAllNecessary();
+    flinkCluster = null;
     yarnClient = null;
     appId = null;
     appContext = null;
@@ -321,6 +365,9 @@ public class YarnRunner {
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
       entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
     }
+    for (ListIterator<String> i = javaOptions.listIterator(); i.hasNext();){
+      i.set(i.next().replaceAll(APPID_REGEX, id));
+    }
   }
 
   private void checkAmResourceRequest(GetNewApplicationResponse appResponse) {
@@ -342,7 +389,7 @@ public class YarnRunner {
     }
   }
 
- private Map<String, LocalResource> addAllToLocalResources(String nameNodeIpPort) throws IOException {
+ private Map<String, LocalResource> addAllToLocalResources(String nameNodeIpPort) throws IOException, URISyntaxException {
     Map<String, LocalResource> localResources = new HashMap<>();
     //If an AM jar has been specified: include that one
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
@@ -387,6 +434,8 @@ public class YarnRunner {
           scFileStat.getModificationTime(),
           entry.getValue().getPattern());
       localResources.put(key, scRsrc);
+      //Loop through local resources and add their properties as system properties
+      
     }
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.entrySet()) {
@@ -407,6 +456,34 @@ public class YarnRunner {
           scFileStat.getModificationTime(),
           entry.getValue().getPattern());
       localResources.put(key, scRsrc);
+      
+    }
+    //For Spark 2.0, loop through local resources and add their properties 
+    //as system properties (javaOptions)
+    if(jobType == JobType.SPARK){
+        StringBuilder uris = new StringBuilder();
+        StringBuilder timestamps = new StringBuilder();
+        StringBuilder sizes = new StringBuilder();
+        StringBuilder visibilities = new StringBuilder();
+        StringBuilder types = new StringBuilder();
+        for(Entry<String, LocalResource> entry : localResources.entrySet()){
+          Path destPath = ConverterUtils.getPathFromYarnURL(entry.getValue().
+                getResource());
+          URI sparkUri = destPath.toUri();
+          URI pathURI = new URI(sparkUri.getScheme(), sparkUri.getAuthority(),
+                sparkUri.getPath(), null, entry.getKey());
+          uris.append(pathURI.toString()).append(",");
+          timestamps.append(entry.getValue().getTimestamp()).append(",");
+          sizes.append(entry.getValue().getSize()).append(",");
+          visibilities.append(entry.getValue().getVisibility()).append(",");
+          types.append(entry.getValue().getType()).append(",");
+        }
+        //Remove the last comma (,) and add them to javaOptions
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_FILENAMES + "=" + uris.substring(0,uris.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_TIMESTAMPS + "=" + timestamps.substring(0, timestamps.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_SIZES + "=" + sizes.substring(0, sizes.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_VISIBILITIES + "=" + visibilities.substring(0, visibilities.length()-1)));
+        javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D" + Settings.SPARK_CACHE_TYPES + "=" + types.substring(0, types.length()-1)));
     }
     return localResources;
   }
@@ -494,6 +571,7 @@ public class YarnRunner {
     for (String s : javaOptions) {
       vargs.add(s);
     }
+          
     // Set class name
     vargs.add(amMainClass);
     // Set params for Application Master
@@ -541,6 +619,7 @@ public class YarnRunner {
     this.amJarPath = builder.amJarPath;
     this.jobType = builder.jobType;
     this.parallelism = builder.parallelism;
+    this.flinkCluster = builder.flinkCluster;
     this.appJarPath = builder.appJarPath;
     this.amQueue = builder.amQueue;
     this.amMemory = builder.amMemory;
@@ -566,7 +645,7 @@ public class YarnRunner {
     this.javaOptions = builder.javaOptions;
     this.filesToRemove = builder.filesToRemove;
     this.hadoopDir = builder.hadoopDir;
-    this.sparkDir = builder.sparkDir;
+    this.serviceDir = builder.serviceDir;
     this.nameNodeIpPort = builder.nameNodeIpPort;
   }
 
@@ -630,6 +709,7 @@ public class YarnRunner {
     private JobType jobType;
     //Flink parallelism
     private int parallelism;
+    private YarnClusterDescriptor flinkCluster;
     private String appJarPath;
     //Optional attributes
     // Queue for App master
@@ -677,7 +757,7 @@ public class YarnRunner {
     private YarnClient yarnClient;
 
     private String hadoopDir;
-    private String sparkDir;
+    private String serviceDir;
     private String nameNodeIpPort;
 
     //Constructors
@@ -690,7 +770,6 @@ public class YarnRunner {
       this.amJarLocalName = amJarLocalName;
     }
 
-    //Setters
     /**
      * Sets the arguments to be passed to the Application Master.
      * <p/>
@@ -764,6 +843,11 @@ public class YarnRunner {
     public void setParallelism(int parallelism){
         this.parallelism = parallelism;
     }
+
+    public void setFlinkCluster(YarnClusterDescriptor flinkCluster) {
+      this.flinkCluster = flinkCluster;
+    }
+    
     
     public void setAppJarPath(String path){
         this.appJarPath = path;
@@ -945,17 +1029,17 @@ public class YarnRunner {
      * Build the YarnRunner instance
      * <p/>
      * @param hadoopDir
-     * @param sparkDir
+     * @param serviceDir
      * @param nameNodeIpPort
      * @param jobType
      * @return
      * @throws IllegalStateException Thrown if (a) configuration is not found, (b) invalid main class name
      * @throws IOException Thrown if stdOut and/or stdErr path have not been set and temp files could not be created
      */
-    public YarnRunner build(String hadoopDir, String sparkDir, String nameNodeIpPort, JobType jobType) throws IllegalStateException, IOException {
+    public YarnRunner build(String hadoopDir, String serviceDir, String nameNodeIpPort, JobType jobType) throws IllegalStateException, IOException {
       //Set configuration
       try {
-        setConfiguration(hadoopDir, sparkDir, nameNodeIpPort);
+        setConfiguration(hadoopDir, serviceDir, nameNodeIpPort);
       } catch (IllegalStateException e) {
         throw new IllegalStateException("Failed to load configuration", e);
       }
@@ -1014,7 +1098,7 @@ public class YarnRunner {
       return new YarnRunner(this);
     }
 
-    private void setConfiguration(String hadoopDir, String sparkDir, String nameNodeIpPort)
+    private void setConfiguration(String hadoopDir, String serviceDir, String nameNodeIpPort)
         throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
       String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
@@ -1030,7 +1114,7 @@ public class YarnRunner {
 
       //Get the configuration file at found path
       this.hadoopDir = hadoopDir;
-      this.sparkDir = sparkDir;
+      this.serviceDir = serviceDir;
       this.nameNodeIpPort = nameNodeIpPort;
 
       Path confPath = new Path(yarnConfDir);
@@ -1077,13 +1161,20 @@ public class YarnRunner {
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
       conf.addResource(new Path(hdfsConf.getAbsolutePath()));
-
+      
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
       setDefaultConfValues(conf);
+      
+      conf.setStrings("dfs.namenode.rpc-address", nameNodeIpPort);
+//      conf.setStrings("dfs.namenodes.rpc.addresses", nameNodeIpPort);
+//      conf.setStrings("fs.defaultFS", "hdfs://"+nameNodeIpPort);
+      if(jobType == JobType.FLINK){
+        flinkCluster.setConf(conf);
+      }
     }
 
-    private static void addPathToConfig(Configuration conf, File path) {
+    public static void addPathToConfig(Configuration conf, File path) {
       // chain-in a new classloader
       URL fileUrl = null;
       try {
@@ -1096,7 +1187,7 @@ public class YarnRunner {
       conf.setClassLoader(cl);
     }
 
-    private static void setDefaultConfValues(Configuration conf) {
+    public static void setDefaultConfValues(Configuration conf) {
       if (conf.get("fs.hdfs.impl", null) == null) {
         conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
       }

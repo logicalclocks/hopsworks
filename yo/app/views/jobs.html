@@ -96,7 +96,7 @@
                                  <button style="border-color: #20AD28; min-width: 64px;"
                                     ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();" 
                                     class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
-                                 <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"/> Run</button>
+                                   <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> Run</button>
                                  <button
                                     ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"
                                     ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
@@ -107,7 +107,7 @@
                                     jobsCtrl.showLogs(job.id);
                                     $event.stopPropagation();"
                                     class="btn btn-danger btn-sm">
-                                    <span class="glyphicon glyphicon-stop" aria-hidden="true"/> Stop
+                                   <span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop
                                  </button>
                               </td>
                               <td>
@@ -232,30 +232,30 @@
                               <td>
                                 <div class="btn-group" role="group">
                                   <button 
-                                    tooltip="Delete"
+                                    uib-tooltip="Delete"
                                     ng-click="jobsCtrl.toggle(job, $index);
-                                    jobsCtrl.deleteJob(job.id); $event.stopPropagation();"
+                                    jobsCtrl.deleteJob(job.id, job.name); $event.stopPropagation();"
                                     type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
                                   </button>
-                                  <button tooltip="Job UI"
+                                  <button uib-tooltip="Job UI"
                                     type="button" class="btn btn-info glyphicon glyphicon-eye-open"
                                           ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                             $event.stopPropagation();">                                            
                                   </button>
-                                  <div class="btn-group" role="group">
+                                  <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
                                     <button type="button" 
-                                            class="btn btn-default dropdown-toggle glyphicon"
+                                            uib-dropdown-toggle class="btn btn-default glyphicon"
                                             style="font-family: sans-serif;"
-                                            data-toggle="dropdown">
+                                            >
                                       More
                                       <span class="caret"></span>
                                     </button>
-                                    <ul class="dropdown-menu" role="menu" style="font-family: sans-serif;">
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                    <ul uib-dropdown-menu class="dropdown-menu" style="font-family: sans-serif;">
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit as new</a></li>
-                                      <li><a class="dropdown-item" ng-click="jobsCtrl.toggle(job, $index);
+                                      <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job); $event.stopPropagation();" >Schedule</a></li>
                                     </ul>
                                   </div>
@@ -299,15 +299,15 @@
                  </ul>
                  <div class="tab-content" >
                     <div id="logs" class="tab-pane fade in active">
-                       <accordion
-                          close-others="true"infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                          <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
-                            <accordion-heading ng-if="item.appId !== ''">
+                       <div uib-accordion
+                          close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                          <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
+                            <div uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">
                                    {{item.time}}
                                 </div>
-                             </accordion-heading>
+                             </div>
                              <div style="overflow-y: auto">
                                 <button ng-if="item.retriableOut !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'out')" >
                                 Retry log
@@ -320,19 +320,19 @@
                                    <a href="#{{item.logPath}}">here!</a>
                                 </div>
                              </div>
-                          </accordion-group>
-                       </accordion>
+                          </div>
+                       </div>
                     </div>
                     <div id="errs" class="tab-pane fade">
-                       <accordion
+                       <div uib-accordion
                           close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                          <accordion-group ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
-                             <accordion-heading>
+                          <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
+                             <div uib-accordion-heading>
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">
                                    {{item.time}}
                                 </div>
-                             </accordion-heading>
+                             </div>
                              <div style="overflow-y: auto">
                                 <button  ng-if="item.retriableErr !== undefined && item.appId !== ''" class="btn btn-default" ng-click="jobsCtrl.retryLogs(item.appId, 'err')" >
                                 Retry log
@@ -345,8 +345,8 @@
                                    <a href="#{{item.errPath}}">here!</a>
                                 </div>
                              </div>
-                          </accordion-group>
-                       </accordion>
+                          </div>
+                       </div>
                     </div>
                  </div>
               </div>
@@ -365,7 +365,8 @@
     tourtip-placement="bottom"
     tourtip-next-label="Next"
     on-proceed="jobsCtrl.newJob()"
-    tourtip-offset-vertical="-13"
+    tourtip-offset-vertical="-65"
+    tourtip-offset-horizontal="38"
     ></virtual-step>
   <virtual-step
     class="ng-scope"
@@ -381,7 +382,7 @@
     tourtip-placement="bottom"
     tourtip-next-label="Done"
     on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
-    tourtip-offset-vertical="-37"
+    tourtip-offset-vertical="-65"
     ></virtual-step>
 </tour>
 

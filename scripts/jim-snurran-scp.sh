@@ -4,11 +4,11 @@ set -e
 export PORT=50070
 export WEBPORT=8080
 export SERVER=snurran.sics.se
-export key=insecure_private_key
+export key=private_key
 usr=jdowling
 
-rm -f $key
-scp ${usr}@${SERVER}:/home/${usr}/.vagrant.d/insecure_private_key .
+#scp ${usr}@${SERVER}:/home/${usr}/.vagrant.d/insecure_private_key .
+scp ${usr}@${SERVER}:/home/${usr}/NetBeansProjects/hopsworks-chef/.vagrant/machines/default/virtualbox/$key .
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd /srv/glassfish/domain1 && sudo chown -R glassfish:vagrant docroot && sudo chmod -R 775 *"
 

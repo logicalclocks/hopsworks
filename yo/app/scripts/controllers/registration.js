@@ -7,7 +7,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.securityQuestions = SecurityQuestions.getQuestions();
             self.working = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.newUser = {
               firstName: '',
               lastName: '',
@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
               securityAnswer: '',
               ToS: '',
               authType: 'Mobile',
-              twoFactor: true,
+              twoFactor: false,
               orgName: '',
               dep: '',
               street: '',
@@ -37,7 +37,6 @@ angular.module('hopsWorksApp')
               self.errorMessage = null;
               if ($scope.registerForm.$valid) {
                 self.working = true;
-                console.log(self.otp);
                 if (self.otp === 'false' || !self.newUser.twoFactor) {
                   AuthService.register(self.newUser).then(
                           function (success) {

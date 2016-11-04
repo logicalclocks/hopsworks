@@ -61,10 +61,9 @@ public class Dataset implements Serializable {
   @Column(name = "id")
   private Integer id;
   @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-            referencedColumnName = "name")
+    @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+    @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")
   })
   @ManyToOne(optional = false)
   private Inode inode;

@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
 
 
             self.working = false;
-            self.otp = $cookies['otp'];
+            self.otp = $cookies.get('otp');
             self.user = {email: '', password: '', otp: ''};
             self.emailHash = md5.createHash(self.user.email || '');
             getAnnouncement();
@@ -60,13 +60,18 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.working = false;
                         self.secondFactorRequired = false;
-                        $cookies.email = self.user.email;
-                        
                         if (success.shibbolethNewAccount === true) {
                           self.shibbolethNewAccount = true;
                         }
                         
+                        $cookies.put("email", self.user.email);
                         $location.path('/');
+                        AuthService.isAdmin().then(
+                            function (success) {
+                              $cookies.put("isAdmin", true);
+                          },function (error) {
+                              $cookies.put("isAdmin", false);
+                        });
                       }, function (error) {
                         self.working = false;
                         if (error.data !== undefined && 

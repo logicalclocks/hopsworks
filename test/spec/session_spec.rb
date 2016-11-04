@@ -2,6 +2,10 @@ describe "session" do
   before(:each) do
     reset_session
   end
+  after :all do
+    puts "after project test. Clean all"
+    clean_projects
+  end
   describe 'login' do
     it 'should work with valid params' do
       user = create_user

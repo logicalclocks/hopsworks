@@ -58,10 +58,8 @@ public class ExecutionController {
 //        String pathOfInode = path.replace("hdfs://" + parts[2], "");
 //        
 //        Inode inode = inodes.getInodeAtPath(pathOfInode);
-//        int inodePid = inode.getInodePK().getParentId();
 //        String inodeName = inode.getInodePK().getName();
 //        
-//        execInputFilesFacade.create(execId, inodePid, inodeName);
 //        jobHistoryFac.persist(user, job, execId, exec.getAppId());
 //        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         break;
@@ -84,7 +82,6 @@ public class ExecutionController {
         String pathOfInode = path.replace("hdfs://" + parts[2], "");
         
         Inode inode = inodes.getInodeAtPath(pathOfInode);
-        int inodePid = inode.getInodePK().getParentId();
         String inodeName = inode.getInodePK().getName();
         
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
@@ -103,12 +100,18 @@ public class ExecutionController {
       IOException {
     switch (job.getJobType()) {
       case ADAM:
-      //adamController.stopJob(job, user);
+        adamController.stopJob(job, user, appid);
+        break;
       case SPARK:
-      //sparkController.stopJob(job, user, appid);
+        sparkController.stopJob(job, user, appid);
+        break;
+      case FLINK:
+        flinkController.stopJob(job, user, appid);
+        break;
       default:
         throw new IllegalArgumentException("Unsupported job type: " + job.
             getJobType());
+        
     }
   }
 }

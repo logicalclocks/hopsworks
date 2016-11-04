@@ -23,6 +23,7 @@ angular.module('hopsWorksApp')
 
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
+            var loaded = false;
 
             self.deselect = function () {
               self.selected = null;
@@ -82,8 +83,8 @@ angular.module('hopsWorksApp')
                 return true;
               if (group.indexOf("flink") > -1)
                 return true;
-//              if (group.indexOf("sh") > -1)
-//                return true;
+              if (group.indexOf("python") > -1)
+                return true;
               if (group.indexOf("angular") > -1)
                 return true;
               if (group.indexOf("livy") > -1)
@@ -107,7 +108,6 @@ angular.module('hopsWorksApp')
                 self.interpretersRefreshing = false;
               }, function (error) {
                 self.interpretersRefreshing = false;
-                console.log('refresh-->', error);
               });
             };
 
@@ -234,20 +234,23 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
               var payload;
-              console.log('Receive event << %o', event);
               if (event.data) {
                 payload = angular.fromJson(event.data);
               }
               console.log('Receive << %o, %o', payload.op, payload);
               var op = payload.op;
-              var data = payload.data;
-              if (op === 'NOTE') {
+              //var data = payload.data;
+              if (op === 'CREATED_SOCKET') {
                 load();
-                console.log('NOTE', data.note);
-              } else if (op === 'NOTES_INFO') {
-                load();
+<<<<<<< HEAD
                 console.log('NOTES_INFO', data);
               }
+=======
+                loaded = true;
+              } else if (loaded && op === 'NOTES_INFO') {
+                getNotesInProject("Loading notebooks...");
+              } 
+>>>>>>> ffaf87a11665361eb08c7feb6851f9c082770f8f
             });
 
             ZeppelinService.websocket().ws.onOpen(function () {
@@ -269,6 +272,23 @@ angular.module('hopsWorksApp')
                 startLoading("Restarting zeppelin...");
                 $route.reload();
               }
+<<<<<<< HEAD
             });
 
+=======
+            }); 
+            
+            $scope.$on("$destroy", function () {
+              console.log('closeing ws');
+              ZeppelinService.wsDestroy();
+              loaded = false;
+            });
+            
+            //refresh interpreter status when we return to zeppelin dashbord. 
+            window.onfocus = function () {
+              if (loaded) {
+                refresh();                
+              }
+            };
+>>>>>>> ffaf87a11665361eb08c7feb6851f9c082770f8f
           }]);

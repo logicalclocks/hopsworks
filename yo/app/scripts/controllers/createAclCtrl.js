@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('CreateAclCtrl', ['$modalInstance', 'KafkaService', 'growl', 'projectId', 'topicName',
-          function ($modalInstance, KafkaService, growl, projectId, topicName) {
+        .controller('CreateAclCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 'topicName',
+          function ($uibModalInstance, KafkaService, growl, projectId, topicName) {
 
             var self = this;
             self.users =[];
@@ -41,14 +41,14 @@ angular.module('hopsWorksApp')
 
               KafkaService.createTopicAcl(self.projectId, topicName, acl).then(
                       function (success) {
-                          $modalInstance.close(success);
+                          $uibModalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Failed to add topic', ttl: 5000});
               });
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

@@ -8,7 +8,7 @@
  * Controller of the hopsWorksApp
  */
 angular.module('hopsWorksApp')
-  .controller('WorkflowCreatorCtrl', [ '$routeParams', '$modalInstance', 'growl','WorkflowService', function ($routeParams, $modalInstance, growl, WorkflowService) {
+  .controller('WorkflowCreatorCtrl', [ '$routeParams', '$uibModalInstance', 'growl','WorkflowService', function ($routeParams, $uibModalInstance, growl, WorkflowService) {
       var self = this;
       var projectId = $routeParams.projectID;
       self.workflow = {"name": ""};
@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
       self.create = function () {
           WorkflowService.create(projectId, self.workflow)
               .then(function (success) {
-                      $modalInstance.close(success);
+                      $uibModalInstance.close(success);
                   },
                   function (error) {
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
@@ -24,6 +24,6 @@ angular.module('hopsWorksApp')
       };
 
       self.close = function () {
-          $modalInstance.dismiss('cancel');
+          $uibModalInstance.dismiss('cancel');
       };
   }]);

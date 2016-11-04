@@ -69,11 +69,7 @@ public class AdamController {
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
               "The given job does not represent an Adam job.");
-    } else if (!sparkController.isSparkJarAvailable()) {
-      //Check if all the jars are available
-      throw new IllegalStateException(
-              "Some ADAM jars are not in HDFS and could not be copied in from this host.");
-    }
+    } 
     ((AdamJobConfiguration) job.getJobConfig()).setJarPath(settings.
             getAdamJarHdfsPath());
     ((AdamJobConfiguration) job.getJobConfig()).setHistoryServerIp(settings.
@@ -93,7 +89,8 @@ public class AdamController {
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
                   hdfsEndpoint.getSingleEndpoint(),
-                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr());
+                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
+                  settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
@@ -114,6 +111,32 @@ public class AdamController {
             getProject(),
             user.asUser());
     return jh;
+  }
+
+  public void stopJob(JobDescription job, Users user, String appid) throws
+          IllegalStateException,
+          IOException, NullPointerException, IllegalArgumentException {
+    //First: some parameter checking.
+    if (job == null) {
+      throw new NullPointerException("Cannot stop a null job.");
+    } else if (user == null) {
+      throw new NullPointerException("Cannot stop a job as a null user.");
+    } else if (job.getJobType() != JobType.ADAM) {
+      throw new IllegalArgumentException(
+              "Job configuration is not a Spark job configuration.");
+    }
+
+    AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopDir(),
+            settings.
+            getSparkDir(), settings.getAdamUser(),
+            hdfsUsersBean.getHdfsUserName(job.getProject(), job.
+                    getCreator()),
+            hdfsEndpoint.getSingleEndpoint(),
+            settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
+            settings.getRestEndpoint());
+
+    submitter.stopExecution(adamJob, appid);
+
   }
 
 }

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export PORT=2222
-export WEBPORT=8081
-export SERVER=localhost
+export PORT=50970
+export WEBPORT=8980
+export SERVER=bbc1
 export key=private_key
 usr=gautier
 

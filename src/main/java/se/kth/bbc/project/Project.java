@@ -31,6 +31,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.workflows.Workflow;
 
 /**
@@ -129,10 +130,9 @@ public class Project implements Serializable {
   private String description;
 
   @JoinColumns({
-    @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
-    @JoinColumn(name = "inode_name",
-            referencedColumnName = "name")
+    @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+    @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")
   })
   @OneToOne(optional = false)
   private Inode inode;

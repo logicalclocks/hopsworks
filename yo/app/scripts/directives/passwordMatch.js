@@ -11,20 +11,14 @@ angular.module('hopsWorksApp').directive('match', function () {
         }
         return;
       }
-      var checker = function () {
-
-        //get the value of the first password
-        var p1 = scope.$eval(attributes.ngModel);
-
-        //get the value of the 2nd password
-        var p2 = scope.$eval(attributes.match);
-
-        return p1 === p2;
-      };
-
-
-      scope.$watch(checker, function (n) {
-        ctrl.$setValidity("unique", n);
+      //get the value of the first password
+      var firstPwd = '#' + attributes.match; 
+      
+      element.add(firstPwd).on('keyup', function () {
+        scope.$apply(function () {
+          var v = element.val()=== $(firstPwd).val();
+          ctrl.$setValidity('pwmatch', v);
+        });
       });
     }
   };

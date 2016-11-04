@@ -472,8 +472,10 @@ public class JobService {
             "<div id=\"user\">[\\s\\S]+Logged in as: dr.who[\\s\\S]+<div id=\"logo\">",
             "<div id=\"logo\">");
     ui = ui.replaceAll(
-            "<div id=\"footer\" class=\"ui-widget\">[\\s\\S]+<tbody>",
-            "<tbody>");
+            "<tfoot>[\\s\\S]+</tfoot>",
+            "");
+    ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td class=\"content\">", 
+            "<td class=\"content\">");
     ui = ui.replaceAll("<td id=\"navcell\">[\\s\\S]+<td ", "<td ");
     ui = ui.replaceAll(
             "<li><a ui-sref=\"submit\"[\\s\\S]+new Job</a></li>", "");
@@ -788,8 +790,9 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
+            String[] desiredLogTypes = {"out"};
             YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                    hdfsLogPath, "out");
+                    hdfsLogPath, desiredLogTypes);
           }
         }
       } else if (type.equals("err")) {
@@ -802,8 +805,9 @@ public class JobService {
                     getStatusCode(),
                     "Destination file is not empty.");
           } else {
+            String[] desiredLogTypes = {"err", ".log"};
             YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                    hdfsErrPath, "err");
+                    hdfsErrPath, desiredLogTypes);
           }
         }
       }

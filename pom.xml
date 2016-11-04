@@ -6,13 +6,13 @@
 
   <groupId>se.kth.hop</groupId>
   <artifactId>hopsworks</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <packaging>war</packaging>
 
   <name>HopsWorks</name>
 
   <properties>
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -25,11 +25,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>de.hu-berlin.wbi.cuneiform</groupId>
-      <artifactId>cuneiform-core</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-    </dependency> 
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
@@ -114,8 +109,8 @@
     
     <dependency>
       <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.10</artifactId>
-      <version>0.9.0.1</version>
+      <artifactId>kafka_2.11</artifactId>
+      <version>0.10.0.1</version>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -126,7 +121,7 @@
     <dependency>
       <groupId>com.101tec</groupId>
       <artifactId>zkclient</artifactId>
-      <version>0.7</version>
+      <version>0.9</version>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -142,9 +137,9 @@
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
     <dependency>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro</artifactId>
-        <version>1.7.7</version>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <version>1.7.7</version>
     </dependency>
 
     <!--end of io.hops -->
@@ -157,17 +152,17 @@
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.1-SNAPSHOT</version>  
+      <version>0.6.3-SNAPSHOT</version>  
     </dependency>
     <dependency>
       <groupId>org.apache.zeppelin</groupId>
       <artifactId>zeppelin-zengine</artifactId>
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
     </dependency>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
       <artifactId>zeppelin-web</artifactId>		
-      <version>0.6.1-SNAPSHOT</version>      
+      <version>0.6.3-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
     <!-- Apache Shiro -->
@@ -229,8 +224,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-clients_2.10</artifactId>
-      <version>1.0.3</version>
+      <artifactId>flink-clients_2.11</artifactId>
+      <version>1.1.3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.flink</groupId>
@@ -244,15 +239,21 @@
     </dependency> 
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-yarn_2.10</artifactId>
-      <version>1.0.3</version>
+      <artifactId>flink-yarn_2.11</artifactId>
+      <version>1.1.3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.flink</groupId>
           <artifactId>flink-shaded-hadoop2</artifactId>
         </exclusion>
       </exclusions>
-    </dependency> 
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.2</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>hopsworks</finalName>
@@ -493,6 +494,13 @@
         </dependency>
         <dependency>
           <groupId>rubygems</groupId>
+          <artifactId>launchy</artifactId>
+          <version>2.4.3</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
           <artifactId>dotenv</artifactId>
           <version>2.1.1</version>
           <type>gem</type>
@@ -508,6 +516,8 @@
       </dependencies>
       <build>
         <plugins>
+          <!-- Doesn't work if the deployment client and the server are on different OS types. 
+          https://codehaus-cargo.atlassian.net/browse/CARGO-1335 -->
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven2-plugin</artifactId>

@@ -18,6 +18,7 @@ package se.kth.hopsworks.zeppelin.socket;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -88,7 +89,7 @@ public class NotebookServer implements
   private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
 
-  Gson gson = new Gson();
+  Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
   static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
   static final Queue<Session> connectedSockets = new ConcurrentLinkedQueue<>();
   private String sender;
@@ -134,10 +135,9 @@ public class NotebookServer implements
     this.conf = zeppelin.getZeppelinConfig(this.project.getName(),
             this.sender, this);
     this.notebook = this.conf.getNotebook();
-    synchronized (connectedSockets) {
-      connectedSockets.add(conn);
-    }
+    connectedSockets.add(conn);
     this.session.getUserProperties().put("projectID", this.project.getId());
+    unicast(new Message(OP.CREATED_SOCKET), conn);
   }
 
   @OnMessage

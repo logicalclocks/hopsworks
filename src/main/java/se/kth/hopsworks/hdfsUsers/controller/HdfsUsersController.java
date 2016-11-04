@@ -245,16 +245,14 @@ public class HdfsUsersController {
      * @param user
      * @param project
      */
-    public void removeProjectMember(Users user, Project project) {
+    public void removeProjectMember(Users user, Project project) throws IOException {
         if (user == null || project == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
         }
         String userName = getHdfsUserName(project, user);
         HdfsUsers hdfsUser = hdfsUsersFacade.findByName(userName);
         dfsService.removeDfsOps(userName);
-        if (hdfsUser != null) {
-            hdfsUsersFacade.removeHdfsUser(hdfsUser);
-        }
+        removeHdfsUser(hdfsUser);
     }
 
     /**
@@ -335,14 +333,12 @@ public class HdfsUsersController {
      * <p>
      * @param project
      */
-    public void deleteProjectGroup(Project project) {
+    public void deleteProjectGroup(Project project) throws IOException {
         if (project == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
         }
         HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
-        if (hdfsGroup != null) {
-            hdfsGroupsFacade.remove(hdfsGroup);
-        }
+        removeHdfsGroup(hdfsGroup);
     }
 
     /**
@@ -352,23 +348,19 @@ public class HdfsUsersController {
      * @param dsInProject
      */
     public void deleteProjectGroupsRecursive(Project project,
-            List<Dataset> dsInProject) {
+            List<Dataset> dsInProject) throws IOException {
         if (project == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
         }
         HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
-        if (hdfsGroup != null) {
-            hdfsGroupsFacade.remove(hdfsGroup);
-        }
+        removeHdfsGroup(hdfsGroup);
         byte[] dsGroupId;
         String dsGroups;
         HdfsGroups hdfsDsGroup;
         for (Dataset ds : dsInProject) {
             dsGroups = getHdfsGroupName(project, ds);
             hdfsDsGroup = hdfsGroupsFacade.findByName(dsGroups);
-            if (hdfsDsGroup != null) {
-                hdfsGroupsFacade.remove(hdfsDsGroup);
-            }
+            removeHdfsGroup(hdfsGroup);
         }
     }
 
@@ -379,23 +371,19 @@ public class HdfsUsersController {
      * @param projectTeam
      */
     public void deleteProjectUsers(Project project,
-            Collection<ProjectTeam> projectTeam) {
+            Collection<ProjectTeam> projectTeam) throws IOException {
         if (project == null || projectTeam == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
         }
         String hdfsUsername;
         HdfsUsers hdfsUser;
         hdfsUser = hdfsUsersFacade.findByName(project.getName());
-        if (hdfsUser != null) {
-            hdfsUsersFacade.removeHdfsUser(hdfsUser);
-        }
+        removeHdfsUser(hdfsUser);
         for (ProjectTeam member : projectTeam) {
             hdfsUsername = getHdfsUserName(project, member.getUser());
             hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
             dfsService.removeDfsOps(hdfsUsername);
-            if (hdfsUser != null) {
-                hdfsUsersFacade.removeHdfsUser(hdfsUser);
-            }
+            removeHdfsUser(hdfsUser);
         }
     }
 
@@ -404,16 +392,13 @@ public class HdfsUsersController {
      * <p>
      * @param dataset
      */
-    public void deleteDatasetGroup(Dataset dataset) {
+    public void deleteDatasetGroup(Dataset dataset) throws IOException {
         if (dataset == null) {
             throw new IllegalArgumentException("One or more arguments are null.");
         }
         String datasetGroup = getHdfsGroupName(dataset);
         HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
-        if (hdfsGroup != null) {
-            hdfsGroupsFacade.remove(hdfsGroup);
-        }
-
+        removeHdfsGroup(hdfsGroup);
     }
 
     /**
@@ -503,6 +488,21 @@ public class HdfsUsersController {
         return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().
                 getName();
     }
+    
+     /**
+     * If the dataset is shared with this project we will get a group name that
+     * does not exist.
+     * <p>
+     * @param project
+     * @param dataSetName
+     * @return
+     */
+    public String getHdfsGroupName(Project project, String dataSetName) {
+        if (project == null || dataSetName == null) {
+            return null;
+        }
+        return project.getName() + USER_NAME_DELIMITER + dataSetName;
+    }
 
     /**
      * This will return a group name for the dataset Warning if the dataset is
@@ -519,5 +519,32 @@ public class HdfsUsersController {
         return inode.getInodePK().getName() + USER_NAME_DELIMITER
                 + dataset.getInode().getInodePK().getName();
 
+    }
+    
+    
+    /**
+     * Removes HDFS user and flush all cache related data in all NameNodes
+     *
+     * @param user
+     * @throws IOException
+     */
+    private void removeHdfsUser(HdfsUsers user) throws IOException {
+        if (user != null) {
+            dfsService.getDfsOps().flushCachedUser(user.getName());
+            hdfsUsersFacade.removeHdfsUser(user);
+        }
+    }
+
+    /**
+     * Removes HDFS group and flush all cache related data in all NameNodes
+     *
+     * @param user
+     * @throws IOException
+     */
+    private void removeHdfsGroup(HdfsGroups group) throws IOException {
+        if (group != null) {
+            dfsService.getDfsOps().flushCachedGroup(group.getName());
+            hdfsGroupsFacade.remove(group);
+        }
     }
 }

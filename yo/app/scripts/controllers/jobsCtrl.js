@@ -205,8 +205,8 @@ angular.module('hopsWorksApp')
 
               ProjectService.uberPrice().$promise.then(
                       function (success) {
-                        var price = success.price;
-                        price = Math.ceil(parseFloat(price).toFixed(4) * 100.0 / 1.67 * 100) / 100;
+                        var price = success.multiplicator;
+                        price = Math.ceil(parseFloat(price).toFixed(4)*100)/100;
                         ModalService.uberPrice('sm', 'Confirm', 'Do you want to run this job at this price?', price).then(
                                 function (success) {
                                   JobService.runJob(self.projectId, jobId).then(

@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.jobs.quota.YarnRunningPrice;
+import se.kth.bbc.jobs.quota.YarnPriceMultiplicator;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeam;
@@ -352,12 +352,20 @@ public class ProjectService {
                   udfso);
           projectController.addExampleJarToExampleProject(owner, project, dfso,
                   udfso);
-          // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
-          //   projectController.createProjectConsentFolder(owner, project);
-          // }
-          // if (projectServices.contains(ProjectServiceEnum.CHARON)) {
-          //   projectController.createProjectCharonFolder(project);
-          // }
+          //Persist README.md to hdfs for Default Datasets
+
+          for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
+            //Generate README.md for the Default Datasets
+            datasetController.generateReadme(udfso, ds.getName(), 
+                    ds.getDescription(), 
+                    project.getName());
+          }
+          
+          //TestJob dataset
+          datasetController.generateReadme(udfso, "TestJob", 
+                    "jar file to calculate pi", 
+                    project.getName());
+            
         } catch (ProjectInternalFoldersFailedException ee) {
           try {
             projectController.removeByID(project.getId(), owner, true, udfso);
@@ -449,11 +457,7 @@ public class ProjectService {
         LocalhostServices.
                 createUserCertificates(settings.getIntermediateCaDir(), project.
                         getName(), user.getUsername());
-//      try {
-//        UserCerts uc = certificateBean.findUserCert(project.getName(), user.getUsername());
-//      } catch (javax.persistence.NoResultException ex) {
         certificateBean.putUserCerts(project.getName(), user.getUsername());
-//      }
       } catch (IOException ex) {
         logger.log(Level.SEVERE,
                 ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
@@ -467,40 +471,36 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.FOLDER_INODE_NOT_CREATED);
       }
-      if (project != null) {
-        try {
-          hdfsUsersBean.addProjectFolderOwner(project, dfso);
-          projectController.createProjectLogResources(owner, project, dfso,
-                  udfso);
-          // if (projectServices.contains(ProjectServiceEnum.BIOBANKING)) {
-          //   projectController.createProjectConsentFolder(owner, project);
-          // }
-          // if (projectServices.contains(ProjectServiceEnum.CHARON)) {
-          //   projectController.createProjectCharonFolder(project);
-          // }
-        } catch (ProjectInternalFoldersFailedException ee) {
-          try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Could not create project resources");
-          } catch (IOException e) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                    getStatusCode(), e.getMessage());
-          }
-        } catch (IOException ex) {
-          try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Could not add project folder owner in HDFS");
-          } catch (IOException e) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                    getStatusCode(), e.getMessage());
-          }
+      try {
+        hdfsUsersBean.addProjectFolderOwner(project, dfso);
+        projectController.createProjectLogResources(owner, project, dfso,
+                udfso);
+        //Persist README.md to hdfs for Default Datasets
+        
+        for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
+          datasetController.generateReadme(udfso, ds.getName(), 
+                  ds.getDescription(), project.getName());
         }
-      } else {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.PROJECT_NAME_EXIST);
+      } catch (ProjectInternalFoldersFailedException ee) {
+        try {
+          projectController.removeByID(project.getId(), owner, true, udfso);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not create project resources");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
+      } catch (IOException ex) {
+        try {
+          projectController.removeByID(project.getId(), owner, true, udfso);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not add project folder owner in HDFS");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
       }
+      
       //add members of the project   
       // TODO - handle failure if we add members and it fails. Catch an AppException and remove the project as above.
       failedMembers = projectController.addMembers(project, owner, projectDTO.
@@ -692,17 +692,18 @@ public class ProjectService {
   }
 
   @GET
-  @Path("price")
+  @Path("{id}/multiplicator")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response getCurrentPrice(
+  public Response getCurrentMultiplicator(
+          @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    YarnRunningPrice price = projectController.getYarnPrice();
+    YarnPriceMultiplicator multiplicator = projectController.getYarnMultiplicator();
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            price).build();
+            multiplicator).build();
   }
 
 

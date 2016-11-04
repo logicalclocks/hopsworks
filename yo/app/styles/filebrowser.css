@@ -276,7 +276,7 @@ body.rtls .file-box {
 }
 
 #hoverable{
-  border-style: solid;
+  /*border-style: solid;*/
   color: #666;
   margin-top: 15px;
   padding: 15px 20px 35px;

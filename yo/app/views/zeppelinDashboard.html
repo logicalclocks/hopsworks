@@ -29,7 +29,7 @@
                     <uib-progressbar class="progress-striped active" value="dynamic" type="{{utilizationType}}">{{clusterUtilization}} </uib-progressbar>
                     <h3>
                         <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
-                            <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" dropdown-toggle type="button" id="newNotebook" aria-haspopup="true" aria-expanded="true">
+                            <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" type="button" id="newNotebook">
                                 Create New Notebook
                             </button>
                         </div>
@@ -45,7 +45,6 @@
                               <span ng-show="!zeppelinCtrl.connectedStatus">Disconnected</span>
                           </li>
                         </ul>
-
                     </h3>
                     <div ng-init="(iscollapsed$index) = true; zeppelinCtrl.tgState = true;"
                          class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
@@ -66,10 +65,8 @@
                                     </div>
                                 </div>
                                 <div ng-repeat="note in zeppelinCtrl.notes track by $index">
-                                    <div ng-click="zeppelinCtrl.openNote(note)"
-                                         class="file-box"
-                                         context-menu>
-                                        <div class="file" ng-class="">
+                                    <div class="file-box" context-menu>
+                                        <div class="file" ng-click="zeppelinCtrl.openNote(note)">
                                             <a>
                                                 <span class="corner"></span>
                                                 <div class="icon">
@@ -83,8 +80,9 @@
                                             </a>
                                         </div>
                                     </div>  
-                                    <div class="dropdown position-fixed" id="menu-{{$index}}">
-                                        <ul class="dropdown-menu dropdown-amore">
+
+                                    <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
+                                        <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                                             <li ng-show="projectCtrl.role === 'Data owner'">
                                                 <a class="pointer"
                                                    role="menuitem"

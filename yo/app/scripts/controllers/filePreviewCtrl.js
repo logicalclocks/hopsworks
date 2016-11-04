@@ -1,8 +1,8 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$modalInstance', 'DataSetService', 'growl', 'fileName', 'filePath', 'projectId',
-          function ($modalInstance, DataSetService, growl, fileName, filePath, projectId) {
+        .controller('FilePreviewCtrl', ['$uibModalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
+          function ($uibModalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId, mode) {
             var self = this;
-
+            self.modes = ['head','tail'];
             self.filePath = filePath;
             self.fileName = fileName;
             self.projectId = projectId;
@@ -10,11 +10,11 @@ angular.module('hopsWorksApp')
             self.type;
             self.extension;
             self.fileDetails;
-            self.init = function () {
+            self.mode; //Head or Tail the file
+            self.fetchFile = function (mode) {
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
-              dataSetService.filePreview(filePath).then(
+              dataSetService.filePreview(filePath, mode).then(
                       function (success) {
-                        var escaped = success.data.data
 //                                .replace(/\\/g, '\\\\')
 //                                .replace(/\"/g, '\\"')
 //                                .replace(/\//g, '\\/')
@@ -23,10 +23,8 @@ angular.module('hopsWorksApp')
 //                                .replace(/\n/g, '\\n')
 //                                .replace(/\r/g, '\\r')
 //                                .replace(/\t/g, '\\t')
-;
-                        console.log("escaped:"+escaped);
-                        self.fileDetails = JSON.parse(escaped);
-                        console.log(self.fileDetails.filePreviewDTO[0].content);
+                        self.mode = mode;
+                        self.fileDetails = JSON.parse(success.data.data);
 
                         self.type = self.fileDetails.filePreviewDTO[0].type;
                         self.content = self.fileDetails.filePreviewDTO[0].content;
@@ -35,10 +33,10 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
               });
             };
-            self.init();
+            self.fetchFile(mode);
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 

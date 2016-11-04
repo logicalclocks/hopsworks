@@ -5,11 +5,18 @@
  */
 package io.hops.hdfs;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -55,5 +62,42 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
       }
       return hdfs.getHostname();
     }
+    
+    /**
+     * Get the currently active NameNode. Loops the NameNodes provided by the
+     * hdfs_le_descriptors table.
+     * @return 
+     */
+    public HdfsLeDescriptors getActiveNN() {
+    try {
+      List<HdfsLeDescriptors> res = em.createNamedQuery(
+              "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
+              getResultList();
+      
+      if (res.isEmpty()) {
+        return null;
+      } else {
+        //Try to open a connection to NN
+        Configuration conf = new Configuration();
+        for (HdfsLeDescriptors hdfsLeDesc : res) {
+          try {
+            FileSystem.get(new URI("hdfs://" + hdfsLeDesc.getHostname()),
+                    conf);
+            return hdfsLeDesc;
+          } catch (URISyntaxException ex) {
+            Logger.getLogger(HdfsLeDescriptorsFacade.class.getName()).
+                    log(Level.SEVERE, null, ex);
+          } catch (IOException ex) {
+            //NN was not active, try the next one
+             Logger.getLogger(HdfsLeDescriptorsFacade.class.getName()).
+                    log(Level.SEVERE, null, ex);
+          }
+        }
+      }
+    } catch (NoResultException e) {
+      return null;
+    }
+    return null;
+  }
     
 }

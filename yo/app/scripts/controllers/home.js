@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
             self.projects = [];
             self.currentPage = 1;
             self.showTours = false;
-            self.showTutorials = false;
             self.showPublicDatasets = false;
             $scope.creating = {"spark" : false, "zeppelin" : false};
             self.exampleProjectID;
@@ -40,7 +39,7 @@ angular.module('hopsWorksApp')
                 return true;
               }
               return false;
-            }
+            };
 
             
             // Load all projects
@@ -241,14 +240,11 @@ angular.module('hopsWorksApp')
                           $scope.creating['spark'] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
-
-
                       },
                       function (error) {
                         $scope.creating['spark'] = false;
-                        growl.info("problem", {title: 'Info', ttl: 5000});
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
-
               );
             };
 

@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('SelectProjectCtrl', ['$modalInstance', 'ProjectService', 'growl', 'global', 'projectId', 'msg',
-          function ($modalInstance, ProjectService, growl, global, projectId, msg) {
+        .controller('SelectProjectCtrl', ['$uibModalInstance', 'ProjectService', 'growl', 'global', 'projectId', 'msg',
+          function ($uibModalInstance, ProjectService, growl, global, projectId, msg) {
 
             var self = this;
             self.global = global;
@@ -47,14 +47,14 @@ angular.module('hopsWorksApp')
 
               ProjectService.getProjectInfo({projectName: self.selectedProject.name}).$promise.then(
                       function (success) {
-                        $modalInstance.close(success);
+                        $uibModalInstance.close(success);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
               });
             };
 
             self.close = function () {
-              $modalInstance.dismiss('cancel');
+              $uibModalInstance.dismiss('cancel');
             };
           }]);
 
