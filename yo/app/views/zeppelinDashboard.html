@@ -68,10 +68,12 @@
                                                 <div class="icon">
                                                     <i class="fa fa-file-code-o"></i>
                                                 </div>
-                                                <div class="file-name">
-                                                    <div style="text-align: center;">
-                                                        {{note.name | limitTo: 18 || 'Note ' + note.id}}{{note.name.length > 18 ? '...' : ''}}
-                                                    </div>                                                
+                                                <div class="file-name" style="text-align: center;">
+                                                  <span tooltip-enable="{{note.name.length > 28}}" 
+                                                        tooltip-placement="bottom" 
+                                                        uib-tooltip="{{note.name}}">
+                                                    {{note.name}}
+                                                  </span>                                             
                                                 </div>
                                             </a>
                                         </div>

@@ -45,34 +45,38 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
     Method method = resourceInfo.getResourceMethod();
     String[] pathParts = path.split("/");
+    log.log(Level.FINEST, "Rest call to {0}, from {1}.", new Object[]{path,
+      requestContext.getSecurityContext().getUserPrincipal()});
     log.log(Level.FINEST, "Filtering request path: {0}", pathParts[0]);
     log.log(Level.FINEST, "Method called: {0}", method.getName());
     //intercepted method must be a project operations on a specific project
     //with an id (/project/projectId/... or /activity/projectId/...). 
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
-            || pathParts[0].equalsIgnoreCase("activity") 
+            || pathParts[0].equalsIgnoreCase("activity")
             || pathParts[0].equalsIgnoreCase("notebook")
             || pathParts[0].equalsIgnoreCase("interpreter"))) {
 
       JsonResponse json = new JsonResponse();
       Integer projectId;
       String userRole;
-      try{
+      try {
         projectId = Integer.valueOf(pathParts[1]);
-      }catch(NumberFormatException ne) {
+      } catch (NumberFormatException ne) {
         //if the second pathparam is not a project id return.
-        log.log(Level.INFO, "No project id, leaving interceptor.");
+        log.log(Level.INFO, "Call to {0} has no project id, leaving interceptor.",
+                path);
         return;
       }
-      
+
       Project project = projectBean.find(projectId);
       if (project == null) {
         requestContext.abortWith(Response.
                 status(Response.Status.NOT_FOUND).build());
         return;
       }
-      log.log(Level.FINEST, "Filtering project request path: {0}", project.getName());
-      
+      log.log(Level.FINEST, "Filtering project request path: {0}", project.
+              getName());
+
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.

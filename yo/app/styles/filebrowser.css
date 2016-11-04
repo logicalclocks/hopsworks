@@ -103,6 +103,8 @@
   background-color: #f8f8f8;
   border-top: 1px solid #e7eaec;
   padding: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .file .file-name .selected {
