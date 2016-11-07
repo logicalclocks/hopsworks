@@ -15,9 +15,9 @@
         <div class="content" style="height:100%; overflow: hidden;" >	
           <div class="row rg-row-top" resizable r-directions="['bottom']">
             <div class="row">
-              <div class=" col-md-6 btn-group"
-                 style="float: left;width: 10%; margin-bottom: 20px;" id="buttonCreateJob">
-                 <button style="width: 100%;"
+              <div class=" col-md-6"
+                 style="margin-bottom: 20px;" id="buttonCreateJob">
+                 <button
                     ng-click="jobsCtrl.newJob()"
                     class="btn btn-success">
                  New job
@@ -27,15 +27,14 @@
             <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
               No Job to show. 
             </h3>
-            <section ng-show="jobsCtrl.jobs.length > 0">
-                  <div style="height:100%; overflow: hidden;">
-                    
+            <div ng-show="jobsCtrl.jobs.length > 0">
+                  <div style="height:100%;">                  
                     <div class="row form-inline">
-                      <div class="col-md-6 form-group">
+                      <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                         <label>Search: <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter">
                         </label>
                       </div>
-                      <div class="col-md-6 form-group">
+                      <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                         <div class="pull-right btn-group">
                           <label>jobs per page:
                             <input type="number" min="1"
@@ -44,7 +43,8 @@
                           </label>
                         </div>
                       </div>
-                    </div>
+                    </div> 
+                    <div style="height:85%; overflow: auto;" >
                      <table class="table table-hover">
                         <thead>
                            <th style="width: 5%">
@@ -250,7 +250,7 @@
                                       More
                                       <span class="caret"></span>
                                     </button>
-                                    <ul uib-dropdown-menu class="dropdown-menu" style="font-family: sans-serif;">
+                                    <ul uib-dropdown-menu class="dropdown-menu dropdown-menu-right" style="font-family: sans-serif;">
                                       <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                         jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
                                       <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
@@ -263,7 +263,7 @@
                               </td>
                            </tr>
                         </tbody>
-                     </table>
+                     </table>                 
                   <dir-pagination-controls
                     class="pull-right"
                     max-size="5"
@@ -271,7 +271,8 @@
                     boundary-links="true" >
                   </dir-pagination-controls>
                   </div>
-              </section>
+                </div>
+              </div>
           </div>
 
             <!-- right side -->

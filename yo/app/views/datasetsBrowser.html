@@ -30,7 +30,7 @@
               <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState}"  style="margin-top: -5px; margin-left:-7px;">
                 <!--Tool bar -->
                 <div class="row"  style="padding-right:30px;">
-                  <div class="col-lg-4 col-md-4 col-sm-4">
+                  <div class="col-lg-4 col-md-6 col-sm-8">
                     <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
                       <div class="btn-group" role="group" aria-label="First group">
                         <button type="button" class="btn btn-default fa fa-level-up" title="Go to parent directory" 
@@ -56,9 +56,9 @@
                       </div>
                     </div>
                   </div>
-                  <div class="col-lg-8 col-md-8 col-sm-8">
+                  <div class="col-lg-6 col-lg-offset-2 col-md-6 col-sm-4">
                     <div class="row">
-                      <div class="col-md-4 pull-right">
+                      <div class="col-md-6 pull-right">
                         <div class="input-group">
                           <input type="text" class="form-control" 
                                  ng-model="search"placeholder="Filter...">
@@ -67,7 +67,7 @@
                           </span>
                         </div>
                       </div>
-                      <div class="col-md-4 pull-right" ng-show="datasetsCtrl.isSelectedFiles() === 1">
+                      <div class="col-md-6 pull-right" ng-show="datasetsCtrl.isSelectedFiles() === 1">
                         <div class=" input-group">
                           <input id="fileRef" type="text" class="form-control" 
                                  value="{{datasetsCtrl.getSelectedPath(projectCtrl.endpoint, datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
