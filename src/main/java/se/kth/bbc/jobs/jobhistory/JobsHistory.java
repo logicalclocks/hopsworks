@@ -163,7 +163,7 @@ public class JobsHistory implements Serializable {
         this.inputBlocksInHdfs = inputBlocksInHdfs;
         this.amMemory = configuration.getAmMemory();
         this.amVcores = configuration.getAmVCores();
-        this.arguments = configuration.getArgs();
+        this.arguments = configuration.getArgs()==null?"-":configuration.getArgs();
         this.className = configuration.getMainClass();
         this.executionDuration = -1;
         this.userEmail = userEmail;
