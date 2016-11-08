@@ -218,15 +218,17 @@ public class YarnLogUtil {
       if (desiredLogType == null || desiredLogType.isEmpty()
               || logType.contains(desiredLogType)) {
         long logLength = logReader.getCurrentLogLength();
-        if (logLength == 0) {
-          logType = logReader.nextLog();
-          continue;
-        }
         if (!foundLog) {
           writer.append("Container: " + containerKey.toString() + " on "
                   + nodename + "\n"
                   + "==============================================="
                   + "=============================================== \n");
+        }
+        if (logLength == 0) {
+          logType = logReader.nextLog();
+          writer.append("Log Type: " + logType + "\n");
+          writer.append("Log Length: " + 0 + "\n");
+          continue;
         }
         writer.append("Log Type: " + logType + "\n");
         writer.append("Log Length: " + Long.toString(logLength) + "\n");
