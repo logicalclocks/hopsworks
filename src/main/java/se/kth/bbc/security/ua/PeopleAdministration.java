@@ -454,7 +454,7 @@ public class PeopleAdministration implements Serializable {
                 AuditUtil.getUserURL(request), user.getUsername()
                 + activationKey));
         user.setValidationKey(activationKey);
-        userManager.persist(user);
+        userManager.updatePeople(user);
 
     }
 

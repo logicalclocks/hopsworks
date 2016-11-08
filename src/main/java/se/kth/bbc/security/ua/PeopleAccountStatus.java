@@ -8,7 +8,7 @@ public enum PeopleAccountStatus {
   // Status of new Yubikey users requests
   NEW_YUBIKEY_ACCOUNT(2),
 
-  // For new account requestes where users should validate their account request
+  // For new account requests where users should validate their account request
   VERIFIED_ACCOUNT(3),
 
   // When user is approved to use the platform
