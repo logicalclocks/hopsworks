@@ -76,13 +76,24 @@
 
                 <p:column id="sactionColumn" headerText="Action">
                   <h:panelGrid columns="2" style="width: auto">                                                    
-                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAdministration.rejectUser(req)}" 
+                    <p:commandLink id="deleteUser"
+                                   styleClass="ui-button-remove fa fa-ban" 
+                                   action="#{peopleAdministration.deleteUser(req)}" 
                                    update="@form">
-                      <p:confirm header="Reject user" 
-                                 message="Are you sure you want to reject this user?" 
+                      <p:confirm header="Remove user" 
+                                 message="Are you sure you want to remove this user?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
+                    <p:commandLink id="removeFromSpam"
+                                   styleClass="ui-button-allow fa fa-check" 
+                                   action="#{peopleAdministration.removeFromSpam(req)}" 
+                                   update="@form">
+                      <p:confirm header="Remove user from spam" 
+                                 message="Are you sure you want to remove this user from spam list?" 
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                    <p:tooltip id="tooltip_deleteUser" for="deleteUser" value="Delete user from system."/>
+                    <p:tooltip id="tooltip_removeFromSpam" for="removeFromSpam" value="Remove user from spam list."/>
                   </h:panelGrid>
                 </p:column>
               </p:dataTable>
