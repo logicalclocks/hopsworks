@@ -431,15 +431,9 @@ public class PeopleAdministration implements Serializable {
   }
 
   public void activateUser(Users user1) {
-    if (user1 == null) {
-      MessagesController.addSecurityErrorMessage("No user.");
+    if (user1 == null || this.role == null || this.role.isEmpty()) {
+      MessagesController.addSecurityErrorMessage("No role set.");
       return;
-    }
-    Logger.getLogger(PeopleAdministration.class.getName()).log(Level.INFO,
-            "Activating user: {0} for group {1}", new Object[]{user1.getEmail(),
-              this.role});
-    if (this.role == null || this.role.isEmpty()) {
-      this.role = "HOPS_USER";
     }
 
     try {
