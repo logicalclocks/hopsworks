@@ -42,6 +42,7 @@ public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
 
   public void merge(HdfsGroups user) {
     em.merge(user);
+    em.flush();
   }
 
   @Override

@@ -271,6 +271,10 @@ public class DataSetService {
     if (!dataSet.isEditable()) {
       newDS.setEditable(false);
     }
+    if(dataSet.isIsPublic()){
+      newDS.setPublicDs(true);
+    }
+    
     // if the dataset is not requested or is requested by a data scientist
     // set status to pending. 
     if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
@@ -920,7 +924,7 @@ public class DataSetService {
     path = getFullPath(path);
     String[] pathArray = path.split(File.separator);
     if (!pathArray[2].equals(this.project.getName())) {
-      if (!this.dataset.isEditable()) {
+      if (!this.dataset.isEditable() && !this.dataset.isPublicDs()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "You can not download a shared dataset.");
       }
