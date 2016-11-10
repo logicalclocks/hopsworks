@@ -62,13 +62,12 @@
                 </p:column>
 
                 <p:column id="roleColumn" headerText="Role">
-                  <p:selectOneMenu id="roleChoose" 
+                  <p:selectOneMenu id="roleToChoose" 
                                    rendered="#{peopleAdministration.notVerified(req) == false}"
-                                   value="#{peopleAdministration.sgroup}" 
+                                   value="#{peopleAdministration.role}"
                                    editable="false">
                     <f:selectItem itemLabel="Select Role"
-                                  itemValue="#"
-                                  noSelectionOption="true" />
+                                  itemValue="#"/>
                     <f:selectItems value="#{peopleAdministration.actGroups}"/>
                   </p:selectOneMenu>
                 </p:column>
