@@ -381,7 +381,10 @@ public class PeopleAdministration implements Serializable {
   }
 
   public void activateUser(Users user1) {
-    if (this.role == null || this.role.isEmpty() || user1 == null) {
+    if (this.role == null || this.role.isEmpty() ) {
+      this.role = "HOPS_USER";
+    }
+    if (user1 == null) {
       MessagesController.addSecurityErrorMessage("Select a role for the user.");
       return;
     }
