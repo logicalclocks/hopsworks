@@ -8,7 +8,7 @@ angular.module('hopsWorksApp')
               if (data) {
                 for (var key in data) {
                   if (requestStr) {
-                    requestStr += '&' + key + '=' + data[key];
+                    requestStr += '&' + key + '=' + encodeURIComponent(data[key]);
                   } else {
                     requestStr = key + '=' + data[key];
                   }

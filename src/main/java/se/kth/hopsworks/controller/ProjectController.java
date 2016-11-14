@@ -17,6 +17,7 @@ import io.hops.bbc.ProjectPaymentAction;
 import java.io.FilenameFilter;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.validation.ValidationException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -119,11 +120,13 @@ public class ProjectController {
     DistributedFileSystemOps dfso) throws
     IOException, AppException {
     Users user = userBean.getUserByEmail(email);
-
-    if (!FolderNameValidator.isValidName(newProject.getProjectName())) {
+    try{
+      FolderNameValidator.isValidName(newProject.getProjectName());
+    }catch(ValidationException ex){
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
         ResponseMessages.INVALID_PROJECT_NAME);
-    } else if (projectFacade.numProjectsLimitReached(user)) {
+    }
+    if (projectFacade.numProjectsLimitReached(user)) {
       logger.log(Level.SEVERE,
         "You have reached the maximum number of allowed projects.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

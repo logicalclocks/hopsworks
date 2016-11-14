@@ -763,6 +763,9 @@ public class ProjectService {
     if (ds.getDescription() != null) {
       newDS.setDescription(ds.getDescription());
     }
+    if(ds.isPublicDs()){
+      newDS.setPublicDs(true);
+    }
     newDS.setEditable(false);
     datasetFacade.persistDataset(newDS);
     Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());

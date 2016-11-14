@@ -94,7 +94,7 @@
     border: 1px solid transparent; 
     height: 70%; 
     max-height: 90%; 
-    min-height: 20%;
+    min-height: 40%;
     z-index: 2;
 }
 .rg-row-bottom {

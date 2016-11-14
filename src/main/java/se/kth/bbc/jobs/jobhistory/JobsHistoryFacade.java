@@ -132,6 +132,9 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
   private String checkArguments(String arguments) {
     String blocks = "0";
     DistributedFileSystemOps dfso = null;
+    if(arguments==null){
+      arguments = "-";
+    }
     if (arguments.startsWith("hdfs://")) {
       try {
           dfso = fileOperations.getDfsOps();

@@ -242,15 +242,10 @@ public class UserManager {
    * @return 
    */
   public List<Users> findSPAMAccounts() {
-     TypedQuery<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE ( p.status = "
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            + " OR p.status = " + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-                    + " OR p.status = " + PeopleAccountStatus.SPAM_ACCOUNT.getValue() + " )", Users.class);
-             
-
+    TypedQuery<Users> query = em.createQuery(
+            "SELECT p FROM Users p WHERE p.status = "
+            + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class);
     return query.getResultList();
-      
   }
 
   public Users findByEmail(String email) {
@@ -357,29 +352,29 @@ public class UserManager {
    */
   public void deleteUserRequest(Users u) {
     if (u != null) {
-        
+
       TypedQuery<RolesAudit> query4 = em.createNamedQuery(
               "RolesAudit.findByInitiator", RolesAudit.class);
       query4.setParameter("initiator", u);
 
-      List<RolesAudit> results1= query4.getResultList();
-      
-        for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.hasNext();) {
-            RolesAudit next = iterator.next();
-            em.remove(next);
-        }
+      List<RolesAudit> results1 = query4.getResultList();
 
-      
+      for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.
+              hasNext();) {
+        RolesAudit next = iterator.next();
+        em.remove(next);
+      }
+
       TypedQuery<AccountAudit> query5 = em.createNamedQuery(
               "AccountAudit.findByInitiator", AccountAudit.class);
       query5.setParameter("initiator", u);
-       
+
       List<AccountAudit> aa = query5.getResultList();
-      
-        for (Iterator<AccountAudit> iterator = aa.iterator(); iterator.hasNext();) {
-            AccountAudit next = iterator.next();
-            em.remove(next);
-        }
+
+      for (Iterator<AccountAudit> iterator = aa.iterator(); iterator.hasNext();) {
+        AccountAudit next = iterator.next();
+        em.remove(next);
+      }
       u = em.merge(u);
       em.remove(u);
     }
@@ -400,7 +395,7 @@ public class UserManager {
     
 
   }
-
+  
   public void updateOrganization(Organization org) {
     em.merge(org);
     

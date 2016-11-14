@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -322,7 +323,14 @@ public class HdfsUsersController {
                 hdfsUser = new HdfsUsers(hdfsUsername);
             }
             if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
-                hdfsGroup.getHdfsUsersCollection().add(hdfsUser);
+              try {
+                dfsService.getDfsOps().flushCache(hdfsUsername, datasetGroup);
+              } catch (IOException ex) {
+                //FIXME: take an action?
+                logger.log(Level.WARNING,
+                        "Error while trying flush the cash", ex);
+              }
+              hdfsGroup.getHdfsUsersCollection().add(hdfsUser);
             }
         }
         hdfsGroupsFacade.merge(hdfsGroup);
@@ -433,6 +441,13 @@ public class HdfsUsersController {
             hdfsUsername = getHdfsUserName(project, member.getUser());
             hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
             if (hdfsUser != null) {
+              try {
+                dfsService.getDfsOps().flushCache(hdfsUsername, datasetGroup);
+              } catch (IOException ex) {
+                //FIXME: take an action?
+                logger.log(Level.WARNING,
+                        "Error while trying flush the cash", ex);
+              }
                 hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
             }
         }

@@ -777,7 +777,7 @@ public class Settings {
   public static final String META_DATA_FIELDS = "xattr.*";
   
   //Filename conventions
-  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
+  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïü";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
       = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";

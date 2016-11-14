@@ -28,8 +28,12 @@ public class BbcGroupFacade extends AbstractFacade<BbcGroup> {
   }
 
   public BbcGroup findByGroupName(String name) {
-    return em.createNamedQuery("BbcGroup.findByGroupName", BbcGroup.class)
+      try {
+        return em.createNamedQuery("BbcGroup.findByGroupName", BbcGroup.class)
             .setParameter("groupName", name).getSingleResult();
+      } catch (javax.persistence.NoResultException e) {
+          return null;
+      }
   }
   
   public List<BbcGroup> findAll() {
