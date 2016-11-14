@@ -66,7 +66,7 @@
                               <i class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
                             <div class="file-name" tooltip-placement="bottom" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
-                                 ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + '/README.md', false);">
+                                 ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
                               <span tooltip-enable="{{dataset.name.length > 28}}" 
                                     tooltip-placement="top" 
                                     uib-tooltip="{{dataset.name}}">

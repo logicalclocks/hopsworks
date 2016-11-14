@@ -52,7 +52,7 @@
                         <button type="button" class="btn btn-default fa fa-cloud-download" title="Download file"
                                 ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])"></button>
                         <button type="button" class="btn btn-default fa fa-camera" title="Preview"
-                                ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true)"></button>
+                                ng-click="datasetsCtrl.filePreview(datasetsCtrl.selected, true, false)"></button>
                       </div>
                     </div>
                   </div>
@@ -177,7 +177,7 @@
                               <a class="pointer"
                                  role="menuitem"
                                  tabindex="5"
-                                 ng-click="datasetsCtrl.filePreview(file.name, true)"
+                                 ng-click="datasetsCtrl.filePreview(file.name, true, false)"
                                  data-toggle="uib-tooltip" title="Click to display a preview of a text file."
                                  >
                                 <span><i class="fa fa-camera-retro" ></i>
