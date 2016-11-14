@@ -230,7 +230,8 @@ public class ProjectController {
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
-          || ds.equals(Settings.DefaultDataset.LOGS));
+          || ds.equals(Settings.DefaultDataset.LOGS) 
+          || ds.equals(Settings.DefaultDataset.NOTEBOOKS));
         datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, globallyVisible, dfso, udfso);
       }
@@ -450,7 +451,7 @@ public class ProjectController {
       if (success) {
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
         hdfsUsersBean.deleteProjectUsers(project, projectTeam);
-        zeppelinConfFactory.deleteZeppelinConfDir(project.getName());
+        zeppelinConfFactory.deleteZeppelinConfDir(project);
         //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
         yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
       }

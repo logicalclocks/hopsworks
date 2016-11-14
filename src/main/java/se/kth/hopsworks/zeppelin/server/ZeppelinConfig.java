@@ -9,9 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
 import org.apache.zeppelin.interpreter.InterpreterException;
@@ -68,7 +71,7 @@ public class ZeppelinConfig {
   private final String interpreterDirPath;
   private final String libDirPath;
 
-  public ZeppelinConfig(String projectName, Settings settings) {
+  public ZeppelinConfig(String projectName, String owner, Settings settings) {
     this.projectName = projectName;
     this.settings = settings;
     boolean newDir = false;
@@ -107,7 +110,16 @@ public class ZeppelinConfig {
               conf.getString(
                       ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
       this.schedulerFactory = SchedulerFactory.singleton();
-      this.notebookRepo = new NotebookRepoSync(conf);
+      LOGGGER.log(Level.INFO, "Using notebook Repo class {0}",
+              conf.getString(
+              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
+      if (conf.getString(
+              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE).
+              contains("HDFSNotebookRepo")) {
+        this.notebookRepo = getNotebookRepo(owner);
+      } else {
+        this.notebookRepo = new NotebookRepoSync(conf);
+      }
       this.notebookIndex = new LuceneSearch();
       this.notebookAuthorization = new NotebookAuthorization(conf);
       this.credentials = new Credentials(conf.credentialsPersist(), conf.
@@ -144,6 +156,32 @@ public class ZeppelinConfig {
     this.notebookAuthorization = zConf.getNotebookAuthorization();
     this.credentials = zConf.getCredentials();
     setNotebookServer(nbs);
+  }
+
+  private NotebookRepoSync getNotebookRepo(String owner) {
+    NotebookRepoSync nbRepo = null;
+    UserGroupInformation ugi;
+    try {
+      ugi = UserGroupInformation.createProxyUser(owner, UserGroupInformation.
+              getLoginUser());
+      nbRepo = ugi.doAs((PrivilegedExceptionAction<NotebookRepoSync>) ()
+              -> new NotebookRepoSync(conf));
+//      nbRepo = ugi.doAs(new PrivilegedExceptionAction<NotebookRepoSync>() {
+//        @Override
+//        public NotebookRepoSync run() throws IOException {
+//          return new NotebookRepoSync(conf);
+//        }
+//      });
+    } catch (IOException ex) {
+      LOGGGER.log(Level.SEVERE, "Could not create proxy user.", ex);
+    } catch (InterruptedException ex) {
+      LOGGGER.log(Level.SEVERE, "Could not create notebook repo.", ex);
+    }
+    if (nbRepo == null) {
+      LOGGGER.log(Level.SEVERE, "Could not create notebook repo.");
+      throw new IllegalStateException("Could not create notebook repo.");
+    }
+    return nbRepo;
   }
 
   public ZeppelinConfiguration getConf() {
@@ -311,6 +349,8 @@ public class ZeppelinConfig {
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
+    String notebookDir = File.separator
+            + Settings.DIR_ROOT + File.separator + this.projectName;
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
@@ -342,7 +382,8 @@ public class ZeppelinConfig {
                       "zeppelin_home", home,
                       "livy_url", settings.getLivyUrl(),
                       "livy_master", settings.getLivyYarnMode(),
-                      "zeppelin_home_dir", home);
+                      "zeppelin_home_dir", home,
+                      "zeppelin_notebook_dir", notebookDir);
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
               zeppelin_site_xml.
               toString());
