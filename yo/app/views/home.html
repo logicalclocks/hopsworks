@@ -167,7 +167,7 @@
         </a>
         <div uib-dropdown class="dropdown position-fixed" id="menu-{{$index}}">
           <ul uib-dropdown-menu class="dropdown-amore">
-            <li>
+<!--            <li>
               <a class="pointer"
                  role="menuitem"
                  tabindex="1"
@@ -175,12 +175,12 @@
                 <span><i class="fa fa-share-alt"></i>
                   Share...</span>
               </a>
-            </li>
+            </li>-->
 
             <li>
               <a class="pointer"
                  role="menuitem"
-                 tabindex="2"
+                 tabindex="1"
                  ng-click="homeCtrl.deleteOnlyProject(project.project.id)">
                 <span><i class="fa fa-trash"></i>
                   Remove and keep DataSets</span>
@@ -189,7 +189,7 @@
             <li>
               <a class="pointer"
                  role="menuitem"
-                 tabindex="3"
+                 tabindex="2"
                  ng-click="homeCtrl.deleteProjectAndDatasets(project.project.id)">
                 <span><i class="fa fa-trash"></i>
                   Remove and delete DataSets </span>
