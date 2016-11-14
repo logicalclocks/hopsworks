@@ -336,16 +336,28 @@ This will make all its files unavailable to other projects unless you share it e
             /**
              * Preview the requested file in a Modal. If the file is README.md
              * and the preview flag is false, preview the file in datasets.
-             * @param {type} fileName
+             * @param {type} dataset
              * @param {type} preview
              * @returns {undefined}
              */
-            self.filePreview = function (fileName, preview) {
+            self.filePreview = function (dataset, preview, readme) {
+              var fileName="";
+              //handle README.md filename for datasets browser viewing here
+              if (readme && !preview){
+                if(dataset.shared === true){
+                  fileName = dataset.selectedIndex + "/README.md";
+                } else {
+                  fileName = dataset.path.substring(dataset.path.lastIndexOf('/')).replace('/', '') + "/README.md";
+                }
+              } else {
+                fileName = dataset;
+              }
+              
               var previewPathArray = self.pathArray.slice(0);
               previewPathArray.push(fileName);
               var filePath = getPath(previewPathArray);
               //If filename is README.md then try fetching it without the modal
-              if (fileName.endsWith("README.md") && !preview) {
+              if (readme && !preview) {
                 dataSetService.filePreview(filePath, "head").then(
                         function (success) {
                           var fileDetails = JSON.parse(success.data.data);

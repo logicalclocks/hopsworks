@@ -300,9 +300,10 @@ public class PeopleAdministration implements Serializable {
       return;
     }
     try {
-      userManager.deleteUserRequest(user1);
+      userManager.changeAccountStatus(user1.getUid(), "",
+              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
-      spamUsers.remove(user1);
+      spamUsers.add(user1);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Rejection failed. " + ex.
               getMessage());
@@ -320,6 +321,50 @@ public class PeopleAdministration implements Serializable {
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
               "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
                 e});
+    }
+  }
+  
+  /**
+   * Removes a user from the db
+   * Only works for new not yet activated users 
+   * @param user 
+   */
+  public void deleteUser(Users user) {
+    if (user == null) {
+      MessagesController.addErrorMessage("Error", "No user found!");
+      return;
+    }
+    try {
+      userManager.deleteUserRequest(user);
+      MessagesController.addInfoMessage(user.getEmail() + " was removed.");
+      spamUsers.remove(user);
+    } catch (RuntimeException ex) {
+      MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
+              getMessage());
+      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
+              "Could not remove user.", ex);
+    }
+  }
+  
+  /**
+   * Remove a user from spam list and set the users status to new mobile user.
+   * @param user 
+   */
+  public void removeFromSpam(Users user) {
+    if (user == null) {
+      MessagesController.addErrorMessage("Error", "No user found!");
+      return;
+    }
+    try {
+      userManager.changeAccountStatus(user.getUid(), "",
+              PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
+      MessagesController.addInfoMessage(user.getEmail() + " was removed from spam list.");
+      spamUsers.remove(user);
+    } catch (RuntimeException ex) {
+      MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
+              getMessage());
+      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
+              "Could not remove user from spam list.", ex);
     }
   }
 
