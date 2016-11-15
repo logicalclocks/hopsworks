@@ -46,6 +46,12 @@ angular.module('hopsWorksApp')
               notebooks: function () {
                 return $http.get('/api/notebook/');
               },
+              reloadedNotebooks: function () {
+                return $http.get('/api/notebook/reloadedNotebookList');
+              },
+              deleteNotebook: function (noteId) {
+                return $http.delete('/api/notebook/' + noteId);
+              },
               createNotebook: function (noteName) {
                 var regReq = {
                   method: 'POST',

@@ -224,10 +224,10 @@ public class YarnLogUtil {
                   + "==============================================="
                   + "=============================================== \n");
         }
-        if (logLength == 0) {
-          logType = logReader.nextLog();
+        if (logLength == 0) {          
           writer.append("Log Type: " + logType + "\n");
           writer.append("Log Length: " + 0 + "\n");
+          logType = logReader.nextLog();
           continue;
         }
         writer.append("Log Type: " + logType + "\n");

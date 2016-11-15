@@ -64,14 +64,16 @@ public class NotebookRestApi {
   private Project project;
   private ZeppelinConfig zeppelinConf;
   private String roleInProject;
+  private String hdfsUserName;
 
   public NotebookRestApi() {
   }
 
-  public void setParms(Project project, String userRole,
+  public void setParms(Project project, String userRole, String hdfsUserName,
           ZeppelinConfig zeppelinConf) {
     this.project = project;
     this.zeppelinConf = zeppelinConf;
+    this.hdfsUserName = hdfsUserName;
     this.roleInProject = userRole;
     this.notebook = zeppelinConf.getNotebook();
     this.notebookServer = zeppelinConf.getNotebookServer();
@@ -168,8 +170,7 @@ public class NotebookRestApi {
             notebookAuthorization.getOwners(noteId),
             notebookAuthorization.getReaders(noteId),
             notebookAuthorization.getWriters(noteId));
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     note.persist(subject);
     notebookServer.broadcastNote(note);
     return new JsonResponse<>(Status.OK).build();
@@ -244,10 +245,18 @@ public class NotebookRestApi {
 
   @GET
   public Response getNotebookList() throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     List<Map<String, String>> notesInfo = notebookServer.generateNotebooksInfo(
             false, subject);
+    return new JsonResponse<>(Status.OK, "", notesInfo).build();
+  }
+
+  @GET
+  @Path("/reloadedNotebookList")
+  public Response getReloadedNotebookList() throws IOException {
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
+    List<Map<String, String>> notesInfo = notebookServer.generateNotebooksInfo(
+            true, subject);
     return new JsonResponse<>(Status.OK, "", notesInfo).build();
   }
 
@@ -259,7 +268,7 @@ public class NotebookRestApi {
     if (note == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "note not found.").build();
     }
-
+    
     return new JsonResponse<>(Status.OK, "", note).build();
   }
 
@@ -288,8 +297,7 @@ public class NotebookRestApi {
   @POST
   @Path("import")
   public Response importNotebook(String req) throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     Note newNote = notebook.importNote(req, null, subject);
     return new JsonResponse<>(Status.CREATED, "", newNote.getId()).build();
   }
@@ -306,8 +314,7 @@ public class NotebookRestApi {
     LOG.info("Create new notebook by JSON {}", message);
     NewNotebookRequest request = gson.fromJson(message,
             NewNotebookRequest.class);
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     Note note = notebook.createNote(subject);
     List<NewParagraphRequest> initialParagraphs = request.getParagraphs();
     if (initialParagraphs != null) {
@@ -342,12 +349,18 @@ public class NotebookRestApi {
   public Response deleteNote(@PathParam("notebookId") String notebookId) throws
           IOException {
     LOG.info("Delete notebook {} ", notebookId);
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     if (!(notebookId.isEmpty())) {
       Note note = notebook.getNote(notebookId);
       if (note != null) {
         notebook.removeNote(notebookId, subject);
+      }
+
+      notebook.reloadAllNotes(subject);
+      note = notebook.getNote(notebookId);
+      if (note != null) {
+        return new JsonResponse<>(Status.BAD_REQUEST,
+                "Could not delete notebook, check your permission.").build();
       }
     }
 
@@ -373,8 +386,7 @@ public class NotebookRestApi {
     NewNotebookRequest request = gson.fromJson(message,
             NewNotebookRequest.class);
     String newNoteName = request.getName();
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     Note newNote = notebook.cloneNote(notebookId, newNoteName, subject);
     notebookServer.broadcastNote(newNote);
     notebookServer.broadcastNoteList(subject);
@@ -414,8 +426,7 @@ public class NotebookRestApi {
     p.setTitle(request.getTitle());
     p.setText(request.getText());
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     note.persist(subject);
     notebookServer.broadcastNote(note);
     return new JsonResponse(Status.CREATED, "", p.getId()).build();
@@ -476,8 +487,7 @@ public class NotebookRestApi {
     try {
       note.moveParagraph(paragraphId, Integer.parseInt(newIndex), true);
 
-      AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-              getPrincipal());
+      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
       note.persist(subject);
       notebookServer.broadcastNote(note);
       return new JsonResponse(Status.OK, "").build();
@@ -511,8 +521,7 @@ public class NotebookRestApi {
       return new JsonResponse(Status.NOT_FOUND, "paragraph not found.").build();
     }
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     note.removeParagraph(paragraphId);
     note.persist(subject);
     notebookServer.broadcastNote(note);
@@ -626,8 +635,7 @@ public class NotebookRestApi {
       Map<String, Object> paramsForUpdating = request.getParams();
       if (paramsForUpdating != null) {
         paragraph.settings.getParams().putAll(paramsForUpdating);
-        AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-                getPrincipal());
+        AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
         note.persist(subject);
       }
     }
@@ -760,8 +768,7 @@ public class NotebookRestApi {
           IllegalArgumentException {
     LOG.info("Get notebook jobs for job manager");
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     List<Map<String, Object>> notebookJobs = notebook.getJobListforNotebook(
             false, 0, subject);
     Map<String, Object> response = new HashMap<>();
@@ -787,8 +794,7 @@ public class NotebookRestApi {
     LOG.info("Get updated notebook jobs lastUpdateTime {}", lastUpdateUnixTime);
 
     List<Map<String, Object>> notebookJobs;
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     notebookJobs = notebook.getJobListforNotebook(false, lastUpdateUnixTime,
             subject);
     Map<String, Object> response = new HashMap<>();
@@ -801,8 +807,9 @@ public class NotebookRestApi {
 
   /**
    * Search for a Notes with permissions
+   *
    * @param queryTerm
-   * @return 
+   * @return
    */
   @GET
   @Path("search")
@@ -847,8 +854,7 @@ public class NotebookRestApi {
     }
     Note note;
     NoteInfo noteInfo;
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     try {
       note = notebook.createNote(subject);
       note.addParagraph(); // it's an empty note. so add one paragraph

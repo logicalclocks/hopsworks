@@ -12,7 +12,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -45,6 +44,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
   private DistributedFileSystem dfs;
   private URI filesystemRoot;
   private final ZeppelinConfiguration conf;
+  private String hdfsUser;
 
   public HDFSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
@@ -57,8 +57,9 @@ public class HDFSNotebookRepo implements NotebookRepo {
     } catch (URISyntaxException e1) {
       throw new IOException(e1);
     }
-
-    dfs = getDfs();
+    UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
+    this.hdfsUser = ugi.getShortUserName();
+    dfs = getDfs(ugi);
     Path path = new Path(filesystemRoot.getPath());
     if (!dfs.exists(path)) {
       logger.info("Notebook dir doesn't exist, create.");
@@ -106,13 +107,11 @@ public class HDFSNotebookRepo implements NotebookRepo {
     return hdfsConf;
   }
 
-  private DistributedFileSystem getDfs() {
+  private DistributedFileSystem getDfs(UserGroupInformation ugi) {
     FileSystem fs = null;
     Configuration hdfsConf = getHadoopConf();
-    UserGroupInformation hdfsUser;
     try {
-      hdfsUser = UserGroupInformation.getCurrentUser();
-      fs = hdfsUser.doAs((PrivilegedExceptionAction<FileSystem>) ()
+      fs = ugi.doAs((PrivilegedExceptionAction<FileSystem>) ()
               -> FileSystem.get(FileSystem.getDefaultUri(hdfsConf), hdfsConf));
     } catch (IOException | InterruptedException ex) {
       logger.error("Unable to initialize FileSystem", ex);
@@ -177,10 +176,27 @@ public class HDFSNotebookRepo implements NotebookRepo {
 
     return note;
   }
-  
+
   private NoteInfo getNoteInfo(Path noteDir) throws IOException {
     Note note = getNote(noteDir);
     return new NoteInfo(note);
+  }
+
+  private DistributedFileSystem getDistributedFs(Path path,
+          AuthenticationInfo subject, boolean create)
+          throws IOException {
+    DistributedFileSystem dfsOp = dfs;
+    String owner;
+    if (create && dfs.exists(path)) {
+      owner = dfs.getFileStatus(path).getOwner();
+    } else {
+      owner = subject.getUser();
+    }
+    if (!owner.equals(this.hdfsUser)) {
+      dfsOp = getDfs(UserGroupInformation.createProxyUser(owner,
+              UserGroupInformation.getLoginUser()));
+    }
+    return dfsOp;
   }
 
   @Override
@@ -193,8 +209,8 @@ public class HDFSNotebookRepo implements NotebookRepo {
     for (FileStatus f : children) {
       String fileName = f.getPath().getName();
       if (fileName.startsWith(".")
-          || fileName.startsWith("#")
-          || fileName.startsWith("~")) {
+              || fileName.startsWith("#")
+              || fileName.startsWith("~")) {
         // skip hidden, temporary files
         continue;
       }
@@ -229,7 +245,8 @@ public class HDFSNotebookRepo implements NotebookRepo {
   }
 
   @Override
-  public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
+  public synchronized void save(Note note, AuthenticationInfo subject) throws
+          IOException {
     GsonBuilder gsonBuilder = new GsonBuilder();
     gsonBuilder.setPrettyPrinting();
     Gson gson = gsonBuilder.create();
@@ -238,21 +255,30 @@ public class HDFSNotebookRepo implements NotebookRepo {
     Path rootDir = getRootDir();
 
     Path noteDir = new Path(rootDir, note.id());
+    DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, true);
+
     FsPermission fsPermission;
     if (!dfs.exists(noteDir)) {
-      fsPermission = dfs.getFileStatus(rootDir).getPermission();
-      dfs.mkdir(noteDir, fsPermission);
+      fsPermission = new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE,
+              FsAction.NONE, false);
+      dfsOp.mkdir(noteDir, fsPermission);
     }
     if (!dfs.isDirectory(noteDir)) {
       throw new IOException(noteDir.toString() + " is not a directory");
     }
 
-    Path noteJson = new Path(noteDir, ".note.json");
+    Path noteJson = new Path(noteDir, "note.json");
+    Path noteJsonTemp = new Path(noteDir, ".note.json");
     // false means not appending. creates file if not exists
-    OutputStream out = dfs.create(noteJson);
-    out.write(json.getBytes(conf.getString(ZeppelinConfiguration.ConfVars.ZEPPELIN_ENCODING)));
+    OutputStream out = dfsOp.create(noteJsonTemp);
+    out.write(json.getBytes(conf.getString(
+            ZeppelinConfiguration.ConfVars.ZEPPELIN_ENCODING)));
     out.close();
-    dfs.rename(noteJson, new Path(noteDir, "note.json"), Options.Rename.OVERWRITE);
+    dfsOp.rename(noteJsonTemp, noteJson, Options.Rename.OVERWRITE);
+
+    if (!dfs.equals(dfsOp)) {
+      dfsOp.close();
+    }
   }
 
   @Override
@@ -270,8 +296,12 @@ public class HDFSNotebookRepo implements NotebookRepo {
       // it does not look like zeppelin note savings
       throw new IOException("Can not remove " + noteDir.toString());
     }
+    DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, false);
+    dfsOp.delete(noteDir, true);
 
-    dfs.delete(noteDir, true);
+    if (!dfs.equals(dfsOp)) {
+      dfsOp.close();
+    }
   }
 
   @Override

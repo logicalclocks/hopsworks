@@ -72,7 +72,6 @@ import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfig;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.socket.Message.OP;
-import se.kth.hopsworks.zeppelin.util.SecurityUtils;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
 
 /**
@@ -90,8 +89,8 @@ public class NotebookServer implements
           getName());
 
   Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
-  static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
-  static final Queue<Session> connectedSockets = new ConcurrentLinkedQueue<>();
+  private static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
+  private static final Queue<Session> connectedSockets = new ConcurrentLinkedQueue<>();
   private String sender;
   private Project project;
   private String userRole;
@@ -164,8 +163,7 @@ public class NotebookServer implements
           messagereceived.ticket,
           ticket});
       }
-      AuthenticationInfo subject = new AuthenticationInfo(
-              messagereceived.principal);
+      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
       /**
        * Lets be elegant here
        */
@@ -559,7 +557,7 @@ public class NotebookServer implements
         notebook.refreshCron(note.id());
       }
 
-      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
       note.persist(subject);
       broadcastNote(note);
       broadcastNoteList(subject);
@@ -583,7 +581,7 @@ public class NotebookServer implements
 
   private void createNote(Session conn, Notebook notebook, Message message)
           throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(message.principal);
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     Note note = notebook.createNote(subject);
     note.addParagraph(); // it's an empty note. so add one paragraph
     if (message != null) {
@@ -609,15 +607,11 @@ public class NotebookServer implements
     }
 
     Note note = notebook.getNote(noteId);
-    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
-      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
-      return;
-    }
 
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     notebook.removeNote(noteId, subject);
     removeNote(noteId);
-    broadcastNoteList(subject);
+    broadcastReloadedNoteList(subject); //reload to make sure it is deleted
   }
 
   private void updateParagraph(Session conn, Notebook notebook,
@@ -636,7 +630,7 @@ public class NotebookServer implements
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -657,8 +651,8 @@ public class NotebookServer implements
     String noteId = getOpenNoteId(conn);
     String name = (String) fromMessage.get("name");
     Note newNote = notebook.cloneNote(noteId, name, new AuthenticationInfo(
-            fromMessage.principal));
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+            this.hdfsUsername));
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     addConnectionToNote(newNote.id(), conn);
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
             put("note", newNote)));
@@ -671,7 +665,7 @@ public class NotebookServer implements
     if (fromMessage != null) {
       String noteName = (String) ((Map) fromMessage.get("notebook")).get("name");
       String noteJson = gson.toJson(fromMessage.get("notebook"));
-      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
       note = notebook.importNote(noteJson, noteName, subject);
       note.persist(subject);
       broadcastNote(note);
@@ -692,12 +686,11 @@ public class NotebookServer implements
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
-    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
-      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
-      return;
-    }
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
+//    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
+//      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
+//      return;
+//    }
 
     /**
      * We dont want to remove the last paragraph
@@ -1025,8 +1018,7 @@ public class NotebookServer implements
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -1047,8 +1039,7 @@ public class NotebookServer implements
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     if (this.userRole == null) {
       permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
               + ", " + AllowedRoles.DATA_SCIENTIST);
@@ -1104,7 +1095,7 @@ public class NotebookServer implements
     // execute the Spark job as the hdfsUserName. It sets a property called "ProxyUser" in Livy
     // Right now, an empty password is ok as a parameter
     AuthenticationInfo authenticationInfo = new AuthenticationInfo(
-            this.hdfsUsername, "");
+            this.hdfsUsername);
     p.setAuthenticationInfo(authenticationInfo);
 
     Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
@@ -1118,7 +1109,7 @@ public class NotebookServer implements
       note.addParagraph();
     }
 
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     note.persist(subject);
     try {
       note.run(paragraphId);
@@ -1156,7 +1147,7 @@ public class NotebookServer implements
           Message fromMessage) throws IOException {
     String noteId = (String) fromMessage.get("noteId");
     String commitMessage = (String) fromMessage.get("commitMessage");
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
     notebook.checkpointNote(noteId, commitMessage, subject);
   }
 

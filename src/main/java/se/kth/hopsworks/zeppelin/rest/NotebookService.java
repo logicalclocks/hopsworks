@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
@@ -35,6 +36,8 @@ public class NotebookService {
   private UserFacade userBean;
   @EJB
   private ProjectTeamFacade projectTeamBean;
+  @EJB
+  private HdfsUsersController hdfsController;
   @Inject
   private NotebookRestApi notebookRestApi;
 
@@ -64,7 +67,8 @@ public class NotebookService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");
     }
-    notebookRestApi.setParms(project, userRole, zeppelinConf);
+    notebookRestApi.setParms(project, userRole, hdfsController.getHdfsUserName(
+            project, user), zeppelinConf);
     return notebookRestApi;
   }
 

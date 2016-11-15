@@ -166,12 +166,6 @@ public class ZeppelinConfig {
               getLoginUser());
       nbRepo = ugi.doAs((PrivilegedExceptionAction<NotebookRepoSync>) ()
               -> new NotebookRepoSync(conf));
-//      nbRepo = ugi.doAs(new PrivilegedExceptionAction<NotebookRepoSync>() {
-//        @Override
-//        public NotebookRepoSync run() throws IOException {
-//          return new NotebookRepoSync(conf);
-//        }
-//      });
     } catch (IOException ex) {
       LOGGGER.log(Level.SEVERE, "Could not create proxy user.", ex);
     } catch (InterruptedException ex) {
