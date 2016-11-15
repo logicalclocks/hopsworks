@@ -98,7 +98,8 @@ public class FlinkYarnRunnerBuilder {
   private String sessionId;//used by Kafka
   private String kafkaAddress;
   private String restEndpoint;
-
+  private String kafkaTopics;
+  
   public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
@@ -265,6 +266,10 @@ public class FlinkYarnRunnerBuilder {
     this.restEndpoint = restEndpoint;
   }
 
+  public void setKafkaTopics(String kafkaTopics) {
+    this.kafkaTopics = kafkaTopics;
+  }
+  
   public void isReadyForDeployment() throws YarnDeploymentException {
     if (taskManagerCount <= 0) {
       throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -420,7 +425,7 @@ public class FlinkYarnRunnerBuilder {
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
     addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
-
+    addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
     }

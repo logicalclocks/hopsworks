@@ -252,14 +252,7 @@
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
             </div>
               
-            <div class="row" ng-show="newJobCtrl.jobtype === 1">
-              <div class="text-right col-md-4">Kafka <i class="fa fa-info-circle" uib-tooltip="Indicates a Spark Kafka job." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.kafka"></div>
-            </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.runConfig.kafka">
-              <div class="text-right col-md-4">Kafka Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this Spark job will use." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="text" ng-show="newJobCtrl.runConfig.kafka" ng-model="newJobCtrl.runConfig.kafkaTopics" class="form-control"></div>
-            </div>    
+              
 
             <!-- Flink -->
             <div class="row" ng-show="newJobCtrl.jobtype === 3">
@@ -289,6 +282,14 @@
                 </select>
               </div>
             </div>
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)">
+              <div class="text-right col-md-4">Kafka <i class="fa fa-info-circle" uib-tooltip="Indicates a Kafka job." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.kafka"></div>
+            </div>
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka">
+              <div class="text-right col-md-4">Kafka Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job will use." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="text" ng-show="newJobCtrl.runConfig.kafka" ng-model="newJobCtrl.runConfig.kafkaTopics" class="form-control"></div>
+            </div>  
             <!-- Add libraries -->
             <div>
               <h3>Libraries
