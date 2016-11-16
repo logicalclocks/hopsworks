@@ -69,6 +69,7 @@ public class ZeppelinConfig {
   private final String logDirPath;
   private final String interpreterDirPath;
   private final String libDirPath;
+  private final boolean notebookInHdfs;
 
   public ZeppelinConfig(String projectName, String owner, Settings settings) {
     this.projectName = projectName;
@@ -99,6 +100,12 @@ public class ZeppelinConfig {
     libDirPath = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + "lib";
+    LOGGGER.log(Level.INFO, "Using notebook Repo class {0}",
+            conf.getString(
+                    ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
+    this.notebookInHdfs = conf.getString(
+            ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE).
+            contains("HDFSNotebookRepo");
     try {
       newDir = createZeppelinDirs();//creates the necessary folders for the project in /srv/zeppelin
       newBinDir = copyBinDir();
@@ -109,12 +116,7 @@ public class ZeppelinConfig {
               conf.getString(
                       ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
       this.schedulerFactory = SchedulerFactory.singleton();
-      LOGGGER.log(Level.INFO, "Using notebook Repo class {0}",
-              conf.getString(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
-      if (conf.getString(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE).
-              contains("HDFSNotebookRepo")) {
+      if (this.notebookInHdfs) {
         this.notebookRepo = getNotebookRepo(owner);
       } else {
         this.notebookRepo = new NotebookRepoSync(conf);
@@ -154,6 +156,7 @@ public class ZeppelinConfig {
     this.notebookIndex = zConf.getNotebookIndex();
     this.notebookAuthorization = zConf.getNotebookAuthorization();
     this.credentials = zConf.getCredentials();
+    this.notebookInHdfs = zConf.isNotebookInHdfs();
     setNotebookServer(nbs);
   }
 
@@ -287,6 +290,10 @@ public class ZeppelinConfig {
     return credentials;
   }
 
+  public boolean isNotebookInHdfs() {
+    return notebookInHdfs;
+  }
+
   //returns true if the project dir was created 
   private boolean createZeppelinDirs() {
     File projectDir = new File(projectDirPath);
@@ -342,8 +349,9 @@ public class ZeppelinConfig {
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
-    String notebookDir = File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName;
+    String notebookDir = this.notebookInHdfs ? File.separator
+            + Settings.DIR_ROOT + File.separator + this.projectName
+            : home;
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
