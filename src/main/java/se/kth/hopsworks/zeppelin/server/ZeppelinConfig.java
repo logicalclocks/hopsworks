@@ -13,7 +13,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
@@ -493,7 +492,7 @@ public class ZeppelinConfig {
    * SchedulerFactory
    */
   public void clean() {
-    LOGGGER.log(Level.INFO, "Cleanup of zeppelin resources for project ==> {0}",
+    LOGGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
             this.projectName);
     if (this.replFactory != null) {
       this.replFactory.close();

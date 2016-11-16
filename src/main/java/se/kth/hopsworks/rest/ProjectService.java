@@ -345,55 +345,40 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.FOLDER_INODE_NOT_CREATED);
       }
-      if (project != null) {
-        try {
-          hdfsUsersBean.addProjectFolderOwner(project, dfso);
-          projectController.createProjectLogResources(owner, project, dfso,
-                  udfso);
-          projectController.addExampleJarToExampleProject(owner, project, dfso,
-                  udfso);
-          //Persist README.md to hdfs for Default Datasets
-
-          for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-            //Generate README.md for the Default Datasets
-            datasetController.generateReadme(udfso, ds.getName(), 
-                    ds.getDescription(), 
-                    project.getName());
-          }
-          
-          //TestJob dataset
-          datasetController.generateReadme(udfso, "TestJob", 
-                    "jar file to calculate pi", 
-                    project.getName());
-            
-        } catch (ProjectInternalFoldersFailedException ee) {
-          try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Could not create project resources");
-          } catch (IOException e) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                    getStatusCode(), e.getMessage());
-          }
-        } catch (IOException ex) {
-          try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Could not add project folder owner in HDFS");
-          } catch (IOException e) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                    getStatusCode(), e.getMessage());
-          }
-        }
-      } else {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                ResponseMessages.PROJECT_NAME_EXIST);
-      }
-
+      //add members of the project   
       projectController.addMembers(project, owner, projectMembers);
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
+      try {
+        hdfsUsersBean.addProjectFolderOwner(project, dfso);
+        projectController.createProjectLogResources(owner, project, dfso,
+                udfso);
+        projectController.addExampleJarToExampleProject(owner, project, dfso,
+                udfso);
+        //TestJob dataset
+        datasetController.generateReadme(udfso, "TestJob",
+                "jar file to calculate pi",
+                project.getName());
 
+      } catch (ProjectInternalFoldersFailedException ee) {
+        try {
+          projectController.removeByID(project.getId(), owner, true, udfso);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not create project resources");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
+      } catch (IOException ex) {
+        try {
+          projectController.removeByID(project.getId(), owner, true, udfso);
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "Could not add project folder owner in HDFS");
+        } catch (IOException e) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(), e.getMessage());
+        }
+      }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
               entity(project).build();
     } finally {
@@ -471,16 +456,15 @@ public class ProjectService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.FOLDER_INODE_NOT_CREATED);
       }
+      //add members of the project   
+      failedMembers = projectController.addMembers(project, owner, projectDTO.
+              getProjectTeam());
+      //add the services for the project
+      projectController.addServices(project, projectServices, owner);
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
                 udfso);
-        //Persist README.md to hdfs for Default Datasets
-        
-        for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-          datasetController.generateReadme(udfso, ds.getName(), 
-                  ds.getDescription(), project.getName());
-        }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.removeByID(project.getId(), owner, true, udfso);
@@ -500,13 +484,6 @@ public class ProjectService {
                   getStatusCode(), e.getMessage());
         }
       }
-      
-      //add members of the project   
-      // TODO - handle failure if we add members and it fails. Catch an AppException and remove the project as above.
-      failedMembers = projectController.addMembers(project, owner, projectDTO.
-              getProjectTeam());
-      //add the services for the project
-      projectController.addServices(project, projectServices, owner);
 
       json.setStatus("201");// Created 
       json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
@@ -700,7 +677,8 @@ public class ProjectService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    YarnPriceMultiplicator multiplicator = projectController.getYarnMultiplicator();
+    YarnPriceMultiplicator multiplicator = projectController.
+            getYarnMultiplicator();
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             multiplicator).build();
@@ -763,7 +741,7 @@ public class ProjectService {
     if (ds.getDescription() != null) {
       newDS.setDescription(ds.getDescription());
     }
-    if(ds.isPublicDs()){
+    if (ds.isPublicDs()) {
       newDS.setPublicDs(true);
     }
     newDS.setEditable(false);
