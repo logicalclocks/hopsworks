@@ -225,7 +225,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     if (!Strings.isNullOrEmpty(mainClass)) {
       obj.set(KEY_MAINCLASS, mainClass);
     }
-    if (!Strings.isNullOrEmpty(mainClass)) {
+    if (!Strings.isNullOrEmpty(jarPath)) {
       obj.set(KEY_JARPATH, jarPath);
     }
     //Then: fields that can never be null or emtpy.

@@ -12,11 +12,11 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService', 'HistoryService', '$timeout',
+          'AdamService', 'FlinkService', 'TourService', 'HistoryService', 'KafkaService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
 
-            AdamService, FlinkService, TourService, HistoryService, $timeout) {
+            AdamService, FlinkService, TourService, HistoryService, KafkaService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -25,6 +25,25 @@ angular.module('hopsWorksApp')
             //Set services as attributes 
             self.ModalService = ModalService;
             self.growl = growl;
+            self.projectId = $routeParams.projectID;
+            ////////////////////////////////////////////////////////////////////
+            //Kafka topics for this project
+            self.topics = [];
+            self.topicsSelected = [];
+            self.getAllTopics = function () {
+              if(self.runConfig.kafka === true){
+                KafkaService.getTopics(self.projectId).then(
+                        function (success) {
+                          var topics = success.data;
+                          for (var i = 0; i<topics.length; i++) {
+                            self.topics.push({name:topics[i]['name'], ticked:false});
+                          }
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+              }
+            };
+           ////////////////////////////////////////////////////////////////////
             
             // keep the proposed configurations
             self.autoConfigResult;
@@ -47,7 +66,6 @@ angular.module('hopsWorksApp')
               "ADAM-FILE": "Please select a file.",
               "ADAM-FOLDER": "Please select a folder."
             };
-            self.projectId = $routeParams.projectID;
 
             //Create variables for user-entered information
             self.jobtype; //Will hold the selection of which job to create.
@@ -60,7 +78,7 @@ angular.module('hopsWorksApp')
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
             self.sliderVisible = false;
-            
+             
             self.sliderOptions = {
                 min: 1,
                 max: 10,      
@@ -143,70 +161,6 @@ angular.module('hopsWorksApp')
                 "title": "Pre-Configuration"};
 
             this.undoable = false; //Signify if a clear operation can be undone.
-
-            /**
-            * Clear the current state (and allow for undo).
-            * @returns {undefined}
-            */
-            this.clear = function () {
-                var state = {
-                    "jobtype": self.jobtype,
-                    "jobname": self.jobname,
-                    "localResources": self.localResources,
-                    "phase": self.phase,
-                    "runConfig": self.runConfig,
-                    "sparkState": self.sparkState,
-                    "adamState": self.adamState,
-                    "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6]
-                };
-                self.undoneState = state;
-                self.undoable = true;
-                self.jobtype = null;
-                self.jobname = null;
-                self.localResources = [];
-                self.phase = 0;
-                self.runConfig = null;
-                self.sparkState = {
-                "selectedJar": null //The path to the selected jar
-                };
-                self.adamState = {//Will hold ADAM-specific state
-                    "processparameter": null, //The parameter currently being processed
-                    "commandList": null, //The ADAM command list.
-                    "selectedCommand": null //The selected ADAM command
-                };
-                //Variables for front-end magic
-                self.accordion1 = {//Contains the job name
-                    "isOpen": true,
-                    "visible": true,
-                    "value": "",
-                    "title": "Job name"};
-                self.accordion2 = {//Contains the job type
-                    "isOpen": false,
-                    "visible": false,
-                    "value": "",
-                    "title": "Job type"};
-                self.accordion3 = {// Contains the main execution file (jar, workflow,...)
-                    "isOpen": false,
-                    "visible": false,
-                    "value": "",
-                    "title": ""};
-                self.accordion4 = {// Contains the job setup (main class, input variables,...)
-                    "isOpen": false,
-                    "visible": false,
-                    "value": "",
-                    "title": ""};
-                self.accordion5 = {//Contains the configuration and creation
-                    "isOpen": false,
-                    "visible": false,
-                    "value": "",
-                    "title": "Configure and create"};
-                self.accordion6 = {//Contains the pre-configuration and proposals for auto configuration
-                    "isOpen": false,
-                    "visible": false,
-                    "value": "",
-                    "title": "Pre-Configuration"};
-                };
-
 
             /**
              * Clear the current state (and allow for undo).
@@ -307,6 +261,15 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createJob = function () {
+              //Loop through the selected Kafka topics (if any) and add them to
+              //the job config
+              if(self.topicsSelected.length > 0){
+                self.runConfig.kafkaTopics = "";
+                for(var i=0; i< self.topicsSelected.length; i++){    
+                     self.runConfig.kafkaTopics += self.topicsSelected[i]['name']+":";
+                }
+                self.runConfig.kafkaTopics = self.runConfig.kafkaTopics.substring(0,self.runConfig.kafkaTopics.length-1);
+              }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
@@ -634,11 +597,44 @@ angular.module('hopsWorksApp')
                         self.phase = stored.phase;
                         self.runConfig = stored.runConfig;
                         if(self.runConfig){
+                            self.topicsSelected = [];
+                            self.topics = [];
                             self.runConfig.schedule = null;
                             self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
                             self.sliderOptions.options['ceil'] = self.runConfig.maxExecutors;
                             self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                             self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                            //Set Kafka topics is selected
+                            KafkaService.getTopics(self.projectId).then(
+                              function (success) {
+                                var topics = success.data;
+                                for (var i = 0; i < topics.length; i++) {
+                                  self.topics.push({name: topics[i]['name'], ticked: false});
+                                }
+                                
+                                console.log("Topics:"+self.topics.toString());  
+                                if (self.runConfig.kafka) {
+                                  //Set selected topics
+                                  //wait to fetch topics firsts
+
+                                  var selectedTopics = self.runConfig.kafkaTopics.split(":");
+                                  for(var i=0; i < selectedTopics.length; i++){
+                                    console.log("Topics:"+self.topics.toString());  
+                                    self.topicsSelected.push({name:selectedTopics[i], ticked:true});
+                                    //Loop through topics to set the ticked ones
+                                    for (var z = 0; z < self.topics.length; z++) {
+                                        if(self.topics[z]['name'] === selectedTopics[i]){
+                                          self.topics[z]['ticked'] = true;
+                                          break;
+                                        }           
+                                        
+                                    } 
+                                  }         
+                                }
+                              }, function (error) {
+                              console.error(error.data.errorMsg);
+                            });
+                            console.log("Topics:"+self.topics.toString());  
                         }    
                         if (self.jobtype === 1) {
                             self.sparkState = stored.sparkState;

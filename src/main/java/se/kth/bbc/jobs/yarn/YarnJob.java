@@ -32,6 +32,7 @@ import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.hopsworks.certificates.UserCerts;
@@ -169,10 +170,14 @@ public abstract class YarnJob extends HopsJob {
       ProjectServices projectService = iter.next();
       //If the project is of type KAFKA
       if (projectService.getProjectServicesPK().getService()
-              == ProjectServiceEnum.KAFKA) {
+              == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()
+              == JobType.FLINK || jobDescription.getJobType() == JobType.SPARK) &&
+              jobDescription.getJobConfig() instanceof YarnJobConfiguration &&
+              ((YarnJobConfiguration)jobDescription.getJobConfig()).isKafka()) {
         copyUserKafkaCerts(projectService, true,
                 Settings.KAFKA_TMP_CERT_STORE_LOCAL,
                 Settings.KAFKA_TMP_CERT_STORE_REMOTE, dfso);
+        return true;
       }
     }
     return true;
@@ -255,30 +260,45 @@ public abstract class YarnJob extends HopsJob {
             //Create HDFS kafka certificate directory. This is done
             //So that the certificates can be used as LocalResources
             //by the YarnJob
-            //TODO: Fix permissions on tmp hdfs directory
+            
             if (!dfso.exists(remoteTmpDir)) {
               dfso.mkdir(
                       new Path(remoteTmpDir), new FsPermission(FsAction.ALL,
                               FsAction.ALL, FsAction.ALL));
-
+            }
+            //Put project certificates in its own dir
+            String certUser = projectService.getProject().getName() + "__"
+                    + projectService.getProject().getOwner().getUsername();
+            String remoteTmpProjDir = remoteTmpDir + File.separator + certUser;
+            if (!dfso.exists(remoteTmpProjDir)) {
+              dfso.mkdir(
+                      new Path(remoteTmpProjDir),
+                      new FsPermission(FsAction.ALL,
+                              FsAction.ALL, FsAction.NONE));
+              dfso.setOwner(new Path(remoteTmpProjDir),
+                      certUser,
+                      certUser);
             }
             Files.write(kafkaCertFiles.get(entry.getKey()), entry.getValue());
             dfso.copyToHDFSFromLocal(true, entry.getValue().getAbsolutePath(),
-                    Settings.KAFKA_TMP_CERT_STORE_REMOTE);
-//                     dfso.setOwner(
-//                                new Path(Settings.KAFKA_TMP_CERT_STORE_REMOTE+"/"+entry.getValue().getName()),
-//                                projectService.getProject().getName()+ "__" +
-//                                  projectService.getProject().getOwner().getUsername(), "hadoop");
-            dfso.setPermission(
-                    new Path(remoteTmpDir + "/" + entry.getValue().getName()),
-                    new FsPermission(FsAction.ALL, FsAction.ALL,
-                            FsAction.ALL));
+                    remoteTmpDir + File.separator + certUser + File.separator
+                    + entry.getValue().getName());
+
+            dfso.setPermission(new Path(remoteTmpProjDir + File.separator
+                    + entry.getValue().getName()),
+                    new FsPermission(FsAction.ALL, FsAction.NONE,
+                            FsAction.NONE));
+            dfso.setOwner(new Path(remoteTmpProjDir + File.separator + entry.
+                    getValue().getName()),
+                    certUser,
+                    certUser);
 
             if (isYarnJob) {
               projectLocalResources.add(new LocalResourceDTO(
                       entry.getKey(),
-                      "hdfs://" + nameNodeIpPort + remoteTmpDir + "/" + entry.
-                      getValue().getName(),
+                      "hdfs://" + nameNodeIpPort + remoteTmpDir +
+                      File.separator + projectService.getProject().getName() + "__"
+                      + projectService.getProject().getOwner().getUsername()+File.separator+entry.getValue().getName(),
                       LocalResourceVisibility.APPLICATION.toString(),
                       LocalResourceType.FILE.toString(), null));
 

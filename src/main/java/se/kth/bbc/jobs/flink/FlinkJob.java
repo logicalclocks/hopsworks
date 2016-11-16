@@ -99,8 +99,6 @@ public class FlinkJob extends YarnJob {
     //Flink specific conf object
     flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
             jobconfig.getFlinkConfDir()));
-//        flinkBuilder.setLocalJarPath(new Path("hdfs://"+nameNodeIpPort+
-//                "/user/"+flinkUser+"/"+Settings.FLINK_LOCRSC_FLINK_JAR));
 
     flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
     flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
@@ -116,6 +114,7 @@ public class FlinkJob extends YarnJob {
     flinkBuilder.setSessionId(jobconfig.getjSessionId());
     flinkBuilder.setKafkaAddress(kafkaAddress);
     flinkBuilder.setRestEndpoint(restEndpoint);
+    flinkBuilder.setKafkaTopics(jobconfig.getKafkaTopics());
     flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources, i.e. Kafka certificates
     flinkBuilder.addExtraFiles(projectLocalResources);

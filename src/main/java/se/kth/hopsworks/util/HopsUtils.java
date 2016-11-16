@@ -40,7 +40,7 @@ public class HopsUtils {
   }
   
   public static int dataSetPartitionId(Inode parent, String name) {
-    return parent.getId();
+    return calculatePartitionId(parent.getId(),name,3);
   }  
   
   public static int calculatePartitionId(int parentId, String name, int depth) {
