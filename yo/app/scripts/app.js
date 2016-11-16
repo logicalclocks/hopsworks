@@ -32,7 +32,8 @@ angular.module('hopsWorksApp', [
   'ng-showdown',
   'vAccordion',
   'md.data.table',
-  'rzModule'
+  'rzModule',
+  'isteven-multi-select'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {

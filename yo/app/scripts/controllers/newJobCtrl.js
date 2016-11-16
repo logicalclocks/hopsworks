@@ -12,11 +12,11 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService', 'HistoryService', '$timeout',
+          'AdamService', 'FlinkService', 'TourService', 'HistoryService', 'KafkaService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
 
-            AdamService, FlinkService, TourService, HistoryService, $timeout) {
+            AdamService, FlinkService, TourService, HistoryService, KafkaService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -25,6 +25,35 @@ angular.module('hopsWorksApp')
             //Set services as attributes 
             self.ModalService = ModalService;
             self.growl = growl;
+            self.projectId = $routeParams.projectID;
+            ////////////////////////////////////////////////////////////////////
+            //Kafka topics for this project
+            self.topics = [];
+            self.topicsSelected = [];
+            
+            self.kafkaSelected = false;
+            self.getAllTopics = function () {
+              if(self.kafkaSelected === false){
+                self.kafkaSelected = true;
+              } else {
+                self.kafkaSelected = false;
+              }
+              if(self.kafkaSelected === true){
+                KafkaService.getTopics(self.projectId).then(
+                        function (success) {
+                          var topics = success.data;
+                          for (var i = 0; i<topics.length; i++) {
+                            self.topics.push({name:topics[i]['name'], ticked:false});
+                          }
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+              }
+              
+            };
+                       
+            
+            ////////////////////////////////////////////////////////////////////
             
             // keep the proposed configurations
             self.autoConfigResult;
@@ -47,7 +76,6 @@ angular.module('hopsWorksApp')
               "ADAM-FILE": "Please select a file.",
               "ADAM-FOLDER": "Please select a folder."
             };
-            self.projectId = $routeParams.projectID;
 
             //Create variables for user-entered information
             self.jobtype; //Will hold the selection of which job to create.
@@ -60,7 +88,7 @@ angular.module('hopsWorksApp')
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
             self.sliderVisible = false;
-            
+             
             self.sliderOptions = {
                 min: 1,
                 max: 10,      
@@ -307,6 +335,15 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createJob = function () {
+              //Loop through the selected Kafka topics (if any) and add them to
+              //the job config
+              if(self.topicsSelected.length > 0){
+                self.runConfig.kafkaTopics = "";
+                for(var i=0; i< self.topicsSelected.length; i++){    
+                     self.runConfig.kafkaTopics += self.topicsSelected[i]['name']+":";
+                }
+                self.runConfig.kafkaTopics = self.runConfig.kafkaTopics.substring(0,self.runConfig.kafkaTopics.length-1);
+              }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
