@@ -41,13 +41,14 @@ public class HDFSNotebookRepo implements NotebookRepo {
 
   private final Logger logger = LoggerFactory.getLogger(HDFSNotebookRepo.class);
 
-  private DistributedFileSystem dfs;
   private URI filesystemRoot;
   private final ZeppelinConfiguration conf;
   private String hdfsUser;
+  private final Configuration hdfsConf;
 
   public HDFSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
+    this.hdfsConf = getHadoopConf();
     setNotebookDirectory(this.conf.getNotebookDir());
   }
 
@@ -59,7 +60,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
     }
     UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
     this.hdfsUser = ugi.getShortUserName();
-    dfs = getDfs(ugi);
+    DistributedFileSystem dfs = getDfs(ugi);
     Path path = new Path(filesystemRoot.getPath());
     if (!dfs.exists(path)) {
       logger.info("Notebook dir doesn't exist, create.");
@@ -67,10 +68,11 @@ public class HDFSNotebookRepo implements NotebookRepo {
               FsAction.READ_EXECUTE, true);
       dfs.mkdirs(path, fsPermission);
     }
+    dfs.close();
   }
 
   private Configuration getHadoopConf() {
-    Configuration hdfsConf;
+    Configuration hdfsConfig;
     //get this from variables table
     String hadoopConfDir = "/srv/hadoop/etc/hadoop";
 
@@ -99,17 +101,16 @@ public class HDFSNotebookRepo implements NotebookRepo {
     Path yarnPath = new Path(yarnConfFile.getAbsolutePath());
     Path hdfsPath = new Path(hdfsConfFile.getAbsolutePath());
     Path hadoopPath = new Path(hadoopConfFile.getAbsolutePath());
-    hdfsConf = new Configuration();
-    hdfsConf.addResource(hadoopPath);
-    hdfsConf.addResource(yarnPath);
-    hdfsConf.addResource(hdfsPath);
-    hdfsConf.set("fs.permissions.umask-mode", "000");
-    return hdfsConf;
+    hdfsConfig = new Configuration();
+    hdfsConfig.addResource(hadoopPath);
+    hdfsConfig.addResource(yarnPath);
+    hdfsConfig.addResource(hdfsPath);
+    hdfsConfig.set("fs.permissions.umask-mode", "000");
+    return hdfsConfig;
   }
 
   private DistributedFileSystem getDfs(UserGroupInformation ugi) {
     FileSystem fs = null;
-    Configuration hdfsConf = getHadoopConf();
     try {
       fs = ugi.doAs((PrivilegedExceptionAction<FileSystem>) ()
               -> FileSystem.get(FileSystem.getDefaultUri(hdfsConf), hdfsConf));
@@ -130,9 +131,8 @@ public class HDFSNotebookRepo implements NotebookRepo {
     }
   }
 
-  protected Path getRootDir() throws IOException {
+  private Path getRootDir(DistributedFileSystem dfs) throws IOException {
     Path rootDir = new Path(getPath("/"));
-
     if (!dfs.exists(rootDir)) {
       throw new IOException("Root path does not exists");
     }
@@ -140,11 +140,11 @@ public class HDFSNotebookRepo implements NotebookRepo {
     if (!dfs.isDirectory(rootDir)) {
       throw new IOException("Root path is not a directory");
     }
-
     return rootDir;
   }
 
-  private Note getNote(Path noteDir) throws IOException {
+  private Note getNote(Path noteDir, DistributedFileSystem dfs) throws
+          IOException {
     if (!dfs.isDirectory(noteDir)) {
       throw new IOException(noteDir.toString() + " is not a directory");
     }
@@ -177,32 +177,46 @@ public class HDFSNotebookRepo implements NotebookRepo {
     return note;
   }
 
-  private NoteInfo getNoteInfo(Path noteDir) throws IOException {
-    Note note = getNote(noteDir);
+  private NoteInfo getNoteInfo(Path noteDir, DistributedFileSystem dfs) throws
+          IOException {
+    Note note = getNote(noteDir, dfs);
     return new NoteInfo(note);
   }
 
   private DistributedFileSystem getDistributedFs(Path path,
-          AuthenticationInfo subject, boolean create)
+          AuthenticationInfo subject, DistributedFileSystem dfs)
           throws IOException {
     DistributedFileSystem dfsOp = dfs;
     String owner;
-    if (create && dfs.exists(path)) {
+    if (dfs.exists(path)) {
       owner = dfs.getFileStatus(path).getOwner();
     } else {
       owner = subject.getUser();
     }
-    if (!owner.equals(this.hdfsUser)) {
+    if (subject != null && !owner.equals(subject.getUser())) {
       dfsOp = getDfs(UserGroupInformation.createProxyUser(owner,
               UserGroupInformation.getLoginUser()));
     }
     return dfsOp;
   }
 
+  private DistributedFileSystem getUserDfs(AuthenticationInfo subject) throws
+          IOException {
+    UserGroupInformation ugi;
+    if (subject == null) {
+      ugi = UserGroupInformation.createProxyUser(this.hdfsUser,
+              UserGroupInformation.getLoginUser());
+    } else {
+      ugi = UserGroupInformation.createProxyUser(subject.getUser(),
+              UserGroupInformation.getLoginUser());
+    }
+    return getDfs(ugi);
+  }
+
   @Override
   public List<NoteInfo> list(AuthenticationInfo subject) throws IOException {
-    Path rootDir = getRootDir();
-
+    DistributedFileSystem dfs = getUserDfs(subject);
+    Path rootDir = getRootDir(dfs);
     FileStatus[] children = dfs.listStatus(rootDir);
 
     List<NoteInfo> infos = new LinkedList<>();
@@ -224,7 +238,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
       NoteInfo info;
 
       try {
-        info = getNoteInfo(f.getPath());
+        info = getNoteInfo(f.getPath(), dfs);
         if (info != null) {
           infos.add(info);
         }
@@ -232,16 +246,17 @@ public class HDFSNotebookRepo implements NotebookRepo {
         logger.error("Can't read note " + f.getPath().toString(), e);
       }
     }
-
+    dfs.close();
     return infos;
   }
 
   @Override
   public Note get(String noteId, AuthenticationInfo subject) throws IOException {
-    Path rootDir = getRootDir();
+    DistributedFileSystem dfs = getUserDfs(subject);
+    Path rootDir = getRootDir(dfs);
     Path noteDir = new Path(rootDir, noteId);
 
-    return getNote(noteDir);
+    return getNote(noteDir, dfs);
   }
 
   @Override
@@ -252,10 +267,13 @@ public class HDFSNotebookRepo implements NotebookRepo {
     Gson gson = gsonBuilder.create();
     String json = gson.toJson(note);
 
-    Path rootDir = getRootDir();
+    DistributedFileSystem dfs = getUserDfs(subject);
+    Path rootDir = getRootDir(dfs);
 
     Path noteDir = new Path(rootDir, note.id());
-    DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, true);
+    //returns dfs for the owner of the dir if the dir exists.
+    //so we do not change the owner of the notebook.
+    DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, dfs);
 
     FsPermission fsPermission;
     if (!dfs.exists(noteDir)) {
@@ -279,12 +297,14 @@ public class HDFSNotebookRepo implements NotebookRepo {
     if (!dfs.equals(dfsOp)) {
       dfsOp.close();
     }
+    dfs.close();
   }
 
   @Override
   public void remove(String noteId, AuthenticationInfo subject) throws
           IOException {
-    Path rootDir = getRootDir();
+    DistributedFileSystem dfs = getUserDfs(subject);
+    Path rootDir = getRootDir(dfs);
     Path noteDir = new Path(rootDir, noteId);
 
     if (!dfs.exists(noteDir)) {
@@ -296,21 +316,14 @@ public class HDFSNotebookRepo implements NotebookRepo {
       // it does not look like zeppelin note savings
       throw new IOException("Can not remove " + noteDir.toString());
     }
-    DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, false);
-    dfsOp.delete(noteDir, true);
+    dfs.delete(noteDir, true);
 
-    if (!dfs.equals(dfsOp)) {
-      dfsOp.close();
-    }
+    dfs.close();
   }
 
   @Override
   public void close() {
-    try {
-      dfs.close();
-    } catch (IOException ex) {
-      logger.info("Could not close dfs object.", ex);
-    }
+    // nop
   }
 
   @Override
