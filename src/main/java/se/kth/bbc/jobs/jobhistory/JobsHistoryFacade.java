@@ -64,6 +64,15 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
     return null;
   }
 
+  public List<JobsHistory> findByProjectId(int projectId) {
+    TypedQuery<JobsHistory> q = em.createNamedQuery(
+            "JobsHistory.findByProjectId",
+            JobsHistory.class);
+    q.setParameter("projectId", projectId);
+
+    return q.getResultList();
+  }
+  
   /**
      * Stores an instance in the database.
      * <p/>
