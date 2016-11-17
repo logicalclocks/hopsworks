@@ -1,6 +1,6 @@
 .file-box {
   float: left;
-  width: 220px;
+  width: 200px;
 }
 .file-manager h5 {
   text-transform: uppercase;
@@ -138,7 +138,6 @@
 
 .publicDS {
   padding-bottom: 0;
-  padding-top: 15px;
 }
 
 

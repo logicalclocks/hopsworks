@@ -18,30 +18,25 @@
             </div>
 
             <div class="content-wrapper" style="background-color: white;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
-              <h3>               
+              <h3>  
                 <div flex="65">
-                  Filter: 
-                  <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
-                  <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Exclusive</a>
-                  <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
-                  <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
-                </div>
+                    Filter: 
+                    <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
+                    <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
+                    <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Exclusive</a>
+                    <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
+                    <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
+                  </div>
                 <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
-                  </hamburger-toggle>
-                </div>
-              </h3>
+                    </hamburger-toggle>
+                  </div>
+              </h3>            
               <div layout="row">
-               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px;" >
-
-                <div class="row row-no-margin-left" style="margin-top: 15px;">
-                  <div class="col-lg-12">                    
-                    <div ng-init="(iscollapsed$index) = true; datasetsCtrl.tgState = true;"
-                         ng-show="datasetsCtrl.files.length < 20"
-                         class="file-box"
-                         context-menu
-                         data-target="menu-{{datasetsCtrl.selected.name}}">
+               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">                 
+                 <div class="row row-no-margin-left" style="margin-top: 15px; overflow-y:auto;">
+                  <div class="col-lg-12" >                    
+                    <div class="file-box">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
                           <i class="glyphicon glyphicon-plus"></i>
@@ -67,14 +62,20 @@
                             </div>
                             <div class="file-name" tooltip-placement="bottom" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
                                  ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
-                              <span tooltip-enable="{{dataset.name.length > 28}}" 
+                              <span tooltip-enable="{{dataset.name.length > 22}}" 
                                     tooltip-placement="top" 
-                                    uib-tooltip="{{dataset.name}}">
+                                    uib-tooltip="{{ dataset.name}}">
                                 {{dataset.name}}
-                              </span>                           
-                              <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
+                              </span>                          
                               <br/>
-                              <small><b>Owner:</b> {{dataset.owner}}</small>
+                              <small><b>Owner:</b> 
+                                <span tooltip-enable="{{dataset.owner.length > 17}}" 
+                                    tooltip-placement="top" 
+                                    uib-tooltip="{{ dataset.owner}}">
+                                  {{dataset.owner | limitTo: 17}}
+                                </span>
+                              </small>
+                              <span class="pull-right publicDS" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
                             </div>
                           </a>
                         </div>
