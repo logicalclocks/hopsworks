@@ -464,8 +464,14 @@ This will make all its files unavailable to other projects unless you share it e
                         dataSetService.move(inodeId, fullPath).then(
                                 function (success) {
                                   getDirContents();
+                                  self.all_selected = false;
+                                  self.selectedFiles = {};
+                                  self.selected = null;
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                  self.all_selected = false;
+                                  self.selectedFiles = {};
+                                  self.selected = null;
                         });
 
                       });
