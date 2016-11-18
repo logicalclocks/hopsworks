@@ -136,7 +136,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/running');
               },
               /**
-               * Retrieve the logs associated to a certain job.
+               * Retrieve the logs associated with a certain job.
                * @param {type} projectId
                * @param {type} jobId
                * @returns {undefined} Log infrormation json.

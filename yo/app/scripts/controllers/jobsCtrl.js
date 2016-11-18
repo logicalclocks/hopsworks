@@ -7,9 +7,8 @@
 
 angular.module('hopsWorksApp')
         .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
-          '$mdSidenav', 'TourService', 'ProjectService',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService,
-                  $mdSidenav, TourService, ProjectService) {
+                    'TourService', 'ProjectService',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService) {
 
             var self = this;
             self.tourService = TourService;
@@ -24,7 +23,7 @@ angular.module('hopsWorksApp')
 
             self.currentjob = null;
             self.currentToggledIndex = -1;
-
+            self.fetchingLogs = 0;
             $scope.pageSize = 10;
             $scope.sortKey = 'creationTime';
             $scope.reverse = true;
@@ -164,6 +163,10 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Retrieve status for all jobs of this project.
+             * @returns {undefined}
+             */
             self.getRunStatus = function () {
               JobService.getRunStatus(self.projectId).then(
                       function (success) {
@@ -180,10 +183,14 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Get data from runningInfo and update jobs.
+             * @returns {undefined}
+             */
             self.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
-                if (typeof self.runningInfo['' + temp.id] !== "undefined") {
-                  if (temp.state !== self.runningInfo['' + temp.id].state) {
+                if (typeof self.runningInfo['' + temp.id] !== undefined) {
+                  if (temp.state !== self.runningInfo['' + temp.id].state && temp.showing === true) {
                     self.showLogs(temp.id);
                   }
                   temp.duration = self.runningInfo['' + temp.id].duration;
@@ -259,11 +266,14 @@ angular.module('hopsWorksApp')
             };
 
             self.showLogs = function (jobId) {
+              self.fetchingLogs = 1;
               JobService.showLog(self.projectId, jobId).then(
-                      function (success) {
-                        self.logset = success.data.logset;
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
+                  function (success) {
+                    self.logset = success.data.logset;
+                    self.fetchingLogs = 0;
+                  }, function (error) {
+                    self.fetchingLogs = 0;
+                    growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
               });
             };
 
@@ -298,6 +308,7 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            //Called when clicking on a job row
             self.toggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
@@ -309,10 +320,13 @@ angular.module('hopsWorksApp')
               //handle the clicked job accordingly
               job.showing = true;
               self.hasSelectJob = true;
-              $scope.selectedIndex = index;
+              self.selectedIndex = index;
               self.currentToggledIndex = index;
               self.currentjob = job;
             };
+            
+            //untoggle is not used in the jobsCtrl
+            ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
@@ -321,13 +335,14 @@ angular.module('hopsWorksApp')
 
               if (self.currentToggledIndex !== index) {
                 self.hasSelectJob = false;
-                $scope.selectedIndex = -1;
+                self.selectedIndex = -1;
                 self.currentToggledIndex = -1;
               } else {
                 job.showing = true;
               }
             };
-
+            ////////////////////////////////////////////////////////////////////
+            
             /**
              * Check if the jobType filter is null, and set to empty string if it is.
              * @returns {undefined}
