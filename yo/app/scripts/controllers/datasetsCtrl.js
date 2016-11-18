@@ -454,13 +454,11 @@ This will make all its files unavailable to other projects unless you share it e
               }
             };
 
-            self.rename = function (inodeId) {
-
+            self.rename = function (inodeId, name) {
               var pathComponents = self.pathArray.slice(0);
               var newPath = getPath(pathComponents);
               var destPath = newPath + '/';
-              var newName = "New Name";
-              ModalService.enterName('lg', "Rename File or Directory", newName).then(
+              ModalService.enterName('lg', "Rename File or Directory", name).then(
                       function (success) {
                         var fullPath = destPath + success.newName;
                         dataSetService.move(inodeId, fullPath).then(
@@ -471,6 +469,36 @@ This will make all its files unavailable to other projects unless you share it e
                         });
 
                       });
+            };
+            self.renameSelected = function () {
+              if(self.isSelectedFiles() === 1){
+                var inodeId, inodeName;
+                for (var name in self.selectedFiles) {
+                  inodeName = name;
+                }
+                inodeId = self.selectedFiles[inodeName]['id'];
+                var pathComponents = self.pathArray.slice(0);
+                var newPath = getPath(pathComponents);
+                var destPath = newPath + '/';
+               
+                ModalService.enterName('lg', "Rename File or Directory", inodeName).then(
+                        function (success) {
+                          var fullPath = destPath + success.newName;
+                          dataSetService.move(inodeId, fullPath).then(
+                                  function (success) {
+                                    getDirContents();
+                                    self.all_selected = false;
+                                    self.selectedFiles = {};
+                                    self.selected = null;
+                                  }, function (error) {
+                                    self.all_selected = false;
+                                    self.selectedFiles = {};
+                                    self.selected = null;
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          });
+
+                });
+              }
             };
             /**
              * Opens a modal dialog for file upload.
