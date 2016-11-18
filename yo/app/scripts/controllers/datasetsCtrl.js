@@ -365,6 +365,7 @@ This will make all its files unavailable to other projects unless you share it e
                           $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
                   //To hide README from UI
+                  growl.error(error.data.errorMsg, {title: 'Error retrieving README file', ttl: 5000, referenceId: 3});
                   $scope.readme = null;
                 });
               } else {
