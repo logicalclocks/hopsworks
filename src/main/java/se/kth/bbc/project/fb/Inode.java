@@ -43,6 +43,9 @@ import se.kth.hopsworks.meta.entity.Template;
   @NamedQuery(name = "Inode.findByParentId",
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId"),
+  @NamedQuery(name = "Inode.findByHdfsUser",
+          query
+          = "SELECT i FROM Inode i WHERE i.hdfsUser = :hdfsUser"),
   @NamedQuery(name = "Inode.findByName",
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.name = :name"),

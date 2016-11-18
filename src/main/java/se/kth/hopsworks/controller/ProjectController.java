@@ -14,15 +14,23 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.jobs.jobhistory.Execution;
+import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectPaymentsHistory;
@@ -49,6 +57,7 @@ import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.HdfsInodeAttributes;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
+import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.user.model.SshKeys;
@@ -57,6 +66,9 @@ import se.kth.hopsworks.users.SshkeysFacade;
 import se.kth.hopsworks.util.LocalhostServices;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
+import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
+import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -96,7 +108,11 @@ public class ProjectController {
   private UserCertsFacade userCertsFacade;
   @EJB
   private DistributedFsService dfs;
-
+  @EJB
+  private InodeFacade inodeFacade;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -172,7 +188,8 @@ public class ProjectController {
           // delete the project if there's an error/
           DistributedFileSystemOps udfso = dfs.getDfsOps(project.getOwner().getUsername());
           try {
-            removeByID(project.getId(), project.getOwner().getEmail(), true, udfso);
+            removeByID(project.getId(), project.getOwner().getEmail(), true,
+                    udfso, dfs.getDfsOps());
           } catch (IOException | AppException t) {
             // do nothing
           } finally {
@@ -424,7 +441,8 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public boolean removeByID(Integer projectID, String email,
-    boolean deleteFilesOnRemove, DistributedFileSystemOps udfso) throws
+          boolean deleteFilesOnRemove, DistributedFileSystemOps udfso,
+          DistributedFileSystemOps dfso) throws
     IOException, AppException {
     boolean success = !deleteFilesOnRemove;
 
@@ -445,12 +463,74 @@ public class ProjectController {
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
     if (deleteFilesOnRemove) {
+      //clean up log aggregation folder
+      File yarnConfFile = new File(settings.getHadoopConfDir(),
+              Settings.DEFAULT_YARN_CONFFILE_NAME);
+      if (!yarnConfFile.exists()) {
+        logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+                yarnConfFile);
+        throw new IllegalStateException("No yarn conf file: yarn-site.xml");
+      }
+
+      Configuration conf = new Configuration();
+      conf.addResource(new Path(yarnConfFile.getAbsolutePath()));
+      String logPath = conf.get(YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+              YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
+
+      Properties sparkProperties = new Properties();
+      InputStream is = null;
+      String historyPath = "";
+      try {
+        is = new FileInputStream(settings.getSparkDir() + "/"
+                + Settings.SPARK_CONFIG_FILE);
+        sparkProperties.load(is);
+
+        //For every property that is in the spark configuration file but is not
+        //already set, create a java system property.
+        historyPath = sparkProperties.getProperty("spark.eventLog.dir");
+      } finally {
+        if (is != null) {
+          is.close();
+        }
+      }
+
+      String hdfsUsername;
+      List<String> usersToClean = new ArrayList<>();
+      List<Integer> userIdToClean = new ArrayList<>();
+
+      for (ProjectTeam member : projectTeam) {
+        hdfsUsername = hdfsUsersBean.getHdfsUserName(project, member.getUser());
+        usersToClean.add(hdfsUsername);
+
+        int userId = hdfsUsersFacade.findByName(hdfsUsername).getId();
+        userIdToClean.add(userId);
+      }
+
+      //clean up project
       String path = File.separator + settings.DIR_ROOT + File.separator
-        + project.getName();
+              + project.getName();
       Path location = new Path(path);
       success = udfso.rm(location, true);
       //if the files are removed the group should also go.
       if (success) {
+        for (String hdfsUserName : usersToClean) {
+          location = new Path(logPath + "/" + hdfsUserName);
+          dfso.rm(location, true);
+        }
+        for (int userId : userIdToClean) {
+          List<Inode> inodes = inodeFacade.findByHdfsUser(new HdfsUsers(userId));
+          for (Inode inode : inodes) {
+            if (inode.getInodePK().getName().contains("snappy")) {
+              location = new Path(historyPath + "/" + inode.getInodePK().
+                      getName());
+              logger.log(Level.SEVERE, "chown " + location.toString());
+              dfso.setOwner(location, UserGroupInformation.getLoginUser().
+                      getUserName(), "hadoop");
+
+            }
+          }
+        }
+        
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
         hdfsUsersBean.deleteProjectUsers(project, projectTeam);
         zeppelinConfFactory.deleteZeppelinConfDir(project.getName());
