@@ -114,20 +114,19 @@ public class HistoryService {
    
     Project returnProject = projectFacade.find(projectId);
     List<YarnAppResultDTO> appResultsToReturn = new ArrayList<>();
-    List<YarnAppResult> appResults = yarnAppResultFacade.findByUsername(
-            hdfsUsersBean.getHdfsUserName(returnProject,
-                    returnProject.getOwner()));
-    
-    Iterator<YarnAppResult> itr = appResults.iterator();
-    while(itr.hasNext()){
-        YarnAppResult it = itr.next();
-        
-        JobsHistory jh = jobsHistoryFacade.findByAppId(it.getId());
-        if(jh != null){
-            YarnAppResultDTO appToAdd  = new YarnAppResultDTO(it, jh.getExecutionDuration(), it.getFinishTime()-it.getStartTime());
-            appToAdd.setOwnerFullName(returnProject.getOwner().getFname() + " " + returnProject.getOwner().getLname());
-            appResultsToReturn.add(appToAdd);
-        }
+    List<JobsHistory> jobsHistories = jobsHistoryFacade.findByProjectId(
+            returnProject.getId());
+
+    for (JobsHistory jh : jobsHistories) {
+      YarnAppResult appResult = yarnAppResultFacade.findAllByName(jh.getAppId());
+      if (appResult != null) {
+        YarnAppResultDTO appToAdd = new YarnAppResultDTO(appResult, jh.
+                getExecutionDuration(), appResult.getFinishTime() - appResult.
+                getStartTime());
+        appToAdd.setOwnerFullName(returnProject.getOwner().getFname() + " "
+                + returnProject.getOwner().getLname());
+        appResultsToReturn.add(appToAdd);
+      }
     }
     
     GenericEntity<List<YarnAppResultDTO>> yarnApps

@@ -23,6 +23,7 @@ import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 @NamedQueries({
     @NamedQuery(name = "JobsHistory.findAll", query = "SELECT j FROM JobsHistory j"),
     @NamedQuery(name = "JobsHistory.findByAppId", query = "SELECT j FROM JobsHistory j WHERE j.appId = :appId AND j.appId IS NOT NULL"),
+    @NamedQuery(name = "JobsHistory.findByProjectId", query = "SELECT j FROM JobsHistory j WHERE j.projectId = :projectId AND j.projectId IS NOT NULL"),
     @NamedQuery(name = "JobsHistory.findByJobType", query = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType"),
     @NamedQuery(name = "JobsHistory.findByClassName", query = "SELECT j FROM JobsHistory j WHERE j.className = :className"),
     @NamedQuery(name = "JobsHistory.findByBlocksInHdfs", query = "SELECT j FROM JobsHistory j WHERE j.inputBlocksInHdfs = :inputBlocksInHdfs"),
@@ -150,6 +151,11 @@ public class JobsHistory implements Serializable {
     @Enumerated(EnumType.STRING)
     private JobFinalStatus finalStatus;
 
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "project_id")
+    private Integer projectId;
+    
     public JobsHistory() {
     }
 
@@ -171,6 +177,7 @@ public class JobsHistory implements Serializable {
         this.jobName = jobDesc.getName();
         this.state = JobState.NEW;
         this.finalStatus = JobFinalStatus.UNDEFINED;
+        this.projectId = jobDesc.getProject().getId();
     }
     
     public String getAppId(){
@@ -361,8 +368,15 @@ public class JobsHistory implements Serializable {
     public void setJarFile(String jarFile) {
         this.jarFile = jarFile;
     }
-    
+  
+  public int getProjectId() {
+    return projectId;
+  }
 
+  public void setProjectId(int projectId) {
+    this.projectId = projectId;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
