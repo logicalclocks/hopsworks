@@ -43,6 +43,8 @@
                       <div class="btn-group" role="group" aria-label="Second group" ng-show="datasetsCtrl.isSelectedFiles() > 0">
                         <button type="button" class="btn btn-default fa fa-trash-o" title="Delete"
                                 ng-click="datasetsCtrl.deleteSelected();"></button>
+                        <button type="button" class="btn btn-default fa fa-edit" title="Rename"
+                                ng-click="datasetsCtrl.renameSelected();" ng-if="datasetsCtrl.isSelectedFiles() === 1"></button>
                         <button type="button" class="btn btn-default fa fa-arrows" title="Move"
                                 ng-click="datasetsCtrl.moveSelected();"></button>
 
@@ -61,7 +63,7 @@
                       <div class="col-md-6 pull-right">
                         <div class="input-group">
                           <input type="text" class="form-control" 
-                                 ng-model="search"placeholder="Filter...">
+                                 ng-model="search" placeholder="Filter...">
                           <span class="input-group-btn">
                             <button class="btn btn-default fa fa-filter icon-resize-small" type="button" title="Filter"></button>
                           </span>
@@ -226,7 +228,7 @@
                               <a class="pointer"
                                  role="menuitem"
                                  tabindex="4"
-                                 ng-click="datasetsCtrl.rename(file.id)">
+                                 ng-click="datasetsCtrl.rename(file.id, file.name)">
                                 <span><i class="fa fa-edit"></i>
                                   Rename</span>
                               </a>
