@@ -97,6 +97,20 @@
     min-height: 40%;
     z-index: 2;
 }
+
+.rg-row-top-min {
+    background:#fff;
+    border-radius: 3px;
+    margin-left: 9px;
+    margin-right: 9px;
+    padding: 10px;
+    border: 1px solid transparent; 
+    height: 70%; 
+    max-height: 90%; 
+    min-height: 30%;
+    z-index: 2;
+}
+
 .rg-row-bottom {
     flex: 1;
     margin-top: 14px;
@@ -104,6 +118,16 @@
     margin-left: 9px;
     margin-right: 9px;
     padding: 10px;
+    background:#fff;
+    border: 1px solid transparent;
+    z-index: 3;
+}
+
+.rg-row-bottom-no-margin {
+    flex: 1;
+    border-radius: 3px;
+    margin-left: 9px;
+    margin-right: 9px;
     background:#fff;
     border: 1px solid transparent;
     z-index: 3;

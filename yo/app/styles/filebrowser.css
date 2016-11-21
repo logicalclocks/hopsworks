@@ -1,6 +1,6 @@
 .file-box {
   float: left;
-  width: 200px;
+  width: 198px;
 }
 .file-manager h5 {
   text-transform: uppercase;
@@ -362,4 +362,8 @@ md-backdrop.md-sidenav-backdrop {
 .md-tabs-content {
   overflow: auto;
   height: 88%;
+}
+
+.full-height {
+  height:90% !important;
 }
