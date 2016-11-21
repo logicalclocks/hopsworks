@@ -368,7 +368,8 @@ public class ProjectService {
             
         } catch (ProjectInternalFoldersFailedException ee) {
           try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
+            projectController.removeByID(project.getId(), owner, true, udfso,
+                    dfso);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Could not create project resources");
           } catch (IOException e) {
@@ -377,7 +378,8 @@ public class ProjectService {
           }
         } catch (IOException ex) {
           try {
-            projectController.removeByID(project.getId(), owner, true, udfso);
+            projectController.removeByID(project.getId(), owner, true, udfso,
+                    dfso);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Could not add project folder owner in HDFS");
           } catch (IOException e) {
@@ -483,7 +485,8 @@ public class ProjectService {
         }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
-          projectController.removeByID(project.getId(), owner, true, udfso);
+          projectController.
+                  removeByID(project.getId(), owner, true, udfso, dfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Could not create project resources");
         } catch (IOException e) {
@@ -492,7 +495,8 @@ public class ProjectService {
         }
       } catch (IOException ex) {
         try {
-          projectController.removeByID(project.getId(), owner, true, udfso);
+          projectController.
+                  removeByID(project.getId(), owner, true, udfso, dfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Could not add project folder owner in HDFS");
         } catch (IOException e) {
@@ -549,7 +553,8 @@ public class ProjectService {
       }
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      success = projectController.removeByID(id, owner, true, udfso);
+      success = projectController.removeByID(id, owner, true, udfso, dfs.
+              getDfsOps());
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You don't have delete permission to one or all files in this folder.");
@@ -596,7 +601,8 @@ public class ProjectService {
       }
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      success = projectController.removeByID(id, owner, false, udfso);
+      success = projectController.removeByID(id, owner, false, udfso, dfs.
+              getDfsOps());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
