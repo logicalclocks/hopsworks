@@ -1,0 +1,140 @@
+.search-result {
+  width: 100%;
+}
+
+.search-result-header > div > h3 {
+  color: #8A8A8A;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+.search-result-header {
+  border-bottom: 1px solid #e5e5e5;
+}
+.search-result-filter {
+  background: #FFFFFF;
+  width: 100%;
+  margin-top: -20px;
+  box-shadow: 1px 2px 7px 1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.search-result-filter > div > li > ul {
+  padding: 0;
+  margin: 0;
+}
+
+.search-result-filter > div > li {
+  list-style: none;
+}
+.search-result-filter > div > li > ul > li {
+  list-style: none;
+}
+
+.search-result-filter > div > li > ul > li > a {
+  display: block;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #999;
+  white-space: normal;
+}
+
+.search-result-filter > div > li ul > li > a:hover,
+.search-result-filter > div > li ul > li > a:focus {
+  text-decoration: none;
+  color: #444;
+  background-color: #f5f5f5;
+}
+
+.search-result-filter form {
+  margin: 3px 20px;
+}
+
+.search-result-filter .form-group {
+  margin-bottom: 3px;
+}
+
+.search-result-filter .divider {
+  height: 1px;
+  margin: 9px 0;
+  overflow: hidden;
+  background-color: #e5e5e5;
+}
+
+.search-result .divider {
+  height: 1px;
+  margin: 9px 0;
+  overflow: hidden;
+  background-color: #e5e5e5;
+}
+
+.search-result-filter .dropdown-header {
+  color: #428bca;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 0px;
+}
+.result-filter-body {
+  margin: 0px;
+  margin-bottom: 15px;
+  padding: 15px;
+}
+
+.search-result-body {
+  margin: 2rem 0;
+  height:700px;
+  overflow:auto;
+}
+
+.filter-menu-uppercase {
+  margin-bottom: 0px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.card-item-content.blue .header > label {
+    color: #4178BE;   
+}
+
+.card-item-content.green .header > label {
+    color: #5DA51D;   
+}
+
+.spinner input {
+  text-align: right;
+}
+
+.input-group-btn-vertical {
+  position: relative;
+  white-space: nowrap;
+  width: 2%;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.input-group-btn-vertical > .btn {
+  display: block;
+  float: none;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px;
+  margin-left: -1px;
+  position: relative;
+  border-radius: 0;
+}
+
+.input-group-btn-vertical > .btn:first-child {
+  border-top-right-radius: 4px;
+}
+
+.input-group-btn-vertical > .btn:last-child {
+  margin-top: -2px;
+  border-bottom-right-radius: 4px;
+}
+
+.input-group-btn-vertical i {
+  position: absolute;
+  top: 0;
+  left: 4px;
+}
+

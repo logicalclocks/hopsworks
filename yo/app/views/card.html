@@ -1,0 +1,40 @@
+<div class="card-item">
+  <div class="card-item-content 
+       {{content.type === 'ds'? 'red': ''}} 
+       {{content.type === 'proj'? 'blue': ''}}
+       {{content.type === 'nb'? 'green': ''}}">
+    <div class="header">
+      <label>{{content.type === 'ds'? 'dataset': ''}} 
+             {{content.type === 'proj'? 'project': ''}}
+             {{content.type === 'nb'? 'notebook': ''}}
+      </label>
+      <h3>{{content.name}}</h3>
+    </div>
+    <div class="card-body">
+      <div class="details">
+        <div ng-bind-html="content.details"></div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-footer-icons">
+        <!--span data-placement="bottom" data-toggle="tooltip" title="Reviews">
+          <i class="card-footer-icon fa fa-heart" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown"></i>
+        </span>
+        <span data-placement="bottom" data-toggle="tooltip" title="Download">
+          <i class="card-footer-icon fa fa-download" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i> 
+        </span>        
+        <span data-placement="bottom" data-toggle="tooltip" title="Share">
+          <i class="card-footer-icon fa fa-share" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>  
+        </span-->
+        <span data-placement="bottom" data-toggle="tooltip" title="Detail"
+              ng-click="detailsFn(content)">
+          <i class="card-footer-icon fa fa-bars" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
