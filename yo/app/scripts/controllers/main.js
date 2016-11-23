@@ -137,13 +137,12 @@ angular.module('hopsWorksApp')
 
 
               if (self.searchType === "global") {
-
                 //triggering a global search
                 elasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
 
                           var searchHits = response.data;
-                          console.log("RECEIVED RESPONSE ", response);
+                          //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
                             if (self.globalClusterBoundary) {
                               self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
@@ -168,9 +167,8 @@ angular.module('hopsWorksApp')
               } else if (self.searchType === "projectCentric") {
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
                         .then(function (response) {
-
                           var searchHits = response.data;
-                          //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
+                          //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
                             self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
                             self.searchResult = searchHits;
@@ -180,16 +178,14 @@ angular.module('hopsWorksApp')
                           }
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
                           self.resultItems = self.searchResult.length;
-
                         }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
               } else if (self.searchType === "datasetCentric") {
                 elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
                         .then(function (response) {
-
                           var searchHits = response.data;
-                          //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
+                          //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
                             self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
                             self.searchResult = searchHits;
@@ -199,12 +195,10 @@ angular.module('hopsWorksApp')
                           }
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
                           self.resultItems = self.searchResult.length;
-
                         }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         });
               }
-
               datePicker();// this will load the function so that the date picker can call it.
             };
                 

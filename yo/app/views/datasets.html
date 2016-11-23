@@ -8,15 +8,14 @@
     <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay" ></div>
+      <div ng-include="'navProject.html'"></div>
       <section>
-          <div ng-include="'navProject.html'"></div>
-          <div layout="column" layout-fill layout-align="top center" >
-            <div ng-show="mainCtrl.searchReturned !== ''">
+          <div >
+            <div ng-show="mainCtrl.searchReturned !== ''" class="content-wrapper">
               <div id="projectSearchResults">
-                <div ng-include="'views/searchResult.html'"></div>
+                <div ng-include="'views/search.html'"></div>
               </div>
             </div>
-
             <div class="content-wrapper" style="background-color: white;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <div growl reference="3" class="pull-right" ></div>
               <h3>               
