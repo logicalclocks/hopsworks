@@ -63,221 +63,186 @@ angular.module('hopsWorksApp')
               return self.email.substring(0, self.email.indexOf("@"));
             };
 
-            self.view = function (name, id, dataType) {
+            var getUnreadCount = function () {
+              MessageService.getUnreadCount().then(
+                      function (success) {
+                        self.unreadMessages = success.data.data.value;
+                      }, function (error) {
+              });
+            };
+            var getMessages = function () {//
+              MessageService.getMessages().then(
+                      function (success) {
+                        self.messages = success.data;
+                        console.log(success);
+                      }, function (error) {
 
-              if (dataType === 'project') {
-                ProjectService.getProjectInfo({projectName: name}).$promise.then(
-                        function (success) {
+              });
+            };
+            getUnreadCount();
+            getMessages();
+            //this might be a bit to frequent for refresh rate 
+            var getUnreadCountInterval = $interval(function () {
+              getUnreadCount();
+            }, 10000);
+            self.getMessages = function () {
+              getMessages();
+            };
+            self.openMessageModal = function (selected) {
+              if (selected !== undefined) {
+                MessageService.markAsRead(selected.id);
+              }
+              ;
+              ModalService.messages('lg', selected)
+                      .then(function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000})
+                      }, function (error) { });
+            };
 
-                          ModalService.viewSearchResult('md', success, dataType)
-                                  .then(function (success) {
-                                    growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                  }, function (error) {
+            self.searchTerm = "";
+            self.globalClusterBoundary = false;
+            self.searchReturned = "";
+            self.searchResult = [];
+            self.resultPages = 0;
+            self.resultItems = 0;
+            self.currentPage = 1;
+            self.pageSize = 5;
+            self.hitEnter = function (evt) {
+              if (angular.equals(evt.keyCode, 13)) {
+                self.search();
+              }
+            };
 
-                                  });
-                        }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                });
-              } else if (dataType === 'dataset') {
-                //fetch the dataset
-                ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
-                        function (response) {
-                          var projects;
+            self.keyTyped = function (evt) {
 
-                          //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
-                          ProjectService.query().$promise.then(
-                                  function (success) {
-                                    projects = success;
-
-                                    //show dataset
-                                    ModalService.viewSearchResult('md', response, dataType, projects)
-                                            .then(function (success) {
-                                                growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                            }, function (error) {
-
-                                            });
-                                }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                        });
-                        });
-                    } else if (dataType === 'ds') {
-                        //fetch the dataset
-                        ProjectService.getDatasetInfo({inodeId: id}).$promise.then(
-                                function (response) {
-                                    var projects;
-                                    //fetch the projects to pass them in the modal. Fixes empty projects array on ui-select initialization
-                                    ProjectService.query().$promise.then(
-                                            function (success) {
-                                                projects = success;
-
-                                                //show dataset
-                                                ModalService.viewSearchResult('md', response, dataType, projects)
-                                                        .then(function (success) {
-                                                            growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                                        }, function (error) {
-
-                                                        });
-                                            }, function (error) {
-                                        console.log('Error: ' + error);
-                                    });
-
-                                }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                        });
-                    }
-                };
-
-                var getUnreadCount = function () {
-                    MessageService.getUnreadCount().then(
-                            function (success) {
-                                self.unreadMessages = success.data.data.value;
-                            }, function (error) {
-                    });
-                };
-                var getMessages = function () {//
-                    MessageService.getMessages().then(
-                            function (success) {
-                                self.messages = success.data;
-                                console.log(success);
-                            }, function (error) {
-
-                    });
-                };
-                getUnreadCount();
-                getMessages();
-                //this might be a bit to frequent for refresh rate 
-                var getUnreadCountInterval = $interval(function () {
-                    getUnreadCount();
-                }, 10000);
-                self.getMessages = function () {
-                    getMessages();
-                };
-                self.openMessageModal = function (selected) {
-                    if (selected !== undefined) {
-                        MessageService.markAsRead(selected.id);
-                    }
-                    ;
-                    ModalService.messages('lg', selected)
-                            .then(function (success) {
-                                growl.success(success.data.successMessage, {title: 'Success', ttl: 1000})
-                            }, function (error) { });
-                };
-
-                self.searchTerm = "";
-                self.globalClusterBoundary = false;
-                self.searchReturned = "";
+              if (self.searchTerm.length > 3) {
+                self.search();
+              } else {
                 self.searchResult = [];
-                self.resultPages = 0;
-                self.resultItems = 0;
-                self.currentPage = 1;
-                self.pageSize = 5;
-                self.hitEnter = function (evt) {
-                    if (angular.equals(evt.keyCode, 13)) {
-                        self.search();
-                    }
-                };
+                self.searchReturned = "";
+              }
+            };
 
-                self.keyTyped = function (evt) {
+            self.search = function () {
+              //ask for the project name when it is time to search
+              self.projectName = UtilsService.getProjectName();
+              self.currentPage = 1;
+              self.pageSize = 5;
+              self.searchResult = [];
+              self.searchReturned = "";
 
-                    if (self.searchTerm.length > 3) {
-                        self.search();
-                    } else {
-                        self.searchResult = [];
-                        self.searchReturned = "";
-                    }
-                };
-
-                self.search = function () {
-                    //ask for the project name when it is time to search
-                    self.projectName = UtilsService.getProjectName();
-                    self.currentPage = 1;
-                    self.pageSize = 5;
-                    self.searchResult = [];
-                    self.searchReturned = "";
-
-                      if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
-                        return;
-                      }
+              if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
+                return;
+              }
 
 
-                    if (self.searchType === "global") {
-                                            
-                        //triggering a global search
-                        elasticService.globalSearch(self.searchTerm)
-                                .then(function (response) {
+              if (self.searchType === "global") {
+                //triggering a global search
+                elasticService.globalSearch(self.searchTerm)
+                        .then(function (response) {
 
-                                    var searchHits = response.data;
-                                    //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
-                                    if (searchHits.length > 0) {
-                                        if (self.globalClusterBoundary) {
-                                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-                                        } else {
-                                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-                                        }
-                                        self.searchResult = searchHits;
-                                    } else {
-                                        self.searchResult = [];
-                                        if (self.globalClusterBoundary) {
-                                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-                                        } else {
-                                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-                                        }
-                                    }
-                                    self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                                    self.resultItems = self.searchResult.length;
+                          var searchHits = response.data;
+                          //console.log("RECEIVED RESPONSE ", response);
+                          if (searchHits.length > 0) {
+                            if (self.globalClusterBoundary) {
+                              self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            } else {
+                              self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            }
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            if (self.globalClusterBoundary) {
+                              self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                            } else {
+                              self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                            }
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
 
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                                });
-                    } else if (self.searchType === "projectCentric") {
-                        elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
-                                .then(function (response) {
-
-                                    var searchHits = response.data;
-                                    //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
-                                    if (searchHits.length > 0) {
-                                        self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-                                        self.searchResult = searchHits;
-                                    } else {
-                                        self.searchResult = [];
-                                        self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-                                    }
-                                    self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                                    self.resultItems = self.searchResult.length;
-
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                                });
-                    } else if (self.searchType === "datasetCentric") {
-                        elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
-                                .then(function (response) {
-
-                                    var searchHits = response.data;
-                                    //console.log("RECEIVED RESPONSE " + JSON.stringify(response));
-                                    if (searchHits.length > 0) {
-                                        self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
-                                        self.searchResult = searchHits;
-                                    } else {
-                                        self.searchResult = [];
-                                        self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
-                                    }
-                                    self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                                    self.resultItems = self.searchResult.length;
-
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                                });
-                    }
-
-                    datePicker();// this will load the function so that the date picker can call it.
-                };
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        });
+              } else if (self.searchType === "projectCentric") {
+                elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
+                        .then(function (response) {
+                          var searchHits = response.data;
+                          //console.log("RECEIVED RESPONSE ", response);
+                          if (searchHits.length > 0) {
+                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        });
+              } else if (self.searchType === "datasetCentric") {
+                elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
+                        .then(function (response) {
+                          var searchHits = response.data;
+                          //console.log("RECEIVED RESPONSE ", response);
+                          if (searchHits.length > 0) {
+                            self.searchReturned = "Result for <b>" + self.searchTerm + "</b>";
+                            self.searchResult = searchHits;
+                          } else {
+                            self.searchResult = [];
+                            self.searchReturned = "No result found for <b>" + self.searchTerm + "</b>";
+                          }
+                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
+                          self.resultItems = self.searchResult.length;
+                        }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        });
+              }
+              datePicker();// this will load the function so that the date picker can call it.
+            };
                 
-                $scope.$on("$destroy", function () {
-                    $interval.cancel(getUnreadCountInterval);
+            $scope.$on("$destroy", function () {
+              $interval.cancel(getUnreadCountInterval);
+            });
+
+            var datePicker = function () {
+              $(function () {
+                $('#datetimepicker1').datetimepicker();
+              });
+            };
+                              
+            self.incrementPage = function () {
+              self.pageSize = self.pageSize + 1;
+            };
+
+            self.decrementPage = function () {
+              if (self.pageSize < 2) {
+                return;
+              }
+              self.pageSize = self.pageSize - 1;
+            };
+            
+            self.viewDelail = function(result) {
+              if (result.type === 'proj') {
+                ProjectService.getProjectInfo({projectName: result.name}).$promise.then(
+                  function (response) {
+                    ModalService.viewSearchResult('md', response, result.type);
+                  }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                 });
-                
-                var datePicker = function () {
-                    $(function () {
-                        $('#datetimepicker1').datetimepicker();
-                    });};
-            }]);
+              } else if (result.type === 'ds') {
+                ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(
+                  function (response) {
+                    var projects;
+                    ProjectService.query().$promise.then(
+                      function (success) {
+                        projects = success;
+                        ModalService.viewSearchResult('md', response, result.type, projects);
+                      }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
+                  });
+              }
+            };            
+}]);

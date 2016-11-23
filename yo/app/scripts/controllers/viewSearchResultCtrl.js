@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
             self.request = {'inodeId': "", 'projectId': "", 'message': ""};
             self.projects = projects;
 
-            if (datatype === 'project') {
+            if (datatype === 'proj') {
               self.type = 'Project';
               self.requestType = 'join';
               self.infoMembers = 'Members in this project.';

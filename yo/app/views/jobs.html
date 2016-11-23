@@ -91,7 +91,7 @@
                         </thead>
                         <tbody>
                            <tr
-                              dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index == selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.id);">
+                              dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.id);">
                               <td id="{{job.name === projectCtrl.tourService.createdJobName}}">
                                  <button style="border-color: #20AD28; min-width: 64px;"
                                     ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();" 
@@ -100,8 +100,8 @@
                                  <button
                                     ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"
                                     ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
-                                    jobsCtrl.runningInfo['' + job.id].state == 'Starting Application Master' ||
-                                    jobsCtrl.runningInfo['' + job.id].state == 'Initializing'"
+                                    jobsCtrl.runningInfo['' + job.id].state === 'Starting Application Master' ||
+                                    jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
                                     ng-click="jobsCtrl.toggle(job, $index);
                                     jobsCtrl.stopJob(job.id);
                                     jobsCtrl.showLogs(job.id);
@@ -127,94 +127,94 @@
                               </td>
                               <td>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Initializing'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Initialization failed'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Initialization failed'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Finished'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Finished'"
                                     style="color: #00A000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Running'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Running'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Accepted'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Accepted'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Failed'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Failed'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Killed'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Killed'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'New'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'New'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'New, saving'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'New, saving'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Submitted'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Submitted'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Aggregating logs'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Aggregating logs'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Framework failure'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Framework failure'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Starting Application Master'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Starting Application Master'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].state == 'Failed starting AM'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].state === 'Failed starting AM'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].state}}
                                  </span>
                               </td>
                               <td>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus == 'Undefined'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus === 'Undefined'"
                                     style="color: #0066bb ">
                                  {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus == 'Succeeded'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus === 'Succeeded'"
                                     style="color: #00A000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus == 'Failed'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus === 'Failed'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
                                  </span>
                                  <span
-                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus == 'Killed'"
+                                    ng-if="jobsCtrl.runningInfo['' + job.id].finalStatus === 'Killed'"
                                     style="color: #880000 ">
                                  {{jobsCtrl.runningInfo['' + job.id].finalStatus}}
                                  </span>
@@ -281,8 +281,12 @@
               Click on a job to see execution logs. 
             </h3>
             <h3 class="text-muted" style="text-align: center;" 
-                ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution()">
+                ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution() && jobsCtrl.fetchingLogs==0">
               No execution log found. 
+            </h3>
+            <h3 class="text-muted" style="text-align: center;" 
+                ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution() && jobsCtrl.fetchingLogs==1">
+              Retrieving logs, please wait... 
             </h3>
             <section ng-show="jobsCtrl.hasSelectJob && jobsCtrl.getNumOfExecution()">
               <h5 class="text-muted pull-right"> Number of executions {{jobsCtrl.getNumOfExecution()}}</h5>
@@ -300,8 +304,7 @@
                  </ul>
                  <div class="tab-content" >
                     <div id="logs" class="tab-pane fade in active">
-                       <div uib-accordion
-                          close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                       <div uib-accordion close-others="true" >
                           <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                             <div uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}
@@ -328,7 +331,7 @@
                        <div uib-accordion
                           close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                           <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
-                             <div uib-accordion-heading>
+                             <div uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">
                                    {{item.time}}

@@ -14,6 +14,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -52,6 +53,19 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return query.getResultList();
   }
 
+  /**
+   * Find all the Inodes that have <i>userId</i> as userId.
+   * <p/>
+   * @param userId
+   * @return
+   */
+  public List<Inode> findByHdfsUser(HdfsUsers hdfsUser) {
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByHdfsUser",
+            Inode.class);
+    query.setParameter("hdfsUser", hdfsUser);
+    return query.getResultList();
+  }
+  
   /**
    * Get all the children of <i>parent</i>. Alias of findByParent().
    * <p/>

@@ -127,7 +127,8 @@ ul.dropdown-messages a:hover  {
   transition: all 0.3s ease;
 }
 .ds-content.sidenav-open {
-  width: 80%;
+  width: 79%;
+  height:95%;
 }
 .ds-sidenav {
   width: 0;
@@ -150,7 +151,7 @@ ul.dropdown-messages a:hover  {
 }
 
 .row-no-margin-left {
-  margin-left: 0px;
+  margin-left: 0px !important;
 }
 
 

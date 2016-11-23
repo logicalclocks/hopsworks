@@ -105,8 +105,8 @@
             </div>
             <div ng-if="viewSearchResultCtrl.type === 'Dataset'" class="col-xs-9" style="padding-left: 0px">
               <label class="text-muted control-label">Projects</label>
-              <ui-select name="project_name" theme="select2"
-                           ng-model="viewSearchResultCtrl.request.projectId" style="min-width: 300px;" required>
+              <ui-select name="project_name" theme="select2" style="min-width: 300px;" title="Choose a project"
+                         ng-model="viewSearchResultCtrl.request.projectId"required>
 
                     <ui-select-match placeholder="Select a project this dataset will be shared with">{{$select.selected.project.name}}</ui-select-match>
 

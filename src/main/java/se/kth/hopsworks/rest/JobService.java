@@ -61,7 +61,6 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.yarn.YarnLogUtil;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
@@ -79,7 +78,7 @@ import se.kth.hopsworks.util.Settings;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobService {
 
-  private static final Logger logger = Logger.getLogger(JobService.class.
+  private static final Logger LOGGER = Logger.getLogger(JobService.class.
           getName());
 
   @EJB
@@ -110,8 +109,7 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private UserManager userBean;
+
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
@@ -122,7 +120,7 @@ public class JobService {
 
   /**
    * Get all the jobs in this project.
-   * <p/>
+   * <p>
    * @param sc
    * @param req
    * @return A list of all defined Jobs in this project.
@@ -144,7 +142,7 @@ public class JobService {
 
   /**
    * Get the job with the given id in the current project.
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -164,7 +162,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
@@ -180,7 +178,7 @@ public class JobService {
    * when a JobDescription object is
    * returned. This method must therefore be called explicitly to get the job
    * configuration.
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -200,7 +198,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
@@ -211,7 +209,7 @@ public class JobService {
 
   /**
    * Get the Job UI url for the specified job
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -231,7 +229,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
@@ -245,7 +243,7 @@ public class JobService {
       try {
         String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(
                 execution.getAppId());
-        if (trackingUrl != null && trackingUrl != "") {
+        if (trackingUrl != null && !trackingUrl.isEmpty()) {
           trackingUrl = "/hopsworks/api/project/" + project.getId() + "/jobs/"
                   + jobId + "/prox/" + trackingUrl;
           return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -255,7 +253,7 @@ public class JobService {
                   entity("").build();
         }
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "exception while geting job ui " + e.
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
                 getLocalizedMessage(), e);
       }
       return noCacheResponse.
@@ -265,7 +263,7 @@ public class JobService {
 
   /**
    * Get the Yarn UI url for the specified job
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -285,7 +283,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
@@ -306,7 +304,7 @@ public class JobService {
                 entity(yarnUrl).build();
 
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "exception while geting job ui " + e.
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
                 getLocalizedMessage(), e);
       }
       return noCacheResponse.
@@ -314,7 +312,7 @@ public class JobService {
     }
   }
 
-  private static final HashSet<String> passThroughHeaders = new HashSet<String>(
+  private static final HashSet<String> PASS_THROUGH_HEADERS = new HashSet<String>(
           Arrays
           .asList("User-Agent", "user-agent", "Accept", "accept",
                   "Accept-Encoding", "accept-encoding", "Accept-Language",
@@ -324,7 +322,7 @@ public class JobService {
   /**
    * Get the job ui for the specified job.
    * This act as a proxy to get the job ui from yarn
-   * <p/>
+   * <p>
    * @param jobId
    * @param param
    * @param sc
@@ -346,7 +344,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
@@ -365,7 +363,7 @@ public class JobService {
         }
         trackingUrl = trackingUrl.replace("@hwqm", "?");
         if (!hasAppAccessRight(trackingUrl, job)) {
-          logger.log(Level.SEVERE,
+          LOGGER.log(Level.SEVERE,
                   "A user is trying to access an app outside their project!");
           return Response.status(Response.Status.FORBIDDEN).build();
         }
@@ -386,7 +384,7 @@ public class JobService {
         while (names.hasMoreElements()) {
           String name = names.nextElement();
           String value = req.getHeader(name);
-          if (passThroughHeaders.contains(name)) {
+          if (PASS_THROUGH_HEADERS.contains(name)) {
             //yarn does not send back the js if encoding is not accepted
             //but we don't want to accept encoding for the html because we
             //need to be able to parse it
@@ -457,7 +455,7 @@ public class JobService {
         }
         return response.build();
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "exception while geting job ui " + e.
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
                 getLocalizedMessage(), e);
         return noCacheResponse.
                 getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -518,7 +516,7 @@ public class JobService {
       }
 
     }
-    if (appId != "") {
+    if (!appId.isEmpty()) {
       String appUser = yarnApplicationstateFacade.findByAppId(appId).
               getAppuser();
       if (!job.getProject().getName().equals(hdfsUsersBean.getProjectName(
@@ -562,9 +560,9 @@ public class JobService {
     JsonObjectBuilder builder = Json.createObjectBuilder();
     for (JobDescription desc : allJobs) {
       try {
-        List<Execution> executions = exeFacade.findForJob(desc);
-        if (executions != null && executions.isEmpty() == false) {
-          Execution execution = executions.get(0);
+        List<Execution> jobExecutions = exeFacade.findForJob(desc);
+        if (jobExecutions != null && jobExecutions.isEmpty() == false) {
+          Execution execution = jobExecutions.get(0);
           builder.add(desc.getId().toString(), Json.createObjectBuilder()
                   .add("running", false)
                   .add("state", execution.getState().toString())
@@ -576,7 +574,7 @@ public class JobService {
           );
         }
       } catch (ArrayIndexOutOfBoundsException e) {
-        logger.log(Level.WARNING, "No execution was found: {0}", e
+        LOGGER.log(Level.WARNING, "No execution was found: {0}", e
                 .getMessage());
       }
     }
@@ -610,7 +608,7 @@ public class JobService {
                 .add("url", trackingUrl)
         );
       } catch (ArrayIndexOutOfBoundsException e) {
-        logger.log(Level.WARNING, "No execution was found: {0}", e
+        LOGGER.log(Level.WARNING, "No execution was found: {0}", e
                 .getMessage());
       }
     }
@@ -622,7 +620,7 @@ public class JobService {
    * Get the log information related to a job. The return value is a JSON
    * object, with format logset=[{"time":"JOB
    * EXECUTION TIME"}, {"log":"INFORMATION LOG"}, {"err":"ERROR LOG"}]
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -663,10 +661,10 @@ public class JobService {
               arrayObjectBuilder.add("logPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              InputStream input = dfso.open(hdfsLogPath);
-              message = IOUtils.toString(input,
-                      "UTF-8");
-              input.close();
+              try (InputStream input = dfso.open(hdfsLogPath)) {
+                message = IOUtils.toString(input,
+                        "UTF-8");
+              }
               arrayObjectBuilder.add("log", message.isEmpty()
                       ? "No information." : message);
               if (message.isEmpty() && e.getState().isFinalState() && e.
@@ -694,10 +692,10 @@ public class JobService {
               arrayObjectBuilder.add("errPath", "/project/" + this.project.
                       getId() + "/datasets" + stdPath);
             } else {
-              InputStream input = dfso.open(hdfsErrPath);
-              message = IOUtils.toString(input,
-                      "UTF-8");
-              input.close();
+              try (InputStream input = dfso.open(hdfsErrPath)) {
+                message = IOUtils.toString(input,
+                        "UTF-8");
+              }
               arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
                       : message);
               if (message.isEmpty() && e.getState().isFinalState() && e.
@@ -723,7 +721,7 @@ public class JobService {
       }
       builder.add("logset", arrayBuilder);
     } catch (IOException ex) {
-      logger.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.
+      LOGGER.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.
               getMessage());
     } finally {
       if (dfso != null) {
@@ -812,7 +810,7 @@ public class JobService {
         }
       }
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -831,7 +829,7 @@ public class JobService {
    * Delete the job associated to the project and jobid. The return value is a
    * JSON object stating operation successful
    * or not.
-   * <p/>
+   * <p>
    * @param jobId
    * @param sc
    * @param req
@@ -845,7 +843,7 @@ public class JobService {
   public Response deleteJob(@PathParam("jobId") int jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    logger.log(Level.INFO, "Request to delete job");
+    LOGGER.log(Level.INFO, "Request to delete job");
 
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
@@ -853,16 +851,16 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return noCacheResponse.
               getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     } else {
       try {
-        logger.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
+        LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
         jobFacade.removeJob(job);
-        logger.log(Level.INFO, "Deleted job name ={0} job id ={1}",
+        LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
         JsonResponse json = new JsonResponse();
         json.setSuccessMessage("Deleted job " + job.getName() + " successfully");
@@ -871,7 +869,7 @@ public class JobService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
       } catch (DatabaseException ex) {
-        logger.log(Level.WARNING,
+        LOGGER.log(Level.WARNING,
                 "Job cannot be deleted  job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -882,7 +880,7 @@ public class JobService {
 
   /**
    * Get the ExecutionService for the job with given id.
-   * <p/>
+   * <p>
    * @param jobId
    * @return
    */
@@ -894,7 +892,7 @@ public class JobService {
       return null;
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return null;
     } else {
@@ -917,7 +915,7 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     } else if (!job.getProject().equals(project)) {
       //In this case, a user is trying to access a job outside its project!!!
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "A user is trying to access a job outside their project!");
       return noCacheResponse.
               getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
@@ -935,17 +933,14 @@ public class JobService {
             return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                     entity(json).build();
           } else {
-            logger.log(Level.WARNING,
-                    "Schedule is not created in the scheduler for the jobid "
-                    + jobId);
+            LOGGER.log(Level.WARNING, "Schedule is not created in the scheduler for the jobid {0}", jobId);
           }
         } else {
-          logger.log(Level.WARNING,
-                  "Schedule is not updated in DB for the jobid " + jobId);
+          LOGGER.log(Level.WARNING, "Schedule is not updated in DB for the jobid {0}", jobId);
         }
 
       } catch (DatabaseException ex) {
-        logger.log(Level.WARNING, "Cannot update schedule " + ex.getMessage());
+        LOGGER.log(Level.WARNING, "Cannot update schedule {0}", ex.getMessage());
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), ex.getMessage());
       }

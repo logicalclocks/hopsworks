@@ -54,20 +54,28 @@
       </div>
     </div>
 
-    <div class="">
+    <div style="width: 35%;">
       <fieldset  data-ng-repeat="choice in newFieldCtrl.fieldSelectItems" >
           <ng-form name="innerForm">
-            <input type="text" ng-model="choice.value" name="choice"  placeholder="Enter a single-select value" required>
-            <button type="button" class="glyphicon glyphicon-plus"  ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)" ng-disabled='innerForm.choice.$error.required'></button>
-            <button type="button" class="glyphicon glyphicon-minus"  ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
+            <div class="input-group input-group-sm">
+              <input class="form-control" type="text" ng-model="choice.value" name="choice"  placeholder="Enter a single-select value" required>
+              <div class="input-group-btn">
+                <button type="button" class="btn btn-default fa fa-plus"  ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(1)" ng-disabled='innerForm.choice.$error.required'></button>
+                <button type="button" class="btn btn-default fa fa-minus"  ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(1)"></button>
+              </div>
+            </div>
           </ng-form>
       </fieldset>
 
       <fieldset  data-ng-repeat="choice in newFieldCtrl.multiSelectItems">
         <ng-form name="innerForm">
-            <input type="text" ng-model="choice.value" name="choice" placeholder="Enter a multi-select value" required>
-            <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(2)" ng-disabled='innerForm.choice.$error.required'></button>
-            <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(2)"></button>
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="text" ng-model="choice.value" name="choice" placeholder="Enter a multi-select value" required>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default fa fa-plus" ng-show="$last" ng-click="newFieldCtrl.addNewSelectChoice(2)" ng-disabled='innerForm.choice.$error.required'></button>
+              <button type="button" class="btn btn-default fa fa-minus" ng-show="$last" ng-click="newFieldCtrl.removeSelectChoice(2)"></button>
+            </div>
+          </div>
         </ng-form>
       </fieldset>
     </div>
