@@ -106,7 +106,7 @@ public class ZeppelinConfigFactory {
       return null;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);    
+    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);
     return userConfig;
   }
 
@@ -128,13 +128,14 @@ public class ZeppelinConfigFactory {
     if (project == null) {
       return null;
     }
-    config = new ZeppelinConfig(projectName, settings);
+    String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
+    config = new ZeppelinConfig(projectName, hdfsUser, settings);
     projectConfCache.put(projectName, config);
     return projectConfCache.get(projectName);
   }
 
   /**
-   * Removes last restart time for projectName. 
+   * Removes last restart time for projectName.
    *
    * @param projectName
    */
@@ -164,32 +165,34 @@ public class ZeppelinConfigFactory {
       config.clean();
     }
   }
-  
+
   /**
    * Last restart time for the given project
-   * @param projectName
-   * @return 
-   */
-  public Long getLastRestartTime(String projectName) {
-    return projectCacheLastRestart.get(projectName);
-  }
-  
-  /**
-   * Deletes zeppelin configuration dir for projectName.
    *
    * @param projectName
    * @return
    */
-  public boolean deleteZeppelinConfDir(String projectName) {
-    ZeppelinConfig conf = projectConfCache.remove(projectName);
+  public Long getLastRestartTime(String projectName) {
+    return projectCacheLastRestart.get(projectName);
+  }
+
+  /**
+   * Deletes zeppelin configuration dir for projectName.
+   *
+   * @param project
+   * @return
+   */
+  public boolean deleteZeppelinConfDir(Project project) {
+    ZeppelinConfig conf = projectConfCache.remove(project.getName());
     if (conf != null) {
       return conf.cleanAndRemoveConfDirs();
     }
     String projectDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + projectName;
+            + Settings.DIR_ROOT + File.separator + project.getName();
     File projectDir = new File(projectDirPath);
+    String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
     if (projectDir.exists()) {
-      conf = new ZeppelinConfig(projectName, settings);
+      conf = new ZeppelinConfig(project.getName(), hdfsUser, settings);
       return conf.cleanAndRemoveConfDirs();
     }
     return false;
