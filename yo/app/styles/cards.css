@@ -1,0 +1,154 @@
+
+.card-item {
+    color: #1d3649;
+    cursor: pointer;
+    background: #FFFFFF;
+    box-shadow: 1px 2px 7px 1px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    float: left;
+    height: 165px;
+    margin-bottom: 1rem;
+    margin-right: 1rem;
+    min-width: 285px;
+    width: 100%;
+    position: relative;
+}
+
+.card-item-content {
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    height: 165px;
+    max-height: 165px;
+    padding: 10px 15px 15px;
+    position: relative;
+}
+
+.col-sm-4.col-md-3 .card-item-content {
+      border-top: 2px solid;
+}
+
+.col-sm-12.col-md-12 .card-item-content {
+      border-left: 2px solid;
+}
+
+.card-item-content.red {
+    border-color: #FC5120 !important;
+}
+
+.card-item-content.blue {
+    border-color: #4178BE !important;
+}
+
+.card-item-content.green {
+    border-color: #5DA51D !important;
+}
+
+.card-item-content.cyan  {
+    border-color: #00FFFF !important;
+}
+
+.card-item-content.gold  {
+    border-color: #FFD700 !important;
+}
+
+.card-item-content.hotPink {
+    border-color: #FF69B4 !important;
+}
+
+.card-item-content.yellow {
+    border-color: #FFFF00 !important;
+}
+
+.card-item-content .header > label {
+    margin-bottom: 0px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.card-item-content .header {
+    height: 62px;
+    max-height: 62px;
+    position: relative;
+    text-overflow: ellipsis;
+}
+
+.card-item-content.red .header > label {
+    color: #FC5120;   
+}
+
+.card-item-content.blue .header > label {
+    color: #4178BE;   
+}
+
+.card-item-content.green .header > label {
+    color: #5DA51D;   
+}
+
+.card-item-content.cyan .header > label {
+    color: #00FFFF;   
+}
+
+.card-item-content.gold .header > label {
+    color: #FFD700;   
+}
+
+.card-item-content.hotPink .header > label {
+    color: #FF69B4;   
+}
+
+.card-item-content.yellow .header > label {
+    color: #FFFF00;   
+}
+
+.card-item-content .header > h3 {
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.card-item-content .card-body {
+    height: 100px;
+    width: 100%;
+}
+
+.card-item-content .card-footer {
+    height: 15px;
+    width: 100%;
+}
+
+.card-footer .card-footer-icons {
+    float: right;
+    margin: 5px;
+}
+
+.card-footer-icons > span > i{
+  color: #777;
+}
+
+.card-footer-icons > span > i:hover{
+  color: #000;
+}
+
+.card-item-content .details {
+    bottom: 25px;
+    position: absolute;
+}
+
+.card-item-content .details label {
+    color: #8A8A8A;
+    font-size: 10px;
+    letter-spacing: 1.25px;
+    text-transform: uppercase;
+}
+.card-item-content .header > h3 {
+  margin-top: 2px;
+}
+.card-item-content .value {
+    color: #224155;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+

@@ -11,11 +11,11 @@
             <i class="fa fa-refresh" ng-class="{'fa-spin':messageCtrl.refreshing}"></i>
         </a><br>
         <p></p>
-        <tabset justified="true">
-            <tab>
-                <tab-heading>
+        <uib-tabset justified="true">
+            <uib-tab>
+                <uib-tab-heading>
                     <em class="fa fa-fw fa-lg fa-envelope-o"></em>Messages
-                </tab-heading>
+                </uib-tab-heading>
                 <p></p>
                 <input type="text" placeholder="Filter messages" ng-model="messageCtrl.filterText" class="form-control" style="margin-left: 10px; width:200px"/>
                 <p></p>
@@ -48,11 +48,11 @@
                     </ul>
                 </div>
 
-            </tab>
-            <tab>
-                <tab-heading>
+            </uib-tab>
+            <uib-tab>
+                <uib-tab-heading>
                     <em class="fa fa-fw fa-lg fa-trash"></em>Trash
-                </tab-heading>
+                </uib-tab-heading>
                 <p></p>
                 <input type="text" placeholder="Filter messages" ng-model="messageCtrl.filterText" class="form-control" style="margin-left: 10px; width:200px"/>
                 <p></p>
@@ -86,8 +86,8 @@
                         </li>
                     </ul>
                 </div>
-            </tab>
-        </tabset>
+            </uib-tab>
+        </uib-tabset>
 
     </div>
     <div class="panel message-panel col-xs-8 col-sm-8 col-md-8 pull-right" style="width: 70%;">

@@ -9,7 +9,7 @@ body {
   line-height: 1.52857;
   padding: 0;
   min-width: 800px;
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
   margin: 0;
 }
@@ -487,3 +487,33 @@ md-input-container {
 .btn-toolbar {
   display: flex;
 }
+
+.fields-in-table {
+  border-style: solid;
+  border-bottom: #ddd; 
+  padding-left:10px;
+  display: flex;
+  flex-direction: column;
+   max-height: 100px;
+}
+
+.form-control > a.select2-choice {
+  margin-top: -4px;
+  width: 112%;
+  margin-left: -10px;
+}
+
+.form-control > div.ui-select-dropdown {
+  margin-left: -10px;
+}
+
+.form-control > span.multiSelect > button {
+  margin-top: -10px;
+  width: 100%;
+}
+
+.ui-select-multiple.ui-select-bootstrap{
+  max-height: 100px; 
+  overflow: auto;
+}
+

@@ -280,6 +280,8 @@ public class DataSetService {
     if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
             AllowedRoles.DATA_SCIENTIST)) {
       newDS.setStatus(Dataset.PENDING);
+    } else {
+      hdfsUsersBean.shareDataset(proj, ds);
     }
     datasetFacade.persistDataset(newDS);
     if (dsReq != null) {
