@@ -48,6 +48,8 @@ import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.bbc.project.services.ProjectServicePK;
+import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.dataset.Dataset;
@@ -75,7 +77,7 @@ import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 public class ProjectController {
 
   private final static Logger logger = Logger.getLogger(ProjectController.class.
-    getName());
+          getName());
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -117,10 +119,12 @@ public class ProjectController {
   private EntityManager em;
 
   /**
-   * Creates a new project(project), the related DIR, the different services in the project, and the master of the
+   * Creates a new project(project), the related DIR, the different services in
+   * the project, and the master of the
    * project.
    * <p>
-   * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will make sure a new transaction is created even
+   * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
+   * make sure a new transaction is created even
    * if this method is called from within a transaction.
    * <p/>
    * @param newProject
@@ -129,36 +133,37 @@ public class ProjectController {
    * @return
    * @throws IllegalArgumentException if the project name already exists.
    * @throws se.kth.hopsworks.rest.AppException
-   * @throws IOException if the DIR associated with the project could not be created. For whatever reason.
+   * @throws IOException if the DIR associated with the project could not be
+   * created. For whatever reason.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Project createProject(ProjectDTO newProject, String email,
-    DistributedFileSystemOps dfso) throws
-    IOException, AppException {
+          DistributedFileSystemOps dfso) throws
+          IOException, AppException {
     Users user = userBean.getUserByEmail(email);
-    try{
+    try {
       FolderNameValidator.isValidName(newProject.getProjectName());
-    }catch(ValidationException ex){
+    } catch (ValidationException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.INVALID_PROJECT_NAME);
+              ResponseMessages.INVALID_PROJECT_NAME);
     }
     if (projectFacade.numProjectsLimitReached(user)) {
       logger.log(Level.SEVERE,
-        "You have reached the maximum number of allowed projects.");
+              "You have reached the maximum number of allowed projects.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
+              ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
     } else if (projectFacade.projectExists(newProject.getProjectName())) {
       logger.log(Level.INFO, "Project with name {0} already exists!",
-        newProject.getProjectName());
+              newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_EXISTS);
+              ResponseMessages.PROJECT_EXISTS);
     } else if (dfso.exists(File.separator + settings.DIR_ROOT
-      + File.separator + newProject.getProjectName())) {
+            + File.separator + newProject.getProjectName())) {
       logger.log(Level.WARNING, "Project with name {0} already exists in hdfs. "
-        + "Possible inconsistency! project name not in database.",
-        newProject.getProjectName());
+              + "Possible inconsistency! project name not in database.",
+              newProject.getProjectName());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_EXISTS);
+              ResponseMessages.PROJECT_EXISTS);
     } else { // create the project!
 
 
@@ -186,7 +191,8 @@ public class ProjectController {
         Inode projectInode = this.inodes.getProjectRoot(project.getName());
         if (projectInode == null) {
           // delete the project if there's an error/
-          DistributedFileSystemOps udfso = dfs.getDfsOps(project.getOwner().getUsername());
+          DistributedFileSystemOps udfso = dfs.getDfsOps(project.getOwner().
+                  getUsername());
           try {
             removeByID(project.getId(), project.getOwner().getEmail(), true,
                     udfso, dfs.getDfsOps());
@@ -195,9 +201,11 @@ public class ProjectController {
           } finally {
             udfso.close();
           }
-          logger.log(Level.SEVERE, "Couldn't get Inode for the project: {0}", project.getName());
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-            ResponseMessages.INTERNAL_SERVER_ERROR);
+          logger.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
+                  project.getName());
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(),
+                  ResponseMessages.INTERNAL_SERVER_ERROR);
         }
         project.setInode(projectInode);
 
@@ -205,23 +213,23 @@ public class ProjectController {
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
         this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(
-          new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
-            .getName(), project.getCreated()), project.
-            getOwner().getEmail(),
-            ProjectPaymentAction.DEPOSIT_MONEY, 0));
+                new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
+                        .getName(), project.getCreated()), project.
+                        getOwner().getEmail(),
+                        ProjectPaymentAction.DEPOSIT_MONEY, 0));
         this.projectPaymentsHistoryFacade.flushEm();
         this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
-          new YarnProjectsQuota(project.getName(), Integer.parseInt(
-            settings
-            .getYarnDefaultQuota()), 0));
+                new YarnProjectsQuota(project.getName(), Integer.parseInt(
+                        settings
+                        .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
-          ActivityFacade.FLAG_PROJECT, user, project);
+                ActivityFacade.FLAG_PROJECT, user, project);
         //update role information in project
         addProjectOwner(project.getId(), user.getEmail());
         logger.log(Level.FINE, "{0} - project created successfully.", project.
-          getName());
+                getName());
 
         //Create default DataSets
         return project;
@@ -231,7 +239,8 @@ public class ProjectController {
   }
 
   /**
-   * Project default datasets Logs and Resources need to be created in a separate transaction after the project creation
+   * Project default datasets Logs and Resources need to be created in a
+   * separate transaction after the project creation
    * is complete.
    * <p/>
    * @param username
@@ -242,37 +251,46 @@ public class ProjectController {
    * @throws se.kth.hopsworks.rest.AppException
    */
   public void createProjectLogResources(String username, Project project,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
-    ProjectInternalFoldersFailedException, AppException {
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          ProjectInternalFoldersFailedException, AppException {
 
     Users user = userBean.getUserByEmail(username);
-
+    List<ProjectServiceEnum> services = projectServicesFacade.
+            findEnabledServicesForProject(project);
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
-          || ds.equals(Settings.DefaultDataset.LOGS));
+                || ds.equals(Settings.DefaultDataset.LOGS)
+                || ds.equals(Settings.DefaultDataset.NOTEBOOKS));
+        if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(
+                Settings.DefaultDataset.NOTEBOOKS)) {
+          continue;
+        }
         datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, globallyVisible, dfso, udfso);
+                getDescription(), -1, false, globallyVisible, dfso, udfso);
+        //Persist README.md to hdfs for Default Datasets
+        datasetController.generateReadme(udfso, ds.getName(), 
+                  ds.getDescription(), project.getName());
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
-        "Could not create project resources ", e);
+              "Could not create project resources ", e);
     }
   }
 
   public void createProjectConsentFolder(String username, Project project,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-    throws
-    ProjectInternalFoldersFailedException, AppException {
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+          throws
+          ProjectInternalFoldersFailedException, AppException {
 
     Users user = userBean.getUserByEmail(username);
 
     try {
       datasetController.createDataset(user, project, "consents",
-        "Biobanking consent forms", -1, false, false, dfso, udfso);
+              "Biobanking consent forms", -1, false, false, dfso, udfso);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
-        "Could not create project consents folder ", e);
+              "Could not create project consents folder ", e);
     }
   }
 
@@ -282,7 +300,8 @@ public class ProjectController {
    *
    * @param id the identifier for a Project
    * @return Project
-   * @throws se.kth.hopsworks.rest.AppException if the project could not be found.
+   * @throws se.kth.hopsworks.rest.AppException if the project could not be
+   * found.
    */
   public Project findProjectById(Integer id) throws AppException {
 
@@ -291,18 +310,18 @@ public class ProjectController {
       return project;
     } else {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+              ResponseMessages.PROJECT_NOT_FOUND);
     }
   }
 
   public boolean addServices(Project project, List<ProjectServiceEnum> services,
-    String userEmail) {
+          String userEmail) {
     boolean addedService = false;
     //Add the desired services
     boolean sshAdded = false;
     for (ProjectServiceEnum se : services) {
       if (!projectServicesFacade.findEnabledServicesForProject(project).
-        contains(se)) {
+              contains(se)) {
         projectServicesFacade.addServiceForProject(project, se);
         addedService = true;
         if (se == ProjectServiceEnum.SSH) {
@@ -318,8 +337,8 @@ public class ProjectController {
         servicesString = servicesString + services.get(i).name() + " ";
       }
       logActivity(ActivityFacade.ADDED_SERVICES + servicesString,
-        ActivityFacade.FLAG_PROJECT,
-        user, project);
+              ActivityFacade.FLAG_PROJECT,
+              user, project);
 //      if (sshAdded == true) {
 //        try {
 //
@@ -356,7 +375,7 @@ public class ProjectController {
    * @param userEmail of the user making the change
    */
   public void updateProject(Project project, ProjectDTO proj,
-    String userEmail) {
+          String userEmail) {
     Users user = userBean.getUserByEmail(userEmail);
 
     project.setDescription(proj.getDescription());
@@ -364,7 +383,7 @@ public class ProjectController {
 
     projectFacade.mergeProject(project);
     logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
-      user, project);
+            user, project);
   }
 
   //Set the project owner as project master in ProjectTeam table
@@ -378,7 +397,7 @@ public class ProjectController {
 
   //create project in HDFS
   private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso)
-    throws IOException {
+          throws IOException {
 
     String rootDir = settings.DIR_ROOT;
 
@@ -394,7 +413,7 @@ public class ProjectController {
        */
       Path location = new Path(File.separator + rootDir);
       FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-        FsAction.ALL); // permission 777 so any one can creat a project.
+              FsAction.ALL); // permission 777 so any one can creat a project.
       rootDirCreated = dfso.mkdir(location, fsPermission);
     } else {
       rootDirCreated = true;
@@ -406,14 +425,14 @@ public class ProjectController {
      * inode.
      */
     String fullProjectPath = File.separator + rootDir + File.separator
-      + projectName;
+            + projectName;
     String project = this.extractProjectName(fullProjectPath + File.separator);
     String projectPath = File.separator + rootDir + File.separator + project;
     //Create first the projectPath
     projectDirCreated = dfso.mkdir(projectPath); //fails here
 
     ProjectController.this.setHdfsSpaceQuotaInMBs(projectName, settings.
-      getHdfsDefaultQuotaInMBs(), dfso);
+            getHdfsDefaultQuotaInMBs(), dfso);
 
     //create the rest of the child folders if any
     if (projectDirCreated && !fullProjectPath.equals(projectPath)) {
@@ -434,9 +453,13 @@ public class ProjectController {
    * @param projectID to be removed
    * @param email
    * @param deleteFilesOnRemove if the associated files should be deleted
-   * @return true if the project and the associated files are removed successfully, and false if the associated files
+   * @param udfso
+   * @param dfso
+   * @return true if the project and the associated files are removed
+   * successfully, and false if the associated files
    * could not be removed.
-   * @throws IOException if the hole operation failed. i.e the project is not removed.
+   * @throws IOException if the hole operation failed. i.e the project is not
+   * removed.
    * @throws AppException if the project could not be found.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -449,15 +472,15 @@ public class ProjectController {
     Project project = projectFacade.find(projectID);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+              ResponseMessages.PROJECT_NOT_FOUND);
     }
 
 
     YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
-      findByProjectName(project.getName());
+            findByProjectName(project.getName());
     List<Dataset> dsInProject = datasetFacade.findByProject(project);
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
-      findMembersByProject(project);
+            findMembersByProject(project);
     //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
     //ActivityFacade.FLAG_PROJECT, user, project);
@@ -532,7 +555,7 @@ public class ProjectController {
         
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
         hdfsUsersBean.deleteProjectUsers(project, projectTeam);
-        zeppelinConfFactory.deleteZeppelinConfDir(project.getName());
+        zeppelinConfFactory.deleteZeppelinConfDir(project);
         //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
         yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
       }
@@ -545,46 +568,49 @@ public class ProjectController {
     // TODO: DELETE THE KAFKA TOPICS
     userCertsFacade.removeAllCertsOfAProject(project.getName());
 
-    LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(), project.getName());
+    LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(),
+            project.getName());
     logger.log(Level.INFO, "{0} - project removed.", project.getName());
 
     return success;
   }
 
   /**
-   * Adds new team members to a project(project) - bulk persist if team role not specified or not in (Data owner or Data
+   * Adds new team members to a project(project) - bulk persist if team role not
+   * specified or not in (Data owner or Data
    * scientist)defaults to Data scientist
    * <p/>
    *
    * @param project
    * @param email
    * @param projectTeams
-   * @return a list of user names that could not be added to the project team list.
+   * @return a list of user names that could not be added to the project team
+   * list.
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String email,
-    List<ProjectTeam> projectTeams) {
+          List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
     Users user = userBean.getUserByEmail(email);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
-          getEmail())) {
+                getEmail())) {
 
           //if the role is not properly set set it to the default resercher.
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
-            equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
-            && !projectTeam.
-            getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
+                  equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
+                  && !projectTeam.
+                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
           projectTeam.setTimestamp(new Date());
           newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
-            getTeamMember());
+                  getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
-            project, newMember)) {
+                  project, newMember)) {
             //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
@@ -595,15 +621,16 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
-            LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
-              project.getName(), newMember.getUsername());
+            LocalhostServices.createUserCertificates(settings.
+                    getIntermediateCaDir(),
+                    project.getName(), newMember.getUsername());
 
             userCertsFacade.putUserCerts(project.getName(), newMember.
-              getUsername());
+                    getUsername());
 
             logger.log(Level.FINE, "{0} - member added to project : {1}.",
-              new Object[]{newMember.getEmail(),
-                project.getName()});
+                    new Object[]{newMember.getEmail(),
+                      project.getName()});
             List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
             List<String> publicKeys = new ArrayList<>();
             for (SshKeys k : keys) {
@@ -611,29 +638,29 @@ public class ProjectController {
             }
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
-              getProjectTeamPK().getTeamMember(),
-              ActivityFacade.FLAG_PROJECT, user, project);
+                    getProjectTeamPK().getTeamMember(),
+                    ActivityFacade.FLAG_PROJECT, user, project);
 //            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-              + " was not found in the system.");
+                    + " was not found in the system.");
           } else {
             failedList.add(newMember.getEmail()
-              + " is already a member in this project.");
+                    + " is already a member in this project.");
           }
 
         } else {
           failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-            + " is already a member in this project.");
+                  + " is already a member in this project.");
         }
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-          + "could not be added. Try again later.");
+                + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
-          projectTeam.getProjectTeamPK().getTeamMember());
+                projectTeam.getProjectTeamPK().getTeamMember());
       } catch (IOException ex) {
         Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-          null, ex);
+                null, ex);
       }
     }
     return failedList;
@@ -674,22 +701,22 @@ public class ProjectController {
 
     //find the project as an inode from hops database
     Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
-      + File.separator + name);
+            + File.separator + name);
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+              ResponseMessages.PROJECT_NOT_FOUND);
     }
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
-      project);
+            project);
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
-      findEnabledServicesForProject(project);
+            findEnabledServicesForProject(project);
     List<String> services = new ArrayList<>();
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
     return new ProjectDTO(project, inode.getId(), services, projectTeam,
-      getYarnQuota(name));
+            getYarnQuota(name));
 //    ,getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
   }
 
@@ -711,12 +738,12 @@ public class ProjectController {
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+              ResponseMessages.PROJECT_NOT_FOUND);
     }
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
-      project);
+            project);
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
-      findEnabledServicesForProject(project);
+            findEnabledServicesForProject(project);
     List<String> services = new ArrayList<>();
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
@@ -733,12 +760,12 @@ public class ProjectController {
     //send the project back to client
     String quota = getYarnQuota(name);
     return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-      quota);
+            quota);
   }
 
   public String getYarnQuota(String name) {
     YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-      findByProjectName(name);
+            findByProjectName(name);
     if (yarnQuota != null) {
       return Float.toString(yarnQuota.getQuotaRemaining());
     }
@@ -746,10 +773,10 @@ public class ProjectController {
   }
 
   public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
-    DistributedFileSystemOps dfso)
-    throws IOException {
+          DistributedFileSystemOps dfso)
+          throws IOException {
     dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)),
-      diskspaceQuotaInMB);
+            diskspaceQuotaInMB);
   }
 
 //  public Long getHdfsSpaceQuotaInBytes(String name) throws AppException {
@@ -799,21 +826,21 @@ public class ProjectController {
     Users userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.USER_DOES_NOT_EXIST);
+              ResponseMessages.USER_DOES_NOT_EXIST);
       //user not found
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project,
-      userToBeRemoved);
+            userToBeRemoved);
     if (projectTeam == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+              ResponseMessages.TEAM_MEMBER_NOT_FOUND);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     Users user = userBean.getUserByEmail(email);
     //remove the user name from HDFS
     hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
-      ActivityFacade.FLAG_PROJECT, user, project);
+            ActivityFacade.FLAG_PROJECT, user, project);
 
 //    try {
 //      LocalhostServices.deleteUserAccount(email, project.getName());
@@ -837,23 +864,23 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
-    String toUpdateEmail, String newRole) throws AppException {
+          String toUpdateEmail, String newRole) throws AppException {
     Users projOwner = project.getOwner();
     Users opsOwner = userBean.getUserByEmail(owner);
     Users user = userBean.getUserByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        "Can not change the role of a project owner.");
+              "Can not change the role of a project owner.");
     }
     if (user == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.USER_DOES_NOT_EXIST);
+              ResponseMessages.USER_DOES_NOT_EXIST);
       //user not found
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, user);
     if (projectTeam == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+              ResponseMessages.TEAM_MEMBER_NOT_FOUND);
       //member not found
     }
     if (!projectTeam.getTeamRole().equals(newRole)) {
@@ -868,7 +895,7 @@ public class ProjectController {
       }
 
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
-        ActivityFacade.FLAG_PROJECT, opsOwner, project);
+              ActivityFacade.FLAG_PROJECT, opsOwner, project);
     }
 
   }
@@ -907,7 +934,7 @@ public class ProjectController {
    * @param performedOn the project the operation was performed on.
    */
   public void logActivity(String activityPerformed, String flag,
-    Users performedBy, Project performedOn) {
+          Users performedBy, Project performedOn) {
     Date now = new Date();
     Activity activity = new Activity();
     activity.setActivity(activityPerformed);
@@ -920,7 +947,8 @@ public class ProjectController {
   }
 
   /**
-   * Extracts the project name out of the given path. The project name is the second part of this path.
+   * Extracts the project name out of the given path. The project name is the
+   * second part of this path.
    * <p/>
    * @param path
    * @return
@@ -934,30 +962,34 @@ public class ProjectController {
   }
 
   public void addExampleJarToExampleProject(String username, Project project,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws AppException {
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          AppException {
 
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, "TestJob",
-        "jar file to calculate pi", -1, false, true, dfso, udfso);
+              "jar file to calculate pi", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-    String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
+    String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
+            + "/";
     try {
       File dir = new File(exampleDir);
       File[] file = dir.listFiles((File dir1, String name)
-        -> name.matches("spark-examples(.*).jar"));
+              -> name.matches("spark-examples(.*).jar"));
       if (file.length == 0) {
         throw new IllegalStateException("No spark-examples*.jar was found in "
-          + dir.getAbsolutePath());
+                + dir.getAbsolutePath());
       }
       if (file.length > 1) {
-        logger.log(Level.WARNING, "More than one spark-examples*.jar found in {0}.", dir.getAbsolutePath());
+        logger.log(Level.WARNING,
+                "More than one spark-examples*.jar found in {0}.", dir.
+                getAbsolutePath());
       }
       udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
-        File.separator + Settings.DIR_ROOT + File.separator + project.
-        getName() + "/TestJob/spark-examples.jar");
+              File.separator + Settings.DIR_ROOT + File.separator + project.
+              getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -966,7 +998,8 @@ public class ProjectController {
   }
 
   public YarnPriceMultiplicator getYarnMultiplicator() {
-    YarnPriceMultiplicator multiplicator = yarnProjectsQuotaFacade.getMultiplicator();
+    YarnPriceMultiplicator multiplicator = yarnProjectsQuotaFacade.
+            getMultiplicator();
     if (multiplicator == null) {
       multiplicator = new YarnPriceMultiplicator();
       multiplicator.setMultiplicator(Settings.DEFAULT_YARN_MULTIPLICATOR);

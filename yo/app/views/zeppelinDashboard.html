@@ -46,9 +46,7 @@
                          class="ds-content col-lg-12" ng-class="{'sidenav-open': zeppelinCtrl.tgState}" style="margin-top: 5px;">
                         <div class="row row-no-margin-left" style="margin-top: 15px;">
                             <div class="col-lg-12">
-                                <div class="file-box"
-                                     context-menu
-                                     data-target="menu-{{ $index}}">
+                                <div class="file-box">
                                     <div  class="file" ng-click="zeppelinCtrl.openZeppelin()">
                                         <div class="icon" style="text-align: center;">
                                             <img width="100" src="images/zepLogo.png"/>
@@ -61,7 +59,7 @@
                                     </div>
                                 </div>
                                 <div ng-repeat="note in zeppelinCtrl.notes track by $index">
-                                    <div class="file-box" context-menu>
+                                    <div class="file-box" context-menu data-target="menu-{{ $index}}">
                                         <div class="file" ng-click="zeppelinCtrl.openNote(note)">
                                             <a>
                                                 <span class="corner"></span>

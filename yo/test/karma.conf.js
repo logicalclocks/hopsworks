@@ -58,8 +58,6 @@ module.exports = function (config) {
       'bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js',
       'bower_components/bootstrap-switch/dist/js/bootstrap-switch.js',
       'bower_components/angular-ui-select/dist/select.js',
-      'bower_components/select2/select2.js',
-      'bower_components/angular-ui-select2/src/select2.js',
       'bower_components/angular-tour/dist/angular-tour-tpls.min.js',
       'bower_components/angular-resizable/src/angular-resizable.js',
       'bower_components/v-accordion/dist/v-accordion.js',

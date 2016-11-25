@@ -98,17 +98,21 @@
     z-index: 2;
 }
 
-.rg-row-top-min {
+.rg-row-top-ds {
     background:#fff;
     border-radius: 3px;
-    margin-left: 9px;
-    margin-right: 9px;
-    padding: 10px;
     border: 1px solid transparent; 
     height: 70%; 
     max-height: 90%; 
     min-height: 30%;
+    overflow: hidden;
     z-index: 2;
+}
+
+.rg-row-top-ds > div.rg-bottom {
+  margin-bottom: 0px !important;
+  width: 97.2%;
+  margin-left: 14px;
 }
 
 .rg-row-bottom {
@@ -123,14 +127,20 @@
     z-index: 3;
 }
 
-.rg-row-bottom-no-margin {
+.rg-row-bottom-ds {
     flex: 1;
+    margin-top: 14px;
     border-radius: 3px;
-    margin-left: 9px;
-    margin-right: 9px;
     background:#fff;
     border: 1px solid transparent;
+    overflow: hidden;
     z-index: 3;
+}
+
+.ds-box {
+    width: 98%;
+    overflow-y: auto; 
+    height: 95%;
 }
 
 table .progress-bar {

@@ -8,15 +8,14 @@
     <div ng-controller="MetadataCtrl as metadataCtrl">
 
       <div class="overlay" ></div>
+      <div ng-include="'navProject.html'"></div>
       <section>
-          <div ng-include="'navProject.html'"></div>
-          <div layout="column" layout-fill layout-align="top center" >
-            <div ng-show="mainCtrl.searchReturned !== ''">
+          <div >
+            <div ng-show="mainCtrl.searchReturned !== ''" class="content-wrapper">
               <div id="projectSearchResults">
-                <div ng-include="'views/searchResult.html'"></div>
+                <div ng-include="'views/search.html'"></div>
               </div>
             </div>
-
             <div class="content-wrapper" style="background-color: white;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchReturned === ''">
               <div growl reference="3" class="pull-right" ></div>
               <h3>               
@@ -35,8 +34,8 @@
               </h3>            
               <div class="row row-no-margin-left">
                <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">                 
-                 <div class="row rg-row-top-min row-no-margin-left" ng-class="{'full-height': readme == null}"style="overflow-y: auto;">
-                  <div class="col-lg-12" style="margin-top: 15px;">                    
+                 <div class="row" resizable r-directions="['bottom']" ng-class="{'rg-row-top-ds': readme !== null}">
+                  <div class="col-lg-12 ds-box" style="margin-top: 15px;">                    
                     <div class="file-box">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
@@ -58,21 +57,19 @@
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name}">
                           <a>
                             <span class="corner"></span>
-                            <div tooltip-placement="top" uib-tooltip="Click on the folder icon to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                            <div data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
-                            <div class="file-name" tooltip-placement="bottom" uib-tooltip="Click on the bottom section to view metadata for this dataset." 
+                            <div class="file-name" data-toggle="tooltip" title="Click on the bottom section to view metadata for this dataset." 
                                  ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
-                              <span tooltip-enable="{{dataset.name.length > 22}}" 
-                                    tooltip-placement="top" 
-                                    uib-tooltip="{{ dataset.name}}">
+                              <span data-toggle="tooltip"
+                                    title="{{dataset.name.length > 22 ? dataset.name:''}}">
                                 {{dataset.name}}
                               </span>                          
                               <br/>
                               <small><b>Owner:</b> 
-                                <span tooltip-enable="{{dataset.owner.length > 17}}" 
-                                    tooltip-placement="top" 
-                                    uib-tooltip="{{ dataset.owner}}">
+                                <span data-toggle="tooltip"
+                                      title="{{dataset.owner.length > 17 ? dataset.owner:''}}">
                                   {{dataset.owner | limitTo: 17}}
                                 </span>
                               </small>
@@ -163,9 +160,9 @@
                   </div>
                 </div>
                 <!--background-color: rgb(250, 251, 252);-->
-                <div class="row rg-row-bottom-no-margin row-no-margin-left"  style="left:5px; width:98%;" resizable r-directions="['bottom']" ng-show="readme !== null" ></div>
-                <div class="row row-no-margin-left" style="margin-right: 15px; margin-top: 25px; overflow-y: auto;" ng-show="readme !== null">
-                  <div class="col-lg-12" >
+                <!--div class="row rg-row-bottom-no-margin row-no-margin-left"  style="left:5px; width:98%;" resizable r-directions="['bottom']" ng-show="readme !== null" ></div-->
+                <div class="row rg-row-bottom-ds" ng-show="readme !== null">
+                  <div class="col-lg-12 ds-box" style="overflow: auto;">
                     <div class="col-lg-12" style="border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
                       <!-- README.md is displayed here -->
                       <div class="row" style="background: #eee; font-size:20px; font-weight: bold;">
@@ -447,7 +444,7 @@
                                         <div class="input-group input-group-sm"
                                              ng-if="field.tagName === card.title && card.fieldtypeid === 2" 
                                              ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                          <ui-select class="form-control"
+                                          <ui-select class="form-control" style="width: 100%;"
                                             ng-model="metadataCtrl.metaData[card.id]" 
                                             theme="select2" ng-disabled="disabled" required>
                                             <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
@@ -465,10 +462,18 @@
                                         </div>
 
                                         <!--multi select list input type-->
-                                        <div class="input-group"
+                                        <div class="input-group input-group-sm"
                                              ng-if="field.tagName === card.title && card.fieldtypeid === 3" 
                                              ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
-                                          <div class="form-control"
+                                            <ui-select class="form-control" multiple ng-model="metadataCtrl.metaData[card.id]" 
+                                                       theme="bootstrap" 
+                                                       close-on-select="false" style="width: 235px; max-height: 70px;">
+                                              <ui-select-match placeholder="Select values...">{{$item.value}}</ui-select-match>
+                                              <ui-select-choices repeat="card in card.fieldtypeContent | filter:$select.search">
+                                                {{card.value}}
+                                              </ui-select-choices>
+                                            </ui-select>
+                                          <!--div class="form-control"
                                             isteven-multi-select
                                             input-model="card.fieldtypeContent"
                                             output-model="metadataCtrl.metaData[card.id]"
@@ -476,9 +481,8 @@
                                             item-label="value"
                                             tick-property="ticked"
                                             output-properties="value"
-                                            style="display:inline-block"
-                                            >
-                                          </div>
+                                            style="display:inline-block">
+                                          </div-->
                                           <div class="input-group-btn">
                                             <button class="btn btn-default fa fa-check" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></button>
                                             <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"></button>
@@ -487,7 +491,7 @@
                                       </div>
                                     </div>
 
-                                    <div style="width: 100%; height: 45px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
+                                    <div style="width: 100%; height: 15px;" ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"></div>
 
 
 

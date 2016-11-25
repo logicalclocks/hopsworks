@@ -24,7 +24,7 @@ angular.module('hopsWorksApp')
             self.deselect = function () {
               self.selected = null;
               refresh();
-              getNotesInProject();
+              getNotesInProject(null, false);
             };
             
             var startLoading = function (lable) {
@@ -57,21 +57,34 @@ angular.module('hopsWorksApp')
               });
             };
 
-            var getNotesInProject = function (loading) {
+            var getNotesInProject = function (loading, reload) {
               self.notesRefreshing = true;
               if (loading) {
                  startLoading(loading);
               }
-              ZeppelinService.notebooks().then(function (success) {
-                self.notes = success.data.body;
-                self.notesRefreshing = false;
-                stopLoading();
-              }, function (error) {
-                self.notesRefreshing = false;
-                growl.warning(error.data.errorMsg + " Try reloading the page.", 
-                {title: 'Error', ttl: 5000, referenceId: 10});
-                stopLoading();
-              });
+              if (reload) {
+                ZeppelinService.reloadedNotebooks().then(function (success) {
+                  self.notes = success.data.body;
+                  self.notesRefreshing = false;
+                  stopLoading();
+                }, function (error) {
+                  self.notesRefreshing = false;
+                  growl.warning(error.data.errorMsg + " Try reloading the page.",
+                          {title: 'Error', ttl: 5000, referenceId: 10});
+                  stopLoading();
+                });
+              } else {
+                ZeppelinService.notebooks().then(function (success) {
+                  self.notes = success.data.body;
+                  self.notesRefreshing = false;
+                  stopLoading();
+                }, function (error) {
+                  self.notesRefreshing = false;
+                  growl.warning(error.data.errorMsg + " Try reloading the page.",
+                          {title: 'Error', ttl: 5000, referenceId: 10});
+                  stopLoading();
+                });
+              }
             };
 
             self.display = function (group) {
@@ -118,7 +131,7 @@ angular.module('hopsWorksApp')
             var load = function () {
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               getInterpreterStatus("Loading interpreters...");
-              getNotesInProject("Loading notebooks...");
+              getNotesInProject("Loading notebooks...", true);
               $scope.tgState = true;
             };
             
@@ -161,7 +174,7 @@ angular.module('hopsWorksApp')
             };
 
             self.refreshDashboard = function () {
-              getNotesInProject();
+              getNotesInProject(null, false);
             };
             self.openNote = function (note) {
               window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
@@ -188,6 +201,16 @@ angular.module('hopsWorksApp')
                       function (error) {
                       });
 
+            };
+            
+            self.deleteNote = function (note) {
+              ZeppelinService.deleteNotebook(note.id).then(function (success) {                
+                growl.success("Notebook deleted.",
+                        {title: 'Success', ttl: 5000, referenceId: 10});
+              }, function (error) {
+                growl.error(error.data.message,
+                        {title: 'Error', ttl: 5000, referenceId: 10});
+              });
             };
             
             self.clearCache = function () {
@@ -218,7 +241,7 @@ angular.module('hopsWorksApp')
                 load();
                 loaded = true;
               } else if (loaded && op === 'NOTES_INFO') {
-                getNotesInProject("Loading notebooks...");
+                getNotesInProject(null, true);
               } 
             });
             
