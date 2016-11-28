@@ -475,8 +475,7 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
 
-    ProjectPaymentsHistory projectPaymentsHistory
-            = projectPaymentsHistoryFacade.findByProjectName(project.getName());
+
     YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
             findByProjectName(project.getName());
     List<Dataset> dsInProject = datasetFacade.findByProject(project);

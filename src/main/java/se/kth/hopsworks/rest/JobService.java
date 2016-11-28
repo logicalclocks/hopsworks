@@ -484,12 +484,24 @@ public class JobService {
             "/hopsworks/api/project/"
             + project.getId() + "/jobs/" + jobId + "/prox/"
             + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/"
+            + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks/api/project/"
             + project.getId() + "/jobs/" + jobId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
             "/hopsworks/api/project/"
             + project.getId() + "/jobs/" + jobId + "/prox/");
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+            "/hopsworks/api/project/"
+            + project.getId() + "/jobs/" + jobId + "/prox/" + param);
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
             "/hopsworks/api/project/"
             + project.getId() + "/jobs/" + jobId + "/prox/" + param);
     return ui;
@@ -510,11 +522,24 @@ public class JobService {
       for (String elem : trackingUrl.split("/")) {
         if (elem.contains("container_")) {
           String[] containerIdElem = elem.split("_");
+          appId = appId + containerIdElem[2] + "_" + containerIdElem[3];
+          break;
+        }
+      }
+    }else if(trackingUrl.contains("appattempt_")){
+      appId = "application_";
+      for(String elem: trackingUrl.split("/")){
+        if(elem.contains("appattempt_")){
+          String[] containerIdElem = elem.split("_");
           appId = appId + containerIdElem[1] + "_" + containerIdElem[2];
           break;
         }
       }
-
+    }else{
+      if(trackingUrl.contains("static")){
+        return true;
+      }
+      return false;
     }
     if (!appId.isEmpty()) {
       String appUser = yarnApplicationstateFacade.findByAppId(appId).

@@ -368,7 +368,7 @@ public class HdfsUsersController {
         for (Dataset ds : dsInProject) {
             dsGroups = getHdfsGroupName(project, ds);
             hdfsDsGroup = hdfsGroupsFacade.findByName(dsGroups);
-            removeHdfsGroup(hdfsGroup);
+            removeHdfsGroup(hdfsDsGroup);
         }
     }
 
