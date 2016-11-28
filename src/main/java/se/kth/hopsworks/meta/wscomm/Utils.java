@@ -30,6 +30,7 @@ import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.entity.TupleToFile;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.util.HopsUtils;
 
 /**
  *
@@ -253,7 +254,8 @@ public class Utils {
       //get the inode
       Inode parent = this.inodeFacade.findById(itc.getInodePid());
       Inode inode = this.inodeFacade.findByInodePK(parent, itc.
-              getInodeName(), parent.getInodePK().getParentId());
+              getInodeName(), HopsUtils.calculatePartitionId(parent.getId(), 
+                      itc.getInodeName(), 3));
 
       //create a metadata tuple attached to be attached to an inodeid
       TupleToFile ttf = new TupleToFile(-1, inode);

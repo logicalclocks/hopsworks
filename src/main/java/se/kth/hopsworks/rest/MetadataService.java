@@ -67,6 +67,7 @@ import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.util.JsonUtil;
 
@@ -557,7 +558,8 @@ public class MetadataService {
     if (parent == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incorrect json message/Missing or incorrect parent inodeId");
     }
-    Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(), parent.getInodePK().getParentId());
+    Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(), 
+            HopsUtils.calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incorrect json message/Missing or incorrect inode name");
     }
