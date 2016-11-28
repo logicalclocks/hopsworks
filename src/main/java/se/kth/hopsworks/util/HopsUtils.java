@@ -1,5 +1,11 @@
 package se.kth.hopsworks.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import se.kth.bbc.project.fb.Inode;
 
 /**
@@ -22,7 +28,8 @@ public class HopsUtils {
    * @param enumClass
    * @return
    */
-  public static <E extends Enum<E>> boolean isInEnum(String value, Class<E> enumClass) {
+  public static <E extends Enum<E>> boolean isInEnum(String value,
+          Class<E> enumClass) {
     for (E e : enumClass.getEnumConstants()) {
       if (e.name().equals(value)) {
         return true;
@@ -30,28 +37,30 @@ public class HopsUtils {
     }
     return false;
   }
-  
+
   public static int fileOrDirPartitionId(int parentId, String name) {
     return parentId;
-  }  
+  }
 
   public static int projectPartitionId(String name) {
-    return calculatePartitionId(ROOT_INODE_ID, PROJECTS_DIR_NAME, PROJECTS_DIR_DEPTH);
+    return calculatePartitionId(ROOT_INODE_ID, PROJECTS_DIR_NAME,
+            PROJECTS_DIR_DEPTH);
   }
-  
+
   public static int dataSetPartitionId(Inode parent, String name) {
-    return calculatePartitionId(parent.getId(),name,3);
-  }  
-  
+    return calculatePartitionId(parent.getId(), name, 3);
+  }
+
   public static int calculatePartitionId(int parentId, String name, int depth) {
-    if (isTreeLevelRandomPartitioned( depth)) {
-      return partitionIdHashFunction(parentId, name,depth);
+    if (isTreeLevelRandomPartitioned(depth)) {
+      return partitionIdHashFunction(parentId, name, depth);
     } else {
       return parentId;
     }
   }
 
-  private static int partitionIdHashFunction(int parentId, String name, int depth) {
+  private static int partitionIdHashFunction(int parentId, String name,
+          int depth) {
     if (depth == ROOT_DIR_DEPTH) {
       return ROOT_DIR_PARTITION_KEY;
     } else {
@@ -62,4 +71,36 @@ public class HopsUtils {
   private static boolean isTreeLevelRandomPartitioned(int depth) {
     return depth <= RANDOM_PARTITIONING_MAX_LEVEL;
   }
+
+  /**
+   * Retrieves the global hadoop classpath.
+   *
+   * @param params
+   * @return
+   */
+  public static String getHadoopClasspathGlob(String... params) {
+    ProcessBuilder pb = new ProcessBuilder(params);
+    try {
+      Process process = pb.start();
+      int errCode = process.waitFor();
+      if (errCode != 0) {
+        return "";
+      }
+      StringBuilder sb = new StringBuilder();
+      try (BufferedReader br
+              = new BufferedReader(new InputStreamReader(process.
+                      getInputStream()))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+          sb.append(line).append(System.getProperty("line.separator"));
+        }
+      }
+      return sb.toString();
+
+    } catch (IOException | InterruptedException ex) {
+      Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return "";
+  }
+
 }
