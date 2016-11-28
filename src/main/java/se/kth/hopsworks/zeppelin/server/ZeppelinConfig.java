@@ -364,10 +364,7 @@ public class ZeppelinConfig {
               "spark_dir", settings.getSparkDir(),
               "hadoop_dir", settings.getHadoopDir(),
               "hadoop_user", this.projectName,
-              "extra_jars", "",
-              "java_home", System.getenv("JAVA_HOME"),
-              "ld_library_path", System.getenv("LD_LIBRARY_PATH"),
-              "hadoop_classpath_global", HopsUtils.getHadoopClasspathGlob(settings.getHadoopDir()+"/bin/hadoop","classpath","--glob"));
+              "extra_jars", "");
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
               toString());
