@@ -491,6 +491,9 @@ public class Settings {
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
   
+  //Zeppelin constants
+  public static final String JAVA_HOME = "/usr/lib/jvm/java";
+  
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
   }

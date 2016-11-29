@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /*
    *  Client Code:
@@ -51,6 +53,25 @@ public class ConfigFileGenerator {
           val = File.pathSeparator;
         }
         script = script.replaceAll("%%" + key + "%%", val);
+      }
+    }
+    return sb.append(script);
+  }
+  /**
+   * 
+   * @param filePath
+   * @param params
+   * @return
+   * @throws IOException 
+   */
+  public static StringBuilder instantiateFromTemplate(String filePath, Map<String,String> params) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    String script = IoUtils.readContentFromClasspath(filePath);
+    if (params.size()>0) {
+      for (Entry<String, String> env : params.entrySet()){
+        if(env.getValue() != null){
+          script = script.replaceAll("%%" + env.getKey() + "%%", env.getValue());
+        }
       }
     }
     return sb.append(script);
