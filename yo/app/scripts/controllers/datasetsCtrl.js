@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
 
             $scope.isPublic = true;
 
-            $scope.tgState = true;
+            self.tgState = true;
 
             $scope.status = {
               isopen: false
@@ -214,7 +214,7 @@ angular.module('hopsWorksApp')
                 });
               }
               getDirContents();
-              $scope.tgState = true;
+              self.tgState = true;
             };
 
             init();
