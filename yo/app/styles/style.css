@@ -499,7 +499,7 @@ md-input-container {
 
 .form-control > a.select2-choice {
   margin-top: -4px;
-  width: 112%;
+  margin-right: -10px;
   margin-left: -10px;
 }
 
