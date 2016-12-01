@@ -1,6 +1,7 @@
 package se.kth.hopsworks.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -92,10 +93,21 @@ public class HopsUtils {
                       getInputStream()))) {
         String line;
         while ((line = br.readLine()) != null) {
-          sb.append(line).append(System.getProperty("line.separator"));
+          sb.append(line);
         }
       }
-      return sb.toString();
+      //Now we must remove the yarn shuffle library as it creates issues for 
+      //Zeppelin Spark Interpreter
+      StringBuilder classpath = new StringBuilder();
+      
+      for(String path : sb.toString().split(File.pathSeparator)){
+        if(!path.contains("yarn")){
+          classpath.append(path).append(File.pathSeparator);
+        }
+      }
+      if(classpath.length()>0){
+        return classpath.toString().substring(0,classpath.length()-1);
+      }
 
     } catch (IOException | InterruptedException ex) {
       Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
