@@ -101,7 +101,7 @@ public class HopsUtils {
       StringBuilder classpath = new StringBuilder();
       
       for(String path : sb.toString().split(File.pathSeparator)){
-        if(!path.contains("yarn-shuffle.jar")){
+        if(!path.contains("yarn")){
           classpath.append(path).append(File.pathSeparator);
         }
       }
