@@ -358,6 +358,7 @@ public class ZeppelinConfig {
               toString());
     }
     if (!zeppelin_env_file.exists()) {
+
       String ldLibraryPath = "";
       if(System.getenv().containsKey("LD_LIBRARY_PATH")){
          ldLibraryPath = System.getenv("LD_LIBRARY_PATH");
