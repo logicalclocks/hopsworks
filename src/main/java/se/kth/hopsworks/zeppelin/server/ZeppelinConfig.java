@@ -361,7 +361,7 @@ public class ZeppelinConfig {
       Map<String, String> params = new HashMap<>();
       //Set some default values first, in case some env variables are null later on
       params.put("java_home", Settings.JAVA_HOME);
-      params.put("ld_library_path", "\\$LD_LIBRARY_PATH:" + Settings.JAVA_HOME + "jre/lib/amd64");
+      params.put("ld_library_path", "\\$LD_LIBRARY_PATH:" + Settings.JAVA_HOME + "/jre/lib/amd64");
       //Now set the proper ones
       params.put("zeppelin_dir", settings.getZeppelinDir());
       params.put("project_dir", Settings.DIR_ROOT + File.separator
