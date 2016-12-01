@@ -3,19 +3,26 @@ html {
 }
 
 body {
-  height: 95%;
+  height: 100%;
   font-family: "Source Sans Pro", sans-serif;
   font-size: 14px;
   line-height: 1.52857;
   padding: 0;
   min-width: 800px;
-  overflow: hidden;
   width: 100%;
   margin: 0;
 }
 
 h2 {
   font-size: 1.5em;
+}
+
+.hw-wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 button, html, input, select, textarea {

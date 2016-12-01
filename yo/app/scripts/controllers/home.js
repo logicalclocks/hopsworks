@@ -19,6 +19,7 @@ angular.module('hopsWorksApp')
             self.tours = [];
             self.tutorials = [];
             self.publicDatasets = [];
+            self.working = [];
             self.getTours = function () {
               self.tours = [
                 {'name': 'spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
@@ -249,6 +250,7 @@ angular.module('hopsWorksApp')
             };
 
             self.deleteOnlyProject = function (projectId) {
+              self.working[projectId] = true;
               ProjectService.remove({id: projectId}).$promise.then(
                       function (success) {
                         growl.success(success.successMessage, {title: 'Success', ttl: 15000});
@@ -256,14 +258,16 @@ angular.module('hopsWorksApp')
                         if (self.tourService.currentStep_TourOne > -1) {
                           self.tourService.resetTours();
                         }
+                        self.working[projectId] = false;
                       },
                       function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        self.working[projectId] = false;
                       }
               );
             };
             self.deleteProjectAndDatasets = function (projectId) {
-
+              self.working[projectId] = true;
               ProjectService.delete({id: projectId}).$promise.then(
                       function (success) {
                         growl.success(success.successMessage, {title: 'Success', ttl: 15000});
@@ -271,9 +275,10 @@ angular.module('hopsWorksApp')
                         if (self.tourService.currentStep_TourOne > -1) {
                           self.tourService.resetTours();
                         }
-                      },
-                      function (error) {
+                        self.working[projectId] = false;
+                      },function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        self.working[projectId] = false;
                       }
               );
             };
