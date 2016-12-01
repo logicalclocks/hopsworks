@@ -358,28 +358,25 @@ public class ZeppelinConfig {
               toString());
     }
     if (!zeppelin_env_file.exists()) {
-      Map<String, String> params = new HashMap<>();
-      //Set some default values first, in case some env variables are null later on
-      params.put("java_home", Settings.JAVA_HOME);
-      params.put("ld_library_path", "\\$LD_LIBRARY_PATH:" + Settings.JAVA_HOME + "jre/lib/amd64");
-      //Now set the proper ones
-      params.put("zeppelin_dir", settings.getZeppelinDir());
-      params.put("project_dir", Settings.DIR_ROOT + File.separator
-              + this.projectName);
-      params.put("spark_dir", settings.getSparkDir());
-      params.put("hadoop_dir", settings.getHadoopDir());
-      params.put("hadoop_user", this.projectName);
-      params.put("extra_jars", "");
-      if(System.getenv().containsKey("JAVA_HOME")){
-         params.put("java_home", System.getenv("JAVA_HOME"));
-      }
+      String ldLibraryPath = "";
       if(System.getenv().containsKey("LD_LIBRARY_PATH")){
-         params.put("ld_library_path", System.getenv("LD_LIBRARY_PATH"));
+         ldLibraryPath = System.getenv("LD_LIBRARY_PATH");
       }
-      params.put("hadoop_classpath_global",  HopsUtils.getHadoopClasspathGlob(settings.getHadoopDir()+"/bin/hadoop","classpath","--glob"));
-      
+      String javaHome = "";
+      if(System.getenv().containsKey("JAVA_HOME")){
+         javaHome = System.getenv("JAVA_HOME");
+      }
+
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
-              ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,params);
+              ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
+	      "spark_dir", settings.getSparkDir(),
+	      "hadoop_dir", settings.getHadoopDir(),
+	      // TODO: This should be the project__username, not just the projectname
+              "hadoop_username", this.projectName,
+              "java_home", javaHome,
+              "ld_library_path", ldLibraryPath,
+              "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.getHadoopDir()+"/bin/hadoop","classpath","--glob")
+      );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
               toString());
