@@ -49,9 +49,6 @@ public class ConfigFileGenerator {
       for (int i = 0; i < pairs.length; i += 2) {
         String key = pairs[i];
         String val = pairs[i + 1];
-        if(val == null){
-          val = File.pathSeparator;
-        }
         script = script.replaceAll("%%" + key + "%%", val);
       }
     }
