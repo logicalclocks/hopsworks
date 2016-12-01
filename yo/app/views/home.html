@@ -1,4 +1,4 @@
-<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px; width: 1500px;">
+<div class="container" ng-controller="MainCtrl as mainCtrl" style="width: 1500px;">
   <div ng-include="'nav.html'"></div>
   <div ng-show="mainCtrl.searchReturned !== ''" class="row">
     <div id="projectSearchResults">
@@ -145,8 +145,7 @@
         </span>
       </div>
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
-        <a
-          ng-class="{disabled: project.project.archived}"
+        <a ng-class="{disabled: project.project.archived, disabled: homeCtrl.working[project.project.id]}"
           href="#/project/{{project.project.id}}"
           class="list-group-item"
           context-menu
@@ -164,18 +163,19 @@
           </div>
           {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
           <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
+          <i class="fa fa-cog fa-spin fa-2x  fa-fw pull-right" ng-show="homeCtrl.working[project.project.id]"></i>
         </a>
         <div uib-dropdown class="dropdown position-fixed" id="menu-{{$index}}">
           <ul uib-dropdown-menu class="dropdown-amore">
-<!--            <li>
-              <a class="pointer"
-                 role="menuitem"
-                 tabindex="1"
-                 ng-click="">
-                <span><i class="fa fa-share-alt"></i>
-                  Share...</span>
-              </a>
-            </li>-->
+            <!--            <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="1"
+                             ng-click="">
+                            <span><i class="fa fa-share-alt"></i>
+                              Share...</span>
+                          </a>
+                        </li>-->
 
             <li>
               <a class="pointer"

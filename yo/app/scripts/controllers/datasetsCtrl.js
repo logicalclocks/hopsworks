@@ -9,7 +9,7 @@ angular.module('hopsWorksApp')
                   $showdown) {
 
             var self = this;
-            self.itemsPerPage = 50;
+            self.itemsPerPage = 14;
             self.working = false;
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
