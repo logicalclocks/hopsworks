@@ -161,6 +161,7 @@ angular.module('hopsWorksApp')
               }
               //Convert into a path
               var newPath = getPath(newPathArray);
+              self.files = [];
               self.working = true;
               self.dir_timing = new Date().getTime();
               //Get the contents and load them
