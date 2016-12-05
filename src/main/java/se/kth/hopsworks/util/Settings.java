@@ -805,10 +805,10 @@ public class Settings {
   public static final String META_PROJECT_TYPE = "proj";
   public static final String META_DATASET_TYPE = "ds";
   public static final String META_INODE_TYPE = "inode";
-  public static final String META_INODE_SEARCHABLE_FIELD = "searchable";
   public static final String META_PROJECT_ID_FIELD = "project_id";
   public static final String META_ID = "_id";
-  public static final String META_DATA_FIELDS = "xattr.*";
+  public static final String META_DATA_NESTED_FIELD = "xattr";
+  public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
   
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";

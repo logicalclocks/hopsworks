@@ -10,7 +10,7 @@ import javax.servlet.ServletRequestListener;
 import javax.servlet.annotation.WebListener;
 import javax.websocket.DeploymentException;
 import javax.websocket.server.ServerContainer;
-import se.kth.hopsworks.meta.wscomm.Protocol;
+import se.kth.hopsworks.meta.wscomm.MetadataProtocol;
 import se.kth.hopsworks.meta.wscomm.WebSocketEndpoint;
 
 /**
@@ -34,7 +34,7 @@ public class ApplicationListener implements ServletContextListener,
 
     try {
 
-      context.setAttribute("protocol", new Protocol());
+      context.setAttribute("protocol", new MetadataProtocol());
 
       //attach the WebSockets Endpoint to the web container
       serverContainer.addEndpoint(WebSocketEndpoint.class);

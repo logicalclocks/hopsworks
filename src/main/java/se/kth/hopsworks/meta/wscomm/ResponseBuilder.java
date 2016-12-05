@@ -17,7 +17,6 @@ import se.kth.hopsworks.meta.db.TupleToFileFacade;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.Field;
 import se.kth.hopsworks.meta.entity.FieldType;
-import se.kth.hopsworks.meta.entity.HdfsMetadataLog;
 import se.kth.hopsworks.meta.entity.InodeTableComposite;
 import se.kth.hopsworks.meta.entity.MTable;
 import se.kth.hopsworks.meta.entity.RawData;
@@ -33,7 +32,6 @@ import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
 import se.kth.hopsworks.meta.wscomm.message.UploadedTemplateMessage;
-import se.kth.hopsworks.util.Settings;
 
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol
@@ -48,7 +46,7 @@ public class ResponseBuilder {
           getLogger(ResponseBuilder.class.getName());
 
   @EJB
-  private Utils utils;
+  private MetadataController metadataController;
   @EJB
   private TemplateFacade templateFacade;
   @EJB
@@ -75,7 +73,7 @@ public class ResponseBuilder {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
-    this.utils.addNewTemplate(template);
+    this.metadataController.addNewTemplate(template);
 
     return this.fetchTemplates(message);
   }
@@ -91,7 +89,7 @@ public class ResponseBuilder {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
-    this.utils.removeTemplate(template);
+    this.metadataController.removeTemplate(template);
 
     return this.fetchTemplates(message);
   }
@@ -107,7 +105,7 @@ public class ResponseBuilder {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
-    this.utils.updateTemplateName(template);
+    this.metadataController.updateTemplateName(template);
 
     TextMessage response = new TextMessage("Server");
     response.setMessage("Template updated successfully");
@@ -124,7 +122,7 @@ public class ResponseBuilder {
    */
   public void storeSchema(Message message) throws ApplicationException {
     List<EntityIntf> schema = message.parseSchema();
-    this.utils.addTables(schema);
+    this.metadataController.addTables(schema);
   }
 
   /**
@@ -272,7 +270,7 @@ public class ResponseBuilder {
         this.checkDeleteField(f);
       }
 
-      this.utils.deleteTable(t);
+      this.metadataController.deleteTable(t);
     } catch (DatabaseException e) {
       throw new ApplicationException("Server", e.getMessage());
     }
@@ -422,63 +420,11 @@ public class ResponseBuilder {
     TemplateMessage tmplMsg = (TemplateMessage) message.addNewTemplateMessage();
     Template template = tmplMsg.getTemplate();
 
-    int templateId = this.utils.addNewTemplate(template);
+    int templateId = this.metadataController.addNewTemplate(template);
 
     tmplMsg = (TemplateMessage) message.addNewTemplateContentMessage(templateId);
 
     this.storeSchema(tmplMsg);
   }
 
-  /**
-   * Creates an inode mutation by writing directly to hdfs_metadata_log table.
-   * <p/>
-   * @param log
-   * @return
-   * @throws ApplicationException
-   */
-  public Message inodeMutationResponse(HdfsMetadataLog log) throws
-          ApplicationException {
-
-    int i = 0;
-    double factor = 0.4;
-
-    while (i < Settings.MAX_RETRIES) {
-      try {
-        this.sleep((int) (10 * factor));
-        
-        //write directly to hdfs_metadata_log table
-        this.utils.createMetadataLog(log);
-        return this.textResponse("Inode mutation was successful");
-      } catch (DatabaseException ex) {
-
-      } finally {
-        i++;
-        factor += 0.4;
-      }
-      //increase the logical time
-      log.getHdfsMetadataLogPK().setLtime(log.getHdfsMetadataLogPK().
-              getLtime() + 1);
-    }
-
-    //flow control reached here, means the log was not persisted to database.
-    //rollback the transaction
-    throw new ApplicationException(
-            "Inode log was not written to database. Max number of retries reached");
-  }
-
-  private Message textResponse(String message) {
-    TextMessage response = new TextMessage();
-    response.setSender("Server");
-    response.setMessage(message);
-
-    return response;
-  }
-
-  private void sleep(int mSec) {
-    try {
-      Thread.sleep(mSec);
-    } catch (InterruptedException e) {
-
-    }
-  }
 }

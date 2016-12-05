@@ -28,6 +28,9 @@ import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.InodeBasicMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.log.ops.OperationType;
+import se.kth.hopsworks.log.ops.OperationsLog;
+import se.kth.hopsworks.log.ops.OperationsLogFacade;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
@@ -54,8 +57,10 @@ public class DatasetController {
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
-
+  private HdfsUsersController hdfsUsersBean;  
+  @EJB
+  private OperationsLogFacade operationsLogFacade;
+  
   /**
    * Create a new DataSet. This is, a folder right under the project home
    * folder.
@@ -129,7 +134,9 @@ public class DatasetController {
             udfso);
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
-      dfso.setMetaEnabled(dsPath);
+      if(searchable){
+        dfso.setMetaEnabled(dsPath);
+      }
       try {
 
         ds = inodes.findByInodePK(parent, dataSetName,
@@ -278,6 +285,7 @@ public class DatasetController {
   /**
    * Deletes a folder recursively as the given user.
    * <p>
+   * @param dataset
    * @param path
    * @param user
    * @param project
@@ -285,12 +293,16 @@ public class DatasetController {
    * @return
    * @throws java.io.IOException
    */
-  public boolean deleteDataset(String path, Users user, Project project,
+  public boolean deleteDataset(Dataset dataset, String path, Users user, Project project,
           DistributedFileSystemOps udfso) throws
           IOException {
+    OperationsLog log = new OperationsLog(dataset, OperationType.Delete);
     boolean success;
     Path location = new Path(path);
     success = udfso.rm(location, true);
+    if(success){
+      operationsLogFacade.persist(log);
+    }
     return success;
   }
 
@@ -449,4 +461,12 @@ public class DatasetController {
     }
     return filePreviewDTO;
   }
+  
+  public void logDataset(Dataset dataset, OperationType type) {
+    if (dataset.isShared() || !dataset.isSearchable()) {
+      return;
+    }
+    operationsLogFacade.persist(new OperationsLog(dataset, type));
+  }
+
 }
