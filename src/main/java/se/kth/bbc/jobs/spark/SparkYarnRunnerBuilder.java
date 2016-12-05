@@ -47,6 +47,7 @@ public class SparkYarnRunnerBuilder {
   private String classPath;
   private String sessionId;//used by Kafka
   private String kafkaAddress;
+  private String certPwd;
   private boolean kafkaJob;
   private String kafkaTopics;
 
@@ -148,6 +149,7 @@ public class SparkYarnRunnerBuilder {
     }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, certPwd);
     addSystemProperty(Settings.KAFKA_JOB_ENV_VAR, Boolean.toString(kafkaJob));
     addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
 
@@ -199,6 +201,7 @@ public class SparkYarnRunnerBuilder {
             + "-Djava.library.path=/srv/hadoop/lib/native/ -D"
             + Settings.KAFKA_SESSIONID_ENV_VAR + "=" + sessionId + " -D"
             + Settings.KAFKA_BROKERADDR_ENV_VAR + "=" + kafkaAddress + " -D"
+            + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=" + certPwd + " -D"
             + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=" + kafkaTopics + " -D"
             + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + restEndpoint + " -D"
             + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + sysProps.get(
@@ -431,6 +434,10 @@ public class SparkYarnRunnerBuilder {
 
   public void setKafkaAddress(String kafkaAddress) {
     this.kafkaAddress = kafkaAddress;
+  }
+  
+  public void setCertPwd(String certPwd) {
+    this.certPwd = certPwd;
   }
 
   public void setKafkaJob(boolean isKafkaJob) {

@@ -99,20 +99,28 @@ public class HopsUtils {
       //Now we must remove the yarn shuffle library as it creates issues for 
       //Zeppelin Spark Interpreter
       StringBuilder classpath = new StringBuilder();
-      
-      for(String path : sb.toString().split(File.pathSeparator)){
-        if(!path.contains("yarn")){
+
+      for (String path : sb.toString().split(File.pathSeparator)) {
+        if (!path.contains("yarn")) {
           classpath.append(path).append(File.pathSeparator);
         }
       }
-      if(classpath.length()>0){
-        return classpath.toString().substring(0,classpath.length()-1);
+      if (classpath.length() > 0) {
+        return classpath.toString().substring(0, classpath.length() - 1);
       }
 
     } catch (IOException | InterruptedException ex) {
       Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
     }
     return "";
+  }
+
+  public static String getProjectKeystoreName(String project, String user) {
+    return project + "__" + user + "__kstore.jks";
+  }
+
+  public static String getProjectTruststoreName(String project, String user) {
+    return project + "__" + user + "__tstore.jks";
   }
 
 }

@@ -21,7 +21,7 @@ import se.kth.hopsworks.util.Settings;
  */
 public class SparkJob extends YarnJob {
 
-  private static final Logger logger = Logger.
+  private static final Logger LOG = Logger.
           getLogger(SparkJob.class.getName());
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
@@ -40,15 +40,44 @@ public class SparkJob extends YarnJob {
    * @param nameNodeIpPort
    * @param sparkUser
    * @param jobUser
+   */
+  public SparkJob(JobDescription job, AsynchronousJobExecutor services,
+          Users user, final String hadoopDir,
+          final String sparkDir, final String nameNodeIpPort, String sparkUser,
+          String jobUser) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
+    if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
+      throw new IllegalArgumentException(
+              "JobDescription must contain a SparkJobConfiguration object. Received: "
+              + job.getJobConfig().getClass());
+    }
+    this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
+    this.sparkDir = sparkDir;
+    this.sparkUser = sparkUser;
+  }
+
+  /**
+   *
+   * @param job
+   * @param user
+   * @param services
+   * @param hadoopDir
+   * @param sparkDir
+   * @param nameNodeIpPort
+   * @param sparkUser
+   * @param jobUser
    * @param kafkaAddress
+   * @param keystorePwd
+   * @param truststorePwd
    * @param restEndpoint
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
           Users user, final String hadoopDir,
           final String sparkDir, final String nameNodeIpPort, String sparkUser,
-          String jobUser, String kafkaAddress, String restEndpoint) {
+          String jobUser, String kafkaAddress, String keystorePwd,
+          String truststorePwd, String restEndpoint) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress,
-            restEndpoint);
+            keystorePwd, truststorePwd, restEndpoint);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -119,7 +148,7 @@ public class SparkJob extends YarnJob {
                       sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
 
     } catch (IOException e) {
-      logger.log(Level.SEVERE,
+      LOG.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
@@ -127,13 +156,13 @@ public class SparkJob extends YarnJob {
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-            getProject().
-            getName())
+                    getProject().
+                    getName())
             + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-            getProject().
-            getName())
+                    getProject().
+                    getName())
             + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
@@ -142,7 +171,7 @@ public class SparkJob extends YarnJob {
 
   @Override
   protected void cleanup() {
-    logger.log(Level.INFO, "Job finished performing cleanup...");
+    LOG.log(Level.INFO, "Job finished performing cleanup...");
     if (monitor != null) {
       monitor.close();
       monitor = null;

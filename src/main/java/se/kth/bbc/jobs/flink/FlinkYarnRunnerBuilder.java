@@ -25,6 +25,7 @@ import se.kth.bbc.jobs.yarn.YarnRunner;
 import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.addPathToConfig;
 import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.setDefaultConfValues;
 import se.kth.hopsworks.controller.LocalResourceDTO;
+import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -97,9 +98,10 @@ public class FlinkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String sessionId;//used by Kafka
   private String kafkaAddress;
+  private String certPwd;
   private String restEndpoint;
   private String kafkaTopics;
-  
+
   public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
@@ -261,6 +263,10 @@ public class FlinkYarnRunnerBuilder {
   public void setKafkaAddress(String kafkaAddress) {
     this.kafkaAddress = kafkaAddress;
   }
+  
+  public void setCertPwd(String certPwd) {
+    this.certPwd = certPwd;
+  }
 
   public void setRestEndpoint(String restEndpoint) {
     this.restEndpoint = restEndpoint;
@@ -269,7 +275,7 @@ public class FlinkYarnRunnerBuilder {
   public void setKafkaTopics(String kafkaTopics) {
     this.kafkaTopics = kafkaTopics;
   }
-  
+
   public void isReadyForDeployment() throws YarnDeploymentException {
     if (taskManagerCount <= 0) {
       throw new YarnDeploymentException("Taskmanager count must be positive");
@@ -358,49 +364,25 @@ public class FlinkYarnRunnerBuilder {
     cluster.setQueue(jobManagerQueue);
     cluster.setLocalJarPath(new Path("file://" + flinkDir + "/flink.jar"));
 
-//    cluster.setDynamicPropertiesEncoded();
     builder.setFlinkCluster(cluster);
-//    cluster.setZookeeperNamespace();
-
-//        //Set Jar Path
-//        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, 
-//            "$PWD:$PWD/"+Settings.FLINK_DEFAULT_CONF_FILE + ":$PWD/"+Settings.FLINK_LOCRSC_FLINK_JAR);
-//        String stagingPath = File.separator + "Projects" + File.separator + project
-//            + File.separator
-//            + Settings.PROJECT_STAGING_DIR + File.separator
-//            + YarnRunner.APPID_PLACEHOLDER;
-//        builder.localResourcesBasePath(stagingPath);
-//        
-//        //Add Flink jar
-//        builder.addLocalResource(new LocalResourceDTO(
-//                Settings.FLINK_LOCRSC_FLINK_JAR, 
-//                "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+
-//                        Settings.FLINK_LOCRSC_FLINK_JAR,
-//                LocalResourceVisibility.PUBLIC.toString(), 
-//                LocalResourceType.FILE.toString(), null), false);
-//                
-//        //Add Flink conf file
-//        builder.addLocalResource(new LocalResourceDTO(
-//                Settings.FLINK_DEFAULT_CONF_FILE, 
-//                "hdfs://"+nameNodeIpPort+"/user/"+flinkUser+"/"+
-//                        Settings.FLINK_DEFAULT_CONF_FILE,
-//                LocalResourceVisibility.PUBLIC.toString(), 
-//                LocalResourceType.FILE.toString(), null), false);
-//        StringBuilder shipfilesPaths = new StringBuilder();
-//        String shipfiles = "";
+    //Remove any Kafka certificates after job is finished
+    builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
+            getProjectKeystoreName(project, jobUser));
+    builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
+            getProjectTruststoreName(project, jobUser));
     //Add extra files to local resources, use filename as key
     //Get filesystem
     if (!extraFiles.isEmpty()) {
       Configuration conf = new Configuration();
       FileSystem fs = null;
       try {
-        fs = FileSystem.get(new URI("hdfs://"+nameNodeIpPort), conf);
+        fs = FileSystem.get(new URI("hdfs://" + nameNodeIpPort), conf);
         //Set the Configuration object for the returned YarnClient
       } catch (URISyntaxException ex) {
         Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
                 log(Level.SEVERE, null, ex);
       }
-      if(fs == null){
+      if (fs == null) {
         throw new YarnDeploymentException("Could not connect to filesystem");
       }
       for (LocalResourceDTO dto : extraFiles) {
@@ -424,6 +406,7 @@ public class FlinkYarnRunnerBuilder {
     }
     addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
     addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
+    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, certPwd);
     addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
     addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
     if (!sysProps.isEmpty()) {
@@ -444,7 +427,7 @@ public class FlinkYarnRunnerBuilder {
     if (dynamicPropertiesEncoded.length() > 0) {
       cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
               dynamicPropertiesEncoded.
-              lastIndexOf("@@")));
+                      lastIndexOf("@@")));
     }
     builder.setJobType(JobType.FLINK);
     builder.setAppJarPath(appJarPath);

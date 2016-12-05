@@ -75,7 +75,6 @@ public class YarnRunner {
   private YarnClusterDescriptor flinkCluster;
   
   private String appJarPath;
-  private String localJarPath; //Used by flink
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -233,6 +232,7 @@ public class YarnRunner {
         } finally{
           //Remove local flink app jar
            FileUtils.deleteDirectory(localPathAppJarDir);
+           //Try to delete any local certificates for this project
            logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
         }
 

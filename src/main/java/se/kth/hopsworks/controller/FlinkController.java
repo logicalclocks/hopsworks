@@ -96,6 +96,8 @@ public class FlinkController {
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
                   settings.getKafkaConnectStr(),
+                  settings.getHopsworksMasterPasswordSsl(),
+                  settings.getHopsworksMasterPasswordSsl(),
                   settings.getRestEndpoint());
         }
       });
@@ -140,6 +142,8 @@ public class FlinkController {
             settings.getFlinkUser(),
             job.getProject().getName() + "__" + user.getUsername(),
             settings.getKafkaConnectStr(),
+            settings.getHopsworksMasterPasswordSsl(),
+            settings.getHopsworksMasterPasswordSsl(),
             settings.getRestEndpoint());
 
     submitter.stopExecution(flinkJob, appid);

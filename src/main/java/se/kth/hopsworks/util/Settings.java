@@ -490,6 +490,7 @@ public class Settings {
   public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
+  public static final String FLINK_KAFKA_CERTS_DIR = "/srv/glassfish/domain1/config";
   
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/java";
@@ -797,6 +798,8 @@ public class Settings {
   public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
+  public static final String KEYSTORE_PASSWORD_ENV_VAR = "hopsworks.keystore.password";
+  public static final String TRUSTSTORE_PASSWORD_ENV_VAR = "hopsworks.truststore.password";
 
   //Used to retrieve schema by KafkaUtil
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";

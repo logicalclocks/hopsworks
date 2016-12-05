@@ -36,7 +36,7 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class SparkController {
 
-  private static final Logger logger = Logger.getLogger(SparkController.class.
+  private static final Logger LOG = Logger.getLogger(SparkController.class.
           getName());
 
   @EJB
@@ -92,11 +92,13 @@ public class SparkController {
                   settings.getSparkUser(), job.getProject().getName() + "__"
                   + user.getUsername(),
                   settings.getKafkaConnectStr(),
+                  settings.getHopsworksMasterPasswordSsl(),
+                  settings.getHopsworksMasterPasswordSsl(),
                   settings.getRestEndpoint());
         }
       });
     } catch (InterruptedException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOG.log(Level.SEVERE, null, ex);
     }
     if (sparkjob == null) {
       throw new NullPointerException("Could not instantiate Sparkjob.");
@@ -105,7 +107,7 @@ public class SparkController {
     if (jh != null) {
       submitter.startExecution(sparkjob);
     } else {
-      logger.log(Level.SEVERE,
+      LOG.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
@@ -127,15 +129,14 @@ public class SparkController {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
     } 
-//    else if (!isSparkJarAvailable()) {
-//      throw new IllegalStateException("Spark is not installed on this system.");
-//    }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
             getHadoopDir(), settings.getSparkDir(),
             hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
             settings.getKafkaConnectStr(),
+            settings.getHopsworksMasterPasswordSsl(),
+            settings.getHopsworksMasterPasswordSsl(),
             settings.getRestEndpoint());
 
     submitter.stopExecution(sparkjob, appid);
@@ -158,7 +159,7 @@ public class SparkController {
           DistributedFileSystemOps dfso) throws
           AccessControlException, IOException,
           IllegalArgumentException {
-    logger.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
+    LOG.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
             new Object[]{username, path});
     if (!path.endsWith(".jar")) {
       throw new IllegalArgumentException("Path does not point to a jar file.");
@@ -167,7 +168,7 @@ public class SparkController {
     // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
     path = path.replaceFirst("hdfs:/*Projects",
             "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
-    logger.log(Level.INFO, "Really executing Spark job by {0} at path: {1}",
+    LOG.log(Level.INFO, "Really executing Spark job by {0} at path: {1}",
             new Object[]{username, path});
 
     SparkJobConfiguration config = new SparkJobConfiguration();

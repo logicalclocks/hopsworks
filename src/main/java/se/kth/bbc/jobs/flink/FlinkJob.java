@@ -50,16 +50,18 @@ public class FlinkJob extends YarnJob {
    * @param flinkUser
    * @param jobUser
    * @param kafkaAddress
+   * @param keystorePwd
+   * @param truststorePwd
    * @param restEndpoint
    */
   public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
           Users user, final String hadoopDir,
           final String flinkDir, final String flinkConfDir,
           final String flinkConfFile, final String nameNodeIpPort,
-          String flinkUser, String jobUser, String kafkaAddress,
-          String restEndpoint) {
+          String flinkUser, String jobUser, String kafkaAddress, String keystorePwd,
+          String truststorePwd, String restEndpoint) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort,
-            kafkaAddress, restEndpoint);
+            kafkaAddress, keystorePwd, truststorePwd, restEndpoint);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -113,6 +115,7 @@ public class FlinkJob extends YarnJob {
     flinkBuilder.setAppJarPath(jobconfig.getJarPath());
     flinkBuilder.setSessionId(jobconfig.getjSessionId());
     flinkBuilder.setKafkaAddress(kafkaAddress);
+    flinkBuilder.setCertPwd(keystorePwd);
     flinkBuilder.setRestEndpoint(restEndpoint);
     flinkBuilder.setKafkaTopics(jobconfig.getKafkaTopics());
     flinkBuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
@@ -131,7 +134,7 @@ public class FlinkJob extends YarnJob {
                         Settings.KAFKA_T_CERTIFICATE)) {
           flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
                   "/srv/glassfish/domain1/config/" + jobSystemProperty.
-                  getValue());
+                          getValue());
         } else {
           flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
                   jobSystemProperty.getValue());
@@ -153,13 +156,13 @@ public class FlinkJob extends YarnJob {
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-            getProject().
-            getName())
+                    getProject().
+                    getName())
             + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-            getProject().
-            getName())
+                    getProject().
+                    getName())
             + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
