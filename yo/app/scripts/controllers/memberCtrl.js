@@ -1,14 +1,15 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', 'MembersService', 'projectId', 'UserService',
-          function ($scope, $timeout, $uibModalStack, MembersService, projectId, UserService) {
+        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', '$location','MembersService', 'projectId', 'UserService', 'growl',
+          function ($scope, $timeout, $uibModalStack, $location, MembersService, projectId, UserService, growl) {
             var self = this;
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
             self.projectId = projectId;
             self.members = [];
-
+            self.projectOwner = "";
+            
             self.newMember = {
               'projectTeamPK':
                       {
@@ -69,13 +70,22 @@ angular.module('hopsWorksApp')
               MembersService.query({id: self.projectId}).$promise.then(
                       function (success) {
                         self.members = success;
+                        if(self.members.length > 0){
+                          self.projectOwner = self.members[0].project.owner;
+                          self.members.forEach(function (member) {
+                            if (member.user.email === self.myCard.email) {
+                              self.teamRole = member.teamRole;
+                              return;
+                            }
+                          });
+                        }                       
                       },
                       function (error) {
-                      })
-            }
+                      });
+            };
 
             getMembers();
-
+            
             var getCard = function () {
               UserService.profile().then(
                       function (success) {
@@ -101,7 +111,7 @@ angular.module('hopsWorksApp')
                         'teamRole': role
                       }
               );
-            }
+            };
 
 
             self.removeMember = function (email) {
@@ -120,7 +130,7 @@ angular.module('hopsWorksApp')
                 self.newMembers.projectTeam.splice(index, 1);
               }
 
-            }
+            };
 
 
 
@@ -133,16 +143,23 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 console.log(error);
               });
-            }
+            };
 
             self.deleteMemberFromBackend = function (email) {
               MembersService.delete({id: self.projectId, email: email}).$promise.then(
                       function (success) {
-                        getMembers();
+                        if(email === self.myCard.email){
+                          self.close();
+                          $location.path('/');
+                          $location.replace();
+                        } else {
+                          getMembers();
+                        }
                       }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
 
               });
-            }
+            };
 
 
             self.updateRole = function (email, role) {
@@ -151,8 +168,9 @@ angular.module('hopsWorksApp')
                         getMembers();
                       }, function (error) {
                 console.log(error);
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
-            }
+            };
 
 
 
@@ -163,14 +181,14 @@ angular.module('hopsWorksApp')
 
             self.selectChanged = function (index, email, teamRole) {
               timeout = $timeout(function () {
-                self.updateRole(email, teamRole)
+                self.updateRole(email, teamRole);
                 self.showThisIndex = index;
               }, secondsToWaitBeforeSave * 1000);
 
               timeout = $timeout(function () {
                 self.showThisIndex = -1;
               }, secondsToWaitBeforeSave * 4000);
-            }
+            };
 
             self.close = function () {
               $uibModalStack.getTop().key.dismiss();
