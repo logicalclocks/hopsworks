@@ -128,12 +128,11 @@ ul.dropdown-messages a:hover  {
 }
 .ds-content.sidenav-open {
   width: 79%;
-  height:95%;
 }
 .ds-sidenav {
   width: 0;
   overflow: hidden;
-  position: fixed;
+  position: absolute;
   right: 0;/*start from right*/
   top: 110px;
   bottom: 0;
@@ -145,6 +144,7 @@ ul.dropdown-messages a:hover  {
   -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
   background: rgb(250,250,250);
   z-index: 10;
+  height: auto;
 }
 .ds-sidenav.open {
     width: 20%;

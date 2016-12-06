@@ -500,6 +500,9 @@ public class Settings {
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
   
+  //Zeppelin constants
+  public static final String JAVA_HOME = "/usr/lib/jvm/java";
+  
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
   }
@@ -807,7 +810,7 @@ public class Settings {
   public static final String META_DATA_FIELDS = "xattr.*";
   
   //Filename conventions
-  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïü@${}[]+~^$`";
+  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
       = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";

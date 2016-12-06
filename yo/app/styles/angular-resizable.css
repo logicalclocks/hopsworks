@@ -111,7 +111,7 @@
 
 .rg-row-top-ds > div.rg-bottom {
   margin-bottom: 0px !important;
-  width: 97.2%;
+  width: 96%;
   margin-left: 14px;
 }
 
@@ -141,6 +141,12 @@
     width: 98%;
     overflow-y: auto; 
     height: 95%;
+}
+
+.ds-box-bottom {
+    width: 98%;
+    overflow: auto;
+    max-height: 55%;
 }
 
 table .progress-bar {

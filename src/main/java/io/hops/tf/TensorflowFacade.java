@@ -1,30 +1,15 @@
 package io.hops.tf;
 
-import io.hops.kafka.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import se.kth.bbc.project.*;
 import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
-import kafka.admin.AdminUtils;
-import kafka.common.TopicExistsException;
-import kafka.common.TopicAlreadyMarkedForDeletionException;
-import org.I0Itec.zkclient.ZkClient;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
-import org.I0Itec.zkclient.ZkConnection;
 
 @Stateless
 public class TensorflowFacade {

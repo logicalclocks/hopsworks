@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.configuration.ConfigurationException;
@@ -357,18 +359,26 @@ public class ZeppelinConfig {
               toString());
     }
     if (!zeppelin_env_file.exists()) {
+
+      String ldLibraryPath = "";
+      if(System.getenv().containsKey("LD_LIBRARY_PATH")){
+         ldLibraryPath = System.getenv("LD_LIBRARY_PATH");
+      }
+      String javaHome = Settings.JAVA_HOME;
+      if(System.getenv().containsKey("JAVA_HOME")){
+         javaHome = System.getenv("JAVA_HOME");
+      }
+
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
               ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
-              "zeppelin_dir", settings.getZeppelinDir(),
-              "project_dir", Settings.DIR_ROOT + File.separator
-              + this.projectName,
-              "spark_dir", settings.getSparkDir(),
-              "hadoop_dir", settings.getHadoopDir(),
-              "hadoop_user", this.projectName,
-              "extra_jars", "",
-              "java_home", System.getenv("JAVA_HOME"),
-              "ld_library_path", System.getenv("LD_LIBRARY_PATH"),
-              "hadoop_classpath_global", HopsUtils.getHadoopClasspathGlob(settings.getHadoopDir()+"/bin/hadoop","classpath","--glob"));
+	      "spark_dir", settings.getSparkDir(),
+	      "hadoop_dir", settings.getHadoopDir(),
+	      // TODO: This should be the project__username, not just the projectname
+              "hadoop_username", this.projectName,
+              "java_home", javaHome,
+              "ld_library_path", ldLibraryPath,
+              "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.getHadoopDir()+"/bin/hadoop","classpath","--glob")
+      );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
               toString());

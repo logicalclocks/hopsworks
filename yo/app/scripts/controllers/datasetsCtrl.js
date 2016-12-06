@@ -9,7 +9,7 @@ angular.module('hopsWorksApp')
                   $showdown) {
 
             var self = this;
-            self.itemsPerPage = 50;
+            self.itemsPerPage = 14;
             self.working = false;
             //Some variables to keep track of state.
             self.files = []; //A list of files currently displayed to the user.
@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
 
             $scope.isPublic = true;
 
-            $scope.tgState = true;
+            self.tgState = true;
 
             $scope.status = {
               isopen: false
@@ -161,6 +161,7 @@ angular.module('hopsWorksApp')
               }
               //Convert into a path
               var newPath = getPath(newPathArray);
+              self.files = [];
               self.working = true;
               self.dir_timing = new Date().getTime();
               //Get the contents and load them
@@ -214,7 +215,7 @@ angular.module('hopsWorksApp')
                 });
               }
               getDirContents();
-              $scope.tgState = true;
+              self.tgState = true;
             };
 
             init();
