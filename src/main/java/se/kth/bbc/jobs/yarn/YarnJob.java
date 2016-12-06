@@ -203,8 +203,8 @@ public abstract class YarnJob extends HopsJob {
             && userCert.getUserKey() != null && userCert.getUserKey().length > 0) {
 
       Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-      kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserCert());
-      kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserKey());
+      kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserCert());
+      kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserKey());
       Map<String, File> kafkaCerts = new HashMap<>();
       //Create tmp cert directory if not exists. Certificates will later 
       //be deleted from this directory when copied to HDFS. 

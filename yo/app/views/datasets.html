@@ -45,9 +45,9 @@
                           <div class="row"> </div>
                         </div>
                       </div>
-                    </div>   
+                    </div> 
+                    <div class="loader loader-sm" ng-show="datasetsCtrl.working"></div>
                     <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | orderBy: 'name'">
-                      <div class="loader" ng-show="datasetsCtrl.working"></div>
                       <div ng-init="(iscollapsed$index) = true"
                            class="file-box"
                            context-menu
