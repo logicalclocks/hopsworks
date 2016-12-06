@@ -26,6 +26,7 @@
               data-target="#collapseAddMember"
               aria-expanded="false"
               aria-controls="collapseAddMember"
+              ng-disabled="memberCtrl.teamRole!=='Data owner'"
               class="btn btn-sm btn-success pull-right">
         <i class="fa fa-user-plus fa-2x"></i>
         New members
@@ -52,7 +53,7 @@
             <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
             <small>
               <i class="fa fa-user-plus"></i>
-              <span style="font-size: 14px;;"
+              <span style="font-size: 14px;"
                     ng-bind-html="''+card.email | highlight: $select.search">
               </span>
               <br/>
@@ -157,7 +158,7 @@
 
               <div class="media-body" style="padding-top:8px;">
                 <h4 class="media-heading" style="margin-bottom:0px;">
-                  <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email == mainCtrl.email"> (me)</span></b>
+                  <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email === mainCtrl.email"> (me)</span></b>
                 </h4>
 
                 <p><span style="font-size:12px;">{{member.user.email}}</span></p>
@@ -174,7 +175,7 @@
                     class="form-control">
             </select>
 
-            <span style="color: green;" ng-show="memberCtrl.showThisIndex == $index">
+            <span style="color: green;" ng-show="memberCtrl.showThisIndex === $index">
               <i class="fa fa-check-square-o"></i>
               Saved!
             </span>
