@@ -37,6 +37,8 @@ public class Settings {
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
+  private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR = "zeppelin_projects_dir";
+  private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
@@ -141,6 +143,17 @@ public class Settings {
     return defaultValue;
   }
 
+  private long setLongVar(String varName, long defaultValue) {
+    Variables ip = findById(varName);
+    if (ip != null && ip.getValue() != null) {
+      String val = ip.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return Long.parseLong(val);
+      }
+    }
+    return defaultValue;
+  }
+  
   private boolean cached = false;
 
   private void populateCache() {
@@ -154,6 +167,8 @@ public class Settings {
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
+      ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR, ZEPPELIN_PROJECTS_DIR);
+      ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL, ZEPPELIN_SYNC_INTERVAL);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -296,12 +311,6 @@ public class Settings {
   public synchronized String getNdbDir() {
     checkCache();
     return NDB_DIR;
-  }
-  private String ZEPPELIN_DIR = "/srv/zeppelin";
-
-  public synchronized String getZeppelinDir() {
-    checkCache();
-    return ZEPPELIN_DIR;
   }
 
   private String ADAM_DIR = "/srv/adam";
@@ -660,6 +669,27 @@ public class Settings {
     return ZK_USER;
   }
   
+  // Zeppelin
+  private String ZEPPELIN_DIR = "/srv/zeppelin";
+
+  public synchronized String getZeppelinDir() {
+    checkCache();
+    return ZEPPELIN_DIR;
+  }
+
+  private String ZEPPELIN_PROJECTS_DIR = "/srv/zeppelin/Projects";
+
+  public synchronized String getZeppelinProjectsDir() {
+    checkCache();
+    return ZEPPELIN_PROJECTS_DIR;
+  }
+  
+  private long ZEPPELIN_SYNC_INTERVAL = 24 * 60 * 60* 1000;
+  
+  public synchronized long getZeppelinSyncInterval(){
+    checkCache();
+    return ZEPPELIN_SYNC_INTERVAL;
+  }
   
   // Kafka
   private String KAFKA_IP = "10.0.2.15";
