@@ -1,14 +1,15 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', 'MembersService', 'projectId', 'UserService',
-          function ($scope, $timeout, $uibModalStack, MembersService, projectId, UserService) {
+        .controller('MemberCtrl', ['$scope', '$timeout', '$uibModalStack', '$location','MembersService', 'projectId', 'UserService', 'growl',
+          function ($scope, $timeout, $uibModalStack, $location, MembersService, projectId, UserService, growl) {
             var self = this;
             self.roles = ["Data scientist", "Data owner"];
             self.newRole = "";
             self.projectId = projectId;
             self.members = [];
-
+            self.projectOwner = "";
+            
             self.newMember = {
               'projectTeamPK':
                       {
@@ -23,29 +24,49 @@ angular.module('hopsWorksApp')
             self.myCard = {};
             self.cards = [];
 
-
-            UserService.allcards().then(
-                    function (success) {
-                      self.cards = success.data;
-                      // remove my own 'card' from the list of members
-                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                          if (self.cards[i].email === self.myCard.email) {
-                            self.cards.splice(i, 1);
-                            break;
+            var getMembers = function () {
+              MembersService.query({id: self.projectId}).$promise.then(
+                      function (success) {
+                        self.members = success;
+                        if(self.members.length > 0){
+                          self.projectOwner = self.members[0].project.owner;
+                          UserService.allcards().then(
+                                  function (success) {
+                                    self.cards = success.data;
+                                    // remove my own 'card' from the list of members
+                                    // remove project owner as well, since he is always a 
+                                    // member of the project
+                                    var countRemoved = 0;
+                                    var i = self.cards.length;
+                                    while(i--) {
+                                        if (self.cards[i].email === self.myCard.email ||
+                                                self.cards[i].email === self.projectOwner.email ||
+                                                self.cards[i].email === "agent@hops.io") {
+                                          self.cards.splice(i, 1);
+                                          countRemoved++;
+                                          if(countRemoved === 3){
+                                            break;
+                                          }
+                                        }
+                                    }
+                                  }, function (error) {
+                            self.errorMsg = error.data.msg;
                           }
-                      }
-                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                          if (self.cards[i].email === "agent@hops.io") {
-                            self.cards.splice(i, 1);
-                            break;
-                          }
-                      }                      
-                    }, function (error) {
-              self.errorMsg = error.data.msg;
-            }
-            );
-
-
+                          );
+                          //Get current user team role
+                          self.members.forEach(function (member) {
+                            if (member.user.email === self.myCard.email) {
+                              self.teamRole = member.teamRole;
+                              return;
+                            }
+                          });
+                        }                       
+                      },
+                      function (error) {
+                      });
+            };
+            getMembers();
+            
             $scope.$watch('memberCtrl.card.selected', function (selected) {
               if (selected !== undefined) {
                 var index = -1;
@@ -65,17 +86,8 @@ angular.module('hopsWorksApp')
             });
 
 
-            var getMembers = function () {
-              MembersService.query({id: self.projectId}).$promise.then(
-                      function (success) {
-                        self.members = success;
-                      },
-                      function (error) {
-                      })
-            }
-
-            getMembers();
-
+           
+            
             var getCard = function () {
               UserService.profile().then(
                       function (success) {
@@ -101,7 +113,7 @@ angular.module('hopsWorksApp')
                         'teamRole': role
                       }
               );
-            }
+            };
 
 
             self.removeMember = function (email) {
@@ -120,7 +132,7 @@ angular.module('hopsWorksApp')
                 self.newMembers.projectTeam.splice(index, 1);
               }
 
-            }
+            };
 
 
 
@@ -132,17 +144,25 @@ angular.module('hopsWorksApp')
                         getMembers();
                       }, function (error) {
                 console.log(error);
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
-            }
+            };
 
             self.deleteMemberFromBackend = function (email) {
               MembersService.delete({id: self.projectId, email: email}).$promise.then(
                       function (success) {
-                        getMembers();
+                        if(email === self.myCard.email){
+                          self.close();
+                          $location.path('/');
+                          $location.replace();
+                        } else {
+                          getMembers();
+                        }
                       }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
 
               });
-            }
+            };
 
 
             self.updateRole = function (email, role) {
@@ -151,8 +171,9 @@ angular.module('hopsWorksApp')
                         getMembers();
                       }, function (error) {
                 console.log(error);
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
-            }
+            };
 
 
 
@@ -163,14 +184,14 @@ angular.module('hopsWorksApp')
 
             self.selectChanged = function (index, email, teamRole) {
               timeout = $timeout(function () {
-                self.updateRole(email, teamRole)
+                self.updateRole(email, teamRole);
                 self.showThisIndex = index;
               }, secondsToWaitBeforeSave * 1000);
 
               timeout = $timeout(function () {
                 self.showThisIndex = -1;
               }, secondsToWaitBeforeSave * 4000);
-            }
+            };
 
             self.close = function () {
               $uibModalStack.getTop().key.dismiss();

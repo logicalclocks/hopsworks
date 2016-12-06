@@ -68,7 +68,7 @@ public class ProjectService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @Inject
-  private ProjectMembers projectMembers;
+  private ProjectMembersService projectMembers;
   @Inject
   private KafkaService kafka;
   @Inject
@@ -517,17 +517,23 @@ public class ProjectService {
     String owner = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
-    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
     try {
-      Users user = userManager.getUserByEmail(owner);
       Project project = projectFacade.find(id);
       if (project == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
                 ResponseMessages.PROJECT_NOT_FOUND);
       }
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
-      udfso = dfs.getDfsOps(username);
-      success = projectController.removeByID(id, owner, true, udfso, dfs.
+      //Only project owner is able to delete a project
+      Users user = userManager.getUserByEmail(owner);
+      if(!project.getOwner().equals(user)){
+         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
+      }
+      //Remove hopsFS operation is done as super user to be able to delete
+      // Datasets owned by other project members as well
+      dfso = dfs.getDfsOps();
+      success = projectController.removeByID(id, owner, true, dfso, dfs.
               getDfsOps());
     } catch (AccessControlException ex) {
       throw new AccessControlException(
@@ -538,7 +544,9 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
     } finally {
-      udfso.close();
+      if(dfso != null){
+        dfso.close();
+      }
     }
     if (success) {
       json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
@@ -565,17 +573,21 @@ public class ProjectService {
     String owner = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
-    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
     try {
-      Users user = userManager.getUserByEmail(owner);
       Project project = projectFacade.find(id);
       if (project == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
                 ResponseMessages.PROJECT_NOT_FOUND);
       }
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
-      udfso = dfs.getDfsOps(username);
-      success = projectController.removeByID(id, owner, false, udfso, dfs.
+      //Only project owner is able to delete a project
+      Users user = userManager.getUserByEmail(owner);
+      if(!project.getOwner().equals(user)){
+         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
+      }
+      dfso = dfs.getDfsOps();
+      success = projectController.removeByID(id, owner, false, dfso, dfs.
               getDfsOps());
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
@@ -583,7 +595,9 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
     } finally {
-      udfso.close();
+      if(dfso != null){
+        dfso.close();
+      }
     }
     json.setStatus("OK");
     if (success) {
@@ -595,7 +609,7 @@ public class ProjectService {
 
   @Path("{id}/projectMembers")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public ProjectMembers projectMembers(
+  public ProjectMembersService projectMembers(
           @PathParam("id") Integer id) throws AppException {
     this.projectMembers.setProjectId(id);
 

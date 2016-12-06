@@ -93,6 +93,7 @@
     <class>io.hops.tf.TfResources</class>
     <class>io.hops.tf.TfTasks</class>
     <class>se.kth.bbc.jobs.quota.YarnPriceMultiplicator</class>
+    <class>se.kth.hopsworks.zeppelin.util.ZeppelinInterpreterConfs</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

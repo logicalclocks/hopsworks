@@ -43,7 +43,7 @@ public class ZeppelinConfig {
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   private static final String HIVE_SITE_XML = "/hive-site.xml";
-  private static final String INTERPRETER_JSON = "/interpreter.json";
+  public static final String INTERPRETER_JSON = "/interpreter.json";
   private static final int DELETE_RETRY = 10;
 
   /**
@@ -72,8 +72,9 @@ public class ZeppelinConfig {
   private final String logDirPath;
   private final String interpreterDirPath;
   private final String libDirPath;
-
-  public ZeppelinConfig(String projectName, String owner, Settings settings) {
+   
+  public ZeppelinConfig(String projectName, String owner, Settings settings,
+          String interpreterConf) {
     this.projectName = projectName;
     this.settings = settings;
     boolean newDir = false;
@@ -106,7 +107,7 @@ public class ZeppelinConfig {
       newDir = createZeppelinDirs();//creates the necessary folders for the project in /srv/zeppelin
       newBinDir = copyBinDir();
       createSymLinks();//interpreter and lib
-      newFile = createZeppelinConfFiles();//create project specific configurations for zeppelin 
+      newFile = createZeppelinConfFiles(interpreterConf);//create project specific configurations for zeppelin 
       this.conf = loadConfig();
       this.depResolver = new DependencyResolver(
               conf.getString(
@@ -338,7 +339,7 @@ public class ZeppelinConfig {
   }
 
   // returns true if one of the conf files were created anew 
-  private boolean createZeppelinConfFiles() throws IOException {
+  private boolean createZeppelinConfFiles(String interpreterConf) throws IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
     File log4j_file = new File(confDirPath + LOG4J_PROPS);
@@ -406,16 +407,23 @@ public class ZeppelinConfig {
               hive_site_xml.toString());
     }
 
-    if (!interpreter_file.exists()) {
+    //get interpreter string from db
+    if (interpreter_file.exists()) {
+      interpreter_file.delete();
+    }
+
+    if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.INTERPRETER_TEMPLATE,
                       "projectName", this.projectName,
                       "livy_url", settings.getLivyUrl()
               );
-      createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
-              interpreter_json.toString());
+      interpreterConf = interpreter_json.toString();
     }
+    createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
+            interpreterConf);
+
     return createdSh || createdXml || createdLog4j;
   }
 

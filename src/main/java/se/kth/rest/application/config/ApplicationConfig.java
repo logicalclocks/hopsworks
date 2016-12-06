@@ -18,7 +18,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(se.kth.hopsworks.rest.DataSetService.class);
     register(se.kth.hopsworks.rest.ExecutionService.class);
     register(se.kth.hopsworks.rest.JobService.class);
-    register(se.kth.hopsworks.rest.ProjectMembers.class);
+    register(se.kth.hopsworks.rest.ProjectMembersService.class);
     register(se.kth.hopsworks.rest.ProjectService.class);
     register(se.kth.hopsworks.rest.RequestService.class);
     register(se.kth.hopsworks.rest.SparkService.class);

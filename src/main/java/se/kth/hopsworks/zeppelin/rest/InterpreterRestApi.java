@@ -49,6 +49,7 @@ import se.kth.hopsworks.zeppelin.util.ZeppelinResource;
 
 import com.google.gson.Gson;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import javax.faces.bean.ManagedProperty;
@@ -74,6 +75,7 @@ import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.hopsworks.zeppelin.util.LivyMsg;
 import se.kth.hopsworks.zeppelin.util.TicketContainer;
+import se.kth.hopsworks.zeppelin.util.ZeppelinInterpreterConfFacade;
 
 /**
  * Interpreter Rest API
@@ -103,7 +105,9 @@ public class InterpreterRestApi {
   private UserFacade userFacade;
   @EJB
   private Settings settings;
-
+  @EJB
+  private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
+  
   Gson gson = new Gson();
 
   public InterpreterRestApi() {
@@ -153,6 +157,7 @@ public class InterpreterRestApi {
               request.getDependencies(),
               request.getOption(),
               p);
+      persistToDB();
       logger.info("new setting created with {}", interpreterSetting.id());
       return new JsonResponse(Status.CREATED, "", interpreterSetting).build();
     } catch (InterpreterException e) {
@@ -201,10 +206,32 @@ public class InterpreterRestApi {
               getStackTrace(e)).build();
     }
     InterpreterSetting setting = interpreterFactory.get(settingId);
+    //Persist json to the database
+    persistToDB();
+
     if (setting == null) {
       return new JsonResponse(Status.NOT_FOUND, "", settingId).build();
     }
     return new JsonResponse(Status.OK, "", setting).build();
+  }
+  
+  private void persistToDB() {
+    try {
+      String s = readConfigFile(new File(zeppelinConf.getConfDirPath()
+              + ZeppelinConfig.INTERPRETER_JSON));
+      zeppelinInterpreterConfFacade.create(project.getName(), s);
+    } catch (IOException ex) {
+      java.util.logging.Logger.getLogger(InterpreterRestApi.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
+  }
+
+  private String readConfigFile(File path) throws IOException {
+    // write contents to file as text, not binary data
+    if (!path.exists()) {
+        throw new IOException("Problem creating file: " + path);
+    }
+    return new String(Files.readAllBytes(path.toPath()));
   }
 
   /**
@@ -220,6 +247,7 @@ public class InterpreterRestApi {
           IOException {
     logger.info("Remove interpreterSetting {}", settingId);
     interpreterFactory.remove(settingId);
+    persistToDB();
     return new JsonResponse(Status.OK).build();
   }
 
@@ -390,6 +418,7 @@ public class InterpreterRestApi {
               request.getUrl(),
               request.isSnapshot(),
               request.getAuthentication());
+      persistToDB();
       logger.info("New repository {} added", request.getId());
     } catch (Exception e) {
       logger.error("Exception in InterpreterRestApi while adding repository ",
@@ -413,6 +442,7 @@ public class InterpreterRestApi {
     logger.info("Remove repository {}", repoId);
     try {
       interpreterFactory.removeRepository(repoId);
+      persistToDB();
     } catch (Exception e) {
       logger.error("Exception in InterpreterRestApi while removing repository ",
               e);

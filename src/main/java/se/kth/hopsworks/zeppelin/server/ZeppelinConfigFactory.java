@@ -24,6 +24,8 @@ import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.ConfigFileGenerator;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.zeppelin.socket.NotebookServer;
+import se.kth.hopsworks.zeppelin.util.ZeppelinInterpreterConfFacade;
+import se.kth.hopsworks.zeppelin.util.ZeppelinInterpreterConfs;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -46,6 +48,8 @@ public class ZeppelinConfigFactory {
   private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsername;
+  @EJB
+  private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
 
   @PostConstruct
   public void init() {
@@ -129,7 +133,13 @@ public class ZeppelinConfigFactory {
       return null;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
-    config = new ZeppelinConfig(projectName, hdfsUser, settings);
+    ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.
+            findByName(projectName);
+    String conf = null;
+    if (interpreterConf != null) {
+      conf = interpreterConf.getIntrepeterConf();
+    }
+    config = new ZeppelinConfig(projectName, hdfsUser, settings, conf);
     projectConfCache.put(projectName, config);
     return projectConfCache.get(projectName);
   }
@@ -192,7 +202,7 @@ public class ZeppelinConfigFactory {
     File projectDir = new File(projectDirPath);
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
     if (projectDir.exists()) {
-      conf = new ZeppelinConfig(project.getName(), hdfsUser, settings);
+      conf = new ZeppelinConfig(project.getName(), hdfsUser, settings, null);
       return conf.cleanAndRemoveConfDirs();
     }
     return false;

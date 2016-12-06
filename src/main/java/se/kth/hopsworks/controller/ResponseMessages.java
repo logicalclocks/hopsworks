@@ -76,8 +76,15 @@ public class ResponseMessages {
           = "Project folder could not be created in HDFS.";
   public final static String PROJECT_FOLDER_NOT_REMOVED
           = "Project folder could not be removed from HDFS.";
+  public final static String PROJECT_REMOVAL_NOT_ALLOWED = "Project can only be deleted by its owner.";
   public final static String PROJECT_MEMBER_NOT_REMOVED
           = "Failed to remove team member.";
+  public final static String MEMBER_REMOVAL_NOT_ALLOWED
+          = "Your project role does not allow to remove other members of this project.";
+  public final static String PROJECT_OWNER_NOT_ALLOWED
+          = "Removing the project owner is not allowed.";
+  public final static String PROJECT_OWNER_ROLE_NOT_ALLOWED
+          = "Chaning the role of the project owner is not allowed.";
   public final static String FOLDER_INODE_NOT_CREATED
           = "Folder Inode could not be created in DB.";
   public final static String FOLDER_NAME_NOT_SET
@@ -102,7 +109,7 @@ public class ResponseMessages {
           = " The selected user is not a team member in this project.";
   public final static String ROLE_NOT_SET = "Role cannot be empty.";
   public final static String CONSENT_ALREADY_EXISTS = "Duplicate error. There is already a consent form in the Project with the same name";
-
+  
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
   public final static String PROJECT_DESCRIPTION_CHANGED
