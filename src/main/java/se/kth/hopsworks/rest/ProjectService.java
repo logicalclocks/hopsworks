@@ -68,7 +68,7 @@ public class ProjectService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @Inject
-  private ProjectMembers projectMembers;
+  private ProjectMembersService projectMembers;
   @Inject
   private KafkaService kafka;
   @Inject
@@ -609,7 +609,7 @@ public class ProjectService {
 
   @Path("{id}/projectMembers")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public ProjectMembers projectMembers(
+  public ProjectMembersService projectMembers(
           @PathParam("id") Integer id) throws AppException {
     this.projectMembers.setProjectId(id);
 

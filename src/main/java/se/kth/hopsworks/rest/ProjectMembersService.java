@@ -30,7 +30,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProjectMembers {
+public class ProjectMembersService {
 
   @EJB
   private ProjectController projectController;
@@ -38,7 +38,7 @@ public class ProjectMembers {
   private NoCacheResponse noCacheResponse;
   private Integer projectId;
 
-  public ProjectMembers() {
+  public ProjectMembersService() {
   }
 
   public void setProjectId(Integer projectId) {
@@ -49,7 +49,7 @@ public class ProjectMembers {
     return projectId;
   }
 
-  private final static Logger logger = Logger.getLogger(ProjectMembers.class.
+  private final static Logger logger = Logger.getLogger(ProjectMembersService.class.
             getName());
   
   @GET
@@ -134,6 +134,10 @@ public class ProjectMembers {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.ROLE_NOT_SET);
     }
+    if(project.getOwner().getEmail().equals(email)){
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_OWNER_ROLE_NOT_ALLOWED);
+    }
     projectController.updateMemberRole(project, owner, email, role);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
@@ -145,7 +149,7 @@ public class ProjectMembers {
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response removeMembersByID(
           @PathParam("email") String email,
           @Context SecurityContext sc,
@@ -158,7 +162,15 @@ public class ProjectMembers {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.EMAIL_EMPTY);
     }
-    
+    //Data Scientists are only allowed to remove themselves
+    if(sc.isUserInRole(AllowedRoles.DATA_SCIENTIST) && !owner.equals(email)){
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.MEMBER_REMOVAL_NOT_ALLOWED);
+    }
+    if(project.getOwner().getEmail().equals(email)){
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_OWNER_NOT_ALLOWED);
+    }
     try {
         projectController.deleteMemberFromTeam(project, owner, email);
     } catch (IOException ex) {

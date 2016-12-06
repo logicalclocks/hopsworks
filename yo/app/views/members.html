@@ -5,6 +5,7 @@
   </button>
   <h2 class="modal-title">Members</h2>
 </div>
+<div growl reference="2" class="pull-right" ></div>
 <div class="modal-body" id="profileModal" ng-controller="MainCtrl as mainCtrl">
 
   <div class="row">
@@ -168,7 +169,8 @@
                     ng-options="role for role in memberCtrl.roles"
                     ng-model="member.teamRole"
                     ng-change="memberCtrl.selectChanged($index, member.user.email, member.teamRole)"
-                    ng-disabled="member.user.email == mainCtrl.email"
+                    ng-disabled="member.user.email === memberCtrl.projectOwner.email ||
+                      memberCtrl.teamRole !== 'Data owner'"
                     class="form-control">
             </select>
 
@@ -182,7 +184,8 @@
           <td>
             <button type="button"
                     style="width:32px; height: 32px; border-radius: 16px;"
-                    ng-disabled="member.user.email == mainCtrl.email"
+                    ng-disabled="member.user.email === memberCtrl.projectOwner.email ||
+                      (memberCtrl.teamRole !== 'Data owner' && member.user.email !== mainCtrl.email)"
                     ng-click="memberCtrl.deleteMemberFromBackend(member.user.email)"
                     class="btn btn-danger pull-right">
               <em class="fa fa-trash"></em>
