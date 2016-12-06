@@ -530,8 +530,8 @@ public class ProjectService {
          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
       }
-        //Remove hopsFS operation is done as super user to be able to delete
-      //inodes(Datasets, Files) from other project members as well
+      //Remove hopsFS operation is done as super user to be able to delete
+      // Datasets owned by other project members as well
       dfso = dfs.getDfsOps();
       success = projectController.removeByID(id, owner, true, dfso, dfs.
               getDfsOps());
