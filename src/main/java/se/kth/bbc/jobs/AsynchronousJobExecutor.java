@@ -17,6 +17,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.util.Settings;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -40,7 +41,8 @@ public class AsynchronousJobExecutor {
   private JobsHistoryFacade jhf;
   @EJB
   private UserCertsFacade userCerts;
-
+  @EJB
+  private Settings settings;
 
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -59,7 +61,7 @@ public class AsynchronousJobExecutor {
   public JobOutputFileFacade getJobOutputFileFacade() {
     return jobOutputFileFacade;
   }
-  
+
   public DistributedFsService getFsService() {
     return dfs;
   }
@@ -68,13 +70,17 @@ public class AsynchronousJobExecutor {
           IOException {
     return dfs.getDfsOps(hdfsUser);
   }
-  
-  public JobsHistoryFacade getJobsHistoryFacade(){
-      return jhf;
+
+  public JobsHistoryFacade getJobsHistoryFacade() {
+    return jhf;
   }
 
   public UserCertsFacade getUserCerts() {
     return userCerts;
   }
-  
+
+  public Settings getSettings() {
+    return settings;
+  }
+
 }

@@ -12,8 +12,8 @@ import se.kth.bbc.jobs.jobhistory.JobFinalStatus;
 import se.kth.bbc.jobs.jobhistory.JobInputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
-import se.kth.bbc.jobs.jobhistory.JobsHistory;
 import se.kth.bbc.jobs.model.description.JobDescription;
+import se.kth.bbc.jobs.yarn.ServiceProperties;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 import se.kth.hopsworks.user.model.Users;
 
@@ -42,11 +42,11 @@ public abstract class HopsJob {
 
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   private Execution execution;
-  private JobsHistory jobHistory;
   private boolean initialized = false;
 
   //Service provider providing access to facades
   protected final AsynchronousJobExecutor services;
+  protected ServiceProperties serviceProps;
   protected final JobDescription jobDescription;
   protected final Users user;
   protected final String hadoopDir;
@@ -159,8 +159,8 @@ public abstract class HopsJob {
     this.execution = upd;
   }
 
-  protected final void updateJobHistoryApp(long executiontime){
-      
+  protected final void updateJobHistoryApp(long executiontime) {
+
     services.getJobsHistoryFacade().updateJobHistory(execution, executiontime);
   }
 

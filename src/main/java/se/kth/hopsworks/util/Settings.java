@@ -820,22 +820,20 @@ public class Settings {
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
-  public static final String KAFKA_TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
-  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
+  public static final String TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
+  public static final String TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
   
-  public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
-  public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
-  public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
+  //Used to retrieve schema by KafkaUtil
+  public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
+  public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
+  public static final String KAFKA_BROKERADDR_ENV_VAR = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
   public static final String KEYSTORE_PASSWORD_ENV_VAR = "hopsworks.keystore.password";
   public static final String TRUSTSTORE_PASSWORD_ENV_VAR = "hopsworks.truststore.password";
-
-  //Used to retrieve schema by KafkaUtil
-  public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";
+  public static final String KAFKA_CONSUMERGROUPS = "hopsworks.kafka.consumergroups";
+  public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "hopsworks.kafka.restendpoint";
   
-//  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
-//  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
   public static int FILE_PREVIEW_TXT_SIZE = 100; 
   public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024*128;

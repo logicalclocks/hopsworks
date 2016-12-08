@@ -22,7 +22,6 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
-import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.hdfs.fileoperations.UserGroupInformationService;
 import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.user.model.Users;
@@ -43,8 +42,6 @@ public class SparkController {
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private DistributedFsService dfs;
   @EJB
   private UserGroupInformationService ugiService;
   @EJB
@@ -77,7 +74,7 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } 
+    }
 
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     UserGroupInformation proxyUser = ugiService.getProxyUser(username);
@@ -90,11 +87,7 @@ public class SparkController {
                   getHadoopDir(), settings.getSparkDir(),
                   hdfsLeDescriptorsFacade.getSingleEndpoint(),
                   settings.getSparkUser(), job.getProject().getName() + "__"
-                  + user.getUsername(),
-                  settings.getKafkaConnectStr(),
-                  settings.getHopsworksMasterPasswordSsl(),
-                  settings.getHopsworksMasterPasswordSsl(),
-                  settings.getRestEndpoint());
+                  + user.getUsername());
         }
       });
     } catch (InterruptedException ex) {
@@ -128,16 +121,12 @@ public class SparkController {
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
               "Job configuration is not a Spark job configuration.");
-    } 
+    }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
             getHadoopDir(), settings.getSparkDir(),
             hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
-            hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-            settings.getKafkaConnectStr(),
-            settings.getHopsworksMasterPasswordSsl(),
-            settings.getHopsworksMasterPasswordSsl(),
-            settings.getRestEndpoint());
+            hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()));
 
     submitter.stopExecution(sparkjob, appid);
 

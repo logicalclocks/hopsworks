@@ -264,11 +264,11 @@ angular.module('hopsWorksApp')
               //Loop through the selected Kafka topics (if any) and add them to
               //the job config
               if(self.topicsSelected.length > 0){
-                self.runConfig.kafkaTopics = "";
+                self.runConfig.kafka.topics = "";
                 for(var i=0; i< self.topicsSelected.length; i++){    
-                     self.runConfig.kafkaTopics += self.topicsSelected[i]['name']+":";
+                     self.runConfig.kafka.topics += self.topicsSelected[i]['name']+":";
                 }
-                self.runConfig.kafkaTopics = self.runConfig.kafkaTopics.substring(0,self.runConfig.kafkaTopics.length-1);
+                self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
               }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;

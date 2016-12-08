@@ -94,11 +94,7 @@ public class FlinkController {
                   hdfsLeDescriptorsFacade.getSingleEndpoint(),
                   settings.getFlinkUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
-                          getCreator()),
-                  settings.getKafkaConnectStr(),
-                  settings.getHopsworksMasterPasswordSsl(),
-                  settings.getHopsworksMasterPasswordSsl(),
-                  settings.getRestEndpoint());
+                          getCreator()));
         }
       });
     } catch (InterruptedException ex) {
@@ -140,11 +136,7 @@ public class FlinkController {
             settings.getFlinkConfDir(), settings.getFlinkConfFile(),
             hdfsLeDescriptorsFacade.getSingleEndpoint(),
             settings.getFlinkUser(),
-            job.getProject().getName() + "__" + user.getUsername(),
-            settings.getKafkaConnectStr(),
-            settings.getHopsworksMasterPasswordSsl(),
-            settings.getHopsworksMasterPasswordSsl(),
-            settings.getRestEndpoint());
+            job.getProject().getName() + "__" + user.getUsername());
 
     submitter.stopExecution(flinkJob, appid);
 

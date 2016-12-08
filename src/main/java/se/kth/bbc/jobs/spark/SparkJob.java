@@ -56,38 +56,6 @@ public class SparkJob extends YarnJob {
     this.sparkUser = sparkUser;
   }
 
-  /**
-   *
-   * @param job
-   * @param user
-   * @param services
-   * @param hadoopDir
-   * @param sparkDir
-   * @param nameNodeIpPort
-   * @param sparkUser
-   * @param jobUser
-   * @param kafkaAddress
-   * @param keystorePwd
-   * @param truststorePwd
-   * @param restEndpoint
-   */
-  public SparkJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, final String hadoopDir,
-          final String sparkDir, final String nameNodeIpPort, String sparkUser,
-          String jobUser, String kafkaAddress, String keystorePwd,
-          String truststorePwd, String restEndpoint) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, kafkaAddress,
-            keystorePwd, truststorePwd, restEndpoint);
-    if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
-      throw new IllegalArgumentException(
-              "JobDescription must contain a SparkJobConfiguration object. Received: "
-              + job.getJobConfig().getClass());
-    }
-    this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
-    this.sparkDir = sparkDir;
-    this.sparkUser = sparkUser;
-  }
-
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
@@ -125,9 +93,8 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
 
-    runnerbuilder.setSessionId(jobconfig.getjSessionId());
-    runnerbuilder.setKafkaAddress(kafkaAddress);
-    runnerbuilder.setRestEndpoint(restEndpoint);
+    //Set Kafka params
+    runnerbuilder.setServiceProps(serviceProps);
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
@@ -139,9 +106,6 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    //Set Kafka params
-    runnerbuilder.setKafkaJob(jobconfig.isKafka());
-    runnerbuilder.setKafkaTopics(jobconfig.getKafkaTopics());
     try {
       runner = runnerbuilder.
               getYarnRunner(jobDescription.getProject().getName(),

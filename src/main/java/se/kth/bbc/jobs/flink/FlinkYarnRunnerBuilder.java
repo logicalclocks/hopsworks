@@ -21,6 +21,8 @@ import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.yarn.KafkaProperties;
+import se.kth.bbc.jobs.yarn.ServiceProperties;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.addPathToConfig;
 import static se.kth.bbc.jobs.yarn.YarnRunner.Builder.setDefaultConfValues;
@@ -68,7 +70,6 @@ public class FlinkYarnRunnerBuilder {
    */
   private static final int MIN_JM_MEMORY = 768; // the minimum memory should be higher than the min heap cutoff
   private static final int MIN_TM_MEMORY = 768;
-  private static final int MIN_JM_CORES = 1;
 
   //Jar paths for AM and app
   private String appJarPath;
@@ -81,7 +82,6 @@ public class FlinkYarnRunnerBuilder {
    */
   private int taskManagerSlots = 1;
   private int jobManagerMemoryMb = 768;
-  private int jobManagerCores = 1;
   private String jobManagerQueue = "default";
 
   private int taskManagerMemoryMb = 1024;
@@ -96,11 +96,7 @@ public class FlinkYarnRunnerBuilder {
   private int parallelism;
   private String customName = null;
   private final Map<String, String> sysProps = new HashMap<>();
-  private String sessionId;//used by Kafka
-  private String kafkaAddress;
-  private String certPwd;
-  private String restEndpoint;
-  private String kafkaTopics;
+  private ServiceProperties serviceProps;
 
   public FlinkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -131,15 +127,6 @@ public class FlinkYarnRunnerBuilder {
               + "of " + MIN_JM_MEMORY + " MB");
     }
     this.jobManagerMemoryMb = memoryMb;
-  }
-
-  public void setJobManagerCores(int cores) {
-    if (cores < MIN_JM_CORES) {
-      throw new IllegalArgumentException("The JobManager cores (" + cores
-              + ") are below the minimum required amount "
-              + "of " + MIN_JM_CORES);
-    }
-    this.jobManagerCores = cores;
   }
 
   public void setJobManagerQueue(String queue) {
@@ -256,24 +243,8 @@ public class FlinkYarnRunnerBuilder {
     return this;
   }
 
-  public void setSessionId(String sessionId) {
-    this.sessionId = sessionId;
-  }
-
-  public void setKafkaAddress(String kafkaAddress) {
-    this.kafkaAddress = kafkaAddress;
-  }
-  
-  public void setCertPwd(String certPwd) {
-    this.certPwd = certPwd;
-  }
-
-  public void setRestEndpoint(String restEndpoint) {
-    this.restEndpoint = restEndpoint;
-  }
-
-  public void setKafkaTopics(String kafkaTopics) {
-    this.kafkaTopics = kafkaTopics;
+  public void setServiceProps(ServiceProperties serviceProps) {
+    this.serviceProps = serviceProps;
   }
 
   public void isReadyForDeployment() throws YarnDeploymentException {
@@ -404,11 +375,26 @@ public class FlinkYarnRunnerBuilder {
         cluster.addHopsworksResource(dto.getName(), resource);
       }
     }
-    addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
-    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, certPwd);
-    addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
-    addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
+    if (serviceProps.getKafka() != null) {
+      addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, serviceProps.
+              getKafka().getSessionId());
+      addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
+              getKafka().
+              getBrokerAddresses());
+      addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getKeystorePwd());
+      addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getTruststorePwd());
+      addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
+              getKafka().getTopics());
+      addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
+              getKafka().
+              getRestEndpoint());
+      if (serviceProps.getKafka().getConsumerGroups() != null) {
+        addSystemProperty(Settings.KAFKA_CONSUMERGROUPS,
+                serviceProps.getKafka().getConsumerGroups());
+      }
+    }
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
     }

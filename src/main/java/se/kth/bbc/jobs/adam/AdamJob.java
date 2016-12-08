@@ -42,14 +42,11 @@ public class AdamJob extends SparkJob {
    * @param jobUser
    * @param nameNodeIpPort
    * @param adamJarPath
-   * @param kafkaAddress
-   * @param restEndpoint 
    */
   public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           String sparkDir, String adamUser, String jobUser,
-          String nameNodeIpPort, String adamJarPath, String kafkaAddress, 
-          String restEndpoint) {
+          String nameNodeIpPort, String adamJarPath) {
     super(job, services, user, hadoopDir, sparkDir, nameNodeIpPort, adamUser,
             jobUser);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {

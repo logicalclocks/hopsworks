@@ -1,5 +1,7 @@
 package io.hops.kafka;
 
+import com.google.common.base.Strings;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -24,8 +26,10 @@ import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
+import kafka.admin.ConsumerGroupCommand;
 import kafka.admin.RackAwareMode;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
+import kafka.controller.KafkaController;
 import kafka.javaapi.TopicMetadataRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
 import org.I0Itec.zkclient.ZkClient;
@@ -37,15 +41,26 @@ import org.I0Itec.zkclient.ZkConnection;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
-import kafka.common.TopicExistsException;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
+import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.HopsUtils;
 
 @Stateless
 public class KafkaFacade {
 
-    private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.
+    private final static Logger LOG = Logger.getLogger(KafkaFacade.class.
             getName());
 
     @PersistenceContext(unitName = "kthfsPU")
@@ -54,12 +69,20 @@ public class KafkaFacade {
     @EJB
     Settings settings;
 
+    @EJB
+    private UserCertsFacade userCerts;
+    
+    @EJB
+    private DistributedFsService dfs;
+    
     public static final String COLON_SEPARATOR = ":";
 
     public static final String SLASH_SEPARATOR = "//";
 
-    public static final String SECURITY_PROTCOL = "SSL";
+    public static final String SECURITY_PROTOCOL = "SSL";
 
+    public static final String PLAINTEXT_PROTOCOL = "PLAINTEXT";
+     
     public static final String TWO_UNDERSCROES = "__";
 
     public static final String DLIMITER = "[\"]";
@@ -70,7 +93,7 @@ public class KafkaFacade {
 
     public final int BUFFER_SIZE = 20 * 1000;
 
-    public Set<String> zkBrokerList;
+    public Set<String> brokers;
 
     public Set<String> topicList;
 
@@ -123,7 +146,7 @@ public class KafkaFacade {
         return topics;
     }
 
-    public List<PartitionDetailsDTO> getTopicDetails(Project project, String topicName)
+    public List<PartitionDetailsDTO> getTopicDetails(Project project, Users user, String topicName)
             throws AppException, Exception {
         List<TopicDTO> topics = findTopicsByProject(project.getId());
         if (topics.isEmpty()) {
@@ -132,7 +155,7 @@ public class KafkaFacade {
         }
         for (TopicDTO topic : topics) {
             if (topic.getName().equalsIgnoreCase(topicName)) {
-                List<PartitionDetailsDTO> topicDetailDTO = getTopicDetailsfromKafkaCluster(topicName);
+                List<PartitionDetailsDTO> topicDetailDTO = getTopicDetailsfromKafkaCluster(project, user, topicName);
                 return topicDetailDTO;
             }
         }
@@ -236,7 +259,7 @@ public class KafkaFacade {
             try {
                 zkConnection.close();
             } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, null, ex.getMessage());
+                LOG.log(Level.SEVERE, null, ex.getMessage());
             }
         }
 
@@ -788,7 +811,7 @@ public class KafkaFacade {
                 try {
                     zk.close();
                 } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex.getMessage());
+                    LOG.log(Level.SEVERE, null, ex.getMessage());
                 }
             }
         }
@@ -800,9 +823,9 @@ public class KafkaFacade {
 
         CLIENT_ID = "list_topics";
 
-        zkBrokerList = getBrokerEndpoints();
+        brokers = getBrokerEndpoints();
 
-        for (String seed : zkBrokerList) {
+        for (String seed : brokers) {
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
                 simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
@@ -834,35 +857,61 @@ public class KafkaFacade {
     }
 
     private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
-            String topicName) throws Exception {
+            Project project, Users user, String topicName) throws Exception {
 
         CLIENT_ID = "topic_detail";
 
-        zkBrokerList = getBrokerEndpoints();
+        brokers = getBrokerEndpoints();
 
         Map<Integer, List<String>> replicas = new HashMap<>();
         Map<Integer, List<String>> inSyncReplicas = new HashMap<>();
         Map<Integer, String> leaders = new HashMap<>();
-
         List<PartitionDetailsDTO> partitionDetailsDto = new ArrayList<>();
-        PartitionDetailsDTO pd = new PartitionDetailsDTO();
-
+        
         //SimpleConsumer cannot connect to a secured kafka cluster,
         //try connnecting only to plaintext endpoints
-        Iterator<String> iter = zkBrokerList.iterator();
+        Iterator<String> iter = brokers.iterator();
         while (iter.hasNext()) {
             String seed = iter.next();
-            if (seed.split(COLON_SEPARATOR)[0].equalsIgnoreCase(SECURITY_PROTCOL)) {
+            if (seed.split(COLON_SEPARATOR)[0].equalsIgnoreCase(PLAINTEXT_PROTOCOL)) {
                 iter.remove();
             }
         }
+        HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(), Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE,
+                      null, null, null,null, null);
 
-        for (String seed : zkBrokerList) {
+        
+        for (String brokerAddress : brokers) {
+            brokerAddress = brokerAddress.split("://")[1];
+            Properties props = new Properties();
+            props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
+            //props.put(ConsumerConfig.GROUP_ID_CONFIG, "DemoConsumer");
+            //props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+            //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+            //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
+            props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                    "org.apache.kafka.common.serialization.IntegerDeserializer");
+            props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                    "org.apache.kafka.common.serialization.StringDeserializer");
+
+            //configure the ssl parameters
+            props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+            props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectTruststoreName(project.getName(), user.getUsername()));
+            props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
+                    settings.getHopsworksMasterPasswordSsl());
+            props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
+            props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
+                    settings.getHopsworksMasterPasswordSsl());
+            props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
+                    settings.getHopsworksMasterPasswordSsl());
+            KafkaConsumer<Integer, String> consumer = new KafkaConsumer<>(props);
+            List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
+            
             kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
             try {
-                simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
+                simpleConsumer = new SimpleConsumer(getBrokerIp(brokerAddress)
                         .getHostAddress(),
-                        getBrokerPort(seed), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
+                        getBrokerPort(brokerAddress), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
 
                 //add ssl certificate to the consumer here
                 List<String> topics = new ArrayList<>();
@@ -880,7 +929,7 @@ public class KafkaFacade {
                         //list the leaders of each parition
                         leaders.put(partId, partitionMetadata.leader().host());
 
-                        //list the replicas of the parition
+                        //list the replicas of the partition
                         replicas.put(partId, new ArrayList<>());
                         for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.replicas()) {
                             replicas.get(partId).add(broker.host());
@@ -897,7 +946,7 @@ public class KafkaFacade {
                     }
                 }
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: Kafka SimpleConsumer cant connect to secured cluster - " + seed, ex);
+                throw new Exception("Error communicating to broker: Kafka SimpleConsumer cant connect to secured cluster - " + brokerAddress, ex);
             } finally {
                 if (simpleConsumer != null) {
                     simpleConsumer.close();
