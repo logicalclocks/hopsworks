@@ -7,17 +7,14 @@
         <div ng-include="'navProject.html'"></div>
         <div>
           <section>  
-
               <div ng-show="mainCtrl.searchReturned !== ''">
                   <div id="projectSearchResults">
-                      <div ng-include="'views/searchResult.html'"></div>
+                      <div ng-include="'views/searchResultDetail.html'"></div>
                   </div>
               </div>
-
               <div ng-if="zeppelinCtrl.loading" class="loadingwrap">
-
                 <div class="loading-content">
-                  <div class="loader"></div>
+                  <div class="loader-in-wrap"></div>
                   {{zeppelinCtrl.loadingText}}
                 </div>
               </div> 

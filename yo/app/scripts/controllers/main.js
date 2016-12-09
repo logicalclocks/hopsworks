@@ -12,13 +12,11 @@ angular.module('hopsWorksApp')
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
 
-            if(!angular.isUndefined($routeParams.datasetName)){
+            if (!angular.isUndefined($routeParams.datasetName)) {
               self.searchType = "datasetCentric";
-            }
-            else if(!angular.isUndefined($routeParams.projectID)){
+            } else if (!angular.isUndefined($routeParams.projectID)) {
               self.searchType = "projectCentric";
-            }
-            else {
+            } else {
               self.searchType = "global";
             }
             
@@ -70,13 +68,12 @@ angular.module('hopsWorksApp')
                       }, function (error) {
               });
             };
-            var getMessages = function () {//
+            
+            var getMessages = function () {
               MessageService.getMessages().then(
                       function (success) {
                         self.messages = success.data;
-                        console.log(success);
                       }, function (error) {
-
               });
             };
             getUnreadCount();
@@ -91,8 +88,7 @@ angular.module('hopsWorksApp')
             self.openMessageModal = function (selected) {
               if (selected !== undefined) {
                 MessageService.markAsRead(selected.id);
-              }
-              ;
+              };
               ModalService.messages('lg', selected)
                       .then(function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000})
@@ -100,6 +96,7 @@ angular.module('hopsWorksApp')
             };
 
             self.searchTerm = "";
+            self.searching = false;
             self.globalClusterBoundary = false;
             self.searchReturned = "";
             self.searchResult = [];
@@ -134,13 +131,12 @@ angular.module('hopsWorksApp')
               if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
                 return;
               }
-
-
+              self.searching = true;
               if (self.searchType === "global") {
                 //triggering a global search
                 elasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
-
+                          self.searching = false;
                           var searchHits = response.data;
                           //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
@@ -162,11 +158,13 @@ angular.module('hopsWorksApp')
                           self.resultItems = self.searchResult.length;
 
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                  self.searching = false;
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "projectCentric") {
                 elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
                         .then(function (response) {
+                          self.searching = false;
                           var searchHits = response.data;
                           //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
@@ -179,11 +177,13 @@ angular.module('hopsWorksApp')
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
                           self.resultItems = self.searchResult.length;
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                          self.searching = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "datasetCentric") {
                 elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
                         .then(function (response) {
+                          self.searching = false;
                           var searchHits = response.data;
                           //console.log("RECEIVED RESPONSE ", response);
                           if (searchHits.length > 0) {
@@ -196,21 +196,42 @@ angular.module('hopsWorksApp')
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
                           self.resultItems = self.searchResult.length;
                         }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                          self.searching = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               }
               datePicker();// this will load the function so that the date picker can call it.
             };
                 
+            var datePicker = function () {
+              $(function () {
+                $('[type="datepicker"]').datetimepicker({format: 'DD/MM/YYYY'});
+                $("#datepicker1").on("dp.change", function (e) {
+                  $('#datepicker2').data("DateTimePicker").minDate(e.date);
+                });
+                $("#datepicker2").on("dp.change", function (e) {
+                  $('#datepicker1').data("DateTimePicker").maxDate(e.date);
+                });
+                $("#datepicker3").on("dp.change", function (e) {
+                  $('#datepicker4').data("DateTimePicker").minDate(e.date);
+                });
+                $("#datepicker4").on("dp.change", function (e) {
+                  $('#datepicker3').data("DateTimePicker").maxDate(e.date);
+                });
+              });
+            };                       
+            
+            self.viewType = function (listView) {
+              if (listView) {
+                self.pageSize = 4;
+              } else {
+                self.pageSize = 16;
+              }
+            };
+
             $scope.$on("$destroy", function () {
               $interval.cancel(getUnreadCountInterval);
             });
-
-            var datePicker = function () {
-              $(function () {
-                $('#datetimepicker1').datetimepicker();
-              });
-            };
                               
             self.incrementPage = function () {
               self.pageSize = self.pageSize + 1;
@@ -227,7 +248,7 @@ angular.module('hopsWorksApp')
               if (result.type === 'proj') {
                 ProjectService.getProjectInfo({projectName: result.name}).$promise.then(
                   function (response) {
-                    ModalService.viewSearchResult('md', response, result.type);
+                    ModalService.viewSearchResult('lg', response, result);
                   }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                 });
@@ -235,10 +256,11 @@ angular.module('hopsWorksApp')
                 ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(
                   function (response) {
                     var projects;
+                    console.log(response);
                     ProjectService.query().$promise.then(
                       function (success) {
                         projects = success;
-                        ModalService.viewSearchResult('md', response, result.type, projects);
+                        ModalService.viewSearchResult('lg', response, result, projects);
                       }, function (error) {
                       growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                     });

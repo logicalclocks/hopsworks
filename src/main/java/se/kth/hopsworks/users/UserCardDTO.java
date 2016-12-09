@@ -6,9 +6,6 @@ import se.kth.hopsworks.user.model.Users;
 
 /**
  * Holds only Name and email of the user
- * <p/>
- * @author André<amore@kth.se>
- * @author Ermias<ermiasg@kth.se>
  */
 @XmlRootElement
 public class UserCardDTO implements Serializable {

@@ -1,5 +1,6 @@
 package se.kth.hopsworks.controller;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -8,6 +9,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -52,7 +54,7 @@ public class DatasetController {
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;  
+  private HdfsUsersController hdfsUsersBean;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -99,7 +101,7 @@ public class DatasetController {
       FolderNameValidator.isValidName(dataSetName);
     } catch (ValidationException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid folder name for DataSet: "+e.getMessage());
+              "Invalid folder name for DataSet: " + e.getMessage());
     }
     //Logic
     boolean success;
@@ -108,11 +110,12 @@ public class DatasetController {
     dsPath = dsPath + File.separator + dataSetName;
     Inode parent = inodes.getProjectRoot(project.getName());
     Inode ds = inodes.findByInodePK(parent, dataSetName,
-        HopsUtils.dataSetPartitionId(parent, dataSetName));
+            HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid folder name for DataSet: " +  ResponseMessages.FOLDER_NAME_EXIST);
+              "Invalid folder name for DataSet: "
+              + ResponseMessages.FOLDER_NAME_EXIST);
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Permission hdfs dfs -chmod 750 or 755
@@ -129,8 +132,8 @@ public class DatasetController {
       dfso.setMetaEnabled(dsPath);
       try {
 
-        ds = inodes.findByInodePK(parent, dataSetName, 
-            HopsUtils.dataSetPartitionId(parent, dataSetName));
+        ds = inodes.findByInodePK(parent, dataSetName,
+                HopsUtils.dataSetPartitionId(parent, dataSetName));
         Dataset newDS = new Dataset(ds, project);
         newDS.setSearchable(searchable);
 
@@ -138,10 +141,11 @@ public class DatasetController {
           newDS.setDescription(datasetDescription);
         }
         datasetFacade.persistDataset(newDS);
-        activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user);
+        activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName,
+                project, user);
         // creates a dataset and adds user as owner.
         hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
-     
+
       } catch (Exception e) {
         IOException failed = new IOException("Failed to create dataset at path "
                 + dsPath + ".", e);
@@ -236,14 +240,16 @@ public class DatasetController {
     //Check if the given dataset exists.
     String parentPath = fullPath;
     // strip any trailing '/' in the pathname
-    while (parentPath != null && parentPath.length() > 0 && parentPath.charAt(parentPath.length()-1)=='/') {
-      parentPath = parentPath.substring(0, parentPath.length()-1);
-    }    
+    while (parentPath != null && parentPath.length() > 0 && parentPath.charAt(
+            parentPath.length() - 1) == '/') {
+      parentPath = parentPath.substring(0, parentPath.length() - 1);
+    }
     // parent path prefixes the last '/' in the pathname
     parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"));
     Inode parent = inodes.getInodeAtPath(parentPath);
     if (parent == null) {
-      throw new IllegalArgumentException("Path for parent folder does not exist: "
+      throw new IllegalArgumentException(
+              "Path for parent folder does not exist: "
               + parentPath + " under " + project.getName());
     }
 
@@ -260,7 +266,8 @@ public class DatasetController {
       String folderName = pathParts[pathParts.length - 1];
 
       //find the corresponding inode
-      int partitionId = HopsUtils.calculatePartitionId(parent.getId(), folderName, pathParts.length);
+      int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
+              folderName, pathParts.length);
       Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
               searchable);
@@ -302,7 +309,7 @@ public class DatasetController {
   public void changePermission(String path, Users user, Project project,
           FsPermission pemission, DistributedFileSystemOps udfso) throws
           IOException {
-  
+
     Path location = new Path(path);
     udfso.setPermission(location, pemission);
   }
@@ -357,13 +364,14 @@ public class DatasetController {
     }
     return success;
   }
-  
+
   /**
    * Generates a markdown style README file for a given Dataset.
+   *
    * @param udfso
    * @param dsName
    * @param description
-   * @param project 
+   * @param project
    */
   public void generateReadme(DistributedFileSystemOps udfso, String dsName,
           String description, String project) {
@@ -380,16 +388,65 @@ public class DatasetController {
         fsOut.flush();
         udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath),
                 new FsPermission(FsAction.ALL,
-                FsAction.READ_EXECUTE,
-                FsAction.NONE));
+                        FsAction.READ_EXECUTE,
+                        FsAction.NONE));
       } catch (IOException ex) {
         logger.log(Level.WARNING, "README.md could not be generated for project"
                 + " {0} and dataset {1}.", new Object[]{project, dsName});
       }
     } else {
       logger.log(Level.WARNING, "README.md could not be generated for project"
-              + " {0} and dataset {1}. DFS client was null", new Object[]{project,
-        dsName});
+              + " {0} and dataset {1}. DFS client was null", new Object[]{
+                project,
+                dsName});
     }
+  }
+
+  /**
+   * Get Readme.md file content from path.
+   *
+   * @param path full path to the readme file
+   * @param dfso give user dfso if access control is required.
+   * @return
+   * @throws AccessControlException if dfso is for a user and this user have no
+   * access permission to the file.
+   * @throws IOException
+   */
+  public FilePreviewDTO getReadme(String path, DistributedFileSystemOps dfso)
+          throws AccessControlException, IOException {
+    if (path == null || dfso == null) {
+      throw new IllegalArgumentException("One or more arguments are not set.");
+    }
+    if (!path.endsWith("README.md")) {
+      throw new IllegalArgumentException("Path does not contain readme file.");
+    }
+    FilePreviewDTO filePreviewDTO = null;
+    FSDataInputStream is;
+    DataInputStream dis = null;
+    try {
+      if (!dfso.exists(path) || dfso.isDir(path)) {
+        throw new IOException("The file does not exist");
+      }
+      is = dfso.open(path);
+      dis = new DataInputStream(is);
+      long fileSize = dfso.getFileStatus(new org.apache.hadoop.fs.Path(
+              path)).getLen();
+      if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
+        throw new IllegalArgumentException("README.md must be smaller than"
+                + Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README
+                + " to be previewd");
+      }
+      byte[] headContent = new byte[(int) fileSize];
+      dis.readFully(headContent, 0, (int) fileSize);
+      filePreviewDTO = new FilePreviewDTO("text", "md", new String(headContent));
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not view the file.");
+    } finally {
+      if (dis != null) {
+        dis.close();
+      }
+    }
+    return filePreviewDTO;
   }
 }

@@ -83,10 +83,6 @@ angular.module('hopsWorksApp')
               return false;
             };
 
-
-
-
-
             getEndpoint();
 
             var getCurrentProject = function () {

@@ -100,6 +100,10 @@
     color: #5DA51D;   
 }
 
+.input-group.spinner {
+  margin: 1rem 0;
+}
+
 .spinner input {
   text-align: right;
 }
@@ -138,3 +142,34 @@
   left: 4px;
 }
 
+.card-dropdown-menu {
+  background: #FFFFFF;
+  width: 98%;
+  box-shadow: 1px 2px 7px 1px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin: -10px -20px 10px 15px;
+  max-height: 700px;
+  overflow:auto;
+}
+
+.card-dropdown-menu:before {
+  content: " ";
+  border-bottom: 15px solid #e52;
+  border-right: 17px solid transparent;
+  border-left: 17px solid transparent;
+  position: absolute;
+  top: -10px;
+  left: 302px;
+  z-index: 10;
+}
+
+.card-dropdown-menu:after {
+  content: " ";
+  border-bottom: 17px solid #ccc;
+  border-right: 19px solid transparent;
+  border-left: 19px solid transparent;
+  position: absolute;
+  top: -17px;
+  left: 302px;
+  z-index: 8;
+}
