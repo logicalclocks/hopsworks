@@ -280,18 +280,21 @@
             </div>
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected">
               <div class="text-right col-md-4">Kafka Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
-              <div  class="col-md-8" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected"   
-                isteven-multi-select
-                input-model="newJobCtrl.topics"
-                output-model="newJobCtrl.topicsSelected"
-                button-label="name"
-                item-label="name"
-                tick-property="ticked"
-                helper-elements="all none filter"
-                >
-            </div>
+                <div  class="col-md-8" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected"   
+                  isteven-multi-select
+                  input-model="newJobCtrl.topics"
+                  output-model="newJobCtrl.topicsSelected"
+                  button-label="name"
+                  item-label="name"
+                  tick-property="ticked"
+                  helper-elements="all none filter"
+                  >
+              </div>
             </div>  
-            
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected">
+              <div class="text-right col-md-4">Kafka consumer groups<i class="fa fa-info-circle" uib-tooltip="Comma-separated list of consumer groups available for this job." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.kafka.consumergroups"></div>
+            </div>
             <!-- Add libraries -->
             <div>
               <h3>Libraries

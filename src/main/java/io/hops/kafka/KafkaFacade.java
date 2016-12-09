@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
+import kafka.admin.ConsumerGroupCommand;
 import kafka.admin.RackAwareMode;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import org.I0Itec.zkclient.ZkClient;
@@ -834,58 +838,72 @@ public class KafkaFacade {
                 iter.remove();
             }
         }
-        HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(), Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE,
-                      null, null, null,null, null);
+        try{
+          HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(), Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE,
+                        null, null, null,null, null);
 
-        
-        for (String brokerAddress : brokers) {
-            brokerAddress = brokerAddress.split("://")[1];
-            Properties props = new Properties();
-            props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
-            //props.put(ConsumerConfig.GROUP_ID_CONFIG, "DemoConsumer");
-            //props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-            //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
-            //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
-            props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                    "org.apache.kafka.common.serialization.IntegerDeserializer");
-            props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                    "org.apache.kafka.common.serialization.StringDeserializer");
 
-            //configure the ssl parameters
-            props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-            props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectTruststoreName(project.getName(), user.getUsername()));
-            props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-                    settings.getHopsworksMasterPasswordSsl());
-            props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
-            props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-                    settings.getHopsworksMasterPasswordSsl());
-            props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
-                    settings.getHopsworksMasterPasswordSsl());
-            try (KafkaConsumer<Integer, String> consumer= new KafkaConsumer<>(props)) {
-                List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
-                    for (PartitionInfo partition : partitions) {
-                        int id = partition.partition();
-                        //list the leaders of each parition
-                        leaders.put(id, partition.leader().host());
+          for (String brokerAddress : brokers) {
+              brokerAddress = brokerAddress.split("://")[1];
+              Properties props = new Properties();
+              props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
+              //props.put(ConsumerConfig.GROUP_ID_CONFIG, "DemoConsumer");
+              //props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+              //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
+              //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
+              props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                      "org.apache.kafka.common.serialization.IntegerDeserializer");
+              props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                      "org.apache.kafka.common.serialization.StringDeserializer");
 
-                        //list the replicas of the partition
-                        replicas.put(id, new ArrayList<>());
-                        for (Node node : partition.replicas()) {
-                            replicas.get(id).add(node.host());
-                        }
+              //configure the ssl parameters
+              props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+              props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectTruststoreName(project.getName(), user.getUsername()));
+              props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
+                      settings.getHopsworksMasterPasswordSsl());
+              props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
+              props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
+                      settings.getHopsworksMasterPasswordSsl());
+              props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
+                      settings.getHopsworksMasterPasswordSsl());
+              KafkaConsumer<Integer, String> consumer = null;
+              try {
+                consumer= new KafkaConsumer<>(props);
+  //              ConsumerGroupCommand.ConsumerGroupCommandOptions opts = new ConsumerGroupCommand.ConsumerGroupCommandOptions(null);
+  //              ConsumerGroupCommand.KafkaConsumerGroupService k = new ConsumerGroupCommand.KafkaConsumerGroupService(opts);
+                  List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
+                      for (PartitionInfo partition : partitions) {
+                          int id = partition.partition();
+                          //list the leaders of each parition
+                          leaders.put(id, partition.leader().host());
 
-                        //list the insync replicas of the parition
-                        inSyncReplicas.put(id, new ArrayList<>());
-                        for (Node node : partition.inSyncReplicas()) {
-                            inSyncReplicas.get(id).add(node.host());
-                        }
+                          //list the replicas of the partition
+                          replicas.put(id, new ArrayList<>());
+                          for (Node node : partition.replicas()) {
+                              replicas.get(id).add(node.host());
+                          }
 
-                        partitionDetailsDto.add(new PartitionDetailsDTO(id, leaders.get(id),
-                                replicas.get(id), replicas.get(id)));
-                    }
-            } catch (Exception ex) {
-                throw new Exception("Error while retrieving topic metadata from broker: " + brokerAddress, ex);
-            }
+                          //list the insync replicas of the parition
+                          inSyncReplicas.put(id, new ArrayList<>());
+                          for (Node node : partition.inSyncReplicas()) {
+                              inSyncReplicas.get(id).add(node.host());
+                          }
+
+                          partitionDetailsDto.add(new PartitionDetailsDTO(id, leaders.get(id),
+                                  replicas.get(id), replicas.get(id)));
+                      }
+              } catch (Exception ex) {
+                  throw new Exception("Error while retrieving topic metadata from broker: " + brokerAddress, ex);
+              } finally{
+                if(consumer!= null){
+                  consumer.close();
+                }
+              }
+          }
+        } finally {
+          //Remove certificates from local dir
+          Files.deleteIfExists(FileSystems.getDefault().getPath(Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectTruststoreName(project.getName(), user.getUsername())));
+          Files.deleteIfExists(FileSystems.getDefault().getPath(Settings.TMP_CERT_STORE_LOCAL+File.separator+HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername())));
         }
 
         return partitionDetailsDto;

@@ -59,6 +59,7 @@ public abstract class YarnJob extends HopsJob {
 
   protected ServiceProperties kafka;
   protected final String jobUser;
+
   /**
    * Constructor for job interacting with the Kafka service.
    *
@@ -179,6 +180,10 @@ public abstract class YarnJob extends HopsJob {
                 getKafka().getTopics());
         serviceProps.getKafka().setSessionId(jobDescription.getJobConfig().
                 getSessionId());
+        if(jobDescription.getJobConfig().getKafka().getConsumergroups()!=null){
+          serviceProps.getKafka().setConsumerGroups(jobDescription.getJobConfig().
+                  getKafka().getConsumergroupsForJob());
+        }
 
         HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
                 getProject(), user.getUsername(),
@@ -240,7 +245,8 @@ public abstract class YarnJob extends HopsJob {
    *
    * // if file doesnt exists, then create it
    * try {
-   * //If it is a Flink job, copy the certificates into the glassfish config dir
+   * //If it is a Flink job, copy the certificates into the glassfish config
+   * dir
    * if (jobDescription.getJobType() == JobType.FLINK) {
    * File f_k_cert = new File(Settings.FLINK_KAFKA_CERTS_DIR
    * + "/" + k_certName);

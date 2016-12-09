@@ -30,6 +30,7 @@ angular.module('hopsWorksApp')
             //Kafka topics for this project
             self.topics = [];
             self.topicsSelected = [];
+            self.consumerGroups = [];
             self.getAllTopics = function () {
               if(self.runConfig.kafka.selected === true){
                 KafkaService.getTopics(self.projectId).then(
@@ -267,6 +268,7 @@ angular.module('hopsWorksApp')
                 growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
                 return;
               }
+              //We use ":" for topics and consumer because we use them as system variables at the backend
               if(self.topicsSelected.length > 0){
                 self.runConfig.kafka.topics = "";
                 for(var i=0; i< self.topicsSelected.length; i++){    
@@ -274,6 +276,14 @@ angular.module('hopsWorksApp')
                 }
                 self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
               }
+//              if(self.consumerGroups.length > 0){
+//                self.runConfig.kafka.consumergroups = "";
+//                var consumers = self.consumerGroups.split(",");
+//                for(var i=0; i< consumers.length; i++){    
+//                  self.runConfig.kafka.consumergroups += consumers[i] + ":";
+//                }
+//                self.runConfig.kafka.consumergroups = self.runConfig.kafka.consumergroups.substring(0,self.runConfig.kafka.consumergroups.length-1);
+//              }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;

@@ -831,7 +831,7 @@ public class Settings {
   public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
   public static final String KEYSTORE_PASSWORD_ENV_VAR = "hopsworks.keystore.password";
   public static final String TRUSTSTORE_PASSWORD_ENV_VAR = "hopsworks.truststore.password";
-  public static final String KAFKA_CONSUMERGROUPS = "hopsworks.kafka.consumergroups";
+  public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "hopsworks.kafka.restendpoint";
   
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  

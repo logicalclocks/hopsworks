@@ -205,8 +205,10 @@ public class SparkYarnRunnerBuilder {
                 getKafka().
                 getRestEndpoint());
         if (serviceProps.getKafka().getConsumerGroups() != null) {
-          addSystemProperty(Settings.KAFKA_CONSUMERGROUPS, serviceProps.
+          addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                   getKafka().getConsumerGroups());
+          builder.addJavaOption(" -D" +Settings.KAFKA_CONSUMER_GROUPS + "=" + serviceProps.getKafka().
+                        getConsumerGroups());
         }
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
@@ -225,9 +227,7 @@ public class SparkYarnRunnerBuilder {
                 + " -D"
                 + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + serviceProps.
                         getKafka().getRestEndpoint() + " -D"
-                + Settings.KAFKA_CONSUMERGROUPS + "=" + serviceProps.getKafka().
-                        getConsumerGroups()
-                + " -D"
+                
                 + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + serviceProps.
                         getProjectId() + "'");
       }

@@ -199,7 +199,7 @@ angular.module('hopsWorksApp')
                   temp.running = self.runningInfo['' + temp.id].running;
                   temp.state = self.runningInfo['' + temp.id].state;
                   temp.submissiontime = self.runningInfo['' + temp.id].submissiontime;
-                  temp.url = self.runningInfo['' + temp.id].url;d
+                  temp.url = self.runningInfo['' + temp.id].url;
                 }
               });
             };

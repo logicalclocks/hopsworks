@@ -391,7 +391,7 @@ public class FlinkYarnRunnerBuilder {
               getKafka().
               getRestEndpoint());
       if (serviceProps.getKafka().getConsumerGroups() != null) {
-        addSystemProperty(Settings.KAFKA_CONSUMERGROUPS,
+        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,
                 serviceProps.getKafka().getConsumerGroups());
       }
     }
