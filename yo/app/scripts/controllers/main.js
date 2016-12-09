@@ -103,7 +103,7 @@ angular.module('hopsWorksApp')
             self.resultPages = 0;
             self.resultItems = 0;
             self.currentPage = 1;
-            self.pageSize = 5;
+            self.pageSize = 16;
             self.hitEnter = function (evt) {
               if (angular.equals(evt.keyCode, 13)) {
                 self.search();
@@ -124,7 +124,7 @@ angular.module('hopsWorksApp')
               //ask for the project name when it is time to search
               self.projectName = UtilsService.getProjectName();
               self.currentPage = 1;
-              self.pageSize = 5;
+              self.pageSize = 16;
               self.searchResult = [];
               self.searchReturned = "";
 
