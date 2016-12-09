@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
             self.topics = [];
             self.topicsSelected = [];
             self.getAllTopics = function () {
-              if(self.runConfig.kafka === true){
+              if(self.runConfig.kafka.selected === true){
                 KafkaService.getTopics(self.projectId).then(
                         function (success) {
                           var topics = success.data;
@@ -263,6 +263,10 @@ angular.module('hopsWorksApp')
             self.createJob = function () {
               //Loop through the selected Kafka topics (if any) and add them to
               //the job config
+              if(self.runConfig.kafka.selected && self.topicsSelected.length === 0){
+                growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
+                return;
+              }
               if(self.topicsSelected.length > 0){
                 self.runConfig.kafka.topics = "";
                 for(var i=0; i< self.topicsSelected.length; i++){    
@@ -288,7 +292,7 @@ angular.module('hopsWorksApp')
                         StorageService.remove(self.newJobName);
                         self.removed = true;
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
               });
             };
 
@@ -613,11 +617,11 @@ angular.module('hopsWorksApp')
                                 }
                                 
                                 console.log("Topics:"+self.topics.toString());  
-                                if (self.runConfig.kafka) {
+                                if (self.runConfig.kafka.selected) {
                                   //Set selected topics
                                   //wait to fetch topics firsts
 
-                                  var selectedTopics = self.runConfig.kafkaTopics.split(":");
+                                  var selectedTopics = self.runConfig.kafka.topics.split(":");
                                   for(var i=0; i < selectedTopics.length; i++){
                                     console.log("Topics:"+self.topics.toString());  
                                     self.topicsSelected.push({name:selectedTopics[i], ticked:true});

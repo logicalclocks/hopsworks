@@ -189,7 +189,7 @@ angular.module('hopsWorksApp')
              */
             self.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
-                if (typeof self.runningInfo['' + temp.id] !== undefined) {
+                if (typeof self.runningInfo['' + temp.id] !== "undefined") {
                   if (temp.state !== self.runningInfo['' + temp.id].state && temp.showing === true) {
                     self.showLogs(temp.id);
                   }
@@ -199,7 +199,7 @@ angular.module('hopsWorksApp')
                   temp.running = self.runningInfo['' + temp.id].running;
                   temp.state = self.runningInfo['' + temp.id].state;
                   temp.submissiontime = self.runningInfo['' + temp.id].submissiontime;
-                  temp.url = self.runningInfo['' + temp.id].url;
+                  temp.url = self.runningInfo['' + temp.id].url;d
                 }
               });
             };
