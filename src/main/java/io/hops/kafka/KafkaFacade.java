@@ -1,6 +1,5 @@
 package io.hops.kafka;
 
-import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,12 +25,8 @@ import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 import se.kth.hopsworks.util.Settings;
 import kafka.admin.AdminUtils;
-import kafka.admin.ConsumerGroupCommand;
 import kafka.admin.RackAwareMode;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
-import kafka.controller.KafkaController;
-import kafka.javaapi.TopicMetadataRequest;
-import kafka.javaapi.consumer.SimpleConsumer;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
@@ -44,10 +39,9 @@ import org.apache.avro.SchemaParseException;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.zookeeper.WatchedEvent;
@@ -819,43 +813,6 @@ public class KafkaFacade {
         return brokerList;
     }
 
-    public Set<String> getTopicList() throws Exception {
-
-        CLIENT_ID = "list_topics";
-
-        brokers = getBrokerEndpoints();
-
-        for (String seed : brokers) {
-            kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
-            try {
-                simpleConsumer = new SimpleConsumer(getBrokerIp(seed)
-                        .getHostAddress(),
-                        getBrokerPort(seed), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
-
-                //add ssl certificate to the consumer here
-                List<String> topics = new ArrayList<>();
-
-                TopicMetadataRequest req = new TopicMetadataRequest(topics);
-                kafka.javaapi.TopicMetadataResponse resp = simpleConsumer.send(req);
-                List<kafka.javaapi.TopicMetadata> topicMetadata = resp.topicsMetadata();
-
-                for (kafka.javaapi.TopicMetadata item : topicMetadata) {
-                    topicList.add(item.topic());
-                }
-
-            } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: " + ex);
-            } finally {
-                if (simpleConsumer != null) {
-                    simpleConsumer.close();
-                }
-            }
-        }
-
-        //val allTopics = zkUtils.getAllTopics()
-        return topicList;
-    }
-
     private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
             Project project, Users user, String topicName) throws Exception {
 
@@ -904,80 +861,34 @@ public class KafkaFacade {
                     settings.getHopsworksMasterPasswordSsl());
             props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
                     settings.getHopsworksMasterPasswordSsl());
-            KafkaConsumer<Integer, String> consumer = new KafkaConsumer<>(props);
-            List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
-            
-            kafka.javaapi.consumer.SimpleConsumer simpleConsumer = null;
-            try {
-                simpleConsumer = new SimpleConsumer(getBrokerIp(brokerAddress)
-                        .getHostAddress(),
-                        getBrokerPort(brokerAddress), connectionTimeout, BUFFER_SIZE, CLIENT_ID);
-
-                //add ssl certificate to the consumer here
-                List<String> topics = new ArrayList<>();
-                topics.add(topicName);
-
-                TopicMetadataRequest req = new TopicMetadataRequest(topics);
-                kafka.javaapi.TopicMetadataResponse resp = simpleConsumer.send(req);
-                List<kafka.javaapi.TopicMetadata> topicsMetadata = resp.topicsMetadata();
-
-                for (kafka.javaapi.TopicMetadata metadata : topicsMetadata) {
-
-                    for (kafka.javaapi.PartitionMetadata partitionMetadata : metadata.partitionsMetadata()) {
-                        int partId = partitionMetadata.partitionId();
-
+            try (KafkaConsumer<Integer, String> consumer= new KafkaConsumer<>(props)) {
+                List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
+                    for (PartitionInfo partition : partitions) {
+                        int id = partition.partition();
                         //list the leaders of each parition
-                        leaders.put(partId, partitionMetadata.leader().host());
+                        leaders.put(id, partition.leader().host());
 
                         //list the replicas of the partition
-                        replicas.put(partId, new ArrayList<>());
-                        for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.replicas()) {
-                            replicas.get(partId).add(broker.host());
+                        replicas.put(id, new ArrayList<>());
+                        for (Node node : partition.replicas()) {
+                            replicas.get(id).add(node.host());
                         }
 
                         //list the insync replicas of the parition
-                        inSyncReplicas.put(partId, new ArrayList<>());
-                        for (kafka.cluster.BrokerEndPoint broker : partitionMetadata.isr()) {
-                            inSyncReplicas.get(partId).add(broker.host());
+                        inSyncReplicas.put(id, new ArrayList<>());
+                        for (Node node : partition.inSyncReplicas()) {
+                            inSyncReplicas.get(id).add(node.host());
                         }
 
-                        partitionDetailsDto.add(new PartitionDetailsDTO(partId, leaders.get(partId),
-                                replicas.get(partId), replicas.get(partId)));
+                        partitionDetailsDto.add(new PartitionDetailsDTO(id, leaders.get(id),
+                                replicas.get(id), replicas.get(id)));
                     }
-                }
             } catch (Exception ex) {
-                throw new Exception("Error communicating to broker: Kafka SimpleConsumer cant connect to secured cluster - " + brokerAddress, ex);
-            } finally {
-                if (simpleConsumer != null) {
-                    simpleConsumer.close();
-                }
+                throw new Exception("Error while retrieving topic metadata from broker: " + brokerAddress, ex);
             }
         }
 
         return partitionDetailsDto;
-    }
-
-    private InetAddress getBrokerIp(String str) {
-
-        String endpoint = str.split(SLASH_SEPARATOR)[1];
-
-        String ip = endpoint.split(COLON_SEPARATOR)[0];
-
-        try {
-            return InetAddress.getByName(ip);
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(KafkaFacade.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
-
-    private int getBrokerPort(String str) {
-
-        String endpoint = str.split(SLASH_SEPARATOR)[1];
-
-        String ip = endpoint.split(COLON_SEPARATOR)[1];
-        return Integer.parseInt(ip);
-
     }
 
     public class ZookeeperWatcher implements Watcher {

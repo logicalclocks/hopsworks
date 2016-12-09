@@ -179,7 +179,7 @@ public class KafkaService {
           topic = kafka.getTopicDetails(project, user, topicName);
         } catch (Exception ex) {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    "Error while retrieving topic details. Please try again!");
+                    "Error while retrieving topic details. Did you define topic ACLs?");
         }
 
         GenericEntity<List<PartitionDetailsDTO>> topics
