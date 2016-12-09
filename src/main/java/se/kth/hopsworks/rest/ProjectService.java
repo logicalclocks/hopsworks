@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,8 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.DatasetController;
+import se.kth.hopsworks.controller.FilePreviewDTO;
+import se.kth.hopsworks.controller.MoreInfoDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.QuotasDTO;
@@ -154,6 +157,70 @@ public class ProjectService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             proj).build();
+  }
+
+  @GET
+  @Path("/getMoreInfo/{type}/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getMoreInfo(@PathParam("type") String type,
+          @PathParam("id") Integer id) throws AppException {
+    MoreInfoDTO info = null;
+    if (id != null) {
+      if ("proj".equals(type)) {
+        Project proj = projectFacade.find(id);
+        info = new MoreInfoDTO(proj);
+      } else if ("ds".equals(type)) {
+        info = datasetInfo(id);
+      }
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            info).build();
+  }
+
+  @GET
+  @Path("/readme/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getReadme(@PathParam("path") String path) throws AppException {
+    if (path == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "No path given.");
+    }
+    String[] parts = path.split(File.separator);
+    if (parts.length < 5) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Should specify full path.");
+    }
+    Project proj = projectFacade.findByName(parts[2]);
+    Dataset ds = datasetFacade.findByNameAndProjectId(proj, parts[3]);
+    if (ds != null && !ds.isSearchable()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Readme not accessable.");
+    }
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    FilePreviewDTO filePreviewDTO;
+    try {
+      filePreviewDTO = datasetController.getReadme(path, dfso);
+    } catch (IOException ex) {
+      filePreviewDTO = new FilePreviewDTO();
+      filePreviewDTO.setContent("No README file found for this dataset.");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            filePreviewDTO).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            filePreviewDTO).build();
+  }
+
+  private MoreInfoDTO datasetInfo(Integer inodeId) {
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      return null;
+    }
+    MoreInfoDTO info = new MoreInfoDTO(inode);
+    Users user = userManager.getUserByUsername(info.getUser());
+    info.setUser(user.getFname() + " " + user.getLname());
+    info.setSize(inodes.getSize(inode));
+    info.setPath(inodes.getPath(inode));
+    return info;
   }
 
   @GET
@@ -361,7 +428,8 @@ public class ProjectService {
 
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
-          projectController.removeByID(project.getId(), owner, true, udfso, dfso);
+          projectController.
+                  removeByID(project.getId(), owner, true, udfso, dfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Could not create project resources");
         } catch (IOException e) {
@@ -370,7 +438,8 @@ public class ProjectService {
         }
       } catch (IOException ex) {
         try {
-          projectController.removeByID(project.getId(), owner, true, udfso, dfso);
+          projectController.
+                  removeByID(project.getId(), owner, true, udfso, dfso);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   "Could not add project folder owner in HDFS");
         } catch (IOException e) {
@@ -526,8 +595,8 @@ public class ProjectService {
       }
       //Only project owner is able to delete a project
       Users user = userManager.getUserByEmail(owner);
-      if(!project.getOwner().equals(user)){
-         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+      if (!project.getOwner().equals(user)) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
       }
       //Remove hopsFS operation is done as super user to be able to delete
@@ -544,7 +613,7 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
     } finally {
-      if(dfso != null){
+      if (dfso != null) {
         dfso.close();
       }
     }
@@ -582,8 +651,8 @@ public class ProjectService {
       }
       //Only project owner is able to delete a project
       Users user = userManager.getUserByEmail(owner);
-      if(!project.getOwner().equals(user)){
-         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+      if (!project.getOwner().equals(user)) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
       }
       dfso = dfs.getDfsOps();
@@ -595,7 +664,7 @@ public class ProjectService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
     } finally {
-      if(dfso != null){
+      if (dfso != null) {
         dfso.close();
       }
     }

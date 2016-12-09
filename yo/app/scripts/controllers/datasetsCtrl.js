@@ -54,7 +54,6 @@ angular.module('hopsWorksApp')
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
-
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
                 return 0;
@@ -169,10 +168,10 @@ angular.module('hopsWorksApp')
                       function (success) {
                         //Reset the selected file
                         self.selected = null;
+                        self.working = false;
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
-                        self.working = false;
                         console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
                         console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));

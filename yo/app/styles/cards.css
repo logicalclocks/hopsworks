@@ -28,6 +28,13 @@
       border-top: 2px solid;
 }
 
+.card-modal .card-item-content {
+  border-top: 5px solid;
+  height: auto;
+  min-height: 100px;
+  max-height: none;
+}
+
 .col-sm-12.col-md-12 .card-item-content {
       border-left: 2px solid;
 }
@@ -123,16 +130,21 @@
 }
 
 .card-footer-icons > span > i{
-  color: #777;
+  color: #dddddd;
 }
 
 .card-footer-icons > span > i:hover{
   color: #000;
 }
 
+.card-footer-icon {
+  margin: 0px 2px;
+}
 .card-item-content .details {
-    bottom: 25px;
+    bottom: 30px;
+    top:50px;
     position: absolute;
+    width: 95%;
 }
 
 .card-item-content .details label {
@@ -140,7 +152,19 @@
     font-size: 10px;
     letter-spacing: 1.25px;
     text-transform: uppercase;
+    margin-bottom: 0px; 
 }
+.card-item-content .details .desc {
+  margin: 5px;
+  min-height: 20px;
+}
+
+.card-modal .details .desc {
+  overflow: auto;
+  height: 60px;
+/*  resize:vertical;*/
+}
+
 .card-item-content .header > h3 {
   margin-top: 2px;
 }
@@ -149,6 +173,18 @@
     font-size: 12px;
     font-weight: 700;
     line-height: 1;
+}
+
+.card-footer .progress {
+    height: 8px;
+    width: 45%;
+    margin-top: 10px;
+}
+
+.card-modal-body {
+  position: relative;
+  padding: 15px;
+  background: white;
 }
 
 

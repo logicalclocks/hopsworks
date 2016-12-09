@@ -1,4 +1,4 @@
-<div >
+<div>
   <nav class="navbar navbar-default">
     <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
@@ -31,14 +31,20 @@
           <li class="dropdown-header">Type</li>
           <li><a class="filter-menu-uppercase"
                  data-toggle="collapse" data-target="#filterdropdown"
-                 style="color: #5DA51D;">public</a></li>
+                 ng-click="searchTypePub=undefined; searchType=undefined;">all</a></li>
+          <li><a class="filter-menu-uppercase"
+                 data-toggle="collapse" data-target="#filterdropdown"
+                 style="color: #5DA51D;"
+                 ng-click="searchType=undefined; searchTypePub='true'">public</a></li>
           <li><a class="filter-menu-uppercase" 
                  data-toggle="collapse" data-target="#filterdropdown"
-                 style="color: #4178BE;">project</a></li>
+                 style="color: #4178BE;"
+                 ng-click="searchTypePub=undefined; searchType='proj';">project</a></li>
           <li><a class="filter-menu-uppercase" 
                  data-toggle="collapse" data-target="#filterdropdown"
-                 style="color: #FC5120;">dataset</a></li>
-          <li class="divider"></li>
+                 style="color: #FC5120;"
+                 ng-click="searchTypePub=undefined; searchType='ds';">dataset</a></li>
+<!--          <li class="divider"></li>
           <li class="dropdown-header">Tops</li>
           <li><a >Votes </a>
             <div class="input-group">
@@ -51,7 +57,7 @@
               <label class="sr-only" for="email">At list</label>
               <input type="number" class="form-control" id="email" placeholder="Downloads">
             </div>
-          </li>
+          </li>-->
         </ul>
       </li>
       <li class="col-md-4">
@@ -78,7 +84,7 @@
             </div>
           </li>
 
-          <li><a>Uploaded</a>
+<!--          <li><a>Uploaded</a>
             <div class="input-group">
               <label class="sr-only" for="from">From</label>
               <input type="datepicker" class="form-control" id="datepicker3" placeholder="From date">
@@ -86,37 +92,50 @@
               <label class="sr-only" for="to">To</label>
               <input type="datepicker" class="form-control" id="datepicker4" placeholder="To date">
             </div>
-          </li>
+          </li>-->
         </ul>
       </li>
        <li class="col-sm-4">
         <ul>
-          <li class="dropdown-header">Source</li> 
+          <li class="dropdown-header">Owner</li> 
           <li>
             <div>
               <label class="sr-only" for="email">Email address</label>
-              <input type="email" class="form-control" id="email" placeholder="Enter email">
+              <input type="email" class="form-control" id="email" placeholder="Enter name" ng-model="searchOwner">
+            </div>
+          </li>
+          <li class="dropdown-header">Name</li> 
+          <li>
+            <div>
+              <label class="sr-only" for="filter">Filter</label>
+              <input type="text" class="form-control" id="filter" placeholder="Filter result..." ng-model="searchName">
             </div>
           </li>
           <li class="divider"></li>
           <li class="dropdown-header">Sort by</li>
-          <li><a data-toggle="collapse" data-target="#filterdropdown">Votes</a></li>
-          <li><a data-toggle="collapse" data-target="#filterdropdown">Downloads</a></li>
-          <li><a data-toggle="collapse" data-target="#filterdropdown">Date</a></li>
-          <li><a data-toggle="collapse" data-target="#filterdropdown">Size</a></li>
+          <li><a data-toggle="collapse" data-target="#filterdropdown" ng-click="sortKey='name'">Name</a></li>
+          <li><a data-toggle="collapse" data-target="#filterdropdown" ng-click="sortKey='user'">Owner</a></li>
+          <li><a data-toggle="collapse" data-target="#filterdropdown" ng-click="sortKey='createDate'">Date</a></li>
+          <li><a data-toggle="collapse" data-target="#filterdropdown" ng-click="sortKey='size'">Size</a></li>
         </ul>
       </li>
     </div>
     <div class="row result-filter-body">
       <div class="pull-right">
-        <button data-toggle="collapse" data-target="#filterdropdown" type="submit" class="btn btn-primary btn-block">GO</button>
+        <button data-toggle="collapse" data-target="#filterdropdown" type="submit" class="btn btn-primary btn-block"
+              ng-click="searchTypePub=undefined; 
+                        searchType=undefined; 
+                        sortKey=undefined;
+                        searchName=undefined; 
+                        searchOwner=undefined;">Clear</button>
       </div>
     </div>
   </section> 
   <section class="search-result">
     <div class="row search-result-header">
       <div class="col-md-11 pull-left">
-        <h3>{{mainCtrl.searchResult.length}} Results found for: {{mainCtrl.searchTerm | limitTo: 85 }}{{ mainCtrl.searchTerm.length > 85 ? '...' : ''}}</h3>
+        <h3>{{mainCtrl.searchResult.length}} Results found for: {{mainCtrl.searchTerm | limitTo: 85 }}
+            {{ mainCtrl.searchTerm.length > 85 ? '...' : ''}}</h3>
       </div>
       <div class="col-xs-1 col-sm-1 col-md-1 pull-right">
         <div class="input-group spinner">  
@@ -129,21 +148,21 @@
       </div>
     </div>
     <div class="search-result-body row">
-      <div ng-repeat="result in mainCtrl.searchResult | startFrom:(mainCtrl.currentPage - 1) * mainCtrl.pageSize | limitTo: mainCtrl.pageSize   track by $index ">
-        <div id="cards" class="col-xs-12" ng-class="{'col-sm-4 col-md-3': !listView, 'col-sm-12 col-md-12': listView}">
-          <hw-card content="result" details-fn="mainCtrl.viewDelail(result)" card-index="mainCtrl.rowIndex($index+1)-1"> </hw-card>
+      <div class="loader loader-md" ng-show="mainCtrl.searching"></div>
+      <div dir-paginate="result in mainCtrl.searchResult | orderBy:sortKey | filter: {public_ds: searchTypePub} | filter: {type: searchType} | filter: {user: searchOwner} | filter: {name: searchName} | itemsPerPage:mainCtrl.pageSize">
+        <div id="cards-{{mainCtrl.currentPage}}-{{$index}}" class="col-xs-12" ng-class="{'col-sm-4 col-md-3': !listView, 'col-sm-12 col-md-12': listView}">
+          <hw-card id="{{mainCtrl.currentPage}}-{{$index}}" content="result" limit="listView ? 240:50" details-fn="mainCtrl.viewDelail(result)" page-no="mainCtrl.currentPage" card-index="$index"> </hw-card>
         </div>
       </div>
     </div>
-    <div class="row divider"></div>
-    <div class="row">
-        <ul uib-pagination ng-show="(mainCtrl.searchResult.length /mainCtrl.pageSize) > 1 "
-            total-items="mainCtrl.searchResult.length" 
-            ng-model="mainCtrl.currentPage" 
-            items-per-page="mainCtrl.pageSize" 
+    <div class="row divider" style="margin-bottom: 0px;"></div>
+    <div class="row" style="margin-top: -20px">
+        <dir-pagination-controls ng-show="(mainCtrl.searchResult.length /mainCtrl.pageSize) > 1 "
+            max-size="15"
+            direction-links="true"
             boundary-links="true"
-            class="pagination-sm pull-right">
-        </ul>
-      </div>
+            class="no-margin-pagination pull-right">
+        </dir-pagination-controls>
+    </div>
   </section>
 </div>
