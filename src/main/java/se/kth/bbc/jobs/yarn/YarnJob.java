@@ -52,7 +52,7 @@ public abstract class YarnJob extends HopsJob {
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   private boolean started = false;
-
+  private boolean removedFiles = false;
   private JobState finalState = null;
   protected List<LocalResourceDTO> projectLocalResources;
   protected Map<String, String> jobSystemProperties;
@@ -180,8 +180,9 @@ public abstract class YarnJob extends HopsJob {
                 getKafka().getTopics());
         serviceProps.getKafka().setSessionId(jobDescription.getJobConfig().
                 getSessionId());
-        if(jobDescription.getJobConfig().getKafka().getConsumergroups()!=null){
-          serviceProps.getKafka().setConsumerGroups(jobDescription.getJobConfig().
+        if (jobDescription.getJobConfig().getKafka().getConsumergroups() != null) {
+          serviceProps.getKafka().setConsumerGroups(jobDescription.
+                  getJobConfig().
                   getKafka().getConsumergroupsForJob());
         }
 
@@ -403,6 +404,17 @@ public abstract class YarnJob extends HopsJob {
                   "Failed to get application state for execution "
                   + getExecution() + ". Tried " + failures + " time(s).", ex);
         }
+        //Remove local and hdfs files (localresources)this job uses
+        if (!removedFiles && appState == YarnApplicationState.RUNNING) {
+          try {
+            runner.removeAllNecessary();
+            removedFiles = true;
+          } catch (IOException ex) {
+            LOG.log(Level.SEVERE,
+                    "Exception while trying to delete job tmp files "
+                    + getExecution(), ex);
+          }
+        }
       }
 
       if (failures > DEFAULT_MAX_STATE_POLL_RETRIES) {
@@ -504,13 +516,6 @@ public abstract class YarnJob extends HopsJob {
     //If not ok: return
     if (!proceed) {
       return;
-    }
-    try {
-      runner.removeAllNecessary();
-    } catch (IOException ex) {
-      LOG.log(Level.SEVERE,
-              "Exception while trying to delete job tmp files "
-              + getExecution(), ex);
     }
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs(udfso);
