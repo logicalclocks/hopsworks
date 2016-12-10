@@ -119,6 +119,27 @@ public class KafkaService {
                 topics).build();
     }
 
+    @GET
+    @Path("/projectAndSharedTopics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response getProjectAndSharedTopics(@Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+        List<TopicDTO> allTopics = kafka.findTopicsByProject(projectId);
+
+        allTopics.addAll(kafka.findSharedTopicsByProject(projectId));
+        GenericEntity<List<TopicDTO>> topics
+                = new GenericEntity<List<TopicDTO>>(allTopics) {
+        };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                topics).build();
+    }
+    
     @POST
     @Path("/topic/add")
     @Consumes(MediaType.APPLICATION_JSON)

@@ -1129,7 +1129,7 @@ public class DataSetService {
       }
       if (this.dataset.getStatus() == Dataset.PENDING) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Dataset is not yet accessible. Accept the share requst to access it.");
+                "Dataset is not yet accessible. Accept the share request to access it.");
       }
       path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
               + dsName, projectName

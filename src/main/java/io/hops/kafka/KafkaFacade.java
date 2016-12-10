@@ -409,9 +409,9 @@ public class KafkaFacade {
         List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
 
         TypedQuery<SharedTopics> query = em.createNamedQuery(
-                "SharedTopics.findByTopicName", SharedTopics.class);
+                "SharedTopics.findByTopicNameAndProjectId", SharedTopics.class);
         query.setParameter("topicName", topicName);
-
+        query.setParameter("projectId", projectId);
         List<SharedTopics> projectIds = query.getResultList();
 
         for (SharedTopics st : projectIds) {

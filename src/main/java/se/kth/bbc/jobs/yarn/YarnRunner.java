@@ -38,6 +38,7 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -179,7 +180,7 @@ public class YarnRunner {
         // Create a new client for monitoring
         newClient.init(conf);
         monitor = new YarnMonitor(appId, newClient);
-        yarnClient.close();
+        
        
     } else if(jobType == JobType.FLINK){
         YarnClusterClient client = flinkCluster.deploy();
@@ -237,9 +238,13 @@ public class YarnRunner {
         }
 
     }
-        
-    //Clean up some
-    //removeAllNecessary();
+//    int count = 0;
+//    while(count<0 && monitor.getApplicationState() == YarnApplicationState.RUNNING){
+//      count++;
+//    }    
+//    //Clean up some
+//    removeAllNecessary();
+    yarnClient.close();
     flinkCluster = null;
     yarnClient = null;
     appId = null;

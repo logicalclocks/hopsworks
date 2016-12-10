@@ -50,6 +50,7 @@ public class KafkaDTO implements JsonReduceable {
   @Override
   public MutableJsonObject getReducedJsonObject() {
     MutableJsonObject obj = new MutableJsonObject();
+    obj.set(KEY_KAFKA_SELECTED, "" + selected);
     if (selected) {
       obj.set(KEY_KAFKA_SELECTED, "" + selected);
       if (!Strings.isNullOrEmpty(topics)) {
@@ -67,7 +68,8 @@ public class KafkaDTO implements JsonReduceable {
   public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     String jsonSelected, jsonTopics, jsonConsumerGroups;
-    jsonSelected = jsonTopics = jsonConsumerGroups = "";
+    jsonSelected = "false";
+    jsonTopics = jsonConsumerGroups = "";
 
     if (json.containsKey(KEY_KAFKA_SELECTED)) {
       jsonSelected = json.getString(KEY_KAFKA_SELECTED);

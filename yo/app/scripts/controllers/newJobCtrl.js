@@ -264,26 +264,21 @@ angular.module('hopsWorksApp')
             self.createJob = function () {
               //Loop through the selected Kafka topics (if any) and add them to
               //the job config
+              if(typeof self.runConfig.kafka == "undefined"){
+                self.runConfig.kafka = {selected:false};
+              }
               if(self.runConfig.kafka.selected && self.topicsSelected.length === 0){
-                growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
-                return;
-              }
-              //We use ":" for topics and consumer because we use them as system variables at the backend
-              if(self.topicsSelected.length > 0){
-                self.runConfig.kafka.topics = "";
-                for(var i=0; i< self.topicsSelected.length; i++){    
-                     self.runConfig.kafka.topics += self.topicsSelected[i]['name']+":";
+                  growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
+                  return;
                 }
-                self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
-              }
-//              if(self.consumerGroups.length > 0){
-//                self.runConfig.kafka.consumergroups = "";
-//                var consumers = self.consumerGroups.split(",");
-//                for(var i=0; i< consumers.length; i++){    
-//                  self.runConfig.kafka.consumergroups += consumers[i] + ":";
-//                }
-//                self.runConfig.kafka.consumergroups = self.runConfig.kafka.consumergroups.substring(0,self.runConfig.kafka.consumergroups.length-1);
-//              }
+                //We use ":" for topics and consumer because we use them as system variables at the backend
+                if(self.topicsSelected.length > 0){
+                  self.runConfig.kafka.topics = "";
+                  for(var i=0; i< self.topicsSelected.length; i++){    
+                       self.runConfig.kafka.topics += self.topicsSelected[i]['name']+":";
+                  }
+                  self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
+                }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
@@ -619,7 +614,7 @@ angular.module('hopsWorksApp')
                             self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                             self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
                             //Set Kafka topics is selected
-                            KafkaService.getTopics(self.projectId).then(
+                            KafkaService.getProjectAndSharedTopics(self.projectId).then(
                               function (success) {
                                 var topics = success.data;
                                 for (var i = 0; i < topics.length; i++) {
@@ -627,7 +622,7 @@ angular.module('hopsWorksApp')
                                 }
                                 
                                 console.log("Topics:"+self.topics.toString());  
-                                if (self.runConfig.kafka.selected) {
+                                if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.selected) {
                                   //Set selected topics
                                   //wait to fetch topics firsts
 

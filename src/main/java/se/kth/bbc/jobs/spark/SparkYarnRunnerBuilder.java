@@ -164,8 +164,6 @@ public class SparkYarnRunnerBuilder {
     }
 
     List<String> jobSpecificProperties = new ArrayList<>();
-    jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
-    jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
     jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_CORES_ENV);
@@ -182,7 +180,8 @@ public class SparkYarnRunnerBuilder {
             executorCores));
 
     //Set executor extraJavaOptions to make parameters available to executors
-    builder.addJavaOption("'-Dspark.executor.extraJavaOptions="
+    StringBuilder extraJavaOptions = new StringBuilder();
+    extraJavaOptions.append("'-Dspark.executor.extraJavaOptions="
             + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
             + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
             + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
@@ -207,30 +206,41 @@ public class SparkYarnRunnerBuilder {
         if (serviceProps.getKafka().getConsumerGroups() != null) {
           addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                   getKafka().getConsumerGroups());
-          builder.addJavaOption(" -D" +Settings.KAFKA_CONSUMER_GROUPS + "=" + serviceProps.getKafka().
-                        getConsumerGroups());
+          builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
+                  + serviceProps.getKafka().
+                          getConsumerGroups());
         }
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
-        builder.addJavaOption(" -D" + Settings.KAFKA_SESSIONID_ENV_VAR + "="
-                + serviceProps.getKafka().getSessionId()
-                + " -D"
-                + Settings.KAFKA_BROKERADDR_ENV_VAR + "=" + serviceProps.
-                        getKafka().getBrokerAddresses() + " -D"
-                + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=" + serviceProps.
-                        getKeystorePwd()
-                + " -D"
-                + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=" + serviceProps.
-                        getTruststorePwd() + " -D"
-                + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=" + serviceProps.
-                        getKafka().getTopics()
-                + " -D"
-                + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + serviceProps.
-                        getKafka().getRestEndpoint() + " -D"
-                
-                + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + serviceProps.
-                        getProjectId() + "'");
+        extraJavaOptions.append(" -D" +
+                Settings.KAFKA_SESSIONID_ENV_VAR + "=").
+                append(serviceProps.getKafka().getSessionId()).
+                append(" -D" +
+                        Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getBrokerAddresses()).
+                append(" -D" +
+                        Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
+                append(serviceProps.
+                        getKeystorePwd()).
+                append(" -D" +
+                        Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
+                append(serviceProps.
+                        getTruststorePwd()).
+                append(" -D" +
+                        Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getTopics()).
+                append(" -D" +
+                        Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getRestEndpoint()).
+                append(" -D" +
+                        Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(serviceProps.
+                                getProjectId());
       }
+      extraJavaOptions.append("'");
+      builder.addJavaOption(extraJavaOptions.toString());
     }
 
     //Set up command

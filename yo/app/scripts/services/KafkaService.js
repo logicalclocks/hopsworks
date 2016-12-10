@@ -23,6 +23,14 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/sharedTopics');
               },
               /**
+               * Get all the topics defined in the project with given id.
+               * @param {int} projectId
+               * @returns {unresolved} A list of topic objects.
+               */
+              getProjectAndSharedTopics: function (projectId) {
+                return $http.get('/api/project/' + projectId  + '/kafka/projectAndSharedTopics');
+              },
+              /**
                * Get the details of the topic with given ID, under the given project.
                * Includes all description for the topic
                * @param {type} projectId

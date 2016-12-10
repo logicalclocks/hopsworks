@@ -103,6 +103,10 @@ public abstract class JobConfiguration implements JsonReduceable {
     }
     if (kafka != null) {
       obj.set(KEY_KAFKA, kafka);
+    } else {
+      kafka = new KafkaDTO();
+      kafka.setSelected(false);
+      obj.set(KEY_KAFKA, new KafkaDTO());
     }
     return obj;
   }
@@ -112,7 +116,6 @@ public abstract class JobConfiguration implements JsonReduceable {
           IllegalArgumentException {
     //First: check correctness
     ScheduleDTO sch = null;
-    KafkaDTO kafkaDTO = null;
     if (json.containsKey(KEY_SCHEDULE)) {
       MutableJsonObject mj = json.getJsonObject(KEY_SCHEDULE);
       try {
@@ -123,16 +126,17 @@ public abstract class JobConfiguration implements JsonReduceable {
                 "Failed to parse JobConfiguration: invalid schedule.", e);
       }
     }
+    KafkaDTO kafkaDTO = new KafkaDTO();
+    kafkaDTO.setSelected(false);
     if (json.containsKey(KEY_KAFKA)) {
       MutableJsonObject mj = json.getJsonObject(KEY_KAFKA);
       try {
-        kafkaDTO = new KafkaDTO();
         kafkaDTO.updateFromJson(mj);
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException(
                 "Failed to parse JobConfiguration: invalid kafka properties.", e);
       }
-    }
+    } 
     //Then: set values
     this.appName = json.getString(KEY_APPNAME, null);
     this.schedule = sch;
