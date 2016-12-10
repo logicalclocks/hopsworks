@@ -196,9 +196,9 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              viewSearchResult: function (size, result, datatype, projects) {
+              viewSearchResult: function (size, response, result, projects) {
                 var modalInstance = $uibModal.open({
-                  templateUrl: 'views/viewSearchResult.html',
+                  templateUrl: 'views/searchResultDetail.html',
                   controller: 'ViewSearchResultCtrl as viewSearchResultCtrl',
                   size: size,
                   resolve: {
@@ -213,11 +213,11 @@ angular.module('hopsWorksApp')
                                   return $q.reject(err);
                                 });
                       }],
+                    response: function () {
+                      return response;
+                    },
                     result: function () {
                       return result;
-                    },
-                    datatype: function () {
-                      return datatype;
                     },
                     projects: function () {
                       return projects;
