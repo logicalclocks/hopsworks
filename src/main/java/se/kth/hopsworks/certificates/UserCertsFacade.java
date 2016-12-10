@@ -14,7 +14,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
 import se.kth.hopsworks.rest.AppException;
 
 /**

@@ -499,6 +499,7 @@ public class Settings {
   public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
   public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
+  public static final String FLINK_KAFKA_CERTS_DIR = "/srv/glassfish/domain1/config";
   
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/java";
@@ -819,20 +820,20 @@ public class Settings {
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
-  public static final String KAFKA_TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
-  public static final String KAFKA_TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
+  public static final String TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
+  public static final String TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
   
-  public static final String KAFKA_SESSIONID_ENV_VAR = "kafka.sessionid";
-  public static final String KAFKA_PROJECTID_ENV_VAR = "kafka.projectid";
-  public static final String KAFKA_BROKERADDR_ENV_VAR = "kafka.brokeraddress";
+  //Used to retrieve schema by KafkaUtil
+  public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
+  public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
+  public static final String KAFKA_BROKERADDR_ENV_VAR = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
-
-  //Used to retrieve schema by KafkaUtil
-  public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "kafka.restendpoint";
+  public static final String KEYSTORE_PASSWORD_ENV_VAR = "hopsworks.keystore.password";
+  public static final String TRUSTSTORE_PASSWORD_ENV_VAR = "hopsworks.truststore.password";
+  public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
+  public static final String KAFKA_REST_ENDPOINT_ENV_VAR = "hopsworks.kafka.restendpoint";
   
-//  public static final String KAFKA_K_CERTIFICATE_ENV_VAR = "kafka.key.certificate";
-//  public static final String KAFKA_T_CERTIFICATE_ENV_VAR = "kafka.trusted.certificate";
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;  
   public static int FILE_PREVIEW_TXT_SIZE = 100; 
   public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024*128;

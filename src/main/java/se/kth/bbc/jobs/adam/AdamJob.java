@@ -24,7 +24,7 @@ import se.kth.hopsworks.util.Settings;
  */
 public class AdamJob extends SparkJob {
 
-  private static final Logger logger = Logger.getLogger(AdamJob.class.getName());
+  private static final Logger LOG = Logger.getLogger(AdamJob.class.getName());
 
   private final AdamJobConfiguration jobconfig;
   private final String sparkDir;
@@ -42,16 +42,13 @@ public class AdamJob extends SparkJob {
    * @param jobUser
    * @param nameNodeIpPort
    * @param adamJarPath
-   * @param kafkaAddress
-   * @param restEndpoint 
    */
   public AdamJob(JobDescription job,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           String sparkDir, String adamUser, String jobUser,
-          String nameNodeIpPort, String adamJarPath, String kafkaAddress, 
-          String restEndpoint) {
+          String nameNodeIpPort, String adamJarPath) {
     super(job, services, user, hadoopDir, sparkDir, nameNodeIpPort, adamUser,
-            jobUser, kafkaAddress, restEndpoint);
+            jobUser);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain a AdamJobConfiguration object. Received: "
@@ -96,7 +93,7 @@ public class AdamJob extends SparkJob {
                     getFileName(arg.getValue()), arg.getValue());
           }
         } catch (IOException e) {
-          logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
+          LOG.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
                   + arg.getValue() + ".", e);
         }
       }
@@ -111,7 +108,7 @@ public class AdamJob extends SparkJob {
                     getFileName(opt.getValue()), opt.getValue());
           }
         } catch (IOException e) {
-          logger.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
+          LOG.log(Level.SEVERE, "Failed to create Inodes for HDFS path "
                   + opt.getValue() + ".", e);
         }
       }
@@ -161,7 +158,7 @@ public class AdamJob extends SparkJob {
               getYarnRunner(jobDescription.getProject().getName(),
                       adamUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
     } catch (IOException e) {
-      logger.log(Level.SEVERE,
+      LOG.log(Level.SEVERE,
               "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;

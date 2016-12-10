@@ -38,6 +38,7 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -75,7 +76,6 @@ public class YarnRunner {
   private YarnClusterDescriptor flinkCluster;
   
   private String appJarPath;
-  private String localJarPath; //Used by flink
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -180,7 +180,7 @@ public class YarnRunner {
         // Create a new client for monitoring
         newClient.init(conf);
         monitor = new YarnMonitor(appId, newClient);
-        yarnClient.close();
+        
        
     } else if(jobType == JobType.FLINK){
         YarnClusterClient client = flinkCluster.deploy();
@@ -233,13 +233,18 @@ public class YarnRunner {
         } finally{
           //Remove local flink app jar
            FileUtils.deleteDirectory(localPathAppJarDir);
+           //Try to delete any local certificates for this project
            logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
         }
 
     }
-        
-    //Clean up some
-    //removeAllNecessary();
+//    int count = 0;
+//    while(count<0 && monitor.getApplicationState() == YarnApplicationState.RUNNING){
+//      count++;
+//    }    
+//    //Clean up some
+//    removeAllNecessary();
+    yarnClient.close();
     flinkCluster = null;
     yarnClient = null;
     appId = null;

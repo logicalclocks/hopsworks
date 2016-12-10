@@ -121,4 +121,12 @@ angular.module('hopsWorksApp')
               getExecutions();
             }, 3000);
 
+            /**
+             * Converts the colon-separated list of topics to a nicer human friendly format
+             * @returns comma-separated list of topics
+             */
+            self.viewTopics = function(topics){
+              return topics.replace(":",", ");
+            };
+
           }]);

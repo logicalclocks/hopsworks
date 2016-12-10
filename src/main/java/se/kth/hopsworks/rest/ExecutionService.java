@@ -25,7 +25,6 @@ import se.kth.bbc.jobs.jobhistory.ExecutionFacade;
 import se.kth.bbc.jobs.jobhistory.YarnApplicationstateFacade;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
-import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.hopsworks.controller.ExecutionController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;
@@ -109,12 +108,8 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
-      //Set sessionId to JobConfiguration so that is used by Kafka
-      if(job.getJobConfig() instanceof YarnJobConfiguration){
-        ((YarnJobConfiguration)job.getJobConfig()).setjSessionId(
-                req.getSession().getId());
-      }
-        
+      //Set sessionId to JobConfiguration so that is used by Services like Kafka
+      job.getJobConfig().setSessionId(req.getSession().getId());
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();

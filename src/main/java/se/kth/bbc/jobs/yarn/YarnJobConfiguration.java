@@ -20,21 +20,14 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
   //Number of cores for appMaster
   private int amVCores = 1;
-  private String jSessionId;
-  //Kafka properties
-  private String kStore;
-  private String tStore;
-  private boolean kafka;
-  private String kafkaTopics;
-
+ 
   //List of paths to be added to local resources
   private LocalResourceDTO[] localResources = new LocalResourceDTO[0];
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
   protected final static String KEY_AMCORS = "AMCORS";
-  protected final static String KEY_KAFKA = "KAFKA";
-  protected final static String KEY_KAFKA_TOPICS = "KAFKATOPICS";
+ 
   protected final static String KEY_RESOURCES = "RESOURCES";
 
   public final static String KEY_RESOURCESNAME = "NAME";
@@ -89,21 +82,7 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amVCores = amVCores;
   }
 
-  public boolean isKafka() {
-    return kafka;
-  }
-
-  public void setKafka(boolean kafka) {
-    this.kafka = kafka;
-  }
-
-  public String getKafkaTopics() {
-    return kafkaTopics;
-  }
-
-  public void setKafkaTopics(String kafkaTopics) {
-    this.kafkaTopics = kafkaTopics;
-  }
+  
 
   public LocalResourceDTO[] getLocalResources() {
     return localResources;
@@ -139,10 +118,7 @@ public class YarnJobConfiguration extends JobConfiguration {
       }
       obj.set(KEY_RESOURCES, resources);
     }
-    if(kafka){
-      obj.set(KEY_KAFKA, "" + kafka);
-      obj.set(KEY_KAFKA_TOPICS, kafkaTopics);
-    }
+    
     //Then: fields that cannot be null or emtpy:
     obj.set(KEY_AMCORS, "" + amVCores);
     obj.set(KEY_AMMEM, "" + amMemory);
@@ -156,8 +132,8 @@ public class YarnJobConfiguration extends JobConfiguration {
           IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
-    String jsonCors, jsonMem, jsonQueue, jsonKafka, jsonKafkaTopics;
-    jsonKafka = jsonKafkaTopics = "";
+    String jsonCors, jsonMem, jsonQueue;
+    
     LocalResourceDTO[] jsonResources = null;
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -194,11 +170,7 @@ public class YarnJobConfiguration extends JobConfiguration {
       jsonCors = json.getString(KEY_AMCORS);
       jsonMem = json.getString(KEY_AMMEM);
       jsonQueue = json.getString(KEY_QUEUE);
-      if(json.containsKey(KEY_KAFKA) && json.containsKey(KEY_KAFKA_TOPICS)){
-        jsonKafka = json.getString(KEY_KAFKA);
-        jsonKafkaTopics = json.getString(KEY_KAFKA_TOPICS);
-        
-      } 
+      
       
     } catch (Exception e) {
       throw new IllegalArgumentException(
@@ -212,31 +184,6 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amMemory = Integer.parseInt(jsonMem);
     this.amQueue = jsonQueue;
     this.amVCores = Integer.parseInt(jsonCors);
-    this.kafka = Boolean.parseBoolean(jsonKafka);
-    this.kafkaTopics = jsonKafkaTopics;
   }
 
-  public String getjSessionId() {
-    return jSessionId;
-  }
-
-  public void setjSessionId(String jSessionId) {
-    this.jSessionId = jSessionId;
-  }
-
-  public String getkStore() {
-    return kStore;
-  }
-
-  public void setkStore(String kStore) {
-    this.kStore = kStore;
-  }
-
-  public String gettStore() {
-    return tStore;
-  }
-
-  public void settStore(String tStore) {
-    this.tStore = tStore;
-  }
 }
