@@ -118,17 +118,17 @@ public class FlinkJob extends YarnJob {
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
       for (Map.Entry<String, String> jobSystemProperty : jobSystemProperties.
               entrySet()) {
-        //If the properties are the Kafka certificates, append glassfish path
-        if (jobSystemProperty.getKey().equals(Settings.KAFKA_K_CERTIFICATE)
-                || jobSystemProperty.getKey().equals(
-                        Settings.KAFKA_T_CERTIFICATE)) {
-          flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
-                  "/srv/glassfish/domain1/config/" + jobSystemProperty.
-                          getValue());
-        } else {
+//        //If the properties are the Kafka certificates, append glassfish path
+//        if (jobSystemProperty.getKey().equals(Settings.KAFKA_K_CERTIFICATE)
+//                || jobSystemProperty.getKey().equals(
+//                        Settings.KAFKA_T_CERTIFICATE)) {
+//          flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
+//                  "/srv/glassfish/domain1/config/" + jobSystemProperty.
+//                          getValue());
+//        } else {
           flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
                   jobSystemProperty.getValue());
-        }
+//        }
       }
     }
     try {

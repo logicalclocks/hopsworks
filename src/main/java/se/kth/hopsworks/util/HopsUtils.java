@@ -1,7 +1,6 @@
 package se.kth.hopsworks.util;
 
 import com.google.common.io.Files;
-import io.hops.metadata.hdfs.entity.User;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -19,12 +18,10 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
-import se.kth.bbc.project.services.ProjectServices;
 import se.kth.hopsworks.certificates.UserCerts;
 import se.kth.hopsworks.certificates.UserCertsFacade;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
-import se.kth.hopsworks.user.model.Users;
 
 /**
  * Utility methods.
@@ -231,12 +228,18 @@ public class HopsUtils {
                   t_k_cert.setWritable(false);
                   if (!f_k_cert.exists()) {
                     Files.write(kafkaCertFiles.get(
-                                    Settings.KAFKA_K_CERTIFICATE),
-                                    f_k_cert);
+                            Settings.KAFKA_K_CERTIFICATE),
+                            f_k_cert);
                     Files.write(kafkaCertFiles.get(
-                                    Settings.KAFKA_T_CERTIFICATE),
-                                    t_k_cert);
+                            Settings.KAFKA_T_CERTIFICATE),
+                            t_k_cert);
                   }
+                  jobSystemProperties.put(Settings.KAFKA_K_CERTIFICATE,
+                          Settings.FLINK_KAFKA_CERTS_DIR
+                          + File.separator + kCertName);
+                  jobSystemProperties.put(Settings.KAFKA_T_CERTIFICATE,
+                          Settings.FLINK_KAFKA_CERTS_DIR
+                          + File.separator + tCertName);
                   break;
                 case SPARK:
                   kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
@@ -298,9 +301,6 @@ public class HopsUtils {
                             + entry.getValue().getName(),
                             LocalResourceVisibility.APPLICATION.toString(),
                             LocalResourceType.FILE.toString(), null));
-
-                    jobSystemProperties.
-                            put(entry.getKey(), entry.getValue().getName());
                   }
                   break;
                 default:

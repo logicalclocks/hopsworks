@@ -388,8 +388,9 @@ public class FlinkYarnRunnerBuilder {
       addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
               getKafka().getTopics());
       addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
-              getKafka().
-              getRestEndpoint());
+              getKafka().getRestEndpoint());
+      addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
+              serviceProps.getProjectId()));
       if (serviceProps.getKafka().getConsumerGroups() != null) {
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,
                 serviceProps.getKafka().getConsumerGroups());
