@@ -238,12 +238,6 @@ public class YarnRunner {
         }
 
     }
-//    int count = 0;
-//    while(count<0 && monitor.getApplicationState() == YarnApplicationState.RUNNING){
-//      count++;
-//    }    
-//    //Clean up some
-//    removeAllNecessary();
     yarnClient.close();
     flinkCluster = null;
     yarnClient = null;

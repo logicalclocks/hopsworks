@@ -203,6 +203,9 @@ public class SparkYarnRunnerBuilder {
         addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
                 getKafka().
                 getRestEndpoint());
+
+        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
+                serviceProps.getProjectId()));
         if (serviceProps.getKafka().getConsumerGroups() != null) {
           addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                   getKafka().getConsumerGroups());
@@ -210,34 +213,26 @@ public class SparkYarnRunnerBuilder {
                   + serviceProps.getKafka().
                           getConsumerGroups());
         }
-        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
-                serviceProps.getProjectId()));
-        extraJavaOptions.append(" -D" +
-                Settings.KAFKA_SESSIONID_ENV_VAR + "=").
+        extraJavaOptions.append(" -D" + Settings.KAFKA_SESSIONID_ENV_VAR + "=").
                 append(serviceProps.getKafka().getSessionId()).
-                append(" -D" +
-                        Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
+                append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
                 append(serviceProps.
                         getKafka().getBrokerAddresses()).
-                append(" -D" +
-                        Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
+                append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
                 append(serviceProps.
                         getKeystorePwd()).
-                append(" -D" +
-                        Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
+                append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
                 append(serviceProps.
                         getTruststorePwd()).
-                append(" -D" +
-                        Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
+                append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
                 append(serviceProps.
                         getKafka().getTopics()).
-                append(" -D" +
-                        Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
+                append(" -D" + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
                 append(serviceProps.
                         getKafka().getRestEndpoint()).
-                append(" -D" +
-                        Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(serviceProps.
-                                getProjectId());
+                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
+                serviceProps.
+                        getProjectId());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());
