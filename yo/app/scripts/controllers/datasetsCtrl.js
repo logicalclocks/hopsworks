@@ -393,7 +393,7 @@ This will make all its files unavailable to other projects unless you share it e
                         dataSetService.copy(inodeId, finalPath).then(
                                 function (success) {
                                   getDirContents();
-                                  growl.success({title: 'Copy was successfully', ttl: 2000, referenceId: 4});
+                                  growl.success('', {title: 'Copied ' + name +' successfully', ttl: 5000, referenceId: 4});
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
                         });
@@ -424,7 +424,7 @@ This will make all its files unavailable to other projects unless you share it e
                             names[i] = name;
                             i++;
                           }
-
+                          
                           for (var name in self.selectedFiles) {
                             dataSetService.copy(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
@@ -436,6 +436,7 @@ This will make all its files unavailable to other projects unless you share it e
                                         }
                                         self.all_selected = false;
                                       }
+                                      //growl.success('',{title: 'Copied successfully', ttl: 5000, referenceId: 4});
                                     }, function (error) {
                               growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
                             });

@@ -665,10 +665,13 @@ public class DataSetService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Cannot find file/folder you are trying to move. Has it been deleted?");
       }
+      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
       udfso.moveWithinHdfs(new org.apache.hadoop.fs.Path(
-              inodes.getPath(sourceInode)),
-              new org.apache.hadoop.fs.Path(path));
-
+              inodes.getPath(sourceInode)), destPath);
+      udfso.setPermission(destPath, udfso.getParentPermission(destPath));
+      String group = dataset.getInode().getHdfsGroup().getName();
+      udfso.setOwner(destPath, username, group);
+      
       String message = "";
       JsonResponse response = new JsonResponse();
 
@@ -740,13 +743,12 @@ public class DataSetService {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Cannot find file/folder you are trying to move. Has it been deleted?");
       }
+      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
       udfso.copyInHdfs(new org.apache.hadoop.fs.Path(
-              inodes.getPath(sourceInode)),
-              new org.apache.hadoop.fs.Path(path));
+              inodes.getPath(sourceInode)),destPath);
       //Set permissions
-      udfso.setPermission(new org.apache.hadoop.fs.Path(path), udfso.getParentPermission(new org.apache.hadoop.fs.Path(path)));
-      //Set owner
-      
+      udfso.setPermission(destPath, udfso.getParentPermission(destPath));
+            
       String message = "";
       JsonResponse response = new JsonResponse();
 
