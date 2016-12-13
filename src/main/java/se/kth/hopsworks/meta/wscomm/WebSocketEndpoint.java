@@ -44,7 +44,7 @@ public class WebSocketEndpoint {
   private String userRole;
   private HttpSession httpSession;//this might be used to check the underlying http session
   @EJB
-  private Protocol protocol;
+  private MetadataProtocol protocol;
 
   @OnOpen
   public void open(Session session, EndpointConfig config,

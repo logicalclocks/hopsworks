@@ -3,6 +3,7 @@ package se.kth.hopsworks.rest;
 import java.io.File;
 import java.util.HashSet;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,11 +15,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonString;
+import javax.json.stream.JsonParsingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -31,9 +32,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.crypto.Data;
-
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -45,6 +43,7 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+import se.kth.hopsworks.log.ops.OperationType;
 import se.kth.hopsworks.meta.db.MTableFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.db.TupleToFileFacade;
@@ -60,8 +59,8 @@ import se.kth.hopsworks.meta.entity.TemplateView;
 import se.kth.hopsworks.meta.entity.TupleToFile;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.exception.DatabaseException;
-import se.kth.hopsworks.meta.wscomm.Protocol;
-import se.kth.hopsworks.meta.wscomm.Utils;
+import se.kth.hopsworks.meta.wscomm.MetadataProtocol;
+import se.kth.hopsworks.meta.wscomm.MetadataController;
 import se.kth.hopsworks.meta.wscomm.message.ContentMessage;
 import se.kth.hopsworks.meta.wscomm.message.Message;
 import se.kth.hopsworks.meta.wscomm.message.TemplateMessage;
@@ -102,9 +101,9 @@ public class MetadataService {
   @EJB
   private InodeFacade inodefacade;
   @EJB
-  private Protocol protocol;
+  private MetadataProtocol protocol;
   @EJB
-  private Utils utils;
+  private MetadataController metadataController;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -113,7 +112,7 @@ public class MetadataService {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
-
+  
   private String path;
 
   /**
@@ -428,7 +427,9 @@ public class MetadataService {
 
       //remove the inode-template association
       this.templatefacade.updateTemplatesInodesMxN(toremove);
-
+          
+      metadataController.logTemplateOperation(toremove, inode, OperationType.Delete);
+      
       //remove any associated metadata
       List<TupleToFile> tuples = ttf.getTuplesByInodeId(inode.getInodePK().
               getParentId(), inode.getInodePK().getName());
@@ -542,7 +543,7 @@ public class MetadataService {
     String email = sc.getUserPrincipal().getName();
     return mutateMetadata(email, metaObj, MetadataOp.REMOVE);
   }
-
+  
   private Response mutateMetadata(String email, String metaObj, MetadataOp op) throws AppException {
     if (op == null || email == null || metaObj == null) {
       throw new NullPointerException("MetadataOp  or email or metaObj was null");
@@ -586,7 +587,7 @@ public class MetadataService {
             if (metaObjPayload == null) {
               throw new ApplicationException("removed metadata was null");
             }
-            this.utils.removeMetadata(composite, metaId, metaObjPayload.getString());
+            this.metadataController.removeMetadata(composite, metaId, metaObjPayload.getString());
             break;
           case UPDATE:
             metaId = obj.getInt("metaid");
@@ -598,12 +599,12 @@ public class MetadataService {
             if (metaObjValue == null) {
               throw new ApplicationException("updated metadata value was null");
             }
-            this.utils.updateMetadata(composite, metaId, metaObjValue.getString());
+            this.metadataController.updateMetadata(composite, metaId, metaObjValue.getString());
             break;
           case ADD:
             List<EntityIntf> rawData = JsonUtil.parseSchemaPayload(metaObj);
             //Persist metadata
-            this.utils.storeRawData(composite, rawData);
+            this.metadataController.storeRawData(composite, rawData);
             break;
           default:
             throw new IllegalStateException("Invalid metadata operation: " + op);
@@ -620,5 +621,68 @@ public class MetadataService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(status).entity(json).build();
 
+  }
+  
+  @POST
+  @Path("attachSchemaless")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response attachSchemalessMetadata(
+          @Context SecurityContext sc, @Context HttpServletRequest req,
+          String metaObj) throws
+          AppException, AccessControlException {
+    
+    processSchemalessMetadata(metaObj, false);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).build();
+  }
+  
+  @POST
+  @Path("detachSchemaless")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response detachSchemalessMetadata(
+          @Context SecurityContext sc, @Context HttpServletRequest req,
+          String metaObj) throws
+          AppException, AccessControlException {
+    
+    processSchemalessMetadata(metaObj, true);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).build();
+  }
+  
+  private void processSchemalessMetadata(String metaObj, boolean detach) throws AppException {
+    try {
+      JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).readObject();
+      if (!jsonObj.containsKey("path")) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 
+                "missing path field");
+      }
+
+      String inodePath = jsonObj.getString("path");
+      if (detach) {
+        metadataController.removeSchemaLessMetadata(inodePath);
+        return;
+      }
+            
+      if (!jsonObj.containsKey("metadata")) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "missing metadata field");
+      }
+      
+      JsonObject metadata = jsonObj.getJsonObject("metadata");
+      StringWriter writer = new StringWriter();
+      Json.createWriter(writer).writeObject(metadata);
+      String metadataJsonString = writer.toString();
+      if(metadataJsonString.length() > 12000){
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "metadata is too long. 12000 is the max size");
+      }
+      
+      metadataController.addSchemaLessMetadata(inodePath, metadataJsonString);
+    } catch (JsonParsingException | NullPointerException | ClassCastException ex) {
+      Logger.getLogger(MetadataService.class.getName()).log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incorrect json message/Missing path/metadata fields");
+    } catch (ApplicationException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ex.getMessage());
+    }
   }
 }
