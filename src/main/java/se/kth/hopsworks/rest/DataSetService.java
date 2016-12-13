@@ -743,7 +743,10 @@ public class DataSetService {
       udfso.copyInHdfs(new org.apache.hadoop.fs.Path(
               inodes.getPath(sourceInode)),
               new org.apache.hadoop.fs.Path(path));
-
+      //Set permissions
+      udfso.setPermission(new org.apache.hadoop.fs.Path(path), udfso.getParentPermission(new org.apache.hadoop.fs.Path(path)));
+      //Set owner
+      
       String message = "";
       JsonResponse response = new JsonResponse();
 
