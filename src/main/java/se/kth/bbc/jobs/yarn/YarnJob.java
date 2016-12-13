@@ -177,13 +177,13 @@ public abstract class YarnJob extends HopsJob {
         serviceProps.getKafka().setRestEndpoint(services.getSettings().
                 getRestEndpoint());
         serviceProps.getKafka().setTopics(jobDescription.getJobConfig().
-                getKafka().getTopics());
+                getKafka().getTopics().replaceAll(",", File.pathSeparator));
         serviceProps.getKafka().setSessionId(jobDescription.getJobConfig().
                 getSessionId());
         if (jobDescription.getJobConfig().getKafka().getConsumergroups() != null) {
           serviceProps.getKafka().setConsumerGroups(jobDescription.
                   getJobConfig().
-                  getKafka().getConsumergroupsForJob());
+                  getKafka().getConsumergroups().replaceAll(",", File.pathSeparator));
         }
 
         HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.

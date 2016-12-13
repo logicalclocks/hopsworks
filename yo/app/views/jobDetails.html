@@ -233,7 +233,7 @@
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.kafka.selected">
           <div class="text-right col-md-4">Kafka Topics: <i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.viewTopics(jobDetailCtrl.job.runConfig.kafka.topics)}}</div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.kafka.topics}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.kafka.selected">
           <div class="text-right col-md-4">Kafka consumer groups <i class="fa fa-info-circle" uib-tooltip="List of consumer groups available for this job." style="margin-left: 10px"></i></div>
