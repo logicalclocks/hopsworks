@@ -1,5 +1,6 @@
 package se.kth.bbc.project.fb;
 
+import io.hops.common.Pair;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -391,4 +392,27 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getChildren(parent);
   }
 
+    /**
+   * Get the project and dataset base directory of which the given Inode is a descendant.
+   * <p/>
+   * @param i
+   * @return The Inodes representing the project and dataset root directories. [ProjectInode, DatasetInode]
+   * @throws IllegalStateException when the given Inode is not under a project
+   * root directory.
+   */
+  public Pair<Inode, Inode> getProjectAndDatasetRootForInode(Inode i) throws IllegalStateException {
+    Inode project = i;
+    Inode dataset = i;
+    do{
+      dataset = project;
+      project = findParent(project);
+       if (project == null) {
+        throw new IllegalStateException(
+                "Transversing the path from folder did not encounter project root folder.");
+      }
+    }
+    while(!isProjectRoot(project));
+    return new Pair<>(project, dataset);
+  }
+  
 }

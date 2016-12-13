@@ -1,31 +1,39 @@
 package se.kth.hopsworks.meta.wscomm;
 
+import io.hops.common.Pair;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.hopsworks.dataset.Dataset;
+import se.kth.hopsworks.dataset.DatasetFacade;
+import se.kth.hopsworks.log.meta.MetaLog;
+import se.kth.hopsworks.log.meta.MetaLogFacade;
+import se.kth.hopsworks.log.ops.OperationType;
+import se.kth.hopsworks.log.ops.OperationsLog;
+import se.kth.hopsworks.log.ops.OperationsLogFacade;
 import se.kth.hopsworks.meta.db.FieldFacade;
 import se.kth.hopsworks.meta.db.FieldPredefinedValueFacade;
-import se.kth.hopsworks.meta.db.HdfsMetadataLogFacade;
 import se.kth.hopsworks.meta.db.MTableFacade;
 import se.kth.hopsworks.meta.db.MetadataFacade;
 import se.kth.hopsworks.meta.db.RawDataFacade;
+import se.kth.hopsworks.meta.db.SchemalessMetadataFacade;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.db.TupleToFileFacade;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.FieldPredefinedValue;
 import se.kth.hopsworks.meta.entity.Field;
-import se.kth.hopsworks.meta.entity.HdfsMetadataLog;
 import se.kth.hopsworks.meta.entity.InodeTableComposite;
 import se.kth.hopsworks.meta.entity.RawData;
 import se.kth.hopsworks.meta.entity.MTable;
 import se.kth.hopsworks.meta.entity.Metadata;
+import se.kth.hopsworks.meta.entity.SchemalessMetadata;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.entity.TupleToFile;
 import se.kth.hopsworks.meta.exception.ApplicationException;
@@ -36,10 +44,10 @@ import se.kth.hopsworks.util.HopsUtils;
  *
  * @author Vangelis
  */
-@Stateless(name = "utils")
-public class Utils {
+@Stateless(name = "metadataController")
+public class MetadataController {
 
-  private static final Logger logger = Logger.getLogger(Utils.class.getName());
+  private static final Logger logger = Logger.getLogger(MetadataController.class.getName());
 
   @EJB
   private TemplateFacade templateFacade;
@@ -56,11 +64,19 @@ public class Utils {
   @EJB
   private MetadataFacade metadataFacade;
   @EJB
-  private HdfsMetadataLogFacade mlf;
-  @EJB
   private InodeFacade inodeFacade;
-
-  public Utils() {
+  @EJB
+  private MetaLogFacade metaLogFacade;
+  @EJB
+  private OperationsLogFacade opsLogFacade;
+  @EJB 
+  private ProjectFacade projectFacade;
+  @EJB
+  private DatasetFacade datasetFacade;
+  @EJB
+  private SchemalessMetadataFacade schemalessMetadataFacade;
+  
+  public MetadataController() {
   }
 
   /**
@@ -238,10 +254,9 @@ public class Utils {
    * <p/>
    * @param composite
    * @param raw
-   * @return The inode
    * @throws ApplicationException
    */
-  public Inode storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
+  public void storeRawData(List<EntityIntf> composite, List<EntityIntf> raw)
           throws ApplicationException {
 
     try {
@@ -278,7 +293,6 @@ public class Utils {
         //move on to persist the child entities
         this.storeMetaData(metadataList, tupleid);
       }
-      return inode;
 
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not store raw data ", e);
@@ -291,30 +305,16 @@ public class Utils {
    * @param composite
    * @param metaId
    * @param metaObj
-   * @return 
    * @throws ApplicationException
    */
-//  public Inode updateMetadata(List<EntityIntf> composite, Metadata meta) throws
-  public Inode updateMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
+  public void updateMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
           ApplicationException {
     try {
-
-      /*
-       * get the inodeid from the entity in the list. It is the
-       * same for all the entities, since they constitute a single tuple
-       */
-      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
-
-      //get the inode
-      Inode parent = this.inodeFacade.findById(itc.getInodePid());
-      Inode inode = this.inodeFacade.findByInodePK(parent, itc.
-              getInodeName(), parent.getInodePK().getParentId());
-
       Metadata metadata = this.metadataFacade.getMetadataById(metaId);
       metadata.setData(metaObj);
       this.metadataFacade.addMetadata(metadata);
+      logMetadataOperation(metadata, OperationType.Update);
       
-      return inode;
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not update metadata ", e);
     }
@@ -330,25 +330,15 @@ public class Utils {
    * @return 
    * @throws ApplicationException
    */
-  public Inode removeMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
+  public void removeMetadata(List<EntityIntf> composite, int metaId, String metaObj) throws
           ApplicationException {
     try {
-
-      /*
-       * get the inodeid from the entity in the list. It is the
-       * same for all the entities, since they constitute a single tuple
-       */
-      InodeTableComposite itc = (InodeTableComposite) composite.get(0);
-
-      //get the inode
-      Inode parent = this.inodeFacade.findById(itc.getInodePid());
-      Inode inode = this.inodeFacade.findByInodePK(parent, itc.getInodeName(), parent.getInodePK().getParentId());
 
       Metadata metadata = this.metadataFacade.getMetadataById(metaId);
       metadata.setData(metaObj);
       this.metadataFacade.removeMetadata(metadata);
+      logMetadataOperation(metadata, OperationType.Delete);
       
-      return inode;
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not delete metadata ", e);
     }
@@ -374,21 +364,60 @@ public class Utils {
 
         //logger.log(Level.INFO, metadata.toString());
         this.metadataFacade.addMetadata(metadata);
+        logMetadataOperation(metadata, OperationType.Add);
       }
     } catch (DatabaseException e) {
       throw new ApplicationException("Utils.java: could not store metadata ", e);
     }
   }
   
-  /**
-   * Creates a fake inode operation in hdfs_metadata_log table.
-   * <p/>
-   * @param log
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
-   */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void createMetadataLog(HdfsMetadataLog log) throws DatabaseException {
+  public void addSchemaLessMetadata(String inodePath, String metadataJson) throws ApplicationException {
+    Inode inode = inodeFacade.getInodeAtPath(inodePath);
+    if (inode == null) {
+      throw new ApplicationException("file " + inodePath + " doesn't exist");
+    }
 
-    this.mlf.addHdfsMetadataLog(log);
+    boolean update = true;
+    SchemalessMetadata metadata = schemalessMetadataFacade.findByInode(inode);
+    if (metadata == null) {
+      update = false;
+      metadata = new SchemalessMetadata(inode);
+    }
+    metadata.setData(metadataJson);
+
+    schemalessMetadataFacade.merge(metadata);
+    logSchemaLessMetadataOperation(metadata, update ? OperationType.Update : OperationType.Add);
   }
+
+  public void removeSchemaLessMetadata(String inodePath) throws ApplicationException {
+    Inode inode = inodeFacade.getInodeAtPath(inodePath);
+    if (inode == null) {
+      throw new ApplicationException("file " + inodePath + " doesn't exist");
+    }
+    SchemalessMetadata metadata = schemalessMetadataFacade.findByInode(inode);
+    if(metadata == null){
+          throw new ApplicationException("No metadata attached with " + inodePath);
+    }
+    MetaLog removeOpLog = new MetaLog(metadata, OperationType.Delete);
+    schemalessMetadataFacade.remove(metadata);
+    metaLogFacade.persist(removeOpLog);
+  }
+    
+  private void logSchemaLessMetadataOperation(SchemalessMetadata metadata, OperationType opType){
+    metaLogFacade.persist(new MetaLog(metadata, opType));
+  }
+  
+  private void logMetadataOperation(Metadata metadata, OperationType optype){
+    metaLogFacade.persist(new MetaLog(metadata, optype));
+  }
+  
+  public void logTemplateOperation(Template template, Inode inode, OperationType optype){
+     Pair<Inode, Inode> project_dataset = inodeFacade.getProjectAndDatasetRootForInode(inode);
+     Project project = projectFacade.findByInodeId(project_dataset.getL().getInodePK().getParentId(),
+             project_dataset.getL().getInodePK().getName());
+     Dataset dataset = datasetFacade.findByProjectAndInode(project, project_dataset.getR());
+  
+    opsLogFacade.persist(new OperationsLog(project, dataset, template, inode, optype));
+  }
+  
 }

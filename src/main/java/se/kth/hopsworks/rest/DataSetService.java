@@ -68,6 +68,7 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.log.ops.OperationType;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
@@ -429,7 +430,9 @@ public class DataSetService {
               dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
               false, dfso, udfso);
-
+      
+      dataset = datasetFacade.findByNameAndProjectId(project, dataSet.getName());
+      datasetController.logDataset(dataset, OperationType.Add);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -581,7 +584,7 @@ public class DataSetService {
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      success = datasetController.deleteDataset(filePath, user, project, udfso);
+      success = datasetController.deleteDataset(dataset,filePath, user, project, udfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + filePath);
@@ -1179,7 +1182,7 @@ public class DataSetService {
     }
     ds.setPublicDs(true);
     datasetFacade.merge(ds);
-    datasetFacade.merge(ds);
+    datasetController.logDataset(ds, OperationType.Update);
     json.setSuccessMessage("The Dataset is now public.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -1214,6 +1217,7 @@ public class DataSetService {
     }
     ds.setPublicDs(false);
     datasetFacade.merge(ds);
+    datasetController.logDataset(ds, OperationType.Update);
     json.setSuccessMessage("The Dataset is no longer public.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

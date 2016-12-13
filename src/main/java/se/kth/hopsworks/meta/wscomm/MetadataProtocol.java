@@ -7,18 +7,14 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.meta.entity.EntityIntf;
 import se.kth.hopsworks.meta.entity.Field;
-import se.kth.hopsworks.meta.entity.HdfsMetadataLog;
 import se.kth.hopsworks.meta.entity.InodeTableComposite;
 import se.kth.hopsworks.meta.entity.MTable;
 import se.kth.hopsworks.meta.entity.Metadata;
 import se.kth.hopsworks.meta.exception.ApplicationException;
 import se.kth.hopsworks.meta.wscomm.message.Command;
 import se.kth.hopsworks.meta.wscomm.message.Message;
-import se.kth.hopsworks.meta.wscomm.message.MetadataLogMessage;
-import se.kth.hopsworks.meta.wscomm.message.MetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.RemoveMetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.StoreMetadataMessage;
 import se.kth.hopsworks.meta.wscomm.message.TextMessage;
@@ -30,19 +26,19 @@ import se.kth.hopsworks.meta.wscomm.message.UpdateMetadataMessage;
  * <p/>
  * @author Vangelis
  */
-@Stateless(name = "protocol")
+@Stateless(name = "metadataProtocol")
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class Protocol {
+public class MetadataProtocol {
 
   private static final Logger logger = Logger.
-          getLogger(Protocol.class.getName());
+          getLogger(MetadataProtocol.class.getName());
 
   @EJB
-  private Utils utils;
+  private MetadataController metadataController;
   @EJB
   private ResponseBuilder builder;
 
-  public Protocol() {
+  public MetadataProtocol() {
     logger.log(Level.INFO, "Protocol initialized");
   }
 
@@ -117,9 +113,9 @@ public class Protocol {
     List<EntityIntf> rawData = message.parseSchema();
 
     //Persist metadata
-    Inode inode = this.utils.storeRawData(composite, rawData);
+    this.metadataController.storeRawData(composite, rawData);
 
-    return this.InodeMutation(inode, message);
+    return new TextMessage("Server");
   }
 
   /**
@@ -142,9 +138,9 @@ public class Protocol {
     }
     //update metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
-    Inode inode = this.utils.updateMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
+    this.metadataController.updateMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
 
-    return this.InodeMutation(inode, message);
+    return new TextMessage("Server");
 
   }
   
@@ -169,10 +165,9 @@ public class Protocol {
     }
     //delete metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
-    Inode inode = this.utils.removeMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
+    this.metadataController.removeMetadata(composite, metadata.getMetadataPK().getId(), metadata.getData());
 
-    return this.InodeMutation(inode, message);
-
+    return new TextMessage("Server");
   }
   
   
@@ -257,17 +252,5 @@ public class Protocol {
     }
 
     return new TextMessage();
-  }
-
-  private Message InodeMutation(Inode inode, Message message) throws
-          ApplicationException {
-
-    //create a meta-log
-    MetadataLogMessage msg = (MetadataLogMessage) ((MetadataMessage) message).
-            getMetadataLogMessage(inode);
-
-    HdfsMetadataLog log = (HdfsMetadataLog) msg.parseSchema().get(0);
-
-    return this.builder.inodeMutationResponse(log);
   }
 }
