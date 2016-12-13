@@ -39,9 +39,6 @@ public class KafkaDTO implements JsonReduceable {
   public String getConsumergroups() {
     return consumergroups;
   }
-  public String getConsumergroupsForJob() {
-    return consumergroups.replaceAll(",", File.pathSeparator);
-  }
 
   public void setConsumergroups(String consumergroups) {
     this.consumergroups = consumergroups;
@@ -68,11 +65,11 @@ public class KafkaDTO implements JsonReduceable {
   public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
     String jsonSelected, jsonTopics, jsonConsumerGroups;
-    jsonSelected = "false";
     jsonTopics = jsonConsumerGroups = "";
 
     if (json.containsKey(KEY_KAFKA_SELECTED)) {
       jsonSelected = json.getString(KEY_KAFKA_SELECTED);
+      selected = Boolean.parseBoolean(jsonSelected);
       if (json.containsKey(KEY_KAFKA_TOPICS)) {
         jsonTopics = json.getString(KEY_KAFKA_TOPICS);
       }
@@ -82,7 +79,6 @@ public class KafkaDTO implements JsonReduceable {
 
     }
 
-    selected = Boolean.parseBoolean(jsonSelected);
     if (selected) {
       if (!Strings.isNullOrEmpty(jsonTopics)) {
         topics = jsonTopics;

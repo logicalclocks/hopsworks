@@ -30,7 +30,6 @@ angular.module('hopsWorksApp')
             //Kafka topics for this project
             self.topics = [];
             self.topicsSelected = [];
-            self.consumerGroups = [];
             self.getAllTopics = function () {
               if(self.runConfig.kafka.selected === true){
                 KafkaService.getTopics(self.projectId).then(
@@ -264,18 +263,17 @@ angular.module('hopsWorksApp')
             self.createJob = function () {
               //Loop through the selected Kafka topics (if any) and add them to
               //the job config
-              if(typeof self.runConfig.kafka == "undefined"){
+              if(typeof self.runConfig.kafka === "undefined"){
                 self.runConfig.kafka = {selected:false};
               }
               if(self.runConfig.kafka.selected && self.topicsSelected.length === 0){
                   growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
                   return;
                 }
-                //We use ":" for topics and consumer because we use them as system variables at the backend
                 if(self.topicsSelected.length > 0){
                   self.runConfig.kafka.topics = "";
                   for(var i=0; i< self.topicsSelected.length; i++){    
-                       self.runConfig.kafka.topics += self.topicsSelected[i]['name']+":";
+                       self.runConfig.kafka.topics += self.topicsSelected[i]['name']+",";
                   }
                   self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
                 }
@@ -626,7 +624,7 @@ angular.module('hopsWorksApp')
                                   //Set selected topics
                                   //wait to fetch topics firsts
 
-                                  var selectedTopics = self.runConfig.kafka.topics.split(":");
+                                  var selectedTopics = self.runConfig.kafka.topics.split(",");
                                   for(var i=0; i < selectedTopics.length; i++){
                                     console.log("Topics:"+self.topics.toString());  
                                     self.topicsSelected.push({name:selectedTopics[i], ticked:true});
