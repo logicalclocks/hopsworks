@@ -118,6 +118,22 @@ angular.module('hopsWorksApp')
                   };
                   return $http(moveReq);                  
                 },
+                copy: function (srcInodeId, fullPath) {
+                  var copyOp = { 
+                    inodeId: srcInodeId, 
+                    destPath: fullPath 
+                  };
+
+                  var copyReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/copy',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: copyOp
+                  };
+                  return $http(copyReq);                  
+                },
                 attachTemplate: function (fileTemplateData) {
                   var regReq = {
                     method: 'POST',
@@ -150,6 +166,9 @@ angular.module('hopsWorksApp')
                 },             
                 fetchMetadata: function (inodePid, inodeName, tableId) {
                   return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
+                },
+                getReadme: function(path) {
+                  return $http.get('/api/project/readme/' + path);
                 }
               };
               return services;

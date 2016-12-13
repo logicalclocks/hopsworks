@@ -1,5 +1,6 @@
 package se.kth.bbc.project.fb;
 
+import io.hops.common.Pair;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +14,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.hdfsUsers.model.HdfsUsers;
 import se.kth.hopsworks.util.HopsUtils;
 import se.kth.hopsworks.util.Settings;
@@ -26,8 +26,9 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  private final static Logger logger = Logger.getLogger(InodeFacade.class.getName());
-  
+  private final static Logger logger = Logger.getLogger(InodeFacade.class.
+          getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -39,7 +40,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public InodeFacade() {
     super(Inode.class);
   }
-  
+
   /**
    * Find all the Inodes that have <i>parent</i> as parent.
    * <p/>
@@ -65,7 +66,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     query.setParameter("hdfsUser", hdfsUser);
     return query.getResultList();
   }
-  
+
   /**
    * Get all the children of <i>parent</i>. Alias of findByParent().
    * <p/>
@@ -74,6 +75,29 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   public List<Inode> getChildren(Inode parent) {
     return findByParent(parent);
+  }
+
+  /**
+   * Return the size of an inode
+   *
+   * @param inode
+   * @return
+   */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public long getSize(Inode inode) {
+    if (!inode.isDir()) {
+      return inode.getSize();
+    }
+    long size = 0;
+    List<Inode> children = getChildren(inode);
+    for (Inode i : children) {
+      if (!i.isDir()) {
+        size += i.getSize();
+      } else {
+        size += getSize(i);
+      }
+    }
+    return size;
   }
 
   /**
@@ -99,6 +123,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
       return Collections.EMPTY_LIST;
     }
   }
+
   /**
    * Find the parent of the given Inode. If the Inode has no parent, null is
    * returned.
@@ -155,15 +180,19 @@ public class InodeFacade extends AbstractFacade<Inode> {
     //Get the right root node
     Inode curr = getRootNode(p[0]);
     if (curr == null) {
-      logger.log(Level.WARNING, "Could not resolve root inode at path: {0}", path);
+      logger.log(Level.WARNING, "Could not resolve root inode at path: {0}",
+              path);
       return null;
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      int partitionId = HopsUtils.calculatePartitionId(curr.getId(), p[i], i+1);
+      int partitionId = HopsUtils.
+              calculatePartitionId(curr.getId(), p[i], i + 1);
       Inode next = findByInodePK(curr, p[i], partitionId);
       if (next == null) {
-        logger.log(Level.WARNING, "Could not resolve inode at path: {0} and path-component " + i, path);
+        logger.log(Level.WARNING,
+                "Could not resolve inode at path: {0} and path-component " + i,
+                path);
         return null;
       } else {
         curr = next;
@@ -175,14 +204,17 @@ public class InodeFacade extends AbstractFacade<Inode> {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
     int partitionId = HopsUtils.projectPartitionId(name);
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
+            Inode.class);
     query.setParameter("name", name);
     query.setParameter("parentId", HopsUtils.ROOT_INODE_ID);
     query.setParameter("partitionId", partitionId);
     try {
       return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
     } catch (NoResultException e) {
-        logger.log(Level.WARNING, "Could not resolve root inode with name: {0} and partition_id" + partitionId, name);
+      logger.log(Level.WARNING,
+              "Could not resolve root inode with name: {0} and partition_id"
+              + partitionId, name);
       return null;
     }
   }
@@ -349,7 +381,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @throws IllegalArgumentException If the path does not point to a directory.
    * @throws java.io.FileNotFoundException If the path does not exist.
    */
-  public List<Inode> getChildren(String path) throws 
+  public List<Inode> getChildren(String path) throws
           FileNotFoundException {
     Inode parent = getInode(path);
     if (parent == null) {
@@ -360,4 +392,27 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getChildren(parent);
   }
 
+    /**
+   * Get the project and dataset base directory of which the given Inode is a descendant.
+   * <p/>
+   * @param i
+   * @return The Inodes representing the project and dataset root directories. [ProjectInode, DatasetInode]
+   * @throws IllegalStateException when the given Inode is not under a project
+   * root directory.
+   */
+  public Pair<Inode, Inode> getProjectAndDatasetRootForInode(Inode i) throws IllegalStateException {
+    Inode project = i;
+    Inode dataset = i;
+    do{
+      dataset = project;
+      project = findParent(project);
+       if (project == null) {
+        throw new IllegalStateException(
+                "Transversing the path from folder did not encounter project root folder.");
+      }
+    }
+    while(!isProjectRoot(project));
+    return new Pair<>(project, dataset);
+  }
+  
 }

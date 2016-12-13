@@ -71,6 +71,9 @@ import se.kth.hopsworks.zeppelin.server.ZeppelinConfigFactory;
 import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
+import se.kth.hopsworks.log.ops.OperationType;
+import se.kth.hopsworks.log.ops.OperationsLog;
+import se.kth.hopsworks.log.ops.OperationsLogFacade;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -114,7 +117,9 @@ public class ProjectController {
   private InodeFacade inodeFacade;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
-  
+  @EJB
+  private OperationsLogFacade operationsLogFacade;
+    
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -212,6 +217,7 @@ public class ProjectController {
         //Persist project object
         this.projectFacade.persistProject(project);
         this.projectFacade.flushEm();
+        logProject(project, OperationType.Add);
         this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(
                 new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
                         .getName(), project.getCreated()), project.
@@ -266,8 +272,18 @@ public class ProjectController {
                 Settings.DefaultDataset.NOTEBOOKS)) {
           continue;
         }
+        
+        //Only mark the resources dataset as searchable
+        boolean searchableResources = ds.equals(Settings.DefaultDataset.RESOURCES);
+
         datasetController.createDataset(user, project, ds.getName(), ds.
-                getDescription(), -1, false, globallyVisible, dfso, udfso);
+                getDescription(), -1, searchableResources, globallyVisible, dfso, udfso);
+
+        if (searchableResources) {
+          Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.getName());
+          datasetController.logDataset(dataset, OperationType.Add);
+        }
+        
         //Persist README.md to hdfs for Default Datasets
         datasetController.generateReadme(udfso, ds.getName(), 
                   ds.getDescription(), project.getName());
@@ -382,6 +398,7 @@ public class ProjectController {
     project.setRetentionPeriod(proj.getRetentionPeriod());
 
     projectFacade.mergeProject(project);
+    logProject(project, OperationType.Update);
     logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);
   }
@@ -564,7 +581,9 @@ public class ProjectController {
       //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
       yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
     }
-
+    
+    logProject(project, OperationType.Delete);
+    
     // TODO: DELETE THE KAFKA TOPICS
     userCertsFacade.removeAllCertsOfAProject(project.getName());
 
@@ -1008,4 +1027,7 @@ public class ProjectController {
     return multiplicator;
   }
 
+  public void logProject(Project project, OperationType type) {
+    operationsLogFacade.persist(new OperationsLog(project, type));
+  }
 }

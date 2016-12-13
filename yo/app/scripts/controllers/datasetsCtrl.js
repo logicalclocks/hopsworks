@@ -54,7 +54,6 @@ angular.module('hopsWorksApp')
             self.metadataView = {};
             self.availableTemplates = [];
             self.closeSlider = false;
-
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
                 return 0;
@@ -167,12 +166,16 @@ angular.module('hopsWorksApp')
               //Get the contents and load them
               dataSetService.getContents(newPath).then(
                       function (success) {
+                        //Clear any selections
+                        self.all_selected = false;
+                        self.selectedFiles = {};
+                        self.selected = null;
                         //Reset the selected file
                         self.selected = null;
+                        self.working = false;
                         //Set the current files and path
                         self.files = success.data;
                         self.pathArray = newPathArray;
-                        self.working = false;
                         console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
                         console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
@@ -366,7 +369,7 @@ This will make all its files unavailable to other projects unless you share it e
                           $scope.readme = $showdown.makeHtml(content);
                         }, function (error) {
                   //To hide README from UI
-                  growl.error(error.data.errorMsg, {title: 'Error retrieving README file', ttl: 5000, referenceId: 3});
+                  growl.error(error.data.errorMsg, {title: 'Error retrieving README file', ttl: 5000, referenceId: 4});
                   $scope.readme = null;
                 });
               } else {
@@ -379,9 +382,74 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
 
+            self.copy = function (inodeId, name) {
+              ModalService.selectDir('lg', "/[^]*/","problem selecting folder").then(function (success) {
+                        var destPath = success;
+                        // Get the relative path of this DataSet, relative to the project home directory
+                        // replace only first occurrence 
+                        var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                        var finalPath = relPath + "/" + name;
+
+                        dataSetService.copy(inodeId, finalPath).then(
+                                function (success) {
+                                  getDirContents();
+                                  growl.success({title: 'Copy was successfully', ttl: 2000, referenceId: 4});
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
+                        });
+                      }, function (error) {
+              });
+            };
+
+
+            self.copySelected = function () {
+              //Check if we are to move one file or many
+              if (Object.keys(self.selectedFiles).length === 0 && self.selectedFiles.constructor === Object) {
+                if (self.selected !== null && self.selected !== undefined) {
+                  self.copy(self.selected.id, self.selected.name);
+                }
+              } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
+
+                ModalService.selectDir('lg', "/[^]*/", "problem selecting folder").then(
+                        function (success) {
+                          var destPath = success;
+                          // Get the relative path of this DataSet, relative to the project home directory
+                          // replace only first occurrence 
+                          var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
+                          //var finalPath = relPath + "/" + name;
+                          var names = [];
+                          var i = 0;
+                          //Check if have have multiple files 
+                          for (var name in self.selectedFiles) {
+                            names[i] = name;
+                            i++;
+                          }
+
+                          for (var name in self.selectedFiles) {
+                            dataSetService.copy(self.selectedFiles[name].id, relPath + "/" + name).then(
+                                    function (success) {
+                                      //If we copied the last file
+                                      if (name === names[names.length - 1]) {
+                                        getDirContents();
+                                        for (var i = 0; i < names.length; i++) {
+                                          delete self.selectedFiles[names[i]];
+                                        }
+                                        self.all_selected = false;
+                                      }
+                                    }, function (error) {
+                              growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
+                            });
+                          }
+                        }, function (error) {
+                  //The user changed their mind.
+                });
+              }
+            };
+            
+            
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
-                      "problem selecting file").then(
+                      "problem selecting doler").then(
                       function (success) {
                         var destPath = success;
                         // Get the relative path of this DataSet, relative to the project home directory
@@ -391,16 +459,12 @@ This will make all its files unavailable to other projects unless you share it e
 
                         dataSetService.move(inodeId, finalPath).then(
                                 function (success) {
-//                                  self.openDir(relPath);
                                   getDirContents();
                                   growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 4});
                         });
-
-
                       }, function (error) {
-                //The user changed their mind.
               });
 
             };
@@ -419,7 +483,7 @@ This will make all its files unavailable to other projects unless you share it e
               } else if (Object.keys(self.selectedFiles).length !== 0 && self.selectedFiles.constructor === Object) {
 
                 ModalService.selectDir('lg', "/[^]*/",
-                        "problem selecting file").then(
+                        "problem selecting folder").then(
                         function (success) {
                           var destPath = success;
                           // Get the relative path of this DataSet, relative to the project home directory
@@ -446,7 +510,7 @@ This will make all its files unavailable to other projects unless you share it e
                                         self.all_selected = false;
                                       }
                                     }, function (error) {
-                              growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 2});
+                              growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 4});
                             });
                           }
                         }, function (error) {

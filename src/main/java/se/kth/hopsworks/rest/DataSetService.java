@@ -68,6 +68,7 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.db.TemplateFacade;
 import se.kth.hopsworks.meta.entity.Template;
 import se.kth.hopsworks.meta.exception.DatabaseException;
+import se.kth.hopsworks.log.ops.OperationType;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.users.UserFacade;
 import se.kth.hopsworks.util.Settings;
@@ -429,7 +430,9 @@ public class DataSetService {
               dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
               false, dfso, udfso);
-
+      
+      dataset = datasetFacade.findByNameAndProjectId(project, dataSet.getName());
+      datasetController.logDataset(dataset, OperationType.Add);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -581,7 +584,7 @@ public class DataSetService {
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      success = datasetController.deleteDataset(filePath, user, project, udfso);
+      success = datasetController.deleteDataset(dataset,filePath, user, project, udfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + filePath);
@@ -683,7 +686,82 @@ public class DataSetService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "The parent folders for the destination do not exist. Create them first.");
+              "Move at path:"+path+" failed. It is not a directory or you do not have permission to copy in this folder");
+    } finally {
+      if (udfso != null) {
+        udfso.close();
+      }
+    }
+  }
+  
+  /**
+   * Copy operations handled here
+   *
+   * @param path - the relative path from the project directory (excluding the
+   * project directory). Not the full path
+   * @param req
+   * @param dto
+   * @param sc
+   * @return
+   * @throws AppException
+   * @throws AccessControlException
+   */
+  @POST
+  @Path("copy")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response copyFile(
+          @Context SecurityContext sc, @Context HttpServletRequest req,
+          MoveDTO dto) throws
+          AppException, AccessControlException {
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
+
+    int inodeId = dto.getInodeId();
+    String path = dto.getDestPath();
+    if (path == null) {
+      path = "";
+    }
+
+    if (path.startsWith("/Projects/" + this.project.getName())) {
+      path = path.replaceFirst("/Projects/" + this.project.getName(), "");
+    }
+
+    path = getFullPath(path);
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(username);
+      boolean exists = udfso.exists(path);
+
+      Inode sourceInode = inodes.findById(inodeId);
+
+      if (sourceInode == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Cannot find file/folder you are trying to move. Has it been deleted?");
+      }
+      udfso.copyInHdfs(new org.apache.hadoop.fs.Path(
+              inodes.getPath(sourceInode)),
+              new org.apache.hadoop.fs.Path(path));
+
+      String message = "";
+      JsonResponse response = new JsonResponse();
+
+      //if it exists and it's not a dir, it must be a file
+      if (exists) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Destination already exists.");
+      }
+
+      message = "Copied";
+      response.setSuccessMessage(message);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(response).build();
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Copy at path:"+path+" failed. It is not a directory or you do not have permission to copy in this folder");
     } finally {
       if (udfso != null) {
         udfso.close();
@@ -1129,7 +1207,7 @@ public class DataSetService {
       }
       if (this.dataset.getStatus() == Dataset.PENDING) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Dataset is not yet accessible. Accept the share requst to access it.");
+                "Dataset is not yet accessible. Accept the share request to access it.");
       }
       path = path.replaceFirst(projectName + Settings.SHARED_FILE_SEPARATOR
               + dsName, projectName
@@ -1179,7 +1257,7 @@ public class DataSetService {
     }
     ds.setPublicDs(true);
     datasetFacade.merge(ds);
-    datasetFacade.merge(ds);
+    datasetController.logDataset(ds, OperationType.Update);
     json.setSuccessMessage("The Dataset is now public.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -1214,6 +1292,7 @@ public class DataSetService {
     }
     ds.setPublicDs(false);
     datasetFacade.merge(ds);
+    datasetController.logDataset(ds, OperationType.Update);
     json.setSuccessMessage("The Dataset is no longer public.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

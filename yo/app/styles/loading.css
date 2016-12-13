@@ -27,6 +27,16 @@
     transition: 0.3s;
 }
 
+.loader-in-wrap {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #69717d;  
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: auto;
+}
+
 .loader { 
     position:fixed;
     border-radius: 50%;
@@ -41,6 +51,13 @@
     border-top: 16px solid #69717d; 
     width: 120px;
     height: 120px;
+}
+
+.loader.loader-md {
+    border: 10px solid #f3f3f3;
+    border-top: 10px solid #69717d; 
+    width: 80px;
+    height: 80px;
 }
 
 .loader.loader-sm {

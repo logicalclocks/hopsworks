@@ -6,13 +6,9 @@
     </div>
   </div>
 
-
   <div ng-show="mainCtrl.searchReturned === ''" class="row" ng-controller="HomeCtrl as homeCtrl">
-
     <div class="col-sm-6 col-md-2 col-lg-2">
       <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
-
-
         <div class="list-group">
           <a href="" class="list-group-item active">Help</a>
           <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
@@ -61,50 +57,12 @@
     <div class="col-sm-6 col-md-2 col-lg-5">
       <div class="widget-body">
         <div class="timeline clearfix">
-
-          <!--                        <div
-                                      ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
-          
-                                      <div class="time-header info" ng-if="historyObject.flag === 'older'">Older</div>
-                                      <div class="time-header error" ng-if="historyObject.flag === 'lastweek'">Last week</div>
-                                      <div class="time-header error" ng-if="historyObject.flag === 'thisweek'">This week</div>
-                                      <div class="time-header completed" ng-if="historyObject.flag === 'yesterday'">Yesterday</div>
-                                      <div class="time-header info" ng-if="historyObject.flag === 'today'">Today</div>
-          
-                                      <div class="right">
-                                          <div class="r-arrow"></div>
-                                          <div class="about-task">
-                                              <div class="header">{{historyObject.project.name}}
-                                                  <small class="muted">{{historyObject.timestamp|
-                                date:'medium'}}
-                                                  </small>
-    </div>
-                                              <p class="no-margin">
-                                                  {{historyObject.user.fname}} {{historyObject.activity}}
-                                              </p>
-                                          </div>
-                                      </div>
-                                  </div>
-    
-                                  <uib-pagination ng-show="homeCtrl.totalPages > 1"
-                                              total-items="homeCtrl.totalItems"
-                                              ng-model="homeCtrl.currentPage"
-                                              max-size="homeCtrl.pageSize"
-                                              class="uib-pagination-sm"
-                                              boundary-links="true"
-                                              rotate="false"
-                                              style="margin-left: 170px"
-                                              num-pages="homeCtrl.totalPages">
-                                  </uib-pagination>-->
-
-
         </div>
-
       </div>
     </div>
+    
     <div class="col-sm-6 col-md-1 col-lg-1"></div>
     <div class="col-sm-6 col-md-3 col-lg-3 sidebar">
-
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
 
@@ -176,7 +134,6 @@
                               Share...</span>
                           </a>
                         </li>-->
-
             <li>
               <a class="pointer"
                  role="menuitem"
@@ -195,7 +152,6 @@
                   Remove and delete DataSets </span>
               </a>
             </li>
-
           </ul>
         </div>
       </div>

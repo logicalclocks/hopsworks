@@ -36,8 +36,6 @@ public class AdamController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private SparkController sparkController;
-  @EJB
   private Settings settings;
   @EJB
   private HdfsLeDescriptorsFacade hdfsEndpoint;
@@ -69,7 +67,7 @@ public class AdamController {
     } else if (job.getJobType() != JobType.ADAM) {
       throw new IllegalArgumentException(
               "The given job does not represent an Adam job.");
-    } 
+    }
     ((AdamJobConfiguration) job.getJobConfig()).setJarPath(settings.
             getAdamJarHdfsPath());
     ((AdamJobConfiguration) job.getJobConfig()).setHistoryServerIp(settings.
@@ -84,13 +82,11 @@ public class AdamController {
         @Override
         public AdamJob run() throws Exception {
           return new AdamJob(job, submitter, user, settings.getHadoopDir(),
-                  settings.
-                  getSparkDir(), settings.getAdamUser(),
+                  settings.getSparkDir(), settings.getAdamUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
                   hdfsEndpoint.getSingleEndpoint(),
-                  settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
-                  settings.getRestEndpoint());
+                  settings.getAdamJarHdfsPath());
         }
       });
     } catch (InterruptedException ex) {
@@ -128,12 +124,11 @@ public class AdamController {
 
     AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopDir(),
             settings.
-            getSparkDir(), settings.getAdamUser(),
+                    getSparkDir(), settings.getAdamUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                     getCreator()),
             hdfsEndpoint.getSingleEndpoint(),
-            settings.getAdamJarHdfsPath(), settings.getKafkaConnectStr(),
-            settings.getRestEndpoint());
+            settings.getAdamJarHdfsPath());
 
     submitter.stopExecution(adamJob, appid);
 

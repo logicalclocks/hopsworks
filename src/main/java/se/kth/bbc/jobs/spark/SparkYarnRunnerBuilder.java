@@ -13,6 +13,8 @@ import java.util.Properties;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.jobs.yarn.KafkaProperties;
+import se.kth.bbc.jobs.yarn.ServiceProperties;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.util.Settings;
@@ -45,12 +47,8 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
-  private String sessionId;//used by Kafka
-  private String kafkaAddress;
-  private boolean kafkaJob;
-  private String kafkaTopics;
+  private ServiceProperties serviceProps;
 
-  private String restEndpoint;
   private JobType jobType;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass,
@@ -136,22 +134,14 @@ public class SparkYarnRunnerBuilder {
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
-    
-//    addSystemProperty("spark.yarn.dist.jars",listOfJars.toString().substring(
-//            0,listOfJars.length()-1 ));
-//    addSystemProperty("spark.yarn.dist.files",listOfFiles.toString().substring(
-//            0,listOfFiles.length()-1 ));
-    if(extraClassPathFiles.toString().length()>0){
-      addSystemProperty("spark.executor.extraClassPath",extraClassPathFiles.toString().substring(
-            0,extraClassPathFiles.length()-1));
+
+    if (extraClassPathFiles.toString().length() > 0) {
+      addSystemProperty("spark.executor.extraClassPath", extraClassPathFiles.
+              toString().substring(
+                      0, extraClassPathFiles.length() - 1));
 
     }
-    addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, sessionId);
-    addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, kafkaAddress);
-    addSystemProperty(Settings.KAFKA_JOB_ENV_VAR, Boolean.toString(kafkaJob));
-    addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, kafkaTopics);
 
-    addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, restEndpoint);
     //If DynamicExecutors are not enabled, set the user defined number 
     //of executors
     if (dynamicExecutors) {
@@ -174,8 +164,6 @@ public class SparkYarnRunnerBuilder {
     }
 
     List<String> jobSpecificProperties = new ArrayList<>();
-    jobSpecificProperties.add(Settings.KAFKA_SESSIONID_ENV_VAR);
-    jobSpecificProperties.add(Settings.KAFKA_BROKERADDR_ENV_VAR);
     jobSpecificProperties.add(Settings.SPARK_NUMBER_EXECUTORS_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_MEMORY_ENV);
     jobSpecificProperties.add(Settings.SPARK_DRIVER_CORES_ENV);
@@ -192,17 +180,64 @@ public class SparkYarnRunnerBuilder {
             executorCores));
 
     //Set executor extraJavaOptions to make parameters available to executors
-    builder.addJavaOption("'-Dspark.executor.extraJavaOptions="
+    StringBuilder extraJavaOptions = new StringBuilder();
+    extraJavaOptions.append("'-Dspark.executor.extraJavaOptions="
             + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
             + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
             + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
-            + "-Djava.library.path=/srv/hadoop/lib/native/ -D"
-            + Settings.KAFKA_SESSIONID_ENV_VAR + "=" + sessionId + " -D"
-            + Settings.KAFKA_BROKERADDR_ENV_VAR + "=" + kafkaAddress + " -D"
-            + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=" + kafkaTopics + " -D"
-            + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=" + restEndpoint + " -D"
-            + Settings.KAFKA_PROJECTID_ENV_VAR + "=" + sysProps.get(
-                    Settings.KAFKA_PROJECTID_ENV_VAR) + "'");
+            + "-Djava.library.path=/srv/hadoop/lib/native/");
+    if (serviceProps != null) {
+      //Handle Kafka properties
+      if (serviceProps.getKafka() != null) {
+        addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, serviceProps.
+                getKafka().getSessionId());
+        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
+                getKafka().
+                getBrokerAddresses());
+        addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
+                getKeystorePwd());
+        addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
+                getTruststorePwd());
+        addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
+                getKafka().getTopics());
+        addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
+                getKafka().
+                getRestEndpoint());
+
+        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
+                serviceProps.getProjectId()));
+        if (serviceProps.getKafka().getConsumerGroups() != null) {
+          addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
+                  getKafka().getConsumerGroups());
+          builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
+                  + serviceProps.getKafka().
+                          getConsumerGroups());
+        }
+        extraJavaOptions.append(" -D" + Settings.KAFKA_SESSIONID_ENV_VAR + "=").
+                append(serviceProps.getKafka().getSessionId()).
+                append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getBrokerAddresses()).
+                append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
+                append(serviceProps.
+                        getKeystorePwd()).
+                append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
+                append(serviceProps.
+                        getTruststorePwd()).
+                append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getTopics()).
+                append(" -D" + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
+                append(serviceProps.
+                        getKafka().getRestEndpoint()).
+                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
+                serviceProps.
+                        getProjectId());
+      }
+      extraJavaOptions.append("'");
+      builder.addJavaOption(extraJavaOptions.toString());
+    }
+
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
@@ -425,24 +460,8 @@ public class SparkYarnRunnerBuilder {
     this.driverQueue = driverQueue;
   }
 
-  public void setSessionId(String sessionId) {
-    this.sessionId = sessionId;
-  }
-
-  public void setKafkaAddress(String kafkaAddress) {
-    this.kafkaAddress = kafkaAddress;
-  }
-
-  public void setKafkaJob(boolean isKafkaJob) {
-    this.kafkaJob = isKafkaJob;
-  }
-
-  public void setKafkaTopics(String kafkaTopics) {
-    this.kafkaTopics = kafkaTopics;
-  }
-
-  public void setRestEndpoint(String restEndpoint) {
-    this.restEndpoint = restEndpoint;
+  public void setServiceProps(ServiceProperties serviceProps) {
+    this.serviceProps = serviceProps;
   }
 
   public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {

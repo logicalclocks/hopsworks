@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.flink.api.common.JobSubmissionResult;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 
@@ -75,7 +74,6 @@ public class YarnRunner {
   private YarnClusterDescriptor flinkCluster;
   
   private String appJarPath;
-  private String localJarPath; //Used by flink
   private final String amJarLocalName;
   private final String amJarPath;
   private final String amQueue;
@@ -180,7 +178,7 @@ public class YarnRunner {
         // Create a new client for monitoring
         newClient.init(conf);
         monitor = new YarnMonitor(appId, newClient);
-        yarnClient.close();
+        
        
     } else if(jobType == JobType.FLINK){
         YarnClusterClient client = flinkCluster.deploy();
@@ -233,13 +231,12 @@ public class YarnRunner {
         } finally{
           //Remove local flink app jar
            FileUtils.deleteDirectory(localPathAppJarDir);
+           //Try to delete any local certificates for this project
            logger.log(Level.INFO, "Deleting local flink app jar:{0}",appJarPath);
         }
 
     }
-        
-    //Clean up some
-    //removeAllNecessary();
+    yarnClient.close();
     flinkCluster = null;
     yarnClient = null;
     appId = null;

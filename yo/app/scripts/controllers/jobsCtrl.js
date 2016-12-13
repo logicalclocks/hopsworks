@@ -189,7 +189,7 @@ angular.module('hopsWorksApp')
              */
             self.createAppReport = function () {
               angular.forEach(self.jobs, function (temp, key) {
-                if (typeof self.runningInfo['' + temp.id] !== undefined) {
+                if (typeof self.runningInfo['' + temp.id] !== "undefined") {
                   if (temp.state !== self.runningInfo['' + temp.id].state && temp.showing === true) {
                     self.showLogs(temp.id);
                   }

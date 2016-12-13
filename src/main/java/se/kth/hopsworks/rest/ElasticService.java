@@ -55,6 +55,8 @@ import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
 /**
  *
@@ -421,11 +423,15 @@ public class ElasticService {
 
     QueryBuilder nameFuzzyQuery = fuzzyQuery(
             Settings.META_NAME_FIELD, searchTerm);
-     
+    
+    QueryBuilder wildCardQuery = wildcardQuery(Settings.META_NAME_FIELD, 
+            String.format("*%s*", searchTerm));
+    
     QueryBuilder nameQuery = boolQuery()
             .should(namePrefixMatch)
             .should(namePhraseMatch)
-            .should(nameFuzzyQuery);
+            .should(nameFuzzyQuery)
+            .should(wildCardQuery);
 
     return nameQuery;
   }
@@ -456,11 +462,15 @@ public class ElasticService {
     QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
             Settings.META_DESCRIPTION_FIELD, searchTerm);
     
+    QueryBuilder wildCardQuery = wildcardQuery(Settings.META_DESCRIPTION_FIELD, 
+            String.format("*%s*", searchTerm));
+    
      QueryBuilder descriptionQuery = boolQuery()
             .should(descriptionPrefixMatch)
             .should(descriptionMatch)
             .should(descriptionPhraseMatch)
-            .should(descriptionFuzzyQuery);
+            .should(descriptionFuzzyQuery)
+            .should(wildCardQuery);
      
      return descriptionQuery;
   }
@@ -474,11 +484,12 @@ public class ElasticService {
    */
   private QueryBuilder getMetadataQuery(String searchTerm) {
 
-    QueryBuilder metadataQuery = queryStringQuery(searchTerm)
+    QueryBuilder metadataQuery = queryStringQuery(String.format("*%s*", searchTerm))
             .lenient(Boolean.TRUE)
             .field(Settings.META_DATA_FIELDS);
-      
-     return metadataQuery;
+    QueryBuilder nestedQuery = nestedQuery(Settings.META_DATA_NESTED_FIELD, metadataQuery);
+
+    return nestedQuery;
   }
   
   /**

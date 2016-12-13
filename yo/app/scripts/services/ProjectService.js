@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
         .factory("ProjectService", ['$resource', function ($resource) {
             return $resource(
                     "/api/project/:id",
-                    {id: "@id", projectName: "@projectName", inodeId: "@inodeId"},
+                    {id: "@id", projectName: "@projectName", inodeId: "@inodeId", type: "@type"},
             {
               "save": {
                 method: "POST",
@@ -45,6 +45,10 @@ angular.module('hopsWorksApp')
                       },
               "getProjectInfo": {
                 url: '/api/project/getProjectInfo/:projectName',
+                'method': 'GET'
+              },
+              "getMoreInfo": {
+                url: '/api/project/getMoreInfo/:type/:inodeId',
                 'method': 'GET'
               },
               "getPublicDatasets": {

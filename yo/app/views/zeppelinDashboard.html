@@ -7,17 +7,14 @@
         <div ng-include="'navProject.html'"></div>
         <div>
           <section>  
-
-              <div ng-show="mainCtrl.searchReturned !== ''">
+              <div ng-show="mainCtrl.searchReturned !== ''" class="content-wrapper">
                   <div id="projectSearchResults">
-                      <div ng-include="'views/searchResult.html'"></div>
+                      <div ng-include="'views/search.html'"></div>
                   </div>
               </div>
-
               <div ng-if="zeppelinCtrl.loading" class="loadingwrap">
-
                 <div class="loading-content">
-                  <div class="loader"></div>
+                  <div class="loader-in-wrap"></div>
                   {{zeppelinCtrl.loadingText}}
                 </div>
               </div> 
@@ -112,7 +109,7 @@
                     </div>
                 </div> <!--content wrapper -->
 
-                <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}">
+                <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}" ng-show="mainCtrl.searchReturned === ''">
                     <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
                         <div class="file-manager">
                             <div>

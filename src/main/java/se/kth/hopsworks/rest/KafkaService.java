@@ -29,13 +29,13 @@ import io.hops.kafka.PartitionDetailsDTO;
 import io.hops.kafka.SchemaDTO;
 import io.hops.kafka.SharedProjectDTO;
 import io.hops.kafka.TopicDefaultValueDTO;
-import java.util.logging.Level;
 import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.hopsworks.user.model.Users;
 //import org.apache.avro.Schema;
-import se.kth.hopsworks.util.Settings;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -51,22 +51,20 @@ public class KafkaService {
     @EJB
     private KafkaFacade kafkaFacade;
     @EJB
-    private Settings settings;
-    @EJB
     private KafkaFacade kafka;
-
+    @EJB
+    private UserManager userManager;
+    
+    
     private Integer projectId;
     private Project project;
-    private String path;
-
+    
     public KafkaService() {
     }
 
     public void setProjectId(Integer projectId) {
         this.projectId = projectId;
         this.project = this.projectFacade.find(projectId);
-        String projectPath = settings.getProjectPath(this.project.getName());
-        this.path = projectPath + File.separator;
     }
 
     public Integer getProjectId() {
@@ -121,6 +119,27 @@ public class KafkaService {
                 topics).build();
     }
 
+    @GET
+    @Path("/projectAndSharedTopics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+    public Response getProjectAndSharedTopics(@Context SecurityContext sc,
+            @Context HttpServletRequest req) throws AppException {
+
+        if (projectId == null) {
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Incomplete request!");
+        }
+        List<TopicDTO> allTopics = kafka.findTopicsByProject(projectId);
+
+        allTopics.addAll(kafka.findSharedTopicsByProject(projectId));
+        GenericEntity<List<TopicDTO>> topics
+                = new GenericEntity<List<TopicDTO>>(allTopics) {
+        };
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+                topics).build();
+    }
+    
     @POST
     @Path("/topic/add")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -169,7 +188,8 @@ public class KafkaService {
     public Response getTopicDetails(@PathParam("topic") String topicName,
             @Context SecurityContext sc,
             @Context HttpServletRequest req) throws AppException {
-
+        String userEmail = sc.getUserPrincipal().getName();
+        Users user = userManager.getUserByEmail(userEmail);
         if (projectId == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Incomplete request!");
@@ -177,10 +197,10 @@ public class KafkaService {
 
         List<PartitionDetailsDTO> topic;
         try {
-          topic = kafka.getTopicDetails(project, topicName);
+          topic = kafka.getTopicDetails(project, user, topicName);
         } catch (Exception ex) {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    "Error while retrieving topic details. Please try again!");
+                    "Error while retrieving topic details. Did you define topic ACLs?");
         }
 
         GenericEntity<List<PartitionDetailsDTO>> topics

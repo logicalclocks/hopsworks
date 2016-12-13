@@ -1,7 +1,6 @@
 html {
   background-color: #FFFFFF !important;
 }
-
 body {
   height: 100%;
   font-family: "Source Sans Pro", sans-serif;
@@ -192,12 +191,25 @@ p.filepreview {
 
 div.scroll {
   border: 1px solid transparent;
-  border-radius: 4px;
   box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.25);
   height: 150px;
   overflow: auto;
   width: auto;
+  resize: vertical;
 }
+
+#readme{
+  background: white;
+  height: 150px;
+  overflow: auto;
+  width: auto;
+  resize: vertical;
+}
+
+#moreInfo {
+  background: white;
+}
+
 div.scroll > ul {
   padding: 10px;
 }
@@ -447,16 +459,18 @@ div.cust .jslider div.jslider-bg i{
   background:url(../img/jslider.png) repeat
 }
 
-
 .list-group.panel > .list-group-item {
   border-bottom-right-radius: 4px;
   border-bottom-left-radius: 4px
 }
+
 .list-group-submenu {
   margin-left:20px;
 }
-.strong { font-weight: bold; }
 
+.strong { 
+  font-weight: bold; 
+}
 
 .md-button.browser.newfolder {
   color: darkslategray;

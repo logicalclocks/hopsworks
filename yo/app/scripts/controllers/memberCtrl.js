@@ -24,29 +24,49 @@ angular.module('hopsWorksApp')
             self.myCard = {};
             self.cards = [];
 
-
-            UserService.allcards().then(
-                    function (success) {
-                      self.cards = success.data;
-                      // remove my own 'card' from the list of members
-                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                          if (self.cards[i].email === self.myCard.email) {
-                            self.cards.splice(i, 1);
-                            break;
+            var getMembers = function () {
+              MembersService.query({id: self.projectId}).$promise.then(
+                      function (success) {
+                        self.members = success;
+                        if(self.members.length > 0){
+                          self.projectOwner = self.members[0].project.owner;
+                          UserService.allcards().then(
+                                  function (success) {
+                                    self.cards = success.data;
+                                    // remove my own 'card' from the list of members
+                                    // remove project owner as well, since he is always a 
+                                    // member of the project
+                                    var countRemoved = 0;
+                                    var i = self.cards.length;
+                                    while(i--) {
+                                        if (self.cards[i].email === self.myCard.email ||
+                                                self.cards[i].email === self.projectOwner.email ||
+                                                self.cards[i].email === "agent@hops.io") {
+                                          self.cards.splice(i, 1);
+                                          countRemoved++;
+                                          if(countRemoved === 3){
+                                            break;
+                                          }
+                                        }
+                                    }
+                                  }, function (error) {
+                            self.errorMsg = error.data.msg;
                           }
-                      }
-                      for (var i = 0, len = self.cards.length; i < len; i++) {
-                          if (self.cards[i].email === "agent@hops.io") {
-                            self.cards.splice(i, 1);
-                            break;
-                          }
-                      }                      
-                    }, function (error) {
-              self.errorMsg = error.data.msg;
-            }
-            );
-
-
+                          );
+                          //Get current user team role
+                          self.members.forEach(function (member) {
+                            if (member.user.email === self.myCard.email) {
+                              self.teamRole = member.teamRole;
+                              return;
+                            }
+                          });
+                        }                       
+                      },
+                      function (error) {
+                      });
+            };
+            getMembers();
+            
             $scope.$watch('memberCtrl.card.selected', function (selected) {
               if (selected !== undefined) {
                 var index = -1;
@@ -66,25 +86,7 @@ angular.module('hopsWorksApp')
             });
 
 
-            var getMembers = function () {
-              MembersService.query({id: self.projectId}).$promise.then(
-                      function (success) {
-                        self.members = success;
-                        if(self.members.length > 0){
-                          self.projectOwner = self.members[0].project.owner;
-                          self.members.forEach(function (member) {
-                            if (member.user.email === self.myCard.email) {
-                              self.teamRole = member.teamRole;
-                              return;
-                            }
-                          });
-                        }                       
-                      },
-                      function (error) {
-                      });
-            };
-
-            getMembers();
+           
             
             var getCard = function () {
               UserService.profile().then(
@@ -142,6 +144,7 @@ angular.module('hopsWorksApp')
                         getMembers();
                       }, function (error) {
                 console.log(error);
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
