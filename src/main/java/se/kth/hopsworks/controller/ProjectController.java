@@ -487,12 +487,13 @@ public class ProjectController {
     boolean success = !deleteFilesOnRemove;
 
     Project project = projectFacade.find(projectID);
+    Users user = userBean.findByEmail(email);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
 
-
+    
     YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
             findByProjectName(project.getName());
     List<Dataset> dsInProject = datasetFacade.findByProject(project);
@@ -564,10 +565,15 @@ public class ProjectController {
                       getName());
               logger.log(Level.SEVERE, "chown " + location.toString());
               dfso.setOwner(location, UserGroupInformation.getLoginUser().
-                      getUserName(), "hadoop");
+                      getUserName(), "hadoop", false);
 
             }
           }
+        }
+        //Clean up tmp certificates dir from hdfs
+        String tmpCertsDir = Settings.TMP_CERT_STORE_REMOTE+File.separator+hdfsUsersBean.getHdfsUserName(project, user);
+        if(dfso.exists(tmpCertsDir)){
+          dfso.rm(new Path(tmpCertsDir), true);
         }
         
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);

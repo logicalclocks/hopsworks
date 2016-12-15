@@ -68,12 +68,13 @@ angular.module('hopsWorksApp')
             };
 
             self.saveDataSetDir = function () {
+              self.dataSet.template = self.selectedTemplate.id;
               if (path) {
-                self.dataSet.name = path + '/' + self.dataSet.name;
-                self.dataSet.template = self.selectedTemplate.id;
-                createDataSetDir(self.dataSet);
+                //Assign it to new var to avoid showing the 
+                var newDS = self.dataSet;
+                newDS.name = path + '/' + newDS.name;
+                createDataSetDir(newDS);
               } else {
-                self.dataSet.template = self.selectedTemplate.id;
                 createTopLevelDataSet(self.dataSet);
               }
             };

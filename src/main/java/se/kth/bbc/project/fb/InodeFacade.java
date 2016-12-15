@@ -78,6 +78,24 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
 
   /**
+   * Get all the children of <i>parent</i>. Alias of findByParent().
+   * <p/>
+   * @param parent
+   * @param children
+   * @return
+   */
+  public void getAllChildren(Inode parent, List<Inode> children) {
+    List<Inode> curr = findByParent(parent);
+    children.addAll(curr);
+
+    for (Inode inode : curr) {
+      if (inode.isDir()) {
+        getAllChildren(inode, children);
+      }
+    }
+  }
+
+  /**
    * Return the size of an inode
    *
    * @param inode
@@ -392,27 +410,29 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getChildren(parent);
   }
 
-    /**
-   * Get the project and dataset base directory of which the given Inode is a descendant.
+  /**
+   * Get the project and dataset base directory of which the given Inode is a
+   * descendant.
    * <p/>
    * @param i
-   * @return The Inodes representing the project and dataset root directories. [ProjectInode, DatasetInode]
+   * @return The Inodes representing the project and dataset root directories.
+   * [ProjectInode, DatasetInode]
    * @throws IllegalStateException when the given Inode is not under a project
    * root directory.
    */
-  public Pair<Inode, Inode> getProjectAndDatasetRootForInode(Inode i) throws IllegalStateException {
+  public Pair<Inode, Inode> getProjectAndDatasetRootForInode(Inode i) throws
+          IllegalStateException {
     Inode project = i;
     Inode dataset = i;
-    do{
+    do {
       dataset = project;
       project = findParent(project);
-       if (project == null) {
+      if (project == null) {
         throw new IllegalStateException(
                 "Transversing the path from folder did not encounter project root folder.");
       }
-    }
-    while(!isProjectRoot(project));
+    } while (!isProjectRoot(project));
     return new Pair<>(project, dataset);
   }
-  
+
 }
