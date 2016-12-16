@@ -47,8 +47,6 @@ public class HdfsUsersController {
     @EJB
     private InodeFacade inodes;
     @EJB
-    private Settings settings;
-    @EJB
     private UserFacade userFacade;
     @EJB
     private DatasetFacade datasetFacade;
@@ -77,7 +75,7 @@ public class HdfsUsersController {
     //This means every body can see the content of a project.
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
             FsAction.READ_EXECUTE);// 775
-    dfso.setOwner(location, owner, project.getName(), false);
+    dfso.setOwner(location, owner, project.getName());
     dfso.setPermission(location, fsPermission);
   }
 
@@ -194,7 +192,7 @@ public class HdfsUsersController {
                 + project.getName() + File.separator + dataset.getInode().
                 getInodePK().getName();
         Path location = new Path(dsPath);
-        dfso.setOwner(location, dsOwner, datasetGroup, false);
+        dfso.setOwner(location, dsOwner, datasetGroup);
 
         String hdfsUsername;
         HdfsUsers hdfsUser;

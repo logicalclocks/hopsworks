@@ -22,7 +22,8 @@ angular.module('hopsWorksApp')
             /**
              * Select a file.
              * @param {type} filepath
-             * @returns {undefined}elf
+             * @param {type} isDirectory
+             * @returns {undefined}
              */
             self.select = function (filepath, isDirectory) {
               selectedFilePath = filepath;
@@ -32,8 +33,6 @@ angular.module('hopsWorksApp')
             self.confirmSelection = function (isDirectory) {
               if (selectedFilePath == null) {
                 growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
-              } else if (!selectedFilePath.match(regex)) {
-                growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
               } else if (self.isDir !== isDirectory) {
                 var msg;
                 if (self.isDir) {
@@ -47,13 +46,18 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.click = function (datasetsCtrl, file) {
+            self.click = function (datasetsCtrl, file, isDirectory) {
               if (file.dir) {
-                self.select(file.path, true);
+                self.select(file.name, true);
                 datasetsCtrl.openDir(file);
               } else {
                 self.select(file.path, false);
-                self.confirmSelection(false);
+                if(!isDirectory){
+                  self.confirmSelection(false);
+                } else {
+                  growl.warning("", {title: "Please select a directory", ttl: 5000});
+                  self.back(datasetsCtrl);
+                }
               }
             };
 

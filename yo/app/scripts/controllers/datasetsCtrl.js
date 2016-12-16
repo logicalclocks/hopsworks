@@ -389,7 +389,7 @@ This will make all its files unavailable to other projects unless you share it e
                         // replace only first occurrence 
                         var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
                         var finalPath = relPath + "/" + name;
-
+                        
                         dataSetService.copy(inodeId, finalPath).then(
                                 function (success) {
                                   getDirContents();

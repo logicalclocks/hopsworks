@@ -272,7 +272,7 @@ public class HopsUtils {
                               new FsPermission(FsAction.ALL,
                                       FsAction.ALL, FsAction.NONE));
                       dfso.setOwner(new Path(remoteTmpProjDir),
-                              certUser, certUser, false);
+                              certUser, certUser);
                     }
                     Files.write(kafkaCertFiles.get(entry.getKey()), entry.
                             getValue());
@@ -288,8 +288,7 @@ public class HopsUtils {
                             new FsPermission(FsAction.ALL, FsAction.NONE,
                                     FsAction.NONE));
                     dfso.setOwner(new Path(remoteTmpProjDir + File.separator
-                            + entry.getValue().getName()), certUser, certUser,
-                            false);
+                            + entry.getValue().getName()), certUser, certUser);
 
                     projectLocalResources.add(new LocalResourceDTO(
                             entry.getKey(),

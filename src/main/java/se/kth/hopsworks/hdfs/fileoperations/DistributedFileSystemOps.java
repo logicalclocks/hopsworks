@@ -349,8 +349,7 @@ public class DistributedFileSystemOps {
           IOException {
     dfs.setPermission(path, permission);
   }
-  
-  
+
   /**
    * Set permission for paths.
    * <p>
@@ -360,7 +359,7 @@ public class DistributedFileSystemOps {
    */
   public void setPermission(Set<Path> paths, FsPermission permission) throws
           IOException {
-    for(Path path : paths){
+    for (Path path : paths) {
       setPermission(path, permission);
     }
   }
@@ -371,23 +370,11 @@ public class DistributedFileSystemOps {
    * @param path
    * @param username
    * @param groupname
-   * @param recursive
    * @throws IOException
    */
-  public void setOwner(Path path, String username, String groupname,
-          boolean recursive) throws
+  public void setOwner(Path path, String username, String groupname) throws
           IOException {
-    if (recursive) {
-      RemoteIterator<LocatedFileStatus> inodesIter = dfs.listFiles(path,
-              recursive);
-      while (inodesIter.hasNext()) {
-        LocatedFileStatus inode = inodesIter.next();
-        Path inodePath = inode.getPath();
-        dfs.setOwner(inodePath, username, groupname);
-      }
-    } else {
-      dfs.setOwner(path, username, groupname);
-    }
+    dfs.setOwner(path, username, groupname);
   }
 
   /**
@@ -577,6 +564,7 @@ public class DistributedFileSystemOps {
 
   /**
    * Flush all cache entries related to the specified user.
+   *
    * @param user
    * @throws IOException
    */
@@ -586,6 +574,7 @@ public class DistributedFileSystemOps {
 
   /**
    * Flush all cache entries related to the specified group.
+   *
    * @param group
    * @throws IOException
    */
@@ -595,6 +584,7 @@ public class DistributedFileSystemOps {
 
   /**
    * Flush all cache entries related to the specified user and group.
+   *
    * @param user
    * @param group
    * @throws IOException

@@ -565,7 +565,7 @@ public class ProjectController {
                       getName());
               logger.log(Level.SEVERE, "chown " + location.toString());
               dfso.setOwner(location, UserGroupInformation.getLoginUser().
-                      getUserName(), "hadoop", false);
+                      getUserName(), "hadoop");
 
             }
           }
