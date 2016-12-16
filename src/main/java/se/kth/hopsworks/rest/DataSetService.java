@@ -148,11 +148,17 @@ public class DataSetService {
     InodeView inodeView;
     Users user;
     List<InodeView> kids = new ArrayList<>();
-    String projPath = Settings.getProjectPath(this.project.getName());
     boolean notebookDirExists = false;
     Collection<Dataset> dsInProject = this.project.getDatasetCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
+      //If it is a shared dataset, put owner project in path
+      String projPath = "";
+      if(ds.isShared()){
+        projPath = Settings.getProjectPath(parent.getInodePK().getName());
+      } else {
+        projPath = Settings.getProjectPath(this.project.getName());
+      }
       inodeView = new InodeView(parent, ds, projPath + File.separator + ds.
               getInode()
               .getInodePK().getName());
@@ -169,6 +175,8 @@ public class DataSetService {
     }
     //if there is a notebook datasets in project dir but not in Dataset table
     if (!notebookDirExists) {
+      String projPath = Settings.getProjectPath(this.project.getName());
+
       Inode projectInode = inodes.getInodeAtPath(projPath);
       Inode ds = inodes.findByInodePK(projectInode,
               Settings.DefaultDataset.NOTEBOOKS.getName(),
@@ -494,6 +502,7 @@ public class DataSetService {
     while (newPath.startsWith("/")) {
       newPath = newPath.substring(1);
     }
+    Project project = projectFacade.findByName(newPath.split(File.separator)[1]);
     String[] fullPathArray = newPath.split(File.separator);
     String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 3,
             fullPathArray.length);
@@ -648,9 +657,14 @@ public class DataSetService {
     if (path == null) {
       path = "";
     }
-
-    if (path.startsWith("/Projects/" + this.project.getName())) {
-      path = path.replaceFirst("/Projects/" + this.project.getName(), "");
+    String projectName = "";
+    if (path.startsWith("/Projects/")) {
+      path = path.replace("/Projects/","");
+      projectName = path.substring(0, path.indexOf("/"));
+      path = path.substring(path.indexOf("/")).replaceFirst("/", "");
+      if(!projectName.equals(this.project.getName())){
+        path = projectName + Settings.SHARED_FILE_SEPARATOR + path;
+      }
     }
 
     path = getFullPath(path);
@@ -672,13 +686,13 @@ public class DataSetService {
       String destPathParent = path.substring(0, path.lastIndexOf(File.separator));
       FsPermission permission = new FsPermission(inodes.getInodeAtPath(destPathParent).getPermission());
       org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
-      String owner = udfso.listStatus(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode)))[0].getOwner();
+      String owner = udfso.getFileStatus(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode))).getOwner();
 
       udfso.moveWithinHdfs(new org.apache.hadoop.fs.Path(
               inodes.getPath(sourceInode)), destPath);
       
       Inode destInode = inodes.getInodeAtPath(path);
-      String group = dfso.listStatus(new org.apache.hadoop.fs.Path(destPathParent))[0].getGroup();
+      String group = dfso.getFileStatus(new org.apache.hadoop.fs.Path(destPathParent)).getGroup();
 
       //Set permissions
       if(udfso.isDir(path)){
@@ -757,8 +771,14 @@ public class DataSetService {
       path = "";
     }
 
-    if (path.startsWith("/Projects/" + this.project.getName())) {
-      path = path.replaceFirst("/Projects/" + this.project.getName(), "");
+    String projectName = "";
+    if (path.startsWith("/Projects/")) {
+      path = path.replace("/Projects/","");
+      projectName = path.substring(0, path.indexOf("/"));
+      path = path.substring(path.indexOf("/")).replaceFirst("/", "");
+      if(!projectName.equals(this.project.getName())){
+        path = projectName + Settings.SHARED_FILE_SEPARATOR + path;
+      }
     }
 
     path = getFullPath(path);

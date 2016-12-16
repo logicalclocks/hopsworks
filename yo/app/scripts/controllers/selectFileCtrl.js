@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
 
             self.click = function (datasetsCtrl, file, isDirectory) {
               if (file.dir) {
-                self.select(file.name, true);
+                self.select(file.path, true);
                 datasetsCtrl.openDir(file);
               } else {
                 self.select(file.path, false);
