@@ -655,23 +655,50 @@ public class DataSetService {
 
     path = getFullPath(path);
     DistributedFileSystemOps udfso = null;
+    //We need super-user(glassfish) to change owner 
+    DistributedFileSystemOps dfso = null;
     try {
       udfso = dfs.getDfsOps(username);
+      dfso = dfs.getDfsOps();
       boolean exists = udfso.exists(path);
 
       Inode sourceInode = inodes.findById(inodeId);
-
+     
       if (sourceInode == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Cannot find file/folder you are trying to move. Has it been deleted?");
       }
+      //Get destination folder permissions
+      String destPathParent = path.substring(0, path.lastIndexOf(File.separator));
+      FsPermission permission = new FsPermission(inodes.getInodeAtPath(destPathParent).getPermission());
       org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
+      String owner = udfso.listStatus(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode)))[0].getOwner();
+
       udfso.moveWithinHdfs(new org.apache.hadoop.fs.Path(
               inodes.getPath(sourceInode)), destPath);
-      udfso.setPermission(destPath, udfso.getParentPermission(destPath));
-      String group = dataset.getInode().getHdfsGroup().getName();
-      udfso.setOwner(destPath, username, group);
       
+      Inode destInode = inodes.getInodeAtPath(path);
+      String group = dfso.listStatus(new org.apache.hadoop.fs.Path(destPathParent))[0].getGroup();
+
+      //Set permissions
+      if(udfso.isDir(path)){
+        org.apache.hadoop.fs.Path parentPath = new org.apache.hadoop.fs.Path(path);
+       
+        udfso.setPermission(parentPath, permission);
+        dfso.setOwner(parentPath, owner, group);
+        
+        List<Inode> children = new ArrayList<>();
+        inodes.getAllChildren(destInode, children);
+        for(Inode child : children){
+          org.apache.hadoop.fs.Path childPath = new org.apache.hadoop.fs.Path(inodes.getPath(child));
+          udfso.setPermission(childPath, permission);
+          //Set group as well
+          dfso.setOwner(childPath, owner, group);
+        }
+      } else {
+        udfso.setPermission(destPath, new FsPermission(permission));
+        dfso.setOwner(destPath, owner, group);
+      }
       String message = "";
       JsonResponse response = new JsonResponse();
 
@@ -681,7 +708,7 @@ public class DataSetService {
                 "Destination already exists.");
       }
 
-      message = "Moved";
+      message = "Copied";
       response.setSuccessMessage(message);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
@@ -693,6 +720,9 @@ public class DataSetService {
     } finally {
       if (udfso != null) {
         udfso.close();
+      }
+      if (dfso != null) {
+        dfso.close();
       }
     }
   }
@@ -738,17 +768,28 @@ public class DataSetService {
       boolean exists = udfso.exists(path);
 
       Inode sourceInode = inodes.findById(inodeId);
-
+      //Get destination folder permissions
+      FsPermission permission = new FsPermission(inodes.getInodeAtPath(path.substring(0, path.lastIndexOf(File.separator))).getPermission());
+      
       if (sourceInode == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Cannot find file/folder you are trying to move. Has it been deleted?");
       }
       org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
       udfso.copyInHdfs(new org.apache.hadoop.fs.Path(
-              inodes.getPath(sourceInode)),destPath);
+              inodes.getPath(sourceInode)), destPath);
       //Set permissions
-      udfso.setPermission(destPath, udfso.getParentPermission(destPath));
-            
+      if(udfso.isDir(path)){
+        udfso.setPermission(new org.apache.hadoop.fs.Path(path), permission);
+        Inode destInode = inodes.getInodeAtPath(path);
+        List<Inode> children = new ArrayList<>();
+        inodes.getAllChildren(destInode, children);
+        for(Inode child : children){
+          udfso.setPermission(new org.apache.hadoop.fs.Path(inodes.getPath(child)), permission);
+        }
+      } else {
+        udfso.setPermission(destPath, new FsPermission(permission));
+      }
       String message = "";
       JsonResponse response = new JsonResponse();
 

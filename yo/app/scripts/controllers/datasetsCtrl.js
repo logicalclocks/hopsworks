@@ -191,7 +191,7 @@ angular.module('hopsWorksApp')
                 } else if (error.data.errorMsg.indexOf("Path not found :") > -1) {
                   self.routeParamArray = [];
                   //$route.updateParams({fileName:''});
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                   getDirContents();
                 }
                 self.working = false;
@@ -252,7 +252,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
               });
             };
 
@@ -305,7 +305,7 @@ This will make all its files available for any registered user to download and p
                                   growl.success(success.data.successMessage, {title: 'The DataSet is now Public.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                         });
 
                       }
@@ -323,7 +323,7 @@ This will make all its files unavailable to other projects unless you share it e
                                   growl.success(success.data.successMessage, {title: 'The DataSet is now Private.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 1000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                         });
 
                       }
@@ -389,7 +389,7 @@ This will make all its files unavailable to other projects unless you share it e
                         // replace only first occurrence 
                         var relPath = destPath.replace("/Projects/" + self.projectId + "/", "");
                         var finalPath = relPath + "/" + name;
-
+                        
                         dataSetService.copy(inodeId, finalPath).then(
                                 function (success) {
                                   getDirContents();
@@ -463,7 +463,7 @@ This will make all its files unavailable to other projects unless you share it e
                                   getDirContents();
                                   growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 4});
+                          growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000, referenceId: 4});
                         });
                       }, function (error) {
               });
@@ -511,7 +511,7 @@ This will make all its files unavailable to other projects unless you share it e
                                         self.all_selected = false;
                                       }
                                     }, function (error) {
-                              growl.error(error.data.errorMsg, {title: 'File ' + name + ' was not moved', ttl: 5000, referenceId: 4});
+                              growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000, referenceId: 4});
                             });
                           }
                         }, function (error) {
@@ -534,7 +534,7 @@ This will make all its files unavailable to other projects unless you share it e
                                   self.selectedFiles = {};
                                   self.selected = null;
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                           self.all_selected = false;
                           self.selectedFiles = {};
                           self.selected = null;
@@ -614,16 +614,16 @@ This will make all its files unavailable to other projects unless you share it e
                                                             dataSetService.compressFile(filePath);
                                                           });
                                                 } else {
-                                                  growl.error("The requested file is too small to be compressed", {title: 'Error', ttl: 5000});
+                                                  growl.error("The requested file is too small to be compressed", {title: 'Error', ttl: 5000, referenceId: 4});
                                                 }
                                               }, function (error) {
-                                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
                                       });
                                     });
                         }
 
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
               });
             };
 
@@ -634,7 +634,7 @@ This will make all its files unavailable to other projects unless you share it e
             self.share = function (name) {
               ModalService.shareDataset('md', name).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                       }, function (error) {
               });
             };
@@ -660,9 +660,9 @@ This will make all its files unavailable to other projects unless you share it e
                           dataSetService.checkFileExist(filePath).then(
                                   function (success) {
                                     dataSetService.fileDownload(filePath);
-                                  }, function (error) {
+                                            }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                          });
+                                    });
                         }
                 );
               } else {

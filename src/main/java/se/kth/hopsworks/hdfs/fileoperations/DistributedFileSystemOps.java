@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
@@ -15,7 +17,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -105,8 +109,8 @@ public class DistributedFileSystemOps {
           IOException {
     return dfs.mkdir(location, filePermission);
   }
-  
-    /**
+
+  /**
    * Create a new folder on the given path only if the parent folders exist
    * <p/>
    * @param path
@@ -198,7 +202,7 @@ public class DistributedFileSystemOps {
           throws IOException {
     dfs.copyFromLocalFile(deleteSource, source, destination);
   }
-  
+
   /**
    * Copy from HDFS to the local file system.
    * <p/>
@@ -344,6 +348,20 @@ public class DistributedFileSystemOps {
   public void setPermission(Path path, FsPermission permission) throws
           IOException {
     dfs.setPermission(path, permission);
+  }
+
+  /**
+   * Set permission for paths.
+   * <p>
+   * @param paths
+   * @param permission
+   * @throws IOException
+   */
+  public void setPermission(Set<Path> paths, FsPermission permission) throws
+          IOException {
+    for (Path path : paths) {
+      setPermission(path, permission);
+    }
   }
 
   /**
@@ -510,7 +528,7 @@ public class DistributedFileSystemOps {
       return false;
     }
   }
-  
+
   /**
    * Marks a file/folder in location as metadata enabled
    * <p/>
@@ -519,7 +537,7 @@ public class DistributedFileSystemOps {
    */
   public void setMetaEnabled(String location) throws IOException {
     Path path = new Path(location);
-    this.dfs.setMetaEnabled(path,true);
+    this.dfs.setMetaEnabled(path, true);
   }
 
   /**
@@ -546,31 +564,35 @@ public class DistributedFileSystemOps {
 
   /**
    * Flush all cache entries related to the specified user.
+   *
    * @param user
-   * @throws IOException 
+   * @throws IOException
    */
-  public void flushCachedUser(String user) throws IOException{
-      dfs.flushCacheUser(user);
+  public void flushCachedUser(String user) throws IOException {
+    dfs.flushCacheUser(user);
   }
-  
+
   /**
    * Flush all cache entries related to the specified group.
+   *
    * @param group
-   * @throws IOException 
+   * @throws IOException
    */
-  public void flushCachedGroup(String group) throws IOException{
-      dfs.flushCacheGroup(group);
+  public void flushCachedGroup(String group) throws IOException {
+    dfs.flushCacheGroup(group);
   }
-  
+
   /**
    * Flush all cache entries related to the specified user and group.
+   *
+   * @param user
    * @param group
-   * @throws IOException 
+   * @throws IOException
    */
-  public void flushCache(String user, String group) throws IOException{
+  public void flushCache(String user, String group) throws IOException {
     dfs.flushCache(user, group);
   }
-  
+
   /**
    * Closes the distributed file system.
    */

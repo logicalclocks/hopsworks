@@ -76,7 +76,7 @@ public class DatasetController {
    * this DataSet.
    * @param searchable Defines whether the dataset can be indexed or not (i.e.
    * whether it can be visible in the search results or not)
-   * @param globallyVisible
+   * @param defaultDataset
    * @param dfso
    * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
@@ -88,7 +88,7 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean globallyVisible, DistributedFileSystemOps dfso,
+          boolean defaultDataset, DistributedFileSystemOps dfso,
           DistributedFileSystemOps udfso)
           throws IOException, AppException {
     //Parameter checking.
@@ -123,13 +123,12 @@ public class DatasetController {
               + ResponseMessages.FOLDER_NAME_EXIST);
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
-    //Permission hdfs dfs -chmod 750 or 755
-    FsAction global = (globallyVisible ? FsAction.READ_EXECUTE
-            : FsAction.NONE);
-    FsAction group = (globallyVisible ? FsAction.ALL
+    //Permission 770
+    FsAction global = FsAction.NONE;
+    FsAction group = (defaultDataset ? FsAction.ALL
             : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
-            group, global, globallyVisible);
+            group, global, defaultDataset);
     success = createFolder(dsPath, templateId, username, fsPermission, dfso,
             udfso);
     if (success) {

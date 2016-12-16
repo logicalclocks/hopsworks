@@ -33,7 +33,7 @@ import se.kth.hopsworks.util.Settings;
 @Stateless
 public class HdfsUsersController {
 
-    private static final Logger logger = Logger.getLogger(
+    private static final Logger LOGGER = Logger.getLogger(
             HdfsUsersController.class.
             getName());
     public static final String USER_NAME_DELIMITER = "__";
@@ -46,8 +46,6 @@ public class HdfsUsersController {
     private DistributedFsService dfsService;
     @EJB
     private InodeFacade inodes;
-    @EJB
-    private Settings settings;
     @EJB
     private UserFacade userFacade;
     @EJB
@@ -68,7 +66,7 @@ public class HdfsUsersController {
   public void addProjectFolderOwner(Project project,
           DistributedFileSystemOps dfso) throws IOException {
     String owner = getHdfsUserName(project, project.getOwner());
-    String projectPath = File.separator + settings.DIR_ROOT + File.separator
+    String projectPath = File.separator + Settings.DIR_ROOT + File.separator
             + project.getName();
     Path location = new Path(projectPath);
     //FsPermission(FsAction u, FsAction g, FsAction o) 775
@@ -108,7 +106,7 @@ public class HdfsUsersController {
             hdfsUsersFacade.persist(memberHdfsUser);
         }
         if (memberHdfsUser.getHdfsGroupsCollection() == null) {
-            memberHdfsUser.setHdfsGroupsCollection(new ArrayList<HdfsGroups>());
+            memberHdfsUser.setHdfsGroupsCollection(new ArrayList<>());
         }
         //add only data_owners to project group
         if (member.getTeamRole().equals(AllowedRoles.DATA_OWNER)) {
@@ -158,7 +156,7 @@ public class HdfsUsersController {
             hdfsUsersFacade.persist(memberHdfsUser);
         }
         if (memberHdfsUser.getHdfsGroupsCollection() == null) {
-            memberHdfsUser.setHdfsGroupsCollection(new ArrayList<HdfsGroups>());
+            memberHdfsUser.setHdfsGroupsCollection(new ArrayList<>());
         }
         //add only data_owners to project group
         if (member.getTeamRole().equals(AllowedRoles.DATA_OWNER)) {
@@ -179,6 +177,7 @@ public class HdfsUsersController {
      * @param owner
      * @param project
      * @param dataset
+     * @param dfso
      * @throws java.io.IOException
      */
     public void addDatasetUsersGroups(Users owner, Project project,
@@ -189,7 +188,7 @@ public class HdfsUsersController {
         }
         String datasetGroup = getHdfsGroupName(project, dataset);
         String dsOwner = getHdfsUserName(project, owner);
-        String dsPath = File.separator + settings.DIR_ROOT + File.separator
+        String dsPath = File.separator + Settings.DIR_ROOT + File.separator
                 + project.getName() + File.separator + dataset.getInode().
                 getInodePK().getName();
         Path location = new Path(dsPath);
@@ -203,7 +202,7 @@ public class HdfsUsersController {
                     "Could not create dataset group in HDFS.");
         }
         if (hdfsGroup.getHdfsUsersCollection() == null) {
-            hdfsGroup.setHdfsUsersCollection(new ArrayList<HdfsUsers>());
+            hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
         }
         /**
          * ****** add project name as a user ********
@@ -245,6 +244,7 @@ public class HdfsUsersController {
      * <p>
      * @param user
      * @param project
+     * @throws java.io.IOException
      */
     public void removeProjectMember(Users user, Project project) throws IOException {
         if (user == null || project == null) {
@@ -297,7 +297,7 @@ public class HdfsUsersController {
             throw new IllegalArgumentException("Dataset group not found");
         }
         if (hdfsGroup.getHdfsUsersCollection() == null) {
-            hdfsGroup.setHdfsUsersCollection(new ArrayList<HdfsUsers>());
+            hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
         }
         String hdfsUsername;
         HdfsUsers hdfsUser;
@@ -327,8 +327,8 @@ public class HdfsUsersController {
                 dfsService.getDfsOps().flushCache(hdfsUsername, datasetGroup);
               } catch (IOException ex) {
                 //FIXME: take an action?
-                logger.log(Level.WARNING,
-                        "Error while trying flush the cash", ex);
+                LOGGER.log(Level.WARNING,
+                        "Error while trying flush the cache", ex);
               }
               hdfsGroup.getHdfsUsersCollection().add(hdfsUser);
             }
@@ -340,6 +340,7 @@ public class HdfsUsersController {
      * Deletes the project group from HDFS
      * <p>
      * @param project
+     * @throws java.io.IOException
      */
     public void deleteProjectGroup(Project project) throws IOException {
         if (project == null) {
@@ -354,6 +355,7 @@ public class HdfsUsersController {
      * <p>
      * @param project
      * @param dsInProject
+     * @throws java.io.IOException
      */
     public void deleteProjectGroupsRecursive(Project project,
             List<Dataset> dsInProject) throws IOException {
@@ -377,6 +379,7 @@ public class HdfsUsersController {
      * <p>
      * @param project
      * @param projectTeam
+     * @throws java.io.IOException
      */
     public void deleteProjectUsers(Project project,
             Collection<ProjectTeam> projectTeam) throws IOException {
@@ -399,6 +402,7 @@ public class HdfsUsersController {
      * Deletes the dataset group from HDFS
      * <p>
      * @param dataset
+     * @throws java.io.IOException
      */
     public void deleteDatasetGroup(Dataset dataset) throws IOException {
         if (dataset == null) {
@@ -445,7 +449,7 @@ public class HdfsUsersController {
                 dfsService.getDfsOps().flushCache(hdfsUsername, datasetGroup);
               } catch (IOException ex) {
                 //FIXME: take an action?
-                logger.log(Level.WARNING,
+                LOGGER.log(Level.WARNING,
                         "Error while trying flush the cash", ex);
               }
                 hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
