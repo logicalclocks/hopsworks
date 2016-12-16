@@ -502,7 +502,7 @@ public class Settings {
   public static final String FLINK_KAFKA_CERTS_DIR = "/srv/glassfish/domain1/config";
   
   //Zeppelin constants
-  public static final String JAVA_HOME = "/usr/lib/jvm/java";
+  public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
   
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir()+ "/flink.jar";
