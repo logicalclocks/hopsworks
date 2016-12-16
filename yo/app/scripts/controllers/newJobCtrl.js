@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
             self.topicsSelected = [];
             self.getAllTopics = function () {
               if(self.runConfig.kafka.selected === true){
-                KafkaService.getTopics(self.projectId).then(
+                KafkaService.getProjectAndSharedTopics(self.projectId).then(
                         function (success) {
                           var topics = success.data;
                           for (var i = 0; i<topics.length; i++) {
