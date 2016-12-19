@@ -74,7 +74,7 @@
 
                     <br ng-show="row.isSelected">
                     <br ng-show="row.isSelected">
-                    <table ng-if="row.isSelected" st-table="rowCollection" class="col-sm-12 kafka-table" ng-show="row.acls.length > 0">
+                    <table ng-if="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4" ng-show="row.acls.length > 0">
                       <thead>
                         <tr>
                           <th class="col-sm-2">Project</th>
@@ -89,7 +89,7 @@
                       </thead>
                       <tr ng-repeat="acl in row.acls" class="td {padding-top: 10px; padding-bottom:10px}">
                         <td ng-if="kafkaCtrl.activeId === -1">{{acl.projectName}}</td>
-                        <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
+                        <td ng-if="kafkaCtrl.activeId === acl.id" >
                       <ui-select style="min-width: 100px;" name="project_name" theme="select2"
                                  ng-model="kafkaCtrl.project"  required>
 
@@ -101,7 +101,7 @@
                       </ui-select><br>
                       </td>
                       <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>-->
-                      <td ng-if="kafkaCtrl.activeId === -1" style="text-align: center;">{{acl.userEmail}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.userEmail}}</td>
                       <td  ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">        
                       <ui-select style="min-width: 200px;" name="project_member" theme="select2"
                                  ng-model="kafkaCtrl.userEmail"  required>
@@ -114,14 +114,14 @@
                       </ui-select><br>
                       </td>
                       <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.userEmail" placeholder="user email "></td>-->
-                      <td ng-if="kafkaCtrl.activeId === -1" style="text-align: center;">{{acl.permissionType}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.permissionType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
                         <select name="permission_type" ng-model="kafkaCtrl.permission_type">
                           <option value="deny">Deny</option>
                           <option value="allow">Allow</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId === -1" style="text-align: center;">{{acl.operationType}}</td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.operationType}}</td>
                       <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
                         <select name="operation_type" ng-model="kafkaCtrl.operation_type">
                           <option value="read">read</option>
@@ -130,12 +130,12 @@
                           <option value="*">*</option>
                         </select>
                       </td>
-                      <td ng-if="kafkaCtrl.activeId === -1" style="text-align: center;">{{acl.host}}</td>
-                      <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.host}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id" >
                         <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
                       </td>
-                      <td ng-if="kafkaCtrl.activeId === -1" style="text-align: center;">{{acl.role}}</td>
-                      <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.role}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id">
                         <select name="role_type" ng-model="kafkaCtrl.role">
                           <option value="Data Scientist">Data scientist</option>
                           <option value="Data Owner">Data owner</option>

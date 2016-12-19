@@ -43,7 +43,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                           $uibModalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Failed to add topic', ttl: 5000});
               });
             };
 
