@@ -9,3 +9,6 @@ export HADOOP_USER_NAME=%%hadoop_username%%
 export JAVA_HOME=%%java_home%%
 export LD_LIBRARY_PATH=${HADOOP_HOME}/lib/native:${JAVA_HOME}/jre/lib/amd64/server:/usr/local/cuda/lib64:/usr/local/lib:/usr/lib:%%ld_library_path%%
 export CLASSPATH=%%hadoop_classpath%%
+
+# This is to get matplotlib to not try and use the local $DISPLAY
+export MPLBACKEND="agg"
