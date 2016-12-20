@@ -502,7 +502,6 @@ public class DataSetService {
     while (newPath.startsWith("/")) {
       newPath = newPath.substring(1);
     }
-    Project project = projectFacade.findByName(newPath.split(File.separator)[1]);
     String[] fullPathArray = newPath.split(File.separator);
     String[] datasetRelativePathArray = Arrays.copyOfRange(fullPathArray, 3,
             fullPathArray.length);
@@ -512,7 +511,7 @@ public class DataSetService {
     if (!fullPathArray[1].equals(this.project.getName())) {
       if (!this.dataset.isEditable()) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not create a folder inside a shared dataset.");
+                "You can not create a folder inside a view-only dataset.");
       }
     }
     StringBuilder dsRelativePath = new StringBuilder();
@@ -527,7 +526,7 @@ public class DataSetService {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
-      datasetController.createSubDirectory(user, project, fullPathArray[2],
+      datasetController.createSubDirectory(user, projectFacade.findByName(newPath.split(File.separator)[1]), fullPathArray[2],
               dsRelativePath.toString(), dataSetName.getTemplate(), dataSetName.
               getDescription(), dataSetName.isSearchable(), dfso, udfso);
     } catch (AccessControlException ex) {
@@ -628,8 +627,6 @@ public class DataSetService {
   /**
    * Move and Rename operations handled here
    *
-   * @param path - the relative path from the project directory (excluding the
-   * project directory). Not the full path
    * @param req
    * @param dto
    * @param sc
@@ -637,66 +634,67 @@ public class DataSetService {
    * @throws AppException
    * @throws AccessControlException
    */
-//  @Path("move/{inodeId}/{path: .+}")
   @POST
   @Path("move")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response moveFile(
-          //      @PathParam("inodeId") Integer inodeId,
-          //      @PathParam("path") String path, 
           @Context SecurityContext sc, @Context HttpServletRequest req,
           MoveDTO dto) throws
           AppException, AccessControlException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
-    int inodeId = dto.getInodeId();
-    String path = dto.getDestPath();
-    if (path == null) {
-      path = "";
+    Inode sourceInode = inodes.findById(dto.getInodeId());
+    if (sourceInode == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Cannot find file/folder you are trying to move. Has it been deleted?");
     }
-    String projectName = "";
-    if (path.startsWith("/Projects/")) {
-      path = path.replace("/Projects/","");
-      projectName = path.substring(0, path.indexOf("/"));
-      path = path.substring(path.indexOf("/")).replaceFirst("/", "");
-      if(!projectName.equals(this.project.getName())){
-        path = projectName + Settings.SHARED_FILE_SEPARATOR + path;
+    String sourcePath = inodes.getPath(sourceInode);
+    String destProject = "";
+    String destDir = dto.getDestPath();
+    if (destDir.startsWith("/Projects/") && sourcePath.startsWith("/Projects/")) {
+      destDir = destDir.replace("/Projects/","");
+      destProject = destDir.substring(0, destDir.indexOf("/"));
+      destDir = destDir.substring(destDir.indexOf("/")).replaceFirst("/", "");
+      sourcePath = sourcePath.replace("/Projects/","");
+      String srcProject = sourcePath.substring(0, sourcePath.indexOf("/"));
+      //Do not allow copying from a shared dataset into another project
+      if(!destProject.equals(srcProject)){
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Cannot move file/folder from another project.");
       }
     }
 
-    path = getFullPath(path);
+    if(!destProject.equals(this.project.getName())){
+        destDir = destProject + Settings.SHARED_FILE_SEPARATOR + destDir;
+    }
+    
+    destDir = getFullPath(destDir);
     DistributedFileSystemOps udfso = null;
     //We need super-user(glassfish) to change owner 
     DistributedFileSystemOps dfso = null;
     try {
       udfso = dfs.getDfsOps(username);
       dfso = dfs.getDfsOps();
-      boolean exists = udfso.exists(path);
-
-      Inode sourceInode = inodes.findById(inodeId);
-     
-      if (sourceInode == null) {
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Cannot find file/folder you are trying to move. Has it been deleted?");
-      }
+      boolean exists = udfso.exists(destDir);
+      
       //Get destination folder permissions
-      String destPathParent = path.substring(0, path.lastIndexOf(File.separator));
+      String destPathParent = destDir.substring(0, destDir.lastIndexOf(File.separator));
       FsPermission permission = new FsPermission(inodes.getInodeAtPath(destPathParent).getPermission());
-      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
+      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(destDir);
       String owner = udfso.getFileStatus(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode))).getOwner();
 
       udfso.moveWithinHdfs(new org.apache.hadoop.fs.Path(
               inodes.getPath(sourceInode)), destPath);
       
-      Inode destInode = inodes.getInodeAtPath(path);
+      Inode destInode = inodes.getInodeAtPath(destDir);
       String group = dfso.getFileStatus(new org.apache.hadoop.fs.Path(destPathParent)).getGroup();
 
       //Set permissions
-      if(udfso.isDir(path)){
-        org.apache.hadoop.fs.Path parentPath = new org.apache.hadoop.fs.Path(path);
+      if(udfso.isDir(destDir)){
+        org.apache.hadoop.fs.Path parentPath = new org.apache.hadoop.fs.Path(destDir);
        
         udfso.setPermission(parentPath, permission);
         dfso.setOwner(parentPath, owner, group);
@@ -722,7 +720,7 @@ public class DataSetService {
                 "Destination already exists.");
       }
 
-      message = "Copied";
+      message = "Moved";
       response.setSuccessMessage(message);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
@@ -730,7 +728,7 @@ public class DataSetService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Move at path:"+path+" failed. It is not a directory or you do not have permission to copy in this folder");
+              "Move at path:"+destDir+" failed. It is not a directory or you do not have permission to move in this folder");
     } finally {
       if (udfso != null) {
         udfso.close();
@@ -742,10 +740,8 @@ public class DataSetService {
   }
   
   /**
-   * Copy operations handled here
+   * Copy operations handled here.
    *
-   * @param path - the relative path from the project directory (excluding the
-   * project directory). Not the full path
    * @param req
    * @param dto
    * @param sc
@@ -765,43 +761,45 @@ public class DataSetService {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
-    int inodeId = dto.getInodeId();
-    String path = dto.getDestPath();
-    if (path == null) {
-      path = "";
-    }
-
-    String projectName = "";
-    if (path.startsWith("/Projects/")) {
-      path = path.replace("/Projects/","");
-      projectName = path.substring(0, path.indexOf("/"));
-      path = path.substring(path.indexOf("/")).replaceFirst("/", "");
-      if(!projectName.equals(this.project.getName())){
-        path = projectName + Settings.SHARED_FILE_SEPARATOR + path;
+    Inode sourceInode = inodes.findById(dto.getInodeId());
+    String sourcePath = inodes.getPath(sourceInode);
+    String destProject = "";
+    String destDir = dto.getDestPath();
+    if (destDir.startsWith("/Projects/") && sourcePath.startsWith("/Projects/")) {
+      destDir = destDir.replace("/Projects/","");
+      destProject = destDir.substring(0, destDir.indexOf("/"));
+      destDir = destDir.substring(destDir.indexOf("/")).replaceFirst("/", "");
+      sourcePath = sourcePath.replace("/Projects/","");
+      String srcProject = sourcePath.substring(0, sourcePath.indexOf("/"));
+      //Do not allow copying from a shared dataset into another project
+      if(!destProject.equals(srcProject)){
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Cannot copy file/folder from another project.");
       }
     }
 
-    path = getFullPath(path);
+    if(!destProject.equals(this.project.getName())){
+        destDir = destProject + Settings.SHARED_FILE_SEPARATOR + destDir;
+    }
+    
+    destDir = getFullPath(destDir);
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
-      boolean exists = udfso.exists(path);
-
-      Inode sourceInode = inodes.findById(inodeId);
+      boolean exists = udfso.exists(destDir);
+    
       //Get destination folder permissions
-      FsPermission permission = new FsPermission(inodes.getInodeAtPath(path.substring(0, path.lastIndexOf(File.separator))).getPermission());
-      
+      FsPermission permission = new FsPermission(inodes.getInodeAtPath(destDir.substring(0, destDir.lastIndexOf(File.separator))).getPermission());
       if (sourceInode == null) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "Cannot find file/folder you are trying to move. Has it been deleted?");
+                "Cannot find file/folder you are trying to copy. Has it been deleted?");
       }
-      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(path);
-      udfso.copyInHdfs(new org.apache.hadoop.fs.Path(
-              inodes.getPath(sourceInode)), destPath);
+      org.apache.hadoop.fs.Path destPath = new org.apache.hadoop.fs.Path(destDir);
+      udfso.copyInHdfs(new org.apache.hadoop.fs.Path(inodes.getPath(sourceInode)), destPath);
       //Set permissions
-      if(udfso.isDir(path)){
-        udfso.setPermission(new org.apache.hadoop.fs.Path(path), permission);
-        Inode destInode = inodes.getInodeAtPath(path);
+      if(udfso.isDir(destDir)){
+        udfso.setPermission(destPath, permission);
+        Inode destInode = inodes.getInodeAtPath(destDir);
         List<Inode> children = new ArrayList<>();
         inodes.getAllChildren(destInode, children);
         for(Inode child : children){
@@ -827,7 +825,7 @@ public class DataSetService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Copy at path:"+path+" failed. It is not a directory or you do not have permission to copy in this folder");
+              "Copy at path:"+destDir+" failed. It is not a directory or you do not have permission to copy in this folder");
     } finally {
       if (udfso != null) {
         udfso.close();

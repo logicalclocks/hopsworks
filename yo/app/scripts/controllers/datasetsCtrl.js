@@ -31,25 +31,16 @@ angular.module('hopsWorksApp')
 
             self.dir_timing;
 
-            $scope.isPublic = true;
-
+            self.isPublic = undefined;
+            self.shared = undefined;
+            self.status = undefined;
+            
             self.tgState = true;
-
-            $scope.status = {
-              isopen: false
-            };
 
             self.onSuccess = function (e) {
               growl.success("Copied to clipboard", {title: '', ttl: 1000});
               e.clearSelection();
             };
-
-            $scope.toggleDropdown = function ($event) {
-              $event.preventDefault();
-              $event.stopPropagation();
-              $scope.status.isopen = !$scope.status.isopen;
-            };
-
 
             self.metadataView = {};
             self.availableTemplates = [];
