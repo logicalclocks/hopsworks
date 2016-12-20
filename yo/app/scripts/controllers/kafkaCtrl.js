@@ -128,7 +128,7 @@ angular.module('hopsWorksApp')
                               }
                           }
                         }, function (error) {
-                    growl.warning(error.data.errorMsg, {title: 'Warning', ttl: 8000});
+                    growl.warning(error.data.errorMsg, {title: 'Warning', ttl: 5000, referenceId: 10});
                });
             };
             
