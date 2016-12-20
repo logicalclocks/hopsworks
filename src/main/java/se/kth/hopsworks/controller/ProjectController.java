@@ -51,7 +51,7 @@ import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.bbc.project.services.ProjectServicePK;
 import se.kth.bbc.project.services.ProjectServices;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.certificates.CertsFacade;
 import se.kth.hopsworks.dataset.Dataset;
 import se.kth.hopsworks.dataset.DatasetFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
@@ -110,7 +110,7 @@ public class ProjectController {
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
   @EJB
-  private UserCertsFacade userCertsFacade;
+  private CertsFacade userCertsFacade;
   @EJB
   private DistributedFsService dfs;
   @EJB

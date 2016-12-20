@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.certificates;
 
 import java.io.Serializable;
@@ -50,7 +45,7 @@ public class UserCerts implements Serializable {
   public UserCerts(String projectname, String username) {
     this.userCertsPK = new UserCertsPK(projectname, username);
   }
-
+  
   public UserCertsPK getUserCertsPK() {
     return userCertsPK;
   }

@@ -19,7 +19,7 @@ import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.hopsworks.certificates.UserCerts;
-import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.certificates.CertsFacade;
 import se.kth.hopsworks.controller.LocalResourceDTO;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
 
@@ -154,7 +154,7 @@ public class HopsUtils {
    * @param jobSystemProperties
    * @param nameNodeIpPort
    */
-  public static void copyUserKafkaCerts(UserCertsFacade userCerts,
+  public static void copyUserKafkaCerts(CertsFacade userCerts,
           Project project, String username,
           String localTmpDir, String remoteTmpDir, JobType jobType,
           DistributedFileSystemOps dfso,
