@@ -16,7 +16,7 @@ import java.io.IOException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import se.kth.hopsworks.certificates.UserCertsFacade;
+import se.kth.hopsworks.certificates.CertsFacade;
 import se.kth.hopsworks.util.Settings;
 
 /**
@@ -40,7 +40,7 @@ public class AsynchronousJobExecutor {
   @EJB
   private JobsHistoryFacade jhf;
   @EJB
-  private UserCertsFacade userCerts;
+  private CertsFacade userCerts;
   @EJB
   private Settings settings;
 
@@ -75,7 +75,7 @@ public class AsynchronousJobExecutor {
     return jhf;
   }
 
-  public UserCertsFacade getUserCerts() {
+  public CertsFacade getUserCerts() {
     return userCerts;
   }
 

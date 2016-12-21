@@ -1,25 +1,56 @@
 package se.kth.hopsworks.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import se.kth.hopsworks.certificates.CertsFacade;
 
 @Singleton
+
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
 
+  private final static Logger LOGGER = Logger.getLogger(Settings.class.
+          getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
+  @EJB
+  private CertsFacade certsFacade;
+  
   @PostConstruct
   public void init() {
+    try {
+      //Generate glassfish certificate and persist to db
+      if(!isGlassfishCertGenerated()){
+        LOGGER.log(Level.INFO, "Attempting to generate super user certificate");
+        LocalhostServices.createServiceCertificates(getIntermediateCaDir(), getHdfsSuperUser());
+        certsFacade.putServiceCerts(getHdfsSuperUser());
+        //Updated variables table
+        Variables variable = findById(VARIABLE_GLASSFISH_CERT_CENERATED);
+        variable.setValue("true");
+        em.persist(variable);
+        em.flush();
+        LOGGER.log(Level.INFO, "Super user certificate was generated successfully");
+      } else {
+        LOGGER.log(Level.INFO, "Super user certificate is already generated");
+      }
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE, "Error while generating superuser cert", ex);
+    }
+    
   }
 
   public static String AGENT_EMAIL  = "kagent@hops.io";
@@ -75,6 +106,7 @@ public class Settings {
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
+  private static final String VARIABLE_GLASSFISH_CERT_CENERATED = "glassfish_cert";
   
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -198,6 +230,7 @@ public class Settings {
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD, HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
+      GLASSFISH_CERT_GENERATED = setVar(VARIABLE_GLASSFISH_CERT_CENERATED, GLASSFISH_CERT_GENERATED);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
       GVOD_REST_ENDPOINT = setStrVar(VARIABLE_GVOD_REST_ENDPOINT, GVOD_REST_ENDPOINT);
@@ -749,6 +782,13 @@ public class Settings {
     return HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD;
   }
   
+  private String GLASSFISH_CERT_GENERATED = "false";
+  
+  public synchronized boolean isGlassfishCertGenerated() {
+    checkCache();
+    return Boolean.parseBoolean(GLASSFISH_CERT_GENERATED);
+  }
+  
   
   
   private String KAFKA_DEFAULT_NUM_PARTITIONS = "2";
@@ -901,8 +941,7 @@ public class Settings {
    * @param id
    * @return The user with given email, or null if no such user exists.
    */
-  public Variables
-      findById(String id) {
+  public Variables findById(String id) {
     try {
       return em.createNamedQuery("Variables.findById", Variables.class
       ).setParameter("id", id).getSingleResult();

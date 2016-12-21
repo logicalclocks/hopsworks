@@ -96,6 +96,7 @@
     <class>se.kth.hopsworks.log.ops.OperationsLog</class>
     <class>se.kth.hopsworks.log.meta.MetaLog</class>
     <class>se.kth.hopsworks.meta.entity.SchemalessMetadata</class>
+    <class>se.kth.hopsworks.certificates.ServiceCerts</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

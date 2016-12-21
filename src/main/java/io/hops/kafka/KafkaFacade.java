@@ -48,8 +48,7 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import se.kth.hopsworks.certificates.UserCertsFacade;
-import se.kth.hopsworks.hdfs.fileoperations.DistributedFsService;
+import se.kth.hopsworks.certificates.CertsFacade;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.HopsUtils;
 
@@ -66,7 +65,7 @@ public class KafkaFacade {
   Settings settings;
 
   @EJB
-  private UserCertsFacade userCerts;
+  private CertsFacade userCerts;
 
   public static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
