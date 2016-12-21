@@ -9,10 +9,8 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -23,6 +21,9 @@ import se.kth.hopsworks.certificates.CertsFacade;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
 
+  private final static Logger LOGGER = Logger.getLogger(Settings.class.
+          getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -33,10 +34,21 @@ public class Settings {
   public void init() {
     try {
       //Generate glassfish certificate and persist to db
-      LocalhostServices.createServiceCertificates(getIntermediateCaDir(), getHdfsSuperUser());
-      certsFacade.putServiceCerts(getHdfsSuperUser());
+      if(!isGlassfishCertGenerated()){
+        LOGGER.log(Level.INFO, "Attempting to generate super user certificate");
+        LocalhostServices.createServiceCertificates(getIntermediateCaDir(), getHdfsSuperUser());
+        certsFacade.putServiceCerts(getHdfsSuperUser());
+        //Updated variables table
+        Variables variable = findById(VARIABLE_GLASSFISH_CERT_CENERATED);
+        variable.setValue("true");
+        em.persist(variable);
+        em.flush();
+        LOGGER.log(Level.INFO, "Super user certificate was generated successfully");
+      } else {
+        LOGGER.log(Level.INFO, "Super user certificate is already generated");
+      }
     } catch (IOException ex) {
-      Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, "Error while generating superuser cert", ex);
     }
     
   }
@@ -929,8 +941,7 @@ public class Settings {
    * @param id
    * @return The user with given email, or null if no such user exists.
    */
-  public Variables
-      findById(String id) {
+  public Variables findById(String id) {
     try {
       return em.createNamedQuery("Variables.findById", Variables.class
       ).setParameter("id", id).getSingleResult();
