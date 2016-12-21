@@ -368,11 +368,9 @@ public class Settings {
     return HOPSWORKS_INSTALL_DIR;
   }
   
-  private static String HOPSWORKS_DOMAIN_DIR = HOPSWORKS_INSTALL_DIR + "/domain1";
-
   public synchronized String getHopsworksDomainDir() {
     checkCache();
-    return HOPSWORKS_DOMAIN_DIR;
+    return HOPSWORKS_INSTALL_DIR + "/domain1";
   }
 
   public synchronized String getIntermediateCaDir() {
@@ -831,7 +829,6 @@ public class Settings {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-//  public static final String HOPS_USERS_HOMEDIR = "/srv/users/";
   private static String CA_DIR = "/config/ca/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
