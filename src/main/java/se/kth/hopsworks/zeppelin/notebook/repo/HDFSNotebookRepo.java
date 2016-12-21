@@ -74,7 +74,11 @@ public class HDFSNotebookRepo implements NotebookRepo {
   private Configuration getHadoopConf() {
     Configuration hdfsConfig;
     //get this from variables table
-    String hadoopConfDir = "/srv/hadoop/etc/hadoop";
+    String hadoopDir = System.getProperty("HADOOP_HOME");
+    if (hadoopDir == null) {
+      hadoopDir = "/srv/hadoop";
+    }
+    String hadoopConfDir = hadoopDir + "/etc/hadoop";
 
     File hdfsConfFile = new File(hadoopConfDir, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {

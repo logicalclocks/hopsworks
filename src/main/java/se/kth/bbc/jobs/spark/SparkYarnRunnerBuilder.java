@@ -47,6 +47,8 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
+  private String hadoopDir;
+  private String sparkDir;
   private ServiceProperties serviceProps;
 
   private JobType jobType;
@@ -88,6 +90,9 @@ public class SparkYarnRunnerBuilder {
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
+    
+    this.hadoopDir = hadoopDir;
+    this.sparkDir = sparkDir;
 
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
@@ -182,10 +187,10 @@ public class SparkYarnRunnerBuilder {
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions="
-            + "-Dlog4j.configuration=/srv/spark/conf/executor-log4j.properties "
+            + "-Dlog4j.configuration=" + this.sparkDir + "/conf/executor-log4j.properties "
             + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
             + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
-            + "-Djava.library.path=/srv/hadoop/lib/native/");
+            + "-Djava.library.path=" + this.hadoopDir + "/lib/native/");
     if (serviceProps != null) {
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
