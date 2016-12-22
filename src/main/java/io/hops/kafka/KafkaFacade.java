@@ -834,8 +834,7 @@ public class KafkaFacade {
     }
     try {
       HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(),
-              Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE,
-              null, null, null, null, null);
+              Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE);
 
       for (String brokerAddress : brokers) {
         brokerAddress = brokerAddress.split("://")[1];

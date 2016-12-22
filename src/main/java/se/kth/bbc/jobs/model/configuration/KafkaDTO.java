@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.model.configuration;
 
-import com.google.common.base.Strings;
 import java.io.File;
 import se.kth.bbc.jobs.MutableJsonObject;
 import se.kth.bbc.jobs.model.JsonReduceable;
@@ -11,81 +10,130 @@ import se.kth.bbc.jobs.model.JsonReduceable;
  */
 public class KafkaDTO implements JsonReduceable {
 
-  protected final static String KEY_KAFKA_SELECTED = "KAFKA_SELECTED";
-  protected final static String KEY_KAFKA_TOPICS = "KAFKA_TOPICS";
-  protected final static String KEY_KAFKA_CONSUMER_GROUP
-          = "KAFKA_CONSUMER_GROUP";
+  protected final static String KEY_KAFKA_ADVANCED = "ADVANCED";
+  protected final static String KEY_KAFKA_TOPICS = "TOPICS";
+  protected final static String KEY_KAFKA_CONSUMER_GROUPS
+          = "CONSUMER_GROUPS";
+  protected final static String KEY_TOPIC_NAME = "NAME";
+  protected final static String KEY_TOPIC_TICKED = "TICKED";
+  protected final static String KEY_CONSUMER_GROUP_ID = "ID";
+  protected final static String KEY_CONSUMER_GROUP_NAME = "NAME";
+
   //Kafka properties
-  private boolean selected;
-  private String topics;
-  private String consumergroups;
+  private boolean advanced;
+  private KafkaTopicDTO[] topics;
+  private ConsumerGroupDTO[] consumergroups;
 
-  public boolean isSelected() {
-    return selected;
+  public boolean isAdvanced() {
+    return advanced;
   }
 
-  public void setSelected(boolean selected) {
-    this.selected = selected;
+  public void setAdvanced(boolean advanced) {
+    this.advanced = advanced;
   }
 
-  public String getTopics() {
+  public KafkaTopicDTO[] getTopics() {
     return topics;
   }
 
-  public void setTopics(String topics) {
+  public String getTopicsForJob() {
+    StringBuilder sb = new StringBuilder();
+    for (KafkaTopicDTO topic : topics) {
+      sb.append(topic.getName()).append(File.pathSeparator);
+    }
+    if (sb.length() > 0) {
+      return sb.substring(0, sb.length() - 1);
+    } else {
+      return null;
+    }
+  }
+
+  public void setTopics(KafkaTopicDTO[] topics) {
     this.topics = topics;
   }
 
-  public String getConsumergroups() {
+  public ConsumerGroupDTO[] getConsumergroups() {
     return consumergroups;
   }
 
-  public void setConsumergroups(String consumergroups) {
+  public String getConsumergroupsForJob() {
+    StringBuilder sb = new StringBuilder();
+    for (ConsumerGroupDTO consumerGroup : consumergroups) {
+      sb.append(consumerGroup.getName()).append(File.pathSeparator);
+    }
+    if (sb.length() > 0) {
+      return sb.substring(0, sb.length() - 1);
+    } else {
+      return null;
+    }
+  }
+
+  public void setConsumergroups(ConsumerGroupDTO[] consumergroups) {
     this.consumergroups = consumergroups;
   }
 
   @Override
   public MutableJsonObject getReducedJsonObject() {
     MutableJsonObject obj = new MutableJsonObject();
-    obj.set(KEY_KAFKA_SELECTED, "" + selected);
-    if (selected) {
-      obj.set(KEY_KAFKA_SELECTED, "" + selected);
-      if (!Strings.isNullOrEmpty(topics)) {
-        obj.set(KEY_KAFKA_TOPICS, topics);
+    obj.set(KEY_KAFKA_ADVANCED, "" + advanced);
+    if (topics != null && topics.length > 0) {
+      MutableJsonObject topicsJson = new MutableJsonObject();
+      for (KafkaTopicDTO topicDTO : topics) {
+        MutableJsonObject topicJson = new MutableJsonObject();
+        topicJson.set(KEY_TOPIC_NAME, topicDTO.getName());
+        topicJson.set(KEY_TOPIC_TICKED, topicDTO.getTicked());
+        topicsJson.set(topicDTO.getName(), topicJson);
       }
-      if (!Strings.isNullOrEmpty(consumergroups)) {
-        obj.set(KEY_KAFKA_CONSUMER_GROUP, consumergroups);
-      }
+      obj.set(KEY_KAFKA_TOPICS, topicsJson);
     }
-    return obj;
+    if (consumergroups != null && consumergroups.length > 0) {
+      MutableJsonObject consumerGroupsJson = new MutableJsonObject();
+      for (ConsumerGroupDTO group : consumergroups) {
+        MutableJsonObject groupJson = new MutableJsonObject();
+        groupJson.set(KEY_CONSUMER_GROUP_ID, group.getId());
+        groupJson.set(KEY_CONSUMER_GROUP_NAME, group.getName());
+        consumerGroupsJson.set(group.getName(), groupJson);
+      }
+      obj.set(KEY_KAFKA_CONSUMER_GROUPS, consumerGroupsJson);
+    }
 
+    return obj;
   }
 
   @Override
   public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
-    String jsonSelected, jsonTopics, jsonConsumerGroups;
-    jsonTopics = jsonConsumerGroups = "";
 
-    if (json.containsKey(KEY_KAFKA_SELECTED)) {
-      jsonSelected = json.getString(KEY_KAFKA_SELECTED);
-      selected = Boolean.parseBoolean(jsonSelected);
-      if (json.containsKey(KEY_KAFKA_TOPICS)) {
-        jsonTopics = json.getString(KEY_KAFKA_TOPICS);
-      }
-      if (json.containsKey(KEY_KAFKA_CONSUMER_GROUP)) {
-        jsonConsumerGroups = json.getString(KEY_KAFKA_CONSUMER_GROUP);
-      }
-
+    if (json.containsKey(KEY_KAFKA_ADVANCED)) {
+      advanced = Boolean.parseBoolean(json.getString(KEY_KAFKA_ADVANCED));
     }
 
-    if (selected) {
-      if (!Strings.isNullOrEmpty(jsonTopics)) {
-        topics = jsonTopics;
+    if (json.containsKey(KEY_KAFKA_TOPICS)) {
+      MutableJsonObject topicsObj = json.getJsonObject(KEY_KAFKA_TOPICS);
+      KafkaTopicDTO[] jsonTopics = new KafkaTopicDTO[topicsObj.size()];
+      int i = 0;
+      for (String key : topicsObj.keySet()) {
+        MutableJsonObject topic = topicsObj.getJsonObject(key);
+        jsonTopics[i] = new KafkaTopicDTO(topic.getString(KEY_TOPIC_NAME),
+                topic.getString(KEY_TOPIC_TICKED));
+        i++;
       }
-      if (!Strings.isNullOrEmpty(jsonConsumerGroups)) {
-        consumergroups = jsonConsumerGroups;
+      topics = jsonTopics;
+    }
+    if (json.containsKey(KEY_KAFKA_CONSUMER_GROUPS)) {
+      MutableJsonObject consumerGroupsObj = json.getJsonObject(
+              KEY_KAFKA_CONSUMER_GROUPS);
+      ConsumerGroupDTO[] jsonConsumerGroups
+              = new ConsumerGroupDTO[consumerGroupsObj.size()];
+      int i = 0;
+      for (String key : consumerGroupsObj.keySet()) {
+        MutableJsonObject consumerGroup = consumerGroupsObj.getJsonObject(key);
+        jsonConsumerGroups[i] = new ConsumerGroupDTO(consumerGroup.getString(
+                KEY_CONSUMER_GROUP_ID), consumerGroup.getString(
+                        KEY_CONSUMER_GROUP_NAME));
+        i++;
       }
+      consumergroups = jsonConsumerGroups;
     }
 
   }

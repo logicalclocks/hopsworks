@@ -431,6 +431,10 @@ fieldset[disabled] #tourColumn .btn-danger.active {
     border-spacing: 0 1em;
 }
 
+.kafka-consumergroups-buttons {
+    padding: 3px;
+}
+
 .server-status {
   font-size: 14px;
   margin-top: 6px;

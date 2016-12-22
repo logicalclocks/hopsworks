@@ -1,5 +1,7 @@
 package se.kth.bbc.jobs.yarn;
 
+import java.io.File;
+
 /**
  * POJO that provides Kafka related information to HopsUtil.
  */
@@ -46,6 +48,22 @@ public class KafkaProperties extends ServiceProperties {
 
   public void setConsumerGroups(String consumerGroups) {
     this.consumerGroups = consumerGroups;
+  }
+
+  /**
+   * Append project name to every consumer group.
+   *
+   * @param projectName
+   * @param consumerGroups
+   */
+  public void setProjectConsumerGroups(String projectName, String consumerGroups) {
+    String[] groups = consumerGroups.split(File.pathSeparator);
+    //Append projectName for every group so actions on them can be properly authenticated
+    for (String group : groups) {
+      this.consumerGroups += projectName + "-" + group + File.pathSeparator;
+    }
+    this.consumerGroups = this.consumerGroups.substring(this.consumerGroups.
+            lastIndexOf(File.pathSeparator));
   }
 
   public String getTopics() {
