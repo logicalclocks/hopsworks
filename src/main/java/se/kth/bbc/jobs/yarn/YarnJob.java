@@ -161,7 +161,7 @@ public abstract class YarnJob extends HopsJob {
                 == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()
                 == JobType.FLINK || jobDescription.getJobType() == JobType.SPARK)
                 && jobDescription.getJobConfig() instanceof YarnJobConfiguration
-                && (jobDescription.getJobConfig().getKafka().isAdvanced())) {
+                && jobDescription.getJobConfig().getKafka()!=null) {
           serviceProps.initKafka();
           //Set Kafka specific properties to serviceProps
           serviceProps.setKeystorePwd(services.getSettings().
@@ -174,15 +174,12 @@ public abstract class YarnJob extends HopsJob {
           serviceProps.getKafka().setRestEndpoint(services.getSettings().
                   getRestEndpoint());
           serviceProps.getKafka().setTopics(jobDescription.getJobConfig().
-                  getKafka().getTopicsForJob());
+                  getKafka().getTopics());
           serviceProps.getKafka().setSessionId(jobDescription.getJobConfig().
                   getSessionId());
-          if (jobDescription.getJobConfig().getKafka().getConsumergroups()
-                  != null) {
-            serviceProps.getKafka().setProjectConsumerGroups(jobDescription.
-                    getProject().getName(), jobDescription.
-                            getJobConfig().getKafka().getConsumergroupsForJob());
-          }
+          serviceProps.getKafka().setProjectConsumerGroups(jobDescription.
+                  getProject().getName(), jobDescription.
+                          getJobConfig().getKafka().getConsumergroups());
 
           HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
                   getProject(), user.getUsername(),

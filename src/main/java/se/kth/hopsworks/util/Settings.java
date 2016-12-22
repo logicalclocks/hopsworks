@@ -857,6 +857,7 @@ public class Settings {
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
+  public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   

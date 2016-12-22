@@ -36,36 +36,12 @@ public class KafkaDTO implements JsonReduceable {
     return topics;
   }
 
-  public String getTopicsForJob() {
-    StringBuilder sb = new StringBuilder();
-    for (KafkaTopicDTO topic : topics) {
-      sb.append(topic.getName()).append(File.pathSeparator);
-    }
-    if (sb.length() > 0) {
-      return sb.substring(0, sb.length() - 1);
-    } else {
-      return null;
-    }
-  }
-
   public void setTopics(KafkaTopicDTO[] topics) {
     this.topics = topics;
   }
 
   public ConsumerGroupDTO[] getConsumergroups() {
     return consumergroups;
-  }
-
-  public String getConsumergroupsForJob() {
-    StringBuilder sb = new StringBuilder();
-    for (ConsumerGroupDTO consumerGroup : consumergroups) {
-      sb.append(consumerGroup.getName()).append(File.pathSeparator);
-    }
-    if (sb.length() > 0) {
-      return sb.substring(0, sb.length() - 1);
-    } else {
-      return null;
-    }
   }
 
   public void setConsumergroups(ConsumerGroupDTO[] consumergroups) {
