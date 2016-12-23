@@ -56,6 +56,21 @@ angular.module('hopsWorksApp')
                 self.consumerGroups.splice(lastItem);
               }
             };
+            
+            self.toggleKafka = function(){
+              if(self.kafkaSelected){
+                self.kafkaSelected = false;
+              } else{
+                self.kafkaSelected = true;
+              }
+            }
+            self.toggleAdvanced = function(){
+              if(self.runConfig.kafka.advanced){
+                self.runConfig.kafka.advanced = false;
+              } else{
+                self.runConfig.kafka.advanced = true;
+              }
+            }
 
             ////////////////////////////////////////////////////////////////////
 
