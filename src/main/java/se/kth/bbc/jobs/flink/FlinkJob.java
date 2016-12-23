@@ -32,6 +32,7 @@ public class FlinkJob extends YarnJob {
           FlinkJob.class.getName());
   private final FlinkJobConfiguration jobconfig;
   private final String flinkDir;
+  private final String glassfishDomainsDir;
   private final String flinkConfDir;
   private final String flinkConfFile;
   private final String flinkUser;
@@ -49,12 +50,13 @@ public class FlinkJob extends YarnJob {
    * @param nameNodeIpPort
    * @param flinkUser
    * @param jobUser
+   * @param glassfishDomainsDir
    */
   public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
           Users user, final String hadoopDir,
           final String flinkDir, final String flinkConfDir,
           final String flinkConfFile, final String nameNodeIpPort,
-          String flinkUser, String jobUser) {
+          String flinkUser, String jobUser, final String glassfishDomainsDir) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -65,6 +67,7 @@ public class FlinkJob extends YarnJob {
     this.jobconfig.setFlinkConfDir(flinkConfDir);
     this.jobconfig.setFlinkConfFile(flinkConfFile);
     this.flinkDir = flinkDir;
+    this.glassfishDomainsDir = glassfishDomainsDir;
     this.flinkConfDir = flinkConfDir;
     this.flinkConfFile = flinkConfFile;
     this.flinkUser = flinkUser;
@@ -204,8 +207,8 @@ public class FlinkJob extends YarnJob {
       String t_certName = jobDescription.getProject().getName() + "__"
               + jobDescription.getProject().getOwner().getUsername()
               + "__tstore.jks";
-      File k_cert = new File("/srv/glassfish/domain1/config/" + k_certName);
-      File t_cert = new File("/srv/glassfish/domain1/config/" + t_certName);
+      File k_cert = new File(this.glassfishDomainsDir + "/domain1/config/" + k_certName);
+      File t_cert = new File(this.glassfishDomainsDir + "/domain1/config/" + t_certName);
       if (k_cert.exists()) {
         k_cert.delete();
       }
@@ -221,7 +224,7 @@ public class FlinkJob extends YarnJob {
     //Stop flink cluster first
     try {
       Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec("/srv/hadoop/bin/yarn application -kill " + appid);
+      Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill " + appid);
     } catch (IOException ex1) {
       LOG.log(Level.SEVERE, "Unable to stop flink cluster with appID:"
               + appid, ex1);
