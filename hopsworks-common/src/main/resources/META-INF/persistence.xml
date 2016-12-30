@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+  <persistence-unit name="kthfsPU" transaction-type="JTA">
+    <jta-data-source>jdbc/hopsworks</jta-data-source>
+    <class>io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes</class>
+    <class>io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors</class>
+    <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups</class>
+    <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.Execution</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResult</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultDetails</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppResult</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationattemptstate</class>
+    <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate</class>
+    <class>io.hops.hopsworks.common.dao.jobs.JobInputFile</class>
+    <class>io.hops.hopsworks.common.dao.jobs.JobOutputFile</class>
+    <class>io.hops.hopsworks.common.dao.jobs.JobsHistory</class>
+    <class>io.hops.hopsworks.common.dao.jobs.description.JobDescription</class>
+    <class>io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator</class>
+    <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsDailyCost</class>
+    <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota</class>
+    <class>io.hops.hopsworks.common.dao.util.Variables</class>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <validation-mode>NONE</validation-mode>
+    <properties/>
+  </persistence-unit>
+</persistence>

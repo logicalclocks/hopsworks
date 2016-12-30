@@ -1,0 +1,116 @@
+package io.hops.hopsworks.common.hdfs;
+
+import com.google.common.base.CharMatcher;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.StringReader;
+import java.util.Scanner;
+import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.stream.JsonParsingException;
+import javax.servlet.http.HttpServletRequest;
+
+public final class Utils {
+
+  private static final Logger logger = Logger.getLogger(Utils.class.getName());
+
+  public static String getFileName(String path) {
+    int lastSlash = path.lastIndexOf("/");
+    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
+    return path.substring(startName);
+  }
+
+  public static String getExtension(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    if (lastDot < 0) {
+      return "";
+    } else {
+      return filename.substring(lastDot);
+    }
+  }
+
+  public static String stripExtension(String filename) {
+    int lastDot = filename.lastIndexOf(".");
+    if (lastDot < 0) {
+      return filename;
+    } else {
+      return filename.substring(0, lastDot);
+    }
+  }
+
+  public static String getDirectoryPart(String path) {
+    int lastSlash = path.lastIndexOf("/");
+    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
+    return path.substring(0, startName);
+  }
+
+
+  public static String getHdfsRootPath(String hadoopDir, String projectname) {
+    return "/Projects/" + projectname + "/";
+  }
+
+  public static String ensurePathEndsInSlash(String path) {
+    if (!path.endsWith(File.separator)) {
+      return path + File.separator;
+    }
+    return path;
+  }
+
+  
+  /**
+   * The root '/' is considered '0', so the answer is incorrect for root, but 
+   * that doesn't matter. '/blah.txt' should return '1'.
+   * @param path
+   * @return 
+   */
+  public static int pathLen(String path) {
+    return CharMatcher.is('/').countIn(path);
+  }
+  
+  
+  /**
+   * Checks if a given file contains actual json content.
+   * <p/>
+   * @param pathName
+   * @return
+   * @throws FileNotFoundException
+   */
+  public static boolean checkJsonValidity(String pathName) throws
+          FileNotFoundException {
+
+    String fileContent = Utils.getFileContents(pathName);
+
+    if (fileContent == null) {
+      return false;
+    }
+
+    try {
+      //check if the file content is actually a json string
+      Json.createReader(new StringReader(fileContent)).readObject();
+    } catch (JsonParsingException e) {
+      return false;
+    }
+
+    return true;
+  }
+
+  public static String getFileContents(String filePath) throws
+          FileNotFoundException {
+    File file = new File(filePath);
+    Scanner scanner = new Scanner(file);
+
+    //check if the file is empty
+    if (!scanner.hasNext()) {
+      return null;
+    }
+
+    //fetch the whole file content at once
+    return scanner.useDelimiter("\\Z").next();
+  }
+  
+  
+  public static String getProjectUsername(String project, String username) {
+    return project + "__" + username;
+  }
+  
+}

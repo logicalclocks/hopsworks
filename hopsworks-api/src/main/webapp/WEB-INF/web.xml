@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+  <context-param>
+    <param-name>javax.faces.PROJECT_STAGE</param-name>
+    <param-value>Development</param-value>
+  </context-param>
+  <servlet>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.zeppelin.server.AppScriptServlet</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <url-pattern>/zeppelin/scripts/scripts.6ddd912ca4c10818.js</url-pattern>
+  </servlet-mapping>
+  <!-- Kibana proxy servlet -->
+  <servlet>
+    <servlet-name>ProxyServlet</servlet-name>
+    <servlet-class>io.hops.kibana.ProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:5601/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ProxyServlet</servlet-name>
+    <url-pattern>/ps/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ProxyServlet</servlet-name>
+    <url-pattern>/ps</url-pattern>
+  </servlet-mapping>
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+  <welcome-file-list>
+    <welcome-file>faces/index.xhtml</welcome-file>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+  <security-constraint>
+    <display-name>Metadata SocketConstraint</display-name>
+    <web-resource-collection>
+      <web-resource-name>MetadataWebSocket</web-resource-name>
+      <description>Security constraint for  metadata designer websocket endpoint</description>
+      <url-pattern>/wspoint/*</url-pattern>
+      <http-method>GET</http-method>
+    </web-resource-collection>
+    <auth-constraint>
+      <description>definition of which roles  may access the quote endpoint</description>
+      <role-name>HOPS_ADMIN</role-name>
+      <role-name>HOPS_USER</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <display-name>Zeppelin SocketConstraint</display-name>
+    <web-resource-collection>
+      <web-resource-name>ZeppelinWebSocket</web-resource-name>
+      <description>Security constraint for  Zeppelin websocket endpoint</description>
+      <url-pattern>/zeppelin/ws/*</url-pattern>
+      <http-method>GET</http-method>
+    </web-resource-collection>
+    <auth-constraint>
+      <description>definition of which roles  may access the endpoint</description>
+      <role-name>HOPS_ADMIN</role-name>
+      <role-name>HOPS_USER</role-name>
+    </auth-constraint>
+    <!--user-data-constraint>		
+        <description>WSS required</description>		
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>		
+    </user-data-constraint-->
+  </security-constraint>
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>/faces/*</url-pattern>
+  </servlet-mapping>
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <name>SESSIONID</name>
+    </cookie-config>
+  </session-config>
+</web-app>

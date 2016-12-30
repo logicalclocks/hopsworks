@@ -1,0 +1,54 @@
+{
+  "name": "ordered-ast-traverse",
+  "version": "1.1.1",
+  "description": "simple but flexible lexically ordered AST traversal with pre and post visitors",
+  "main": "ordered-ast-traverse.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olov/ordered-ast-traverse.git"
+  },
+  "dependencies": {
+    "ordered-esprima-props": "~1.1.0"
+  },
+  "keywords": [
+    "ast",
+    "traverse",
+    "traversal",
+    "walk",
+    "visit",
+    "visitor",
+    "acorn",
+    "esprima"
+  ],
+  "author": {
+    "name": "Olov Lassus",
+    "email": "olov.lassus@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/olov/ordered-ast-traverse/issues"
+  },
+  "homepage": "https://github.com/olov/ordered-ast-traverse",
+  "_id": "ordered-ast-traverse@1.1.1",
+  "_shasum": "6843a170bc0eee8b520cc8ddc1ddd3aa30fa057c",
+  "_resolved": "https://registry.npmjs.org/ordered-ast-traverse/-/ordered-ast-traverse-1.1.1.tgz",
+  "_from": "ordered-ast-traverse@>=1.1.1 <1.2.0",
+  "scripts": {},
+  "_npmVersion": "2.0.0",
+  "_npmUser": {
+    "name": "olov",
+    "email": "olov.lassus@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "olov",
+      "email": "olov.lassus@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "6843a170bc0eee8b520cc8ddc1ddd3aa30fa057c",
+    "tarball": "http://registry.npmjs.org/ordered-ast-traverse/-/ordered-ast-traverse-1.1.1.tgz"
+  },
+  "directories": {},
+  "readme": "ERROR: No README data found!"
+}

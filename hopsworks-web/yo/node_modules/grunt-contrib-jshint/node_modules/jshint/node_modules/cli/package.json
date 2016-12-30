@@ -1,0 +1,72 @@
+{
+  "name": "cli",
+  "description": "A tool for rapidly building command line apps",
+  "version": "1.0.1",
+  "homepage": "http://github.com/node-js-libs/cli",
+  "keywords": [
+    "cli",
+    "command line",
+    "opts",
+    "parseopt",
+    "opt",
+    "args",
+    "console",
+    "argsparse",
+    "optparse",
+    "autocomplete",
+    "command",
+    "autocompletion"
+  ],
+  "author": {
+    "name": "Chris O'Hara",
+    "email": "cohara87@gmail.com"
+  },
+  "main": "cli.js",
+  "bugs": {
+    "url": "http://github.com/node-js-libs/cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/node-js-libs/cli.git"
+  },
+  "dependencies": {
+    "glob": "^7.1.1",
+    "exit": "0.1.2"
+  },
+  "contributors": [
+    {
+      "name": "Douglas Meyer"
+    }
+  ],
+  "engines": {
+    "node": ">=0.2.5"
+  },
+  "license": "MIT",
+  "gitHead": "470db35ec032a81a3d5aebb4f48f90f905945248",
+  "_id": "cli@1.0.1",
+  "scripts": {},
+  "_shasum": "22817534f24bfa4950c34d532d48ecbc621b8c14",
+  "_from": "cli@>=1.0.0 <1.1.0",
+  "_npmVersion": "3.10.8",
+  "_nodeVersion": "6.9.1",
+  "_npmUser": {
+    "name": "cohara87",
+    "email": "cohara87@gmail.com"
+  },
+  "dist": {
+    "shasum": "22817534f24bfa4950c34d532d48ecbc621b8c14",
+    "tarball": "https://registry.npmjs.org/cli/-/cli-1.0.1.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "cohara87",
+      "email": "cohara87@gmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-18-east.internal.npmjs.com",
+    "tmp": "tmp/cli-1.0.1.tgz_1477195136534_0.8342971515376121"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/cli/-/cli-1.0.1.tgz"
+}

@@ -1,0 +1,100 @@
+{
+  "name": "grunt-filerev",
+  "version": "2.3.1",
+  "description": "Asset revisioning by using file content hashing",
+  "keywords": [
+    "gruntplugin",
+    "optimize",
+    "rev",
+    "revision",
+    "minify",
+    "assets"
+  ],
+  "author": {
+    "name": "Frederick Ros",
+    "email": "frederick.ros@gmail.com",
+    "url": "https://github.com/sleeper"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeoman/grunt-filerev.git"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "files": [
+    "tasks"
+  ],
+  "dependencies": {
+    "chalk": "^1.0.0",
+    "convert-source-map": "^1.0.0",
+    "each-async": "^0.1.3"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-copy": "^0.8.0",
+    "grunt-contrib-jshint": "^0.11.0",
+    "grunt-jscs": "^1.5.0",
+    "grunt-simple-mocha": "^0.4.0"
+  },
+  "peerDependencies": {
+    "grunt": ">=0.4.0"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "license": "BSD",
+  "gitHead": "a431c85efc310e20709359996e444e7c09d51b9c",
+  "bugs": {
+    "url": "https://github.com/yeoman/grunt-filerev/issues"
+  },
+  "homepage": "https://github.com/yeoman/grunt-filerev#readme",
+  "_id": "grunt-filerev@2.3.1",
+  "_shasum": "2990210f0b5a9edc5e7198987fd1c029c6d5f4df",
+  "_from": "grunt-filerev@>=2.3.1 <3.0.0",
+  "_npmVersion": "2.8.3",
+  "_nodeVersion": "0.12.1",
+  "_npmUser": {
+    "name": "eddiemonge",
+    "email": "eddie+npm@eddiemonge.com"
+  },
+  "maintainers": [
+    {
+      "name": "sindresorhus",
+      "email": "sindresorhus@gmail.com"
+    },
+    {
+      "name": "sleeper",
+      "email": "frederick.ros@gmail.com"
+    },
+    {
+      "name": "addyosmani",
+      "email": "addyosmani@gmail.com"
+    },
+    {
+      "name": "paulirish",
+      "email": "paul.irish@gmail.com"
+    },
+    {
+      "name": "passy",
+      "email": "phartig@rdrei.net"
+    },
+    {
+      "name": "sboudrias",
+      "email": "admin@simonboudrias.com"
+    },
+    {
+      "name": "eddiemonge",
+      "email": "eddie+npm@eddiemonge.com"
+    }
+  ],
+  "dist": {
+    "shasum": "2990210f0b5a9edc5e7198987fd1c029c6d5f4df",
+    "tarball": "http://registry.npmjs.org/grunt-filerev/-/grunt-filerev-2.3.1.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/grunt-filerev/-/grunt-filerev-2.3.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

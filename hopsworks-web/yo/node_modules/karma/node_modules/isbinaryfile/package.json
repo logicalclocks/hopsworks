@@ -1,0 +1,58 @@
+{
+  "name": "isbinaryfile",
+  "description": "Detects if a file is binary in Node.js. Similar to Perl's -B.",
+  "version": "3.0.1",
+  "devDependencies": {
+    "mocha": "^2.2.4",
+    "grunt": "~0.4.1",
+    "grunt-release": "~0.6.0",
+    "grunt-exec": "0.4.3",
+    "grunt-cli": "~0.1.13"
+  },
+  "engines": {
+    "node": ">=0.6.0"
+  },
+  "files": [
+    "index.js"
+  ],
+  "license": "MIT",
+  "main": "./index.js",
+  "maintainers": [
+    {
+      "name": "gjtorikian",
+      "email": "gjtorikian@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gjtorikian/isBinaryFile.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "gitHead": "b771103b2ac94f2f68771b58973f514882a13af2",
+  "bugs": {
+    "url": "https://github.com/gjtorikian/isBinaryFile/issues"
+  },
+  "homepage": "https://github.com/gjtorikian/isBinaryFile#readme",
+  "_id": "isbinaryfile@3.0.1",
+  "_shasum": "6e99573675372e841a0520c036b41513d783e79e",
+  "_from": "isbinaryfile@>=3.0.0 <4.0.0",
+  "_npmVersion": "3.9.5",
+  "_nodeVersion": "5.11.0",
+  "_npmUser": {
+    "name": "gjtorikian",
+    "email": "gjtorikian@gmail.com"
+  },
+  "dist": {
+    "shasum": "6e99573675372e841a0520c036b41513d783e79e",
+    "tarball": "https://registry.npmjs.org/isbinaryfile/-/isbinaryfile-3.0.1.tgz"
+  },
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/isbinaryfile-3.0.1.tgz_1470697593755_0.28075776994228363"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/isbinaryfile/-/isbinaryfile-3.0.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

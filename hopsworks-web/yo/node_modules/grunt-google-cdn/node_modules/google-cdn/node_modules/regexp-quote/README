@@ -1,0 +1,2 @@
+RegExp.quote = require("regexp-quote")
+new RegExp(format("(%s)+", RegExp.quote(foo)))

@@ -1,0 +1,60 @@
+{
+  "name": "cdnjs-cdn-data",
+  "version": "0.1.2",
+  "description": "CDNJS CDN Data for google-cdn",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shahata/cdnjs-cdn-data.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": {
+    "name": "Shahar Talmi"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shahata/cdnjs-cdn-data/issues"
+  },
+  "homepage": "https://github.com/shahata/cdnjs-cdn-data",
+  "keywords": [
+    "cdn",
+    "cdnjs"
+  ],
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-release": "~0.6.0",
+    "chai": "~1.8.1",
+    "mocha": "~1.17.0"
+  },
+  "dependencies": {
+    "semver": "~5.0.1"
+  },
+  "gitHead": "201b35917cbd3b5e794924273677a8da6bdf4c2a",
+  "_id": "cdnjs-cdn-data@0.1.2",
+  "_shasum": "865d34ba4e48dd1b73fd668e24a61a5adf9b8b21",
+  "_from": "cdnjs-cdn-data@>=0.1.0 <0.2.0",
+  "_npmVersion": "2.14.1",
+  "_nodeVersion": "0.12.7",
+  "_npmUser": {
+    "name": "shahata",
+    "email": "shahar.talmi@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "shahata",
+      "email": "shahar.talmi@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "865d34ba4e48dd1b73fd668e24a61a5adf9b8b21",
+    "tarball": "http://registry.npmjs.org/cdnjs-cdn-data/-/cdnjs-cdn-data-0.1.2.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/cdnjs-cdn-data/-/cdnjs-cdn-data-0.1.2.tgz",
+  "readme": "ERROR: No README data found!"
+}

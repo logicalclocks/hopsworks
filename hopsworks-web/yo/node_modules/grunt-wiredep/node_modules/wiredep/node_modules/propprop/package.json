@@ -1,0 +1,59 @@
+{
+  "name": "propprop",
+  "version": "0.3.1",
+  "author": {
+    "name": "Stephen Sawchuk",
+    "email": "sawchuk@gmail.com"
+  },
+  "license": "MIT",
+  "description": "Just a helper for plucking a property out of an object.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stephenplusplus/propprop.git"
+  },
+  "scripts": {
+    "browser": "a=$npm_package_name; browserify -r ./index:$a -s $a index.js -o browser.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "prop",
+    "property",
+    "pluck"
+  ],
+  "devDependencies": {
+    "browserify": "^3.0.0"
+  },
+  "gitHead": "ed91e3146e8c90fb50b61eac37c66367b55a5a22",
+  "bugs": {
+    "url": "https://github.com/stephenplusplus/propprop/issues"
+  },
+  "homepage": "https://github.com/stephenplusplus/propprop#readme",
+  "_id": "propprop@0.3.1",
+  "_shasum": "a049a3568b896440067d15d8ec9f33735e570178",
+  "_from": "propprop@>=0.3.0 <0.4.0",
+  "_npmVersion": "3.9.5",
+  "_nodeVersion": "6.2.2",
+  "_npmUser": {
+    "name": "stephenplusplus",
+    "email": "sawchuk@gmail.com"
+  },
+  "dist": {
+    "shasum": "a049a3568b896440067d15d8ec9f33735e570178",
+    "tarball": "https://registry.npmjs.org/propprop/-/propprop-0.3.1.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "stephenplusplus",
+      "email": "sawchuk@gmail.com"
+    }
+  ],
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/propprop-0.3.1.tgz_1468331619420_0.7816366874612868"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/propprop/-/propprop-0.3.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

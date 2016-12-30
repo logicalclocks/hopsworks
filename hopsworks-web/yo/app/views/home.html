@@ -1,0 +1,174 @@
+<div class="container" ng-controller="MainCtrl as mainCtrl" style="width: 1500px;">
+  <div ng-include="'nav.html'"></div>
+  <div ng-show="mainCtrl.searchReturned !== ''" class="row">
+    <div id="projectSearchResults">
+      <div ng-include="'views/search.html'"></div>
+    </div>
+  </div>
+
+  <div ng-show="mainCtrl.searchReturned === ''" class="row" ng-controller="HomeCtrl as homeCtrl">
+    <div class="col-sm-6 col-md-2 col-lg-2">
+      <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
+        <div class="list-group">
+          <a href="" class="list-group-item active">Help</a>
+          <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
+             ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
+            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
+            Tours
+            <span class="glyphicon glyphicon-expand pull-right"></span>
+            <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
+              <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
+                      type="button" class="btn btn-default btn-block" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.createExampleProject()">
+                <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="isCreating(tour.name) === true"></span>
+                <span style="margin-right: 5px" class="fa fa-spinner fa-spin pull-right" ng-hide="isCreating(tour.name) === false"></span>
+                <span class="button-text">{{tour.name}}</span>
+              </button>
+            </div>
+          </a>
+          <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
+            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
+            Public Data Sets
+            <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
+            <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
+              <div>
+                <button style="padding-bottom: 2px; padding-top: 2px; padding-left: 0px; padding-right: 0px;" 
+                        uib-popover="Add this public dataset to one of your projects."
+                        type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
+                  <span>{{dataset.name}}</span>
+                </button>
+              </div>
+              <div ng-show="homeCtrl.publicDatasets.length === 0" >
+                None available.
+              </div>
+            </div>
+          </a>
+          <a href="https://groups.google.com/forum/#!forum/hopshadoop" class="list-group-item">
+            <span class="glyphicon glyphicon-user"></span>
+            Need support?
+            <span class="glyphicon glyphicon-earphone pull-right" style="margin-right: 1px;"></span>
+          </a>
+        </div>
+      </div>
+
+
+    </div>
+
+
+    <div class="col-sm-6 col-md-2 col-lg-5">
+      <div class="widget-body">
+        <div class="timeline clearfix">
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-sm-6 col-md-1 col-lg-1"></div>
+    <div class="col-sm-6 col-md-3 col-lg-3 sidebar">
+      <span class="list-group-item active">
+        <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
+
+        <button class="btn btn-success pull-right" id="buttonCreateProject"
+                style="height: 43px;margin-right: -16px;margin-top: -11px;width: 70px; border-radius: 0px;"
+                ng-click="homeCtrl.newProject()">
+          <i class="fa fa-plus-circle fa-lg"></i>
+          <span style="margin-left:3px;">New</span>
+        </button>
+
+      </span>
+
+      <div class="list-group-item"
+           style="background-color: #f5f5f5;">
+        <div class="input-group-btn search-panel pull-left" uib-dropdown
+             style="width: 83px;">
+          <button type="button" class="btn btn-default" ihhd="filterByButton" uib-dropdown-toggle>
+            <span id="search_concept">Filter by</span>
+            <span class="caret"></span>
+          </button>
+
+          <ul uib-dropdown-menu class="dropdown-menu" role="menu">
+            <li><a href="#its_equal"> My own</a></li>
+            <li><a href="#greather_than"> Private</a></li>
+            <li><a href="#less_than"> Public </a></li>
+            <li class="divider"></li>
+            <li><a href="#all">All</a></li>
+          </ul>
+        </div>
+        <input type="hidden" name="search_param" value="all" id="search_param">
+        <input type="text" class="form-control pull-left" ng-model="searchProject"
+               style="width: 155px; border-radius: 0;"
+               name="x" placeholder="Find project...">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" style="height:34px;">
+            <span class="glyphicon glyphicon-search"></span>
+          </button>
+        </span>
+      </div>
+      <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
+        <a ng-class="{disabled: project.project.archived, disabled: homeCtrl.working[project.project.id]}"
+          href="#/project/{{project.project.id}}"
+          class="list-group-item"
+          context-menu
+          data-target="menu-{{$index}}"
+          id="{{project.project.name.substr(0, 5) === 'demo_'}}">
+          <div ng-if="project.teamRole === 'Data scientist'">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
+          </div>
+          <div ng-if="project.teamRole === 'Data owner'">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-unlock fa-2 pull-left"></i>
+          </div>
+          <div ng-if="project.project.archived">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px; color: #9d261d"
+               class="fa fa-ban fa-2 pull-left"></i>
+          </div>
+          {{ project.project.name | limitTo: 17 }}{{project.project.name.length > 17 ? '...' : ''}}
+          <span ng-if="project.project.name.substr(0, 5) === 'demo_'" class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
+          <i class="fa fa-cog fa-spin fa-2x  fa-fw pull-right" ng-show="homeCtrl.working[project.project.id]"></i>
+        </a>
+        <div uib-dropdown class="dropdown position-fixed" id="menu-{{$index}}">
+          <ul uib-dropdown-menu class="dropdown-amore">
+            <!--            <li>
+                          <a class="pointer"
+                             role="menuitem"
+                             tabindex="1"
+                             ng-click="">
+                            <span><i class="fa fa-share-alt"></i>
+                              Share...</span>
+                          </a>
+                        </li>-->
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="1"
+                 ng-click="homeCtrl.deleteOnlyProject(project.project.id)">
+                <span><i class="fa fa-trash"></i>
+                  Remove and keep DataSets</span>
+              </a>
+            </li>
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="2"
+                 ng-click="homeCtrl.deleteProjectAndDatasets(project.project.id)">
+                <span><i class="fa fa-trash"></i>
+                  Remove and delete DataSets </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <ul uib-pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects" ></ul>
+    </div>
+  </div>
+  <tour class="ng-scope" step="homeCtrl.tourService.currentStep_TourOne" post-tour="closeTour()" ng-if="homeCtrl.loadedView">
+    <virtual-step
+      class="ng-scope"
+      tourtip="Begin the tour by clicking Next, OR when {{homeCtrl.tourService.alive_TourOne}} seconds passed, click on the project"
+      tourtip-step="0"
+      tourtip-element="#true.list-group-item"
+      tourtip-placement="left"
+      tourtip-next-label="Next"
+      on-proceed="homeCtrl.EnterExampleProject(homeCtrl.exampleProjectID)"
+      tourtip-offset-vertical="-17"
+      tourtip-offset-horizontal="13"
+      ></virtual-step>
+  </tour>
+</div>

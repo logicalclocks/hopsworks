@@ -1,0 +1,108 @@
+<div growl></div>
+
+<div ng-controller="ProjectCtrl as projectCtrl">
+  <div class="modal-header">
+    <button class="close"
+            ng-click="projectCtrl.close()"
+            data-dismiss="modal"
+            aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Project settings</h2>
+  </div>
+
+
+  <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()">
+    <div class="modal-body" id="testmodal">
+
+      <div class="row">
+
+        <div class="col-md-7">
+          <fieldset>
+            <div class="control-group col-md-offset-1">
+              <label class="control-label">Name</label>
+              <div class="controls">
+                <input class="form-control" name="project_name"
+                       type="text"
+                       id="projectname"
+                       ng-model="projectCtrl.currentProject.projectName"
+                       disabled>
+              </div>
+              <p></p>
+              <label class="control-label">Description</label>
+              <div class="controls">
+                <textarea class="form-control" style="resize:none;"
+                          ng-model="projectCtrl.currentProject.description"
+                          rows="3">
+                </textarea>
+              </div>
+              <p></p>
+              <label class="control-label">Data Retention Period</label>
+              <div class='input-group date col-md-8' id='schedulePicker'>
+                <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
+                <span class="input-group-addon">
+                  <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+              </div>
+              <script type="text/javascript">
+                    $(function () {
+                      $('#schedulePicker').datetimepicker({
+                        format: 'YYYY-MM-DD'
+                      }).on('dp.change', function (e) {
+                        $('#dpInput').trigger('input');
+                      });
+                    });</script>
+
+              <p></p>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="col-md-5">
+          <label class="text-muted">Status</label>
+          <div class="row" style="margin-left:15px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.hdfsUsage()}} of {{projectSettingsCtrl.hdfsQuota()}} used
+              </span>          
+            </fieldset>
+          </div>
+          <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.hdfsNsCount()}} files of {{projectSettingsCtrl.hdfsNsQuota()}} used
+              </span>          
+            </fieldset>
+          </div>
+          <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
+            <fieldset>
+              <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                {{projectSettingsCtrl.yarnQuota()}} CPU 
+              </span>          
+            </fieldset>    
+          </div>
+
+          <fieldset>
+            <label class="text-muted" ng-show="projectCtrl.allServicesSelected()">Services</label>
+            <div class="control-group col-md-offset-2">
+              <div class="row" ng-repeat="projectType in projectCtrl.projectTypes">
+                <md-checkbox class=" row md-primary" ng-click="projectCtrl.exists(projectType)">
+                  {{ projectType}}
+                </md-checkbox>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
+        <button class="btn btn-primary" type="submit" 
+                ng-disabled="projectCtrl.working">
+          <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+          Save
+        </button>
+      </div>
+  </form>
+
+</div>

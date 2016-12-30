@@ -1,0 +1,80 @@
+{
+  "name": "globule",
+  "description": "An easy-to-use wildcard globbing library.",
+  "version": "1.1.0",
+  "homepage": "https://github.com/cowboy/node-globule",
+  "author": {
+    "name": "\"Cowboy\" Ben Alman",
+    "url": "http://benalman.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cowboy/node-globule.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cowboy/node-globule/issues"
+  },
+  "license": "MIT",
+  "main": "lib/globule",
+  "files": [
+    "lib"
+  ],
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "scripts": {
+    "test": "grunt"
+  },
+  "devDependencies": {
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-nodeunit": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt": "^1.0.0"
+  },
+  "keywords": [
+    "glob",
+    "file",
+    "match",
+    "mapping",
+    "expand",
+    "wildcard",
+    "pattern",
+    "sync",
+    "awesome"
+  ],
+  "dependencies": {
+    "glob": "~7.1.1",
+    "lodash": "~4.16.4",
+    "minimatch": "~3.0.2"
+  },
+  "gitHead": "40634f884bc259728eb4add3d9dc75fdf3db38e2",
+  "_id": "globule@1.1.0",
+  "_shasum": "c49352e4dc183d85893ee825385eb994bb6df45f",
+  "_from": "globule@>=1.0.0 <2.0.0",
+  "_npmVersion": "2.15.2",
+  "_nodeVersion": "4.4.1",
+  "_npmUser": {
+    "name": "shama",
+    "email": "kyle@dontkry.com"
+  },
+  "maintainers": [
+    {
+      "name": "cowboy",
+      "email": "cowboy@rj3.net"
+    },
+    {
+      "name": "shama",
+      "email": "kyle@dontkry.com"
+    }
+  ],
+  "dist": {
+    "shasum": "c49352e4dc183d85893ee825385eb994bb6df45f",
+    "tarball": "https://registry.npmjs.org/globule/-/globule-1.1.0.tgz"
+  },
+  "_npmOperationalInternal": {
+    "host": "packages-18-east.internal.npmjs.com",
+    "tmp": "tmp/globule-1.1.0.tgz_1477268981002_0.8328830695245415"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/globule/-/globule-1.1.0.tgz"
+}

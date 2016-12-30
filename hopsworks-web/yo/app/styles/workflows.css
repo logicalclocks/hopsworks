@@ -1,0 +1,31 @@
+.cy {
+    height: 100%;
+    width: 70%;
+    float: left;
+    position: relative;
+    left: 0px;
+    border-right: 1px solid #aaa;
+    padding: 0px;
+    display: block;
+    z-index: 1;
+}
+#options {
+    height: 65%;
+    width: 30%;
+    float: right;
+    position: relative;
+    left: 0px;
+    padding: 0px;
+    display: block;
+    z-index: 1;
+    padding-left:30px;
+    padding-right:30px;
+}
+#navigator{
+    height: 30%;
+    width: 20%;
+}
+#workflow{
+    height: 100%;
+    width: 100%;
+}

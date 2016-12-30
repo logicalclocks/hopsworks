@@ -1,0 +1,46 @@
+{
+  "name": "ordered-esprima-props",
+  "version": "1.1.0",
+  "description": "Lexical ordering of property names per Esprima AST type",
+  "main": "ordered-esprima-props.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olov/ordered-esprima-props.git"
+  },
+  "keywords": [
+    "esprima",
+    "ast",
+    "traverse"
+  ],
+  "author": {
+    "name": "Olov Lassus",
+    "email": "olov.lassus@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/olov/ordered-esprima-props/issues"
+  },
+  "homepage": "https://github.com/olov/ordered-esprima-props",
+  "_id": "ordered-esprima-props@1.1.0",
+  "_shasum": "a9827086df5f010aa60e9bd02b6e0335cea2ffcb",
+  "_resolved": "https://registry.npmjs.org/ordered-esprima-props/-/ordered-esprima-props-1.1.0.tgz",
+  "_from": "ordered-esprima-props@>=1.1.0 <1.2.0",
+  "scripts": {},
+  "_npmVersion": "2.0.0",
+  "_npmUser": {
+    "name": "olov",
+    "email": "olov.lassus@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "olov",
+      "email": "olov.lassus@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "a9827086df5f010aa60e9bd02b6e0335cea2ffcb",
+    "tarball": "http://registry.npmjs.org/ordered-esprima-props/-/ordered-esprima-props-1.1.0.tgz"
+  },
+  "directories": {},
+  "readme": "ERROR: No README data found!"
+}
