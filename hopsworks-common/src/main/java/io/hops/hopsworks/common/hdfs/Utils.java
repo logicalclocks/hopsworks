@@ -8,7 +8,6 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
-import javax.servlet.http.HttpServletRequest;
 
 public final class Utils {
 
@@ -44,7 +43,6 @@ public final class Utils {
     return path.substring(0, startName);
   }
 
-
   public static String getHdfsRootPath(String hadoopDir, String projectname) {
     return "/Projects/" + projectname + "/";
   }
@@ -56,18 +54,17 @@ public final class Utils {
     return path;
   }
 
-  
   /**
-   * The root '/' is considered '0', so the answer is incorrect for root, but 
+   * The root '/' is considered '0', so the answer is incorrect for root, but
    * that doesn't matter. '/blah.txt' should return '1'.
+   *
    * @param path
-   * @return 
+   * @return
    */
   public static int pathLen(String path) {
     return CharMatcher.is('/').countIn(path);
   }
-  
-  
+
   /**
    * Checks if a given file contains actual json content.
    * <p/>
@@ -107,10 +104,9 @@ public final class Utils {
     //fetch the whole file content at once
     return scanner.useDelimiter("\\Z").next();
   }
-  
-  
+
   public static String getProjectUsername(String project, String username) {
     return project + "__" + username;
   }
-  
+
 }

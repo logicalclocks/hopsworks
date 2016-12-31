@@ -11,7 +11,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -64,11 +69,8 @@ public class UserService {
       UserCardDTO userCardDTO = new UserCardDTO(user);
       userCardDTOs.add(userCardDTO);
     }
-
     GenericEntity<List<UserCardDTO>> userCards
-            = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {
-    };
-
+            = new GenericEntity<List<UserCardDTO>>(userCardDTOs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             userCards).build();
   }
@@ -254,8 +256,7 @@ public class UserService {
     List<SshKeyDTO> sshKeys = userController.getSshKeys(id);
 
     GenericEntity<List<SshKeyDTO>> sshKeyViews
-            = new GenericEntity<List<SshKeyDTO>>(sshKeys) {
-    };
+            = new GenericEntity<List<SshKeyDTO>>(sshKeys) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             sshKeyViews).build();
 

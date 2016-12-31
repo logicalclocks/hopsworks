@@ -19,9 +19,8 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "SshKeys.findByUid",
           query = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid"),
   @NamedQuery(name = "SshKeys.findByUidName",
-          query
-          = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid and s.sshKeysPK.name = :name")
-})
+          query = "SELECT s FROM SshKeys s WHERE s.sshKeysPK.uid = :uid and "
+          + "s.sshKeysPK.name = :name")})
 public class SshKeys implements Serializable {
 
   private static final long serialVersionUID = 1L;

@@ -177,7 +177,8 @@ public class ExecutionService {
     } else if (!execution.getJob().equals(job)) {
       //The user is requesting an execution that is not under the given job. May be a malicious user!
       logger.log(Level.SEVERE,
-              "Someone is trying to access an execution under a job where it does not belong. May be a malicious user!");
+              "Someone is trying to access an execution under a job where it does "
+              + "not belong. May be a malicious user!");
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).

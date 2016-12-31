@@ -171,7 +171,8 @@ public class HostController implements Serializable {
 //    public void run() {
 //      FacesMessage message;
 //      try {
-//        ClientResponse response = web.doCommand(hostAddress, cluster, service, role, command);
+//        ClientResponse response = web.doCommand(hostAddress, cluster, service,
+//                role, command);
 //
 //        Thread.sleep(3000);
 //
@@ -181,7 +182,9 @@ public class HostController implements Serializable {
 //          Role r = roleEjb.find(hostId, cluster, service, role);
 //
 //          if (command.equalsIgnoreCase("start")) {
-//            JsonObject json = Json.createReader(response.getEntityInputStream()).readObject();
+//            JsonObject json
+//                    = Json.createReader(response.getEntityInputStream()).
+//                    readObject();
 //            messageText = json.getString("msg");
 //            r.setStatus(Status.Started);
 //
@@ -190,19 +193,23 @@ public class HostController implements Serializable {
 //            r.setStatus(Status.Stopped);
 //          }
 //          roleEjb.store(r);
-//          message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", messageText);
+//          message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success",
+//                  messageText);
 //
 //        } else {
 //          c.failed();
 //          if (response.getStatus() == 400) {
-//            message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", command + ": " + response.getEntity(String.class));
+//            message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
+//                    command + ": " + response.getEntity(String.class));
 //          } else {
-//            message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Server Error", "");
+//            message = new FacesMessage(FacesMessage.SEVERITY_FATAL,
+//                    "Server Error", "");
 //          }
 //        }
 //      } catch (Exception e) {
 //        c.failed();
-//        message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Communication Error", e.toString());
+//        message = new FacesMessage(FacesMessage.SEVERITY_FATAL,
+//                "Communication Error", e.toString());
 //      }
 //      commandEJB.updateCommand(c);
 ////            context.addMessage(null, message);

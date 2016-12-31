@@ -11,7 +11,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.user.Users;
 
- 
 @Entity
 @Table(name = "hopsworks.people_group")
 @XmlRootElement

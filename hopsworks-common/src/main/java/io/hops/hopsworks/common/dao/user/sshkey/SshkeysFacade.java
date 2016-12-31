@@ -3,8 +3,10 @@ package io.hops.hopsworks.common.dao.user.sshkey;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 import javax.ejb.Stateless;
-import javax.persistence.*;
 import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 @Stateless
 public class SshkeysFacade extends AbstractFacade<SshKeys> {

@@ -33,7 +33,8 @@ import io.hops.hopsworks.common.dao.project.Project;
           = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId"),
   @NamedQuery(name = "ProjectTopics.findBySchemaVersion",
           query
-          = "SELECT p FROM ProjectTopics p WHERE p.schemaTopics.schemaTopicsPK.name = :schema_name AND p.schemaTopics.schemaTopicsPK.version = :schema_version")})
+          = "SELECT p FROM ProjectTopics p WHERE p.schemaTopics.schemaTopicsPK.name "
+          + "= :schema_name AND p.schemaTopics.schemaTopicsPK.version = :schema_version")})
 public class ProjectTopics implements Serializable {
 
   private static final long serialVersionUID = 1L;

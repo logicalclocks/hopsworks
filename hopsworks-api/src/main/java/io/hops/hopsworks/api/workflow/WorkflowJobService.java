@@ -48,8 +48,7 @@ public class WorkflowJobService {
   public Response index() throws AppException {
     Collection<WorkflowJob> jobs = execution.getJobs();
     GenericEntity<Collection<WorkflowJob>> jobsList
-            = new GenericEntity<Collection<WorkflowJob>>(jobs) {
-    };
+            = new GenericEntity<Collection<WorkflowJob>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobsList).build();
   }

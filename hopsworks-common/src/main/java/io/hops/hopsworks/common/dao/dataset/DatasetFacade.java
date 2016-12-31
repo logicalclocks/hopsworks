@@ -63,7 +63,8 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   }
 
   public Dataset findByNameAndProjectId(Project project, String name) {
-    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByNameAndProjectId",
+    TypedQuery<Dataset> query = em.createNamedQuery(
+            "Dataset.findByNameAndProjectId",
             Dataset.class);
     query.setParameter("name", name).setParameter("projectId", project);
     try {
@@ -72,7 +73,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
       return null;
     }
   }
-  
+
   /**
    * Find by project and dataset name
    * <p/>
@@ -84,7 +85,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     try {
       return em.createNamedQuery("Dataset.findByProjectAndInode", Dataset.class)
               .setParameter("projectId", project).setParameter(
-                      "inode", inode).getSingleResult();
+              "inode", inode).getSingleResult();
     } catch (Exception e) {
       return null;
     }
@@ -107,19 +108,18 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic",
             Dataset.class);
     List<Dataset> datasets = query.getResultList();
-    
+
     List<DataSetDTO> ds = new ArrayList<>();
     for (Dataset d : datasets) {
-        DataSetDTO dto = new DataSetDTO();
-        dto.setDescription(d.getDescription());
-        dto.setName(d.getInode().getInodePK().getName());
-        dto.setInodeId(d.getInode().getId());
-        ds.add(dto);
+      DataSetDTO dto = new DataSetDTO();
+      dto.setDescription(d.getDescription());
+      dto.setName(d.getInode().getInodePK().getName());
+      dto.setInodeId(d.getInode().getId());
+      ds.add(dto);
     }
     return ds;
   }
-  
-  
+
   public void persistDataset(Dataset dataset) {
     em.persist(dataset);
   }
@@ -132,10 +132,10 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     em.merge(dataset);
     em.flush();
   }
-  
-  public void removeDataset(Dataset dataset){
+
+  public void removeDataset(Dataset dataset) {
     Dataset ds = em.find(Dataset.class, dataset.getId());
-    if (ds != null){
+    if (ds != null) {
       em.remove(ds);
     }
   }

@@ -133,8 +133,7 @@ public class JobService {
           throws AppException {
     List<JobDescription> jobs = jobFacade.findForProject(project);
     GenericEntity<List<JobDescription>> jobList
-            = new GenericEntity<List<JobDescription>>(jobs) {
-    };
+            = new GenericEntity<List<JobDescription>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobList).build();
   }

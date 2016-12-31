@@ -11,8 +11,10 @@
     </module>
     <module name="Indentation">
       <property name="lineWrappingIndentation" value="2"/>
+      <property name="braceAdjustment" value="0"/>
       <property name="basicOffset" value="2"/>
       <property name="caseIndent" value="2"/>
+      <property name="arrayInitIndent" value="2"/>
     </module>
     <module name="RegexpSinglelineJava">
       <property name="format" value="^\s*\t+\s*\S*"/>
@@ -20,9 +22,9 @@
       <property name="ignoreComments" value="true"/>
     </module>
     <module name="AvoidStarImport"/>
-    <module name="IllegalImport">
+    <!--module name="IllegalImport">
       <property name="illegalPkgs" value="java.util.logging"/>
-    </module>
+    </module-->
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
     <module name="Regexp">

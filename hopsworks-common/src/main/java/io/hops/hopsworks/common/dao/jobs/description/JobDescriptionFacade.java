@@ -82,7 +82,9 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * @throws NullPointerException If any of the arguments user, project or
    * config are null.
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) //This seems to ensure that the entity is actually created and can later be found using em.find().
+  //This seems to ensure that the entity is actually created and can later 
+  //be found using em.find().
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public JobDescription create(Users creator, Project project,
           JobConfiguration config) throws
           IllegalArgumentException, NullPointerException {

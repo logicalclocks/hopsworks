@@ -67,8 +67,7 @@ $(document).ready(function () {
             result += "<h3>" + source.name + "</h3>modified at <b> " + source.modified + "</b><hr/>";
           });
           $("#searchresults").html(result);
-        }
-        else {
+        } else {
           $("#searchresults").html("Search <b>" + $('#searchbox').val() + "</b> did not \n\
                                                     find any document. Try different keywords");
         }

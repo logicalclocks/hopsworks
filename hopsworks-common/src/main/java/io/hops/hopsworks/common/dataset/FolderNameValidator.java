@@ -39,14 +39,15 @@ public class FolderNameValidator {
       reason = ResponseMessages.FOLDER_NAME_ENDS_WITH_DOT;
     } else if (name.contains("" + Settings.DOUBLE_UNDERSCORE)) {
       valid = false;
-       reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-               + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
-    }  else {
+      reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+              + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
+    } else {
       for (char c : Settings.FILENAME_DISALLOWED_CHARS.toCharArray()) {
         if (name.contains("" + c)) {
           valid = false;
           reason = ResponseMessages.FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
-                  + Settings.FILENAME_DISALLOWED_CHARS + Settings.DOUBLE_UNDERSCORE;
+                  + Settings.FILENAME_DISALLOWED_CHARS
+                  + Settings.DOUBLE_UNDERSCORE;
         }
       }
     }

@@ -69,7 +69,8 @@ public class UploadServlet extends HttpServlet {
     try (PrintWriter c = response.getWriter()) {
       if (info.addChunkAndCheckIfFinished(
               new ResumableInfo.ResumableChunkNumber(
-                      resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
+                      //Check if all chunks uploaded, and change filename
+                      resumableChunkNumber), content_length)) {
         ResumableInfoStorage.getInstance().remove(info);
         c.print("All finished.");
         finished = true;
@@ -130,7 +131,8 @@ public class UploadServlet extends HttpServlet {
     //Here we add a ".temp" to every upload file to indicate NON-FINISHED
     String resumableFilePath = new File(base_dir, resumableFilename).
             getAbsolutePath() + ".temp";
-    //TODO: the current way of uploading will not scale: if two persons happen to upload a file with the same name, trouble is waiting to happen
+    //TODO: the current way of uploading will not scale: if two persons happen to 
+    //upload a file with the same name, trouble is waiting to happen
 
     ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 

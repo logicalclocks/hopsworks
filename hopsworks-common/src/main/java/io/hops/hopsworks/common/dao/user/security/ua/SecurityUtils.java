@@ -1,11 +1,10 @@
- 
 package io.hops.hopsworks.common.dao.user.security.ua;
 
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Base32;
 import java.security.SecureRandom;
 import java.util.UUID;
- 
+
 public class SecurityUtils {
 
   /**

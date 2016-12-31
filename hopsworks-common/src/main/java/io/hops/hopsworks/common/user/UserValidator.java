@@ -22,7 +22,9 @@ public class UserValidator {
   private static final String PASSWORD_PATTERN
           = "(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).*$";
   private static final String EMAIL_PATTERN
-          = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
+          = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)"
+          + "*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]"
+          + "*[a-z0-9])?";
 
   public boolean isValidEmail(String email) throws AppException {
     if (email == null || email.isEmpty()) {

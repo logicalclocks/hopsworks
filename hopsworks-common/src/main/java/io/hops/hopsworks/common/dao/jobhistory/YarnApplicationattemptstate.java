@@ -22,15 +22,15 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "YarnApplicationattemptstate.findAll",
           query = "SELECT y FROM YarnApplicationattemptstate y"),
   @NamedQuery(name = "YarnApplicationattemptstate.findByApplicationid",
-          query
-          = "SELECT y FROM YarnApplicationattemptstate y WHERE y.yarnApplicationattemptstatePK.applicationid = :applicationid"),
+          query = "SELECT y FROM YarnApplicationattemptstate y "
+          + "WHERE y.yarnApplicationattemptstatePK.applicationid = :applicationid"),
   @NamedQuery(name = "YarnApplicationattemptstate.findByApplicationattemptid",
-          query
-          = "SELECT y FROM YarnApplicationattemptstate y WHERE y.yarnApplicationattemptstatePK.applicationattemptid = :applicationattemptid"),
+          query = "SELECT y FROM YarnApplicationattemptstate y "
+          + "WHERE y.yarnApplicationattemptstatePK.applicationattemptid = :applicationattemptid"),
   @NamedQuery(name
           = "YarnApplicationattemptstate.findByApplicationattempttrakingurl",
-          query
-          = "SELECT y FROM YarnApplicationattemptstate y WHERE y.applicationattempttrakingurl = :applicationattempttrakingurl")})
+          query = "SELECT y FROM YarnApplicationattemptstate y "
+          + "WHERE y.applicationattempttrakingurl = :applicationattempttrakingurl")})
 public class YarnApplicationattemptstate implements Serializable {
 
   private static final long serialVersionUID = 1L;

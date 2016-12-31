@@ -8,40 +8,51 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /*
-   *  Client Code:
-   * 
-   * Settings settings = ...
-   * StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate( ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE, 
-   * "zeppelin_dir", settings.getZeppelinDir() + projectName,
-   * "spark_dir", settings.getSparkDir(),
-   * "hadoop_dir", settings.getHadoopDir()
-   * );
-   *
-   * ConfigFileGenerator.createConfigFile(settings.getZeppelinDir() + projectName + "/zeppelin_env.xml", zeppelin_env.toString());
-   *
+ * Client Code:
+ *
+ * Settings settings = ...
+ * StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
+ * ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
+ * "zeppelin_dir", settings.getZeppelinDir() + projectName,
+ * "spark_dir", settings.getSparkDir(),
+ * "hadoop_dir", settings.getHadoopDir()
+ * );
+ *
+ * ConfigFileGenerator.createConfigFile(settings.getZeppelinDir() + projectName
+ * + "/zeppelin_env.xml", zeppelin_env.toString());
+ *
  */
 public class ConfigFileGenerator {
 
-  public static final String TEMPLATE_ROOT = File.separator + "io" + File.separator + "hops";
+  public static final String TEMPLATE_ROOT = File.separator + "io"
+          + File.separator + "hops";
   public static final String LOG4J_TEMPLATE
-      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "log4j_template.properties";
+          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
+          + "log4j_template.properties";
   public static final String ZEPPELIN_CONFIG_TEMPLATE
-      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "zeppelin_site_template.xml";
+          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
+          + "zeppelin_site_template.xml";
   public static final String ZEPPELIN_ENV_TEMPLATE
-      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "zeppelin_env_template.sh";
+          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
+          + "zeppelin_env_template.sh";
   public static final String INTERPRETER_TEMPLATE
-      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "interpreter_template.json";
+          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
+          + "interpreter_template.json";
   public static final String HIVE_SITE_TEMPLATE
-      = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator + "hive_site_template.xml";
+          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
+          + "hive_site_template.xml";
+
   /**
    * @param filePath
    * @param pairs
    * @return
    * @throws IOException
    */
-  public static StringBuilder instantiateFromTemplate(String filePath, String... pairs) throws IOException {
+  public static StringBuilder instantiateFromTemplate(String filePath,
+          String... pairs) throws IOException {
     if (pairs.length % 2 != 0) {
-      throw new IOException("Odd number of parameters when instantiating a template. Are you missing a parameter?");
+      throw new IOException(
+              "Odd number of parameters when instantiating a template. Are you missing a parameter?");
     }
     StringBuilder sb = new StringBuilder();
     String script = IoUtils.readContentFromClasspath(filePath);
@@ -54,26 +65,28 @@ public class ConfigFileGenerator {
     }
     return sb.append(script);
   }
+
   /**
-   * 
+   *
    * @param filePath
    * @param params
    * @return
-   * @throws IOException 
+   * @throws IOException
    */
-  public static StringBuilder instantiateFromTemplate(String filePath, Map<String,String> params) throws IOException {
+  public static StringBuilder instantiateFromTemplate(String filePath,
+          Map<String, String> params) throws IOException {
     StringBuilder sb = new StringBuilder();
     String script = IoUtils.readContentFromClasspath(filePath);
-    if (params.size()>0) {
-      for (Entry<String, String> env : params.entrySet()){
-        if(env.getValue() != null){
+    if (params.size() > 0) {
+      for (Entry<String, String> env : params.entrySet()) {
+        if (env.getValue() != null) {
           script = script.replaceAll("%%" + env.getKey() + "%%", env.getValue());
         }
       }
     }
     return sb.append(script);
   }
-  
+
   public static boolean mkdirs(String path) {
     File cbDir = new File(path);
     return cbDir.mkdirs();
@@ -91,8 +104,9 @@ public class ConfigFileGenerator {
     }
     return ret && path.delete();
   }
-  
-  public static boolean createConfigFile(File path, String contents) throws IOException {
+
+  public static boolean createConfigFile(File path, String contents) throws
+          IOException {
     // write contents to file as text, not binary data
     if (!path.exists()) {
       if (!path.createNewFile()) {
@@ -105,5 +119,5 @@ public class ConfigFileGenerator {
     out.close();
     return true;
   }
-  
+
 }

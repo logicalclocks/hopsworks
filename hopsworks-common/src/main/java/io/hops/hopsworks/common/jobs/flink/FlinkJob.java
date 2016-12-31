@@ -129,8 +129,8 @@ public class FlinkJob extends YarnJob {
 //                  "/srv/glassfish/domain1/config/" + jobSystemProperty.
 //                          getValue());
 //        } else {
-          flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
-                  jobSystemProperty.getValue());
+        flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
+                jobSystemProperty.getValue());
 //        }
       }
     }
@@ -149,13 +149,13 @@ public class FlinkJob extends YarnJob {
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-                    getProject().
-                    getName())
+            getProject().
+            getName())
             + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
             jobDescription.
-                    getProject().
-                    getName())
+            getProject().
+            getName())
             + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
@@ -207,8 +207,10 @@ public class FlinkJob extends YarnJob {
       String t_certName = jobDescription.getProject().getName() + "__"
               + jobDescription.getProject().getOwner().getUsername()
               + "__tstore.jks";
-      File k_cert = new File(this.glassfishDomainsDir + "/domain1/config/" + k_certName);
-      File t_cert = new File(this.glassfishDomainsDir + "/domain1/config/" + t_certName);
+      File k_cert = new File(this.glassfishDomainsDir + "/domain1/config/"
+              + k_certName);
+      File t_cert = new File(this.glassfishDomainsDir + "/domain1/config/"
+              + t_certName);
       if (k_cert.exists()) {
         k_cert.delete();
       }
@@ -224,7 +226,8 @@ public class FlinkJob extends YarnJob {
     //Stop flink cluster first
     try {
       Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill " + appid);
+      Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill "
+              + appid);
     } catch (IOException ex1) {
       LOG.log(Level.SEVERE, "Unable to stop flink cluster with appID:"
               + appid, ex1);

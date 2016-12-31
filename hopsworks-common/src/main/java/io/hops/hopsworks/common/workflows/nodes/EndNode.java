@@ -5,7 +5,7 @@ import org.w3c.dom.Element;
 import io.hops.hopsworks.common.dao.workflow.OozieFacade;
 import io.hops.hopsworks.common.dao.workflow.Node;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 import javax.ws.rs.ProcessingException;
 import javax.xml.bind.annotation.XmlRootElement;
 

@@ -9,11 +9,11 @@
     <relativePath>..</relativePath>
   </parent>
   
-  <groupId>io.hops</groupId>
+  <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-common</artifactId>
   <version>0.1.0</version>
   <packaging>ejb</packaging>
-
+  <description>Hopsworks common</description>
   <name>hopsworks-common</name>
 
   <dependencies>

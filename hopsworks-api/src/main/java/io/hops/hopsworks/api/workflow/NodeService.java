@@ -17,7 +17,13 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -27,7 +33,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
-import static com.google.common.base.CaseFormat.*;
+import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import io.hops.hopsworks.common.dao.workflow.Node;
 import io.hops.hopsworks.common.dao.workflow.NodeFacade;
 import io.hops.hopsworks.common.dao.workflow.NodePK;
@@ -61,8 +68,7 @@ public class NodeService {
   public Response index() throws AppException {
     Collection<Node> nodes = workflow.getNodes();
     GenericEntity<Collection<Node>> nodesList
-            = new GenericEntity<Collection<Node>>(nodes) {
-    };
+            = new GenericEntity<Collection<Node>>(nodes) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             nodesList).build();
   }

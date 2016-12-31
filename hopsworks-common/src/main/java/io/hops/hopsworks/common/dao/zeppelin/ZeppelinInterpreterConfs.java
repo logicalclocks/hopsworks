@@ -1,4 +1,3 @@
-
 package io.hops.hopsworks.common.dao.zeppelin;
 
 import io.hops.hopsworks.common.dao.project.Project;

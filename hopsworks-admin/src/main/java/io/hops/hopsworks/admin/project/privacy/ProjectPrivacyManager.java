@@ -1,6 +1,5 @@
 package io.hops.hopsworks.admin.project.privacy;
 
-
 import org.apache.hadoop.fs.Path;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import java.io.BufferedOutputStream;
@@ -32,18 +31,16 @@ import io.hops.hopsworks.common.util.Settings;
 @Stateless
 public class ProjectPrivacyManager {
 
-  
-  private static final Logger logger = Logger.getLogger(ProjectPrivacyManager.class.
+  private static final Logger logger = Logger.getLogger(
+          ProjectPrivacyManager.class.
           getName());
-  
+
   @EJB
   private DistributedFsService dfs;
-
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  
   @EJB
   private InodeFacade inodeFacade;
 
@@ -85,7 +82,6 @@ public class ProjectPrivacyManager {
 
   }
 
-  
   public Consents getConsentByName(String name) throws ParseException {
 
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findByInodePK",
@@ -98,6 +94,7 @@ public class ProjectPrivacyManager {
     return null;
 
   }
+
   public List<Consents> getAllConsets(int pid) {
     TypedQuery<Consents> q = em.createNamedQuery("Consents.findByProjectId",
             Consents.class);
@@ -146,21 +143,20 @@ public class ProjectPrivacyManager {
 
     String projectPath = "/" + Settings.DIR_ROOT + "/" + consent.getProject().
             getName();
-    String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS +"/"+ consent.getProject().getInode().getInodePK().getName()+".pdf";
-    
-    
-  
-    FSDataInputStream stream=null;
-    try { 
-        stream = dfso.open(new Path(consentsPath));
+    String consentsPath = projectPath + "/" + Settings.DIR_CONSENTS + "/"
+            + consent.getProject().getInode().getInodePK().getName() + ".pdf";
+
+    FSDataInputStream stream = null;
+    try {
+      stream = dfso.open(new Path(consentsPath));
       //response.header("Content-disposition", "attachment;");
-      
+
       // Init servlet response.
       response.reset();
       response.setHeader("Content-Type", "application/pdf");
-      response.setHeader( "Content-Disposition", "attachment;filename="
-      + consent.getProject().getInode().getInodePK().getName()+".pdf");
-      
+      response.setHeader("Content-Disposition", "attachment;filename="
+              + consent.getProject().getInode().getInodePK().getName() + ".pdf");
+
       output = new BufferedOutputStream(response.getOutputStream());
 
       // Write file contents to response.
@@ -172,12 +168,10 @@ public class ProjectPrivacyManager {
       output.flush();
     } finally {
       close(output);
-      if(stream!=null){
+      if (stream != null) {
         stream.close();
       }
     }
-
-       
 
     // Inform JSF that it doesn't need to handle response.
     // This is very important, otherwise you will get the following exception in the logs:
@@ -197,6 +191,5 @@ public class ProjectPrivacyManager {
       }
     }
   }
-
 
 }

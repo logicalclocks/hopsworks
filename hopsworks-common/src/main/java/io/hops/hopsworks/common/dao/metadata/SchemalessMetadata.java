@@ -39,8 +39,7 @@ public class SchemalessMetadata implements Serializable {
     @JoinColumn(name = "inode_name",
             referencedColumnName = "name"),
     @JoinColumn(name = "inode_partition_id",
-            referencedColumnName = "partition_id")
-  })
+            referencedColumnName = "partition_id")})
   @OneToOne(optional = false)
   private Inode inode;
 

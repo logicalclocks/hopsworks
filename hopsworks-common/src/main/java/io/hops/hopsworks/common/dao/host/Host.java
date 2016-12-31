@@ -4,7 +4,12 @@ import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Date;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
@@ -19,10 +24,12 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT h FROM Host h WHERE h.hostname = :hostname"),
   @NamedQuery(name = "Host.findBy-Cluster.Service.Role.Status",
           query
-          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
+          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster "
+          + "= :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
   @NamedQuery(name = "Host.findBy-Cluster.Service.Role",
           query
-          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),})
+          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster "
+          + "= :cluster AND r.service = :service AND r.role = :role"),})
 public class Host implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;

@@ -224,7 +224,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
     query.setParameter("parentId", HopsUtils.ROOT_INODE_ID);
     query.setParameter("partitionId", partitionId);
     try {
-      return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
+      //Sure to give a single result because all children of same parent "null" 
+      //so name is unique
+      return query.getSingleResult();
     } catch (NoResultException e) {
       logger.log(Level.WARNING,
               "Could not resolve root inode with name: {0} and partition_id"
@@ -320,7 +322,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
             Settings.DIR_ROOT)) {
       return false;
     } else {
-      //A node is the project root if its parent has the name $DIR_ROOT and its grandparent is the root node
+      //A node is the project root if its parent has the name $DIR_ROOT and its 
+      //grandparent is the root node
       return parent.getInodePK().getParentId() == 1;
     }
   }

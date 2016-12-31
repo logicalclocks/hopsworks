@@ -22,7 +22,8 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT p FROM ProjectPaymentsHistory p"),
   @NamedQuery(name = "ProjectPaymentsHistory.findByProjectname",
           query
-          = "SELECT p FROM ProjectPaymentsHistory p WHERE p.projectPaymentsHistoryPK.projectname = :projectname"),
+          = "SELECT p FROM ProjectPaymentsHistory p "
+          + "WHERE p.projectPaymentsHistoryPK.projectname = :projectname"),
   @NamedQuery(name = "ProjectPaymentsHistory.findByUsername",
           query
           = "SELECT p FROM ProjectPaymentsHistory p WHERE p.username = :username"),
@@ -31,7 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT p FROM ProjectPaymentsHistory p WHERE p.action = :action"),
   @NamedQuery(name = "ProjectPaymentsHistory.findByTransactionDate",
           query
-          = "SELECT p FROM ProjectPaymentsHistory p WHERE p.projectPaymentsHistoryPK.transactionDate = :transactionDate"),
+          = "SELECT p FROM ProjectPaymentsHistory p "
+          + "WHERE p.projectPaymentsHistoryPK.transactionDate = :transactionDate"),
   @NamedQuery(name = "ProjectPaymentsHistory.findByAmount",
           query
           = "SELECT p FROM ProjectPaymentsHistory p WHERE p.amount = :amount")})

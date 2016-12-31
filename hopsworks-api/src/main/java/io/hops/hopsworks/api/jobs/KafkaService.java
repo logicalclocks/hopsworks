@@ -94,8 +94,7 @@ public class KafkaService {
 
     List<TopicDTO> listTopics = kafka.findTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
-            = new GenericEntity<List<TopicDTO>>(listTopics) {
-    };
+            = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             topics).build();
   }
@@ -114,8 +113,7 @@ public class KafkaService {
 
     List<TopicDTO> listTopics = kafka.findSharedTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
-            = new GenericEntity<List<TopicDTO>>(listTopics) {
-    };
+            = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             topics).build();
   }
@@ -135,8 +133,7 @@ public class KafkaService {
 
     allTopics.addAll(kafka.findSharedTopicsByProject(projectId));
     GenericEntity<List<TopicDTO>> topics
-            = new GenericEntity<List<TopicDTO>>(allTopics) {
-    };
+            = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             topics).build();
   }
@@ -206,8 +203,7 @@ public class KafkaService {
     }
 
     GenericEntity<List<PartitionDetailsDTO>> topics
-            = new GenericEntity<List<PartitionDetailsDTO>>(topic) {
-    };
+            = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             topics).build();
@@ -299,8 +295,7 @@ public class KafkaService {
             .topicIsSharedTo(topicName, this.projectId);
 
     GenericEntity<List<SharedProjectDTO>> projectDtos
-            = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {
-    };
+            = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projectDtos).build();
@@ -323,8 +318,7 @@ public class KafkaService {
             = kafkaFacade.aclUsers(projectId, topicName);
 
     GenericEntity<List<AclUserDTO>> aclUsers
-            = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {
-    };
+            = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             aclUsers).build();
@@ -416,8 +410,7 @@ public class KafkaService {
 //        }
 
     GenericEntity<List<AclDTO>> aclDtos
-            = new GenericEntity<List<AclDTO>>(aclDto) {
-    };
+            = new GenericEntity<List<AclDTO>>(aclDto) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             aclDtos).build();
@@ -567,8 +560,7 @@ public class KafkaService {
 
     List<SchemaDTO> schemaDtos = kafka.listSchemasForTopics();
     GenericEntity<List<SchemaDTO>> schemas
-            = new GenericEntity<List<SchemaDTO>>(schemaDtos) {
-    };
+            = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             schemas).build();
   }

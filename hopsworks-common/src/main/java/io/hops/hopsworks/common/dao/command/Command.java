@@ -3,7 +3,17 @@ package io.hops.hopsworks.common.dao.command;
 import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Temporal;
 
 @Entity
 @Table(name = "hopsworks.commands")
@@ -12,25 +22,33 @@ import javax.persistence.*;
           query = "SELECT c FROM Command c"),
   @NamedQuery(name = "Command.findRecentByCluster",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND (NOT c.status "
+          + "= :status) ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findRunningByCluster",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.status = :status ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.status = :status "
+          + "ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findRecentByCluster-Service",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service "
+          + "AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findRunningByCluster-Service",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.status = :status ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service "
+          + "AND c.status = :status ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findRecentByCluster-Service-Role-HostId",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service "
+          + "AND c.role = :role AND c.hostId = :hostId AND (NOT c.status = :status) "
+          + "ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findRunningByCluster-Service-Role-HostId",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND c.status = :status ORDER BY c.startTime DESC"),
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service "
+          + "AND c.role = :role AND c.hostId = :hostId AND c.status = :status ORDER BY c.startTime DESC"),
   @NamedQuery(name = "Command.findByCluster-Service-Role-HostId",
           query
-          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId ORDER BY c.startTime DESC"),})
+          = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service "
+          + "AND c.role = :role AND c.hostId = :hostId ORDER BY c.startTime DESC"),})
 public class Command implements Serializable {
 
   public static enum CommandStatus {

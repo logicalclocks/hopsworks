@@ -78,7 +78,6 @@ public class DatasetController {
    * @param dfso
    * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
-   * @throws se.kth.hopsworks.rest.AppException
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
    * @throws IOException if the creation of the dataset failed.
@@ -115,7 +114,8 @@ public class DatasetController {
             HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
-      throw new IOException("Invalid folder name for DataSet: name alrady exist.");
+      throw new IOException(
+              "Invalid folder name for DataSet: name alrady exist.");
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Permission 770
@@ -204,7 +204,8 @@ public class DatasetController {
     while (dsRelativePath.startsWith("/")) {
       dsRelativePath = dsRelativePath.substring(1);
     }
-    String[] relativePathArray = dsRelativePath.split(File.separator); //The array representing the DataSet-relative path
+    //The array representing the DataSet-relative path
+    String[] relativePathArray = dsRelativePath.split(File.separator);
     String fullPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
             + datasetName + "/" + dsRelativePath;
     //Parameter checking

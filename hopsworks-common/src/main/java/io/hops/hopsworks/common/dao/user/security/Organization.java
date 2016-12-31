@@ -68,11 +68,15 @@ public class Organization implements Serializable {
   @Size(max = 100)
   @Column(name = "department")
   private String department;
-  // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
+  // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid 
+  //phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax 
+  //number consider using this annotation to enforce field validation
   @Size(max = 20)
   @Column(name = "phone")
   private String phone;
-  // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
+  // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid 
+  //phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax 
+  //number consider using this annotation to enforce field validation
   @Size(max = 20)
   @Column(name = "fax")
   private String fax;

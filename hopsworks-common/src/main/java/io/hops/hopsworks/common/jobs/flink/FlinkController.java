@@ -91,8 +91,8 @@ public class FlinkController {
                   settings.getFlinkConfFile(),
                   hdfsLeDescriptorsFacade.getSingleEndpoint(),
                   settings.getFlinkUser(),
-                  hdfsUsersBean.getHdfsUserName(job.getProject(), 
-                      job.getCreator()),
+                  hdfsUsersBean.getHdfsUserName(job.getProject(),
+                          job.getCreator()),
                   settings.getHopsworksDomainDir()
           );
         }

@@ -58,8 +58,7 @@ public class MessageService {
     Users user = userFacade.findByEmail(eamil);
     List<Message> list = msgFacade.getAllMessagesTo(user);
     GenericEntity<List<Message>> msgs
-            = new GenericEntity<List<Message>>(list) {
-    };
+            = new GenericEntity<List<Message>>(list) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             msgs).build();

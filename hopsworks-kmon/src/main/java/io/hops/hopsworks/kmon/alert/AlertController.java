@@ -218,7 +218,6 @@ public class AlertController implements Serializable {
   private void informAlertsDeleted(String msg) {
     FacesContext context = FacesContext.getCurrentInstance();
     context.addMessage(null, new FacesMessage("Successful", msg));
-    System.err.println(msg);
   }
 
 }

@@ -138,8 +138,7 @@ public class HistoryService {
     }
 
     GenericEntity<List<YarnAppResultDTO>> yarnApps
-            = new GenericEntity<List<YarnAppResultDTO>>(appResultsToReturn) {
-    };
+            = new GenericEntity<List<YarnAppResultDTO>>(appResultsToReturn) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             yarnApps).build();
@@ -291,8 +290,7 @@ public class HistoryService {
     premiumAnalysis(jobsHistoryResult);
 
     GenericEntity<JobHeuristicDTO> jobsHistory
-            = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult) {
-    };
+            = new GenericEntity<JobHeuristicDTO>(jobsHistoryResult) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobsHistory).build();

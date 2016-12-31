@@ -1,4 +1,3 @@
-
 package io.hops.hopsworks.common.dao.hdfsUser;
 
 import java.io.Serializable;
@@ -20,7 +19,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-
 
 @Entity
 @Table(name = "hops.hdfs_users")
@@ -49,7 +47,7 @@ public class HdfsUsers implements Serializable {
           max = 100)
   @Column(name = "name")
   private String name;
-    @JoinTable(name = "hops.hdfs_users_groups",
+  @JoinTable(name = "hops.hdfs_users_groups",
           joinColumns
           = {
             @JoinColumn(name = "user_id",
@@ -72,7 +70,6 @@ public class HdfsUsers implements Serializable {
     this.name = name;
   }
 
-  
   public HdfsUsers(Integer id, String name) {
     this.id = id;
     this.name = name;
@@ -94,7 +91,7 @@ public class HdfsUsers implements Serializable {
     this.name = name;
   }
 
-  public String getUsername(){
+  public String getUsername() {
     int index = this.name.indexOf("__");
     if (index == -1) {
       return this.name;
@@ -102,7 +99,7 @@ public class HdfsUsers implements Serializable {
     index += 2; //removes the "__"
     return this.name.substring(index);
   }
-  
+
   @XmlTransient
   @JsonIgnore
   public Collection<HdfsGroups> getHdfsGroupsCollection() {
@@ -128,8 +125,8 @@ public class HdfsUsers implements Serializable {
       return false;
     }
     HdfsUsers other = (HdfsUsers) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -139,5 +136,5 @@ public class HdfsUsers implements Serializable {
   public String toString() {
     return "se.kth.hopsworks.hdfsUsers.HdfsUsers[ id=" + id + " ]";
   }
-  
+
 }

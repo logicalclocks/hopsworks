@@ -140,7 +140,7 @@ public class LocalhostServices {
     commands.add("-c");
     commands.add("sudo " + intermediateCaDir
             + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " + LocalhostServices.
-                    getUsernameInProject(userName, projectName));
+            getUsernameInProject(userName, projectName));
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";

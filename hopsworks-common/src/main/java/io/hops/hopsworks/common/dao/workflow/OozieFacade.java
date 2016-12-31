@@ -23,9 +23,15 @@ import javax.persistence.PersistenceContext;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
 import java.util.logging.Logger;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 @Stateless
 @LocalBean
@@ -196,7 +202,8 @@ public class OozieFacade {
         PrintStream ps = new PrintStream(fsStream);
         lsSerializer.getDomConfig().setParameter("format-pretty-print",
                 Boolean.TRUE); // Set this to true if the output needs to be beautified.
-        lsSerializer.getDomConfig().setParameter("xml-declaration", false); // Set this to true if the declaration is needed to be outputted.
+        // Set this to true if the declaration is needed to be outputted.
+        lsSerializer.getDomConfig().setParameter("xml-declaration", false);
         ps.print(lsSerializer.writeToString(this.doc));
         ps.flush();
         ps.close();

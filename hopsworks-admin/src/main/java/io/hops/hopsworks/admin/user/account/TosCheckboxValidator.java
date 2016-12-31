@@ -1,4 +1,3 @@
- 
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
@@ -10,7 +9,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 
- 
 @ManagedBean
 @RequestScoped
 public class TosCheckboxValidator implements Validator {

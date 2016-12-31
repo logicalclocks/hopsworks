@@ -23,14 +23,16 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT y FROM YarnAppHeuristicResultDetails y"),
   @NamedQuery(name
           = "YarnAppHeuristicResultDetails.findByYarnAppHeuristicResultId",
-          query
-          = "SELECT y FROM YarnAppHeuristicResultDetails y WHERE y.yarnAppHeuristicResultDetailsPK.yarnAppHeuristicResultId = :yarnAppHeuristicResultId"),
+          query = "SELECT y FROM YarnAppHeuristicResultDetails y "
+          + "WHERE y.yarnAppHeuristicResultDetailsPK.yarnAppHeuristicResultId "
+          + "= :yarnAppHeuristicResultId"),
   @NamedQuery(name = "YarnAppHeuristicResultDetails.findByIdAndName",
-          query
-          = "SELECT y FROM YarnAppHeuristicResultDetails y WHERE y.yarnAppHeuristicResultDetailsPK.yarnAppHeuristicResultId = :yarnAppHeuristicResultId AND y.yarnAppHeuristicResultDetailsPK.name = :name"),
+          query = "SELECT y FROM YarnAppHeuristicResultDetails y "
+          + "WHERE y.yarnAppHeuristicResultDetailsPK.yarnAppHeuristicResultId "
+          + "= :yarnAppHeuristicResultId AND y.yarnAppHeuristicResultDetailsPK.name = :name"),
   @NamedQuery(name = "YarnAppHeuristicResultDetails.findByName",
-          query
-          = "SELECT y FROM YarnAppHeuristicResultDetails y WHERE y.yarnAppHeuristicResultDetailsPK.name = :name")})
+          query = "SELECT y FROM YarnAppHeuristicResultDetails y "
+          + "WHERE y.yarnAppHeuristicResultDetailsPK.name = :name")})
 public class YarnAppHeuristicResultDetails implements Serializable {
 
   private static final long serialVersionUID = 1L;

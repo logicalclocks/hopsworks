@@ -11,7 +11,6 @@ public class MoveDTO {
   public MoveDTO() {
   }
 
-  
   public MoveDTO(int inodeId, String destPath) {
     this.inodeId = inodeId;
     this.destPath = destPath;
@@ -32,6 +31,5 @@ public class MoveDTO {
   public void setInodeId(int inodeId) {
     this.inodeId = inodeId;
   }
-  
-  
+
 }

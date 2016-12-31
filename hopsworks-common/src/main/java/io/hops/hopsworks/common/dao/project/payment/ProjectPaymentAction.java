@@ -17,7 +17,7 @@
  */
 package io.hops.hopsworks.common.dao.project.payment;
 
-public enum  ProjectPaymentAction {
+public enum ProjectPaymentAction {
 
   DEPOSIT_MONEY("Deposit money"),
   WITHDRAW_MONEY("Withdraw money"),

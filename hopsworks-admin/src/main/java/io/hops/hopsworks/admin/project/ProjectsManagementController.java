@@ -9,8 +9,10 @@
  * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
  * <p/>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package io.hops.hopsworks.admin.project;
@@ -59,7 +61,7 @@ public class ProjectsManagementController {
 
   @EJB
   private InodeFacade inodes;
-  
+
   /**
    *
    * @param projectname
@@ -74,7 +76,6 @@ public class ProjectsManagementController {
 //      throw new IOException(ex);
 //    }
 //  }
-
   /**
    *
    * @return size of quota for project subtree in HDFS in GBs
@@ -86,19 +87,17 @@ public class ProjectsManagementController {
 //      throw new IOException(ex);
 //    }
 //  }
-  
   /**
-   * 
+   *
    * @param name
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   public HdfsInodeAttributes getHDFSQuotas(String name) throws AppException {
     String pathname = Settings.getProjectPath(name);
     Inode inode = inodes.getInodeAtPath(pathname);
     return projectController.getHdfsQuotas(inode.getId());
-  }  
-  
+  }
 
   /**
    *
@@ -110,12 +109,11 @@ public class ProjectsManagementController {
           DistributedFileSystemOps dfso) throws IOException {
     projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
   }
-  
+
   public void setHdfsNumFilesQuota(String projectname, long quotaInMBs,
           DistributedFileSystemOps dfso) throws IOException {
 //    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
   }
-  
 
   public List<ProjectsManagement> getAllProjects() {
     return projectsManagementFacade.findAll();

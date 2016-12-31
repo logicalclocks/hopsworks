@@ -3,11 +3,9 @@ package io.hops.hopsworks.common.dao.user.consent;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
-import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless

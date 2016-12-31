@@ -9,11 +9,11 @@
     <relativePath>..</relativePath>
   </parent>
   
-  <groupId>io.hops</groupId>
+  <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-api</artifactId>
   <version>0.1.0</version>
   <packaging>war</packaging>
-
+  <description>Hopsworks rest api</description>
   <name>hopsworks-api</name>
     
   <dependencies>

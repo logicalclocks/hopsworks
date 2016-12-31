@@ -122,8 +122,7 @@ public class NotebookRestApi {
           String req)
           throws IOException {
     HashMap<String, HashSet> permMap = gson.fromJson(req,
-            new TypeToken<HashMap<String, HashSet>>() {
-    }.getType());
+            new TypeToken<HashMap<String, HashSet>>() {}.getType());
     Note note = notebook.getNote(noteId);
     String principal = SecurityUtils.getPrincipal();
     HashSet<String> roles = SecurityUtils.getRoles();
@@ -189,8 +188,7 @@ public class NotebookRestApi {
   public Response bind(@PathParam("noteId") String noteId, String req) throws
           IOException {
     List<String> settingIdList = gson.fromJson(req,
-            new TypeToken<List<String>>() {
-    }.getType());
+            new TypeToken<List<String>>() {}.getType());
     notebook.bindInterpretersToNote(noteId, settingIdList);
     return new JsonResponse<>(Status.OK).build();
   }

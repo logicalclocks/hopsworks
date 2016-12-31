@@ -95,8 +95,7 @@ public class LocalFsService {
     }
 
     GenericEntity<List<FsView>> fileViews = new GenericEntity<List<FsView>>(
-            results) {
-    };
+            results) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             fileViews).build();
   }

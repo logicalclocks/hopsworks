@@ -43,7 +43,7 @@ public class DistributedFsService {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-  
+
   private Configuration conf;
   private String hadoopConfDir;
 
@@ -85,7 +85,8 @@ public class DistributedFsService {
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
-    conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.getSingleEndpoint());
+    conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.
+            getSingleEndpoint());
 //    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
 //    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
   }
@@ -126,22 +127,25 @@ public class DistributedFsService {
     }
     return new DistributedFileSystemOps(ugi, conf);
   }
+
   public DistributedFileSystemOps getDfsOpsForTesting(String username) {
     if (username == null || username.isEmpty()) {
       throw new NullPointerException("username not set.");
     }
     //Get hdfs groups
-        Collection<HdfsGroups> groups = hdfsUsersFacade.findByName(username).getHdfsGroupsCollection();
-        String[] userGroups = new String[groups.size()];
-        Iterator<HdfsGroups> iter = groups.iterator();
-        int i=0;
-        while(iter.hasNext()){
-          userGroups[i] = iter.next().getName();
-          i++;
-        }
+    Collection<HdfsGroups> groups = hdfsUsersFacade.findByName(username).
+            getHdfsGroupsCollection();
+    String[] userGroups = new String[groups.size()];
+    Iterator<HdfsGroups> iter = groups.iterator();
+    int i = 0;
+    while (iter.hasNext()) {
+      userGroups[i] = iter.next().getName();
+      i++;
+    }
     UserGroupInformation ugi;
     try {
-      ugi = UserGroupInformation.createProxyUserForTesting(username, UserGroupInformation.
+      ugi = UserGroupInformation.createProxyUserForTesting(username,
+              UserGroupInformation.
               getLoginUser(), userGroups);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -226,8 +230,9 @@ public class DistributedFsService {
 
   /**
    * Returns a list of inodes if the path is a directory empty list otherwise.
+   *
    * @param path
-   * @return 
+   * @return
    */
   public List<Inode> getChildInodes(String path) {
     Inode inode = inodes.getInodeAtPath(path);

@@ -28,7 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT s FROM SharedTopics s WHERE s.sharedTopicsPK.projectId = :projectId"),
   @NamedQuery(name = "SharedTopics.findByTopicNameAndProjectId",
           query
-          = "SELECT s FROM SharedTopics s WHERE s.sharedTopicsPK.projectId = :projectId and s.sharedTopicsPK.topicName = :topicName")})
+          = "SELECT s FROM SharedTopics s WHERE s.sharedTopicsPK.projectId "
+          + "= :projectId and s.sharedTopicsPK.topicName = :topicName")})
 public class SharedTopics implements Serializable {
 
   private static final long serialVersionUID = 1L;

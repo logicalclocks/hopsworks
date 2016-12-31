@@ -1,8 +1,10 @@
 package io.hops.hopsworks.common.dao.workflow;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 @Embeddable
 public class EdgePK implements Serializable {

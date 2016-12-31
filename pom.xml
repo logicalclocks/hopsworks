@@ -7,7 +7,7 @@
   <version>0.1.0</version>
   <packaging>pom</packaging>
   <name>hopsworks</name>
-  <description>Hopsworks project</description>
+  <description>Hopsworks parent project</description>
   <url>http://www.hops.io</url>
 
   <modules>
@@ -53,10 +53,10 @@
   <build>
     <finalName>hopsworks</finalName>
     <plugins>
-      <!--plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.15</version>
+        <version>2.16</version>
         <executions>
           <execution>
             <id>validate</id>
@@ -74,7 +74,7 @@
           <failsOnError>true</failsOnError>
           <consoleOutput>true</consoleOutput>
         </configuration>
-      </plugin-->
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

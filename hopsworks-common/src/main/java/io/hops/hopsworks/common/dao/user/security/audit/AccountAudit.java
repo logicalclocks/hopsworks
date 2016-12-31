@@ -18,7 +18,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.user.Users;
- 
+
 @Entity
 @Table(name = "hopsworks.account_audit")
 @XmlRootElement
@@ -91,7 +91,7 @@ public class AccountAudit implements Serializable {
           referencedColumnName = "uid")
   @ManyToOne
   private Users target;
-    
+
   public AccountAudit() {
   }
 

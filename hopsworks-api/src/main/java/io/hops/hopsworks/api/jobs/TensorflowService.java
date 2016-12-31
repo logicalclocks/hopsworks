@@ -100,8 +100,7 @@ public class TensorflowService {
 
 //        List<TopicDTO> listTopics = tf.findProgramsByProject(projectId);
     GenericEntity<List<TopicDTO>> programs
-            = new GenericEntity<List<TopicDTO>>(null) {
-    };
+            = new GenericEntity<List<TopicDTO>>(null) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             programs).build();
   }

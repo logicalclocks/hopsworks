@@ -46,7 +46,7 @@
                            paginator="true"
                            paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                            rowsPerPageTemplate="15,25,35,45,55">
-              
+
                 <p:column id="ynameColumn" headerText="First Name" 
                           filterBy="#{yreq.fname}">
                   <h:outputText value="#{yreq.fname}" />
@@ -65,7 +65,7 @@
                           filterBy="#{yreq.organization.orgName}">
                   <h:outputText value="#{yreq.organization.orgName}" />
                 </p:column>
-                
+
                 <p:column id="deptColumn" headerText="Department" 
                           filterBy="#{yreq.organization.department}">
                   <h:outputText value="#{yreq.organization.department}" />

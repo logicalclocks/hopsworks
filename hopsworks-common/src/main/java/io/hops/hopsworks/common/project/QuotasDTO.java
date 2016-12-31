@@ -1,16 +1,7 @@
 package io.hops.hopsworks.common.project;
 
-import java.util.Date;
-import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 
-/**
- *
- * @author Ermias
- */
 @XmlRootElement
 public class QuotasDTO {
 
@@ -24,8 +15,8 @@ public class QuotasDTO {
   }
 
   public QuotasDTO(String yarnQuotaInMins,
-      Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
-       Long hdfsNsQuota, Long hdfsNsCount
+          Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
+          Long hdfsNsQuota, Long hdfsNsCount
   ) {
     this.yarnQuotaInMins = yarnQuotaInMins;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
@@ -77,9 +68,10 @@ public class QuotasDTO {
   @Override
   public String toString() {
     return "QuotasDTO{"
-        + "hdfsUsage=" + hdfsUsageInBytes + ", hdfsQuota=" + hdfsQuotaInBytes
-        + "hdfsNsUsage=" + hdfsNsCount + ", hdfsNsQuota=" + hdfsNsQuota
-        + ", yarnQuota=" + yarnQuotaInMins + '}';
+            + "hdfsUsage=" + hdfsUsageInBytes + ", hdfsQuota="
+            + hdfsQuotaInBytes
+            + "hdfsNsUsage=" + hdfsNsCount + ", hdfsNsQuota=" + hdfsNsQuota
+            + ", yarnQuota=" + yarnQuotaInMins + '}';
   }
 
 }

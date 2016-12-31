@@ -1,11 +1,16 @@
 package io.hops.hopsworks.common.util;
 
 import java.util.Date;
-import javax.mail.*;
-import javax.mail.internet.*;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 @Stateless
 public class EmailBean {

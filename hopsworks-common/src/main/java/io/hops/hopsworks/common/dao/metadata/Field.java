@@ -274,7 +274,6 @@ public class Field implements Serializable, EntityIntf, Comparable<Field> {
   /*
    * -------------------------------
    */
-
   public String getName() {
     return name;
   }

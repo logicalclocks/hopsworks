@@ -151,8 +151,7 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-      };
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(searchResults).build();
     }
@@ -237,8 +236,7 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-      };
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(searchResults).build();
     }
@@ -326,8 +324,7 @@ public class ElasticService {
 
       this.clientShutdown(client);
       GenericEntity<List<ElasticHit>> searchResults
-              = new GenericEntity<List<ElasticHit>>(elasticHits) {
-      };
+              = new GenericEntity<List<ElasticHit>>(elasticHits) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(searchResults).build();
     }

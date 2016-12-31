@@ -19,8 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Variables.findAll",
           query = "SELECT v FROM Variables v"),
   @NamedQuery(name = "Variables.findById",
-          query = "SELECT v FROM Variables v WHERE v.id = :id")
-})
+          query = "SELECT v FROM Variables v WHERE v.id = :id")})
 public class Variables implements Serializable {
 
   private static final long serialVersionUID = 1L;

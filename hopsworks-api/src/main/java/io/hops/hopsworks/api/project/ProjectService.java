@@ -133,8 +133,7 @@ public class ProjectService {
     String email = sc.getUserPrincipal().getName();
     List<ProjectTeam> list = projectController.findProjectByUser(email);
     GenericEntity<List<ProjectTeam>> projects
-            = new GenericEntity<List<ProjectTeam>>(list) {
-    };
+            = new GenericEntity<List<ProjectTeam>>(list) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -149,8 +148,7 @@ public class ProjectService {
 
     List<Project> list = projectFacade.findAll();
     GenericEntity<List<Project>> projects
-            = new GenericEntity<List<Project>>(list) {
-    };
+            = new GenericEntity<List<Project>>(list) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -406,7 +404,8 @@ public class ProjectService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
         }
-        //Severe: java.io.FileNotFoundException: /tmp/tempstores/demo_admin000__meb10000__kstore.jks (No such file or directory)
+        //Severe: java.io.FileNotFoundException: /tmp/tempstores/
+        //demo_admin000__meb10000__kstore.jks (No such file or directory)
         LocalhostServices.
                 createUserCertificates(settings.getIntermediateCaDir(),
                         project.getName(), user.getUsername());
@@ -794,8 +793,7 @@ public class ProjectService {
     List<DataSetDTO> publicDatasets = datasetFacade.findPublicDatasets();
 
     GenericEntity<List<DataSetDTO>> datasets
-            = new GenericEntity<List<DataSetDTO>>(publicDatasets) {
-    };
+            = new GenericEntity<List<DataSetDTO>>(publicDatasets) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             datasets).build();

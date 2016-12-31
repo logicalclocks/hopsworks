@@ -19,7 +19,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -29,6 +28,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -107,10 +113,8 @@ public class EdgeService {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response update(
-          String stringParams,
-          @PathParam("id") String id
-  ) throws AppException {
+  public Response update(String stringParams, @PathParam("id") String id) throws
+          AppException {
     EdgePK edgePk = new EdgePK(id, workflow.getId());
     Edge edge;
     try {

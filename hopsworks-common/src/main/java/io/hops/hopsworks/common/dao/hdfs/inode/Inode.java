@@ -84,7 +84,8 @@ import io.hops.hopsworks.common.dao.metadata.Template;
           = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
   @NamedQuery(name = "Inode.findRootByName",
           query
-          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId")})
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId "
+          + "AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;

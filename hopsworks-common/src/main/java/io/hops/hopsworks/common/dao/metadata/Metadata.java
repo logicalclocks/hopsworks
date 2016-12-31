@@ -28,8 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT m FROM Metadata m WHERE m.metadataPK = :metadataPK"),
   @NamedQuery(name = "Metadata.findById",
-          query = "SELECT m FROM Metadata m WHERE m.metadataPK.id = :id")
-})
+          query = "SELECT m FROM Metadata m WHERE m.metadataPK.id = :id")})
 public class Metadata implements EntityIntf, Serializable {
 
   private static final long serialVersionUID = 1L;

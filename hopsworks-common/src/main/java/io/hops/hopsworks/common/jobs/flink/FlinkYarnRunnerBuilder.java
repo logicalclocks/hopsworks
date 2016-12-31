@@ -28,11 +28,14 @@ import io.hops.hopsworks.common.util.Settings;
 
 /**
  * All classes in this package contain code taken from
- * https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/src/main/java/org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
+ * https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/hadoop-yarn
+ * /hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/src/main/java/
+ * org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
  * and
  * https://github.com/hortonworks/simple-yarn-app
  * and
- * https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/yarn/StormOnYarn.java
+ * https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/
+ * yarn/StormOnYarn.java
  * <p>
  * The Flink jar is uploaded to HDFS by this client.
  * The application master and all the TaskManager containers get the jar file
@@ -51,7 +54,8 @@ public class FlinkYarnRunnerBuilder {
   public final static String ENV_TM_MEMORY = "_CLIENT_TM_MEMORY";
   public final static String ENV_TM_COUNT = "_CLIENT_TM_COUNT";
   public final static String ENV_APP_ID = "_APP_ID";
-  public final static String FLINK_JAR_PATH = "_FLINK_JAR_PATH"; // the Flink jar resource location (in HDFS).
+  // the Flink jar resource location (in HDFS).
+  public final static String FLINK_JAR_PATH = "_FLINK_JAR_PATH";
   public static final String ENV_CLIENT_HOME_DIR = "_CLIENT_HOME_DIR";
   public static final String ENV_CLIENT_SHIP_FILES = "_CLIENT_SHIP_FILES";
   public static final String ENV_CLIENT_USERNAME = "_CLIENT_USERNAME";
@@ -405,12 +409,13 @@ public class FlinkYarnRunnerBuilder {
 
     /*
      * Split propertes with "@@"
-     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
+     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/
+     * flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
      */
     if (dynamicPropertiesEncoded.length() > 0) {
       cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
               dynamicPropertiesEncoded.
-                      lastIndexOf("@@")));
+              lastIndexOf("@@")));
     }
     builder.setJobType(JobType.FLINK);
     builder.setAppJarPath(appJarPath);

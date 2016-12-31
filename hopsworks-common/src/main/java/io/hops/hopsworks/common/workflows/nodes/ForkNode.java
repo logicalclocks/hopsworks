@@ -6,7 +6,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.w3c.dom.Element;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 import javax.ws.rs.ProcessingException;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -46,8 +46,9 @@ public class ForkNode extends Node {
 
       node.getWorkflowElement(execution, root);
     }
-//        JoinNode joinNode = execution.getEm().find(JoinNode.class, new NodePK(this.getJoinNodeId(), this.getWorkflowId()));
-//        joinNode.getWorkflowElement(execution, root);
+//    JoinNode joinNode = execution.getEm().find(JoinNode.class, new NodePK(this.
+//            getJoinNodeId(), this.getWorkflowId()));
+//    joinNode.getWorkflowElement(execution, root);
 
     execution.addNodeId(this.getOozieId());
     return fork;

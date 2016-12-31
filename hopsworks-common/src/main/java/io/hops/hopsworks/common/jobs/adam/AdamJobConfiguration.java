@@ -63,7 +63,8 @@ public class AdamJobConfiguration extends SparkJobConfiguration {
       throw new IllegalArgumentException(
               "Cannot convert object into AdamJobConfiguration.", e);
     }
-    //Second: allow all superclasses to check validity. To do this: make sure that the type will get recognized correctly.
+    //Second: allow all superclasses to check validity. To do this: make sure 
+    //that the type will get recognized correctly.
     json.set(KEY_TYPE, JobType.SPARK.name());
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state

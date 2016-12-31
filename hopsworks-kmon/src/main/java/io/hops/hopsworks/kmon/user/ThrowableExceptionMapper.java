@@ -19,7 +19,6 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   @Override
   @Produces(MediaType.APPLICATION_JSON)
   public Response toResponse(Throwable ex) {
-    System.out.println("ThrowableExceptionMapper: " + ex.getClass());
     ex.printStackTrace();
     //usually you don't pass detailed info out (don't do this here in production environments)
     JSON.setErrorMsg(ex.getMessage());

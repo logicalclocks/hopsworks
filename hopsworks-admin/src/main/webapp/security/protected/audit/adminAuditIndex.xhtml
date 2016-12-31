@@ -6,7 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-        
+
       xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
 
@@ -23,15 +23,15 @@
 
     <h:body>
 
-        <c:if test="#{roleEnforcementPoint.isAuditorRole()}">
+      <c:if test="#{roleEnforcementPoint.isAuditorRole()}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
-      
+
 
       <c:if test="#{roleEnforcementPoint.onlyAuditorRole}">
-          <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
+        <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
       </c:if>
 
 
@@ -98,7 +98,7 @@
               <p:outputLabel style="text-align: left"  value="Project Audit"></p:outputLabel>
 
             </p:column>
-            
+
             <p:column>
               <h:commandLink  action="consentsAudit">
                 <p:graphicImage id="consentsAudit" 

@@ -41,7 +41,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           = "SELECT y FROM YarnAppHeuristicResult y WHERE y.severity = :severity"),
   @NamedQuery(name = "YarnAppHeuristicResult.findByIdAndHeuristicClass",
           query
-          = "SELECT y FROM YarnAppHeuristicResult y WHERE y.yarnAppResultId = :yarnAppResultId AND y.heuristicClass = :heuristicClass"),
+          = "SELECT y FROM YarnAppHeuristicResult y WHERE y.yarnAppResultId "
+          + "= :yarnAppResultId AND y.heuristicClass = :heuristicClass"),
   @NamedQuery(name = "YarnAppHeuristicResult.findByScore",
           query
           = "SELECT y FROM YarnAppHeuristicResult y WHERE y.score = :score")})

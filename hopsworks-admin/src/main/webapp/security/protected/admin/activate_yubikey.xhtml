@@ -33,7 +33,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                 #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
+                #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
               </h3>
             </p:column>
 
@@ -96,7 +96,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">              
-              #{yubikeyActivator.selectedYubikyUser.title eq '-'? '':yubikeyActivator.selectedYubikyUser.title}   #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
+                #{yubikeyActivator.selectedYubikyUser.title eq '-'? '':yubikeyActivator.selectedYubikyUser.title}   #{yubikeyActivator.selectedYubikyUser.fname} #{yubikeyActivator.selectedYubikyUser.lname} 
 
               </h3>
             </p:column>
@@ -128,7 +128,7 @@
 
             <p:column>
               <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-               #{yubikeyActivator.selectedYubikyUser.address.city}
+                #{yubikeyActivator.selectedYubikyUser.address.city}
               </h3>
             </p:column>
 
@@ -149,19 +149,19 @@
         <h:form>
           <h:panelGrid columns="3">  
             <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
-                  <p:selectOneMenu id="yroleChoose" 
-                                   value="#{yubikeyActivator.sgroup}"
-                                   rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"
-                                   editable="false"
-                                   required="true"
-                                   >
-                    <f:selectItem itemLabel="Select Role" 
-                                  itemValue="#"
-                                  />
-                    <f:selectItems value="#{yubikeyActivator.actGroups}"/>
-                  </p:selectOneMenu>
-          <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
-            
+            <p:selectOneMenu id="yroleChoose" 
+                             value="#{yubikeyActivator.sgroup}"
+                             rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"
+                             editable="false"
+                             required="true"
+                             >
+              <f:selectItem itemLabel="Select Role" 
+                            itemValue="#"
+                            />
+              <f:selectItems value="#{yubikeyActivator.actGroups}"/>
+            </p:selectOneMenu>
+            <p:spacer rendered="#{yubikeyActivator.selectedYubikyUser.yubikey.status !=7}"/>
+
             <p:outputLabel for="pid" 
                            style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
                            value="Yubikey PublicId"/>
@@ -188,7 +188,7 @@
             <p:tooltip   for="secret" 
                          value="Yubikey Secret Key (16 bytes Hex)" 
                          trackMouse="true" />
-            
+
             <p:spacer></p:spacer>
             <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
             <p:spacer></p:spacer>
@@ -196,7 +196,7 @@
 
           <div align="center">
             <p:commandButton  type="submit" value="Register" action="#{yubikeyActivator.activateYubikey()}">
-             </p:commandButton>  
+            </p:commandButton>  
             <p:spacer width="10px"></p:spacer>
             <p:commandButton  type="submit" value="Cancel" action="userMgmt" immediate="true" />
           </div>

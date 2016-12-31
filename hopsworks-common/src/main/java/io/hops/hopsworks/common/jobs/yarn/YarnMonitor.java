@@ -54,12 +54,12 @@ public final class YarnMonitor implements Closeable {
   }
 
   public FinalApplicationStatus getFinalApplicationStatus() throws YarnException,
-      IOException {
+          IOException {
     return yarnClient.getApplicationReport(appId).getFinalApplicationStatus();
   }
 
   public float getProgress() throws YarnException,
-      IOException {
+          IOException {
     return yarnClient.getApplicationReport(appId).getProgress();
   }
 

@@ -151,7 +151,8 @@ public abstract class ContentMessage implements Message {
         card.add("fieldtypeid", c.getFieldTypeId());
         card.add("position", c.getPosition());
 
-        //"fieldtypeContent":[{"id":-1,"fieldid":-1,"value":"cc"},{"id":-1,"fieldid":-1,"value":"ccc"},{"id":-1,"fieldid":-1,"value":"cccc"}]
+        //"fieldtypeContent":[{"id":-1,"fieldid":-1,"value":"cc"},{"id":-1,
+        //"fieldid":-1,"value":"ccc"},{"id":-1,"fieldid":-1,"value":"cccc"}]
         JsonObjectBuilder temp = Json.createObjectBuilder();
         temp.add("showing", false);
         temp.add("value", String.valueOf(c.getMaxsize()));

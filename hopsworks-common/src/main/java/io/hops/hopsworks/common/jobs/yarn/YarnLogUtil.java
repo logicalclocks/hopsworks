@@ -59,7 +59,7 @@ public class YarnLogUtil {
                   + wait + " seconds.");
           break;
         case SUCCESS:
-          for(String desiredLogType : desiredLogTypes){
+          for (String desiredLogType : desiredLogTypes) {
             writeLogs(dfs, srcs, writer, desiredLogType);
           }
           break;

@@ -8,7 +8,7 @@
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
   <navigation-rule>      
    
-     <navigation-case>
+    <navigation-case>
       <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
@@ -190,7 +190,7 @@
       <to-view-id>/security/protected/admin/yubikeyUers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-     <navigation-case>
+    <navigation-case>
       <from-outcome>monitoring</from-outcome>
       <to-view-id>/security/protected/kmon/clusters.xhtml</to-view-id>
       <redirect/>
@@ -217,7 +217,7 @@
       <redirect/>
     </navigation-case>
     
-      <navigation-case>
+    <navigation-case>
       <from-outcome>home</from-outcome>
       <to-view-id>/#/home</to-view-id>
       <redirect/>

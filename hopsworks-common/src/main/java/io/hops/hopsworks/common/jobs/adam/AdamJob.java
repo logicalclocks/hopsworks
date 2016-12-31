@@ -28,7 +28,7 @@ public class AdamJob extends SparkJob {
   private final String adamUser; //must be glassfish
 
   /**
-   * 
+   *
    * @param job
    * @param services
    * @param user
@@ -127,7 +127,7 @@ public class AdamJob extends SparkJob {
       jobconfig.setAppName("Untitled ADAM Job");
     }
 
-    runnerbuilder = new SparkYarnRunnerBuilder(adamJarPath, 
+    runnerbuilder = new SparkYarnRunnerBuilder(adamJarPath,
             Settings.ADAM_MAINCLASS, JobType.SPARK);
     super.setupJob(dfso);
     //Set some ADAM-specific property values   
@@ -137,7 +137,7 @@ public class AdamJob extends SparkJob {
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     runnerbuilder.addSystemProperty("spark.kryoserializer.buffer", "4m");
     runnerbuilder.addSystemProperty("spark.kryo.referenceTracking", "true");
-   
+
     runnerbuilder.addAllJobArgs(constructArgs(jobconfig));
 
     //Add ADAM jar to local resources
@@ -239,8 +239,9 @@ public class AdamJob extends SparkJob {
   protected void cleanup() {
     //Nothing to be done, really.
   }
+
   @Override
-  protected void stopJob(String appid){
+  protected void stopJob(String appid) {
     super.stopJob(appid);
   }
 

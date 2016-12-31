@@ -5,7 +5,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
 
 @XmlRootElement

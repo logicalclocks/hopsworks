@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.dao.user.Users;
           query
           = "SELECT c FROM ConsentsAudit c WHERE c.mac = :mac")})
 public class ConsentsAudit implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -90,12 +91,12 @@ public class ConsentsAudit implements Serializable {
           referencedColumnName = "uid")
   @ManyToOne
   private Users initiator;
-  
+
   @JoinColumn(name = "consent_id",
           referencedColumnName = "id")
   @ManyToOne
   private Consents consentID;
-  
+
   public ConsentsAudit() {
   }
 
@@ -205,8 +206,8 @@ public class ConsentsAudit implements Serializable {
       return false;
     }
     ConsentsAudit other = (ConsentsAudit) object;
-    if ((this.logId == null && other.logId != null) ||
-            (this.logId != null && !this.logId.equals(other.logId))) {
+    if ((this.logId == null && other.logId != null) || (this.logId != null
+            && !this.logId.equals(other.logId))) {
       return false;
     }
     return true;
@@ -214,7 +215,8 @@ public class ConsentsAudit implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.security.audit.model.ConsentsAudit[ logId=" + logId + " ]";
+    return "se.kth.bbc.security.audit.model.ConsentsAudit[ logId=" + logId
+            + " ]";
   }
-  
+
 }

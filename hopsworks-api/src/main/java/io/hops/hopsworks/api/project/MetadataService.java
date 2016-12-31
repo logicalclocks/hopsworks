@@ -284,8 +284,7 @@ public class MetadataService {
 
       metadata.add(metatopView);
       GenericEntity<List<MetadataView>> response
-              = new GenericEntity<List<MetadataView>>(metadata) {
-      };
+              = new GenericEntity<List<MetadataView>>(metadata) {};
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(response).build();
@@ -329,8 +328,7 @@ public class MetadataService {
     }
 
     GenericEntity<List<TemplateView>> t
-            = new GenericEntity<List<TemplateView>>(tViews) {
-    };
+            = new GenericEntity<List<TemplateView>>(tViews) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             t).build();
@@ -379,8 +377,7 @@ public class MetadataService {
     }
 
     GenericEntity<List<TemplateView>> t
-            = new GenericEntity<List<TemplateView>>(toreturn) {
-    };
+            = new GenericEntity<List<TemplateView>>(toreturn) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             t).build();
@@ -557,7 +554,8 @@ public class MetadataService {
     if (op == null || email == null || metaObj == null) {
       throw new NullPointerException("MetadataOp  or email or metaObj was null");
     }
-    // Get Inode. Get project for the inode. Check if the user has DATA OWNER role for that project (privileges to add metadata)
+    // Get Inode. Get project for the inode. Check if the user has DATA OWNER 
+    //role for that project (privileges to add metadata)
     InodeTableComposite itc = JsonUtil.parseSchemaHeader(metaObj);
     //variables not set in the json message
     if (itc == null) {

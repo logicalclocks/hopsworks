@@ -1,4 +1,3 @@
-
 package io.hops.hopsworks.common.dao.hdfsUser;
 
 import java.io.Serializable;
@@ -116,8 +115,8 @@ public class HdfsGroups implements Serializable {
       return false;
     }
     HdfsGroups other = (HdfsGroups) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -127,5 +126,5 @@ public class HdfsGroups implements Serializable {
   public String toString() {
     return "se.kth.hopsworks.hdfsUsers.HdfsGroups[ id=" + id + " ]";
   }
-  
+
 }

@@ -14,7 +14,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.*;
+import javax.ejb.Stateless;
+import javax.ejb.EJB;
+import javax.ejb.EJBException;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentAction;
@@ -354,7 +358,8 @@ public class ProjectController {
 //      if (sshAdded == true) {
 //        try {
 //
-//          // For all members of the project, create an account for them and copy their public keys to ~/.ssh/authorized_keys
+//          // For all members of the project, create an account for them and 
+//            //copy their public keys to ~/.ssh/authorized_keys
 //          List<ProjectTeam> members = projectTeamFacade.findMembersByProject(
 //                  project);
 //          for (ProjectTeam pt : members) {

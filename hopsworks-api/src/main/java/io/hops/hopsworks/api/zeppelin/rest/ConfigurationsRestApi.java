@@ -94,16 +94,14 @@ public class ConfigurationsRestApi {
     ZeppelinConfiguration conf = zeppelinConf.getNotebook().getConf();
 
     Map<String, String> configurations = conf.dumpConfigurations(conf,
-            new ZeppelinConfiguration.ConfigurationKeyPredicate() {
+      new ZeppelinConfiguration.ConfigurationKeyPredicate() {
       @Override
       public boolean apply(String key) {
         return !key.contains("password") && !key.equals(
                 ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
                 getVarName());
       }
-    }
-    );
-
+    });
     return new JsonResponse(Status.OK, "", configurations).build();
   }
 

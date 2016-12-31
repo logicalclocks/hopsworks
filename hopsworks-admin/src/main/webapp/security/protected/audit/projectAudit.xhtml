@@ -6,7 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-        
+
       xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
   <f:view contentType="text/html">
 
@@ -20,16 +20,16 @@
     </h:head>
 
     <h:body>
-      
+
       <c:if test="#{roleEnforcementPoint.admin}">
         <ui:insert name="adminTitleBar">
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
-      
+
 
       <c:if test="#{roleEnforcementPoint.onlyAuditorRole}">
-          <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
+        <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
       </c:if>
 
 
@@ -101,7 +101,7 @@
 
                   <f:facet name="header" >Audit </f:facet>
 
-                  
+
 
                   <p:column id="studyName" filterBy="#{activity.project.name}"
                             headerText="Project Name"
@@ -109,7 +109,7 @@
 
                     <h:outputText value="#{activity.project.name}" />
                   </p:column>
-                  
+
                   <p:column id="perfColumn" filterBy="#{activity.user.lname}"
                             headerText="Initiator"
                             style="width:32%; font-size: 12px; text-align: left;">

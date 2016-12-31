@@ -25,7 +25,8 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query = "SELECT m FROM InodeBasicMetadata m"),
   @NamedQuery(name = "InodeBasicMetadata.findById",
           query
-          = "SELECT m FROM InodeBasicMetadata m WHERE m.inode.inodePK.parentId = :id AND m.inode.inodePK.name = :name")})
+          = "SELECT m FROM InodeBasicMetadata m WHERE m.inode.inodePK.parentId "
+          + "= :id AND m.inode.inodePK.name = :name")})
 public class InodeBasicMetadata implements Serializable, EntityIntf {
 
   @Id
@@ -40,8 +41,7 @@ public class InodeBasicMetadata implements Serializable, EntityIntf {
     @JoinColumn(name = "inode_name",
             referencedColumnName = "name"),
     @JoinColumn(name = "partition_id",
-            referencedColumnName = "partition_id")
-  })
+            referencedColumnName = "partition_id")})
   @OneToOne(optional = false)
   private Inode inode;
 

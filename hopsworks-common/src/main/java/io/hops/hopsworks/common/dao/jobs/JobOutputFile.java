@@ -35,7 +35,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           = "SELECT j FROM JobOutputFile j WHERE j.path = :path"),
   @NamedQuery(name = "JobOutputFile.findByNameAndExecutionId",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.executionId = :executionId")})
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name "
+          + "AND j.jobOutputFilePK.executionId = :executionId")})
 public class JobOutputFile implements Serializable {
 
   private static final long serialVersionUID = 1L;

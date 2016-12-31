@@ -49,8 +49,7 @@ public class ActivityService {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {
-    };
+            = new GenericEntity<List<Activity>>(activityDetails) {};
 
     Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(
@@ -69,8 +68,7 @@ public class ActivityService {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {
-    };
+            = new GenericEntity<List<Activity>>(activityDetails) {};
 
     Response r = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(
@@ -89,8 +87,7 @@ public class ActivityService {
     List<Activity> activityDetails = activityFacade.
             getPaginatedActivityByUser(from, to, user);
     GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {
-    };
+            = new GenericEntity<List<Activity>>(activityDetails) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projectActivities).build();
@@ -106,8 +103,7 @@ public class ActivityService {
     List<Activity> activityDetails = activityFacade.
             getAllActivityOnProject(project);
     GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {
-    };
+            = new GenericEntity<List<Activity>>(activityDetails) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projectActivities).build();
@@ -125,8 +121,7 @@ public class ActivityService {
     List<Activity> activityDetails = activityFacade.
             getPaginatedActivityForProject(from, to, project);
     GenericEntity<List<Activity>> projectActivities
-            = new GenericEntity<List<Activity>>(activityDetails) {
-    };
+            = new GenericEntity<List<Activity>>(activityDetails) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projectActivities).build();

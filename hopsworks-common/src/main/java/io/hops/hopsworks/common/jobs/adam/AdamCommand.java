@@ -29,10 +29,12 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true),
             new AdamOption("recurse1",
-                    "Optional regex; if specified, INPUT1 is recursively searched for matching this pattern, whose contents are loaded and merged prior to running the comparison",
+                    "Optional regex; if specified, INPUT1 is recursively searched for matching this "
+                    + "pattern, whose contents are loaded and merged prior to running the comparison",
                     false, false),
             new AdamOption("recurse2",
-                    "Optional regex; if specified, INPUT2 is recursively searched for matching this pattern, whose contents are loaded and merged prior to running the comparison",
+                    "Optional regex; if specified, INPUT2 is recursively searched for matching this "
+                    + "pattern, whose contents are loaded and merged prior to running the comparison",
                     false, false)}),
   FINDREADS(
           "Find reads that match particular individual or comparative criteria.",
@@ -57,10 +59,14 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true),
             new AdamOption("recurse1",
-                    "Optional regex; if specified, INPUT1 is recursively searched for matching this pattern, whose contents are loaded and merged prior to running the comparison",
+                    "Optional regex; if specified, INPUT1 is recursively searched "
+                    + "for matching this pattern, whose contents are loaded and "
+                    + "merged prior to running the comparison",
                     false, false),
             new AdamOption("recurse2",
-                    "Optional regex; if specified, INPUT2 is recursively searched for matching this pattern, whose contents are loaded and merged prior to running the comparison",
+                    "Optional regex; if specified, INPUT2 is recursively searched "
+                    + "for matching this pattern, whose contents are loaded and "
+                    + "merged prior to running the comparison",
                     false, false)}),
   DEPTH("Calculate the depth from a given ADAM file, at each variant in a VCF.",
           new AdamArgument[]{
@@ -127,7 +133,8 @@ public enum AdamCommand {
                     "Local path to dump BQSR observations to. Outputs CSV format.",
                     true, false, true),
             new AdamOption("known_indels",
-                    "VCF file including locations of known INDELs. If none is provided, default consensus model will be used.",
+                    "VCF file including locations of known INDELs. If none is provided, "
+                    + "default consensus model will be used.",
                     true, false),
             new AdamOption("known_snps",
                     "Sites-only VCF giving location of known SNPs.", true, false),
@@ -137,13 +144,15 @@ public enum AdamCommand {
             new AdamOption("mark_duplicate_reads", "Mark duplicate reads.",
                     false, true),
             new AdamOption("max_consensus_number",
-                    "The maximum number of consensus to try realigning a target region to. Default value is 30.",
+                    "The maximum number of consensus to try realigning a target region to."
+                    + " Default value is 30.",
                     false, false),
             new AdamOption("max_indel_size",
                     "The maximum length of an INDEL to realign to. Default value is 500.",
                     false, false),
             new AdamOption("max_target_size",
-                    "The maximum length of a target region to attempt realigning. Default length is 3000.",
+                    "The maximum length of a target region to attempt realigning. "
+                    + "Default length is 3000.",
                     false, false),
             new AdamOption("parquet_block_size",
                     "Parquet block size (default = 128mb)", false, false),
@@ -171,13 +180,15 @@ public enum AdamCommand {
             new AdamOption("repartition",
                     "Set the number of partitions to map data to", false, false),
             new AdamOption("sort_fastq_output",
-                    "Sets whether to sort the FASTQ output, if saving as FASTQ. False by default. Ignored if not saving as FASTQ.",
+                    "Sets whether to sort the FASTQ output, if saving as FASTQ. "
+                    + "False by default. Ignored if not saving as FASTQ.",
                     false, true),
             new AdamOption("sort_reads",
                     "Sort the reads by referenceId and read position", false,
                     true),
             new AdamOption("trimBeforeBQSR",
-                    "Performs quality based trim before running BQSR. Default is to run quality based trim after BQSR.",
+                    "Performs quality based trim before running BQSR. Default is "
+                    + "to run quality based trim after BQSR.",
                     false, true),
             new AdamOption("trimFromEnd", "Trim to be applied to end of read.",
                     false, false),
@@ -187,7 +198,8 @@ public enum AdamCommand {
                     "Read group to be trimmed. If omitted, all reads are trimmed.",
                     false, false),
             new AdamOption("trimReads",
-                    "Apply a fixed trim to the prefix and suffix of all reads/reads in a specific read group.",
+                    "Apply a fixed trim to the prefix and suffix of all reads/reads "
+                    + "in a specific read group.",
                     false, true)}),
   ADAM2FASTQ("Convert BAM to FASTQ files.",
           new AdamArgument[]{
@@ -196,11 +208,13 @@ public enum AdamCommand {
             new AdamArgument("OUTPUT",
                     "The ADAM, BAM or SAM file to save as output.", true, true),
             new AdamArgument("OUTPUT",
-                    "When writing FASTQ data, all second-in-pair reads will go here, if this argument is provided.",
+                    "When writing FASTQ data, all second-in-pair reads will go here,"
+                    + " if this argument is provided.",
                     true, true, false)},
           new AdamOption[]{
             new AdamOption("no-projection",
-                    "Disable projection on records. No great reason to do this, but useful for testing/comparison.",
+                    "Disable projection on records. No great reason to do this, "
+                    + "but useful for testing/comparison.",
                     false, true),
             new AdamOption("parquet_block_size",
                     "Parquet block size (default = 128mb)", false, false),
@@ -244,7 +258,8 @@ public enum AdamCommand {
                     false)}),
 //CONVERSION OPERATIONS
   BAM2ADAM(
-          "Single-node BAM to ADAM converter (Note: the 'transform' command can take SAM or BAM as input).",
+          "Single-node BAM to ADAM converter (Note: the 'transform' command can "
+          + "take SAM or BAM as input).",
           new AdamArgument[]{
             new AdamArgument("BAM", "The SAM or BAM file to convert.", true),
             new AdamArgument("ADAM", "Location to write ADAM data.", true, true)},
@@ -365,13 +380,15 @@ public enum AdamCommand {
             new AdamOption("print_metrics",
                     "Print metrics to the log on completion", false, true)}),
   FASTA2ADAM(
-          "Convert a text FASTA sequence file into an ADAMNucleotideContig Parquet file which represents assembled sequences.",
+          "Convert a text FASTA sequence file into an ADAMNucleotideContig Parquet "
+          + "file which represents assembled sequences.",
           new AdamArgument[]{
             new AdamArgument("FASTA", "The FASTA file to convert.", true),
             new AdamArgument("ADAM", "Location to write ADAM data.", true, true)},
           new AdamOption[]{
             new AdamOption("fragment_length",
-                    "Sets maximum fragment length. Default value is 10,000. Values greater than 1e9 should be avoided.",
+                    "Sets maximum fragment length. Default value is 10,000. Values "
+                    + "greater than 1e9 should be avoided.",
                     false, false),
             new AdamOption("parquet_block_size",
                     "Parquet block size (default = 128mb)", false, false),
@@ -513,10 +530,12 @@ public enum AdamCommand {
             new AdamArgument("INPUT", "The ADAM file to scan for tags", true)},
           new AdamOption[]{
             new AdamOption("count",
-                    "Comma-separated list of tag names; for each tag listed, we print the distinct values and their counts.",
+                    "Comma-separated list of tag names; for each tag listed, we "
+                    + "print the distinct values and their counts.",
                     false, false),
             new AdamOption("list",
-                    "When value is set to <N>, also lists the first N attribute fields for ADAMRecords in the input.",
+                    "When value is set to <N>, also lists the first N attribute "
+                    + "fields for ADAMRecords in the input.",
                     false, false),
             new AdamOption("parquet_block_size",
                     "Parquet block size (default = 128mb)", false, false),

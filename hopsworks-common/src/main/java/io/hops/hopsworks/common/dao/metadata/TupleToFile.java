@@ -31,11 +31,12 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid"),
   @NamedQuery(name = "TupleToFile.findByInodeid",
           query
-          = "SELECT t FROM TupleToFile t WHERE t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name"),
+          = "SELECT t FROM TupleToFile t WHERE t.inode.inodePK.parentId = :parentid "
+          + "AND t.inode.inodePK.name = :name"),
   @NamedQuery(name = "TupleToFile.findByTupleidAndInodeid",
           query
-          = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid AND t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name")})
-
+          = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid "
+          + "AND t.inode.inodePK.parentId = :parentid AND t.inode.inodePK.name = :name")})
 public class TupleToFile implements Serializable, EntityIntf {
 
   private static final long serialVersionUID = 1L;
@@ -58,8 +59,7 @@ public class TupleToFile implements Serializable, EntityIntf {
     @JoinColumn(name = "inode_name",
             referencedColumnName = "name"),
     @JoinColumn(name = "partition_id",
-            referencedColumnName = "partition_id")
-  })
+            referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
 

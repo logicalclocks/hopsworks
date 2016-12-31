@@ -14,8 +14,11 @@ public class PKIUtils {
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signWithServerCertificate(String csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
-    File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
+  public static String signWithServerCertificate(String csr,
+          String intermediateCaDir, String hopsMasterPassword) throws
+          IOException, InterruptedException {
+    File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"),
+            ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
@@ -24,7 +27,8 @@ public class PKIUtils {
     return null;
   }
 
-  private static boolean verifyCSR(File csr) throws IOException, InterruptedException {
+  private static boolean verifyCSR(File csr) throws IOException,
+          InterruptedException {
 
     logger.info("Verifying CSR...");
     List<String> cmds = new ArrayList<>();
@@ -61,9 +65,11 @@ public class PKIUtils {
     return false;
   }
 
-  private static String signCSR(File csr, String intermediateCaDir, String hopsMasterPassword) throws IOException, InterruptedException {
+  private static String signCSR(File csr, String intermediateCaDir,
+          String hopsMasterPassword) throws IOException, InterruptedException {
 
-    File generatedCertFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".cert.pem");
+    File generatedCertFile = File.createTempFile(System.getProperty(
+            "java.io.tmpdir"), ".cert.pem");
 
     logger.info("Signing CSR...");
     List<String> cmds = new ArrayList<>();
@@ -104,7 +110,8 @@ public class PKIUtils {
     process.waitFor();
     int exitValue = process.exitValue();
     if (exitValue != 0) {
-      throw new RuntimeException("Failed to sign certificate. Exit value: " + exitValue);
+      throw new RuntimeException("Failed to sign certificate. Exit value: "
+              + exitValue);
     }
     logger.info("Signed certificate.");
     return FileUtils.readFileToString(generatedCertFile);

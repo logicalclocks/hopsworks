@@ -26,7 +26,11 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -81,8 +85,7 @@ public class WorkflowExecutionService {
   public Response index() throws AppException {
     Collection<WorkflowExecution> executions = workflow.getWorkflowExecutions();
     GenericEntity<Collection<WorkflowExecution>> executionsList
-            = new GenericEntity<Collection<WorkflowExecution>>(executions) {
-    };
+            = new GenericEntity<Collection<WorkflowExecution>>(executions) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             executionsList).build();
   }

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class IoUtils {
+
   private static final Logger logger = Logger.getLogger(IoUtils.class.getName());
 
   public static String readContentFromClasspath(String path) throws IOException {
@@ -28,7 +29,8 @@ public class IoUtils {
     return Files.toString(new File(path), Charsets.UTF_8);
   }
 
-  public static List<String> readLinesFromClasspath(String url) throws IOException {
+  public static List<String> readLinesFromClasspath(String url) throws
+          IOException {
     return Resources.readLines(Resources.getResource(url), Charsets.UTF_8);
   }
 
@@ -46,17 +48,18 @@ public class IoUtils {
     return Resources.toString(fileUrl, Charsets.UTF_8);
   }
 
-  public static String getMainClassNameFromJar(String amJarPath, InputStream inputStream  ) {
+  public static String getMainClassNameFromJar(String amJarPath,
+          InputStream inputStream) {
     if (amJarPath == null) {
       throw new IllegalStateException(
-          "amJar path cannot be null.");
+              "amJar path cannot be null.");
     }
     String fileName = amJarPath;
-    
+
     if (amJarPath.startsWith("hdfs:")) {
       // download the jar file
     }
-    
+
     String mainClassName = null;
 
     try (JarFile jarFile = new JarFile(fileName)) {
@@ -66,7 +69,7 @@ public class IoUtils {
       }
     } catch (IOException io) {
       logger.log(Level.SEVERE, "Could not open jar file " + amJarPath
-          + " to load main class.", io);
+              + " to load main class.", io);
       return null;
     }
 

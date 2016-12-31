@@ -51,7 +51,8 @@ import io.hops.hopsworks.common.dao.user.Users;
           = "SELECT COUNT(m.id) FROM Message m WHERE m.to = :to AND m.unread = :unread"),
   @NamedQuery(name = "Message.findByToAndDeleted",
           query
-          = "SELECT m FROM Message m WHERE m.to = :to AND m.deleted = :deleted  ORDER BY m.unread DESC, m.dateSent DESC"),
+          = "SELECT m FROM Message m WHERE m.to = :to AND m.deleted = :deleted  "
+                  + "ORDER BY m.unread DESC, m.dateSent DESC"),
   @NamedQuery(name = "Message.emptyToAndDeleted",
           query
           = "DELETE FROM Message m WHERE m.to = :to AND m.deleted = :deleted"),

@@ -4,8 +4,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import io.hops.hopsworks.common.workflows.nodes.*;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.workflows.nodes.DecisionNode;
+import io.hops.hopsworks.common.workflows.nodes.EmailNode;
+import io.hops.hopsworks.common.workflows.nodes.EndNode;
+import io.hops.hopsworks.common.workflows.nodes.ForkNode;
+import io.hops.hopsworks.common.workflows.nodes.JoinNode;
+import io.hops.hopsworks.common.workflows.nodes.RootNode;
+import io.hops.hopsworks.common.workflows.nodes.SparkCustomNode;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

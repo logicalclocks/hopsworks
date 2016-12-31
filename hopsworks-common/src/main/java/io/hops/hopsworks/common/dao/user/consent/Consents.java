@@ -18,7 +18,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,11 +25,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 
 @Entity
-@Table(name = "hopsworks.consents",
-        uniqueConstraints = {
-          @UniqueConstraint(columnNames = "inode_pid, inode_name")
-        }
-)
+@Table(name = "hopsworks.consents")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Consents.findAll",
@@ -53,8 +48,9 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query = "SELECT c FROM Consents c WHERE c.inode.id = :id"),
   @NamedQuery(name
           = "Consents.findByInodePK",
-          query = "SELECT c FROM Consents c WHERE c.inode.inodePK.parentId "
-          + "= :parentId AND c.inode.inodePK.name = :name ")})
+          query
+          = "SELECT c FROM Consents c WHERE c.inode.inodePK.parentId= :parentId "
+          + "AND c.inode.inodePK.name = :name ")})
 public class Consents implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -91,8 +87,7 @@ public class Consents implements Serializable {
     @JoinColumn(name = "inode_name",
             referencedColumnName = "name"),
     @JoinColumn(name = "partition_id",
-            referencedColumnName = "partition_id")
-  })
+            referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
 

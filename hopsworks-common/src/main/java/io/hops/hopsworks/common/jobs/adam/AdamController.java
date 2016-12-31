@@ -122,7 +122,7 @@ public class AdamController {
 
     AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopDir(),
             settings.
-                    getSparkDir(), settings.getAdamUser(),
+            getSparkDir(), settings.getAdamUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                     getCreator()),
             hdfsEndpoint.getSingleEndpoint(),

@@ -51,7 +51,8 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
   @NamedQuery(name = "JobsHistory.findWithHighSimilarity",
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
-          + "AND j.arguments = :arguments AND j.jarFile = :jarFile AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL"),
+          + "AND j.arguments = :arguments AND j.jarFile = :jarFile AND j.finalStatus = :finalStatus "
+          + "AND j.appId IS NOT NULL"),
   @NamedQuery(name = "JobsHistory.findWithMediumSimilarity",
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
@@ -64,7 +65,8 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
           + "AND j.arguments = :arguments AND j.jarFile = :jarFile AND j.inputBlocksInHdfs = :inputBlocksInHdfs "
-          + "AND j.projectName = :projectName AND j.jobName = :jobName AND j.userEmail = :userEmail AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL"),
+          + "AND j.projectName = :projectName AND j.jobName = :jobName AND j.userEmail = :userEmail "
+          + "AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL"),
   @NamedQuery(name = "JobsHistory.findWithHighSimilarityFilter",
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
@@ -74,13 +76,14 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
   @NamedQuery(name = "JobsHistory.findWithMediumSimilarityFilter",
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
-          + "AND j.jarFile = :jarFile AND j.projectName = :projectName AND j.jobName = :jobName AND j.userEmail = :userEmail "
+          + "AND j.jarFile = :jarFile AND j.projectName = :projectName AND j.jobName = :jobName "
+          + "AND j.userEmail = :userEmail "
           + "AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL"),
   @NamedQuery(name = "JobsHistory.findWithLowSimilarityFilter",
           query
           = "SELECT j FROM JobsHistory j WHERE j.jobType = :jobType AND j.className = :className "
-          + "AND j.projectName = :projectName AND j.jobName = :jobName AND j.userEmail = :userEmail AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL")
-})
+          + "AND j.projectName = :projectName AND j.jobName = :jobName AND j.userEmail = :userEmail "
+          + "AND j.finalStatus = :finalStatus AND j.appId IS NOT NULL")})
 public class JobsHistory implements Serializable {
 
   private static long serialVersionUID = 1L;

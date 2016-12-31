@@ -2,12 +2,25 @@ package io.hops.hopsworks.common.dao.workflow;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 @XmlRootElement
@@ -18,9 +31,7 @@ import java.util.UUID;
           = "SELECT e FROM Edge e"),
   @NamedQuery(name = "Edge.findById",
           query
-          = "SELECT e FROM Edge e WHERE e.edgePK = :edgePK")
-})
-
+          = "SELECT e FROM Edge e WHERE e.edgePK = :edgePK")})
 public class Edge implements Serializable {
 
   private static final long serialVersionUID = 1L;

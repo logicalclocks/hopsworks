@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -42,6 +41,9 @@ import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -128,7 +130,7 @@ public class UsersController {
 
     try {
       // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(), RecipientType.TO, 
+      emailBean.sendEmail(newUser.getEmail(), RecipientType.TO,
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildMobileRequestMessage(
                       AuditUtil.getUserURL(req), user.getUsername()
@@ -221,7 +223,7 @@ public class UsersController {
 
     try {
       // Notify user about the request
-      emailBean.sendEmail(newUser.getEmail(),RecipientType.TO, 
+      emailBean.sendEmail(newUser.getEmail(), RecipientType.TO,
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
               UserAccountsEmailMessages.buildYubikeyRequestMessage(
                       AuditUtil.getUserURL(req), user.getUsername()
@@ -278,7 +280,7 @@ public class UsersController {
         try {
           String message = UserAccountsEmailMessages.buildTempResetMessage(
                   randomPassword);
-          emailBean.sendEmail(email,RecipientType.TO, 
+          emailBean.sendEmail(email, RecipientType.TO,
                   UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
           user.setPassword(DigestUtils.sha256Hex(randomPassword));
           //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
@@ -385,7 +387,7 @@ public class UsersController {
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
 
-        emailBean.sendEmail(user.getEmail(), RecipientType.TO, 
+        emailBean.sendEmail(user.getEmail(), RecipientType.TO,
                 UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                 UserAccountsEmailMessages.accountBlockedMessage());
 
@@ -473,14 +475,15 @@ public class UsersController {
   }
 
   /**
-   * Enables or disables two factor authentication. 
+   * Enables or disables two factor authentication.
    * The operation depends on the current status of the users two factor.
    * i.e enables if it was disabled or vice versa.
+   *
    * @param user
    * @param password
    * @param req
    * @return qrCode if tow factor is enabled null if disabled.
-   * @throws AppException 
+   * @throws AppException
    */
   public byte[] changeTwoFactor(Users user, String password,
           HttpServletRequest req) throws AppException {
@@ -490,7 +493,8 @@ public class UsersController {
     }
     if (!user.getPassword().equals(DigestUtils.sha256Hex(password))) {
       am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-              AccountsAuditActions.FAILED.name(), "Incorrect password", user, req);
+              AccountsAuditActions.FAILED.name(), "Incorrect password", user,
+              req);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PASSWORD_INCORRECT);
     }
@@ -499,7 +503,8 @@ public class UsersController {
       user.setTwoFactor(false);
       userBean.update(user);
       am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-              AccountsAuditActions.SUCCESS.name(), "Disabled 2-factor", user, req);
+              AccountsAuditActions.SUCCESS.name(), "Disabled 2-factor", user,
+              req);
     } else {
       try {
         user.setTwoFactor(true);
@@ -507,29 +512,34 @@ public class UsersController {
         qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(),
                 AuthenticationConstants.ISSUER, user.getSecret());
         am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-                AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user, req);
+                AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
+                req);
         am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-              AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user, req);
+                AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
+                req);
       } catch (IOException | WriterException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
         am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-              AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user, req);
+                AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
+                req);
         am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-              AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user, req);
+                AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
+                req);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Cannot enable 2-factor authentication.");
+                getStatusCode(),
+                "Cannot enable 2-factor authentication.");
       }
     }
     return qr_code;
   }
-  
+
   /**
    * Returns the QR code for the user if two factor is enabled.
+   *
    * @param user
    * @param password
    * @return null if two factor is disabled.
-   * @throws AppException 
+   * @throws AppException
    */
   public byte[] getQRCode(Users user, String password) throws AppException {
     byte[] qr_code = null;
@@ -545,8 +555,7 @@ public class UsersController {
         LOGGER.log(Level.SEVERE, null, ex);
       }
     }
-    return qr_code; 
+    return qr_code;
   }
-  
 
 }

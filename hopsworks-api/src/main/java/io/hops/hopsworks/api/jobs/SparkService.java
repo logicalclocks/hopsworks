@@ -93,8 +93,7 @@ public class SparkService {
     List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
             JobType.SPARK);
     GenericEntity<List<JobDescription>> jobList
-            = new GenericEntity<List<JobDescription>>(jobs) {
-    };
+            = new GenericEntity<List<JobDescription>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
             entity(jobList).build();
   }

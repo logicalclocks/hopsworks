@@ -84,7 +84,6 @@ public class CommandController {
   }
 
   public List<Command> getRunningCommandsByClusterService() {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
     List<Command> commands = commandEJB.findRunningByClusterService(cluster,
             service);
     return commands;

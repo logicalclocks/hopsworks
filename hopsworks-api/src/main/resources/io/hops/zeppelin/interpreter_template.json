@@ -17,7 +17,8 @@
           "name": "sql"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -39,7 +40,8 @@
           "name": "flink"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -93,7 +95,8 @@
           "name": "dep"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": true,
@@ -117,7 +120,8 @@
           "name": "elasticsearch"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -136,7 +140,8 @@
           "name": "md"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -187,7 +192,8 @@
           "name": "cassandra"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -229,7 +235,8 @@
           "name": "sql"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -252,7 +259,8 @@
           "name": "hdfs"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -275,7 +283,8 @@
           "name": "hbase"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -296,7 +305,8 @@
           "name": "sh"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -325,7 +335,8 @@
           "name": "ignitesql"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -352,7 +363,8 @@
           "name": "lens"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -374,7 +386,8 @@
           "name": "alluxio"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -393,7 +406,8 @@
           "name": "angular"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -414,7 +428,8 @@
           "name": "python"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -461,7 +476,8 @@
           "name": "sparkr"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": true,
@@ -488,7 +504,8 @@
           "name": "kylin"
         }
       ],
-      "dependencies": [],
+      "dependencies": [
+      ],
       "option": {
         "remote": true,
         "perNoteSession": false,
@@ -513,7 +530,8 @@
         "updatePolicy": "daily",
         "checksumPolicy": "warn"
       },
-      "mirroredRepositories": [],
+      "mirroredRepositories": [
+      ],
       "repositoryManager": false
     }
   ]

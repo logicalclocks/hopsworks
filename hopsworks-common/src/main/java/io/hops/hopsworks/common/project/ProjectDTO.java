@@ -56,7 +56,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, List<InodeView> datasets, String yarnQuotaInMins) {
+          List<ProjectTeam> projectTeam, List<InodeView> datasets,
+          String yarnQuotaInMins) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -74,7 +75,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
-          Date retentionPeriod, Date created, String ethicalStatus, boolean archived, String description,
+          Date retentionPeriod, Date created, String ethicalStatus,
+          boolean archived, String description,
           List<String> services, List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
@@ -92,18 +94,18 @@ public class ProjectDTO {
     return projectId;
   }
 
-  public Integer getInodeid(){
+  public Integer getInodeid() {
     return this.inodeid;
   }
-  
+
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
 
-  public void setInodeid(Integer inodeid){
+  public void setInodeid(Integer inodeid) {
     this.inodeid = inodeid;
   }
-  
+
   public String getProjectName() {
     return projectName;
   }
@@ -207,10 +209,7 @@ public class ProjectDTO {
   public void setHdfsUsageInBytes(Long hdfsUsageInBytes) {
     this.hdfsUsageInBytes = hdfsUsageInBytes;
   }
-  
 
-  
-  
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner

@@ -109,7 +109,8 @@ public class ProxyServlet extends HttpServlet {
    */
   protected boolean doSendUrlFragment = true;
 
-  //These next 3 are cached here, and should only be referred to in initialization logic. See the
+  //These next 3 are cached here, and should only be referred to in initialization 
+  //logic. See the
   // ATTR_* parameters.
   /**
    * From the configured parameter "targetUri".
@@ -184,7 +185,8 @@ public class ProxyServlet extends HttpServlet {
    * Called from {@link #init(javax.servlet.ServletConfig)}. HttpClient offers
    * many opportunities
    * for customization. By default,
-   * <a href="http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/client/SystemDefaultHttpClient.html">
+   * <a href="http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/
+   * org/apache/http/impl/client/SystemDefaultHttpClient.html">
    * SystemDefaultHttpClient</a> is used if available, otherwise it falls
    * back to:
    * <pre>new DefaultHttpClient(new ThreadSafeClientConnManager(),hcParams)</pre>
@@ -253,11 +255,8 @@ public class ProxyServlet extends HttpServlet {
       } catch (IOException e) {
         log("While destroying servlet, shutting down HttpClient: " + e, e);
       }
-    } else //Older releases require we do this:
-    {
-      if (proxyClient != null) {
-        proxyClient.getConnectionManager().shutdown();
-      }
+    } else if (proxyClient != null) {  //Older releases require we do this:
+      proxyClient.getConnectionManager().shutdown();
     }
     super.destroy();
   }
@@ -275,7 +274,8 @@ public class ProxyServlet extends HttpServlet {
     }
 
     // Make the Request
-    //note: we won't transfer the protocol version because I'm not sure it would truly be compatible
+    //note: we won't transfer the protocol version because I'm not sure it would 
+    //truly be compatible
     String method = servletRequest.getMethod();
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
     HttpRequest proxyRequest;
@@ -285,7 +285,8 @@ public class ProxyServlet extends HttpServlet {
       HttpEntityEnclosingRequest eProxyRequest
               = new BasicHttpEntityEnclosingRequest(method, proxyRequestUri);
       // Add the input entity (streamed)
-      //  note: we don't bother ensuring we close the servletInputStream since the container handles it
+      //note: we don't bother ensuring we close the servletInputStream since the 
+      //container handles it
       eProxyRequest.setEntity(new InputStreamEntity(servletRequest.
               getInputStream(), servletRequest.getContentLength()));
       proxyRequest = eProxyRequest;
@@ -317,7 +318,8 @@ public class ProxyServlet extends HttpServlet {
         return;
       }
 
-      // Pass the response code. This method with the "reason phrase" is deprecated but it's the only way to pass the
+      // Pass the response code. This method with the "reason phrase" is deprecated 
+      //but it's the only way to pass the
       //  reason along too.
       //noinspection deprecation
       servletResponse.setStatus(statusCode, proxyResponse.getStatusLine().
@@ -353,7 +355,8 @@ public class ProxyServlet extends HttpServlet {
         consumeQuietly(proxyResponse.getEntity());
       }
       //Note: Don't need to close servlet outputStream:
-      // http://stackoverflow.com/questions/1159168/should-one-call-close-on-httpservletresponse-getoutputstream-getwriter
+      // http://stackoverflow.com/questions/1159168/should-one-call-close-on-
+      //httpservletresponse-getoutputstream-getwriter
     }
   }
 
@@ -589,7 +592,8 @@ public class ProxyServlet extends HttpServlet {
       uri.append(encodeUriQuery(servletRequest.getPathInfo()));
     }
     // Handle the query string & fragment
-    String queryString = servletRequest.getQueryString();//ex:(following '?'): name=value&foo=bar#fragment
+    //ex:(following '?'): name=value&foo=bar#fragment
+    String queryString = servletRequest.getQueryString();
     String fragment = null;
     //split off fragment from queryString, updating queryString if found
     if (queryString != null) {

@@ -5,59 +5,60 @@ import io.hops.hopsworks.common.util.FormatUtils;
 
 public class NodesTableItem implements Serializable {
 
-    private Integer nodeId;
-    private String status;
-    private Long upTime;
-    private Integer startPhase;
-    private Integer configGeneration;
+  private Integer nodeId;
+  private String status;
+  private Long upTime;
+  private Integer startPhase;
+  private Integer configGeneration;
 
-    public NodesTableItem(Integer nodeId, String status, Long uptime, Integer startPhase, Integer configGeneration) {
+  public NodesTableItem(Integer nodeId, String status, Long uptime,
+          Integer startPhase, Integer configGeneration) {
 
-        this.nodeId = nodeId;
-        this.status = status;
-        this.upTime = uptime;
-        this.startPhase = startPhase;
-        this.configGeneration = configGeneration;
-    }
+    this.nodeId = nodeId;
+    this.status = status;
+    this.upTime = uptime;
+    this.startPhase = startPhase;
+    this.configGeneration = configGeneration;
+  }
 
-   public Integer getNodeId() {
-      return nodeId;
-   }
+  public Integer getNodeId() {
+    return nodeId;
+  }
 
-   public void setNodeId(Integer nodeId) {
-      this.nodeId = nodeId;
-   }
+  public void setNodeId(Integer nodeId) {
+    this.nodeId = nodeId;
+  }
 
-   public String getStatus() {
-      return status;
-   }
+  public String getStatus() {
+    return status;
+  }
 
-   public void setStatus(String status) {
-      this.status = status;
-   }
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
-   public String getUpTime() {
-      return FormatUtils.timeInSec(upTime);
-   }
+  public String getUpTime() {
+    return FormatUtils.timeInSec(upTime);
+  }
 
-   public void setUpTime(Long upTime) {
-      this.upTime = upTime;
-   }
+  public void setUpTime(Long upTime) {
+    this.upTime = upTime;
+  }
 
-   public Integer getStartPhase() {
-      return startPhase;
-   }
+  public Integer getStartPhase() {
+    return startPhase;
+  }
 
-   public void setStartPhase(Integer startPhase) {
-      this.startPhase = startPhase;
-   }
+  public void setStartPhase(Integer startPhase) {
+    this.startPhase = startPhase;
+  }
 
-   public Integer getConfigGeneration() {
-      return configGeneration;
-   }
+  public Integer getConfigGeneration() {
+    return configGeneration;
+  }
 
-   public void setConfigGeneration(Integer configGeneration) {
-      this.configGeneration = configGeneration;
-   }
+  public void setConfigGeneration(Integer configGeneration) {
+    this.configGeneration = configGeneration;
+  }
 
 }

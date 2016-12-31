@@ -23,7 +23,8 @@ import io.hops.hopsworks.common.dao.project.Project;
           = "SELECT s FROM ProjectServices s WHERE s.project = :project"),
   @NamedQuery(name = "ProjectServices.findServicesByProject",
           query
-          = "SELECT s.projectServicePK.service FROM ProjectServices s WHERE s.project = :project ORDER BY s.projectServicePK.service"),
+          = "SELECT s.projectServicePK.service FROM ProjectServices s "
+          + "WHERE s.project = :project ORDER BY s.projectServicePK.service"),
   @NamedQuery(name = "ProjectServices.findByService",
           query
           = "SELECT s FROM ProjectServices s WHERE s.projectServicePK.service = :service")})

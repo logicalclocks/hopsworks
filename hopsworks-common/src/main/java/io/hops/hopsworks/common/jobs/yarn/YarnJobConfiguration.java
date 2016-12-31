@@ -19,14 +19,14 @@ public class YarnJobConfiguration extends JobConfiguration {
   private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
   //Number of cores for appMaster
   private int amVCores = 1;
- 
+
   //List of paths to be added to local resources
   private LocalResourceDTO[] localResources = new LocalResourceDTO[0];
   protected final static String KEY_TYPE = "type";
   protected final static String KEY_QUEUE = "QUEUE";
   protected final static String KEY_AMMEM = "AMMEM";
   protected final static String KEY_AMCORS = "AMCORS";
- 
+
   protected final static String KEY_RESOURCES = "RESOURCES";
 
   public final static String KEY_RESOURCESNAME = "NAME";
@@ -81,8 +81,6 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.amVCores = amVCores;
   }
 
-  
-
   public LocalResourceDTO[] getLocalResources() {
     return localResources;
   }
@@ -117,7 +115,7 @@ public class YarnJobConfiguration extends JobConfiguration {
       }
       obj.set(KEY_RESOURCES, resources);
     }
-    
+
     //Then: fields that cannot be null or emtpy:
     obj.set(KEY_AMCORS, "" + amVCores);
     obj.set(KEY_AMMEM, "" + amMemory);
@@ -132,7 +130,7 @@ public class YarnJobConfiguration extends JobConfiguration {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonCors, jsonMem, jsonQueue;
-    
+
     LocalResourceDTO[] jsonResources = null;
     try {
       String jsonType = json.getString(KEY_TYPE);
@@ -169,8 +167,7 @@ public class YarnJobConfiguration extends JobConfiguration {
       jsonCors = json.getString(KEY_AMCORS);
       jsonMem = json.getString(KEY_AMMEM);
       jsonQueue = json.getString(KEY_QUEUE);
-      
-      
+
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Cannot convert object into YarnJobConfiguration.", e);

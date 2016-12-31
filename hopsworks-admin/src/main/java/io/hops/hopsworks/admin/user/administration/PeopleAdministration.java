@@ -329,11 +329,12 @@ public class PeopleAdministration implements Serializable {
                 e});
     }
   }
-  
+
   /**
    * Removes a user from the db
-   * Only works for new not yet activated users 
-   * @param user 
+   * Only works for new not yet activated users
+   *
+   * @param user
    */
   public void deleteUser(Users user) {
     if (user == null) {
@@ -351,10 +352,11 @@ public class PeopleAdministration implements Serializable {
               "Could not remove user.", ex);
     }
   }
-  
+
   /**
    * Remove a user from spam list and set the users status to new mobile user.
-   * @param user 
+   *
+   * @param user
    */
   public void removeFromSpam(Users user) {
     if (user == null) {
@@ -364,7 +366,8 @@ public class PeopleAdministration implements Serializable {
     try {
       userManager.changeAccountStatus(user.getUid(), "",
               PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
-      MessagesController.addInfoMessage(user.getEmail() + " was removed from spam list.");
+      MessagesController.addInfoMessage(user.getEmail()
+              + " was removed from spam list.");
       spamUsers.remove(user);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
@@ -398,7 +401,6 @@ public class PeopleAdministration implements Serializable {
     } catch (Exception ex) {
       ExternalContext extContext = FacesContext.getCurrentInstance().
               getExternalContext();
-      System.err.println(extContext.getRequestContextPath());
       extContext.redirect(extContext.getRequestContextPath());
       return null;
     }

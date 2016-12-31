@@ -76,7 +76,7 @@ public class TensorflowFacade {
     /*
      * What is the possibility of the program failing below? The topic is
      * removed from
-     * db, but not yet from zk.      *
+     * db, but not yet from zk. *
      * Possibilities:
      * 1. ZkClient is unable to establish a connection, maybe due to timeouts.
      * 2. In case delete.topic.enable is not set to true in the Kafka server

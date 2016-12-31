@@ -17,7 +17,6 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 
-
 /**
  * Contains the execution logic of a Hops job. This class takes care of the main
  * flow control of the application. The job is started by calling the execute()

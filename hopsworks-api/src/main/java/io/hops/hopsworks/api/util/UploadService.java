@@ -1,6 +1,5 @@
 package io.hops.hopsworks.api.util;
 
-import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import java.io.File;
 import java.io.FileReader;

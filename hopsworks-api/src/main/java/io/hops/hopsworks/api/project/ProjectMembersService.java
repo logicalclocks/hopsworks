@@ -66,8 +66,7 @@ public class ProjectMembersService {
     List<ProjectTeam> list = projectController.findProjectTeamById(
             this.projectId);
     GenericEntity<List<ProjectTeam>> projects
-            = new GenericEntity<List<ProjectTeam>>(list) {
-    };
+            = new GenericEntity<List<ProjectTeam>>(list) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();

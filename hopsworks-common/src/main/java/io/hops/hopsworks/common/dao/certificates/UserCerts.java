@@ -26,8 +26,8 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT u FROM UserCerts u WHERE u.userCertsPK.username = :username"),
   @NamedQuery(name = "UserCerts.findUserProjectCert",
           query
-          = "SELECT u FROM UserCerts u WHERE u.userCertsPK.username = :username AND u.userCertsPK.projectname = :projectname")
-})
+          = "SELECT u FROM UserCerts u WHERE u.userCertsPK.username = :username "
+          + "AND u.userCertsPK.projectname = :projectname")})
 public class UserCerts implements Serializable {
 
   private static final long serialVersionUID = 1L;

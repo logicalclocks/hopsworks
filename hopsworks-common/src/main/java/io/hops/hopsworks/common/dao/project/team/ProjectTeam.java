@@ -40,19 +40,23 @@ import io.hops.hopsworks.common.dao.user.Users;
           = "SELECT COUNT(s) FROM ProjectTeam s WHERE s.user = :user"),
   @NamedQuery(name = "ProjectTeam.countMembersForProjectAndRole",
           query
-          = "SELECT COUNT(DISTINCT s.projectTeamPK.teamMember) FROM ProjectTeam s WHERE s.project=:project AND s.teamRole = :teamRole"),
+          = "SELECT COUNT(DISTINCT s.projectTeamPK.teamMember) FROM ProjectTeam s "
+          + "WHERE s.project=:project AND s.teamRole = :teamRole"),
   @NamedQuery(name = "ProjectTeam.countAllMembersForProject",
           query
-          = "SELECT COUNT(DISTINCT s.projectTeamPK.teamMember) FROM ProjectTeam s WHERE s.project = :project"),
+          = "SELECT COUNT(DISTINCT s.projectTeamPK.teamMember) FROM ProjectTeam s"
+          + " WHERE s.project = :project"),
   @NamedQuery(name = "ProjectTeam.findMembersByRoleInProject",
           query
-          = "SELECT s FROM ProjectTeam s WHERE s.project = :project AND s.teamRole = :teamRole"),
+          = "SELECT s FROM ProjectTeam s WHERE s.project = :project "
+          + "AND s.teamRole = :teamRole"),
   @NamedQuery(name = "ProjectTeam.findAllMemberStudiesForUser",
           query
           = "SELECT st.project from ProjectTeam st WHERE st.user = :user"),
   @NamedQuery(name = "ProjectTeam.findAllJoinedStudiesForUser",
           query
-          = "SELECT st.project from ProjectTeam st WHERE st.user = :user AND NOT st.project.owner = :user")})
+          = "SELECT st.project from ProjectTeam st WHERE st.user = :user "
+          + "AND NOT st.project.owner = :user")})
 public class ProjectTeam implements Serializable {
 
   private static final long serialVersionUID = 1L;

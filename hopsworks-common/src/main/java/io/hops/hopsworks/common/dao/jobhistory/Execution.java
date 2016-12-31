@@ -63,16 +63,19 @@ import io.hops.hopsworks.common.dao.user.Users;
           = "SELECT e FROM Execution e WHERE e.appId = :appId"),
   @NamedQuery(name = "Execution.findByProjectAndType",
           query
-          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project = :project ORDER BY e.submissionTime DESC"),
+          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project "
+          + "= :project ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findByProjectAndJobId",
           query
-          = "SELECT e FROM Execution e WHERE e.job.id = :jobid AND e.job.project = :project ORDER BY e.submissionTime DESC"),
+          = "SELECT e FROM Execution e WHERE e.job.id = :jobid AND e.job.project "
+          + "= :project ORDER BY e.submissionTime DESC"),
   @NamedQuery(name = "Execution.findJobsForExecutionInState",
           query
-          = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project AND e.state IN :stateCollection ORDER BY e.submissionTime DESC")})
+          = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.project = :project "
+          + "AND e.state IN :stateCollection ORDER BY e.submissionTime DESC")})
 public class Execution implements Serializable {
 
   private static final long serialVersionUID = 1L;

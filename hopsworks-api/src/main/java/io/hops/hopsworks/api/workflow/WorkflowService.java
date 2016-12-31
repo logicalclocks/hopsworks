@@ -29,7 +29,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -42,6 +48,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.ProcessingException;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -91,8 +99,7 @@ public class WorkflowService {
   public Response index() throws AppException {
     Collection<Workflow> workflows = project.getWorkflowCollection();
     GenericEntity<Collection<Workflow>> workflowsList
-            = new GenericEntity<Collection<Workflow>>(workflows) {
-    };
+            = new GenericEntity<Collection<Workflow>>(workflows) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             workflowsList).build();
   }

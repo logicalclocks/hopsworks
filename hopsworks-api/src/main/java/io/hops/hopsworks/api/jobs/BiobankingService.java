@@ -126,8 +126,7 @@ public class BiobankingService {
               size());
 
       GenericEntity<List<ConsentDTO>> consents
-              = new GenericEntity<List<ConsentDTO>>(allConsents) {
-      };
+              = new GenericEntity<List<ConsentDTO>>(allConsents) {};
 
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(

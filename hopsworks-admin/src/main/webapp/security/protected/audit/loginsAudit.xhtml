@@ -6,7 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-        
+
       xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
   <f:view contentType="text/html">
 
@@ -25,10 +25,10 @@
           <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
       </c:if>
-      
+
 
       <c:if test="#{roleEnforcementPoint.onlyAuditorRole}">
-          <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
+        <ui:include src="/security/protected/audit/auditTitleBar.xhtml" />
       </c:if>
 
 

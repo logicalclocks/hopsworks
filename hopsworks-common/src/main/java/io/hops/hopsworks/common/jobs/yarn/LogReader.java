@@ -34,19 +34,19 @@ public class LogReader {
   private final TFile.Reader.Scanner scanner;
   private final TFile.Reader reader;
   private static final Map<String, LogKey> RESERVED_KEYS;
-  private static final LogKey APPLICATION_ACL_KEY =
-      new LogKey("APPLICATION_ACL");
-  private static final LogKey APPLICATION_OWNER_KEY =
-      new LogKey("APPLICATION_OWNER");
+  private static final LogKey APPLICATION_ACL_KEY
+          = new LogKey("APPLICATION_ACL");
+  private static final LogKey APPLICATION_OWNER_KEY = new LogKey(
+          "APPLICATION_OWNER");
   private static final LogKey VERSION_KEY = new LogKey("VERSION");
-  
+
   static {
     RESERVED_KEYS = new HashMap<String, AggregatedLogFormat.LogKey>();
     RESERVED_KEYS.put(APPLICATION_ACL_KEY.toString(), APPLICATION_ACL_KEY);
     RESERVED_KEYS.put(APPLICATION_OWNER_KEY.toString(), APPLICATION_OWNER_KEY);
     RESERVED_KEYS.put(VERSION_KEY.toString(), VERSION_KEY);
   }
-  
+
   public LogReader(Configuration conf, DistributedFileSystemOps dfs,
           Path remoteAppLogFile)
           throws IOException {

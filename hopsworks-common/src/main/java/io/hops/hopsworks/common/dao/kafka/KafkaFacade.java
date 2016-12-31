@@ -870,8 +870,10 @@ public class KafkaFacade {
         KafkaConsumer<Integer, String> consumer = null;
         try {
           consumer = new KafkaConsumer<>(props);
-          //              ConsumerGroupCommand.ConsumerGroupCommandOptions opts = new ConsumerGroupCommand.ConsumerGroupCommandOptions(null);
-          //              ConsumerGroupCommand.KafkaConsumerGroupService k = new ConsumerGroupCommand.KafkaConsumerGroupService(opts);
+//          ConsumerGroupCommand.ConsumerGroupCommandOptions opts
+//                  = new ConsumerGroupCommand.ConsumerGroupCommandOptions(null);
+//          ConsumerGroupCommand.KafkaConsumerGroupService k
+//                  = new ConsumerGroupCommand.KafkaConsumerGroupService(opts);
           List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
           for (PartitionInfo partition : partitions) {
             int id = partition.partition();

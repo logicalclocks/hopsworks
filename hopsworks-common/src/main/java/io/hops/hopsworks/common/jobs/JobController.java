@@ -15,7 +15,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
 
-
 @Stateless
 public class JobController {
 
@@ -25,7 +24,7 @@ public class JobController {
   private JobScheduler scheduler;
   @EJB
   private Settings settings;
-  
+
   private static final Logger logger = Logger.getLogger(JobController.class.
           getName());
 
@@ -49,10 +48,12 @@ public class JobController {
   }
 
   /**
-   * Returns aggregated log dir path for an application with the the given appId.
+   * Returns aggregated log dir path for an application with the the given
+   * appId.
+   *
    * @param hdfsUser
    * @param appId
-   * @return 
+   * @return
    */
   public String getAggregatedLogPath(String hdfsUser, String appId) {
     String yarnConfDir = settings.getYarnConfDir();

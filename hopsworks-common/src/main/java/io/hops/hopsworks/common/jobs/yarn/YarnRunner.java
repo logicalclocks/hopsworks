@@ -1194,7 +1194,8 @@ public class YarnRunner {
    * @return The converted InetSocketAddress.
    */
   private static InetSocketAddress getInetFromHostport(String hostport) {
-    // from http://stackoverflow.com/questions/2345063/java-common-way-to-validate-and-convert-hostport-to-inetsocketaddress
+    // from http://stackoverflow.com/questions/2345063/java-common-way-to-validate-
+    //and-convert-hostport-to-inetsocketaddress
     URI uri;
     try {
       uri = new URI("my://" + hostport);

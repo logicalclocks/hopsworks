@@ -118,7 +118,7 @@ public class MessageController {
     newMsg.setPreview(preview);
     messageFacade.save(newMsg);
   }
-  
+
   /**
    * Sends a message to a single user
    * <p>
@@ -136,12 +136,12 @@ public class MessageController {
       throw new IllegalArgumentException("Message too long.");
     }
     String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(now);
-    String dateAndWriter = "On " + date + ", " + msg.getFrom().getFname() + 
-            " " + msg.getFrom().getLname() + " wrote: <br><br>";
+    String dateAndWriter = "On " + date + ", " + msg.getFrom().getFname() + " "
+            + msg.getFrom().getLname() + " wrote: <br><br>";
     msg.setDateSent(now);
     String message = REPLY_SEPARATOR + dateAndWriter + msg.getContent();
     msg.setContent(message);
-    
+
     messageFacade.save(msg);
   }
 
@@ -156,7 +156,8 @@ public class MessageController {
    * contain the path
    * to the requested dataset or project.
    */
-  public void sendToMany(List<Users> recipients, Users from, String subject, String msg,
+  public void sendToMany(List<Users> recipients, Users from, String subject,
+          String msg,
           String requestPath) {
     Date now = new Date();
     if (recipients == null || recipients.isEmpty()) {
@@ -177,10 +178,11 @@ public class MessageController {
     }
 
   }
-  
+
   /**
    * Removes a message entity from the persistent storage.
-   * @param msg 
+   *
+   * @param msg
    */
   public void remove(Message msg) {
     messageFacade.remove(msg);

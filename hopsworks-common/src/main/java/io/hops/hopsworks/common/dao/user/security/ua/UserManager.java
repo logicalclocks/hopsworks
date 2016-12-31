@@ -266,8 +266,9 @@ public class UserManager {
 
   public List<String> findGroups(int uid) {
     String sql
-            = "SELECT group_name FROM hopsworks.bbc_group INNER JOIN hopsworks.people_group ON (hopsworks.people_group.gid = hopsworks.bbc_group.gid AND hopsworks.people_group.uid = "
-            + uid + " )";
+            = "SELECT group_name FROM hopsworks.bbc_group INNER JOIN hopsworks.people_group "
+            + "ON (hopsworks.people_group.gid = hopsworks.bbc_group.gid "
+            + "AND hopsworks.people_group.uid = " + uid + " )";
     List existing = em.createNativeQuery(sql).getResultList();
     return existing;
   }
@@ -293,7 +294,8 @@ public class UserManager {
   public List<Users> filterUsersBasedOnStudy(String name) {
 
     Query query = em.createNativeQuery(
-            "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member FROM hopsworks.project_team WHERE name=?)",
+            "SELECT * FROM hopsworks.users WHERE email NOT IN (SELECT team_member "
+            + "FROM hopsworks.project_team WHERE name=?)",
             Users.class).setParameter(1, name);
     return query.getResultList();
   }
@@ -409,7 +411,8 @@ public class UserManager {
    */
   public List<Users> filterUsersBasedOnProject(Project project) {
     TypedQuery<Users> query = em.createQuery(
-            "SELECT u FROM hopsworks.users u WHERE u NOT IN (SELECT DISTINCT st.user FROM hopsworks.project_team st WHERE st.project = :project)",
+            "SELECT u FROM hopsworks.users u WHERE u NOT IN (SELECT DISTINCT st.user"
+            + " FROM hopsworks.project_team st WHERE st.project = :project)",
             Users.class);
     query.setParameter("project", project);
     return query.getResultList();

@@ -186,7 +186,7 @@ public class RecoverySelector implements Serializable {
         String random = SecurityUtils.getRandomPassword(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-        email.sendEmail(people.getEmail(),RecipientType.TO, 
+        email.sendEmail(people.getEmail(), RecipientType.TO,
                 UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -245,12 +245,13 @@ public class RecoverySelector implements Serializable {
         String otpSecret = SecurityUtils.calculateSecretKey();
 
         um.updateSecret(people.getUid(), otpSecret);
-        qrCode = new DefaultStreamedContent(QRCodeGenerator.getQRCode(people.getEmail(),
+        qrCode = new DefaultStreamedContent(QRCodeGenerator.getQRCode(people.
+                getEmail(),
                 AuthenticationConstants.ISSUER, otpSecret), "image/png");
-        
+
         qrEnabled = 1;
-         am.registerAccountChange(people, AccountsAuditActions.QRCODE.name(),
-              AccountsAuditActions.SUCCESS.name(), "QR code reset.", people);
+        am.registerAccountChange(people, AccountsAuditActions.QRCODE.name(),
+                AccountsAuditActions.SUCCESS.name(), "QR code reset.", people);
 
         return "qrcode";
 
@@ -267,13 +268,14 @@ public class RecoverySelector implements Serializable {
                 PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
         try {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
+                  AccountsAuditActions.SUCCESS.name(),
+                  "Account bloecked due to many false attempts.", people);
 
-          email.sendEmail(people.getEmail(), RecipientType.TO, 
+          email.sendEmail(people.getEmail(), RecipientType.TO,
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                   UserAccountsEmailMessages.accountBlockedMessage());
         } catch (MessagingException ex1) {
-        
+
         }
       }
 
@@ -330,7 +332,7 @@ public class RecoverySelector implements Serializable {
         people.getYubikey().setStatus(PeopleAccountStatus.LOST_YUBIKEY.
                 getValue());
         um.updatePeople(people);
-        email.sendEmail(people.getEmail(), RecipientType.TO, 
+        email.sendEmail(people.getEmail(), RecipientType.TO,
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -343,16 +345,18 @@ public class RecoverySelector implements Serializable {
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           um.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
-           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.SUCCESS.name(), "Account bloecked due to many false attempts.", people);
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+                  AccountsAuditActions.SUCCESS.name(),
+                  "Account bloecked due to many false attempts.", people);
 
           try {
-            email.sendEmail(people.getEmail(),RecipientType.TO, 
+            email.sendEmail(people.getEmail(), RecipientType.TO,
                     UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                     UserAccountsEmailMessages.accountBlockedMessage());
           } catch (MessagingException ex1) {
-            
-            am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+
+            am.registerAccountChange(people, AccountsAuditActions.RECOVERY.
+                    name(),
                     AccountsAuditActions.FAILED.name(), "", people);
 
           }
