@@ -22,19 +22,27 @@
       <artifactId>hopsworks-common</artifactId>
       <version>0.1.0</version>
       <type>ejb</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-kmon</artifactId>
-      <version>0.1.0</version>
-      <type>ejb</type>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.flink</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions> 
     </dependency>
     <!--Zeppelin dependencies -->
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
     which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
     is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
     -->
-    <dependency> 
+    <dependency>
       <groupId>org.sonatype.sisu</groupId>
       <artifactId>sisu-inject-bean</artifactId>
       <version>2.6.0</version>
@@ -85,12 +93,6 @@
     </dependency>
     <!-- end of jersey dependencies -->
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>18.0</version>
@@ -103,6 +105,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>hopsworks-api</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -1,11 +1,6 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 import java.io.File;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -83,13 +78,14 @@ public class KibanaService {
     }
     String trackingUrl = "http://10.0.2.15:8080/hopsworks/kibana";
 
-    ClientConfig config = new DefaultClientConfig();
-    Client client = Client.create(config);
-    WebResource service = client.resource(trackingUrl);
-    final ClientResponse blogResponse = service.get(ClientResponse.class);
-    final String blog = blogResponse.getEntity(String.class);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(blog).build();
+//    ClientConfig config = new DefaultClientConfig();
+//    Client client = Client.create(config);
+//    WebResource service = client.resource(trackingUrl);
+//    final ClientResponse blogResponse = service.get(ClientResponse.class);
+//    final String blog = blogResponse.getEntity(String.class);
+//
+//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+//            entity(blog).build();
+    return null;
   }
 }
