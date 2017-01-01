@@ -16,7 +16,6 @@
   <description>Hopsworks web app</description>
   <name>hopsworks-web</name>
 
-    
   <dependencies>
     <dependency>		
       <groupId>org.apache.zeppelin</groupId>		
@@ -24,18 +23,12 @@
       <version>0.6.3-SNAPSHOT</version>      
       <type>war</type>		
     </dependency> 
-    <dependency>
-      <groupId>javax</groupId>
-      <artifactId>javaee-web-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <!--yeoman-maven-plugin -->
-      <plugin>    
+      <plugin>
         <groupId>com.github.trecloux</groupId>
         <artifactId>yeoman-maven-plugin</artifactId>
         <version>0.5</version>

@@ -65,8 +65,7 @@ public class EdgeService {
   public Response index() throws AppException {
     Collection<Edge> edges = workflow.getEdges();
     GenericEntity<Collection<Edge>> edgesList
-            = new GenericEntity<Collection<Edge>>(edges) {
-    };
+            = new GenericEntity<Collection<Edge>>(edges) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             edgesList).build();
   }

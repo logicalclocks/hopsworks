@@ -1132,13 +1132,13 @@ public class NotebookServer implements
 
     Map<String, String> configurations = conf.dumpConfigurations(conf,
             new ZeppelinConfiguration.ConfigurationKeyPredicate() {
-      @Override
-      public boolean apply(String key) {
-        return !key.contains("password") && !key.equals(
-                ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
-                getVarName());
-      }
-    });
+          @Override
+          public boolean apply(String key) {
+            return !key.contains("password") && !key.equals(
+                    ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
+                        getVarName());
+          }
+        });
 
     conn.getBasicRemote().sendText(serializeMessage(new Message(
             OP.CONFIGURATIONS_INFO)

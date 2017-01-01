@@ -94,14 +94,14 @@ public class ConfigurationsRestApi {
     ZeppelinConfiguration conf = zeppelinConf.getNotebook().getConf();
 
     Map<String, String> configurations = conf.dumpConfigurations(conf,
-      new ZeppelinConfiguration.ConfigurationKeyPredicate() {
-      @Override
-      public boolean apply(String key) {
-        return !key.contains("password") && !key.equals(
-                ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
-                getVarName());
-      }
-    });
+            new ZeppelinConfiguration.ConfigurationKeyPredicate() {
+          @Override
+          public boolean apply(String key) {
+            return !key.contains("password") && !key.equals(
+                    ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
+                    getVarName());
+          }
+        });
     return new JsonResponse(Status.OK, "", configurations).build();
   }
 
@@ -132,15 +132,13 @@ public class ConfigurationsRestApi {
 
     Map<String, String> configurations = conf.dumpConfigurations(conf,
             new ZeppelinConfiguration.ConfigurationKeyPredicate() {
-      @Override
-      public boolean apply(String key) {
-        return !key.contains("password") && !key.equals(
-                ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
-                getVarName()) && key.startsWith(prefix);
-      }
-    }
-    );
-
+          @Override
+          public boolean apply(String key) {
+            return !key.contains("password") && !key.equals(
+                    ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
+                    getVarName()) && key.startsWith(prefix);
+          }
+        });
     return new JsonResponse(Status.OK, "", configurations).build();
   }
 

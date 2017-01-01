@@ -4,6 +4,11 @@
           "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
+  <module name="RegexpSingleline">
+     <property name="format" value="((//.*)|(\*.*))TODO[^(]" />
+     <property name="message" value='All TODOs should be named.  e.g. "TODO(Ermias): Remove hardcoded string."' />
+     <property name="severity" value="warning" />
+  </module>
   <module name="TreeWalker">
     <property name="tabWidth" value="2"/>
     <module name="LineLength">
@@ -14,7 +19,6 @@
       <property name="braceAdjustment" value="0"/>
       <property name="basicOffset" value="2"/>
       <property name="caseIndent" value="2"/>
-      <property name="arrayInitIndent" value="2"/>
     </module>
     <module name="RegexpSinglelineJava">
       <property name="format" value="^\s*\t+\s*\S*"/>

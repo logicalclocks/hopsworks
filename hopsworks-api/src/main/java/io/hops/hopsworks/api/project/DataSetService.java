@@ -204,11 +204,8 @@ public class DataSetService {
         kids.add(inodeView);
       }
     }
-
     GenericEntity<List<InodeView>> inodViews
-            = new GenericEntity<List<InodeView>>(kids) {
-    };
-
+            = new GenericEntity<List<InodeView>>(kids) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
   }
@@ -243,7 +240,6 @@ public class DataSetService {
     InodeView inodeView;
     Users user;
     for (Inode i : cwdChildren) {
-
       inodeView = new InodeView(i, fullpath + "/" + i.getInodePK().getName());
       user = userfacade.findByUsername(inodeView.getOwner());
       if (user != null) {
@@ -252,11 +248,8 @@ public class DataSetService {
       }
       kids.add(inodeView);
     }
-
     GenericEntity<List<InodeView>> inodeViews
-            = new GenericEntity<List<InodeView>>(kids) {
-    };
-
+            = new GenericEntity<List<InodeView>>(kids) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodeViews).build();
   }

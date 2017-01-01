@@ -92,7 +92,7 @@ build/Release
 ## Directory-based project format:
 .idea/
 
-yo/node_modules
+hopsworks-web/yo/node_modules
 
 ## File-based project format:
 *.ipr
