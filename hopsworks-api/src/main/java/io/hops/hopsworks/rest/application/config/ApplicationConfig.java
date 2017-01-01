@@ -52,6 +52,7 @@ public class ApplicationConfig extends Application {
     resources.add(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     resources.add(io.hops.hopsworks.api.util.DownloadService.class);
     resources.add(io.hops.hopsworks.api.util.EndpointService.class);
+    resources.add(io.hops.hopsworks.api.util.KibanaService.class);
     resources.add(io.hops.hopsworks.api.util.LocalFsService.class);
     resources.add(io.hops.hopsworks.api.util.UploadService.class);
     resources.add(io.hops.hopsworks.api.util.VariablesService.class);

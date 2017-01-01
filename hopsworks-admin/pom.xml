@@ -22,12 +22,14 @@
       <artifactId>hopsworks-common</artifactId>
       <version>0.1.0</version>
       <type>ejb</type>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-kmon</artifactId>
       <version>0.1.0</version>
       <type>ejb</type>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>commons-fileupload</groupId>
