@@ -1,4 +1,4 @@
-package io.hops.hopsworks.api.zeppelin.server;
+package io.hops.hopsworks.web.servlet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +53,7 @@ public class AppScriptServlet extends HttpServlet {
         String replaceStringRest
                 = "this.getRestApiBase=function(){return location.protocol + '//'"
                 + " + location.hostname + ':' + this.getPort() "
-                + " + '/hopsworks/api'; }";
+                + " + '/hopsworks-api/api'; }";
         script.replace(startIndexRest, endIndexRest + 1, replaceStringRest);
       }
       out.println(script.toString());

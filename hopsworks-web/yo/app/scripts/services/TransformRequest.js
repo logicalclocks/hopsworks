@@ -16,5 +16,5 @@ angular.module('hopsWorksApp')
               }
               return requestStr;
             }
-          }
+          };
         });

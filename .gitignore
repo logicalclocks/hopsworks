@@ -108,3 +108,4 @@ test/.env
 src/main/setup/glassfish-resources.xml
 */glassfish-resources.xml
 
+/hopsworks-web/yo/nbproject/private/

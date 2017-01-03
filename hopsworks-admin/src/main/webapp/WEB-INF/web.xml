@@ -124,7 +124,7 @@
   </filter-mapping>
   <filter>
     <filter-name>LoginFilter</filter-name>
-    <filter-class>se.kth.bbc.security.ua.authz.LoginFilter</filter-class>
+    <filter-class>io.hops.hopsworks.admin.security.ua.LoginFilter</filter-class>
     <init-param>
       <param-name>avoid-urls</param-name>
       <param-value>html</param-value>

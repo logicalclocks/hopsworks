@@ -104,16 +104,24 @@ function getPort() {
   return port;
 };
 
+function getPathname() {
+  return "/hopsworks-api";
+}
+
 function getLocationBase() {
-  return location.protocol + "//" + location.hostname +":" + getPort() + skipTrailingSlash(location.pathname);
+  return location.protocol + "//" + location.hostname +":" + getPort() + getPathname();
 };
 
 function getWsProtocol() {
   return location.protocol === 'https:' ? 'wss:' : 'ws:';
 };
 
+function getMetaDataWsBaseURL() {
+  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/wspoint/";
+}
+
 function getZeppelinWsBaseURL() {
-  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + skipTrailingSlash(location.pathname) + "/zeppelin/ws";
+  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/zeppelin/ws";
 };
 
 function skipTrailingSlash(path) {

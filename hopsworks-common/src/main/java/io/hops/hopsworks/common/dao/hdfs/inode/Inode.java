@@ -127,8 +127,6 @@ public class Inode implements Serializable {
   private String symlink;
   @Basic(optional = false)
   @NotNull
-//  @Converter(name = "byteConverter", converterClass = se.kth.bbc.project.fb.ByteConverter.class)
-//  @Convert("byteConverter")
   @Column(name = "quota_enabled")
   private boolean quotaEnabled;
   @Basic(optional = false)

@@ -1,5 +1,6 @@
 package io.hops.hopsworks.admin.project.privacy;
 
+import io.hops.hopsworks.common.dao.project.ProjectPrivacyFacade;
 import org.apache.hadoop.fs.Path;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import java.io.BufferedOutputStream;
@@ -8,25 +9,20 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
-import org.primefaces.context.RequestContext;
-import org.primefaces.event.SelectEvent;
 import io.hops.hopsworks.common.dao.user.consent.Consents;
 
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FSDataInputStream;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.util.Settings;
+import javax.ejb.EJB;
+import org.primefaces.context.RequestContext;
+import org.primefaces.event.SelectEvent;
 
 @Stateless
 public class ProjectPrivacyManager {
@@ -36,19 +32,9 @@ public class ProjectPrivacyManager {
           getName());
 
   @EJB
-  private DistributedFsService dfs;
-
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
-
-  @EJB
-  private InodeFacade inodeFacade;
+  private ProjectPrivacyFacade privacyFacade;
 
   private static final int DEFAULT_BUFFER_SIZE = 10240;
-
-  protected EntityManager getEntityManager() {
-    return em;
-  }
 
   public void onDateSelect(SelectEvent event) {
     FacesContext facesContext = FacesContext.getCurrentInstance();
@@ -65,69 +51,32 @@ public class ProjectPrivacyManager {
   }
 
   public boolean upload(Consents consent) {
-    em.persist(consent);
+    privacyFacade.upload(consent);
     return true;
   }
 
   public Consents getConsentById(int cid) throws ParseException {
-
-    TypedQuery<Consents> q = em.createNamedQuery("Consents.findById",
-            Consents.class);
-    q.setParameter("id", cid);
-    List<Consents> consent = q.getResultList();
-    if (consent.size() > 0) {
-      return consent.get(0);
-    }
-    return null;
-
+    return privacyFacade.getConsentById(cid);
   }
 
   public Consents getConsentByName(String name) throws ParseException {
-
-    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByInodePK",
-            Consents.class);
-    q.setParameter("name", name);
-    List<Consents> consent = q.getResultList();
-    if (consent.size() > 0) {
-      return consent.get(0);
-    }
-    return null;
-
+    return privacyFacade.getConsentByName(name);
   }
 
   public List<Consents> getAllConsets(int pid) {
-    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByProjectId",
-            Consents.class);
-    q.setParameter("project.id", pid);
-
-    return q.getResultList();
-
+    return privacyFacade.getAllConsets(pid);
   }
 
   public List<Consents> findAllNewConsets(ConsentStatus status) {
-    TypedQuery<Consents> q = em.createNamedQuery("Consents.findByStatus",
-            Consents.class);
-    q.setParameter("consentStatus", status);
-
-    return q.getResultList();
-
+    return privacyFacade.findAllNewConsets(status);
   }
 
   public List<Consents> findAllConsents() {
-    TypedQuery<Consents> q = em.createNamedQuery("Consents.findAll",
-            Consents.class);
-    return q.getResultList();
+    return privacyFacade.findAllConsents();
   }
 
   public boolean updateConsentStatus(Consents cons, ConsentStatus status) {
-
-    if (cons != null) {
-      cons.setConsentStatus(status);
-      em.merge(cons);
-
-      return true;
-    }
-    return false;
+    return privacyFacade.updateConsentStatus(cons, status);
   }
 
   public void downloadPDF(Consents consent, DistributedFileSystemOps dfso)

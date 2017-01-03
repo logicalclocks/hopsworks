@@ -44,20 +44,20 @@ import io.hops.hopsworks.common.dao.host.Status;
           = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service"),
   @NamedQuery(name = "Role.findRoleHostBy-Cluster",
           query
-          = "SELECT NEW io.hops.kmon.struct.RoleHostInfo(r, h) FROM Role r, Host h "
+          = "SELECT NEW io.hops.hopsworks.common.dao.role.RoleHostInfo(r, h) FROM Role r, Host h "
           + "WHERE r.hostId = h.hostId AND r.cluster = :cluster"),
   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service",
           query
-          = "SELECT NEW io.hops.kmon.struct.RoleHostInfo(r, h) FROM Role r, Host h "
+          = "SELECT NEW io.hops.hopsworks.common.dao.role.RoleHostInfo(r, h) FROM Role r, Host h "
           + "WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role",
           query
-          = "SELECT NEW io.hops.kmon.struct.RoleHostInfo(r, h) FROM Role r, Host h "
+          = "SELECT NEW io.hops.hopsworks.common.dao.role.RoleHostInfo(r, h) FROM Role r, Host h "
           + "WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service "
           + "AND r.role = :role"),
   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host",
           query
-          = "SELECT NEW io.hops.kmon.struct.RoleHostInfo(r, h) FROM Role r, Host h "
+          = "SELECT NEW io.hops.hopsworks.common.dao.role.RoleHostInfo(r, h) FROM Role r, Host h "
           + "WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service "
           + "AND r.role = :role AND r.hostId = :hostid"),
   @NamedQuery(name = "Role.DeleteBy-HostId",

@@ -26,7 +26,7 @@ public class DecoderHelper {
     try {
       String message = this.json.getString("type");
       Class c = getClass().getClassLoader().loadClass(
-              "se.kth.hopsworks.meta.wscomm.message." + message);
+              "io.hops.hopsworks.api.metadata.wscomm.message." + message);
       msg = (Message) c.newInstance();
     } catch (ClassNotFoundException | InstantiationException |
             IllegalAccessException e) {

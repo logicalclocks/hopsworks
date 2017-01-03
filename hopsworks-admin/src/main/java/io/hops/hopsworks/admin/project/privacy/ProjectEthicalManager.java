@@ -12,8 +12,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
@@ -25,8 +23,6 @@ public class ProjectEthicalManager implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
   @EJB
   private ProjectPrivacyManager privacyManager;
   @EJB
@@ -53,10 +49,6 @@ public class ProjectEthicalManager implements Serializable {
   private List<Consents> allNewConsents;
 
   private List<Consents> allConsents;
-
-  protected EntityManager getEntityManager() {
-    return em;
-  }
 
   public List<Project> getAllStudies() {
     this.allStudies = projectController.findAll();

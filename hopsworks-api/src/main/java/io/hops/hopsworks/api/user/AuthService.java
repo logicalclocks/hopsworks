@@ -90,6 +90,13 @@ public class AuthService {
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
           throws AppException, MessagingException {
 
+    req.getServletContext().log("email: " + email);
+    req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
+    req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
+    req.getServletContext().log("SecurityContext in user role: " + sc.
+            isUserInRole("HOPS_USER"));
+    req.getServletContext().log("SecurityContext in sysadmin role: " + sc.
+            isUserInRole("HOPS_ADMIN"));
     JsonResponse json = new JsonResponse();
     if (email == null || email.isEmpty()) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
@@ -140,6 +147,10 @@ public class AuthService {
     if (sc.getUserPrincipal() == null) {
       if (statusValidator.checkStatus(user.getStatus())) {
         try {
+          req.getServletContext().log("going to login. User status: " + user.
+                  getStatus());
+          req.login(email, newPassword);
+          req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
           am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
                   UserAuditActions.SUCCESS.name(), req);

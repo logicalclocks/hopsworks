@@ -12,7 +12,7 @@
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-kmon</artifactId>
   <version>0.1.0</version>
-  <packaging>ejb</packaging>
+  <packaging>war</packaging>
   <description>Hopsworks monitoring app</description>
   <name>hopsworks-kmon</name>
 

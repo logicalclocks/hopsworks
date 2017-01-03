@@ -22,6 +22,10 @@ public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
     HttpSession httpSession = (HttpSession) request.getHttpSession();
     Map<String, String> cookies = new HashMap<>();
     String cookie = request.getHeaders().get("Cookie").get(0);
+    logger.log(Level.INFO, "=======> cookie length = {0}", request.getHeaders().
+            get("Cookie").size());
+    logger.log(Level.INFO, "=======> cookie 0 = {0}", request.getHeaders().
+            get("Cookie").get(0));
     String[] cookieParts = cookie.split("; ");//should have space after ;
     for (String c : cookieParts) {
       cookies.put(c.substring(0, c.indexOf("=")), c.
