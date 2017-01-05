@@ -190,11 +190,6 @@
       <to-view-id>/security/protected/admin/yubikeyUers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
-    <navigation-case>
-      <from-outcome>monitoring</from-outcome>
-      <to-view-id>/security/protected/kmon/clusters.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
 
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>
@@ -203,23 +198,23 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>logout</from-outcome>
-      <to-view-id>/index.xhtml</to-view-id>
+      <url-pattern>/hopsworks/#/index.xhtml</url-pattern>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>login</from-outcome>
-      <to-view-id>//#/login</to-view-id>
+      <url-pattern>/hopsworks/#/login</url-pattern>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>welcome</from-outcome>
-      <to-view-id>/#/login</to-view-id>
+      <url-pattern>/hopsworks/#/login</url-pattern>
       <redirect/>
     </navigation-case>
     
     <navigation-case>
       <from-outcome>home</from-outcome>
-      <to-view-id>/#/home</to-view-id>
+      <url-pattern>/hopsworks/#/home</url-pattern>
       <redirect/>
     </navigation-case>      
   </navigation-rule>

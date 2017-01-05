@@ -21,6 +21,7 @@ yo/app/karma.conf.js
 */nbdist/
 */nbactions.xml
 */nb-configuration.xml
+*/settings.xml
 .nb-gradle/
 nb-configuration.xml
 nbactions.xml

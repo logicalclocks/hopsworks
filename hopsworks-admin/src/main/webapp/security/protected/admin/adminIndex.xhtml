@@ -48,7 +48,7 @@
 
 
             <p:column>
-              <h:commandLink  action="monitoring">
+              <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-kmon/monitor/clusters.xhtml')}">
 
                 <p:graphicImage id="monitoring"
                                 value="/resources/images/users/monitoring.png"

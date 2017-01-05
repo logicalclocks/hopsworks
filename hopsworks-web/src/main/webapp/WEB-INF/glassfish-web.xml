@@ -8,4 +8,27 @@
       <description>Keep a copy of the generated servlet class' java code.</description>
     </property>
   </jsp-config>
+  <security-role-mapping>
+    <role-name>HOPS_ADMIN</role-name>
+    <group-name>HOPS_ADMIN</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>HOPS_USER</role-name>
+    <group-name>HOPS_USER</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>AGENT</role-name>
+    <group-name>AGENT</group-name>
+  </security-role-mapping>
+  <parameter-encoding default-charset="UTF-8"/>
+  <security-role-mapping>
+    <role-name>AUDITOR</role-name>
+    <group-name>AUDITOR</group-name>
+  </security-role-mapping>
+  <session-config>
+    <cookie-properties>
+      <property name="cookieName" value="SESSIONID"/>
+      <property name="cookiePath" value="/"/>
+    </cookie-properties>
+  </session-config>
 </glassfish-web-app>

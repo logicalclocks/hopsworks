@@ -16,6 +16,10 @@ import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.AuditUtil;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.servlet.ServletException;
 
 @ManagedBean
 @RequestScoped
@@ -145,26 +149,33 @@ public class RoleEnforcementPoint implements Serializable {
 
   // MOVE OUT THIS
   public String logOut() {
-    getRequest().getSession().invalidate();
+    try {
+      getRequest().getSession().invalidate();
+      
+      FacesContext ctx = FacesContext.getCurrentInstance();
+      HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+      HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
 
-    FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
-
-    String ip = AuditUtil.getIPAddress();
-    String browser = AuditUtil.getBrowserInfo();
-    String os = AuditUtil.getOSInfo();
-    String macAddress = AuditUtil.getMacAddress(ip);
-
-    am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.
-            getValue(), ip,
-            browser, os, macAddress, UserAuditActions.SUCCESS.name());
-
-    userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
-
-    if (null != sess) {
-      sess.invalidate();
+      String ip = AuditUtil.getIPAddress();
+      String browser = AuditUtil.getBrowserInfo();
+      String os = AuditUtil.getOSInfo();
+      String macAddress = AuditUtil.getMacAddress(ip);
+      
+      am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.
+              getValue(), ip,
+              browser, os, macAddress, UserAuditActions.SUCCESS.name());
+      
+      userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
+      req.logout();
+      if (null != sess) {
+        sess.invalidate();
+      }
+      ctx.getExternalContext().redirect("/hopsworks/#/home");
+    } catch (IOException | ServletException ex) {
+      Logger.getLogger(RoleEnforcementPoint.class.getName()).
+              log(Level.SEVERE, null, ex);
     }
     return ("welcome");
-
   }
 }

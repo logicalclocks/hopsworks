@@ -22,7 +22,7 @@
     <h:form class="stylelayout" id="formToolbar">  
       <p:toolbar styleClass="MainToolbar">  
         <p:toolbarGroup align="left">  
-          <p:commandLink value="#{settingsController.name}" action="adminIndex"/>
+          <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}"/>
         </p:toolbarGroup> 
 
         <p:toolbarGroup align="left">

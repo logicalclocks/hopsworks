@@ -23,6 +23,13 @@
       <version>0.1.0</version>
       <type>ejb</type>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+
     </dependency>
     <dependency>
       <groupId>commons-fileupload</groupId>

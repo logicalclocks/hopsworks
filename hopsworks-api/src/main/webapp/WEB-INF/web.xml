@@ -91,7 +91,7 @@
     tells everyone (especially hackers) that our application is based on java -->
     <cookie-config>
       <name>SESSIONID</name>
-      <path>/hopsworks</path>
+      <path>/</path>
     </cookie-config>
   </session-config>
 </web-app>

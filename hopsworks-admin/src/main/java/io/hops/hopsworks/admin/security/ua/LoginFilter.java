@@ -56,7 +56,7 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
       } else if (isInUserRole(user)) {
         response.sendRedirect(contextPath + "/#home");
       }
-    } else {
+    } else if (request.getRemoteUser() != null){
       chain.doFilter(req, res);
     }
   }

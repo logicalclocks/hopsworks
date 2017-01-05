@@ -50,7 +50,7 @@
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-kmon</artifactId>
       <version>0.1.0</version>
-      <type>ejb</type>
+      <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>

@@ -32,6 +32,9 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.util.AuditUtil;
+import java.io.IOException;
+import java.util.logging.Level;
+import javax.servlet.ServletException;
 
 @ManagedBean
 @SessionScoped
@@ -543,9 +546,15 @@ public class ResetPassword implements Serializable {
     auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.getValue(),
             ip, browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
-    session.invalidate();
-
-    mgr.setOnline(people.getUid(), -1);
+    try {
+      req.logout();
+      session.invalidate();
+      mgr.setOnline(people.getUid(), -1);
+      context.getExternalContext().redirect("/hopsworks/#/home");
+    } catch (IOException | ServletException ex) {
+      Logger.getLogger(ResetPassword.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
     return ("welcome");
   }
 
