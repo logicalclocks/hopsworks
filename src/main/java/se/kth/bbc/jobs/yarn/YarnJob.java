@@ -161,7 +161,7 @@ public abstract class YarnJob extends HopsJob {
                 == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()
                 == JobType.FLINK || jobDescription.getJobType() == JobType.SPARK)
                 && jobDescription.getJobConfig() instanceof YarnJobConfiguration
-                && jobDescription.getJobConfig().getKafka()!=null) {
+                && jobDescription.getJobConfig().getKafka() != null) {
           serviceProps.initKafka();
           //Set Kafka specific properties to serviceProps
           serviceProps.setKeystorePwd(services.getSettings().
@@ -183,7 +183,7 @@ public abstract class YarnJob extends HopsJob {
 
           HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
                   getProject(), user.getUsername(),
-                  Settings.TMP_CERT_STORE_LOCAL,
+                  services.getSettings().getHopsworksTmpCertDir(),
                   Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
                   dfso, projectLocalResources, jobSystemProperties,
                   nameNodeIpPort);
@@ -191,7 +191,6 @@ public abstract class YarnJob extends HopsJob {
         }
       }
     }
-
     return true;
   }
 

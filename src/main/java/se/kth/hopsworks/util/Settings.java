@@ -248,7 +248,7 @@ public class Settings {
 
 
 
-  private static String GLASSFISH_DIR = "/srv/glassfish";
+  private static String GLASSFISH_DIR = "/srv/hops/glassfish";
 
   public static synchronized String getGlassfishDir() {
     return GLASSFISH_DIR;
@@ -267,7 +267,7 @@ public class Settings {
   /**
    * Default Directory locations
    */
-  private String SPARK_DIR = "/srv/spark";
+  private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
   public static final String HOPS_VERSION = "2.4.0";
 
@@ -316,7 +316,7 @@ public class Settings {
     return ADAM_USER;
   }
 
-  private String FLINK_DIR = "/srv/flink";
+  private String FLINK_DIR = "/srv/hops/flink";
 
   public synchronized String getFlinkDir() {
     checkCache();
@@ -346,7 +346,7 @@ public class Settings {
     return NDB_DIR;
   }
 
-  private String ADAM_DIR = "/srv/adam";
+  private String ADAM_DIR = "/srv/hops/adam";
 
   public synchronized String getAdamDir() {
     checkCache();
@@ -354,14 +354,14 @@ public class Settings {
   }
   
   
-  private String HADOOP_DIR = "/srv/hadoop";
+  private String HADOOP_DIR = "/srv/hops/hadoop";
 
   public synchronized String getHadoopDir() {
     checkCache();
     return HADOOP_DIR;
   }
 
-  private static String HOPSWORKS_INSTALL_DIR = "/srv/glassfish";
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/hops";
 
   public synchronized String getHopsworksInstallDir() {
     checkCache();
@@ -858,7 +858,6 @@ public class Settings {
   public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
   public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
   
-  public static final String TMP_CERT_STORE_LOCAL = "/srv/glassfish/kafkacerts";
   public static final String TMP_CERT_STORE_REMOTE = "/user/glassfish/kafkacerts";
   
   //Used to retrieve schema by KafkaUtil
@@ -881,6 +880,12 @@ public class Settings {
           + "To replace it, go into your DataSet and edit the README.md file.\n"
           + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
           + "## %s";
+  
+  
+   public String getHopsworksTmpCertDir() {
+    return getHopsworksDomainDir() + File.separator + "kafkacerts";
+  }
+
   //Dataset request subject
   public static String MESSAGE_DS_REQ_SUBJECT = "Dataset access request.";
   

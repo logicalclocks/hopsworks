@@ -834,7 +834,8 @@ public class KafkaFacade {
     }
     try {
       HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(),
-              Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE);
+              settings.getHopsworksTmpCertDir(), Settings.TMP_CERT_STORE_REMOTE,
+              null, null, null, null, null);
 
       for (String brokerAddress : brokers) {
         brokerAddress = brokerAddress.split("://")[1];
@@ -852,13 +853,13 @@ public class KafkaFacade {
         //configure the ssl parameters
         props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-                Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+                settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
                         getProjectTruststoreName(project.getName(), user.
                                 getUsername()));
         props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
                 settings.getHopsworksMasterPasswordSsl());
         props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-                Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+                settings.getHopsworksTmpCertDir()+ File.separator + HopsUtils.
                         getProjectKeystoreName(project.getName(), user.
                                 getUsername()));
         props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
@@ -904,11 +905,11 @@ public class KafkaFacade {
     } finally {
       //Remove certificates from local dir
       Files.deleteIfExists(FileSystems.getDefault().getPath(
-              Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+              settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
                       getProjectTruststoreName(project.getName(), user.
                               getUsername())));
       Files.deleteIfExists(FileSystems.getDefault().getPath(
-              Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+              settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
                       getProjectKeystoreName(project.getName(), user.
                               getUsername())));
     }
