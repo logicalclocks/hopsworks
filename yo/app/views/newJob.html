@@ -283,7 +283,7 @@
                 </button>
 
                   <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected">
-                    <div class="text-right col-md-2">Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
+                    <div class="text-right col-md-2">Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="text-align: left;margin-left: 10px"></i></div>
                       <div  class="col-md-10" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected"   
                         isteven-multi-select
                         input-model="newJobCtrl.topics"
