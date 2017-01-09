@@ -58,19 +58,12 @@ angular.module('hopsWorksApp')
             };
             
             self.toggleKafka = function(){
-              if(self.kafkaSelected){
-                self.kafkaSelected = false;
-              } else{
-                self.kafkaSelected = true;
-              }
-            }
+              self.kafkaSelected = !self.kafkaSelected;
+            };
+            
             self.toggleAdvanced = function(){
-              if(self.runConfig.kafka.advanced){
-                self.runConfig.kafka.advanced = false;
-              } else{
-                self.runConfig.kafka.advanced = true;
-              }
-            }
+              self.runConfig.kafka.advanced = !self.runConfig.kafka.advanced;
+            };
 
             ////////////////////////////////////////////////////////////////////
 
@@ -297,8 +290,10 @@ angular.module('hopsWorksApp')
                   growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
                   return;
                 } else {
-                  if (self.groupsSelected) {
+                  if (self.runConfig.kafka.advanced) {
                     self.runConfig.kafka.consumergroups = self.consumerGroups;
+                  } else {
+                    delete self.runConfig.kafka.consumergroups;
                   }
                 }
               }
