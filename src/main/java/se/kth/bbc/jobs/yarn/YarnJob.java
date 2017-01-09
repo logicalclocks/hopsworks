@@ -188,7 +188,7 @@ public abstract class YarnJob extends HopsJob {
 
         HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
                 getProject(), user.getUsername(),
-                Settings.TMP_CERT_STORE_LOCAL,
+                services.getSettings().getHopsworksTmpCertDir(),
                 Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
                 dfso, projectLocalResources, jobSystemProperties, nameNodeIpPort);
         return true;
