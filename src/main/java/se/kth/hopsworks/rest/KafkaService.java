@@ -35,6 +35,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.PUT;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 //import org.apache.avro.Schema;
 
 @RequestScoped
@@ -154,8 +155,15 @@ public class KafkaService {
                     "Incomplete request!");
         }
         //create the topic in the database and the Kafka cluster
-        kafkaFacade.createTopicInProject(this.projectId, topicDto);
-
+        kafkaFacade.createTopicInProject(projectId, topicDto);
+        //By default, all members of the project are granted full permissions 
+        //on the topic
+        AclDTO aclDto = new AclDTO(null, project.getName(),
+                Settings.KAFKA_ACL_WILDCARD,
+                "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+                Settings.KAFKA_ACL_WILDCARD);
+        kafkaFacade.addAclsToTopic(topicDto.getName(), projectId, aclDto);
+        
         json.setSuccessMessage("The Topic has been created.");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
@@ -247,6 +255,18 @@ public class KafkaService {
         }
 
         kafkaFacade.shareTopic(this.projectId, topicName, projectId);
+        //By default, all members of the project are granted full permissions 
+        //on the topic
+        Project projectShared = projectFacade.find(projectId);
+        if(projectShared == null){
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                    "Could not find project for topic");
+        }
+        AclDTO aclDto = new AclDTO(null, projectShared.getName(),
+                Settings.KAFKA_ACL_WILDCARD,
+                "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+                Settings.KAFKA_ACL_WILDCARD);
+        kafkaFacade.addAclsToTopic(topicName, this.projectId, aclDto);
         json.setSuccessMessage("The topic has been shared.");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
@@ -355,7 +375,7 @@ public class KafkaService {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     "Problem adding ACL to topic.");
         }
-
+        
         json.setSuccessMessage("ACL has been added to the topic.");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
                 json).build();
