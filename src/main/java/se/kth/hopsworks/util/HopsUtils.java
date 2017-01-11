@@ -138,6 +138,13 @@ public class HopsUtils {
     return project + "__" + user + "__tstore.jks";
   }
 
+  public static void copyUserKafkaCerts(CertsFacade userCerts,
+          Project project, String username,
+          String localTmpDir, String remoteTmpDir) {
+    copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
+            null, null, null, null, null);
+  }
+
   /**
    * Utility method that copies Kafka user certificates from the Database, to
    * either hdfs to be passed as LocalResources to the YarnJob or to used

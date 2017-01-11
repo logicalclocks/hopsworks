@@ -274,16 +274,21 @@
                 </select>
               </div>
             </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()">
-              <div class="text-right col-md-4">Kafka <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.kafka.selected"></div>
+            
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
+              <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
+              <div class="col-md-8">
+                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
+                  Kafka
+                </button>
+              </div>
             </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected">
-              <div class="text-right col-md-4">Kafka Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
-                <div  class="col-md-8" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected"   
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
+              <div class="text-right col-md-4">Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
+                <div  class="col-md-8" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected"   
                   isteven-multi-select
                   input-model="newJobCtrl.topics"
-                  output-model="newJobCtrl.topicsSelected"
+                  output-model="newJobCtrl.runConfig.kafka.topics"
                   button-label="name"
                   item-label="name"
                   tick-property="ticked"
@@ -291,9 +296,25 @@
                   >
               </div>
             </div>  
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.runConfig.kafka.selected">
-              <div class="text-right col-md-4">Kafka consumer groups<i class="fa fa-info-circle" uib-tooltip="Comma-separated list of consumer groups available for this job." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.kafka.consumergroups"></div>
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
+              <div class="text-right col-md-4"></div>
+              <div class="col-md-8">
+                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()">
+                  Advanced
+                </button>
+              </div>
+            </div>
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
+              <div class="text-right col-md-4">Consumer Groups<i class="fa fa-info-circle" uib-tooltip="Choose Consumer groups to be available in the job via HopsUtil." style="margin-left: 10px"></i></div>
+              <div class="col-md-8">
+                <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
+                  <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">
+                  <button class="kafka-consumergroups-buttons glyphicon glyphicon-remove-sign" ng-show="$last" ng-click="newJobCtrl.removeGroup()">
+                  </button>
+                  <button class="kafka-consumergroups-buttons glyphicon glyphicon-plus-sign" ng-show="$last" ng-click="newJobCtrl.addGroup(group)">
+                  </button>
+                </fieldset>
+              </div>
             </div>
             <!-- Add libraries -->
             <div>

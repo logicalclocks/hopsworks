@@ -66,6 +66,9 @@ public class KafkaFacade {
 
   @EJB
   private CertsFacade userCerts;
+  
+  @EJB 
+  private ProjectFacade projectsFacade;
 
   public static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
@@ -484,7 +487,15 @@ public class KafkaFacade {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               "The specified project for the topic is not in database");
     }
-
+    
+    if(!project.getName().equals(selectedProjectName)){
+      project = projectsFacade.findByName(selectedProjectName);
+      if(project == null){
+         throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "The specified project for the topic is not in database");
+      }
+    }
+    
     ProjectTopics pt = em.find(ProjectTopics.class,
             new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {

@@ -183,7 +183,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
             executorCores));
-
+    addSystemProperty("spark.yarn.stagingDir", stagingPath);
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions="
@@ -211,13 +211,11 @@ public class SparkYarnRunnerBuilder {
 
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
-        if (serviceProps.getKafka().getConsumerGroups() != null) {
-          addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
-                  getKafka().getConsumerGroups());
-          builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
-                  + serviceProps.getKafka().
-                          getConsumerGroups());
-        }
+        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
+                getKafka().getConsumerGroups());
+        builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
+                + serviceProps.getKafka().
+                        getConsumerGroups());
         extraJavaOptions.append(" -D" + Settings.KAFKA_SESSIONID_ENV_VAR + "=").
                 append(serviceProps.getKafka().getSessionId()).
                 append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
