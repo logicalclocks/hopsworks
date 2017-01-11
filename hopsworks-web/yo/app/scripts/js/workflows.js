@@ -249,7 +249,7 @@ module.exports = function(target, dir, cb) {
         n.data['fullPath'] = parent.data.fullPath+ "/" + n.text + "/"
         n.data['relPath'] = path
 
-        $.post("/hopsworks/api/project/:project_id/dataset", JSON.stringify({name: path, description: "", searchable: true})).retry({times:3, timeout:500})
+        $.post(getApiPath() + "/project/:project_id/dataset", JSON.stringify({name: path, description: "", searchable: true})).retry({times:3, timeout:500})
       }); },0);
     });
   })
@@ -262,7 +262,7 @@ module.exports = function(target, dir, cb) {
       multiple: false,
       data : function (node, callback) {
         var path = (node.data) ? node.data.relPath : ""
-        $.get('/hopsworks/api/project/:project_id/dataset' + path, function(data){
+        $.get(getApiPath() + '/project/:project_id/dataset' + path, function(data){
           var tree = data.map(function(i){
             var path = i.path.split('/')
             path = '/' + path.splice(3, path.length).join('/')
@@ -385,12 +385,12 @@ module.exports = function(target, dir, cb) {
       if(ele.isNode()){
         var data = ele.data()
         data['data'] = jQuery.extend(true, {}, data)
-        $.post("/hopsworks/api/project/:project_id/workflows/:workflow_id/nodes", JSON.stringify(data)).retry({times:3, timeout:500})
+        $.post(getApiPath() + "/project/:project_id/workflows/:workflow_id/nodes", JSON.stringify(data)).retry({times:3, timeout:500})
       }
 
       if(ele.isEdge()){
         var data = ajaxEdgeDataSetup(ele.data(), false)
-        $.post("/hopsworks/api/project/:project_id/workflows/:workflow_id/edges", JSON.stringify(data)).retry({times:3, timeout:500})
+        $.post(getApiPath() + "/project/:project_id/workflows/:workflow_id/edges", JSON.stringify(data)).retry({times:3, timeout:500})
       }
 
     });
@@ -401,24 +401,24 @@ module.exports = function(target, dir, cb) {
         var data = ajaxNodeDataSetup(ele.data(), true)
         if(!jQuery.isEmptyObject(data)){
           data['data'] = jQuery.extend(true, {}, ajaxNodeDataSetup(ele.data(), true))
-          $.put("/hopsworks/api/project/:project_id/workflows/:workflow_id/nodes/"+ele.id(), JSON.stringify(data)).retry({times:3, timeout:500})
+          $.put(getApiPath() + "/project/:project_id/workflows/:workflow_id/nodes/"+ele.id(), JSON.stringify(data)).retry({times:3, timeout:500})
         }
       }
 
       if(ele.isEdge()){
         var data = ajaxEdgeDataSetup(ele.data())
-        $.put("/hopsworks/api/project/:project_id/workflows/:workflow_id/edges/"+ele.id(), JSON.stringify(data)).retry({times:3, timeout:500})
+        $.put(getApiPath() + "/project/:project_id/workflows/:workflow_id/edges/"+ele.id(), JSON.stringify(data)).retry({times:3, timeout:500})
       }
     });
 
     cy.on('remove', '*', function(e){
       var ele = e.cyTarget
       if(ele.isNode()){
-        $.delete("/hopsworks/api/project/:project_id/workflows/:workflow_id/nodes/"+ele.id()).retry({times:3, timeout:500})
+        $.delete(getApiPath() + "/project/:project_id/workflows/:workflow_id/nodes/"+ele.id()).retry({times:3, timeout:500})
       }
 
       if(ele.isEdge()){
-        $.delete("/hopsworks/api/project/:project_id/workflows/:workflow_id/edges/"+ele.id()).retry({times:3, timeout:500})
+        $.delete(getApiPath() + "/project/:project_id/workflows/:workflow_id/edges/"+ele.id()).retry({times:3, timeout:500})
       }
 
     });
@@ -496,7 +496,7 @@ module.exports = function(target, dir, cb) {
       $('#options').html(form)
     });
 
-    $.get("/hopsworks/api/project/:project_id/workflows/:workflow_id", function(data){
+    $.get(getApiPath() + "/project/:project_id/workflows/:workflow_id", function(data){
       if(data.nodes.length == 0){
           var ele0 = defaults.blankNodeOpts();
         var nodes = [
@@ -588,7 +588,7 @@ module.exports = function(target, dir, cb) {
   }
   var pollData = function(){
     setTimeout(function () {
-      $.get("/hopsworks/api/project/:project_id/workflows/:workflow_id/executions/:execution_id", function(data){
+      $.get(getApiPath() + "/project/:project_id/workflows/:workflow_id/executions/:execution_id", function(data){
         drawAction(data.actions, 0)
         if(data.status.toLowerCase === "running") pollData()
       })
@@ -609,7 +609,7 @@ module.exports = function(target, dir, cb) {
     $('#image').cyNavigator({container: '#navigator'})
     loadDefaults(cy)
 
-    $.get("/hopsworks/api/project/:project_id/workflows/:workflow_id/executions/:execution_id", function(success){
+    $.get(getApiPath() + "/project/:project_id/workflows/:workflow_id/executions/:execution_id", function(success){
       var data = success.snapshot
       debugger
       if(data.nodes.length == 0) return
@@ -636,7 +636,7 @@ module.exports = function(target, dir, cb) {
       cy.add(edges)
       cy.ready(function(){
         cy.layout( layoutOpts() )
-        $.get("/hopsworks/api/project/:project_id/workflows/:workflow_id/executions/:execution_id/jobs/:job_id", function(data){
+        $.get(getApiPath() + "/project/:project_id/workflows/:workflow_id/executions/:execution_id/jobs/:job_id", function(data){
           drawAction(data.actions, 0)
           if(data.status.toLowerCase === "running") pollData()
         })
@@ -1037,7 +1037,7 @@ function form(node){
   var tables = $('<select id = "tables"></select>')
   options.append($('<div class="col-sm-3"></div>').append(tables))
   tables.on('change', function(o){
-    $.get("/hopsworks/api/metadata/" + node.data('jarINodeId'), function(data){
+    $.get(getApiPath() + "/metadata/" + node.data('jarINodeId'), function(data){
       var selected = $('#tables').find('option:selected').val().split('-')
       var table = data[selected[0]][selected[1]]
       var data = {}
@@ -1093,7 +1093,7 @@ var multiInput = function(node, text, value, disabled, dir, cb){
 }
 
 var populateTemplates = function(inodeId){
-  $.get("/hopsworks/api/metadata/" + inodeId, function(data){
+  $.get(getApiPath() + "/metadata/" + inodeId, function(data){
     $('#tables').html($("<option></option>"))
     var node = cy.$('node.selected').first()
     $.each(data, function(temp, v) {

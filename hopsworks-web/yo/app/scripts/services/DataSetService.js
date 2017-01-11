@@ -39,7 +39,7 @@ angular.module('hopsWorksApp')
                  * @returns {undefined}
                  */
                 fileDownload: function (fileName) {
-                  location.href='/hopsworks/api/project/' + id + '/dataset/fileDownload/' + fileName;
+                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName;
                 },
                 compressFile: function(fileName) {
                   return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);

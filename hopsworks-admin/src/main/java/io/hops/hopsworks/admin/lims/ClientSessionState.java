@@ -10,6 +10,8 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
+import java.io.IOException;
+import javax.faces.context.ExternalContext;
 
 @ManagedBean
 @SessionScoped
@@ -66,6 +68,12 @@ public class ClientSessionState implements Serializable {
       user = userFacade.findByEmail(email);
     }
     return user;
+  }
+
+  public void redirect() throws IOException {
+    ExternalContext externalContext = FacesContext.getCurrentInstance().
+            getExternalContext();
+    externalContext.redirect("/hopsworks-kmon/monitor/clusters.xhtml");
   }
 
 }

@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
 
-            self.target = '/hopsworks/api/project/' + self.projectId + '/dataset/upload/' + self.path;
+            self.target = getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path;
 
             self.size = function (fileSizeInBytes) {
               return convertSize (fileSizeInBytes);
@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
             };
 
             self.target = function (FlowFile, FlowChunk, isTest) {
-              return '/hopsworks/api/project/' + self.projectId + '/dataset/upload/' + self.path + '/' + self.selectedTemplate.id;
+              return getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path + '/' + self.selectedTemplate.id;
             };
 
             self.fileErrorHandler = function (file, message, flow) {

@@ -6,25 +6,25 @@ module ProjectHelper
   def create_project
     with_valid_session
     new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
-    post "/hopsworks/api/project", new_project
+    post "#{ENV['HOPSWORKS_API']}/project", new_project
     get_project_by_name(new_project[:projectName])
   end
   
   def create_project_by_name(projectname)
     with_valid_session
     new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
-    post "/hopsworks/api/project", new_project
+    post "#{ENV['HOPSWORKS_API']}/project", new_project
     get_project_by_name(new_project[:projectName])
   end
   
   def delete_project(project)
-    post "/hopsworks/api/project/#{project[:id]}/delete"
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
   end
   
   def add_member(member, role)
     with_valid_session
     with_valid_project
-    post "/hopsworks/api/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
+    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
   end
   
   def get_all_projects
@@ -42,7 +42,7 @@ module ProjectHelper
   
   def clean_projects
    with_valid_session
-   get "/hopsworks/api/project/getAll"
-      json_body.map{|project| project[:id]}.each{|i| post "/hopsworks/api/project/#{i}/delete" }
+   get "#{ENV['HOPSWORKS_API']}/project/getAll"
+      json_body.map{|project| project[:id]}.each{|i| post "#{ENV['HOPSWORKS_API']}/project/#{i}/delete" }
      end
   end

@@ -7,7 +7,7 @@ describe 'dataset' do
         reset_session
       end
       it "should fail" do
-        post "/hopsworks/api/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -19,34 +19,34 @@ describe 'dataset' do
       end
       it 'should work with valid params' do
         dsname = "dataset_#{short_random_id}"
-        post "/hopsworks/api/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "The Dataset was created successfully.")
         expect_status(200)
-        get "/hopsworks/api/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:description]).to eq ("test dataset")
         expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(ds[:permission]).to eq ("rwxr-x---")
-        get "/hopsworks/api/project/#{@project[:id]}/dataset/#{dsname}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
         ds = json_body.detect { |d| d[:name] == "README.md" }
         expect(ds).to be_present
       end
       
       it 'should work with valid params and no README.md' do
         dsname = "dataset_#{short_random_id}"
-        post "/hopsworks/api/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: false}
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: false}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "The Dataset was created successfully.")
         expect_status(200)
-        get "/hopsworks/api/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:description]).to eq ("test dataset")
         expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(ds[:permission]).to eq ("rwxr-x---")
-        get "/hopsworks/api/project/#{@project[:id]}/dataset/#{dsname}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
         ds = json_body.detect { |d| d[:name] == "README.md" }
         expect(ds).to be_nil
       end
@@ -59,7 +59,7 @@ describe 'dataset' do
         reset_session
       end
       it "should fail to get dataset list" do
-        get "/hopsworks/api/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -69,7 +69,7 @@ describe 'dataset' do
         with_valid_project
       end
       it "should return dataset list" do
-        get "/hopsworks/api/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
         expect_json_types :array
         expect_status(200)
       end
@@ -83,7 +83,7 @@ describe 'dataset' do
       end
       it "should fail to delete dataset" do
         project = get_project
-        delete "/hopsworks/api/project/#{project[:id]}/dataset/Logs" 
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs" 
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -98,7 +98,7 @@ describe 'dataset' do
         member = create_user
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
-        delete "/hopsworks/api/project/#{project[:id]}/dataset/Logs"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
@@ -110,7 +110,7 @@ describe 'dataset' do
       member = create_user
       add_member(member[:email], "Data owner")
       create_session(member[:email],"Pass123")
-      delete "/hopsworks/api/project/#{@project[:id]}/dataset/#{dsname}"
+      delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
       expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied")})
       expect_status(403)
     end
@@ -119,7 +119,7 @@ describe 'dataset' do
         with_valid_project
       end
       it "should delete dataset" do
-        delete "/hopsworks/api/project/#{@project[:id]}/dataset/Logs"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
         expect_json(successMessage: "DataSet removed from hdfs.")
         expect_status(200)
       end
@@ -136,7 +136,7 @@ describe 'dataset' do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
         reset_session
-        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
+        post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -150,16 +150,16 @@ describe 'dataset' do
       it "should send request" do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
-        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
+        post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
         expect_json(errorMsg: "")
         expect_json(successMessage: "Request sent successfully.")
         expect_status(200)
-        get "/hopsworks/api/message"
+        get "#{ENV['HOPSWORKS_API']}/message"
         msg = json_body.detect { |e| e[:content].include? "Dataset name: #{@dataset[:inode_name]}" }
         expect(msg).not_to be_nil
       end
       it "should fail to send request to the same project" do
-        post "/hopsworks/api/request/access", {inodeId: @dataset[:inode_id], projectId: @project[:id]}
+        post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: @project[:id]}
         expect_json(errorMsg: "Project already contains dataset.")
         expect_status(400)
       end
@@ -178,7 +178,7 @@ describe 'dataset' do
         dsname = "dataset_#{short_random_id}"
         create_dataset_by_name(project, dsname)
         reset_session
-        post "/hopsworks/api/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -197,7 +197,7 @@ describe 'dataset' do
         member = create_user
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
-        post "/hopsworks/api/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
@@ -211,7 +211,7 @@ describe 'dataset' do
         project = create_project_by_name(projectname)
         dsname = "dataset_#{short_random_id}"
         create_dataset_by_name(@project, dsname)
-        post "/hopsworks/api/project/#{@project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project[:id]}
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project[:id]}
         expect_json(successMessage: "The Dataset was successfully shared.")
         expect_status(200)
       end

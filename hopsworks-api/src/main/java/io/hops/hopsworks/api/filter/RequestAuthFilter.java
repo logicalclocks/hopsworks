@@ -42,7 +42,6 @@ public class RequestAuthFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
 
     String path = requestContext.getUriInfo().getPath();
-
     Method method = resourceInfo.getResourceMethod();
     String[] pathParts = path.split("/");
     log.log(Level.FINEST, "Rest call to {0}, from {1}.", new Object[]{path,

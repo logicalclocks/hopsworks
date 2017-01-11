@@ -19,7 +19,7 @@ describe 'nodes' do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -29,14 +29,14 @@ describe 'nodes' do
         with_valid_session
       end
       it "should return all nodes" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
         expect_json_sizes(3)
         expect_json_types(:array)
         expect_status(200)
       end
 
       it "should not include other project's nodes" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes"
         ids = json_body.map{|body| body[:id]}
         expect(ids).to include("root", "end")
         expect(ids).not_to include(@node1[:id])
@@ -53,7 +53,7 @@ describe 'nodes' do
       end
       context "with valid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
           expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
@@ -65,21 +65,21 @@ describe 'nodes' do
       end
       context "with valid params" do
         it "should create a new node" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
           expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
           expect_status(200)
         end
 
         it "should not be nil externalId" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes", valid_params
           expect_status(200)
           expect_json(externalId: ->(value){ expect(value).to_not be_nil})
         end
       end
       context "with invalid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes", invalid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes", invalid_params
           expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
@@ -95,7 +95,7 @@ describe 'nodes' do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -105,7 +105,7 @@ describe 'nodes' do
         with_valid_session
       end
       it "should return the node" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
         expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
         expect_json(id: node[:id])
         expect_json(type: node[:type])
@@ -113,8 +113,8 @@ describe 'nodes' do
       end
       it "should fail trying to get unexitising node" do
         id = create_node(project_id, workflow[:id])[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
         expect_json(errorMsg: 'Node not found.')
         expect_status(400)
       end
@@ -136,7 +136,7 @@ describe 'nodes' do
       end
       context "with valid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
           expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
@@ -148,7 +148,7 @@ describe 'nodes' do
       end
       context "with valid params" do
         it "should update a node" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", valid_params
           expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
           expect_json(id: node[:id])
@@ -158,15 +158,15 @@ describe 'nodes' do
 
         it "should not be nil externalId" do
           params = valid_params
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", params
           expect_status(200)
           expect_json(externalId: ->(value){ expect(value).to_not be_nil})
         end
 
         it "should fail trying to update unexitising node" do
           id = create_node(project_id, workflow[:id])[:id]
-          delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}", valid_params
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}", valid_params
           expect_json(errorMsg: 'Node not found.')
           expect_status(400)
         end
@@ -174,7 +174,7 @@ describe 'nodes' do
 
       context "with invalid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", invalid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}", invalid_params
           expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
@@ -191,7 +191,7 @@ describe 'nodes' do
         example.run
       end
       it "should fail" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -201,15 +201,15 @@ describe 'nodes' do
         with_valid_session
       end
       it "should remove a node" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{node[:id]}"
         expect_json_types(id: :string, workflowId: :int, type: :string, data: :object)
         expect_json(id: node[:id])
         expect_status(200)
       end
       it "should fail trying to removed unexitising node" do
         id = create_node(project_id, workflow[:id])[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/nodes/#{id}"
         expect_json(errorMsg: 'Node not found.')
         expect_status(400)
       end

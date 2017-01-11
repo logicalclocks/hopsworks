@@ -9,7 +9,7 @@ describe "session" do
   describe 'login' do
     it 'should work with valid params' do
       user = create_user
-      post "/hopsworks/api/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
+      post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
       expect_json_types(sessionID: :string, status: :string)
       expect_status(200)
     end
@@ -25,7 +25,7 @@ describe "session" do
 
     it 'should fail with invalid params' do
       user = create_user
-      post "/hopsworks/api/auth/login", URI.encode_www_form({ email: user.email, password: "not_pass"}), { content_type: 'application/x-www-form-urlencoded'}
+      post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "not_pass"}), { content_type: 'application/x-www-form-urlencoded'}
       expect_json_types(errorMsg: :string)
       expect_status(401)
     end
@@ -75,7 +75,7 @@ describe "session" do
       first_name = "name"
       last_name = "last"
       password = "Pass123"
-      post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", twoFactor: false}
+      post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", twoFactor: false}
       expect_json(errorMsg: ->(value){ expect(value).to be_empty})
       expect_json(successMessage: ->(value){ expect(value).to include("We registered your account request")})
       expect_status(200)
@@ -87,7 +87,7 @@ describe "session" do
       last_name = "last"
       password = "Pass123"
       register_user(email: email)
-      post "/hopsworks/api/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
+      post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile"}
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("There is an existing account")})
       expect_status(400)

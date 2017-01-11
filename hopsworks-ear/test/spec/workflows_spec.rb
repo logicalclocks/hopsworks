@@ -18,7 +18,7 @@ describe 'workflows' do
         reset_session
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows"
         expect_status(401)
       end
     end
@@ -27,14 +27,14 @@ describe 'workflows' do
         with_valid_session
       end
       it "should return all workflows" do
-        get "/hopsworks/api/project/#{project_id}/workflows"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows"
         expect_json_sizes(2)
         expect_json_types(:array)
         expect_status(200)
       end
 
       it "should not include other project's workflow" do
-        get "/hopsworks/api/project/#{project_id}/workflows"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows"
         ids = json_body.map{|body| body[:id]}
         expect(ids).to contain_exactly(@workflow1[:id], @workflow3[:id])
         expect(ids).not_to include(@workflow2[:id])
@@ -49,7 +49,7 @@ describe 'workflows' do
       end
       context "with valid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows", valid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows", valid_params
           expect_status(401)
         end
       end
@@ -60,16 +60,16 @@ describe 'workflows' do
       end
       context "with valid params" do
         it "should create a new workflow" do
-          post "/hopsworks/api/project/#{project_id}/workflows", valid_params
-          expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows", valid_params
+          expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :int, projectId: :int, nodes: :array_of_objects, edges: :array_of_objects)
           expect_status(200)
         end
       end
       context "with invalid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows", invalid_params
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end
@@ -84,7 +84,7 @@ describe 'workflows' do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
         expect_status(401)
       end
     end
@@ -93,8 +93,8 @@ describe 'workflows' do
         with_valid_session
       end
       it "should return the workflow" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
-        expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
+        expect_json(errorMsg: ->(value){ expect(value).to be_nil})
         expect_json_types(id: :int, projectId: :int, nodes: :array_of_objects, edges: :array_of_objects)
         expect_json(id: workflow[:id])
         expect_json(name: workflow[:name])
@@ -102,8 +102,8 @@ describe 'workflows' do
       end
       it "should fail trying to get unexitising workflow" do
         id = create_workflow(project_id)[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{id}"
-        get "/hopsworks/api/project/#{project_id}/workflows/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}"
         expect_json(errorMsg: 'Workflow not found.')
         expect_status(400)
       end
@@ -119,7 +119,7 @@ describe 'workflows' do
       end
       context "with valid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}", valid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}", valid_params
           expect_status(401)
         end
       end
@@ -130,8 +130,8 @@ describe 'workflows' do
       end
       context "with valid params" do
         it "should update a workflow" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}", valid_params
-          expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}", valid_params
+          expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :int, projectId: :int, nodes: :array_of_objects, edges: :array_of_objects)
           expect_json(id: workflow[:id])
           expect_json(name: valid_params[:name])
@@ -139,8 +139,8 @@ describe 'workflows' do
         end
         it "should fail trying to update unexitising workflow" do
           id = create_workflow(project_id)[:id]
-          delete "/hopsworks/api/project/#{project_id}/workflows/#{id}"
-          put "/hopsworks/api/project/#{project_id}/workflows/#{id}", valid_params
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}"
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}", valid_params
           expect_json(errorMsg: 'Workflow not found.')
           expect_status(400)
         end
@@ -148,8 +148,8 @@ describe 'workflows' do
 
       context "with invalid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}", invalid_params
-          expect_json(errorMsg: -> (value){ expect(value).not_to be_empty})
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}", invalid_params
+          expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
       end
@@ -165,7 +165,7 @@ describe 'workflows' do
         example.run
       end
       it "should fail" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
         expect_status(401)
       end
     end
@@ -174,15 +174,15 @@ describe 'workflows' do
         with_valid_session
       end
       it "should remove a workflow" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
         expect_json_types(id: :int, projectId: :int, nodes: :array_of_objects, edges: :array_of_objects)
         expect_json(id: workflow[:id])
         expect_status(200)
       end
       it "should fail trying to removed unexitising workflow" do
         id = workflow[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{id}"
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{id}"
         expect_json(errorMsg: 'Workflow not found.')
         expect_status(400)
       end

@@ -19,7 +19,7 @@ describe 'edges' do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -29,14 +29,14 @@ describe 'edges' do
         with_valid_session
       end
       it "should return all edges" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges"
         expect_json_sizes(2)
         expect_json_types(:array)
         expect_status(200)
       end
 
       it "should not include other project's edges" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges"
         node_ids = json_body.map{|body| [body[:sourceId], body[:targetId]]}.flatten
         ids = json_body.map{|body| body[:id]}
         expect(node_ids).to include("root", "end")
@@ -55,7 +55,7 @@ describe 'edges' do
       end
       context "with valid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
           expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
@@ -68,7 +68,7 @@ describe 'edges' do
       context "with valid params" do
         context "with existing source and target" do
           it "should create a new edge" do
-            post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges", valid_params
             expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :string, workflowId: :int)
             expect_status(200)
@@ -78,7 +78,7 @@ describe 'edges' do
           it "should fail" do
             params = valid_params
             params[:sourceId] = random_id
-            post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
             expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
             expect_status(400)
           end
@@ -87,7 +87,7 @@ describe 'edges' do
           it "should fail" do
             params = valid_params
             params[:targetId] = random_id
-            post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges", params
             expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
             expect_status(400)
           end
@@ -95,7 +95,7 @@ describe 'edges' do
       end
       context "with invalid params" do
         it "should fail" do
-          post "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges", invalid_params
+          post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges", invalid_params
           expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
@@ -111,7 +111,7 @@ describe 'edges' do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -121,7 +121,7 @@ describe 'edges' do
         with_valid_session
       end
       it "should return the edge" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
         expect_json_types(id: :string, workflowId: :int)
         expect_json(id: edge[:id])
         expect_json(type: edge[:type])
@@ -129,8 +129,8 @@ describe 'edges' do
       end
       it "should fail trying to get unexitising edge" do
         id = create_edge(project_id, workflow[:id])[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
-        get "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
         expect_json(errorMsg: 'Edge not found.')
         expect_status(400)
       end
@@ -150,7 +150,7 @@ describe 'edges' do
       end
       context "with valid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
           expect_json(errorMsg: "Client not authorized for this invocation")
           expect_status(401)
         end
@@ -162,7 +162,7 @@ describe 'edges' do
       end
       context "with valid params" do
         it "should update a edge" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", valid_params
           expect_json(errorMsg: ->(value){ expect(value).to be_nil})
           expect_json_types(id: :string, workflowId: :int)
           expect_json(id: edge[:id])
@@ -171,8 +171,8 @@ describe 'edges' do
         end
         it "should fail trying to update unexitising edge" do
           id = create_edge(project_id, workflow[:id])[:id]
-          delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}", valid_params
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}", valid_params
           expect_json(errorMsg: 'Edge not found.')
           expect_status(400)
         end
@@ -180,7 +180,7 @@ describe 'edges' do
 
       context "with invalid params" do
         it "should fail" do
-          put "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", invalid_params
+          put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}", invalid_params
           expect_json(errorMsg: ->(value){ expect(value).not_to be_empty})
           expect_status(400)
         end
@@ -197,7 +197,7 @@ describe 'edges' do
         example.run
       end
       it "should fail" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -207,15 +207,15 @@ describe 'edges' do
         with_valid_session
       end
       it "should remove a edge" do
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{edge[:id]}"
         expect_json_types(id: :string, workflowId: :int)
         expect_json(id: edge[:id])
         expect_status(200)
       end
       it "should fail trying to removed unexitising edge" do
         id = create_edge(project_id, workflow[:id])[:id]
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
-        delete "/hopsworks/api/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{workflow[:id]}/edges/#{id}"
         expect_json(errorMsg: 'Edge not found.')
         expect_status(400)
       end

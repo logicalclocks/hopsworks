@@ -15,7 +15,7 @@ describe "Workflow Job" do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs"
         expect_status(401)
       end
     end
@@ -24,7 +24,7 @@ describe "Workflow Job" do
         with_valid_session
       end
       it "should return all jobs" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs"
         expect(json_body.count).to be > 0
         expect_json_types(:array)
         expect_status(200)
@@ -42,7 +42,7 @@ describe "Workflow Job" do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{valid_workflow_job[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{valid_workflow_job[:id]}"
         expect_status(401)
       end
     end
@@ -51,14 +51,14 @@ describe "Workflow Job" do
         with_valid_session
       end
       it "should return the workflow" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{valid_workflow_job[:id]}"
-        expect_json(errorMsg: -> (value){ expect(value).to be_nil})
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{valid_workflow_job[:id]}"
+        expect_json(errorMsg: ->(value){ expect(value).to be_nil})
         expect_json_types(id: :string, actions: :array, path: :string, status: :string)
         expect_status(200)
       end
       it "should fail trying to get unexitising workflow job" do
         id = Random.new.rand 100000
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{id}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/jobs/#{id}"
         expect_json(errorMsg: 'Job not found.')
         expect_status(400)
       end

@@ -20,7 +20,7 @@ angular.module('hopsWorksApp')
 
                     //File upload handling functions
                     self.path = 'Uploads';
-                    self.target = '/hopsworks/api/metadata/upload/' + self.path;
+                    self.target = getApiPath() + '/metadata/upload/' + self.path;
 
                     self.size = function (fileSizeInBytes) {
                       return convertSize(fileSizeInBytes);
@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
                     });
 
                     self.target = function (FlowFile, FlowChunk, isTest) {
-                      return '/hopsworks/api/metadata/upload/' + self.path;
+                      return getApiPath() + '/metadata/upload/' + self.path;
                     };
 
                     self.fileErrorHandler = function (file, message, flow) {

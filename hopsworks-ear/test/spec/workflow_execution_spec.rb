@@ -78,7 +78,7 @@ describe "Workflow Execution" do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}"
         expect_status(401)
       end
     end
@@ -87,7 +87,7 @@ describe "Workflow Execution" do
         with_valid_session
       end
       it "should return the workflow" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}"
         expect_json(errorMsg: ->(value){ expect(value).to be_nil})
         expect_json_types(id: :int, workflowTimestamp: :int, userId: :int, jobIds: :array, snapshot: :object)
         expect_json_keys('snapshot', [:edges, :nodes])
@@ -95,7 +95,7 @@ describe "Workflow Execution" do
       end
       it "should fail trying to get unexitising workflow execution" do
         id = Random.new.rand 100000
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}"
         expect_json(errorMsg: 'Execution not found.')
         expect_status(400)
       end
@@ -111,7 +111,7 @@ describe "Workflow Execution" do
         example.run
       end
       it "should fail" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/logs"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/logs"
         expect_status(401)
       end
     end
@@ -120,14 +120,14 @@ describe "Workflow Execution" do
         with_valid_session
       end
       it "should return the workflow" do
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/logs"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{valid_email_execution[:id]}/logs"
         expect_json_types :array_of_objects
         expect_json_types('*', default: :string, error: :string, audit: :string, time: :string)
         expect_status(200)
       end
       it "should fail trying to get unexitising workflow" do
         id = Random.new.rand 100000
-        get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}/logs"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}/logs"
         expect_json(errorMsg: 'Execution not found.')
         expect_status(400)
       end
@@ -141,7 +141,7 @@ describe "Workflow Execution" do
           it "should fail" do
             valid_spark_workflow
             reset_session
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
             expect_status(401)
           end
         end
@@ -152,21 +152,21 @@ describe "Workflow Execution" do
         end
         context "with valid params" do
           it "should create a new execution" do
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
             expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :int, workflowId: :int, userId: :int)
             expect_status(200)
           end
 
           it "should increase job count" do
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
             sleep(15.seconds)
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions"
             job_count = json_body[:jobIds].count
             expect_status(200)
             id = json_body[:id]
             sleep(15.seconds)
-            get "/hopsworks/api/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions/#{id}"
+            get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_spark_workflow[:id]}/executions/#{id}"
             expect_json_sizes(jobIds: job_count+1)
             expect_status(200)
           end
@@ -180,7 +180,7 @@ describe "Workflow Execution" do
           it "should fail" do
             valid_email_workflow
             reset_session
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
             expect_status(401)
           end
         end
@@ -191,21 +191,21 @@ describe "Workflow Execution" do
         end
         context "with valid params" do
           it "should create a new execution" do
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
             expect_json(errorMsg: ->(value){ expect(value).to be_nil})
             expect_json_types(id: :int, workflowId: :int, userId: :int)
             expect_status(200)
           end
 
           it "should increase job count" do
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
             sleep(15.seconds)
-            post "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
+            post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions"
             job_count = json_body[:jobIds].count
             expect_status(200)
             id = json_body[:id]
             sleep(15.seconds)
-            get "/hopsworks/api/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}"
+            get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/workflows/#{valid_email_workflow[:id]}/executions/#{id}"
             expect_json_sizes(jobIds: job_count+1)
             expect_status(200)
           end

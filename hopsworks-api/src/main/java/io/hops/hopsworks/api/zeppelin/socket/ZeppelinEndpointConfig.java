@@ -35,7 +35,8 @@ public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
     config.getUserProperties().put("user", request.getUserPrincipal().getName());
     config.getUserProperties().put("projectID", cookies.get("projectID"));
     logger.log(Level.INFO, "Connecting to zeppelin: User={0} Project id={1}",
-            new Object[]{cookies.get("email"), cookies.get("projectID")});
+            new Object[]{request.getUserPrincipal().getName(), cookies.get(
+                      "projectID")});
   }
 
 //  @Override

@@ -2,7 +2,7 @@ module SessionHelper
   def with_valid_session
     unless @cookies
       user = create_user
-      post "/hopsworks/api/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
+      post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
       @user = user
     end
@@ -24,7 +24,7 @@ module SessionHelper
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
     
-    post "/hopsworks/api/auth/register", user
+    post "#{ENV['HOPSWORKS_API']}/auth/register", user
   end
 
   def create_validated_user(params={})
@@ -57,7 +57,7 @@ module SessionHelper
 
   def create_session(email, password)
     reset_session
-    post "/hopsworks/api/auth/login", URI.encode_www_form({ email: email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
+    post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
     cookies = {"SESSIONID"=> json_body[:sessionID]}
     Airborne.configure do |config|
       config.headers = {:cookies => cookies, content_type: 'application/json' }

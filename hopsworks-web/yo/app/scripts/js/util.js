@@ -108,6 +108,10 @@ function getPathname() {
   return "/hopsworks-api";
 }
 
+function getApiPath() {
+  return "/hopsworks-api/api";
+}
+
 function getLocationBase() {
   return location.protocol + "//" + location.hostname +":" + getPort() + getPathname();
 };
