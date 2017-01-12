@@ -87,10 +87,11 @@ public class SparkYarnRunnerBuilder {
           throws IOException {
 
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
+    String log4jPath = Settings.getSparkLog4JPath(sparkUser);
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
-    
+
     this.hadoopDir = hadoopDir;
     this.sparkDir = sparkDir;
 
@@ -101,7 +102,12 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     builder.addLocalResource(new LocalResourceDTO(
-            "__spark_libs__", hdfsSparkJarPath,
+            Settings.LOCALIZED_LIB_DIR, hdfsSparkJarPath,
+            LocalResourceVisibility.PRIVATE.toString(),
+            LocalResourceType.ARCHIVE.toString(), null), false);
+    //Add log4j
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
             LocalResourceVisibility.PRIVATE.toString(),
             LocalResourceType.ARCHIVE.toString(), null), false);
 
@@ -129,8 +135,11 @@ public class SparkYarnRunnerBuilder {
 
     }
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-            "$PWD/__spark_conf__:__spark_conf__:__spark_libs__/*"
-            + ":" + Settings.SPARK_LOCRSC_APP_JAR
+            "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
+            + Settings.LOCALIZED_CONF_DIR
+            + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
+            + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
+            + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
     );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
@@ -141,10 +150,9 @@ public class SparkYarnRunnerBuilder {
     }
 
     if (extraClassPathFiles.toString().length() > 0) {
-      addSystemProperty("spark.executor.extraClassPath", extraClassPathFiles.
-              toString().substring(
-                      0, extraClassPathFiles.length() - 1));
-
+      addSystemProperty(Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
+              extraClassPathFiles.toString().substring(0, extraClassPathFiles.
+                      length() - 1));
     }
 
     //If DynamicExecutors are not enabled, set the user defined number 
@@ -183,14 +191,24 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
             executorCores));
-    addSystemProperty("spark.yarn.stagingDir", stagingPath);
+    addSystemProperty(Settings.SPARK_DRIVER_STAGINGDIR_ENV, stagingPath);
+    addSystemProperty(Settings.SPARK_LOG4J_CONFIG,
+            Settings.SPARK_LOG4J_PROPERTIES);
+    addSystemProperty(Settings.SPARK_APPID_PROPERTY,
+            YarnRunner.APPID_PLACEHOLDER);
+    addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
+            + "/lib/native/");
+
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
-    extraJavaOptions.append("'-Dspark.executor.extraJavaOptions="
-            + "-Dlog4j.configuration=" + this.sparkDir + "/conf/executor-log4j.properties "
-            + "-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails "
-            + "-XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy "
-            + "-Djava.library.path=" + this.hadoopDir + "/lib/native/");
+    extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
+            append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").
+            append(Settings.SPARK_LOG4J_PROPERTIES).append(" ").
+            append("-D").append(Settings.SPARK_APPID_PROPERTY).append("=").
+            append(YarnRunner.APPID_PLACEHOLDER).append(" ").
+            append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
+            append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
+            append(this.hadoopDir).append("/lib/native/");
     if (serviceProps != null) {
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
@@ -219,23 +237,17 @@ public class SparkYarnRunnerBuilder {
         extraJavaOptions.append(" -D" + Settings.KAFKA_SESSIONID_ENV_VAR + "=").
                 append(serviceProps.getKafka().getSessionId()).
                 append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
-                append(serviceProps.
-                        getKafka().getBrokerAddresses()).
+                append(serviceProps.getKafka().getBrokerAddresses()).
                 append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
-                append(serviceProps.
-                        getKeystorePwd()).
+                append(serviceProps.getKeystorePwd()).
                 append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
-                append(serviceProps.
-                        getTruststorePwd()).
+                append(serviceProps.getTruststorePwd()).
                 append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
-                append(serviceProps.
-                        getKafka().getTopics()).
+                append(serviceProps.getKafka().getTopics()).
                 append(" -D" + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
-                append(serviceProps.
-                        getKafka().getRestEndpoint()).
+                append(serviceProps.getKafka().getRestEndpoint()).
                 append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
-                serviceProps.
-                        getProjectId());
+                serviceProps.getProjectId());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());
@@ -266,7 +278,14 @@ public class SparkYarnRunnerBuilder {
       }
     }
     for (String s : sysProps.keySet()) {
-      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+      //Exclude "hopsworks.yarn.appid" property because we do not want to 
+      //escape it now
+      String option;
+      if (s.equals(Settings.SPARK_APPID_PROPERTY)) {
+        option = "-D" + s + "=" + sysProps.get(s);
+      } else {
+        option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+      }
       builder.addJavaOption(option);
     }
 
@@ -274,7 +293,7 @@ public class SparkYarnRunnerBuilder {
     for (String s : jobArgs) {
       amargs.append(" --arg ").append(s);
     }
-    //amargs.append(" --properties-file __spark_conf__/spark-defaults.conf");
+
     builder.amArgs(amargs.toString());
 
     //Set up Yarn properties

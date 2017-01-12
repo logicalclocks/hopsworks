@@ -279,7 +279,15 @@ public class Settings {
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
-
+  public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
+  public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
+  
+  
+  //Spark log4j properties
+  public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
+  public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
+  public static final String SPARK_APPID_PROPERTY = "hopsworks.yarn.appid";
+  
   public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
   public static final String SPARK_CACHE_TIMESTAMPS = "spark.yarn.cache.timestamps";
@@ -574,7 +582,15 @@ public class Settings {
   public static String getHdfsSparkJarPath(String sparkUser) {
     return hdfsSparkJarPath(sparkUser);
   }
+  
+  private static String sparkLog4JPath(String sparkUser) {
+    return "hdfs:///user/" + sparkUser + "/log4j.properties";
+  }
 
+  public static String getSparkLog4JPath(String sparkUser) {
+    return sparkLog4JPath(sparkUser);
+  }
+  
   public synchronized String getSparkDefaultClasspath() {
     return sparkDefaultClasspath(getSparkDir());
   }

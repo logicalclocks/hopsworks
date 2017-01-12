@@ -443,7 +443,7 @@ public class YarnRunner {
         YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
       classPathEnv.append(":").append(c.trim());
     }
-    classPathEnv.append(":").append("./log4j.properties");
+    //classPathEnv.append(":").append("./log4j.properties");
     // add the runtime classpath needed for tests to work
     if (conf.getBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, false)) {
       classPathEnv.append(':');
