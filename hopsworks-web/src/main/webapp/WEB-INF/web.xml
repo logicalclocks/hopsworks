@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+  <servlet>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.web.servlet.AppScriptServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AppScriptServlet</servlet-name>
+    <url-pattern>/zeppelin/scripts/scripts.6ddd912ca4c10818.js</url-pattern>
+  </servlet-mapping>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>cauthRealm</realm-name>
+  </login-config>
+  <session-config>
+    <session-timeout>
+      30
+    </session-timeout>
+    <cookie-config>
+      <name>SESSIONID</name>
+      <path>/</path>
+    </cookie-config>
+  </session-config>
+</web-app>
