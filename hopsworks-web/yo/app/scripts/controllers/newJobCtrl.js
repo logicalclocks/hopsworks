@@ -15,8 +15,7 @@ angular.module('hopsWorksApp')
           'AdamService', 'FlinkService', 'TourService', 'HistoryService', 'KafkaService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-
-            AdamService, FlinkService, TourService, HistoryService, KafkaService, $timeout) {
+                  AdamService, FlinkService, TourService, HistoryService, KafkaService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -29,29 +28,54 @@ angular.module('hopsWorksApp')
             ////////////////////////////////////////////////////////////////////
             //Kafka topics for this project
             self.topics = [];
-            self.topicsSelected = [];
+            self.kafkaSelected = false;
+            self.consumerGroups = [{id: 'group1', "name": "default"}];
+            self.groupsSelected = false;
+            self.showAdvanced = false;
             self.getAllTopics = function () {
-              if(self.runConfig.kafka.selected === true){
-                KafkaService.getProjectAndSharedTopics(self.projectId).then(
-                        function (success) {
-                          var topics = success.data;
-                          for (var i = 0; i<topics.length; i++) {
-                            self.topics.push({name:topics[i]['name'], ticked:false});
-                          }
-                        }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                });
+              self.topics = [];
+              KafkaService.getProjectAndSharedTopics(self.projectId).then(
+                      function (success) {
+                        var topics = success.data;
+                        for (var i = 0; i < topics.length; i++) {
+                          self.topics.push({name: topics[i]['name'], ticked: false});
+                        }
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+              });
+            };
+
+            self.addGroup = function () {
+              var newItemNo = self.consumerGroups.length + 1;
+              self.consumerGroups.push({'id': 'group' + newItemNo});
+            };
+
+            self.removeGroup = function () {
+              var lastItem = self.consumerGroups.length - 1;
+              if (lastItem > 0) {
+                self.consumerGroups.splice(lastItem);
               }
             };
-           ////////////////////////////////////////////////////////////////////
             
+            self.toggleKafka = function(){
+              self.kafkaSelected = !self.kafkaSelected;
+            };
+            
+            self.toggleAdvanced = function(){
+              self.runConfig.kafka.advanced = !self.runConfig.kafka.advanced;
+            };
+
+            ////////////////////////////////////////////////////////////////////
+
+
+
             // keep the proposed configurations
             self.autoConfigResult;
 
-            self.setResourceType = function(type){
+            self.setResourceType = function (type) {
               self.resourceType = type;
             };
-            
+
             //Set some (semi-)constants
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
@@ -78,32 +102,32 @@ angular.module('hopsWorksApp')
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
             self.sliderVisible = false;
-             
+
             self.sliderOptions = {
-                min: 1,
-                max: 10,      
-                options: {
-                  floor: 0,
-                  ceil: 500
-                },
-                getPointerColor: function(value) {
-                  return '#4b91ea';
-                }
-                
+              min: 1,
+              max: 10,
+              options: {
+                floor: 0,
+                ceil: 500
+              },
+              getPointerColor: function (value) {
+                return '#4b91ea';
+              }
+
             };
-            
+
             self.refreshSlider = function () {
-                $timeout(function () {
-                    $scope.$broadcast('rzSliderForceRender');
-                });
+              $timeout(function () {
+                $scope.$broadcast('rzSliderForceRender');
+              });
             };
-    
+
             self.toggleSlider = function () {
               self.sliderVisible = !self.sliderVisible;
               if (self.sliderVisible)
                 self.refreshSlider();
             };
-  
+
             self.setInitExecs = function () {
               if (self.sliderOptions.min >
                       self.runConfig.numberOfExecutorsInit) {
@@ -115,7 +139,7 @@ angular.module('hopsWorksApp')
                         parseInt(self.sliderOptions.max);
               }
             };
-            
+
             self.sparkState = {//Will hold spark-specific state
               "selectedJar": null //The path to the selected jar
             };
@@ -130,35 +154,35 @@ angular.module('hopsWorksApp')
 
             //Variables for front-end magic
             this.accordion1 = {//Contains the job name
-                "isOpen": true,
-                "visible": true,
-                "value": "",
-                "title": "Job name"};
+              "isOpen": true,
+              "visible": true,
+              "value": "",
+              "title": "Job name"};
             this.accordion2 = {//Contains the job type
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": "Job type"};
+              "isOpen": false,
+              "visible": false,
+              "value": "",
+              "title": "Job type"};
             this.accordion3 = {// Contains the main execution file (jar, workflow,...)
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": ""};
+              "isOpen": false,
+              "visible": false,
+              "value": "",
+              "title": ""};
             this.accordion4 = {// Contains the job setup (main class, input variables,...)
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": ""};
+              "isOpen": false,
+              "visible": false,
+              "value": "",
+              "title": ""};
             this.accordion5 = {//Contains the configuration and creation
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": "Configure and create"};
+              "isOpen": false,
+              "visible": false,
+              "value": "",
+              "title": "Configure and create"};
             this.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": "Pre-Configuration"};
+              "isOpen": false,
+              "visible": false,
+              "value": "",
+              "title": "Pre-Configuration"};
 
             this.undoable = false; //Signify if a clear operation can be undone.
 
@@ -228,8 +252,8 @@ angular.module('hopsWorksApp')
                 "value": "",
                 "title": "Pre-Configuration"};
             };
-            
-            self.exitToJobs = function() {
+
+            self.exitToJobs = function () {
               self.clear();
               StorageService.remove(self.newJobName);
               self.removed = true;
@@ -261,26 +285,22 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createJob = function () {
-              //Loop through the selected Kafka topics (if any) and add them to
-              //the job config
-              if(typeof self.runConfig.kafka === "undefined"){
-                self.runConfig.kafka = {selected:false};
-              }
-              if(self.runConfig.kafka.selected && self.topicsSelected.length === 0){
+              if (self.kafkaSelected) {
+                if (self.runConfig.kafka.topics === "undefined" || self.runConfig.kafka.topics.length === 0) {
                   growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
                   return;
-                }
-                if(self.topicsSelected.length > 0){
-                  self.runConfig.kafka.topics = "";
-                  for(var i=0; i< self.topicsSelected.length; i++){    
-                       self.runConfig.kafka.topics += self.topicsSelected[i]['name']+",";
+                } else {
+                  if (self.runConfig.kafka.advanced) {
+                    self.runConfig.kafka.consumergroups = self.consumerGroups;
+                  } else {
+                    delete self.runConfig.kafka.consumergroups;
                   }
-                  self.runConfig.kafka.topics = self.runConfig.kafka.topics.substring(0,self.runConfig.kafka.topics.length-1);
                 }
+              }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              if(self.getJobType() === "SPARK" || self.getJobType() === "ADAM"){
+              if (self.getJobType() === "SPARK" || self.getJobType() === "ADAM") {
                 self.runConfig.selectedMinExecutors = self.sliderOptions.min;
                 self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
               }
@@ -402,20 +422,20 @@ angular.module('hopsWorksApp')
 
 
 
-                /**
-                 * Callback method for when the main job file has been selected.
-                 * @param {type} path
-                 * @returns {undefined}
-                 */
-                this.mainFileSelected = function (path) {
-                    self.phase = 3;
-                    self.accordion4.isOpen = true; // Open job setup
-                    self.accordion4.visible = true; // Show job setup
-                    self.accordion5.visible = true; // Show job config
-                    self.accordion6.visible = true; // Show job config
-                    self.accordion3.value = " - " + path; // Set file selection title
-                    self.accordion3.isOpen = false; //Close file selection
-                };
+            /**
+             * Callback method for when the main job file has been selected.
+             * @param {type} path
+             * @returns {undefined}
+             */
+            this.mainFileSelected = function (path) {
+              self.phase = 3;
+              self.accordion4.isOpen = true; // Open job setup
+              self.accordion4.visible = true; // Show job setup
+              self.accordion5.visible = true; // Show job config
+              self.accordion6.visible = true; // Show job config
+              self.accordion3.value = " - " + path; // Set file selection title
+              self.accordion3.isOpen = false; //Close file selection
+            };
 
             /**
              * Callback for when the job setup has been completed.
@@ -462,16 +482,16 @@ angular.module('hopsWorksApp')
                 case "LIBRARY":
                   //Push the new library into the localresources array
                   self.localResources.push({
-                      'name': filename,
-                      'path': path, 
-                      'type': null,
-                      'visibility': null,
-                      'pattern': null
+                    'name': filename,
+                    'path': path,
+                    'type': null,
+                    'visibility': null,
+                    'pattern': null
                   });
                   break;
                 case "ADAM":
-                    self.adamState.processparameter.value = path;
-                  if(typeof runConfig != 'undefined'){
+                  self.adamState.processparameter.value = path;
+                  if (typeof runConfig != 'undefined') {
                     self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
                     self.sliderOptions.options['ceil'] = self.runConfig.
                             maxExecutors;
@@ -493,76 +513,76 @@ angular.module('hopsWorksApp')
               }
             };
 
-                /**
-                 * Open a dialog for file selection.
-                 * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-                 * @param {Object} parameter The Adam parameter to bind.
-                 * @returns {undefined}
-                 */
-                this.selectFile = function (reason, parameter) {
-                    self.accordion6.visible = false;
-                    self.accordion6.isOpen = false;
-                    if (reason.toUpperCase() === "ADAM") {
-                        self.adamState.processparameter = parameter;
-                    }
-                    ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                            self.selectFileErrorMsgs["ADAM-FILE"]).then(
-                            function (success) {
-                                self.onFileSelected(reason, "hdfs://" + success);
-                            }, function (error) {
-                        //The user changed their mind.
-                    });
-                };
-                /**
-                 * Open a dialog for directory selection.
-                 * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-                 * @param {Object} parameter The Adam parameter to bind.
-                 * @returns {undefined}
-                 */
-                this.selectDir = function (reason, parameter) {
-                    if (reason.toUpperCase() === "ADAM") {
-                        self.adamState.processparameter = parameter;
-                    }
-                    ModalService.selectDir('lg', self.selectFileRegexes[reason],
-                            self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
-                            function (success) {
-                                self.onFileSelected(reason, "hdfs://" + success);
-                                if (reason.toUpperCase() === "ADAM") {
-                                  growl.info("Insert output file name", {title: 'Required', ttl: 5000});
-                                }
-                            }, function (error) {
-                        //The user changed their mind.
-                    });
-                };
-
-
-                /**
-                 * Get a list of ADAM commands from the server.
-                 * @returns {undefined}
-                 */
-                this.getCommandList = function () {
-                    AdamService.getCommandList(self.projectId).then(
-                            function (success) {
-                                self.adamState.commandList = success.data;
-                            }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                    });
-                };
-
-                /**
-                 * Remove the given entry from the localResources list.
-                 * @param {type} lib
-                 * @returns {undefined}
-                 */
-                this.removeLibrary = function (name) {
-                    var arlen = self.localResources.length;
-                    for (var i = 0; i < arlen; i++) {
-                        if (self.localResources[i].name === name) {
-                            self.localResources.splice(i, 1);
-                            return;
+            /**
+             * Open a dialog for file selection.
+             * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
+             * @param {Object} parameter The Adam parameter to bind.
+             * @returns {undefined}
+             */
+            this.selectFile = function (reason, parameter) {
+              self.accordion6.visible = false;
+              self.accordion6.isOpen = false;
+              if (reason.toUpperCase() === "ADAM") {
+                self.adamState.processparameter = parameter;
+              }
+              ModalService.selectFile('lg', self.selectFileRegexes[reason],
+                      self.selectFileErrorMsgs["ADAM-FILE"]).then(
+                      function (success) {
+                        self.onFileSelected(reason, "hdfs://" + success);
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+            /**
+             * Open a dialog for directory selection.
+             * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
+             * @param {Object} parameter The Adam parameter to bind.
+             * @returns {undefined}
+             */
+            this.selectDir = function (reason, parameter) {
+              if (reason.toUpperCase() === "ADAM") {
+                self.adamState.processparameter = parameter;
+              }
+              ModalService.selectDir('lg', self.selectFileRegexes[reason],
+                      self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
+                      function (success) {
+                        self.onFileSelected(reason, "hdfs://" + success);
+                        if (reason.toUpperCase() === "ADAM") {
+                          growl.info("Insert output file name", {title: 'Required', ttl: 5000});
                         }
-                    }
-                };
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+
+
+            /**
+             * Get a list of ADAM commands from the server.
+             * @returns {undefined}
+             */
+            this.getCommandList = function () {
+              AdamService.getCommandList(self.projectId).then(
+                      function (success) {
+                        self.adamState.commandList = success.data;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
+
+            /**
+             * Remove the given entry from the localResources list.
+             * @param {type} lib
+             * @returns {undefined}
+             */
+            this.removeLibrary = function (name) {
+              var arlen = self.localResources.length;
+              for (var i = 0; i < arlen; i++) {
+                if (self.localResources[i].name === name) {
+                  self.localResources.splice(i, 1);
+                  return;
+                }
+              }
+            };
 
             /**
              * Save state upon destroy.
@@ -590,165 +610,162 @@ angular.module('hopsWorksApp')
               };
               StorageService.store(self.newJobName, state);
             });
-                /**
-                 * Init method: restore any previous state.
-                 * @returns {undefined}
-                 */
-                var init = function () {
-                    var stored = StorageService.recover(self.newJobName);
-                    if (stored) {
-                        //Job information
-                        self.jobtype = stored.jobtype;
-                        self.jobname = stored.jobname;
-                        self.localResources = stored.localResources;
-                        self.phase = stored.phase;
-                        self.runConfig = stored.runConfig;
-                        if(self.runConfig){
-                            self.topicsSelected = [];
-                            self.topics = [];
-                            self.runConfig.schedule = null;
-                            self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
-                            self.sliderOptions.options['ceil'] = self.runConfig.maxExecutors;
-                            self.sliderOptions.min = self.runConfig.selectedMinExecutors;
-                            self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
-                            //Set Kafka topics is selected
-                            KafkaService.getProjectAndSharedTopics(self.projectId).then(
-                              function (success) {
-                                var topics = success.data;
-                                for (var i = 0; i < topics.length; i++) {
-                                  self.topics.push({name: topics[i]['name'], ticked: false});
-                                }
-                                
-                                console.log("Topics:"+self.topics.toString());  
-                                if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.selected) {
-                                  //Set selected topics
-                                  //wait to fetch topics firsts
-
-                                  var selectedTopics = self.runConfig.kafka.topics.split(",");
-                                  for(var i=0; i < selectedTopics.length; i++){
-                                    console.log("Topics:"+self.topics.toString());  
-                                    self.topicsSelected.push({name:selectedTopics[i], ticked:true});
-                                    //Loop through topics to set the ticked ones
-                                    for (var z = 0; z < self.topics.length; z++) {
-                                        if(self.topics[z]['name'] === selectedTopics[i]){
-                                          self.topics[z]['ticked'] = true;
-                                          break;
-                                        }           
-                                        
-                                    } 
-                                  }         
-                                }
-                              }, function (error) {
-                              console.error(error.data.errorMsg);
-                            });
-                            console.log("Topics:"+self.topics.toString());  
-                        }    
-                        if (self.jobtype === 1) {
-                            self.sparkState = stored.sparkState;
-                        } else if (self.jobtype === 2) {
-                            self.adamState = stored.adamState;
-                        } else  if (self.jobtype === 3) {
-                            self.flinkState = stored.flinkState;
-                        }
-                        //GUI state
-                        self.accordion1 = stored.accordion1;
-                        self.accordion2 = stored.accordion2;
-                        self.accordion3 = stored.accordion3;
-                        self.accordion4 = stored.accordion4;
-                        self.accordion5 = stored.accordion5;
-                        self.accordion6 = stored.accordion6;
+            /**
+             * Init method: restore any previous state.
+             * @returns {undefined}
+             */
+            var init = function () {
+              var stored = StorageService.recover(self.newJobName);
+              if (stored) {
+                //Job information
+                self.jobtype = stored.jobtype;
+                self.jobname = stored.jobname;
+                self.localResources = stored.localResources;
+                self.phase = stored.phase;
+                self.runConfig = stored.runConfig;
+                if (self.runConfig) {
+                  self.topics = [];
+                  self.runConfig.schedule = null;
+                  self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                  self.sliderOptions.options['ceil'] = self.runConfig.maxExecutors;
+                  self.sliderOptions.min = self.runConfig.selectedMinExecutors;
+                  self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                  //Load Kafka properties
+                  if (typeof self.runConfig.kafka !== "undefined") {
+                    self.kafkaSelected = true;
+                    self.showAdvanced = self.runConfig.kafka.advanced;
+                    if(typeof self.runConfig.kafka.consumergroups !== "undefined"){
+                      self.groupsSelected = true;
+                      self.consumerGroups = self.runConfig.kafka.consumergroups;
                     }
-                    if (self.adamState.commandList === null) {
-                        self.getCommandList();
-                    }
-                };
-                init(); //Call upon create;
-                /**
-                 * Select an ADAM command by sending the name to the server, gets an 
-                 * AdamJobConfiguration back.
-                 * @param {string} command
-                 * @returns {undefined}
-                 */
-                this.selectCommand = function (command) {
-                    self.adamState.selectedCommand = command;
-                    AdamService.getCommand(self.projectId, self.adamState.selectedCommand).then(
+                    var storedTopics = self.runConfig.kafka.topics;
+                    //Set Kafka topics is selected
+                    KafkaService.getProjectAndSharedTopics(self.projectId).then(
                             function (success) {
-                                self.runConfig = success.data;
-                                self.mainFileSelected(self.adamState.selectedCommand);
+                              var topics = success.data;
+                              for (var i = 0; i < topics.length; i++) {
+                                self.topics.push({name: topics[i]['name'], ticked: false});
+                              }
+                              if (typeof storedTopics !== "undefined") {
+                                self.runConfig.kafka.topics = storedTopics;
+                                //Set selected topics
+                                //wait to fetch topics firsts
+                                for (var i = 0; i < self.runConfig.kafka.topics.length; i++) {
+                                  for (var z = 0; z < self.topics.length; z++) {
+                                    if (self.topics[z]['name'] === self.runConfig.kafka.topics[i]['name']) {
+                                      self.topics[z]['ticked'] = true;
+                                      break;
+                                    }
+                                  }
+                                }
+                              }
                             }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                     });
-                };
-                
-                /**
-                 * Creates a jobDetails object with the arguments typed by the user and send  
-                 * these attributes to the server. The server responds with the results from the 
-                 * heuristic search.
-                 * @returns {undefined}
-                 */
-                this.autoConfig = function (filterValue) {
-                    self.isSpin = true;
-                    
-                    self.autoConfigResult = {};
-                    var jobDetails ={};
-                    jobDetails.className = self.runConfig.mainClass;
-                    jobDetails.selectedJar = self.sparkState.selectedJar;
-                    jobDetails.inputArgs = self.runConfig.args;
-                    jobDetails.jobType = self.getJobType();
-                    jobDetails.projectId = self.projectId;
-                    jobDetails.jobName = self.jobname;
-                    jobDetails.filter = filterValue;
-                    
-                if(!angular.isUndefined(jobDetails.className) && !angular.isUndefined(jobDetails.inputArgs) &&
-                   !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)){
-                    
-                    self.configAlert = false;
-                    HistoryService.getHeuristics(jobDetails).then(
-                    function (success) {
-                        self.autoConfigResult = success.data;
-                        console.log(self.autoConfigResult);
-                    });
+                  }
                 }
-                
-                else{
-                    self.configAlert = true;
-                    self.isSpin = false;
+                if (self.jobtype === 1) {
+                  self.sparkState = stored.sparkState;
+                } else if (self.jobtype === 2) {
+                  self.adamState = stored.adamState;
+                } else if (self.jobtype === 3) {
+                  self.flinkState = stored.flinkState;
                 }
-                };
-                
-                /**
-                 * Checks the value of the proposed configuration.
-                 * The function is used to initialized the checked radio button
-                 * @param {type} value
-                 * @returns {Boolean}
-                 */
-                $scope.checkRadio = function(value){
-                    if(value === "Minimal"){
-                        return true;
-                    }
-                    else
-                        return false;
-                };
-                
-                /**
-                 * When the user changes configutaion (using the radio button) the 
-                 * runConfig values change.
-                 * @param {type} value
-                 * @returns {undefined}
-                 */
-                $scope.selectConfig = function(value) {
-                    for(var i=0; i < self.autoConfigResult.jobProposedConfig.length; i++){
-                        var obj = self.autoConfigResult.jobProposedConfig[i];
-                        if(obj.configType === value){
-                            self.runConfig.amMemory = obj.amMemory;
-                            self.runConfig.amVCores = obj.amVcores;
-                            self.runConfig.amQueue = "default";
-                            self.runConfig.numberOfExecutors = obj.numOfExecutors;
-                            self.runConfig.executorCores = obj.executorCores; 
-                            self.runConfig.executorMemory = obj.executorMemory;
-                        }
-                    }
-                };
+                //GUI state
+                self.accordion1 = stored.accordion1;
+                self.accordion2 = stored.accordion2;
+                self.accordion3 = stored.accordion3;
+                self.accordion4 = stored.accordion4;
+                self.accordion5 = stored.accordion5;
+                self.accordion6 = stored.accordion6;
+              }
+              if (self.adamState.commandList === null) {
+                self.getCommandList();
+              }
+            };
+            init(); //Call upon create;
+            /**
+             * Select an ADAM command by sending the name to the server, gets an 
+             * AdamJobConfiguration back.
+             * @param {string} command
+             * @returns {undefined}
+             */
+            this.selectCommand = function (command) {
+              self.adamState.selectedCommand = command;
+              AdamService.getCommand(self.projectId, self.adamState.selectedCommand).then(
+                      function (success) {
+                        self.runConfig = success.data;
+                        self.mainFileSelected(self.adamState.selectedCommand);
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              });
+            };
+
+            /**
+             * Creates a jobDetails object with the arguments typed by the user and send  
+             * these attributes to the server. The server responds with the results from the 
+             * heuristic search.
+             * @returns {undefined}
+             */
+            this.autoConfig = function (filterValue) {
+              self.isSpin = true;
+
+              self.autoConfigResult = {};
+              var jobDetails = {};
+              jobDetails.className = self.runConfig.mainClass;
+              jobDetails.selectedJar = self.sparkState.selectedJar;
+              jobDetails.inputArgs = self.runConfig.args;
+              jobDetails.jobType = self.getJobType();
+              jobDetails.projectId = self.projectId;
+              jobDetails.jobName = self.jobname;
+              jobDetails.filter = filterValue;
+
+              if (!angular.isUndefined(jobDetails.className) && !angular.isUndefined(jobDetails.inputArgs) &&
+                      !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)) {
+
+                self.configAlert = false;
+                HistoryService.getHeuristics(jobDetails).then(
+                        function (success) {
+                          self.autoConfigResult = success.data;
+                          console.log(self.autoConfigResult);
+                        });
+              } else {
+                self.configAlert = true;
+                self.isSpin = false;
+              }
+            };
+
+            /**
+             * Checks the value of the proposed configuration.
+             * The function is used to initialized the checked radio button
+             * @param {type} value
+             * @returns {Boolean}
+             */
+            $scope.checkRadio = function (value) {
+              if (value === "Minimal") {
+                return true;
+              } else
+                return false;
+            };
+
+            /**
+             * When the user changes configutaion (using the radio button) the 
+             * runConfig values change.
+             * @param {type} value
+             * @returns {undefined}
+             */
+            $scope.selectConfig = function (value) {
+              for (var i = 0; i < self.autoConfigResult.jobProposedConfig.length; i++) {
+                var obj = self.autoConfigResult.jobProposedConfig[i];
+                if (obj.configType === value) {
+                  self.runConfig.amMemory = obj.amMemory;
+                  self.runConfig.amVCores = obj.amVcores;
+                  self.runConfig.amQueue = "default";
+                  self.runConfig.numberOfExecutors = obj.numOfExecutors;
+                  self.runConfig.executorCores = obj.executorCores;
+                  self.runConfig.executorMemory = obj.executorMemory;
+                }
+              }
+            };
 
           }]);
 

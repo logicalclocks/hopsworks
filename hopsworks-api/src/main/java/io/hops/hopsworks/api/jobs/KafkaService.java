@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.Settings;
 import javax.persistence.EntityExistsException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -152,7 +153,14 @@ public class KafkaService {
               "Incomplete request!");
     }
     //create the topic in the database and the Kafka cluster
-    kafkaFacade.createTopicInProject(this.projectId, topicDto);
+    kafkaFacade.createTopicInProject(projectId, topicDto);
+    //By default, all members of the project are granted full permissions 
+    //on the topic
+    AclDTO aclDto = new AclDTO(null, project.getName(),
+            Settings.KAFKA_ACL_WILDCARD,
+            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+            Settings.KAFKA_ACL_WILDCARD);
+    kafkaFacade.addAclsToTopic(topicDto.getName(), projectId, aclDto);
 
     json.setSuccessMessage("The Topic has been created.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -245,6 +253,18 @@ public class KafkaService {
     }
 
     kafkaFacade.shareTopic(this.projectId, topicName, projectId);
+    //By default, all members of the project are granted full permissions 
+    //on the topic
+    Project projectShared = projectFacade.find(projectId);
+    if (projectShared == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not find project for topic");
+    }
+    AclDTO aclDto = new AclDTO(null, projectShared.getName(),
+            Settings.KAFKA_ACL_WILDCARD,
+            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+            Settings.KAFKA_ACL_WILDCARD);
+    kafkaFacade.addAclsToTopic(topicName, this.projectId, aclDto);
     json.setSuccessMessage("The topic has been shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -404,10 +424,6 @@ public class KafkaService {
       aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
     } catch (Exception e) {
     }
-//        if (aclDto == null) {
-//            throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-//                    "Topic has not ACLs");
-//        }
 
     GenericEntity<List<AclDTO>> aclDtos
             = new GenericEntity<List<AclDTO>>(aclDto) {};

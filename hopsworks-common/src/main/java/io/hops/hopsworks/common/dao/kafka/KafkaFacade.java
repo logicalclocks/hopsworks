@@ -49,6 +49,7 @@ import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -67,6 +68,9 @@ public class KafkaFacade {
 
   @EJB
   private CertsFacade userCerts;
+
+  @EJB
+  private ProjectFacade projectsFacade;
 
   public static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
@@ -486,6 +490,14 @@ public class KafkaFacade {
               "The specified project for the topic is not in database");
     }
 
+    if (!project.getName().equals(selectedProjectName)) {
+      project = projectsFacade.findByName(selectedProjectName);
+      if (project == null) {
+        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+                "The specified project for the topic is not in database");
+      }
+    }
+
     ProjectTopics pt = em.find(ProjectTopics.class,
             new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {
@@ -835,7 +847,7 @@ public class KafkaFacade {
     }
     try {
       HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(),
-              Settings.TMP_CERT_STORE_LOCAL, Settings.TMP_CERT_STORE_REMOTE,
+              settings.getHopsworksTmpCertDir(), Settings.TMP_CERT_STORE_REMOTE,
               null, null, null, null, null);
 
       for (String brokerAddress : brokers) {
@@ -854,13 +866,13 @@ public class KafkaFacade {
         //configure the ssl parameters
         props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-                Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+                settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
                 getProjectTruststoreName(project.getName(), user.
                         getUsername()));
         props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
                 settings.getHopsworksMasterPasswordSsl());
         props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-                Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+                settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
                 getProjectKeystoreName(project.getName(), user.
                         getUsername()));
         props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
@@ -908,11 +920,11 @@ public class KafkaFacade {
     } finally {
       //Remove certificates from local dir
       Files.deleteIfExists(FileSystems.getDefault().getPath(
-              Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+              settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
               getProjectTruststoreName(project.getName(), user.
                       getUsername())));
       Files.deleteIfExists(FileSystems.getDefault().getPath(
-              Settings.TMP_CERT_STORE_LOCAL + File.separator + HopsUtils.
+              settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
               getProjectKeystoreName(project.getName(), user.
                       getUsername())));
     }
