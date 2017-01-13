@@ -164,6 +164,18 @@ public class ZeppelinResource {
     }
     return project;
   }
+  
+  public Project getProject(String projectId) {
+    Integer pId;
+    Project proj;
+    try {
+      pId = Integer.valueOf(projectId);
+      proj = projectBean.find(pId);
+    } catch (NumberFormatException e) {
+      return null;
+    }
+    return proj;
+  }
 
   private boolean isProccessAlive(String pid) {
     String[] command = {"kill", "-0", pid};

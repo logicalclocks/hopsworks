@@ -53,8 +53,27 @@ public class AppScriptServlet extends HttpServlet {
         String replaceStringRest
                 = "this.getRestApiBase=function(){return location.protocol + '//'"
                 + " + location.hostname + ':' + this.getPort() "
-                + " + '/hopsworks-api/api'; }";
+                + " + '/hopsworks-api/api/zeppelin/'+getCookie('projectID');}; "
+                + "var getCookie = function (cname) { var name = cname + '=';" 
+                + "var ca = document.cookie.split(';'); "
+                + "for(var i = 0; i < ca.length; i++) { var c = ca[i]; "
+                + "while (c.charAt(0) == ' ') { c = c.substring(1); } "
+                + "if(c.indexOf(name)==0){return c.substring(name.length, c.length); "
+                + "}} return ''; }";
         script.replace(startIndexRest, endIndexRest + 1, replaceStringRest);
+      }
+
+      // Replace the string "function getWebsocketUrl(){...}" to return
+      // the proper value with project id
+      int startIndexWs = script.indexOf("this.getWebsocketUrl=function(){");
+      int endIndexWs = script.indexOf("},", startIndexWs);
+
+      if (startIndexWs >= 0 && endIndexWs >= 0) {
+        String replaceStringWs
+                = "this.getWebsocketUrl=function(){var wsProtocol=location.protocol"
+                + "==='https:'?'wss:':'ws:'; return wsProtocol+'//'+location.hostname+'"
+                + ":'+this.getPort()+'/hopsworks-api/zeppelin/ws/'+getCookie('projectID');}";
+        script.replace(startIndexWs, endIndexWs + 1, replaceStringWs);
       }
       out.println(script.toString());
     }

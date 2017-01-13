@@ -52,7 +52,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 /**
  * Created for org.apache.zeppelin.rest.message on 17/03/16.
  */
-@Path("/login")
+@Path("/zeppelin/{projectID}/login")
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})

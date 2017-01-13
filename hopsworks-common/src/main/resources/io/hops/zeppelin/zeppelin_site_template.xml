@@ -106,7 +106,7 @@
 
   <property>
     <name>zeppelin.notebook.storage</name>
-    <value>se.kth.hopsworks.zeppelin.notebook.repo.HDFSNotebookRepo</value>
+    <value>io.hops.hopsworks.api.zeppelin.notebook.repo.HDFSNotebookRepo</value>
     <description>notebook persistence layer implementation</description>
   </property>
 

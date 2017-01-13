@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
         .factory('ZeppelinService', ['$http', '$websocket', function ($http, $websocket) {
             var websocketCalls = {};
             var setUp = function () {            
-              websocketCalls.ws = $websocket(getZeppelinWsBaseURL());
+              websocketCalls.ws = $websocket(getZeppelinWsBaseURL() + getCookie('projectID'));
               websocketCalls.ws.reconnectIfNotNormalClose = true;
 
               websocketCalls.sendNewEvent = function (data) {
@@ -38,24 +38,24 @@ angular.module('hopsWorksApp')
                 return websocketCalls;
               },
               settings: function () {
-                return $http.get('/api/interpreter/setting');
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/setting');
               },
               restartInterpreter: function (settingId) {
-                return $http.put('/api/interpreter/setting/restart/' + settingId);
+                return $http.put('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/setting/restart/' + settingId);
               },
               notebooks: function () {
-                return $http.get('/api/notebook/');
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/notebook/');
               },
               reloadedNotebooks: function () {
-                return $http.get('/api/notebook/reloadedNotebookList');
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/notebook/reloadedNotebookList');
               },
               deleteNotebook: function (noteId) {
-                return $http.delete('/api/notebook/' + noteId);
+                return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/notebook/' + noteId);
               },
               createNotebook: function (noteName) {
                 var regReq = {
                   method: 'POST',
-                  url: '/api/notebook/new',
+                  url: '/api/zeppelin/'+ getCookie('projectID') + '/notebook/new',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -64,13 +64,13 @@ angular.module('hopsWorksApp')
                 return $http(regReq);
               },
               interpreters: function () {
-                return $http.get('/api/interpreter/interpretersWithStatus');
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/interpretersWithStatus');
               },
               restart: function () {
-                return $http.get('/api/interpreter/restart');
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/restart');
               },
               stopLivySession: function (settingId, sessionId) {
-                return $http.delete('/api/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
+                return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
               }
             };
           }]);

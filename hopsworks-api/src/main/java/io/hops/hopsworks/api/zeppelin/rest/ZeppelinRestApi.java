@@ -10,7 +10,7 @@ import org.apache.zeppelin.util.Util;
 
 /**
  */
-@Path("/")
+@Path("/zeppelin/{projectID}")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class ZeppelinRestApi {

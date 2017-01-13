@@ -24,16 +24,6 @@
     <servlet-name>AppScriptServlet</servlet-name>
     <url-pattern>/zeppelin/scripts/scripts.6ddd912ca4c10818.js</url-pattern>
   </servlet-mapping>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>AppScript Servlet</web-resource-name>
-      <url-pattern>/zeppelin/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>HOPS_ADMIN</role-name>
-      <role-name>HOPS_USER</role-name>
-    </auth-constraint>
-  </security-constraint>
   <login-config>
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>

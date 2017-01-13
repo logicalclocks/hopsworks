@@ -1,4 +1,4 @@
-package se.kth.hopsworks.zeppelin.notebook.repo;
+package io.hops.hopsworks.api.zeppelin.notebook.repo;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

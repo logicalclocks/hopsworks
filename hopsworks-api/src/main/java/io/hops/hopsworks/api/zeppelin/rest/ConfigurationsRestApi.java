@@ -44,7 +44,7 @@ import javax.ws.rs.core.Context;
 /**
  * Configurations Rest API Endpoint
  */
-@Path("/configurations")
+@Path("/zeppelin/{projectID}/configurations")
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -70,9 +70,10 @@ public class ConfigurationsRestApi {
 
   @GET
   @Path("all")
-  public Response getAll(@Context HttpServletRequest httpReq) throws
+  public Response getAll(@PathParam("projectID") String projectID,
+          @Context HttpServletRequest httpReq) throws
           AppException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
+    Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "Could not find project. Make sure cookies are enabled.");

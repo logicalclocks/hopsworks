@@ -1,7 +1,5 @@
 package io.hops.hopsworks.api.zeppelin.socket;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
@@ -20,23 +18,10 @@ public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
           HandshakeRequest request, HandshakeResponse response) {
 
     HttpSession httpSession = (HttpSession) request.getHttpSession();
-    Map<String, String> cookies = new HashMap<>();
-    String cookie = request.getHeaders().get("Cookie").get(0);
-    logger.log(Level.INFO, "=======> cookie length = {0}", request.getHeaders().
-            get("Cookie").size());
-    logger.log(Level.INFO, "=======> cookie 0 = {0}", request.getHeaders().
-            get("Cookie").get(0));
-    String[] cookieParts = cookie.split("; ");//should have space after ;
-    for (String c : cookieParts) {
-      cookies.put(c.substring(0, c.indexOf("=")), c.
-              substring(c.indexOf("=") + 1, c.length()));
-    }
+    String user = request.getUserPrincipal().getName();
     config.getUserProperties().put("httpSession", httpSession);
-    config.getUserProperties().put("user", request.getUserPrincipal().getName());
-    config.getUserProperties().put("projectID", cookies.get("projectID"));
-    logger.log(Level.INFO, "Connecting to zeppelin: User={0} Project id={1}",
-            new Object[]{request.getUserPrincipal().getName(), cookies.get(
-                      "projectID")});
+    config.getUserProperties().put("user", user);
+    logger.log(Level.INFO, "Hand shake for upgrade to websocket by: {0}", user);
   }
 
 //  @Override

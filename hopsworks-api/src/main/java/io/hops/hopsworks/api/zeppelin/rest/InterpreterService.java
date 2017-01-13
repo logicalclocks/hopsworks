@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Path("/interpreter")
+@Path("/zeppelin/{projectID}/interpreter")
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -46,9 +46,10 @@ public class InterpreterService {
 
   @Path("/")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public InterpreterRestApi interpreter(@Context HttpServletRequest httpReq)
+  public InterpreterRestApi interpreter(@PathParam("projectID") String projectID,
+          @Context HttpServletRequest httpReq)
           throws AppException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
+    Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       logger.error("Could not find project in cookies.");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),

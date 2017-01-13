@@ -15,13 +15,14 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Path("/notebook")
+@Path("/zeppelin/{projectID}/notebook")
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -44,9 +45,10 @@ public class NotebookService {
 
   @Path("/")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public NotebookRestApi interpreter(@Context HttpServletRequest httpReq)
-          throws AppException {
-    Project project = zeppelinResource.getProjectNameFromCookies(httpReq);
+  public NotebookRestApi interpreter(@PathParam("projectID") String projectID,
+          @Context HttpServletRequest httpReq) throws
+          AppException {
+    Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
               "Could not find project. Make sure cookies are enabled.");

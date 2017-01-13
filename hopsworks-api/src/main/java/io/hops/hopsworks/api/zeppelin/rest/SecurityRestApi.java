@@ -42,7 +42,7 @@ import javax.ws.rs.core.Context;
  * Zeppelin security rest api endpoint.
  * <p>
  */
-@Path("/security")
+@Path("/zeppelin/{projectID}/security")
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})

@@ -73,12 +73,13 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import javax.websocket.server.PathParam;
 
 /**
  * Zeppelin websocket service.
  * <p>
  */
-@ServerEndpoint(value = "/zeppelin/ws",
+@ServerEndpoint(value = "/zeppelin/ws/{projectID}",
         configurator = ZeppelinEndpointConfig.class)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
@@ -119,14 +120,11 @@ public class NotebookServer implements
   }
 
   @OnOpen
-  public void open(Session conn, EndpointConfig config) {
-    LOG.log(Level.INFO, "Create zeppelin websocket on port {0}:{1}",
-            new Object[]{conn.getRequestURI().getHost(), conn.getRequestURI().
-              getPort()});
+  public void open(Session conn, EndpointConfig config, 
+          @PathParam("projectID") String projectId) {
     this.session = conn;
     this.sender = (String) config.getUserProperties().get("user");
-    this.project = getProject((String) config.getUserProperties().get(
-            "projectID"));
+    this.project = getProject(projectId);
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
       LOG.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",

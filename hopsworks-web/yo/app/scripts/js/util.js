@@ -89,6 +89,22 @@ var sortObject = function(filter, predicate, template){
   return filter('orderBy')(template.columns, predicate, false);
 };
 
+//w3school get cookie example
+function getCookie(cname) {
+    var name = cname + '=';
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
 function getPort() {
     var port = Number(location.port);
   if (port === 'undefined' || port === 0) {
@@ -113,6 +129,10 @@ function getApiPath() {
 }
 
 function getLocationBase() {
+  return location.protocol + "//" + location.hostname +":" + getPort() + "/hopsworks";
+};
+
+function getApiLocationBase() {
   return location.protocol + "//" + location.hostname +":" + getPort() + getPathname();
 };
 
@@ -125,7 +145,7 @@ function getMetaDataWsBaseURL() {
 }
 
 function getZeppelinWsBaseURL() {
-  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/zeppelin/ws";
+  return getWsProtocol() +"//" + location.hostname + ":" + getPort() + getPathname() + "/zeppelin/ws/";
 };
 
 function skipTrailingSlash(path) {

@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
             return {
               request: function (config) {
 
-                var RESOURCE_SERVER = getLocationBase(); 
+                var RESOURCE_SERVER = getApiLocationBase(); 
                 var RESOURCE_NAME = 'api';
 
                 var isApi = config.url.indexOf(RESOURCE_NAME);
