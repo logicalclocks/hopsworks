@@ -194,8 +194,9 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_DRIVER_STAGINGDIR_ENV, stagingPath);
     addSystemProperty(Settings.SPARK_LOG4J_CONFIG,
             Settings.SPARK_LOG4J_PROPERTIES);
-    addSystemProperty(Settings.SPARK_APPID_PROPERTY,
-            YarnRunner.APPID_PLACEHOLDER);
+    //Comma-separated list of attributes sent to Logstash
+    addSystemProperty(Settings.LOGSTASH_JOB_INFO,
+            project + "," + jobName + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
             + "/lib/native/");
 
@@ -204,8 +205,8 @@ public class SparkYarnRunnerBuilder {
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
             append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").
             append(Settings.SPARK_LOG4J_PROPERTIES).append(" ").
-            append("-D").append(Settings.SPARK_APPID_PROPERTY).append("=").
-            append(YarnRunner.APPID_PLACEHOLDER).append(" ").
+            append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").
+            append(project).append(",").append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
             append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
             append(this.hadoopDir).append("/lib/native/");
@@ -281,7 +282,7 @@ public class SparkYarnRunnerBuilder {
       //Exclude "hopsworks.yarn.appid" property because we do not want to 
       //escape it now
       String option;
-      if (s.equals(Settings.SPARK_APPID_PROPERTY)) {
+      if (s.equals(Settings.LOGSTASH_JOB_INFO)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {
         option = escapeForShell("-D" + s + "=" + sysProps.get(s));

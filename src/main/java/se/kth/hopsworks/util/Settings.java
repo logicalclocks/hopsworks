@@ -286,7 +286,8 @@ public class Settings {
   //Spark log4j properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
   public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
-  public static final String SPARK_APPID_PROPERTY = "hopsworks.yarn.appid";
+  //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
+  public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
   
   public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
