@@ -88,6 +88,7 @@ public class SparkYarnRunnerBuilder {
 
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
+    String metricsPath = Settings.getSparkMetricsPath(sparkUser);
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
@@ -108,6 +109,11 @@ public class SparkYarnRunnerBuilder {
     //Add log4j
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
+            LocalResourceVisibility.PRIVATE.toString(),
+            LocalResourceType.ARCHIVE.toString(), null), false);
+    //Add metrics
+    builder.addLocalResource(new LocalResourceDTO(
+            Settings.SPARK_METRICS_PROPERTIES, metricsPath,
             LocalResourceVisibility.PRIVATE.toString(),
             LocalResourceType.ARCHIVE.toString(), null), false);
 
@@ -192,6 +198,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
             executorCores));
     addSystemProperty(Settings.SPARK_DRIVER_STAGINGDIR_ENV, stagingPath);
+    //Add log4j property
     addSystemProperty(Settings.SPARK_LOG4J_CONFIG,
             Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
@@ -199,6 +206,7 @@ public class SparkYarnRunnerBuilder {
             project + "," + jobName + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
             + "/lib/native/");
+    //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
 
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();

@@ -29,6 +29,13 @@
               class="btn btn-primary glyphicon glyphicon-asterisk">
       </button>
     </span>
+    <span class="field-info" uib-tooltip="display Kibana dashboard" style="padding-top: 5px;padding-left:3px">
+      <button style=""
+              ng-click="jobUICtrl.kibanaUI();
+                $event.stopPropagation();"
+              class="btn btn-primary glyphicon glyphicon-asterisk">
+      </button>
+    </span>
   </div>
   <div ng-if="jobUICtrl.ui !== ''">
     <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="1170" height ="1000"></iframe> 

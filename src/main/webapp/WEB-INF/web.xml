@@ -178,9 +178,9 @@
   </filter-mapping>
   
   <!-- Kibana proxy servlet -->
-      <servlet>
-        <servlet-name>ProxyServlet</servlet-name>
-        <servlet-class>io.hops.kibana.ProxyServlet</servlet-class>
+    <servlet>
+        <servlet-name>KibanaProxyServlet</servlet-name>
+        <servlet-class>io.hops.kibana.KibanaProxyServlet</servlet-class>
         <init-param>
             <param-name>targetUri</param-name>
             <param-value>http://localhost:5601/</param-value>
@@ -191,11 +191,11 @@
         </init-param>
     </servlet>
     <servlet-mapping>
-        <servlet-name>ProxyServlet</servlet-name>
-        <url-pattern>/ps/*</url-pattern>
+        <servlet-name>KibanaProxyServlet</servlet-name>
+        <url-pattern>/kibana/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>ProxyServlet</servlet-name>
-        <url-pattern>/ps</url-pattern>
+        <servlet-name>KibanaProxyServlet</servlet-name>
+        <url-pattern>/kibana</url-pattern>
     </servlet-mapping>
 </web-app>

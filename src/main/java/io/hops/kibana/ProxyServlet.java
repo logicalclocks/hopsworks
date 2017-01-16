@@ -106,7 +106,7 @@ public class ProxyServlet extends HttpServlet {
   protected URI targetUriObj;//new URI(targetUri)
   protected HttpHost targetHost;//URIUtils.extractHost(targetUriObj);
 
-  private HttpClient proxyClient;
+  protected HttpClient proxyClient;
 
   @Override
   public String getServletInfo() {
@@ -118,7 +118,7 @@ public class ProxyServlet extends HttpServlet {
     return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
   }
 
-  private HttpHost getTargetHost(HttpServletRequest servletRequest) {
+  protected HttpHost getTargetHost(HttpServletRequest servletRequest) {
     return (HttpHost) servletRequest.getAttribute(ATTR_TARGET_HOST);
   }
 
@@ -414,7 +414,7 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  private void setXForwardedForHeader(HttpServletRequest servletRequest,
+  protected void setXForwardedForHeader(HttpServletRequest servletRequest,
                                       HttpRequest proxyRequest) {
     String headerName = "X-Forwarded-For";
     if (doForwardIP) {

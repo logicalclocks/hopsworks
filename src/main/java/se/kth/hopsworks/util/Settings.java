@@ -281,13 +281,14 @@ public class Settings {
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
+  public static final String SPARK_METRICS_ENV = "spark.metrics.conf";
   
-  
-  //Spark log4j properties
+  //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
   public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
   //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
   public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
+  public static final String SPARK_METRICS_PROPERTIES = "metrics.properties";
   
   public static final String SPARK_CACHE_FILENAMES = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
@@ -590,6 +591,14 @@ public class Settings {
 
   public static String getSparkLog4JPath(String sparkUser) {
     return sparkLog4JPath(sparkUser);
+  }
+  
+  private static String sparkMetricsPath(String sparkUser) {
+    return "hdfs:///user/" + sparkUser + "/metrics.properties";
+  }
+
+  public static String getSparkMetricsPath(String sparkUser) {
+    return sparkMetricsPath(sparkUser);
   }
   
   public synchronized String getSparkDefaultClasspath() {

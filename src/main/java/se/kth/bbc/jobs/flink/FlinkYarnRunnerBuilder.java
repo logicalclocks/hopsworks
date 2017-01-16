@@ -398,24 +398,26 @@ public class FlinkYarnRunnerBuilder {
     }
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
-    }
-    for (String s : sysProps.keySet()) {
-      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
-      builder.addJavaOption(option);
-      cluster.addHopsworksParam(option);
-      dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
-              append("@@");
+      for (String s : sysProps.keySet()) {
+        String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+        builder.addJavaOption(option);
+        cluster.addHopsworksParam(option);
+        dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
+                append("@@");
+      }
+
+      /*
+       * Split propertes with "@@"
+       * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
+       */
+      if (dynamicPropertiesEncoded.length() > 0) {
+        cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.
+                substring(0,
+                        dynamicPropertiesEncoded.
+                                lastIndexOf("@@")));
+      }
     }
 
-    /*
-     * Split propertes with "@@"
-     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
-     */
-    if (dynamicPropertiesEncoded.length() > 0) {
-      cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
-              dynamicPropertiesEncoded.
-                      lastIndexOf("@@")));
-    }
     builder.setJobType(JobType.FLINK);
     builder.setAppJarPath(appJarPath);
     builder.setParallelism(parallelism);

@@ -28,7 +28,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
 
-            }
+            };
 
             getJobUI();
 
@@ -46,7 +46,11 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
 
-            }
+            };
+            
+            self.kibanaUI = function () {
+              self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(application,message,jobname,priority,logger_name),index:"+self.job.project.name+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:%27*%20priority%3DWARN%20AND%20jobname%3D"+self.job.name+"%27)),sort:!(_score,desc))";
+            };
             
             self.backToHome = function () {
               getJobUI();
