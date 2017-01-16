@@ -1,0 +1,98 @@
+  <div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+</div>
+<div ng-controller="PysparkDepsCtrl as pysparkDepsCtrl">
+
+  <div id="wrapper" class="toggled">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <div growl reference="10" class="pull-right" ></div>
+
+
+        <div>
+          <form class="form-horizontal">
+            <div class="form-group"  style="margin-left: 15px;">
+              <div class="row"/>
+              <div class="row">
+
+                <ul class="nav nav-tabs">
+                  <li ng-class="{'active' : pysparkDepsCtrl.showClusters === 1}"><a ng-click="pysparkDepsCtrl.showTab(false)">Training</a></li>
+                  <li ng-class="{'active' : pysparkDepsCtrl.showServing === 1}"><a ng-click="pysparkDepsCtrl.showTab(true)">Serving</a></li>
+                </ul>                
+
+              </div>
+              <div class="row"><br></div>
+
+              <div ng-show="pysparkDepsCtrl.advanced === 1">
+                <br>
+                <div class="col-sm-2">
+                </div>
+              </div>              
+            </div>
+          </form>
+
+          <div ng-show="pysparkDepsCtrl.showClusters === 1">
+
+            <button ng-click="accordion.expandAll()">Expand all</button>
+            <button ng-click="accordion.collapseAll()">Collapse all</button>
+
+            <v-accordion class="vAccordion--default" multiple>
+
+              <v-pane ng-repeat="cluster in pysparkDepsCtrl.clusters" expanded="cluster.isExpanded" control="accordion">
+                <v-pane-header>
+                  {{ ::cluster.name}} 
+                  <div class="btn-group pull-right" style="bottom: 10px;" role="group">
+                    <button 
+                      uib-tooltip="Delete"
+                      ng-click="pysparkDepsCtrl.toggle(cluster, $index); pysparkDepsCtrl.removeCluster(cluster.name); $event.stopPropagation();"
+                      type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
+                    </button>
+                  </div>
+                </v-pane-header>
+                <v-pane-content>
+                  <v-accordion ng-if="cluster.jobs">
+                    <v-pane ng-repeat="job in cluster.jobs"">
+                      <v-pane-header> 
+                        {{ ::job.name}}
+                      </v-pane-header>
+                      <v-pane-content>
+                        {{ ::job.program}}
+                        <div class="btn-group pull-right" style="bottom: 10px;" role="group">
+                          <button 
+                            uib-tooltip="Delete"
+                            ng-click="pysparkDepsCtrl.toggle(cluster, $index); pysparkDepsCtrl.removeJob(cluster.name); $event.stopPropagation();"
+                            type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
+                          </button>
+                        </div>
+                        <v-accordion ng-if="job.tasks">
+                          <v-pane ng-repeat="task in job.tasks"">
+                            <v-pane-header> 
+                              {{ ::task.host}}
+                            </v-pane-header>
+                            <v-pane-content>
+                              {{ ::task.params}}
+                            </v-pane-content>
+                          </v-pane>
+
+                      </v-pane-content>
+                    </v-pane>
+                  </v-accordion>
+                </v-pane-content>
+              </v-pane> 
+            </v-accordion> 
+
+
+
+          </div>      
+          <div ng-show="pysparkDepsCtrl.showServing == 1">
+            <br>
+            Some stuff here
+          </div>
+        </div>              
+    </section>
+  </div>
+</div>

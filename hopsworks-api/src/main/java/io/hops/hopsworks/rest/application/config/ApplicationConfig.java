@@ -33,6 +33,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
+    register(io.hops.hopsworks.api.pysparkDeps.PysparkService.class);
     register(io.hops.hopsworks.api.user.ActivityService.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
     register(io.hops.hopsworks.api.user.UserService.class);
@@ -57,7 +58,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.NotebookService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.SecurityRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
-    
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
   }
 }
