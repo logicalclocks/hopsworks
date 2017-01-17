@@ -16,27 +16,36 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author jdowling
- */
 @Entity
-@Table(name = "project_pythondeps", catalog = "hopsworks", schema = "")
+@Table(name = "project_pythondeps",
+        catalog = "hopsworks",
+        schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "ProjectPythondeps.findAll", query = "SELECT p FROM ProjectPythondeps p"),
-  @NamedQuery(name = "ProjectPythondeps.findByProjectId", query = "SELECT p FROM ProjectPythondeps p WHERE p.projectPythondepsPK.projectId = :projectId"),
-  @NamedQuery(name = "ProjectPythondeps.findByDepId", query = "SELECT p FROM ProjectPythondeps p WHERE p.projectPythondepsPK.depId = :depId")})
+  @NamedQuery(name = "ProjectPythondeps.findAll",
+          query = "SELECT p FROM ProjectPythondeps p"),
+  @NamedQuery(name = "ProjectPythondeps.findByProjectId",
+          query
+          = "SELECT p FROM ProjectPythondeps p WHERE p.projectPythondepsPK.projectId = :projectId"),
+  @NamedQuery(name = "ProjectPythondeps.findByDepId",
+          query
+          = "SELECT p FROM ProjectPythondeps p WHERE p.projectPythondepsPK.depId = :depId")})
 public class ProjectPythondeps implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected ProjectPythondepsPK projectPythondepsPK;
-  @JoinColumn(name = "dep_id", referencedColumnName = "id", insertable = false, updatable = false)
+  @JoinColumn(name = "dep_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable = false)
   @ManyToOne(optional = false)
   private PythonDep pythonDep;
 
-  @JoinColumn(name = "project_id", referencedColumnName = "id", insertable = false, updatable = false)
+  @JoinColumn(name = "project_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable = false)
   @ManyToOne(optional = false)
   private Project project;
 
@@ -74,7 +83,7 @@ public class ProjectPythondeps implements Serializable {
   public void setProject(Project project) {
     this.project = project;
   }
-  
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -89,7 +98,9 @@ public class ProjectPythondeps implements Serializable {
       return false;
     }
     ProjectPythondeps other = (ProjectPythondeps) object;
-    if ((this.projectPythondepsPK == null && other.projectPythondepsPK != null) || (this.projectPythondepsPK != null && !this.projectPythondepsPK.equals(other.projectPythondepsPK))) {
+    if ((this.projectPythondepsPK == null && other.projectPythondepsPK != null)
+            || (this.projectPythondepsPK != null && !this.projectPythondepsPK.
+            equals(other.projectPythondepsPK))) {
       return false;
     }
     return true;
@@ -97,7 +108,8 @@ public class ProjectPythondeps implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.ProjectPythondeps[ projectPythondepsPK=" + projectPythondepsPK + " ]";
+    return "io.hops.hopsworks.common.dao.pythonDeps.ProjectPythondeps[ projectPythondepsPK="
+            + projectPythondepsPK + " ]";
   }
-  
+
 }

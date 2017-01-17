@@ -33,16 +33,23 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author jdowling
  */
 @Entity
-@Table(name = "python_dep", catalog = "hopsworks", schema = "")
+@Table(name = "python_dep",
+        catalog = "hopsworks",
+        schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "PythonDep.findAll", query = "SELECT p FROM PythonDep p"),
-  @NamedQuery(name = "PythonDep.findById", query = "SELECT p FROM PythonDep p WHERE p.id = :id"),
-  @NamedQuery(name = "PythonDep.findByDependency", query = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
-  @NamedQuery(name = "PythonDep.findByVersion", query = "SELECT p FROM PythonDep p WHERE p.version = :version")})
+  @NamedQuery(name = "PythonDep.findAll",
+          query = "SELECT p FROM PythonDep p"),
+  @NamedQuery(name = "PythonDep.findById",
+          query = "SELECT p FROM PythonDep p WHERE p.id = :id"),
+  @NamedQuery(name = "PythonDep.findByDependency",
+          query = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
+  @NamedQuery(name = "PythonDep.findByVersion",
+          query = "SELECT p FROM PythonDep p WHERE p.version = :version")})
 public class PythonDep implements Serializable {
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "pythonDep")
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "pythonDep")
   private Collection<ProjectPythondeps> projectPythondepsCollection;
 
   private static final long serialVersionUID = 1L;
@@ -53,17 +60,20 @@ public class PythonDep implements Serializable {
   private Integer id;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 128)
+  @Size(min = 1,
+          max = 128)
   @Column(name = "dependency")
   private String dependency;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 128)
+  @Size(min = 1,
+          max = 128)
   @Column(name = "version")
   private String version;
   @ManyToMany(mappedBy = "pythonDepCollection")
   private Collection<Project> projectCollection;
-  @JoinColumn(name = "repo_url", referencedColumnName = "id")
+  @JoinColumn(name = "repo_url",
+          referencedColumnName = "id")
   @ManyToOne(optional = false)
   private AnacondaRepo repoUrl;
 
@@ -136,7 +146,8 @@ public class PythonDep implements Serializable {
       return false;
     }
     PythonDep other = (PythonDep) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -153,8 +164,9 @@ public class PythonDep implements Serializable {
     return projectPythondepsCollection;
   }
 
-  public void setProjectPythondepsCollection(Collection<ProjectPythondeps> projectPythondepsCollection) {
+  public void setProjectPythondepsCollection(
+          Collection<ProjectPythondeps> projectPythondepsCollection) {
     this.projectPythondepsCollection = projectPythondepsCollection;
   }
-  
+
 }
