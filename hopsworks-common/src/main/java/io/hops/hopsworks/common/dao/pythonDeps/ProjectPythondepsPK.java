@@ -77,7 +77,9 @@ public class ProjectPythondepsPK implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.ProjectPythondepsPK[ projectId=" + projectId + ", depId=" + depId + " ]";
+    return "io.hops.hopsworks.common.dao.pythonDeps.ProjectPythondepsPK[ projectId="
+            + projectId
+            + ", depId=" + depId + " ]";
   }
-  
+
 }

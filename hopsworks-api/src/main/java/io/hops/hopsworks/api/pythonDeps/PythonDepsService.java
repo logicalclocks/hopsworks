@@ -5,7 +5,7 @@ import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 
@@ -29,7 +29,7 @@ public class PythonDepsService {
     getName());
 
   @EJB
-  private PythonDepFacade pythonDepsFacade;
+  private PythonDepsFacade pythonDepsFacade;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
