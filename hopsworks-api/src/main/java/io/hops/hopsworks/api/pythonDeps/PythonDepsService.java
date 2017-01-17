@@ -1,11 +1,11 @@
-package io.hops.hopsworks.api.pysparkDeps;
+package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pysparkDeps.PythonDep;
-import io.hops.hopsworks.common.dao.pysparkDeps.PythonDepFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 
@@ -23,9 +23,9 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class PysparkService {
+public class PythonDepsService {
 
-  private final static Logger logger = Logger.getLogger(PysparkService.class.
+  private final static Logger logger = Logger.getLogger(PythonDepsService.class.
     getName());
 
   @EJB
@@ -48,7 +48,7 @@ public class PysparkService {
     return project;
   }
 
-  public PysparkService() {
+  public PythonDepsService() {
 
   }
 

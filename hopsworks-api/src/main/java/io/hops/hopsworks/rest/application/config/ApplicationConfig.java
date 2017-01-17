@@ -33,7 +33,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
-    register(io.hops.hopsworks.api.pysparkDeps.PysparkService.class);
+    register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.user.ActivityService.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
     register(io.hops.hopsworks.api.user.UserService.class);

@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.api.pysparkDeps.PysparkService;
+import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -96,7 +96,7 @@ public class ProjectService {
   @Inject
   private WorkflowService workflowService;
   @Inject
-  private PysparkService pysparkService;
+  private PythonDepsService pysparkService;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -881,7 +881,7 @@ public class ProjectService {
 
   @Path("{id}/pysparkDeps")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public PysparkService pysparkDeps(@PathParam("id") Integer id) throws AppException {
+  public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

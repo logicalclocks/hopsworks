@@ -1,4 +1,4 @@
-package io.hops.hopsworks.common.dao.pysparkDeps;
+package io.hops.hopsworks.common.dao.pythonDeps;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -9,9 +9,9 @@ import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.util.Settings;
 
 @Stateless
-public class PythonDepFacade {
+public class PythonDepsFacade {
 
-  private final static Logger LOGGER = Logger.getLogger(PythonDepFacade.class.
+  private final static Logger LOGGER = Logger.getLogger(PythonDepsFacade.class.
     getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -24,7 +24,7 @@ public class PythonDepFacade {
     return em;
   }
 
-  public PythonDepFacade() throws Exception {
+  public PythonDepsFacade() throws Exception {
   }
 
   /**

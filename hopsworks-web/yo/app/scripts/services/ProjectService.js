@@ -60,26 +60,6 @@ angular.module('hopsWorksApp')
                 url: '/api/project/getDatasetInfo/:inodeId',
                 'method': 'GET'                  
               },
-              "getPysparkDeps": {
-                'method': 'GET', 
-                url: '/api/project/:id/pysparkDeps',
-                isArray: true
-              },
-              "installPysparkDeps": {
-                method: "PUT",
-                url: '/api/project/:id/pysparkDeps/install',
-                headers: {'Content-Type': 'application/json; charset=UTF-8'}
-              },
-              "removePysparkDeps": {
-                method: "PUT",
-                url: '/api/project/:id/pysparkDeps/remove',
-                headers: {'Content-Type': 'application/json; charset=UTF-8'}
-              },
-              "clonePysparkDeps": {
-                'method': 'GET',
-                url: '/api/project/:forkProj/pysparkDeps/clone',
-                isArray: true
-              },
               "importPublicDataset": {
                 url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
                 'method': 'GET'                  
