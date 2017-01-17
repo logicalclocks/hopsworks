@@ -7,20 +7,22 @@ package io.hops.kibana;
 
 /**
  * Copyright MITRE
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -51,57 +53,89 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HeaderElement;
+import org.apache.http.client.entity.GzipCompressingEntity;
+import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.entity.HttpEntityWrapper;
+import org.eclipse.jetty.client.GZIPContentDecoder;
+import org.glassfish.jersey.message.GZipEncoder;
+import org.json.JSONObject;
 
 /**
- * An HTTP reverse proxy/gateway servlet. It is designed to be extended for customization
+ * An HTTP reverse proxy/gateway servlet. It is designed to be extended for
+ * customization
  * if desired. Most of the work is handled by
- * <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache HttpClient</a>.
+ * <a href="http://hc.apache.org/httpcomponents-client-ga/">Apache
+ * HttpClient</a>.
  * <p>
- *   There are alternatives to a servlet based proxy such as Apache mod_proxy if that is available to you. However
- *   this servlet is easily customizable by Java, secure-able by your web application's security (e.g. spring-security),
- *   portable across servlet engines, and is embeddable into another web application.
+ * There are alternatives to a servlet based proxy such as Apache mod_proxy if
+ * that is available to you. However
+ * this servlet is easily customizable by Java, secure-able by your web
+ * application's security (e.g. spring-security),
+ * portable across servlet engines, and is embeddable into another web
+ * application.
  * </p>
  * <p>
- *   Inspiration: http://httpd.apache.org/docs/2.0/mod/mod_proxy.html
+ * Inspiration: http://httpd.apache.org/docs/2.0/mod/mod_proxy.html
  * </p>
  *
  * @author David Smiley dsmiley@mitre.org
  */
 public class ProxyServlet extends HttpServlet {
 
-  /* INIT PARAMETER NAME CONSTANTS */
-
-  /** A boolean parameter name to enable logging of input and target URLs to the servlet log. */
+  /*
+   * INIT PARAMETER NAME CONSTANTS
+   */
+  /**
+   * A boolean parameter name to enable logging of input and target URLs to the
+   * servlet log.
+   */
   public static final String P_LOG = "log";
 
-  /** A boolean parameter name to enable forwarding of the client IP  */
+  /**
+   * A boolean parameter name to enable forwarding of the client IP
+   */
   public static final String P_FORWARDEDFOR = "forwardip";
 
-  /** The parameter name for the target (destination) URI to proxy to. */
+  /**
+   * The parameter name for the target (destination) URI to proxy to.
+   */
   protected static final String P_TARGET_URI = "targetUri";
-  protected static final String ATTR_TARGET_URI =
-          ProxyServlet.class.getSimpleName() + ".targetUri";
-  protected static final String ATTR_TARGET_HOST =
-          ProxyServlet.class.getSimpleName() + ".targetHost";
+  protected static final String ATTR_TARGET_URI = ProxyServlet.class.
+          getSimpleName() + ".targetUri";
+  protected static final String ATTR_TARGET_HOST = ProxyServlet.class.
+          getSimpleName() + ".targetHost";
 
-  /* MISC */
-
+  /*
+   * MISC
+   */
   protected boolean doLog = false;
   protected boolean doForwardIP = true;
-  /** User agents shouldn't send the url fragment but what if it does? */
+  /**
+   * User agents shouldn't send the url fragment but what if it does?
+   */
   protected boolean doSendUrlFragment = true;
 
   //These next 3 are cached here, and should only be referred to in initialization logic. See the
   // ATTR_* parameters.
-  /** From the configured parameter "targetUri". */
+  /**
+   * From the configured parameter "targetUri".
+   */
   protected String targetUri;
   protected URI targetUriObj;//new URI(targetUri)
   protected HttpHost targetHost;//URIUtils.extractHost(targetUriObj);
@@ -113,7 +147,6 @@ public class ProxyServlet extends HttpServlet {
     return "A proxy servlet by David Smiley, dsmiley@apache.org";
   }
 
-
   protected String getTargetUri(HttpServletRequest servletRequest) {
     return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
   }
@@ -123,7 +156,8 @@ public class ProxyServlet extends HttpServlet {
   }
 
   /**
-   * Reads a configuration parameter. By default it reads servlet init parameters but
+   * Reads a configuration parameter. By default it reads servlet init
+   * parameters but
    * it can be overridden.
    */
   protected String getConfigParam(String key) {
@@ -139,13 +173,14 @@ public class ProxyServlet extends HttpServlet {
 
     String doForwardIPString = getConfigParam(P_FORWARDEDFOR);
     if (doForwardIPString != null) {
-        this.doForwardIP = Boolean.parseBoolean(doForwardIPString);
+      this.doForwardIP = Boolean.parseBoolean(doForwardIPString);
     }
 
     initTarget();//sets target*
 
     HttpParams hcParams = new BasicHttpParams();
-    hcParams.setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.IGNORE_COOKIES);
+    hcParams.setParameter(ClientPNames.COOKIE_POLICY,
+            CookiePolicy.IGNORE_COOKIES);
     readConfigParam(hcParams, ClientPNames.HANDLE_REDIRECTS, Boolean.class);
     proxyClient = createHttpClient(hcParams);
   }
@@ -154,30 +189,37 @@ public class ProxyServlet extends HttpServlet {
     // TODO - should get the Kibana URI from Settings.java
 //    targetUri = Settings.getKibanaUri();
     targetUri = getConfigParam(P_TARGET_URI);
-    if (targetUri == null)
-      throw new ServletException(P_TARGET_URI+" is required.");
+    if (targetUri == null) {
+      throw new ServletException(P_TARGET_URI + " is required.");
+    }
     //test it's valid
     try {
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
-      throw new ServletException("Trying to process targetUri init parameter: "+e,e);
+      throw new ServletException("Trying to process targetUri init parameter: "
+              + e, e);
     }
     targetHost = URIUtils.extractHost(targetUriObj);
   }
 
-  /** Called from {@link #init(javax.servlet.ServletConfig)}. HttpClient offers many opportunities
+  /**
+   * Called from {@link #init(javax.servlet.ServletConfig)}. HttpClient offers
+   * many opportunities
    * for customization. By default,
    * <a href="http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/org/apache/http/impl/client/SystemDefaultHttpClient.html">
-   *   SystemDefaultHttpClient</a> is used if available, otherwise it falls
+   * SystemDefaultHttpClient</a> is used if available, otherwise it falls
    * back to:
    * <pre>new DefaultHttpClient(new ThreadSafeClientConnManager(),hcParams)</pre>
-   * SystemDefaultHttpClient uses PoolingClientConnectionManager. In any case, it should be thread-safe. */
+   * SystemDefaultHttpClient uses PoolingClientConnectionManager. In any case,
+   * it should be thread-safe.
+   */
   @SuppressWarnings({"unchecked", "deprecation"})
   protected HttpClient createHttpClient(HttpParams hcParams) {
     try {
       //as of HttpComponents v4.2, this class is better since it uses System
       // Properties:
-      Class clientClazz = Class.forName("org.apache.http.impl.client.SystemDefaultHttpClient");
+      Class clientClazz = Class.forName(
+              "org.apache.http.impl.client.SystemDefaultHttpClient");
       Constructor constructor = clientClazz.getConstructor(HttpParams.class);
       return (HttpClient) constructor.newInstance(hcParams);
     } catch (ClassNotFoundException e) {
@@ -190,31 +232,38 @@ public class ProxyServlet extends HttpServlet {
     return new DefaultHttpClient(new ThreadSafeClientConnManager(), hcParams);
   }
 
-  /** The http client used.
-   * @see #createHttpClient(HttpParams) */
+  /**
+   * The http client used.
+   *
+   * @see #createHttpClient(HttpParams)
+   */
   protected HttpClient getProxyClient() {
     return proxyClient;
   }
 
-  /** Reads a servlet config parameter by the name {@code hcParamName} of type {@code type}, and
+  /**
+   * Reads a servlet config parameter by the name {@code hcParamName} of type
+   * {@code type}, and
    * set it in {@code hcParams}.
    */
-  protected void readConfigParam(HttpParams hcParams, String hcParamName, Class type) {
+  protected void readConfigParam(HttpParams hcParams, String hcParamName,
+          Class type) {
     String val_str = getConfigParam(hcParamName);
-    if (val_str == null)
+    if (val_str == null) {
       return;
+    }
     Object val_obj;
     if (type == String.class) {
       val_obj = val_str;
     } else {
       try {
         //noinspection unchecked
-        val_obj = type.getMethod("valueOf",String.class).invoke(type,val_str);
+        val_obj = type.getMethod("valueOf", String.class).invoke(type, val_str);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
-    hcParams.setParameter(hcParamName,val_obj);
+    hcParams.setParameter(hcParamName, val_obj);
   }
 
   @Override
@@ -224,19 +273,21 @@ public class ProxyServlet extends HttpServlet {
       try {
         ((Closeable) proxyClient).close();
       } catch (IOException e) {
-        log("While destroying servlet, shutting down HttpClient: "+e, e);
+        log("While destroying servlet, shutting down HttpClient: " + e, e);
       }
     } else {
       //Older releases require we do this:
-      if (proxyClient != null)
+      if (proxyClient != null) {
         proxyClient.getConnectionManager().shutdown();
+      }
     }
     super.destroy();
   }
 
   @Override
-  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-      throws ServletException, IOException {
+  protected void service(HttpServletRequest servletRequest,
+          HttpServletResponse servletResponse)
+          throws ServletException, IOException {
     //initialize request attributes from caches if unset by a subclass by this point
     if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
@@ -251,15 +302,18 @@ public class ProxyServlet extends HttpServlet {
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
     HttpRequest proxyRequest;
     //spec: RFC 2616, sec 4.3: either of these two headers signal that there is a message body.
-    if (servletRequest.getHeader(HttpHeaders.CONTENT_LENGTH) != null ||
-        servletRequest.getHeader(HttpHeaders.TRANSFER_ENCODING) != null) {
-      HttpEntityEnclosingRequest eProxyRequest = new BasicHttpEntityEnclosingRequest(method, proxyRequestUri);
+    if (servletRequest.getHeader(HttpHeaders.CONTENT_LENGTH) != null
+            || servletRequest.getHeader(HttpHeaders.TRANSFER_ENCODING) != null) {
+      HttpEntityEnclosingRequest eProxyRequest
+              = new BasicHttpEntityEnclosingRequest(method, proxyRequestUri);
       // Add the input entity (streamed)
       //  note: we don't bother ensuring we close the servletInputStream since the container handles it
-      eProxyRequest.setEntity(new InputStreamEntity(servletRequest.getInputStream(), servletRequest.getContentLength()));
+      eProxyRequest.setEntity(new InputStreamEntity(servletRequest.
+              getInputStream(), servletRequest.getContentLength()));
       proxyRequest = eProxyRequest;
-    } else
+    } else {
       proxyRequest = new BasicHttpRequest(method, proxyRequestUri);
+    }
 
     copyRequestHeaders(servletRequest, proxyRequest);
 
@@ -269,14 +323,17 @@ public class ProxyServlet extends HttpServlet {
     try {
       // Execute the request
       if (doLog) {
-        log("proxy " + method + " uri: " + servletRequest.getRequestURI() + " -- " + proxyRequest.getRequestLine().getUri());
+        log("proxy " + method + " uri: " + servletRequest.getRequestURI()
+                + " -- " + proxyRequest.getRequestLine().getUri());
       }
-      proxyResponse = proxyClient.execute(getTargetHost(servletRequest), proxyRequest);
+      proxyResponse = proxyClient.execute(getTargetHost(servletRequest),
+              proxyRequest);
 
       // Process the response
       int statusCode = proxyResponse.getStatusLine().getStatusCode();
 
-      if (doResponseRedirectOrNotModifiedLogic(servletRequest, servletResponse, proxyResponse, statusCode)) {
+      if (doResponseRedirectOrNotModifiedLogic(servletRequest, servletResponse,
+              proxyResponse, statusCode)) {
         //the response is already "committed" now without any body to send
         //TODO copy response headers?
         return;
@@ -285,7 +342,8 @@ public class ProxyServlet extends HttpServlet {
       // Pass the response code. This method with the "reason phrase" is deprecated but it's the only way to pass the
       //  reason along too.
       //noinspection deprecation
-      servletResponse.setStatus(statusCode, proxyResponse.getStatusLine().getReasonPhrase());
+      servletResponse.setStatus(statusCode, proxyResponse.getStatusLine().
+              getReasonPhrase());
 
       copyResponseHeaders(proxyResponse, servletRequest, servletResponse);
 
@@ -295,22 +353,27 @@ public class ProxyServlet extends HttpServlet {
     } catch (Exception e) {
       //abort request, according to best practice with HttpClient
       if (proxyRequest instanceof AbortableHttpRequest) {
-        AbortableHttpRequest abortableHttpRequest = (AbortableHttpRequest) proxyRequest;
+        AbortableHttpRequest abortableHttpRequest
+                = (AbortableHttpRequest) proxyRequest;
         abortableHttpRequest.abort();
       }
-      if (e instanceof RuntimeException)
-        throw (RuntimeException)e;
-      if (e instanceof ServletException)
-        throw (ServletException)e;
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      }
+      if (e instanceof ServletException) {
+        throw (ServletException) e;
+      }
       //noinspection ConstantConditions
-      if (e instanceof IOException)
+      if (e instanceof IOException) {
         throw (IOException) e;
+      }
       throw new RuntimeException(e);
 
     } finally {
       // make sure the entire entity was consumed, so the connection is released
-      if (proxyResponse != null)
+      if (proxyResponse != null) {
         consumeQuietly(proxyResponse.getEntity());
+      }
       //Note: Don't need to close servlet outputStream:
       // http://stackoverflow.com/questions/1159168/should-one-call-close-on-httpservletresponse-getoutputstream-getwriter
     }
@@ -322,15 +385,21 @@ public class ProxyServlet extends HttpServlet {
           throws ServletException, IOException {
     // Check if the proxy response is a redirect
     // The following code is adapted from org.tigris.noodle.filters.CheckForRedirect
-    if (statusCode >= HttpServletResponse.SC_MULTIPLE_CHOICES /* 300 */
-        && statusCode < HttpServletResponse.SC_NOT_MODIFIED /* 304 */) {
+    if (statusCode >= HttpServletResponse.SC_MULTIPLE_CHOICES /*
+             * 300
+             */
+            && statusCode < HttpServletResponse.SC_NOT_MODIFIED /*
+             * 304
+             */) {
       Header locationHeader = proxyResponse.getLastHeader(HttpHeaders.LOCATION);
       if (locationHeader == null) {
         throw new ServletException("Received status code: " + statusCode
-            + " but no " + HttpHeaders.LOCATION + " header was found in the response");
+                + " but no " + HttpHeaders.LOCATION
+                + " header was found in the response");
       }
       // Modify the redirect to go to this proxy servlet rather that the proxied host
-      String locStr = rewriteUrlFromResponse(servletRequest, locationHeader.getValue());
+      String locStr = rewriteUrlFromResponse(servletRequest, locationHeader.
+              getValue());
 
       servletResponse.sendRedirect(locStr);
       return true;
@@ -357,8 +426,11 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** HttpClient v4.1 doesn't have the
-   * {@link org.apache.http.util.EntityUtils#consumeQuietly(org.apache.http.HttpEntity)} method. */
+  /**
+   * HttpClient v4.1 doesn't have the
+   * {@link org.apache.http.util.EntityUtils#consumeQuietly(org.apache.http.HttpEntity)}
+   * method.
+   */
   protected void consumeQuietly(HttpEntity entity) {
     try {
       EntityUtils.consume(entity);
@@ -367,33 +439,40 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** These are the "hop-by-hop" headers that should not be copied.
+  /**
+   * These are the "hop-by-hop" headers that should not be copied.
    * http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
    * I use an HttpClient HeaderGroup class instead of Set<String> because this
    * approach does case insensitive lookup faster.
    */
   protected static final HeaderGroup hopByHopHeaders;
+
   static {
     hopByHopHeaders = new HeaderGroup();
-    String[] headers = new String[] {
-        "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization",
-        "TE", "Trailers", "Transfer-Encoding", "Upgrade" };
+    String[] headers = new String[]{
+      "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization",
+      "TE", "Trailers", "Transfer-Encoding", "Upgrade"};
     for (String header : headers) {
       hopByHopHeaders.addHeader(new BasicHeader(header, null));
     }
   }
 
-  /** Copy request headers from the servlet client to the proxy request. */
-  protected void copyRequestHeaders(HttpServletRequest servletRequest, HttpRequest proxyRequest) {
+  /**
+   * Copy request headers from the servlet client to the proxy request.
+   */
+  protected void copyRequestHeaders(HttpServletRequest servletRequest,
+          HttpRequest proxyRequest) {
     // Get an Enumeration of all of the header names sent by the client
     Enumeration enumerationOfHeaderNames = servletRequest.getHeaderNames();
     while (enumerationOfHeaderNames.hasMoreElements()) {
       String headerName = (String) enumerationOfHeaderNames.nextElement();
       //Instead the content-length is effectively set via InputStreamEntity
-      if (headerName.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH))
+      if (headerName.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
         continue;
-      if (hopByHopHeaders.containsHeader(headerName))
+      }
+      if (hopByHopHeaders.containsHeader(headerName)) {
         continue;
+      }
 
       Enumeration headers = servletRequest.getHeaders(headerName);
       while (headers.hasMoreElements()) {//sometimes more than one value
@@ -404,8 +483,9 @@ public class ProxyServlet extends HttpServlet {
         if (headerName.equalsIgnoreCase(HttpHeaders.HOST)) {
           HttpHost host = getTargetHost(servletRequest);
           headerValue = host.getHostName();
-          if (host.getPort() != -1)
-            headerValue += ":"+host.getPort();
+          if (host.getPort() != -1) {
+            headerValue += ":" + host.getPort();
+          }
         } else if (headerName.equalsIgnoreCase(org.apache.http.cookie.SM.COOKIE)) {
           headerValue = getRealCookie(headerValue);
         }
@@ -415,7 +495,7 @@ public class ProxyServlet extends HttpServlet {
   }
 
   protected void setXForwardedForHeader(HttpServletRequest servletRequest,
-                                      HttpRequest proxyRequest) {
+          HttpRequest proxyRequest) {
     String headerName = "X-Forwarded-For";
     if (doForwardIP) {
       String newHeader = servletRequest.getRemoteAddr();
@@ -427,14 +507,19 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** Copy proxied response headers back to the servlet client. */
-  protected void copyResponseHeaders(HttpResponse proxyResponse, HttpServletRequest servletRequest,
-                                     HttpServletResponse servletResponse) {
+  /**
+   * Copy proxied response headers back to the servlet client.
+   */
+  protected void copyResponseHeaders(HttpResponse proxyResponse,
+          HttpServletRequest servletRequest,
+          HttpServletResponse servletResponse) {
     for (Header header : proxyResponse.getAllHeaders()) {
-      if (hopByHopHeaders.containsHeader(header.getName()))
+      if (hopByHopHeaders.containsHeader(header.getName())) {
         continue;
-      if (header.getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE) ||
-          header.getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE2)) {
+      }
+      if (header.getName().
+              equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE) || header.
+              getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE2)) {
         copyProxyCookie(servletRequest, servletResponse, header);
       } else {
         servletResponse.addHeader(header.getName(), header.getValue());
@@ -442,11 +527,12 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** Copy cookie from the proxy to the servlet client.
-   *  Replaces cookie path to local path and renames cookie to avoid collisions.
+  /**
+   * Copy cookie from the proxy to the servlet client.
+   * Replaces cookie path to local path and renames cookie to avoid collisions.
    */
   protected void copyProxyCookie(HttpServletRequest servletRequest,
-                                 HttpServletResponse servletResponse, Header header) {
+          HttpServletResponse servletResponse, Header header) {
     List<HttpCookie> cookies = HttpCookie.parse(header.getValue());
     String path = servletRequest.getContextPath(); // path starts with / or is empty string
     path += servletRequest.getServletPath(); // servlet path starts with / or is empty string
@@ -465,8 +551,11 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** Take any client cookies that were originally from the proxy and prepare them to send to the
-   * proxy.  This relies on cookie headers being set correctly according to RFC 6265 Sec 5.4.
+  /**
+   * Take any client cookies that were originally from the proxy and prepare
+   * them to send to the
+   * proxy. This relies on cookie headers being set correctly according to RFC
+   * 6265 Sec 5.4.
    * This also blocks any local cookies from being sent to the proxy.
    */
   protected String getRealCookie(String cookieValue) {
@@ -490,13 +579,18 @@ public class ProxyServlet extends HttpServlet {
     return cookieValue;
   }
 
-  /** The string prefixing rewritten cookies. */
+  /**
+   * The string prefixing rewritten cookies.
+   */
   protected String getCookieNamePrefix() {
     return "!Proxy!" + getServletConfig().getServletName();
   }
 
-  /** Copy response body data (the entity) from the proxy to the servlet client. */
-  protected void copyResponseEntity(HttpResponse proxyResponse, HttpServletResponse servletResponse) throws IOException {
+  /**
+   * Copy response body data (the entity) from the proxy to the servlet client.
+   */
+  protected void copyResponseEntity(HttpResponse proxyResponse,
+          HttpServletResponse servletResponse) throws IOException {
     HttpEntity entity = proxyResponse.getEntity();
     if (entity != null) {
       OutputStream servletOutputStream = servletResponse.getOutputStream();
@@ -504,7 +598,9 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  /** Reads the request URI from {@code servletRequest} and rewrites it, considering targetUri.
+  /**
+   * Reads the request URI from {@code servletRequest} and rewrites it,
+   * considering targetUri.
    * It's used to make the new request.
    */
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
@@ -522,7 +618,7 @@ public class ProxyServlet extends HttpServlet {
       int fragIdx = queryString.indexOf('#');
       if (fragIdx >= 0) {
         fragment = queryString.substring(fragIdx + 1);
-        queryString = queryString.substring(0,fragIdx);
+        queryString = queryString.substring(0, fragIdx);
       }
     }
 
@@ -539,13 +635,18 @@ public class ProxyServlet extends HttpServlet {
     return uri.toString();
   }
 
-  protected String rewriteQueryStringFromRequest(HttpServletRequest servletRequest, String queryString) {
+  protected String rewriteQueryStringFromRequest(
+          HttpServletRequest servletRequest, String queryString) {
     return queryString;
   }
 
-  /** For a redirect response from the target server, this translates {@code theUrl} to redirect to
-   * and translates it to one the original client can use. */
-  protected String rewriteUrlFromResponse(HttpServletRequest servletRequest, String theUrl) {
+  /**
+   * For a redirect response from the target server, this translates
+   * {@code theUrl} to redirect to
+   * and translates it to one the original client can use.
+   */
+  protected String rewriteUrlFromResponse(HttpServletRequest servletRequest,
+          String theUrl) {
     //TODO document example paths
     final String targetUri = getTargetUri(servletRequest);
     if (theUrl.startsWith(targetUri)) {
@@ -553,22 +654,30 @@ public class ProxyServlet extends HttpServlet {
       String pathInfo = servletRequest.getPathInfo();
       if (pathInfo != null) {
         assert curUrl.endsWith(pathInfo);
-        curUrl = curUrl.substring(0,curUrl.length()-pathInfo.length());//take pathInfo off
+        curUrl = curUrl.substring(0, curUrl.length() - pathInfo.length());//take pathInfo off
       }
-      theUrl = curUrl+theUrl.substring(targetUri.length());
+      theUrl = curUrl + theUrl.substring(targetUri.length());
     }
     return theUrl;
   }
 
-  /** The target URI as configured. Not null. */
-  public String getTargetUri() { return targetUri; }
+  /**
+   * The target URI as configured. Not null.
+   */
+  public String getTargetUri() {
+    return targetUri;
+  }
 
   /**
    * Encodes characters in the query or fragment part of the URI.
-   *
-   * <p>Unfortunately, an incoming URI sometimes has characters disallowed by the spec.  HttpClient
-   * insists that the outgoing proxied request has a valid URI because it uses Java's {@link URI}.
-   * To be more forgiving, we must escape the problematic characters.  See the URI class for the
+   * <p>
+   * <p>
+   * Unfortunately, an incoming URI sometimes has characters disallowed by the
+   * spec. HttpClient
+   * insists that the outgoing proxied request has a valid URI because it uses
+   * Java's {@link URI}.
+   * To be more forgiving, we must escape the problematic characters. See the
+   * URI class for the
    * spec.
    *
    * @param in example: name=value&foo=bar#fragment
@@ -577,48 +686,62 @@ public class ProxyServlet extends HttpServlet {
     //Note that I can't simply use URI.java to encode because it will escape pre-existing escaped things.
     StringBuilder outBuf = null;
     Formatter formatter = null;
-    for(int i = 0; i < in.length(); i++) {
+    for (int i = 0; i < in.length(); i++) {
       char c = in.charAt(i);
       boolean escape = true;
       if (c < 128) {
-        if (asciiQueryChars.get((int)c)) {
+        if (asciiQueryChars.get((int) c)) {
           escape = false;
         }
       } else if (!Character.isISOControl(c) && !Character.isSpaceChar(c)) {//not-ascii
         escape = false;
       }
       if (!escape) {
-        if (outBuf != null)
+        if (outBuf != null) {
           outBuf.append(c);
+        }
       } else {
         //escape
         if (outBuf == null) {
-          outBuf = new StringBuilder(in.length() + 5*3);
-          outBuf.append(in,0,i);
+          outBuf = new StringBuilder(in.length() + 5 * 3);
+          outBuf.append(in, 0, i);
           formatter = new Formatter(outBuf);
         }
         //leading %, 0 padded, width 2, capital hex
-        formatter.format("%%%02X",(int)c);//TODO
+        formatter.format("%%%02X", (int) c);//TODO
       }
     }
     return outBuf != null ? outBuf : in;
   }
 
   protected static final BitSet asciiQueryChars;
+
   static {
     char[] c_unreserved = "_-!.~'()*".toCharArray();//plus alphanum
     char[] c_punct = ",;:$&+=".toCharArray();
     char[] c_reserved = "?/[]@".toCharArray();//plus punct
 
     asciiQueryChars = new BitSet(128);
-    for(char c = 'a'; c <= 'z'; c++) asciiQueryChars.set((int)c);
-    for(char c = 'A'; c <= 'Z'; c++) asciiQueryChars.set((int)c);
-    for(char c = '0'; c <= '9'; c++) asciiQueryChars.set((int)c);
-    for(char c : c_unreserved) asciiQueryChars.set((int)c);
-    for(char c : c_punct) asciiQueryChars.set((int)c);
-    for(char c : c_reserved) asciiQueryChars.set((int)c);
+    for (char c = 'a'; c <= 'z'; c++) {
+      asciiQueryChars.set((int) c);
+    }
+    for (char c = 'A'; c <= 'Z'; c++) {
+      asciiQueryChars.set((int) c);
+    }
+    for (char c = '0'; c <= '9'; c++) {
+      asciiQueryChars.set((int) c);
+    }
+    for (char c : c_unreserved) {
+      asciiQueryChars.set((int) c);
+    }
+    for (char c : c_punct) {
+      asciiQueryChars.set((int) c);
+    }
+    for (char c : c_reserved) {
+      asciiQueryChars.set((int) c);
+    }
 
-    asciiQueryChars.set((int)'%');//leave existing percent escapes in place
+    asciiQueryChars.set((int) '%');//leave existing percent escapes in place
   }
 
 }
