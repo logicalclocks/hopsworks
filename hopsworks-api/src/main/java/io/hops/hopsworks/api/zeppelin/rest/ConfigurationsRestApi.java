@@ -48,7 +48,7 @@ import javax.ws.rs.core.Context;
 @Path("/zeppelin/{projectID}/configurations")
 @Stateless
 @Produces("application/json")
-@Api(value = "/zeppelin/{projectID}/configurations",
+@Api(value = "Zeppelin configurations",
         description = "Zeppelin configurations")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class ConfigurationsRestApi {

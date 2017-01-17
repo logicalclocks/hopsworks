@@ -72,7 +72,7 @@ import io.swagger.annotations.Api;
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
-@Api(value = "/project", description = "Project service")
+@Api(value = "Project", description = "Project service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "/zeppelin/{projectID}/interpreter",
+@Api(value = "Zeppelin interpreter",
         description = "Zeppelin interpreter")
 public class InterpreterService {
 

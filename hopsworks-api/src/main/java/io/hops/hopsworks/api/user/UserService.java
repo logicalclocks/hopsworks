@@ -41,7 +41,7 @@ import io.swagger.annotations.Api;
 @Path("/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Stateless
-@Api(value = "/user", description = "User service")
+@Api(value = "User", description = "User service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 

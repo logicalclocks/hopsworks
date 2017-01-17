@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "/zeppelin/{projectID}/notebook",
+@Api(value = "Zeppelin notebook",
         description = "Zeppelin notebook")
 public class NotebookService {
 
