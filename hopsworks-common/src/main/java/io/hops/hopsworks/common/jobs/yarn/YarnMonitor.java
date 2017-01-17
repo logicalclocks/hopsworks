@@ -10,10 +10,6 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
-/**
- *
- * @author stig
- */
 public final class YarnMonitor implements Closeable {
 
   private final YarnClient yarnClient;

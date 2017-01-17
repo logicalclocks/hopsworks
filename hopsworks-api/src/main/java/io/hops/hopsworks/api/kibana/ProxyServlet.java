@@ -72,7 +72,6 @@ import java.util.List;
  * Inspiration: http://httpd.apache.org/docs/2.0/mod/mod_proxy.html
  * </p>
  *
- * @author David Smiley dsmiley@mitre.org
  */
 public class ProxyServlet extends HttpServlet {
 

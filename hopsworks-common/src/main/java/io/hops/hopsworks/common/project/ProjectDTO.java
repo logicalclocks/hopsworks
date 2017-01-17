@@ -7,10 +7,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 
-/**
- *
- * @author Ermias
- */
 @XmlRootElement
 public class ProjectDTO {
 

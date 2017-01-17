@@ -14,7 +14,6 @@ import io.hops.hopsworks.common.util.Settings;
  * :, |, ', \", &lt;, &gt; >, %, (, ), &, ;, #, __</li>
  * </ul>
  * <p/>
- * @author Ermias
  */
 public class FolderNameValidator {
 

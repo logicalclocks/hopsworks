@@ -37,7 +37,6 @@ import io.hops.hopsworks.common.util.HopsUtils;
 /**
  * Contains business logic pertaining DataSet management.
  * <p/>
- * @author stig
  */
 @Stateless
 public class DatasetController {

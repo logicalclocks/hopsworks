@@ -14,10 +14,6 @@ import javax.faces.bean.ViewScoped;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 
-/**
- *
- * @author stig
- */
 @ManagedBean
 @ViewScoped
 public class ProjectTeamController implements Serializable {

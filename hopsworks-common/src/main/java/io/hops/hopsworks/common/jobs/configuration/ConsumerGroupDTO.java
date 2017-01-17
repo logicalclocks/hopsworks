@@ -2,10 +2,6 @@ package io.hops.hopsworks.common.jobs.configuration;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- *
- * @author tkak
- */
 @XmlRootElement
 public class ConsumerGroupDTO {
 

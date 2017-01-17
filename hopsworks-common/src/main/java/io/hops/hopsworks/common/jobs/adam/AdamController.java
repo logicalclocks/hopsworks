@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.util.Settings;
 /**
  * Acts as the interaction point between the Adam frontend and backend.
  *
- * @author stig
  */
 @Stateless
 public class AdamController {

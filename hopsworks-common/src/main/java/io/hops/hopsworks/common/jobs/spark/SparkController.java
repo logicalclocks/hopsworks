@@ -28,7 +28,6 @@ import io.hops.hopsworks.common.util.Settings;
 /**
  * Interaction point between the Spark front- and backend.
  * <p/>
- * @author stig
  */
 @Stateless
 public class SparkController {
