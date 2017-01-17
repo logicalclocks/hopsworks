@@ -66,11 +66,13 @@ import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@Api(value = "/project", description = "Project service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 

@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "/zeppelin/{projectID}/interpreter",
+        description = "Zeppelin interpreter")
 public class InterpreterService {
 
   Logger logger = LoggerFactory.getLogger(InterpreterService.class);

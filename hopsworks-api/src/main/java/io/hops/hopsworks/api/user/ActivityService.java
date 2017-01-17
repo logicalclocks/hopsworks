@@ -25,11 +25,13 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.swagger.annotations.Api;
 
 @Path("/activity")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@Api(value = "/activity", description = "User activity service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ActivityService {
 

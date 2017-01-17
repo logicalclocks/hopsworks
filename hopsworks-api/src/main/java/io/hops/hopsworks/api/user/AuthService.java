@@ -18,6 +18,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @Path("/auth")
 @Stateless
+@Api(value = "/auth", description = "Authentication service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 

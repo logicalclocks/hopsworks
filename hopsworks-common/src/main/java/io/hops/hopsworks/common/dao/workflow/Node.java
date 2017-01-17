@@ -2,14 +2,12 @@ package io.hops.hopsworks.common.dao.workflow;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.w3c.dom.Element;
 import javax.ws.rs.ProcessingException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.IOException;
 import java.io.Serializable;
 
 import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
@@ -171,10 +169,6 @@ public abstract class Node implements Serializable {
 
   public void setData(JsonNode data) {
     this.data = data;
-  }
-
-  public void setData(String data) throws IOException {
-    this.data = new ObjectMapper().readTree(data);
   }
 
   @Basic(optional = false)

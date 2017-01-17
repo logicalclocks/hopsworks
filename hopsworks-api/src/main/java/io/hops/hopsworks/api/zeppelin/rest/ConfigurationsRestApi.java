@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Notebook;
 
@@ -47,6 +48,8 @@ import javax.ws.rs.core.Context;
 @Path("/zeppelin/{projectID}/configurations")
 @Stateless
 @Produces("application/json")
+@Api(value = "/zeppelin/{projectID}/configurations",
+        description = "Zeppelin configurations")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 public class ConfigurationsRestApi {
 
