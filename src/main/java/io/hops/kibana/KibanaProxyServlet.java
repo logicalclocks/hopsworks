@@ -33,6 +33,7 @@ import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.rest.NoCacheResponse;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -47,8 +48,6 @@ public class KibanaProxyServlet extends ProxyServlet {
   private UserManager userManager;
   @EJB
   private ProjectController projectController;
-  @EJB
-  private NoCacheResponse noCacheResponse;
 
   private String email;
   private String index;
@@ -70,6 +69,11 @@ public class KibanaProxyServlet extends ProxyServlet {
       return;
     }
     email = servletRequest.getUserPrincipal().getName();
+    //Do not authorize admin
+    if(email.equals(Settings.AGENT_EMAIL)){
+      super.service(servletRequest, servletResponse);
+      return;
+    }
     MyRequestWrapper myRequestWrapper = new MyRequestWrapper(
             (HttpServletRequest) servletRequest);
     System.out.println("kibana.proxy uri:" + servletRequest.getRequestURI());
@@ -93,10 +97,7 @@ public class KibanaProxyServlet extends ProxyServlet {
                 "User is not authorized to access this index");
         return;
       }
-    } else if ("POST".equalsIgnoreCase(servletRequest.getMethod())
-            && servletRequest.getRequestURI().contains(
-                    "elasticsearch/_msearch")) {
-
+    } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
       JSONObject body = new JSONObject(myRequestWrapper.getBody());
       List<String> projects = projectController.findProjectNamesByUser(
               email);
@@ -105,7 +106,18 @@ public class KibanaProxyServlet extends ProxyServlet {
                 "User is not authorized to access this index");
         return;
       }
-
+    } else if (servletRequest.getRequestURI().contains(
+            "elasticsearch/") && servletRequest.getRequestURI().contains(
+                    "_mapping/field")) {
+      //Check if this user has access to this project
+      List<String> projects = projectController.findProjectNamesByUser(
+              email);
+      index = servletRequest.getRequestURI().split("/")[4];
+      if (!projects.contains(index)) {
+        servletResponse.sendError(403,
+                "User is not authorized to access this index");
+        return;
+      }
     }
 
     //initialize request attributes from caches if unset by a subclass by this point
@@ -227,7 +239,7 @@ public class KibanaProxyServlet extends ProxyServlet {
             List<String> projects = projectController.findProjectNamesByUser(
                     email);
             JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
-            for (int i = 0; i < hits.length(); i++) {
+            for (int i = hits.length()-1; i >=0; i--) {
               if (!projects.contains(hits.getJSONObject(i).getString("_id"))) {
                 hits.remove(i);
               }
