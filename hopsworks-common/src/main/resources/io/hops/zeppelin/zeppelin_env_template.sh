@@ -12,3 +12,7 @@ export CLASSPATH=%%hadoop_classpath%%
 
 # This is to get matplotlib to not try and use the local $DISPLAY
 export MPLBACKEND="agg"
+
+# These are setting the project-specific conda environment directory for python
+export PYSPARK_PYTHON=%%anaconda_env_dir%%
+export PYTHONPATH=%%anaconda_env_dir%%

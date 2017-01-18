@@ -112,7 +112,8 @@ public class Settings {
           = "hopsworks_master_password";
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
-
+  private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
+  
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
@@ -258,6 +259,8 @@ public class Settings {
       PUBLIC_SEARCH_ENDPOINT = setStrVar(VARIABLE_PUBLIC_SEARCH_ENDPOINT,
               PUBLIC_SEARCH_ENDPOINT);
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
+      ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
+
       cached = true;
     }
   }
@@ -775,6 +778,13 @@ public class Settings {
   public synchronized String getKafkaDir() {
     checkCache();
     return KAFKA_DIR;
+  }
+  
+  private String ANACONDA_DIR = "/opt/anaconda/anaconda/envs";
+
+  public synchronized String getAnacondaDir() {
+    checkCache();
+    return ANACONDA_DIR;
   }
 
   private String GVOD_REST_ENDPOINT = "http://10.0.2.15:42000";
