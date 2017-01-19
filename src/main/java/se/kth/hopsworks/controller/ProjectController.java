@@ -293,6 +293,30 @@ public class ProjectController {
               "Could not create project resources ", e);
     }
   }
+  /**
+   *
+   * @param username
+   * @param project
+   * @param dfso
+   * @param udfso
+   * @throws ProjectInternalFoldersFailedException
+   * @throws AppException
+   */
+  public void copySparkStreamingResources(String username, Project project,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          ProjectInternalFoldersFailedException, AppException {
+    try {
+      udfso.copyInHdfs(new Path(Settings.getSparkLog4JPath(settings.
+              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+              + "/" + Settings.DefaultDataset.RESOURCES));
+      udfso.copyInHdfs(new Path(Settings.getSparkMetricsPath(settings.
+              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+              + "/" + Settings.DefaultDataset.RESOURCES));
+    } catch (IOException e) {
+      throw new ProjectInternalFoldersFailedException(
+              "Could not create project resources ", e);
+    }
+  }
 
   public void createProjectConsentFolder(String username, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
@@ -937,20 +961,25 @@ public class ProjectController {
     return projectTeamFacade.findByMember(user);
   }
   /**
-   * Retrieves all the project teams that a user have a role
+   * Retrieves all the project teams that a user have a role. 
    * <p/>
    *
    * @param email of the user
+   * @param ignoreCase
    * @return a list of project names
    */
-  public List<String> findProjectNamesByUser(String email) {
+  public List<String> findProjectNamesByUser(String email, boolean ignoreCase) {
     Users user = userBean.getUserByEmail(email);
     List<ProjectTeam> projectTeams = projectTeamFacade.findByMember(user);
     List<String> projects = null;
     if(projectTeams != null && projectTeams.size()>0){
       projects = new ArrayList<>();
       for(ProjectTeam team : projectTeams){
-        projects.add(team.getProject().getName());
+        if(ignoreCase){
+          projects.add(team.getProject().getName().toLowerCase());
+        } else {
+          projects.add(team.getProject().getName());
+        }
       }
     }
     return projects;

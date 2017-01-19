@@ -533,6 +533,9 @@ public class ProjectService {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
                 udfso);
+//        //Add Spark log4j and metrics files in Resources
+//        projectController.copySparkStreamingResources(owner, project, dfso,
+//                udfso);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.

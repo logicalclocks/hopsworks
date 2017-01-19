@@ -48,7 +48,6 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private String hadoopDir;
-  private String sparkDir;
   private ServiceProperties serviceProps;
 
   private JobType jobType;
@@ -94,7 +93,6 @@ public class SparkYarnRunnerBuilder {
     builder.setJobType(jobType);
 
     this.hadoopDir = hadoopDir;
-    this.sparkDir = sparkDir;
 
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
@@ -203,7 +201,7 @@ public class SparkYarnRunnerBuilder {
             Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
     addSystemProperty(Settings.LOGSTASH_JOB_INFO,
-            project + "," + jobName + "," + YarnRunner.APPID_PLACEHOLDER);
+            project.toLowerCase() + "," + jobName + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
             + "/lib/native/");
     //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
@@ -214,7 +212,7 @@ public class SparkYarnRunnerBuilder {
             append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").
             append(Settings.SPARK_LOG4J_PROPERTIES).append(" ").
             append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").
-            append(project).append(",").append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
+            append(project.toLowerCase()).append(",").append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
             append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
             append(this.hadoopDir).append("/lib/native/");

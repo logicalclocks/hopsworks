@@ -32,6 +32,7 @@ import se.kth.hopsworks.log.ops.OperationType;
 import se.kth.hopsworks.log.ops.OperationsLog;
 import se.kth.hopsworks.log.ops.OperationsLogFacade;
 import se.kth.hopsworks.rest.AppException;
+import se.kth.hopsworks.rest.ProjectInternalFoldersFailedException;
 import se.kth.hopsworks.util.Settings;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.HopsUtils;
@@ -60,6 +61,8 @@ public class DatasetController {
   private HdfsUsersController hdfsUsersBean;  
   @EJB
   private OperationsLogFacade operationsLogFacade;
+  @EJB
+  private Settings settings;
   
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -412,7 +415,7 @@ public class DatasetController {
                 dsName});
     }
   }
-
+  
   /**
    * Get Readme.md file content from path.
    *

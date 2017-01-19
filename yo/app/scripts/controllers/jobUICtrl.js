@@ -28,7 +28,8 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
               //Send request to create index in Kibana
-              KibanaService.createIndex(self.job.project.name).then(
+              //Lower case is for elasticsearch index
+              KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
                 function (success) {
                   console.log('Successful creation of Kibana index:'+self.job.project.name);
                 }, function (error) {
@@ -56,7 +57,7 @@ angular.module('hopsWorksApp')
             };
             
             self.kibanaUI = function () {
-              self.ui = "http://tkak2.sics.se:8080/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:"+self.job.project.name+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"+self.job.name+")),sort:!(%27@timestamp%27,asc))";
+              self.ui = "http://tkak2.sics.se:8080/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:"+self.job.project.name.toLowerCase()+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"+self.job.name+")),sort:!(%27@timestamp%27,asc))";
             };
             
             self.backToHome = function () {
