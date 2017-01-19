@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             this.showExecutions = false;
             this.projectId = $routeParams.projectID;
             this.ui = "";
+            self.current="";
 
             var getJobUI = function () {
 
@@ -20,6 +21,7 @@ angular.module('hopsWorksApp')
                       function (success) {
 
                         self.ui = success.data;
+                        self.current = "jobUI";
                         if(self.ui!==""){
                           var iframe = document.getElementById('ui_iframe');
                           iframe.src = self.ui;
@@ -38,6 +40,7 @@ angular.module('hopsWorksApp')
                       function (success) {
 
                         self.ui = success.data;
+                        self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
                         if(iframe!==null){
                           iframe.src = self.ui;
@@ -50,6 +53,38 @@ angular.module('hopsWorksApp')
             
             self.kibanaUI = function () {
               self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(application,message,jobname,priority,logger_name),index:"+self.job.project.name+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:%27*%20priority%3DWARN%20AND%20jobname%3D"+self.job.name+"%27)),sort:!(_score,desc))";
+              self.current = "kibanaUI";
+            };
+            
+            self.grafanaUI = function () {
+              JobService.getAppInfo(projectId, job.id).then(
+                      function(success) {
+                        var info = success.data;
+                        var appid = info.appId;
+                        var startTime= info.startTime;
+                        var finishTime=info.endTime;
+                        //nbExecutors=;
+                        if(info.now){
+                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
+                                  + appid + "&maxExecutorId=" 
+                                  + info.nbExecutors + "&from=" 
+                                  + startTime;
+                        }else{
+                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
+                                  + appid +  "&maxExecutorId=" 
+                                  + info.nbExecutors + "&from=" 
+                                  + startTime + "&to=" 
+                                  + finishTime;
+                        }
+                        self.current = "grafanaUI";
+                        var iframe = document.getElementById('ui_iframe');
+                        if(iframe!==null){
+                          iframe.src = self.ui;
+                        }
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', 
+                  ttl: 15000});
+              });
             };
             
             self.backToHome = function () {
@@ -58,6 +93,9 @@ angular.module('hopsWorksApp')
 
             self.refresh = function () {
               var ifram = document.getElementById('ui_iframe');
+              if(self.current==="grafanaUI"){
+                self.grafanaUI();
+              }
               if(ifram!==null){
                 ifram.contentWindow.location.reload();
               }
