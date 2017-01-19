@@ -5,8 +5,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('PysparkDepsCtrl', ['$scope', '$routeParams', 'growl', 'ProjectService', '$location', 'ModalService', '$interval', '$mdSidenav',
-          function ($scope, $routeParams, growl, ProjectService, $location, ModalService, $interval, $mdSidenav) {
+        .controller('PythonDepsCtrl', ['$scope', '$routeParams', 'growl', 'ProjectService', '$location', 'PythonDepsService', '$interval', '$mdSidenav',
+          function ($scope, $routeParams, growl, ProjectService, $location, PythonDepsService, $interval, $mdSidenav) {
               
 
             var self = this;

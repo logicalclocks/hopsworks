@@ -29,12 +29,20 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author jdowling
  */
 @Entity
-@Table(name = "anaconda_repo", catalog = "hopsworks", schema = "")
+@Table(name = "anaconda_repo",
+        catalog = "hopsworks",
+        schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "AnacondaRepo.findAll", query = "SELECT a FROM AnacondaRepo a"),
-  @NamedQuery(name = "AnacondaRepo.findById", query = "SELECT a FROM AnacondaRepo a WHERE a.id = :id"),
-  @NamedQuery(name = "AnacondaRepo.findByUrl", query = "SELECT a FROM AnacondaRepo a WHERE a.url = :url")})
+  @NamedQuery(name = "AnacondaRepo.findAll",
+          query
+          = "SELECT a FROM AnacondaRepo a"),
+  @NamedQuery(name = "AnacondaRepo.findById",
+          query
+          = "SELECT a FROM AnacondaRepo a WHERE a.id = :id"),
+  @NamedQuery(name = "AnacondaRepo.findByUrl",
+          query
+          = "SELECT a FROM AnacondaRepo a WHERE a.url = :url")})
 public class AnacondaRepo implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -45,10 +53,12 @@ public class AnacondaRepo implements Serializable {
   private Integer id;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 255)
+  @Size(min = 1,
+          max = 255)
   @Column(name = "url")
   private String url;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "repoUrl")
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "repoUrl")
   private Collection<PythonDep> pythonDepCollection;
 
   public AnacondaRepo() {
@@ -103,7 +113,8 @@ public class AnacondaRepo implements Serializable {
       return false;
     }
     AnacondaRepo other = (AnacondaRepo) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
       return false;
     }
     return true;
@@ -111,7 +122,8 @@ public class AnacondaRepo implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo[ id=" + id + " ]";
+    return "io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo[ id=" + id +
+            " ]";
   }
   
 }

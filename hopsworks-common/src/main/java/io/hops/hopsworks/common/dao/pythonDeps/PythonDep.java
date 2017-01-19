@@ -9,7 +9,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,7 +19,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -39,18 +37,18 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "PythonDep.findAll",
-          query = "SELECT p FROM PythonDep p"),
+          query
+          = "SELECT p FROM PythonDep p"),
   @NamedQuery(name = "PythonDep.findById",
-          query = "SELECT p FROM PythonDep p WHERE p.id = :id"),
+          query
+          = "SELECT p FROM PythonDep p WHERE p.id = :id"),
   @NamedQuery(name = "PythonDep.findByDependency",
-          query = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
+          query
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
   @NamedQuery(name = "PythonDep.findByVersion",
-          query = "SELECT p FROM PythonDep p WHERE p.version = :version")})
+          query
+          = "SELECT p FROM PythonDep p WHERE p.version = :version")})
 public class PythonDep implements Serializable {
-
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "pythonDep")
-  private Collection<ProjectPythondeps> projectPythondepsCollection;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -146,8 +144,8 @@ public class PythonDep implements Serializable {
       return false;
     }
     PythonDep other = (PythonDep) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
       return false;
     }
     return true;
@@ -158,15 +156,5 @@ public class PythonDep implements Serializable {
     return "io.hops.hopsworks.common.dao.pythonDeps.PythonDep[ id=" + id + " ]";
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public Collection<ProjectPythondeps> getProjectPythondepsCollection() {
-    return projectPythondepsCollection;
-  }
-
-  public void setProjectPythondepsCollection(
-          Collection<ProjectPythondeps> projectPythondepsCollection) {
-    this.projectPythondepsCollection = projectPythondepsCollection;
-  }
 
 }

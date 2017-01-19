@@ -90,14 +90,12 @@
     <class>io.hops.hopsworks.common.workflows.nodes.JoinNode</class>
     <class>io.hops.hopsworks.common.workflows.nodes.RootNode</class>
     <class>io.hops.hopsworks.common.workflows.nodes.SparkCustomNode</class>
+    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
+    <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
     <class>io.hops.hopsworks.common.dao.kagent.KagentCommands</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.ProjectPythondeps</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.Project</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.Users</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

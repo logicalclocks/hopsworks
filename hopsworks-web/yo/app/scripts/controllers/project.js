@@ -278,6 +278,10 @@ angular.module('hopsWorksApp')
               self.goToUrl('kafka');
             };
 
+            self.goToSettings = function () {
+              self.goToUrl('settings');
+            };
+
             self.goToService = function (service) {
               self.goToUrl(service.toLowerCase());
             };

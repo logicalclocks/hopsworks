@@ -31,8 +31,11 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.workflow.Workflow;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 
 @Entity
 @Table(name = "hopsworks.project")
@@ -61,7 +64,7 @@ import io.hops.hopsworks.common.dao.workflow.Workflow;
   @NamedQuery(name = "Project.findByInodeId",
           query
           = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-                  + "AND t.inode.inodePK.name = :name")})
+          + "AND t.inode.inodePK.name = :name")})
 public class Project implements Serializable {
 
   @Column(name = "archived")
@@ -135,6 +138,18 @@ public class Project implements Serializable {
             referencedColumnName = "partition_id")})
   @OneToOne(optional = false)
   private Inode inode;
+
+  @JoinTable(name = "project_pythondeps",
+          joinColumns
+          = {
+            @JoinColumn(name = "project_id",
+                    referencedColumnName = "id")},
+          inverseJoinColumns
+          = {
+            @JoinColumn(name = "dep_id",
+                    referencedColumnName = "id")})
+  @ManyToMany
+  private Collection<PythonDep> pythonDepCollection;
 
   public Project() {
   }
@@ -325,6 +340,16 @@ public class Project implements Serializable {
 
   public void setWorkflowCollection(Collection<Workflow> workflowCollection) {
     this.workflowCollection = workflowCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<PythonDep> getPythonDepCollection() {
+    return pythonDepCollection;
+  }
+
+  public void setPythonDepCollection(Collection<PythonDep> pythonDepCollection) {
+    this.pythonDepCollection = pythonDepCollection;
   }
 
   @Override
