@@ -936,6 +936,25 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(email);
     return projectTeamFacade.findByMember(user);
   }
+  /**
+   * Retrieves all the project teams that a user have a role
+   * <p/>
+   *
+   * @param email of the user
+   * @return a list of project names
+   */
+  public List<String> findProjectNamesByUser(String email) {
+    Users user = userBean.getUserByEmail(email);
+    List<ProjectTeam> projectTeams = projectTeamFacade.findByMember(user);
+    List<String> projects = null;
+    if(projectTeams != null && projectTeams.size()>0){
+      projects = new ArrayList<>();
+      for(ProjectTeam team : projectTeams){
+        projects.add(team.getProject().getName());
+      }
+    }
+    return projects;
+  }
 
   /**
    * Retrieves all the project teams for a project

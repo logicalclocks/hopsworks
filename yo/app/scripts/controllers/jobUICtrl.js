@@ -3,8 +3,8 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location',
-          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location) {
+        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location','KibanaService',
+          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location, KibanaService) {
 
             var self = this;
             this.job = job;
@@ -29,6 +29,13 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
+              //Send request to create index in Kibana
+              KibanaService.createIndex(self.job.project.name).then(
+                function (success) {
+                  console.log('Successful creation of Kibana index:'+self.job.project.name);
+                }, function (error) {
+                  console.log('Did not create Kibana index:'+self.job.project.name);
+              });
 
             };
 
@@ -52,7 +59,7 @@ angular.module('hopsWorksApp')
             };
             
             self.kibanaUI = function () {
-              self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(application,message,jobname,priority,logger_name),index:"+self.job.project.name+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:%27*%20priority%3DWARN%20AND%20jobname%3D"+self.job.name+"%27)),sort:!(_score,desc))";
+              self.ui = "http://tkak2.sics.se:8080/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:"+self.job.project.name+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"+self.job.name+")),sort:!(%27@timestamp%27,asc))";
               self.current = "kibanaUI";
             };
             

@@ -2,25 +2,38 @@ package io.hops.kibana;
 
 import static io.hops.kibana.ProxyServlet.ATTR_TARGET_URI;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.entity.GzipCompressingEntity;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.methods.AbortableHttpRequest;
+import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
-import se.kth.bbc.project.ProjectTeam;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.rest.NoCacheResponse;
 import se.kth.hopsworks.user.model.Users;
+import se.kth.hopsworks.util.Settings;
 
 /**
  *
@@ -36,76 +49,75 @@ public class KibanaProxyServlet extends ProxyServlet {
   @EJB
   private ProjectController projectController;
 
+  private String email;
+  private String index;
+
   /**
    * Authorizer user to access particular index.
-   * 
+   *
    * @param servletRequest
    * @param servletResponse
    * @throws ServletException
-   * @throws IOException 
+   * @throws IOException
    */
   @Override
   protected void service(HttpServletRequest servletRequest,
           HttpServletResponse servletResponse) throws ServletException,
           IOException {
-    String userEmail = servletRequest.getUserPrincipal().getName();
-    System.out.println("proxy :: servletRequest.userEmail:" + userEmail);
-    Users user = userManager.getUserByEmail(userEmail);
-    System.out.println("proxy :: servletRequest.user.lastname:" + user.
-            getLname());
-
-    System.out.println("proxy :: servletRequest.getRequestURI():"
-            + servletRequest.getRequestURI());
-    boolean found = false;
-    
+    if (servletRequest.getUserPrincipal() == null) {
+      servletResponse.sendError(403, "User is not logged in");
+      return;
+    }
+    email = servletRequest.getUserPrincipal().getName();
+    //Do not authorize admin
+    if(email.equals(Settings.AGENT_EMAIL)){
+      super.service(servletRequest, servletResponse);
+      return;
+    }
+    MyRequestWrapper myRequestWrapper = new MyRequestWrapper(
+            (HttpServletRequest) servletRequest);
+    System.out.println("kibana.proxy uri:" + servletRequest.getRequestURI());
+    KibanaFilter kibanaFilter = null;
     //Filter requests based on path
-    /**
-     * List of requests
-     * 1.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/_mget?timeout=0&ignore_unavailable=true&preference=1484560870227
-     * 2.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/index-pattern/_search?fields= (filter json response)
-     * 3. "http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/_mapping/* /field/_source?_=1484560870948 (do nothing)
-     * 4.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/_mget?timeout=0&ignore_unavailable=true&preference=1484560870227 (filter request params)
-     * 5.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/_msearch?timeout=0&ignore_unavailable=true&preference=1484560870227 (filter request payload)
-     * 6.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/index-pattern/demo_admin000 (filter uri)
-     * 7.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/logstash-* /_mapping/field/*?_=1484561606214&ignore_unavailable=false&allow_no_indices=false&include_defaults=true (filter index in URI)
-     * 8.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/search/_search?size=100 (filter saved searches in response, should be prefixed with projectId)
-     * 9.  http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/visualization/_search?size=100 (similar 8)
-     * 10. http://tkak2.sics.se:8080/hopsworks/kibana/elasticsearch/.kibana/dashboard/_search?size=100 (similar to 8)
-     * 
-     */
-    //2
-    if(servletRequest.getRequestURI().contains("elasticsearch/.kibana/index-pattern/_search")){
-      
-    }//6
-    else if (servletRequest.getRequestURI().contains(
+    if (servletRequest.getRequestURI().contains(
+            "elasticsearch/.kibana/index-pattern/_search")) {
+      kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN_SEARCH;
+
+    } else if (servletRequest.getRequestURI().contains(
             "elasticsearch/.kibana/index-pattern")) {
+      kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN;
       //Get index from URI
-      String index = servletRequest.getRequestURI().substring(servletRequest.
+      index = servletRequest.getRequestURI().substring(servletRequest.
               getRequestURI().lastIndexOf("/")).replace("/", "");
       //Check if this user has access to this project
-      List<ProjectTeam> projectTeams = projectController.findProjectByUser(
-              userEmail);
-
-      for (ProjectTeam team : projectTeams) {
-        if (team.getProject().getName().equalsIgnoreCase(index)) {
-          found = true;
-          break;
-        }
-      }
-      System.out.println("proxy :: servletRequest.getPathTranslated():"
-              + servletRequest.getPathTranslated());
-      System.out.println("proxy :: servletRequest.getServletPath():"
-              + servletRequest.getServletPath());
-      System.out.println("proxy :: servletRequest.getPathInfo:"
-              + servletRequest.getPathInfo());
-      System.out.println("proxy :: servletRequest.getQueryString():"
-              + servletRequest.getQueryString());
-      if (!found) {
+      List<String> projects = projectController.findProjectNamesByUser(
+              email);
+      if (!projects.contains(index)) {
+        servletResponse.sendError(403,
+                "User is not authorized to access this index");
         return;
       }
-    } // 
-    else if (servletRequest.getRequestURI().contains("elasticsearch/.kibana/index-pattern/_search")){
-      
+    } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
+      JSONObject body = new JSONObject(myRequestWrapper.getBody());
+      List<String> projects = projectController.findProjectNamesByUser(
+              email);
+      if (!projects.contains((String) body.getJSONArray("index").get(0))) {
+        servletResponse.sendError(403,
+                "User is not authorized to access this index");
+        return;
+      }
+    } else if (servletRequest.getRequestURI().contains(
+            "elasticsearch/") && servletRequest.getRequestURI().contains(
+                    "_mapping/field")) {
+      //Check if this user has access to this project
+      List<String> projects = projectController.findProjectNamesByUser(
+              email);
+      index = servletRequest.getRequestURI().split("/")[4];
+      if (!projects.contains(index)) {
+        servletResponse.sendError(403,
+                "User is not authorized to access this index");
+        return;
+      }
     }
 
     //initialize request attributes from caches if unset by a subclass by this point
@@ -128,7 +140,7 @@ public class KibanaProxyServlet extends ProxyServlet {
               = new BasicHttpEntityEnclosingRequest(method, proxyRequestUri);
       // Add the input entity (streamed)
       //  note: we don't bother ensuring we close the servletInputStream since the container handles it
-      eProxyRequest.setEntity(new InputStreamEntity(servletRequest.
+      eProxyRequest.setEntity(new InputStreamEntity(myRequestWrapper.
               getInputStream(), servletRequest.getContentLength()));
       proxyRequest = eProxyRequest;
     } else {
@@ -147,12 +159,12 @@ public class KibanaProxyServlet extends ProxyServlet {
                 + " -- " + proxyRequest.getRequestLine().getUri());
       }
       proxyResponse = super.proxyClient.execute(super.getTargetHost(
-              servletRequest), proxyRequest);
+              myRequestWrapper), proxyRequest);
 
       // Process the response
       int statusCode = proxyResponse.getStatusLine().getStatusCode();
 
-      if (doResponseRedirectOrNotModifiedLogic(servletRequest, servletResponse,
+      if (doResponseRedirectOrNotModifiedLogic(myRequestWrapper, servletResponse,
               proxyResponse, statusCode)) {
         //the response is already "committed" now without any body to send
         //TODO copy response headers?
@@ -168,7 +180,7 @@ public class KibanaProxyServlet extends ProxyServlet {
       copyResponseHeaders(proxyResponse, servletRequest, servletResponse);
 
       // Send the content to the client
-      copyResponseEntity(proxyResponse, servletResponse);
+      copyResponseEntity(proxyResponse, servletResponse, kibanaFilter);
 
     } catch (Exception e) {
       //abort request, according to best practice with HttpClient
@@ -196,6 +208,55 @@ public class KibanaProxyServlet extends ProxyServlet {
       }
       //Note: Don't need to close servlet outputStream:
       // http://stackoverflow.com/questions/1159168/should-one-call-close-on-httpservletresponse-getoutputstream-getwriter
+    }
+  }
+
+  /**
+   * Copy response body data (the entity) from the proxy to the servlet client.
+   *
+   * @param proxyResponse
+   * @param servletResponse
+   * @param kibanaFilter
+   * @throws java.io.IOException
+   */
+  protected void copyResponseEntity(HttpResponse proxyResponse,
+          HttpServletResponse servletResponse, KibanaFilter kibanaFilter) throws
+          IOException {
+    if (kibanaFilter == null) {
+      super.copyResponseEntity(proxyResponse, servletResponse);
+    } else {
+      switch (kibanaFilter) {
+        case KIBANA_INDEXPATTERN_SEARCH:
+          HttpEntity entity = proxyResponse.getEntity();
+          if (entity != null) {
+            GzipDecompressingEntity gzipEntity = new GzipDecompressingEntity(
+                    entity);
+            String resp = EntityUtils.toString(gzipEntity);
+            BasicHttpEntity basic = new BasicHttpEntity();
+            JSONObject indices = new JSONObject(resp);
+
+            //Remove projects (_id) that do not belong to user
+            List<String> projects = projectController.findProjectNamesByUser(
+                    email);
+            JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
+            for (int i = hits.length()-1; i >=0; i--) {
+              if (!projects.contains(hits.getJSONObject(i).getString("_id"))) {
+                hits.remove(i);
+              }
+            }
+
+            InputStream in = IOUtils.toInputStream(indices.toString());
+
+            OutputStream servletOutputStream = servletResponse.getOutputStream();
+            basic.setContent(in);
+            GzipCompressingEntity compress = new GzipCompressingEntity(basic);
+            compress.writeTo(servletOutputStream);
+          }
+          break;
+        default:
+          break;
+      }
+
     }
   }
 }
