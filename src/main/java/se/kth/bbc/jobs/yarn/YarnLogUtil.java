@@ -26,6 +26,26 @@ public class YarnLogUtil {
     TIMEOUT
   }
 
+  public static void writeLog(DistributedFileSystemOps dfs, String dst,
+          String message, Exception exception) {
+    PrintStream writer = null;
+    try {
+      writer = new PrintStream(dfs.create(dst));
+      writer.print(message + "\n" + exception.getMessage());
+    } catch (IOException ex) {
+      if (writer != null) {
+        writer.print(YarnLogUtil.class.getName()
+                + ": Failed to write logs.\n" + ex.getMessage());
+      }
+      LOGGER.log(Level.SEVERE, null, ex);
+    } finally {
+      if (writer != null) {
+        writer.flush();
+        writer.close();
+      }
+    }
+  }
+  
   /**
    * Given aggregated yarn log path and destination path copies the desired log
    * type (stdout/stderr)
