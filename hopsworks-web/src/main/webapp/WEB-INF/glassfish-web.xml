@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
+<glassfish-web-app error-url="">
+  <context-root>/hopsworks</context-root>
+  <class-loader delegate="true"/>
+  <jsp-config>
+    <property name="keepgenerated" value="true">
+      <description>Keep a copy of the generated servlet class' java code.</description>
+    </property>
+  </jsp-config>
+  <security-role-mapping>
+    <role-name>HOPS_ADMIN</role-name>
+    <group-name>HOPS_ADMIN</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>HOPS_USER</role-name>
+    <group-name>HOPS_USER</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>AGENT</role-name>
+    <group-name>AGENT</group-name>
+  </security-role-mapping>
+  <parameter-encoding default-charset="UTF-8"/>
+  <security-role-mapping>
+    <role-name>AUDITOR</role-name>
+    <group-name>AUDITOR</group-name>
+  </security-role-mapping>
+  <session-config>
+    <cookie-properties>
+      <property name="cookieName" value="SESSIONID"/>
+      <property name="cookiePath" value="/"/>
+    </cookie-properties>
+  </session-config>
+</glassfish-web-app>

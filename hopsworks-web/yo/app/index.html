@@ -1,0 +1,240 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>HopsWorks</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/png" href="images/hops-black.png" />
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lobster'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Varela+Round'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:500'>
+    <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.css" />
+    <link rel="stylesheet" href="bower_components/jstree/dist/themes/default/style.css" />
+    <link rel="stylesheet" href="bower_components/ng-prettyjson/src/ng-prettyjson.css" />
+    <link rel="stylesheet" href="bower_components/ng-sortable/dist/ng-sortable.css" />
+    <link rel="stylesheet" href="bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
+    <link rel="stylesheet" href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.css" />
+    <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
+    <link rel="stylesheet" href="bower_components/v-accordion/dist/v-accordion.css" />
+    <link rel="stylesheet" href="bower_components/angular-growl-v2/build/angular-growl.css" />
+    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
+    <link rel="stylesheet" href="bower_components/isteven-angular-multiselect/isteven-multi-select.css" />
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+    <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
+    <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.tmp) styles/main.css -->
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="styles/project_sidebar.css">
+    <link rel="stylesheet" href="styles/form.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/filebrowser.css">
+    <link rel="stylesheet" href="styles/board.css">
+    <link rel="stylesheet" href="styles/message.css">
+    <link rel="stylesheet" href="styles/angular-tour.css"/>
+    <link rel="stylesheet" href="styles/timeline.css">
+    <link rel="stylesheet" href="styles/ExampleProjectLoaderFix.css">
+    <link rel="stylesheet" href="styles/workflows.css">
+    <link rel="stylesheet" href="styles/jquery.qtip.css" />
+    <link rel="stylesheet" href="styles/loading.css">
+    <link rel="stylesheet" href="styles/angular-resizable.css">
+    <link rel="stylesheet" href="styles/cards.css">
+    <link rel="stylesheet" href="styles/search-result.css">
+    <link rel="stylesheet" href="styles/select2.css">
+    <!-- endbuild -->
+  </head>
+  <body  ng-app="hopsWorksApp">
+    <!--[if lt IE 7]>
+       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <div class="hw-wrapper">
+      <div ng-view=""></div>
+    </div>
+    <!-- build:js(.) scripts/jquery.js -->
+    <script src="bower_components/jquery/jquery.js"></script>
+    <!-- endbuild -->
+    <!-- build:js(.) scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/jquery/jquery.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-websocket/angular-websocket.min.js"></script>
+    <script src="bower_components/angular-md5/angular-md5.js"></script>
+    <script src="bower_components/angular-messages/angular-messages.js"></script>
+    <script src="bower_components/angular-touch/angular-touch.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/angular-hamburger-toggle/dist/angular-hamburger-toggle.js"></script>
+    <script src="bower_components/clipboard/dist/clipboard.js"></script>
+    <script src="bower_components/ngclipboard/dist/ngclipboard.js"></script>
+    <script src="bower_components/angular-utils-pagination/dirPagination.js"></script>
+    <script src="bower_components/cytoscape/dist/cytoscape.js"></script>
+    <script src="bower_components/cytoscape-cxtmenu/cytoscape-cxtmenu.js"></script>
+    <script src="bower_components/js.cytoscape-navigator/cytoscape-navigator.js"></script>
+    <script src="bower_components/lodash/lodash.js"></script>
+    <script src="bower_components/graphlib/dist/graphlib.core.js"></script>
+    <script src="bower_components/dagre/dist/dagre.core.js"></script>
+    <script src="bower_components/dagre/dist/dagre.core.min.js"></script>
+    <script src="bower_components/cytoscape-dagre/cytoscape-dagre.js"></script>
+    <script src="bower_components/jstree/dist/jstree.js"></script>
+    <script src="bower_components/recase/recase.js"></script>
+    <script src="bower_components/node-uuid/uuid.js"></script>
+    <script src="bower_components/ev-emitter/ev-emitter.js"></script>
+    <script src="bower_components/imagesloaded/imagesloaded.js"></script>
+    <script src="bower_components/qtip2/jquery.qtip.js"></script>
+    <script src="bower_components/qtip2/basic/jquery.qtip.js"></script>
+    <script src="bower_components/cytoscape-qtip/cytoscape-qtip.js"></script>
+    <script src="bower_components/ng-prettyjson/src/ng-prettyjson.js"></script>
+    <script src="bower_components/ng-prettyjson/src/ng-prettyjson-tmpl.js"></script>
+    <script src="bower_components/showdown/dist/showdown.js"></script>
+    <script src="bower_components/ng-showdown/dist/ng-showdown.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
+    <script src="bower_components/ng-sortable/dist/ng-sortable.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.js"></script>
+    <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <script src="bower_components/angular-tour/dist/angular-tour-tpls.min.js"></script>
+    <script src="bower_components/angular-resizable/src/angular-resizable.js"></script>
+    <script src="bower_components/v-accordion/dist/v-accordion.js"></script>
+    <script src="bower_components/angular-smart-table/dist/smart-table.js"></script>
+    <script src="bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
+    <script src="bower_components/flow.js/dist/flow.js"></script>
+    <script src="bower_components/ng-flow/dist/ng-flow.js"></script>
+    <script src="bower_components/angular-growl-v2/build/angular-growl.js"></script>
+    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
+    <script src="bower_components/isteven-angular-multiselect/isteven-multi-select.js"></script>
+    <script src="bower_components/angular-aria/angular-aria.js"></script>
+    <script src="bower_components/angular-material/angular-material.js"></script>
+    <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
+    <script src="bower_components/angularjs-slider/dist/rzslider.js"></script>
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:js({.tmp,app}) scripts/scripts.js -->
+    <script src="scripts/app.js"></script>
+    <script src="scripts/js/util.js"></script>
+    <script src="scripts/js/countries.js"></script>
+    <script src="scripts/js/cytoscape-toolbar.js"></script>
+    <script src="scripts/js/jquery.ajax-retry.min.js"></script>
+    <script src="scripts/js/workflows.js"></script>
+    <script src="scripts/js/hamburger.js"></script>
+
+    <script src="scripts/directives/switch.js"></script>
+    <script src="scripts/directives/modal.js"></script>
+    <script src="scripts/directives/passwordMatch.js"></script>
+    <script src="scripts/directives/hwcard.js"></script>
+
+    <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
+    <script src="scripts/controllers/datasetsCtrl.js"></script>
+    <script src="scripts/controllers/fileUpload.js"></script>
+    <script src="scripts/controllers/memberCtrl.js"></script>
+    <script src="scripts/controllers/history.js"></script>
+    <script src="scripts/controllers/historyDetailCtrl.js"></script>
+    <script src="scripts/controllers/home.js"></script>
+    <script src="scripts/controllers/login.js"></script>
+    <script src="scripts/controllers/main.js"></script>
+    <script src="scripts/controllers/modalCtrl.js"></script>
+    <script src="scripts/controllers/alert.js"></script>
+    <script src="scripts/controllers/newFieldCtrl.js"></script>
+    <script src="scripts/controllers/newTableCtrl.js"></script>
+    <script src="scripts/controllers/profile.js"></script>
+    <script src="scripts/controllers/project.js"></script>
+    <script src="scripts/controllers/projectCreator.js"></script>
+    <script src="scripts/controllers/projectSettings.js"></script>
+    <script src="scripts/controllers/recoverCtrl.js"></script>
+    <script src="scripts/controllers/newlistCtrl.js"></script>
+    <script src="scripts/controllers/enterNameCtrl.js"></script>
+    <script src="scripts/controllers/modifyFieldCtrl.js"></script>
+    <script src="scripts/controllers/registration.js"></script>
+    <script src="scripts/controllers/selectFileCtrl.js"></script>
+    <script src="scripts/controllers/attachTemplateCtrl.js"></script>
+    <script src="scripts/controllers/shareDatasetCtrl.js"></script>
+    <script src="scripts/controllers/viewPublicDatasetCtrl.js"></script>
+    <script src="scripts/controllers/viewSearchResultCtrl.js"></script>
+    <script src="scripts/controllers/jobsCtrl.js"></script>
+    <script src="scripts/controllers/newJobCtrl.js"></script>
+    <script src="scripts/controllers/jobDetailCtrl.js"></script>
+    <script src="scripts/controllers/jobUICtrl.js"></script>
+    <script src="scripts/controllers/metadataCtrl.js"></script>
+    <script src="scripts/controllers/importTemplateCtrl.js"></script>
+    <script src="scripts/controllers/zeppelinCtrl.js"></script>
+    <script src="scripts/controllers/messageCtrl.js"></script>
+    <script src="scripts/controllers/sshKeysCtrl.js"></script>
+    <script src="scripts/controllers/biobankingCtrl.js"></script>    
+    <script src="scripts/controllers/detachTemplateCtrl.js"></script>
+    <script src="scripts/controllers/localFsCtrl.js"></script>
+    <script src="scripts/controllers/inputModalCtrl.js"></script>
+    <script src="scripts/controllers/uberCtrl.js"></script>
+    <script src="scripts/controllers/workflow.js"></script>
+    <script src="scripts/controllers/workflowcreator.js"></script>
+    <script src="scripts/controllers/uberCtrl.js"></script>    
+    <script src="scripts/controllers/kafkaCtrl.js"></script>    
+    <script src="scripts/controllers/tensorflowCtrl.js"></script>    
+    <script src="scripts/controllers/selectProjectCtrl.js"></script>    
+    <script src="scripts/controllers/createTopicCtrl.js"></script>    
+    <script src="scripts/controllers/createAclCtrl.js"></script> 
+    <script src="scripts/controllers/schemaCreateCtrl.js"></script>
+    <script src="scripts/controllers/schemaViewContentCtrl.js"></script>
+    <script src="scripts/controllers/schemaUpdateContentCtrl.js"></script>
+    <script src="scripts/controllers/filePreviewCtrl.js"></script>
+    <script src="scripts/controllers/clusterUtilisationCtrl.js"></script>
+    <script src="scripts/controllers/cardCtrl.js"></script>
+
+    <!-- Services -->
+    <script src="scripts/services/AuthInterceptorService.js"></script>
+    <script src="scripts/services/AuthService.js"></script>
+    <script src="scripts/services/BannerService.js"></script>
+    <script src="scripts/services/UtilsService.js"></script>
+    <script src="scripts/services/ElasticService.js"></script>
+    <script src="scripts/services/EndpointService.js"></script>
+    <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/DataSetService.js"></script>
+    <script src="scripts/services/ProjectService.js"></script>
+    <script src="scripts/services/UserService.js"></script>
+    <script src="scripts/services/RequestInterceptorService.js"></script>
+    <script src="scripts/services/TransformRequest.js"></script>
+    <script src="scripts/services/ModalService.js"></script>
+    <script src="scripts/services/ActivityService.js"></script>
+    <script src="scripts/services/SecurityQuestions.js"></script>
+    <script src="scripts/services/MembersService.js"></script>
+    <script src="scripts/services/MetadataActionService.js"></script>
+    <script src="scripts/services/SparkService.js"></script>
+    <script src="scripts/services/AdamService.js"></script>
+    <script src="scripts/services/FlinkService.js"></script>
+    <script src="scripts/services/HistoryService.js"></script>
+    <script src="scripts/services/JobService.js"></script>
+    <script src="scripts/services/RequestService.js"></script>
+    <script src="scripts/services/MetadataRestService.js"></script>
+    <script src="scripts/services/MetadataHelperService.js"></script>
+    <script src="scripts/services/StorageService.js"></script>
+    <script src="scripts/services/ZeppelinService.js"></script>
+    <script src="scripts/services/MessageService.js"></script>
+    <script src="scripts/services/VariablesService.js"></script>
+    <script src="scripts/services/BiobankingService.js"></script>
+    <script src="scripts/services/TensorflowService.js"></script>
+    <script src="scripts/services/LocalFsService.js"></script>
+    <script src="scripts/services/TourService.js"></script>
+    <script src="scripts/services/workflowservice.js"></script>
+    <script src="scripts/controllers/workflowexecution.js"></script>
+    <script src="scripts/services/workflowexecutionservice.js"></script>
+    <script src="scripts/controllers/workflowjob.js"></script>
+    <script src="scripts/services/workflowjobservice.js"></script>
+    <script src="scripts/services/KafkaService.js"></script>
+    <script src="scripts/services/ClusterUtilService.js"></script>
+    <script src="scripts/services/KibanaService.js"></script>
+    <!-- endbuild -->
+
+
+  </body>
+</html>

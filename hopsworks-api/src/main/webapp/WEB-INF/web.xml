@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+  <context-param>
+    <param-name>javax.faces.PROJECT_STAGE</param-name>
+    <param-value>Development</param-value>
+  </context-param>
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <!-- Kibana proxy servlet -->
+  <servlet>
+    <servlet-name>KibanaProxyServlet</servlet-name>
+    <servlet-class>io.hops.kibana.KibanaProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:5601/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>KibanaProxyServlet</servlet-name>
+    <url-pattern>/kibana/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>KibanaProxyServlet</servlet-name>
+    <url-pattern>/kibana</url-pattern>
+  </servlet-mapping>
+  <!-- Grafana proxy servlet -->
+  <servlet>
+    <servlet-name>GrafanaProxyServlet</servlet-name>
+    <servlet-class>io.hops.kibana.GrafanaProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:3000/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>GrafanaProxyServlet</servlet-name>
+    <url-pattern>/grafana/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GrafanaProxyServlet</servlet-name>
+    <url-pattern>/grafana</url-pattern>
+  </servlet-mapping>
+  <servlet> 
+    <servlet-name>Jersey2Config</servlet-name>
+    <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+    <init-param>
+      <param-name>api.version</param-name>
+      <param-value>0.1.0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.title</param-name>
+      <param-value>Hopsworks api</param-value>
+    </init-param>
+    <!--init-param>
+      <param-name>scan.all.resources</param-name>
+      <param-value>true</param-value>
+    </init-param-->
+    <init-param>
+      <param-name>swagger.api.basepath</param-name>
+      <param-value>http://localhost:8080/hopsworks-api/api</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+  <security-constraint>
+    <display-name>Metadata SocketConstraint</display-name>
+    <web-resource-collection>
+      <web-resource-name>MetadataWebSocket</web-resource-name>
+      <description>Security constraint for  metadata designer websocket endpoint</description>
+      <url-pattern>/wspoint/*</url-pattern>
+      <http-method>GET</http-method>
+    </web-resource-collection>
+    <auth-constraint>
+      <description>definition of which roles  may access the quote endpoint</description>
+      <role-name>HOPS_ADMIN</role-name>
+      <role-name>HOPS_USER</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <display-name>Zeppelin SocketConstraint</display-name>
+    <web-resource-collection>
+      <web-resource-name>ZeppelinWebSocket</web-resource-name>
+      <description>Security constraint for  Zeppelin websocket endpoint</description>
+      <url-pattern>/zeppelin/ws/*</url-pattern>
+      <http-method>GET</http-method>
+    </web-resource-collection>
+    <auth-constraint>
+      <description>definition of which roles  may access the endpoint</description>
+      <role-name>HOPS_ADMIN</role-name>
+      <role-name>HOPS_USER</role-name>
+    </auth-constraint>
+    <!--user-data-constraint>		
+        <description>WSS required</description>		
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>		
+    </user-data-constraint-->
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+      <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+  </security-constraint>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>cauthRealm</realm-name>
+  </login-config>
+  <session-config>
+    <!-- on production systems you might have another value for the timeout -->
+    <session-timeout>30</session-timeout>
+    <!-- we don't want to use the default name JSESSIONID because this
+    tells everyone (especially hackers) that our application is based on java -->
+    <cookie-config>
+      <name>SESSIONID</name>
+      <path>/</path>
+    </cookie-config>
+  </session-config>
+</web-app>

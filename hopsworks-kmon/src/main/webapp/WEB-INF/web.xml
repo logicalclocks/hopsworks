@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.xhtml</url-pattern>
+  </servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>clusters.xhtml</welcome-file>
+  </welcome-file-list>
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Monitor Management</web-resource-name>
+      <url-pattern>/monitor/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>HOPS_ADMIN</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+      <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+  </security-constraint>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>cauthRealm</realm-name>
+  </login-config>
+  <session-config>
+    <!-- on production systems you might have another value for the timeout -->
+    <session-timeout>30</session-timeout>
+    <!-- we don't want to use the default name JSESSIONID because this
+    tells everyone (especially hackers) that our application is based on java -->
+    <cookie-config>
+      <name>SESSIONID</name>
+    </cookie-config>
+  </session-config>
+</web-app>
