@@ -1,12 +1,44 @@
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.api.util.LocalFsService;
-import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
+import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.api.workflow.WorkflowService;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.MoreInfoDTO;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.project.ProjectDTO;
+import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.LocalhostServices;
+import io.hops.hopsworks.common.util.Settings;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,45 +66,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
-import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.project.MoreInfoDTO;
-import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.common.project.QuotasDTO;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.LocalhostServices;
-import io.hops.hopsworks.common.util.Settings;
-import io.swagger.annotations.Api;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
-@Api(value = "Project", description = "Project service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
@@ -107,8 +105,7 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private ZeppelinConfigFactory zeppelinConfFactory;
+
   @EJB
   private ActivityFacade activityController;
   @EJB
@@ -406,10 +403,7 @@ public class ProjectService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
         }
-        //Severe: java.io.FileNotFoundException: /tmp/tempstores/
-        //demo_admin000__meb10000__kstore.jks (No such file or directory)
-        LocalhostServices.
-                createUserCertificates(settings.getIntermediateCaDir(),
+        LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
                         project.getName(), user.getUsername());
         certificateBean.putUserCerts(project.getName(), user.getUsername());
       } catch (IOException ex) {
@@ -428,6 +422,7 @@ public class ProjectService {
       projectController.addMembers(project, owner, projectMembers);
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
+
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
@@ -438,7 +433,7 @@ public class ProjectService {
         datasetController.generateReadme(udfso, "TestJob",
                 "jar file to calculate pi",
                 project.getName());
-
+        projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -546,6 +541,12 @@ public class ProjectService {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
                 udfso);
+//        //Add Spark log4j and metrics files in Resources
+//        projectController.copySparkStreamingResources(owner, project, dfso,
+//                udfso);
+
+        //Create Template for this project in elasticsearch
+        projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -617,7 +618,6 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       success = projectController.removeByID(id, owner, true, dfso, dfs.
               getDfsOps());
-      zeppelinConfFactory.deleteZeppelinConfDir(project);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You don't have delete permission to one or all files in this folder.");

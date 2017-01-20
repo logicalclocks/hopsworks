@@ -1,6 +1,31 @@
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.util.JsonResponse;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
+import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,31 +73,15 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.JobController;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
-import io.hops.hopsworks.common.util.Settings;
+import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDBFactory;
+import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 
+/**
+ *
+ * <p>
+ */
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobService {
@@ -123,7 +132,7 @@ public class JobService {
    * @param sc
    * @param req
    * @return A list of all defined Jobs in this project.
-   * @throws AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -310,14 +319,81 @@ public class JobService {
     }
   }
 
+  /**
+   * Get application run info for the specified job
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/appinfo")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getAppInfo(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      LOGGER.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      Execution execution = exeFacade.findForJob(job).get(0);
+
+      try {
+        long startTime = execution.getSubmissionTime().getTime();
+        long endTime = startTime + execution.getExecutionDuration();
+        boolean running = false;
+        if (!execution.getState().isFinalState()) {
+          running = true;
+        }
+
+        InfluxDB influxDB = InfluxDBFactory.connect(settings.
+                getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
+                getInfluxDBPW());
+
+        Query query = new Query("SELECT * FROM /" + execution.getAppId()
+                + ".*.executor.threadpool.activeTasks/ limit 1", "graphite");
+        QueryResult queryResult = influxDB.query(query);
+
+        influxDB.close();
+
+        int nbExecutors = 0;
+        if (queryResult != null && queryResult.getResults() != null
+                && queryResult.getResults().get(0) != null) {
+          nbExecutors = queryResult.getResults().get(0).getSeries().size();
+        }
+
+        AppInfoDTO appInfo = new AppInfoDTO(execution.getAppId(), startTime,
+                running, endTime, nbExecutors);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(appInfo).build();
+
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+                getLocalizedMessage(), e);
+      }
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+
   private static final HashSet<String> PASS_THROUGH_HEADERS
           = new HashSet<String>(
                   Arrays
-                  .asList("User-Agent", "user-agent", "Accept", "accept",
-                          "Accept-Encoding", "accept-encoding",
-                          "Accept-Language",
-                          "accept-language",
-                          "Accept-Charset", "accept-charset"));
+                          .asList("User-Agent", "user-agent", "Accept", "accept",
+                                  "Accept-Encoding", "accept-encoding",
+                                  "Accept-Language",
+                                  "accept-language",
+                                  "Accept-Charset", "accept-charset"));
 
   /**
    * Get the job ui for the specified job.
@@ -624,13 +700,15 @@ public class JobService {
                 execution.getAppId());
         builder.add(desc.getId().toString(),
                 Json.createObjectBuilder()
-                .add("running", true)
-                .add("state", execution.getState().toString())
-                .add("finalStatus", execution.getFinalStatus().toString())
-                .add("progress", execution.getProgress())
-                .add("duration", execution.getExecutionDuration())
-                .add("submissiontime", execution.getSubmissionTime().toString())
-                .add("url", trackingUrl)
+                        .add("running", true)
+                        .add("state", execution.getState().toString())
+                        .add("finalStatus", execution.getFinalStatus().
+                                toString())
+                        .add("progress", execution.getProgress())
+                        .add("duration", execution.getExecutionDuration())
+                        .add("submissiontime", execution.getSubmissionTime().
+                                toString())
+                        .add("url", trackingUrl)
         );
       } catch (ArrayIndexOutOfBoundsException e) {
         LOGGER.log(Level.WARNING, "No execution was found: {0}", e
@@ -859,7 +937,7 @@ public class JobService {
    * @param sc
    * @param req
    * @return
-   * @throws se.kth.hopsworks.rest.AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @DELETE
   @Path("/{jobId}/deleteJob")

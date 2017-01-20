@@ -289,7 +289,7 @@ public abstract class HopsJob {
    * @param message
    */
   protected final void writeToLogs(String message) {
-    //TODO: implement this.
+    //TODO(Theofilos): implement this.
   }
 
   /**

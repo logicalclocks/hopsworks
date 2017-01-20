@@ -2,6 +2,10 @@ package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
+import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
+import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
@@ -21,21 +25,16 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
-import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
-import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 
 /**
  * All classes in this package contain code taken from
- * https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/hadoop-yarn
- * /hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/src/main/java/
- * org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
+ * https://github.com/apache/hadoop-common/blob/trunk/hadoop-yarn-project/
+ * hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/
+ * src/main/java/org/apache/hadoop/yarn/applications/distributedshell/Client.java?source=cc
  * and
  * https://github.com/hortonworks/simple-yarn-app
  * and
- * https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/
- * yarn/StormOnYarn.java
+ * https://github.com/yahoo/storm-yarn/blob/master/src/main/java/com/yahoo/storm/yarn/StormOnYarn.java
  * <p>
  * The Flink jar is uploaded to HDFS by this client.
  * The application master and all the TaskManager containers get the jar file
@@ -45,7 +44,7 @@ import io.hops.hopsworks.common.util.Settings;
  */
 public class FlinkYarnRunnerBuilder {
 
-  private static final Logger logger = Logger.
+  private static final Logger LOGGER = Logger.
           getLogger(FlinkYarnRunnerBuilder.class.getName());
   /**
    * Constants, all starting with ENV_ are used as environment variables to
@@ -54,8 +53,7 @@ public class FlinkYarnRunnerBuilder {
   public final static String ENV_TM_MEMORY = "_CLIENT_TM_MEMORY";
   public final static String ENV_TM_COUNT = "_CLIENT_TM_COUNT";
   public final static String ENV_APP_ID = "_APP_ID";
-  // the Flink jar resource location (in HDFS).
-  public final static String FLINK_JAR_PATH = "_FLINK_JAR_PATH";
+  public final static String FLINK_JAR_PATH = "_FLINK_JAR_PATH"; // the Flink jar resource location (in HDFS).
   public static final String ENV_CLIENT_HOME_DIR = "_CLIENT_HOME_DIR";
   public static final String ENV_CLIENT_SHIP_FILES = "_CLIENT_SHIP_FILES";
   public static final String ENV_CLIENT_USERNAME = "_CLIENT_USERNAME";
@@ -264,7 +262,7 @@ public class FlinkYarnRunnerBuilder {
     // check if required Hadoop environment variables are set. If not, warn user
     if (System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR) == null
             && System.getenv(Settings.ENV_KEY_YARN_CONF) == null) {
-      logger.log(Level.WARNING,
+      LOGGER.log(Level.WARNING,
               "Neither the HADOOP_CONF_DIR nor the YARN_CONF_DIR environment variable is set."
               + "The Flink YARN Client needs one of these to be set to properly load the Hadoop "
               + "configuration for accessing YARN.");
@@ -398,25 +396,27 @@ public class FlinkYarnRunnerBuilder {
     }
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
-    }
-    for (String s : sysProps.keySet()) {
-      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
-      builder.addJavaOption(option);
-      cluster.addHopsworksParam(option);
-      dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
-              append("@@");
+      for (String s : sysProps.keySet()) {
+        String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+        builder.addJavaOption(option);
+        cluster.addHopsworksParam(option);
+        dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
+                append("@@");
+      }
+
+      /*
+       * Split propertes with "@@"
+       * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/
+       * flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
+       */
+      if (dynamicPropertiesEncoded.length() > 0) {
+        cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.
+                substring(0,
+                        dynamicPropertiesEncoded.
+                                lastIndexOf("@@")));
+      }
     }
 
-    /*
-     * Split propertes with "@@"
-     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/
-     * flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
-     */
-    if (dynamicPropertiesEncoded.length() > 0) {
-      cluster.setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0,
-              dynamicPropertiesEncoded.
-              lastIndexOf("@@")));
-    }
     builder.setJobType(JobType.FLINK);
     builder.setAppJarPath(appJarPath);
     builder.setParallelism(parallelism);

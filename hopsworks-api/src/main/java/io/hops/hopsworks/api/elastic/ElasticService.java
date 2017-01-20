@@ -166,8 +166,8 @@ public class ElasticService {
   private Client getClient() throws AppException {
     final org.elasticsearch.common.settings.Settings settings
             = org.elasticsearch.common.settings.Settings.settingsBuilder()
-            .put("client.transport.sniff", true) //being able to retrieve other nodes 
-            .put("cluster.name", "hops").build();
+                    .put("client.transport.sniff", true) //being able to retrieve other nodes 
+                    .put("cluster.name", "hops").build();
 
     return TransportClient.builder().settings(settings).build()
             .addTransportAddress(new InetSocketTransportAddress(
@@ -303,7 +303,7 @@ public class ElasticService {
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
     srb = srb.setTypes(Settings.META_INODE_TYPE);
     srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm));
-    //FIXME: https://github.com/elastic/elasticsearch/issues/14999 
+    //TODO: https://github.com/elastic/elasticsearch/issues/14999 
     //srb = srb.addHighlightedField("name");
     srb = srb.setRouting(String.valueOf(project.getId()));
 

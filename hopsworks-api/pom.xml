@@ -109,6 +109,11 @@
       <version>7.0</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.influxdb</groupId>
+      <artifactId>influxdb-java</artifactId>
+      <version>2.5</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>hopsworks-api</finalName>

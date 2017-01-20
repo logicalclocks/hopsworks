@@ -72,6 +72,7 @@ import java.util.List;
  * Inspiration: http://httpd.apache.org/docs/2.0/mod/mod_proxy.html
  * </p>
  *
+ * David Smiley dsmiley@mitre.org
  */
 public class ProxyServlet extends HttpServlet {
 
@@ -108,9 +109,8 @@ public class ProxyServlet extends HttpServlet {
    */
   protected boolean doSendUrlFragment = true;
 
-  //These next 3 are cached here, and should only be referred to in initialization 
-  //logic. See the
-  // ATTR_* parameters.
+  //These next 3 are cached here, and should only be referred to in 
+  //initialization logic. See the ATTR_* parameters.
   /**
    * From the configured parameter "targetUri".
    */
@@ -118,7 +118,7 @@ public class ProxyServlet extends HttpServlet {
   protected URI targetUriObj;//new URI(targetUri)
   protected HttpHost targetHost;//URIUtils.extractHost(targetUriObj);
 
-  private HttpClient proxyClient;
+  protected HttpClient proxyClient;
 
   @Override
   public String getServletInfo() {
@@ -129,7 +129,7 @@ public class ProxyServlet extends HttpServlet {
     return (String) servletRequest.getAttribute(ATTR_TARGET_URI);
   }
 
-  private HttpHost getTargetHost(HttpServletRequest servletRequest) {
+  protected HttpHost getTargetHost(HttpServletRequest servletRequest) {
     return (HttpHost) servletRequest.getAttribute(ATTR_TARGET_HOST);
   }
 
@@ -254,8 +254,11 @@ public class ProxyServlet extends HttpServlet {
       } catch (IOException e) {
         log("While destroying servlet, shutting down HttpClient: " + e, e);
       }
-    } else if (proxyClient != null) {  //Older releases require we do this:
-      proxyClient.getConnectionManager().shutdown();
+    } else {
+      //Older releases require we do this:
+      if (proxyClient != null) {
+        proxyClient.getConnectionManager().shutdown();
+      }
     }
     super.destroy();
   }
@@ -273,19 +276,20 @@ public class ProxyServlet extends HttpServlet {
     }
 
     // Make the Request
-    //note: we won't transfer the protocol version because I'm not sure it would 
-    //truly be compatible
+    // note: we won't transfer the protocol version because I'm not 
+    // sure it would truly be compatible
     String method = servletRequest.getMethod();
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
     HttpRequest proxyRequest;
-    //spec: RFC 2616, sec 4.3: either of these two headers signal that there is a message body.
+    //spec: RFC 2616, sec 4.3: either of these two headers signal that there is
+    //a message body.
     if (servletRequest.getHeader(HttpHeaders.CONTENT_LENGTH) != null
             || servletRequest.getHeader(HttpHeaders.TRANSFER_ENCODING) != null) {
       HttpEntityEnclosingRequest eProxyRequest
               = new BasicHttpEntityEnclosingRequest(method, proxyRequestUri);
       // Add the input entity (streamed)
-      //note: we don't bother ensuring we close the servletInputStream since the 
-      //container handles it
+      // note: we don't bother ensuring we close the servletInputStream since 
+      // the container handles it
       eProxyRequest.setEntity(new InputStreamEntity(servletRequest.
               getInputStream(), servletRequest.getContentLength()));
       proxyRequest = eProxyRequest;
@@ -317,9 +321,8 @@ public class ProxyServlet extends HttpServlet {
         return;
       }
 
-      // Pass the response code. This method with the "reason phrase" is deprecated 
-      //but it's the only way to pass the
-      //  reason along too.
+      // Pass the response code. This method with the "reason phrase" is 
+      //deprecated but it's the only way to pass the reason along too.
       //noinspection deprecation
       servletResponse.setStatus(statusCode, proxyResponse.getStatusLine().
               getReasonPhrase());
@@ -354,8 +357,8 @@ public class ProxyServlet extends HttpServlet {
         consumeQuietly(proxyResponse.getEntity());
       }
       //Note: Don't need to close servlet outputStream:
-      // http://stackoverflow.com/questions/1159168/should-one-call-close-on-
-      //httpservletresponse-getoutputstream-getwriter
+      // http://stackoverflow.com/questions/1159168/should-one-call-close-on
+      //-httpservletresponse-getoutputstream-getwriter
     }
   }
 
@@ -474,7 +477,7 @@ public class ProxyServlet extends HttpServlet {
     }
   }
 
-  private void setXForwardedForHeader(HttpServletRequest servletRequest,
+  protected void setXForwardedForHeader(HttpServletRequest servletRequest,
           HttpRequest proxyRequest) {
     String headerName = "X-Forwarded-For";
     if (doForwardIP) {
@@ -664,7 +667,8 @@ public class ProxyServlet extends HttpServlet {
    * @param in example: name=value&foo=bar#fragment
    */
   protected static CharSequence encodeUriQuery(CharSequence in) {
-    //Note that I can't simply use URI.java to encode because it will escape pre-existing escaped things.
+    //Note that I can't simply use URI.java to encode because it will escape 
+    //pre-existing escaped things.
     StringBuilder outBuf = null;
     Formatter formatter = null;
     for (int i = 0; i < in.length(); i++) {
