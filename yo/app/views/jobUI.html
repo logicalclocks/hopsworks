@@ -15,13 +15,6 @@
               class="btn btn-primary glyphicon glyphicon-home">
       </button>
     </span>
-    <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
-      <button style=""
-              ng-click="jobUICtrl.refresh();
-                $event.stopPropagation();"
-              class="btn btn-primary glyphicon glyphicon-refresh">
-      </button>
-    </span>
     <span class="field-info" uib-tooltip="show yarn app ui" style="padding-top: 5px;padding-left:3px">
       <button style=""
               ng-click="jobUICtrl.yarnUI();
@@ -33,12 +26,26 @@
       <button style=""
               ng-click="jobUICtrl.kibanaUI();
                 $event.stopPropagation();"
-              class="btn btn-primary glyphicon glyphicon-asterisk">
+              class="btn btn-primary glyphicon glyphicon-open-file">
+      </button>
+    </span>
+    <span class="field-info" uib-tooltip="display grafana dashboard" style="padding-top: 5px;padding-left:3px">
+      <button style=""
+              ng-click="jobUICtrl.grafanaUI();
+                $event.stopPropagation();"
+              class="btn btn-primary glyphicon glyphicon-dashboard">
+      </button>
+    </span>
+    <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
+      <button style=""
+              ng-click="jobUICtrl.refresh();
+                $event.stopPropagation();"
+              class="btn btn-primary glyphicon glyphicon-refresh">
       </button>
     </span>
   </div>
   <div ng-if="jobUICtrl.ui !== ''">
-    <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="1170" height ="1000"></iframe> 
+    <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="100%" height ="87%"></iframe> 
   </div>
   <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
 </div>
