@@ -1,10 +1,11 @@
 package io.hops.hopsworks.api.project;
 
-import io.hops.hopsworks.api.util.LocalFsService;
-import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
+<<<<<<< HEAD
 import io.hops.hopsworks.api.workflow.WorkflowService;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import java.io.File;
@@ -36,8 +37,11 @@ import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
+=======
+>>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
 import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
+import io.hops.hopsworks.api.util.LocalFsService;
+import io.hops.hopsworks.api.workflow.WorkflowService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
@@ -57,6 +61,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -67,6 +72,34 @@ import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.EJBException;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -108,8 +141,7 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private ZeppelinConfigFactory zeppelinConfFactory;
+
   @EJB
   private ActivityFacade activityController;
   @EJB
@@ -405,11 +437,16 @@ public class ProjectService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
         }
+<<<<<<< HEAD
         //Severe: java.io.FileNotFoundException: /tmp/tempstores/
         //demo_admin000__meb10000__kstore.jks (No such file or directory)
         LocalhostServices.
           createUserCertificates(settings.getIntermediateCaDir(),
             project.getName(), user.getUsername());
+=======
+        LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
+                        project.getName(), user.getUsername());
+>>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
         certificateBean.putUserCerts(project.getName(), user.getUsername());
       } catch (IOException ex) {
         logger.log(Level.SEVERE,
@@ -427,6 +464,7 @@ public class ProjectService {
       projectController.addMembers(project, owner, projectMembers);
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
+
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
@@ -435,9 +473,15 @@ public class ProjectService {
           udfso);
         //TestJob dataset
         datasetController.generateReadme(udfso, "TestJob",
+<<<<<<< HEAD
           "jar file to calculate pi",
           project.getName());
 
+=======
+                "jar file to calculate pi",
+                project.getName());
+        projectController.manageElasticsearch(project.getName(), true);
+>>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -544,7 +588,17 @@ public class ProjectService {
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
+<<<<<<< HEAD
           udfso);
+=======
+                udfso);
+//        //Add Spark log4j and metrics files in Resources
+//        projectController.copySparkStreamingResources(owner, project, dfso,
+//                udfso);
+
+        //Create Template for this project in elasticsearch
+        projectController.manageElasticsearch(project.getName(), true);
+>>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -615,8 +669,12 @@ public class ProjectService {
       // Datasets owned by other project members as well
       dfso = dfs.getDfsOps();
       success = projectController.removeByID(id, owner, true, dfso, dfs.
+<<<<<<< HEAD
         getDfsOps());
       zeppelinConfFactory.deleteZeppelinConfDir(project);
+=======
+              getDfsOps());
+>>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
     } catch (AccessControlException ex) {
       throw new AccessControlException(
         "Permission denied: You don't have delete permission to one or all files in this folder.");

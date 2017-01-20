@@ -5,6 +5,8 @@ import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterDescriptor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkYarnRunnerBuilder;
+import io.hops.hopsworks.common.util.IoUtils;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -47,9 +49,11 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
-import io.hops.hopsworks.common.util.IoUtils;
-import io.hops.hopsworks.common.util.Settings;
 
+/**
+ *
+ * <p>
+ */
 public class YarnRunner {
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
@@ -148,14 +152,9 @@ public class YarnRunner {
       //Set up commands
       List<String> amCommands = setUpCommands();
 
-      //TODO: set up security tokens
       //Set up container launch context
       ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
               localResources, env, amCommands, null, null, null);
-      // TODO: implement this for real. doAs
-      //    UserGroupInformation proxyUser = UserGroupInformation.
-      //            createProxyUser("user", UserGroupInformation.
-      //                    getCurrentUser());
 
       //Finally set up context
       appContext.setAMContainerSpec(amContainer); //container spec
@@ -287,7 +286,7 @@ public class YarnRunner {
       entry.getValue().setName(entry.getValue().getName().
               replaceAll(APPID_REGEX, id));
     }
-    //TODO: thread-safety?
+    //TODO(Theofilos): thread-safety?
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
       entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
     }
@@ -356,7 +355,7 @@ public class YarnRunner {
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
               getYarnUrlFromPath(dst),
               LocalResourceType.
-              valueOf(entry.getValue().getType().toUpperCase()),
+                      valueOf(entry.getValue().getType().toUpperCase()),
               LocalResourceVisibility.valueOf(entry.getValue().getVisibility().
                       toUpperCase()),
               scFileStat.getLen(),
@@ -381,7 +380,7 @@ public class YarnRunner {
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
               getYarnUrlFromPath(src),
               LocalResourceType.
-              valueOf(entry.getValue().getType().toUpperCase()),
+                      valueOf(entry.getValue().getType().toUpperCase()),
               LocalResourceVisibility.valueOf(entry.getValue().getVisibility().
                       toUpperCase()),
               scFileStat.getLen(),
@@ -422,7 +421,7 @@ public class YarnRunner {
                       length() - 1)));
       javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
               + Settings.SPARK_CACHE_VISIBILITIES + "=" + visibilities.
-              substring(0, visibilities.length() - 1)));
+                      substring(0, visibilities.length() - 1)));
       javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
               + Settings.SPARK_CACHE_TYPES + "=" + types.substring(0, types.
                       length() - 1)));
@@ -471,31 +470,25 @@ public class YarnRunner {
             YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
       classPathEnv.append(":").append(c.trim());
     }
-    classPathEnv.append(":").append("./log4j.properties");
+    //classPathEnv.append(":").append("./log4j.properties");
     // add the runtime classpath needed for tests to work
     if (conf.getBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, false)) {
       classPathEnv.append(':');
       classPathEnv.append(System.getProperty("java.class.path"));
     }
     //Check whether a classpath variable was already set, and if so: merge them
-    //TODO: clean this up so no doubles are found in the classpath.
+    //TODO(Theofilos): clean this up so no doubles are found in the classpath.
     if (env.containsKey(KEY_CLASSPATH)) {
       String clpth = env.get(KEY_CLASSPATH) + ":" + classPathEnv.toString();
       env.put(KEY_CLASSPATH, clpth);
     } else {
       env.put(KEY_CLASSPATH, classPathEnv.toString());
     }
-    env.
-            put(Settings.HADOOP_HOME_KEY, hadoopDir);
+    env.put(Settings.HADOOP_HOME_KEY, hadoopDir);
     //Put some environment vars in env
-    env.
-            put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
-//                    Settings.HADOOP_COMMON_HOME_VALUE);
+    env.put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
     env.put(Settings.HADOOP_CONF_DIR_KEY, Settings.getHadoopConfDir(hadoopDir));
-//    env.put(Settings.HADOOP_CONF_DIR_KEY, Settings.HADOOP_CONF_DIR_VALUE);
-//    env.put(Settings.HADOOP_HDFS_HOME_KEY, Settings.HADOOP_HDFS_HOME_VALUE);
     env.put(Settings.HADOOP_HDFS_HOME_KEY, hadoopDir);
-//    env.put(Settings.HADOOP_YARN_HOME_KEY, Settings.HADOOP_YARN_HOME_VALUE);
     env.put(Settings.HADOOP_YARN_HOME_KEY, hadoopDir);
   }
 
@@ -653,7 +646,7 @@ public class YarnRunner {
     private String appJarPath;
     //Optional attributes
     // Queue for App master
-    private String amQueue = "default"; //TODO: enable changing this, or infer from user data
+    private String amQueue = "default"; //TODO(Theofilos): enable changing this, or infer from user data
     // Memory for App master (in MB)
     private int amMemory = 1024;
     //Number of cores for appMaster
@@ -892,7 +885,6 @@ public class YarnRunner {
       while (basePath.endsWith(File.separator)) {
         basePath = basePath.substring(0, basePath.length() - 1);
       }
-      //TODO: handle paths like "hdfs://"
       if (!basePath.startsWith("/")) {
         basePath = "/" + basePath;
       }
@@ -1194,8 +1186,7 @@ public class YarnRunner {
    * @return The converted InetSocketAddress.
    */
   private static InetSocketAddress getInetFromHostport(String hostport) {
-    // from http://stackoverflow.com/questions/2345063/java-common-way-to-validate-
-    //and-convert-hostport-to-inetsocketaddress
+    //http://stackoverflow.com/questions/2345063/java-common-way-to-validate-and-convert-hostport-to-inetsocketaddress
     URI uri;
     try {
       uri = new URI("my://" + hostport);

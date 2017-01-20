@@ -9,7 +9,6 @@ import io.hops.hopsworks.common.util.Settings;
 /**
  * Contains user-setable configuration parameters for a Yarn job.
  * <p/>
- * @author stig
  */
 @XmlRootElement
 public class YarnJobConfiguration extends JobConfiguration {

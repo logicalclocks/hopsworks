@@ -58,10 +58,10 @@ angular.module('hopsWorksApp')
                * @param {type} jobid.
                * @returns {undefined}.
                */
-              updateSchedule: function (projectId, type, schedule,jobId) {
+              updateSchedule: function (projectId, type, schedule, jobId) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/updateschedule/'+jobId,
+                  url: '/api/project/' + projectId + '/jobs/updateschedule/' + jobId,
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -128,6 +128,15 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/yarnui');
               },
               /**
+               * Get the app infos.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The app info.
+               */
+              getAppInfo: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/appinfo');
+              },
+              /**
                * Get the current status of all jobs in the given project.
                * @param {type} projectId
                * @returns {unresolved}
@@ -162,7 +171,7 @@ angular.module('hopsWorksApp')
               deleteJob: function (projectId, jobId) {
                 return $http.delete('/api/project/' + projectId + '/jobs/' + jobId + '/deleteJob');
               }
-              
+
             };
             return service;
           }]);

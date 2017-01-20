@@ -11,6 +11,17 @@
      <property name="severity" value="warning" />
   </module>
 -->
+  <!--Until we have a proper header file -->
+  <module name="RegexpSingleline">
+    <property name="format" value="((//.*)|(\*.*))To change this license header," />
+    <property name="message" value='Remove default license header!' />
+    <property name="severity" value="error" />
+  </module>
+  <module name="RegexpSingleline">
+    <property name="format" value="((//.*)|(\*.*))@author " />
+    <property name="message" value='Remove author git will keep track of that.' />
+    <property name="severity" value="error" />
+  </module>
   <module name="TreeWalker">
     <property name="tabWidth" value="2"/>
     <module name="LineLength">

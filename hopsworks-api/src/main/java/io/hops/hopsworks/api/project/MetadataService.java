@@ -185,7 +185,7 @@ public class MetadataService {
       logger.log(Level.WARNING, "Trying to fetch metadata.", e);
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(),
               "Could not fetch the metadata for the file " + inode.getInodePK().
-              getName() + ".");
+                      getName() + ".");
     }
     templates = mapper.createObjectNode();
     for (Template template : inode.getTemplates()) {
@@ -572,7 +572,7 @@ public class MetadataService {
     }
     Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(),
             HopsUtils.
-            calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
+                    calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incorrect json message/Missing or incorrect inode name");

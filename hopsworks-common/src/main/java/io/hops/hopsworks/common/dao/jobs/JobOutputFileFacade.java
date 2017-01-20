@@ -10,10 +10,6 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 
-/**
- *
- * @author stig
- */
 @Stateless
 public class JobOutputFileFacade extends AbstractFacade<JobOutputFile> {
 

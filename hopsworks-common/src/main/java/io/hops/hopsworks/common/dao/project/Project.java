@@ -219,15 +219,6 @@ public class Project implements Serializable {
     this.retentionPeriod = retentionPeriod;
   }
 
-  @JsonIgnore
-  public boolean isArchived() {
-    return archived;
-  }
-
-  public void setArchived(boolean archived) {
-    this.archived = archived;
-  }
-
   public String getDescription() {
     return description;
   }

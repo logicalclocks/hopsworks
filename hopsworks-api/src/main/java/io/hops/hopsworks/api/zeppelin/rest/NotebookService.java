@@ -9,6 +9,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.swagger.annotations.Api;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -26,6 +27,8 @@ import org.slf4j.LoggerFactory;
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Zeppelin notebook",
+        description = "Zeppelin notebook")
 public class NotebookService {
 
   Logger logger = LoggerFactory.getLogger(NotebookService.class);

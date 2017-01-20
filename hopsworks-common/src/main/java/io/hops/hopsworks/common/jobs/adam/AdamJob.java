@@ -60,7 +60,7 @@ public class AdamJob extends SparkJob {
   protected void runJob(DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso) {
     //Try to start the AM
-    boolean proceed = startApplicationMaster();
+    boolean proceed = startApplicationMaster(udfso);
     //If success: monitor running job
     if (!proceed) {
       return;

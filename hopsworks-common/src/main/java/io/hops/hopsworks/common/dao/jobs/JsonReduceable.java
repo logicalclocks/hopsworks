@@ -6,7 +6,6 @@ import io.hops.hopsworks.common.jobs.MutableJsonObject;
  * Signifies that this object can be translated in a more compact JSON format.
  * Mainly used to store JSON objects in the DB.
  * <p/>
- * @author stig
  */
 public interface JsonReduceable {
 

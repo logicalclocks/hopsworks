@@ -36,10 +36,12 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.swagger.annotations.Api;
 
 @Path("/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Stateless
+@Api(value = "User", description = "User service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 

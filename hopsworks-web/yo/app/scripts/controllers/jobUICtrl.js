@@ -3,8 +3,8 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location',
-          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location) {
+        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location','KibanaService',
+          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location, KibanaService) {
 
             var self = this;
             this.job = job;
@@ -13,6 +13,7 @@ angular.module('hopsWorksApp')
             this.showExecutions = false;
             this.projectId = $routeParams.projectID;
             this.ui = "";
+            self.current="";
 
             var getJobUI = function () {
 
@@ -20,6 +21,7 @@ angular.module('hopsWorksApp')
                       function (success) {
 
                         self.ui = success.data;
+                        self.current = "jobUI";
                         if(self.ui!==""){
                           var iframe = document.getElementById('ui_iframe');
                           iframe.src = self.ui;
@@ -27,8 +29,16 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
+              //Send request to create index in Kibana
+              //Lower case is for elasticsearch index
+              KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
+                function (success) {
+                  console.log('Successful creation of Kibana index:'+self.job.project.name);
+                }, function (error) {
+                  console.log('Did not create Kibana index:'+self.job.project.name);
+              });
 
-            }
+            };
 
             getJobUI();
 
@@ -38,6 +48,7 @@ angular.module('hopsWorksApp')
                       function (success) {
 
                         self.ui = success.data;
+                        self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
                         if(iframe!==null){
                           iframe.src = self.ui;
@@ -46,7 +57,43 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
               });
 
-            }
+            };
+            
+            self.kibanaUI = function () {
+              self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:"+self.job.project.name.toLowerCase()+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"+self.job.name+")),sort:!(%27@timestamp%27,asc))";
+              self.current = "kibanaUI";
+            };
+            
+            self.grafanaUI = function () {
+              JobService.getAppInfo(projectId, job.id).then(
+                      function(success) {
+                        var info = success.data;
+                        var appid = info.appId;
+                        var startTime= info.startTime;
+                        var finishTime=info.endTime;
+                        //nbExecutors=;
+                        if(info.now){
+                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
+                                  + appid + "&maxExecutorId=" 
+                                  + info.nbExecutors + "&from=" 
+                                  + startTime;
+                        }else{
+                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
+                                  + appid +  "&maxExecutorId=" 
+                                  + info.nbExecutors + "&from=" 
+                                  + startTime + "&to=" 
+                                  + finishTime;
+                        }
+                        self.current = "grafanaUI";
+                        var iframe = document.getElementById('ui_iframe');
+                        if(iframe!==null){
+                          iframe.src = self.ui;
+                        }
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', 
+                  ttl: 15000});
+              });
+            };
             
             self.backToHome = function () {
               getJobUI();
@@ -54,6 +101,9 @@ angular.module('hopsWorksApp')
 
             self.refresh = function () {
               var ifram = document.getElementById('ui_iframe');
+              if(self.current==="grafanaUI"){
+                self.grafanaUI();
+              }
               if(ifram!==null){
                 ifram.contentWindow.location.reload();
               }

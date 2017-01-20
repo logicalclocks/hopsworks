@@ -120,7 +120,7 @@ a:focus {
 }
 
 .modal-xlg {
-  min-width: 1200px;
+  min-width: 99%;
 }
 
 /* Project list in home */

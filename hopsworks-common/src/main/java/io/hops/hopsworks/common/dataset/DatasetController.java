@@ -1,5 +1,27 @@
 package io.hops.hopsworks.common.dataset;
 
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.log.operation.OperationType;
+import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
+import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
+import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
+import io.hops.hopsworks.common.dao.metadata.Template;
+import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
+import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -8,36 +30,17 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.validation.ValidationException;
+import javax.ws.rs.core.Response;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
-import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
-import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.util.HopsUtils;
 
 /**
  * Contains business logic pertaining DataSet management.
- * <p/>
- * @author stig
+ *  
  */
 @Stateless
 public class DatasetController {
@@ -58,6 +61,8 @@ public class DatasetController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private OperationsLogFacade operationsLogFacade;
+  @EJB
+  private Settings settings;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -78,6 +83,7 @@ public class DatasetController {
    * @param dfso
    * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
+   * @throws io.hops.hopsworks.common.exception.AppException
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
    * @throws IOException if the creation of the dataset failed.
@@ -87,7 +93,7 @@ public class DatasetController {
           String datasetDescription, int templateId, boolean searchable,
           boolean defaultDataset, DistributedFileSystemOps dfso,
           DistributedFileSystemOps udfso)
-          throws IOException {
+          throws IOException, AppException {
     //Parameter checking.
     if (user == null) {
       throw new NullPointerException(
@@ -102,7 +108,8 @@ public class DatasetController {
     try {
       FolderNameValidator.isValidName(dataSetName);
     } catch (ValidationException e) {
-      throw new IOException("Invalid folder name for DataSet: " + e.getMessage());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid folder name for DataSet: " + e.getMessage());
     }
     //Logic
     boolean success;
@@ -114,8 +121,9 @@ public class DatasetController {
             HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
-      throw new IOException(
-              "Invalid folder name for DataSet: name alrady exist.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid folder name for DataSet: "
+              + ResponseMessages.FOLDER_NAME_EXIST);
     }
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Permission 770
@@ -205,7 +213,7 @@ public class DatasetController {
       dsRelativePath = dsRelativePath.substring(1);
     }
     //The array representing the DataSet-relative path
-    String[] relativePathArray = dsRelativePath.split(File.separator);
+    String[] relativePathArray = dsRelativePath.split(File.separator); 
     String fullPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
             + datasetName + "/" + dsRelativePath;
     //Parameter checking

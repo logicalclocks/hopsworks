@@ -2,9 +2,6 @@ package io.hops.hopsworks.common.project;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dataset.FolderNameValidator;
-import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,17 +11,69 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.Stateless;
-import javax.ejb.EJB;
-import javax.ejb.EJBException;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+
 import javax.ws.rs.core.Response;
 
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.log.operation.OperationType;
+import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
+import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentAction;
+import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory;
+import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
+import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryPK;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.Activity;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
+import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.LocalhostServices;
+import io.hops.hopsworks.common.util.Settings;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import javax.ejb.EJB;
+import javax.ejb.EJBException;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
@@ -34,45 +83,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import io.hops.hopsworks.common.dao.user.activity.Activity;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryPK;
-import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.util.LocalhostServices;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import org.json.JSONObject;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -134,7 +145,7 @@ public class ProjectController {
    * @param dfso
    * @return
    * @throws IllegalArgumentException if the project name already exists.
-   * @throws AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    * @throws IOException if the DIR associated with the project could not be
    * created. For whatever reason.
    */
@@ -224,7 +235,7 @@ public class ProjectController {
         this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
                 new YarnProjectsQuota(project.getName(), Integer.parseInt(
                         settings
-                        .getYarnDefaultQuota()), 0));
+                                .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
@@ -251,7 +262,6 @@ public class ProjectController {
    * @param dfso
    * @param udfso
    * @throws ProjectInternalFoldersFailedException
-   * @throws AppException
    */
   public void createProjectLogResources(String username, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
@@ -289,6 +299,31 @@ public class ProjectController {
                 ds.getDescription(), project.getName());
       }
     } catch (IOException | EJBException e) {
+      throw new ProjectInternalFoldersFailedException(
+              "Could not create project resources ", e);
+    }
+  }
+
+  /**
+   *
+   * @param username
+   * @param project
+   * @param dfso
+   * @param udfso
+   * @throws ProjectInternalFoldersFailedException
+   * @throws AppException
+   */
+  public void copySparkStreamingResources(String username, Project project,
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          ProjectInternalFoldersFailedException, AppException {
+    try {
+      udfso.copyInHdfs(new Path(Settings.getSparkLog4JPath(settings.
+              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+              + "/" + Settings.DefaultDataset.RESOURCES));
+      udfso.copyInHdfs(new Path(Settings.getSparkMetricsPath(settings.
+              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+              + "/" + Settings.DefaultDataset.RESOURCES));
+    } catch (IOException e) {
       throw new ProjectInternalFoldersFailedException(
               "Could not create project resources ", e);
     }
@@ -359,7 +394,7 @@ public class ProjectController {
 //        try {
 //
 //          // For all members of the project, create an account for them and 
-//            //copy their public keys to ~/.ssh/authorized_keys
+//          //copy their public keys to ~/.ssh/authorized_keys
 //          List<ProjectTeam> members = projectTeamFacade.findMembersByProject(
 //                  project);
 //          for (ProjectTeam pt : members) {
@@ -563,7 +598,7 @@ public class ProjectController {
             if (inode.getInodePK().getName().contains("snappy")) {
               location = new Path(historyPath + "/" + inode.getInodePK().
                       getName());
-              logger.log(Level.SEVERE, "chown {0}", location.toString());
+              logger.log(Level.SEVERE, "chown " + location.toString());
               dfso.setOwner(location, UserGroupInformation.getLoginUser().
                       getUserName(), "hadoop");
 
@@ -579,7 +614,7 @@ public class ProjectController {
 
         hdfsUsersBean.deleteProjectGroupsRecursive(project, dsInProject);
         hdfsUsersBean.deleteProjectUsers(project, projectTeam);
-        //zeppelinConfFactory.deleteZeppelinConfDir(project);
+        //ZeppelinConfigFactory.deleteZeppelinConfDir(project);
         //projectPaymentsHistoryFacade.remove(projectPaymentsHistory);
         yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
       }
@@ -593,6 +628,9 @@ public class ProjectController {
 
     // TODO: DELETE THE KAFKA TOPICS
     userCertsFacade.removeAllCertsOfAProject(project.getName());
+
+    //Delete elasticsearch template for this project
+    manageElasticsearch(project.getName(), false);
 
     LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(),
             project.getName());
@@ -628,7 +666,8 @@ public class ProjectController {
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
                   equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
                   && !projectTeam.
-                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
+                          getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
+                                  getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
@@ -752,7 +791,7 @@ public class ProjectController {
    *
    * @param name
    * @return project DTO that contains team members and services
-   * @throws se.kth.hopsworks.rest.AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public ProjectDTO getProjectByName(String name) throws AppException {
     //find the project entity from hopsworks database
@@ -939,6 +978,31 @@ public class ProjectController {
   }
 
   /**
+   * Retrieves all the project teams that a user have a role.
+   * <p/>
+   *
+   * @param email of the user
+   * @param ignoreCase
+   * @return a list of project names
+   */
+  public List<String> findProjectNamesByUser(String email, boolean ignoreCase) {
+    Users user = userBean.getUserByEmail(email);
+    List<ProjectTeam> projectTeams = projectTeamFacade.findByMember(user);
+    List<String> projects = null;
+    if (projectTeams != null && projectTeams.size() > 0) {
+      projects = new ArrayList<>();
+      for (ProjectTeam team : projectTeams) {
+        if (ignoreCase) {
+          projects.add(team.getProject().getName().toLowerCase());
+        } else {
+          projects.add(team.getProject().getName());
+        }
+      }
+    }
+    return projects;
+  }
+
+  /**
    * Retrieves all the project teams for a project
    * <p/>
    *
@@ -1011,11 +1075,11 @@ public class ProjectController {
       if (file.length > 1) {
         logger.log(Level.WARNING,
                 "More than one spark-examples*.jar found in {0}.", dir.
-                getAbsolutePath());
+                        getAbsolutePath());
       }
       udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
-              getName() + "/TestJob/spark-examples.jar");
+                      getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -1037,4 +1101,109 @@ public class ProjectController {
   public void logProject(Project project, OperationType type) {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
+
+  /**
+   * Handles Kibana related indices and templates for projects.
+   *
+   * @param project
+   * @param create creation or deletion stage of project
+   * @return
+   * @throws java.io.IOException
+   */
+  public boolean manageElasticsearch(String project, boolean create)
+          throws IOException {
+    Map<String, String> params = new HashMap<>();
+    if (create) {
+      params.put("op", "PUT");
+      params.put("project", project);
+      params.put("resource", "_template");
+      params.put("data", "{\"template\":\"" + project
+              + "\",\"mappings\":{\"logs\":{\"properties\":{\"application\":"
+              + "{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host"
+              + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
+              + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
+              + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
+      JSONObject resp = sendElasticsearchReq(params);
+      if (resp.has("acknowledged")) {
+        return (Boolean) resp.get("acknowledged");
+      }
+
+    } else {
+      //1. Delete Kibana index
+      params.put("url", settings.getPublicSearchEndpoint().substring(0,
+              settings.getPublicSearchEndpoint().indexOf("/api"))
+              + "/kibana/elasticsearch/.kibana/index-pattern/" + project);
+      params.put("project", project);
+      params.put("op", "DELETE");
+      params.put("resource", "");
+      //2. Delete Elasticsearch Index
+
+      JSONObject resp = sendElasticsearchReq(params);
+      boolean indexDeleted = false;
+      if (resp != null && resp.has("acknowledged")) {
+        indexDeleted = (Boolean) resp.get("acknowledged");
+      }
+      //3. Delete Elasticsearch Template
+      params.put("resource", "_template");
+      boolean templateDeleted = false;
+      resp = sendElasticsearchReq(params);
+      if (resp != null && resp.has("acknowledged")) {
+        templateDeleted = (Boolean) resp.get("acknowledged");
+      }
+
+      if (indexDeleted && templateDeleted) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   *
+   * @param params
+   * @return
+   * @throws MalformedURLException
+   * @throws IOException
+   */
+  private JSONObject sendElasticsearchReq(Map<String, String> params) throws
+          MalformedURLException, IOException {
+    String templateUrl;
+    if (!params.containsKey("url")) {
+      templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
+              + params.get("resource") + "/" + params.get("project");
+    } else {
+      templateUrl = params.get("url");
+    }
+    URL obj = new URL(templateUrl);
+    HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
+
+    conn.setDoOutput(true);
+    conn.setRequestMethod(params.get("op"));
+    if (params.get("op").equalsIgnoreCase("PUT")) {
+      String data = params.get("data");
+      try (OutputStreamWriter out
+              = new OutputStreamWriter(conn.getOutputStream())) {
+        out.write(data);
+      }
+    }
+    try {
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+              (conn.getInputStream())));
+
+      String output;
+      StringBuilder outputBuilder = new StringBuilder();
+      while ((output = br.readLine()) != null) {
+        outputBuilder.append(output);
+      }
+
+      conn.disconnect();
+      return new JSONObject(outputBuilder.toString());
+
+    } catch (FileNotFoundException ex) {
+      logger.log(Level.WARNING, "Elasticsearch resource " + params.get(
+              "resource") + " was not found");
+    }
+    return null;
+  }
+
 }
