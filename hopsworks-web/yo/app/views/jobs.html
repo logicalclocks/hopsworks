@@ -330,7 +330,7 @@
                     <div id="errs" class="tab-pane fade">
                        <div uib-accordion
                           close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
-                          <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.appId}}">
+                          <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
                              <div uib-accordion-heading ng-if="item.appId !== ''">
                                 Application Id = {{item.appId}}
                                 <div class="pull-right">

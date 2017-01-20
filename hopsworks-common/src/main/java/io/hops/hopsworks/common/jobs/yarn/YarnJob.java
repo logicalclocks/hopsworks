@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -113,7 +114,7 @@ public abstract class YarnJob extends HopsJob {
    * @return True if the AM was started, false otherwise.
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
-  protected final boolean startApplicationMaster() throws IllegalStateException {
+  protected final boolean startApplicationMaster(DistributedFileSystemOps udfso) throws IllegalStateException {
     if (runner == null) {
       throw new IllegalStateException(
               "The YarnRunner has not been initialized yet.");
@@ -135,6 +136,10 @@ public abstract class YarnJob extends HopsJob {
               + getExecution()
               + ". Aborting execution",
               e);
+      writeLog("Failed to start application master for execution "
+              + getExecution()
+              + ". Aborting execution",
+              e, udfso);
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     }
@@ -494,11 +499,22 @@ public abstract class YarnJob extends HopsJob {
     }
   }
 
+  protected void writeLog(String message, Exception exception, DistributedFileSystemOps udfso){
+    
+    Date date = new Date();
+    String dateString = date.toString();
+    dateString = dateString.replace(" ", "_").replace(":", "-");
+    stdErrFinalDestination = stdErrFinalDestination + jobDescription.getName() + dateString + "/stderr.log";
+    YarnLogUtil.writeLog(udfso ,stdErrFinalDestination, message, exception);
+    updateExecution(null, -1, null, stdErrFinalDestination,
+              null, null, null, null, 0);
+  }
+  
   @Override
   protected void runJob(DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso) {
     // Try to start the AM
-    boolean proceed = startApplicationMaster();
+    boolean proceed = startApplicationMaster(udfso);
 
     if (!proceed) {
       return;
