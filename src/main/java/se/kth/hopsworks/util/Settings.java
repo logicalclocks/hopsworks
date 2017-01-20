@@ -654,7 +654,7 @@ public class Settings {
     return ELASTIC_IP;
   }
 	
-  public static final int ELASTIC_PORT = 9300;
+  public static final int ELASTIC_PORT = 9200;
 
    // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";

@@ -415,6 +415,7 @@ public class ProjectService {
       projectController.addMembers(project, owner, projectMembers);
       //add the services for the project
       projectController.addServices(project, projectServices, owner);
+     
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         projectController.createProjectLogResources(owner, project, dfso,
@@ -425,7 +426,7 @@ public class ProjectService {
         datasetController.generateReadme(udfso, "TestJob",
                 "jar file to calculate pi",
                 project.getName());
-
+        projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -536,6 +537,9 @@ public class ProjectService {
 //        //Add Spark log4j and metrics files in Resources
 //        projectController.copySparkStreamingResources(owner, project, dfso,
 //                udfso);
+
+      //Create Template for this project in elasticsearch
+      projectController.manageElasticsearch(project.getName(),true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.

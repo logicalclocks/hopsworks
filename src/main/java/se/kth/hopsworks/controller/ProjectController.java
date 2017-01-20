@@ -14,9 +14,21 @@ import javax.ejb.*;
 import javax.ws.rs.core.Response;
 
 import io.hops.bbc.ProjectPaymentAction;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,6 +39,9 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.elasticsearch.ElasticsearchCorruptionException;
+import org.elasticsearch.ElasticsearchException;
+import org.json.JSONObject;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.jobs.jobhistory.Execution;
@@ -74,6 +89,7 @@ import se.kth.hopsworks.hdfsUsers.HdfsUsersFacade;
 import se.kth.hopsworks.log.ops.OperationType;
 import se.kth.hopsworks.log.ops.OperationsLog;
 import se.kth.hopsworks.log.ops.OperationsLogFacade;
+import se.kth.hopsworks.rest.JsonResponse;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -616,6 +632,9 @@ public class ProjectController {
     
     // TODO: DELETE THE KAFKA TOPICS
     userCertsFacade.removeAllCertsOfAProject(project.getName());
+    
+    //Delete elasticsearch template for this project
+    manageElasticsearch(project.getName(),false);
 
     LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(),
             project.getName());
@@ -1084,4 +1103,99 @@ public class ProjectController {
   public void logProject(Project project, OperationType type) {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
+  
+  /**
+   * Handles Kibana related indices and templates for projects.
+   *
+   * @param project
+   * @param create creation or deletion stage of project
+   * @return
+   * @throws java.io.IOException
+   */
+  public boolean manageElasticsearch(String project, boolean create)
+          throws IOException {
+    Map<String, String> params = new HashMap<>();
+    if (create) {
+      params.put("op", "PUT");
+      params.put("project", project);
+      params.put("resource", "_template");
+      params.put("data", "{\"template\":\"" + project
+              + "\",\"mappings\":{\"logs\":{\"properties\":{\"application\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
+      JSONObject resp = sendElasticsearchReq(params);
+      if (resp.has("acknowledged")) {
+        return (Boolean) resp.get("acknowledged");
+      }
+
+    } else {
+      //1. Delete Kibana index
+
+      //2. Delete Elasticsearch Index
+      params.put("op", "DELETE");
+      params.put("project", project);
+      params.put("resource", "");
+      JSONObject resp = sendElasticsearchReq(params);
+      boolean indexDeleted = false;
+      if (resp != null && resp.has("acknowledged")) {
+        indexDeleted = (Boolean) resp.get("acknowledged");
+      }
+      //3. Delete Elasticsearch Template
+      params.put("op", "DELETE");
+      params.put("project", project);
+      params.put("resource", "_template");
+      boolean templateDeleted = false;
+      resp = sendElasticsearchReq(params);
+      if (resp != null && resp.has("acknowledged")) {
+        templateDeleted = (Boolean) resp.get("acknowledged");
+      }
+      
+      if(indexDeleted && templateDeleted){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 
+   * @param params
+   * @return
+   * @throws MalformedURLException
+   * @throws IOException 
+   */
+  private JSONObject sendElasticsearchReq(Map<String, String> params) throws
+          MalformedURLException, IOException {
+    String templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
+            + params.get("resource") + "/" + params.get("project");
+    URL obj = new URL(templateUrl);
+    HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
+
+    conn.setDoOutput(true);
+    conn.setRequestMethod(params.get("op"));
+    if (params.get("op").equalsIgnoreCase("PUT")) {
+      String data = params.get("data");
+      try (OutputStreamWriter out
+              = new OutputStreamWriter(conn.getOutputStream())) {
+        out.write(data);
+      }
+    }
+    try {
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+              (conn.getInputStream())));
+
+      String output;
+      StringBuilder outputBuilder = new StringBuilder();
+      while ((output = br.readLine()) != null) {
+        outputBuilder.append(output);
+      }
+
+      conn.disconnect();
+      return new JSONObject(outputBuilder.toString());
+
+    } catch (FileNotFoundException ex) {
+      logger.log(Level.WARNING, "Elasticsearch resource " + params.get(
+              "resource") + " was not found");
+    }
+    return null;
+  }
+
 }
