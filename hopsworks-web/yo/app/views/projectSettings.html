@@ -12,8 +12,6 @@
     <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
 
     <div ng-controller="ProjectCtrl as projectCtrl">
-      <h2>Project settings</h2>
-
 
       <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()">
         <div id="updateSettings">
@@ -114,98 +112,57 @@
 
     <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
 
-      <div id="wrapper" class="toggled">
-        <div class="overlay"></div>
-
-        <div ng-include="'navProject.html'"></div>
-
-        <section>
-          <div class="content-wrapper">
-            <div growl reference="10" class="pull-right" ></div>
+      <section>
+        <div class="content-wrapper">
+          <div growl reference="10" class="pull-right" ></div>
 
 
-            <div>
-              <form class="form-horizontal">
-                <div class="form-group"  style="margin-left: 15px;">
-                  <div class="row"/>
-                  <div class="row">
+          <div>
+            <form class="form-horizontal">
+              <div class="form-group"  style="margin-left: 15px;">
+                <div class="row"/>
+                <div class="row">
 
-                    <ul class="nav nav-tabs">
-                      <li ng-class="{'active' : pythonDepsCtrl.showClusters === 1}"><a ng-click="pythonDepsCtrl.showTab(false)">Training</a></li>
-                      <li ng-class="{'active' : pythonDepsCtrl.showServing === 1}"><a ng-click="pythonDepsCtrl.showTab(true)">Serving</a></li>
-                    </ul>                
+                  <ul class="nav nav-tabs">
+                    <li ng-class="{'active' : pythonDepsCtrl.showClusters === 1}"><a ng-click="pythonDepsCtrl.showTab(false)">Training</a></li>
+                    <li ng-class="{'active' : pythonDepsCtrl.showServing === 1}"><a ng-click="pythonDepsCtrl.showTab(true)">Serving</a></li>
+                  </ul>                
 
-                  </div>
-                  <div class="row"><br></div>
-
-                  <div ng-show="pythonDepsCtrl.advanced === 1">
-                    <br>
-                    <div class="col-sm-2">
-                    </div>
-                  </div>              
                 </div>
-              </form>
+                <div class="row"><br></div>
 
-              <div ng-show="pythonDepsCtrl.showClusters === 1">
-
-                <button ng-click="accordion.expandAll()">Expand all</button>
-                <button ng-click="accordion.collapseAll()">Collapse all</button>
-
-                <v-accordion class="vAccordion--default" multiple>
-
-                  <v-pane ng-repeat="cluster in pythonDepsCtrl.clusters" expanded="cluster.isExpanded" control="accordion">
-                    <v-pane-header>
-                      {{ ::cluster.name}} 
-                      <div class="btn-group pull-right" style="bottom: 10px;" role="group">
-                        <button 
-                          uib-tooltip="Delete"
-                          ng-click="pythonDepsCtrl.toggle(cluster, $index); pythonDepsCtrl.removeCluster(cluster.name); $event.stopPropagation();"
-                          type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
-                        </button>
-                      </div>
-                    </v-pane-header>
-                    <v-pane-content>
-                      <v-accordion ng-if="cluster.jobs">
-                        <v-pane ng-repeat="job in cluster.jobs"">
-                          <v-pane-header> 
-                            {{ ::job.name}}
-                          </v-pane-header>
-                          <v-pane-content>
-                            {{ ::job.program}}
-                            <div class="btn-group pull-right" style="bottom: 10px;" role="group">
-                              <button 
-                                uib-tooltip="Delete"
-                                ng-click="pythonDepsCtrl.toggle(cluster, $index); pythonDepsCtrl.removeJob(cluster.name); $event.stopPropagation();"
-                                type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
-                              </button>
-                            </div>
-                            <v-accordion ng-if="job.tasks">
-                              <v-pane ng-repeat="task in job.tasks"">
-                                <v-pane-header> 
-                                  {{ ::task.host}}
-                                </v-pane-header>
-                                <v-pane-content>
-                                  {{ ::task.params}}
-                                </v-pane-content>
-                              </v-pane>
-
-                          </v-pane-content>
-                        </v-pane>
-                      </v-accordion>
-                    </v-pane-content>
-                  </v-pane> 
-                </v-accordion> 
-
-
-
-              </div>      
-              <div ng-show="pythonDepsCtrl.showServing == 1">
-                <br>
-                Some stuff here
+                <div ng-show="pythonDepsCtrl.advanced === 1">
+                  <br>
+                  <div class="col-sm-2">
+                  </div>
+                </div>              
               </div>
-            </div>              
-        </section>
-      </div>
+            </form>
+
+            <div ng-show="pythonDepsCtrl.showClusters === 1">
+
+              <button ng-click="accordion.expandAll()">Expand all</button>
+              <button ng-click="accordion.collapseAll()">Collapse all</button>
+
+              <v-accordion class="vAccordion--default" multiple>
+
+                <v-pane ng-repeat="dep in pythonDepsCtrl.deps" expanded="dep.isExpanded" control="accordion">
+                  <v-pane-header>
+                    {{ ::dep.name}}:: {{ ::dep.version}}
+                  </v-pane-header>
+                  <v-pane-content>
+                  </v-pane-content>
+                </v-pane>
+              </v-accordion>
+
+
+            </div>      
+            <div ng-show="pythonDepsCtrl.showServing == 1">
+              <br>
+              Some stuff here
+            </div>
+          </div>              
+      </section>
 
     </div>
   </div>

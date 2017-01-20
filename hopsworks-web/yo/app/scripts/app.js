@@ -469,7 +469,7 @@ angular.module('hopsWorksApp', [
                       }
                     })
                     .when('/project/:projectID/settings', {
-                      templateUrl: 'views/settings.html',
+                      templateUrl: 'views/projectSettings.html',
                       controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',
