@@ -61,6 +61,7 @@ import se.kth.bbc.jobs.model.description.JobDescription;
 import se.kth.bbc.jobs.model.description.JobDescriptionFacade;
 import se.kth.bbc.jobs.yarn.YarnLogUtil;
 import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.AppInfoDTO;
 import se.kth.hopsworks.controller.JobController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.hdfs.fileoperations.DistributedFileSystemOps;
@@ -69,6 +70,10 @@ import se.kth.hopsworks.hdfsUsers.controller.HdfsUsersController;
 import se.kth.hopsworks.meta.exception.DatabaseException;
 import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
+import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDBFactory;
+import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 
 /**
  *
@@ -312,6 +317,73 @@ public class JobService {
     }
   }
 
+  /**
+   * Get application run info for the specified job
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/appinfo")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getAppInfo(@PathParam("jobId") int jobId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      LOGGER.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      Execution execution = exeFacade.findForJob(job).get(0);
+
+      try {
+        long startTime = execution.getSubmissionTime().getTime();
+        long endTime = startTime + execution.getExecutionDuration();
+        boolean running = false;
+        if (!execution.getState().isFinalState()) {
+          running = true;
+        }
+
+        InfluxDB influxDB = InfluxDBFactory.connect(settings.
+                getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
+                getInfluxDBPW());
+
+        Query query = new Query("SELECT * FROM /" + execution.getAppId()
+                + ".*.executor.threadpool.activeTasks/ limit 1", "graphite");
+        QueryResult queryResult = influxDB.query(query);
+
+        influxDB.close();
+
+        int nbExecutors = 0;
+        if (queryResult != null && queryResult.getResults() != null
+                && queryResult.getResults().get(0) != null) {
+          nbExecutors = queryResult.getResults().get(0).getSeries().size();
+        }
+
+        AppInfoDTO appInfo = new AppInfoDTO(execution.getAppId(), startTime,
+                running, endTime, nbExecutors);
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(appInfo).build();
+
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+                getLocalizedMessage(), e);
+      }
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+  
   private static final HashSet<String> PASS_THROUGH_HEADERS = new HashSet<String>(
           Arrays
           .asList("User-Agent", "user-agent", "Accept", "accept",

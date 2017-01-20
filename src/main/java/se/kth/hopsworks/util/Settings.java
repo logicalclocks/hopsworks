@@ -104,6 +104,10 @@ public class Settings {
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED = "glassfish_cert";
   
+  private static final String VARIABLE_INFLUXDB_ADDRESS = "influxdb_address";
+  private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
+  private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
+          
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().isEmpty() == false)) {
@@ -232,6 +236,9 @@ public class Settings {
       GVOD_REST_ENDPOINT = setStrVar(VARIABLE_GVOD_REST_ENDPOINT, GVOD_REST_ENDPOINT);
       PUBLIC_SEARCH_ENDPOINT = setStrVar(VARIABLE_PUBLIC_SEARCH_ENDPOINT, PUBLIC_SEARCH_ENDPOINT);
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
+      INFLUXDB_ADDRESS = setStrVar(VARIABLE_INFLUXDB_ADDRESS, INFLUXDB_ADDRESS);
+      INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
+      INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       cached = true;
     }
   }
@@ -934,6 +941,27 @@ public class Settings {
     return FILE_PREVIEW_TXT_SIZE;
   }
   
+  
+  public static String INFLUXDB_ADDRESS = "http://localhost:8086";
+  public static String INFLUXDB_USER = "hopsworks";
+  public static String INFLUXDB_PW = "hopsworks";
+  
+  public synchronized String getInfluxDBAddress(){
+    checkCache();
+    return INFLUXDB_ADDRESS;
+  }
+  
+  public synchronized String getInfluxDBUser(){
+    checkCache();
+    return INFLUXDB_USER;
+  }
+  
+  public synchronized String getInfluxDBPW(){
+    checkCache();
+    return INFLUXDB_PW;
+  }
+  
+          
   //Project creation: default datasets
   public static enum DefaultDataset {
 
