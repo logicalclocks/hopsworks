@@ -5,14 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -31,8 +28,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.hopsworks.controller.ProjectController;
-import se.kth.hopsworks.rest.NoCacheResponse;
-import se.kth.hopsworks.user.model.Users;
 import se.kth.hopsworks.util.Settings;
 
 /**

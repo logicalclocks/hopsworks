@@ -1128,19 +1128,18 @@ public class ProjectController {
 
     } else {
       //1. Delete Kibana index
-
-      //2. Delete Elasticsearch Index
-      params.put("op", "DELETE");
+      params.put("url", settings.getPublicSearchEndpoint().substring(0, settings.getPublicSearchEndpoint().indexOf("/api"))+"/kibana/elasticsearch/.kibana/index-pattern/"+project);
       params.put("project", project);
+      params.put("op", "DELETE");
       params.put("resource", "");
+      //2. Delete Elasticsearch Index
+      
       JSONObject resp = sendElasticsearchReq(params);
       boolean indexDeleted = false;
       if (resp != null && resp.has("acknowledged")) {
         indexDeleted = (Boolean) resp.get("acknowledged");
       }
       //3. Delete Elasticsearch Template
-      params.put("op", "DELETE");
-      params.put("project", project);
       params.put("resource", "_template");
       boolean templateDeleted = false;
       resp = sendElasticsearchReq(params);
@@ -1164,8 +1163,13 @@ public class ProjectController {
    */
   private JSONObject sendElasticsearchReq(Map<String, String> params) throws
           MalformedURLException, IOException {
-    String templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
+    String templateUrl;
+    if(!params.containsKey("url")){
+      templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
             + params.get("resource") + "/" + params.get("project");
+    } else {
+      templateUrl = params.get("url");
+    }
     URL obj = new URL(templateUrl);
     HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
 
