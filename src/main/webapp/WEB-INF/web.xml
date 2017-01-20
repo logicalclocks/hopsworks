@@ -201,7 +201,7 @@
     <!-- Grafana proxy servlet -->
     <servlet>
         <servlet-name>GrafanaProxyServlet</servlet-name>
-        <servlet-class>io.hops.kibana.ProxyServlet</servlet-class>
+        <servlet-class>io.hops.kibana.GrafanaProxyServlet</servlet-class>
         <init-param>
             <param-name>targetUri</param-name>
             <param-value>http://localhost:3000/</param-value>
