@@ -193,8 +193,8 @@ public class YarnRunner {
           amArgs = amArgs.substring(0, amArgs.length() - 1);
           amArgs += "\"";
         }
+        args = amArgs.trim().split(" ");
       }
-      args = amArgs.trim().split(" ");
 
       /*
        * Copy the appjar to the localOS as it is needed by the Flink client
@@ -278,7 +278,9 @@ public class YarnRunner {
       aggregatedLogPath = aggregatedLogPath.replaceAll(APPID_REGEX, id);
     }
     appName = appName.replaceAll(APPID_REGEX, id);
-    amArgs = amArgs.replaceAll(APPID_REGEX, id);
+    if(amArgs != null){
+      amArgs = amArgs.replaceAll(APPID_REGEX, id);
+    }
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
     stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
