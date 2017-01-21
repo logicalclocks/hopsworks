@@ -437,7 +437,9 @@ public class FlinkYarnRunnerBuilder {
     for (String s : jobArgs) {
       amargs.append(" ").append(s);
     }
-    builder.amArgs(amargs.toString());
+    if (!amargs.toString().equals("")) {
+      builder.amArgs(amargs.toString());
+    }
     return builder.build(hadoopDir, flinkDir, nameNodeIpPort, JobType.FLINK);
   }
 

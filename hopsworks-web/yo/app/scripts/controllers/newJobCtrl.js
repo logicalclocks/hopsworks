@@ -32,17 +32,35 @@ angular.module('hopsWorksApp')
             self.consumerGroups = [{id: 'group1', "name": "default"}];
             self.groupsSelected = false;
             self.showAdvanced = false;
+            self.selectedTopics = [];
             self.getAllTopics = function () {
-              self.topics = [];
-              KafkaService.getProjectAndSharedTopics(self.projectId).then(
-                      function (success) {
-                        var topics = success.data;
-                        for (var i = 0; i < topics.length; i++) {
-                          self.topics.push({name: topics[i]['name'], ticked: false});
-                        }
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-              });
+              if (self.kafkaSelected) {
+                if (typeof self.runConfig.kafka !== "undefined" && 
+                        typeof self.runConfig.kafka.topics !== "undefined") {
+                  self.selectedTopics = self.runConfig.kafka.topics;
+                }
+                self.topics = [];
+                KafkaService.getProjectAndSharedTopics(self.projectId).then(
+                        function (success) {
+                          var topics = success.data;
+                          for (var i = 0; i < topics.length; i++) {
+                            if (self.selectedTopics.length > 0) {
+                              var found = false;
+                              for (var j = 0; j < self.selectedTopics.length; j++) {
+                                if (self.selectedTopics[j]['name'] === topics[i]['name']) {
+                                  found = true;
+                                  break;
+                                }
+                              }
+                              self.topics.push({name: topics[i]['name'], ticked: found});
+                            } else {
+                              self.topics.push({name: topics[i]['name'], ticked: false});
+                            }
+                          }
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                });
+              }
             };
 
             self.addGroup = function () {
@@ -56,12 +74,12 @@ angular.module('hopsWorksApp')
                 self.consumerGroups.splice(lastItem);
               }
             };
-            
-            self.toggleKafka = function(){
+
+            self.toggleKafka = function () {
               self.kafkaSelected = !self.kafkaSelected;
             };
-            
-            self.toggleAdvanced = function(){
+
+            self.toggleAdvanced = function () {
               self.runConfig.kafka.advanced = !self.runConfig.kafka.advanced;
             };
 
@@ -296,6 +314,8 @@ angular.module('hopsWorksApp')
                     delete self.runConfig.kafka.consumergroups;
                   }
                 }
+              } else {
+                delete self.runConfig.kafka;
               }
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
@@ -634,7 +654,7 @@ angular.module('hopsWorksApp')
                   if (typeof self.runConfig.kafka !== "undefined") {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
-                    if(typeof self.runConfig.kafka.consumergroups !== "undefined"){
+                    if (typeof self.runConfig.kafka.consumergroups !== "undefined") {
                       self.groupsSelected = true;
                       self.consumerGroups = self.runConfig.kafka.consumergroups;
                     }

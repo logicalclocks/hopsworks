@@ -1202,6 +1202,13 @@ public class ProjectController {
     } catch (FileNotFoundException ex) {
       logger.log(Level.WARNING, "Elasticsearch resource " + params.get(
               "resource") + " was not found");
+    } catch (IOException ex) {
+      if (ex.getMessage().contains("kibana")) {
+        logger.log(Level.WARNING, "Kibana index could not be deleted for "
+                + params.get("project"));
+      } else {
+        throw new IOException(ex);
+      }
     }
     return null;
   }
