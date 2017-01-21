@@ -437,16 +437,8 @@ public class ProjectService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
             ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
         }
-<<<<<<< HEAD
-        //Severe: java.io.FileNotFoundException: /tmp/tempstores/
-        //demo_admin000__meb10000__kstore.jks (No such file or directory)
-        LocalhostServices.
-          createUserCertificates(settings.getIntermediateCaDir(),
-            project.getName(), user.getUsername());
-=======
         LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
                         project.getName(), user.getUsername());
->>>>>>> b1a45b277826e94539ee4b8ce1ea67bd848db511
         certificateBean.putUserCerts(project.getName(), user.getUsername());
       } catch (IOException ex) {
         logger.log(Level.SEVERE,
