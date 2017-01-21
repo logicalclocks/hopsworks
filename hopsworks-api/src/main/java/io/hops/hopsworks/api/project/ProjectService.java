@@ -135,8 +135,7 @@ public class ProjectService {
     String email = sc.getUserPrincipal().getName();
     List<ProjectTeam> list = projectController.findProjectByUser(email);
     GenericEntity<List<ProjectTeam>> projects
-            = new GenericEntity<List<ProjectTeam>>(list) {
-    };
+            = new GenericEntity<List<ProjectTeam>>(list) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -800,8 +799,7 @@ public class ProjectService {
 
     List<DataSetDTO> publicDatasets = datasetFacade.findPublicDatasets();
     GenericEntity<List<DataSetDTO>> datasets
-            = new GenericEntity<List<DataSetDTO>>(publicDatasets) {
-    };
+            = new GenericEntity<List<DataSetDTO>>(publicDatasets) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             datasets).build();
