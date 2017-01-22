@@ -278,7 +278,7 @@
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
               <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
+                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
                   Kafka
                 </button>
               </div>
