@@ -262,7 +262,10 @@ angular.module('hopsWorksApp')
             };
 
             self.showUI = function (job) {
-              ModalService.jobUI('xlg', job, self.projectId);
+//              ModalService.jobUI('xlg', job, self.projectId);
+              StorageService.store(self.projectId + "_jobui", job);
+              $location.path('project/' + self.projectId + '/jobMonitor');
+
             };
 
             self.showLogs = function (jobId) {
@@ -323,11 +326,15 @@ angular.module('hopsWorksApp')
               self.selectedIndex = index;
               self.currentToggledIndex = index;
               self.currentjob = job;
+              StorageService.remove(self.projectId + "_jobui")
+              StorageService.store(self.projectId + "_jobui", job)
+
             };
             
             //untoggle is not used in the jobsCtrl
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
+              StorageService.remove(self.projectId + "_jobui")
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
                 temp.showing = false;
