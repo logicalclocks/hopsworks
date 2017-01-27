@@ -827,7 +827,7 @@ public class Settings {
   }
 
   private String PUBLIC_SEARCH_ENDPOINT
-          = "http://10.0.2.15:8080/hopsworks/api/elastic/publicdatasets/";
+          = "http://10.0.2.15:8080/hopsworks-web-api/api/elastic/publicdatasets/";
 
   public synchronized String getPublicSearchEndpoint() {
     checkCache();

@@ -54,7 +54,7 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
         response.sendRedirect(contextPath
                 + "/security/protected/audit/adminAuditIndex.xhtml");
       } else if (isInUserRole(user)) {
-        response.sendRedirect("/hopsworks/#home");
+        response.sendRedirect("/hopsworks-web-0.1.0/#home");
       }
     } else {
       chain.doFilter(req, res);

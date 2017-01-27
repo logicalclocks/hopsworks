@@ -171,7 +171,7 @@ public class RoleEnforcementPoint implements Serializable {
       if (null != sess) {
         sess.invalidate();
       }
-      ctx.getExternalContext().redirect("/hopsworks/#/home");
+      ctx.getExternalContext().redirect("/hopsworks-web-0.1.0/#/home");
     } catch (IOException | ServletException ex) {
       Logger.getLogger(RoleEnforcementPoint.class.getName()).
               log(Level.SEVERE, null, ex);
