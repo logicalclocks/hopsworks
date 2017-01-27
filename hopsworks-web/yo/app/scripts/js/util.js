@@ -129,7 +129,7 @@ function getApiPath() {
 }
 
 function getLocationBase() {
-  return location.protocol + "//" + location.hostname +":" + getPort() + "/hopsworks";
+  return location.protocol + "//" + location.hostname +":" + getPort() + "/hopsworks-web-0.1.0";
 };
 
 function getApiLocationBase() {

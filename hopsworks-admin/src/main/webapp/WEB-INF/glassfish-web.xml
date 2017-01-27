@@ -9,7 +9,6 @@
       </session-config>
   -->
 
-  <context-root>/hopsworks-admin</context-root>
   <property name="allowLinking" value="true"/>
   <security-role-mapping>
     <role-name>HOPS_ADMIN</role-name>
