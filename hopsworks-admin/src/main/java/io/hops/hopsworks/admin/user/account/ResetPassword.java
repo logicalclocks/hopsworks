@@ -550,7 +550,7 @@ public class ResetPassword implements Serializable {
       req.logout();
       session.invalidate();
       mgr.setOnline(people.getUid(), -1);
-      context.getExternalContext().redirect("/hopsworks-web-0.1.0/#/home");
+      context.getExternalContext().redirect("/hopsworks/#/home");
     } catch (IOException | ServletException ex) {
       Logger.getLogger(ResetPassword.class.getName()).
               log(Level.SEVERE, null, ex);
