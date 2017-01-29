@@ -27,9 +27,9 @@ angular.module('hopsWorksApp')
               getNotesInProject(null, false);
             };
             
-            var startLoading = function (lable) {
+            var startLoading = function (label) {
               self.loading = true;
-              self.loadingText = lable;
+              self.loadingText = label;
             };
             
             var stopLoading = function () {

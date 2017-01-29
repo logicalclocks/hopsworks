@@ -1,67 +1,71 @@
-
-<div ng-include="'header.html'"></div>
-
-      <div class="job-content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
-      </div>
+<div ng-include="'header.html'"/>
 
 
-        <!-- Page Content -->
-        <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >	
-          <div class="row rg-row-top" resizable r-directions="['bottom']">
+<!-- Page Content -->
 
-            <div style="padding-bottom: 10px">
-              <span class="field-info" uib-tooltip="back to jobs page" style="padding-top: 5px;padding-left:3px">
-                <button style=""
-                        ng-click="jobUICtrl.backToHome();
-                                  $event.stopPropagation();"
-                        class="btn btn-primary glyphicon glyphicon-home">
-                </button>
-              </span>
-              <span class="field-info" uib-tooltip="show yarn app ui" style="padding-top: 5px;padding-left:3px">
-                <button style=""
-                        ng-click="jobUICtrl.yarnUI();
-                                  $event.stopPropagation();"
-                        class="btn btn-primary glyphicon glyphicon-asterisk">
-                </button>
-              </span>
-              <span class="field-info" uib-tooltip="display Kibana dashboard" style="padding-top: 5px;padding-left:3px">
-                <button style=""
-                        ng-click="jobUICtrl.kibanaUI();
-                                  $event.stopPropagation();"
-                        class="btn btn-primary glyphicon glyphicon-open-file">
-                </button>
-              </span>
-              <span class="field-info" uib-tooltip="display grafana dashboard" style="padding-top: 5px;padding-left:3px">
-                <button style=""
-                        ng-click="jobUICtrl.grafanaUI();
-                                  $event.stopPropagation();"
-                        class="btn btn-primary glyphicon glyphicon-dashboard">
-                </button>
-              </span>
-              <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
-                <button style=""
-                        ng-click="jobUICtrl.refresh();
-                                  $event.stopPropagation();"
-                        class="btn btn-primary glyphicon glyphicon-refresh">
-                </button>
-              </span>
-            </div>
-            <div ng-if="jobUICtrl.ui !== ''">
-              <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="100%" height ="87%"></iframe> 
-            </div>
-            <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
+<div class="content" style="height:100%; overflow: hidden; margin-left: 20px; margin-top: 20px;" >	
+
+              <div ng-if="jobUICtrl.loading" class="loadingwrap">
+                <div class="loading-content">
+                  <div class="loader-in-wrap"></div>
+                  {{zeppelinCtrl.loadingText}}
+                </div>
+              </div> 
+
+  <div class="row" resizable r-directions="['bottom']">
+
+    <div style="padding-bottom: 10px">
+      <span class="field-info" uib-tooltip="back to jobs page" style="padding-top: 5px;padding-left:3px">
+        <button style=""
+                ng-click="jobUICtrl.backToHome();
+                  $event.stopPropagation();"
+                class="btn btn-primary glyphicon glyphicon-home">
+        </button>
+      </span>
+      <span class="field-info" uib-tooltip="show yarn app ui" style="padding-top: 5px;padding-left:3px">
+        <button style=""
+                ng-click="jobUICtrl.yarnUI();
+                  $event.stopPropagation();"
+                class="btn btn-primary glyphicon glyphicon-asterisk">
+        </button>
+      </span>
+      <span class="field-info" uib-tooltip="display Kibana dashboard" style="padding-top: 5px;padding-left:3px">
+        <button style=""
+                ng-click="jobUICtrl.kibanaUI();
+                  $event.stopPropagation();"
+                class="btn btn-primary glyphicon glyphicon-open-file">
+        </button>
+      </span>
+      <span class="field-info" uib-tooltip="display grafana dashboard" style="padding-top: 5px;padding-left:3px">
+        <button style=""
+                ng-click="jobUICtrl.grafanaUI();
+                  $event.stopPropagation();"
+                class="btn btn-primary glyphicon glyphicon-dashboard">
+        </button>
+      </span>
+      <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
+        <button style=""
+                ng-click="jobUICtrl.refresh();
+                  $event.stopPropagation();"
+                class="btn btn-primary glyphicon glyphicon-refresh">
+        </button>
+      </span>
+    </div>
+    <div ng-if="jobUICtrl.ui !== ''">
+      <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="100%" height ="87%"></iframe> 
+    </div>
+    <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
 
 
 
 
 
-            <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
-              No Job selected. 
-            </h3>
-          </div>
+    <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
+      No Job selected. 
+    </h3>
+  </div>
 
-        </div>
-        
-        
-<div ng-include="'footer.html'"></div>
+</div>
+
+
+<div ng-include="'footer.html'"/>

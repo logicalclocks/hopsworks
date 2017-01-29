@@ -4,10 +4,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', '$route', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService',
-          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, $route, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
 
             var self = this;
@@ -222,7 +222,7 @@ angular.module('hopsWorksApp')
                                 if (success.errorMsg) {
                                   growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
                                 }
-                                $uibModalStack.getTop().key.close();
+                                $route.reload();
                               }, function (error) {
                         self.working = false;
                         growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -230,11 +230,10 @@ angular.module('hopsWorksApp')
                       );
             };
 
-            self.close = function () {
-              $uibModalStack.getTop().key.dismiss();
-            };
-
             $scope.showHamburger = $location.path().indexOf("project") > -1;
+            
+            // Show the searchbar if you are (1) within a project on datasets or (2) on the landing page
+//            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
 
 
             self.goToUrl = function(serviceName) {

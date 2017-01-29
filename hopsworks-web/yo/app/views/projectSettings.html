@@ -1,4 +1,3 @@
-<!-- A dialog presenting job UI. -->
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
@@ -17,151 +16,192 @@
           <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
 
           <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()">
-            <div id="updateSettings">
 
-              <div class="row">
+          <h2>Project Settings</h2>
+            <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;">
+              <div class="panel-body">
+                <div id="updateSettings">
 
-                <div class="col-md-7">
-                  <fieldset>
-                    <div class="control-group col-md-offset-1">
-                      <label class="control-label">Name</label>
-                      <div class="controls">
-                        <input class="form-control" name="project_name"
-                               type="text"
-                               id="projectname"
-                               ng-model="projectCtrl.currentProject.projectName"
-                               disabled>
-                      </div>
-                      <p></p>
-                      <label class="control-label">Description</label>
-                      <div class="controls">
-                        <textarea class="form-control" style="resize:none;"
-                                  ng-model="projectCtrl.currentProject.description"
-                                  rows="3">
-                        </textarea>
-                      </div>
-                      <p></p>
-                      <label class="control-label">Data Retention Period</label>
-                      <div class='input-group date col-md-8' id='schedulePicker'>
-                        <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
-                        <span class="input-group-addon">
-                          <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                      </div>
-                      <script type="text/javascript">
-                                $(function () {
-                                  $('#schedulePicker').datetimepicker({
-                                    format: 'YYYY-MM-DD'
-                                  }).on('dp.change', function (e) {
-                                    $('#dpInput').trigger('input');
-                                  });
-                                });</script>
+                  <div class="row">
 
-                      <p></p>
+                    <div class="col-md-7">
+                      <fieldset>
+                        <div class="control-group col-md-offset-1">
+                          <label class="control-label">Name</label>
+                          <div class="controls">
+                            <input class="form-control" name="project_name"
+                                   type="text"
+                                   id="projectname"
+                                   ng-model="projectCtrl.currentProject.projectName"
+                                   disabled>
+                          </div>
+                          <p></p>
+                          <label class="control-label">Description</label>
+                          <div class="controls">
+                            <textarea class="form-control" style="resize:none;"
+                                      ng-model="projectCtrl.currentProject.description"
+                                      rows="3">
+                            </textarea>
+                          </div>
+                          <p></p>
+                          <label class="control-label">Data Retention Period</label>
+                          <div class='input-group date col-md-8' id='schedulePicker'>
+                            <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="yyyy-MM-dd" class="form-control">
+                            <span class="input-group-addon">
+                              <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                          </div>
+                          <script type="text/javascript">
+                                    $(function () {
+                                      $('#schedulePicker').datetimepicker({
+                                        format: 'YYYY-MM-DD'
+                                      }).on('dp.change', function (e) {
+                                        $('#dpInput').trigger('input');
+                                      });
+                                    });</script>
+
+                          <p></p>
+                        </div>
+                      </fieldset>
                     </div>
-                  </fieldset>
-                </div>
 
-                <div class="col-md-5">
-                  <label class="text-muted">Status</label>
-                  <div class="row" style="margin-left:15px; margin-bottom:0px">
-                    <fieldset>
-                      <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                        {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
-                      </span>          
-                    </fieldset>
-                  </div>
-                  <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                    <fieldset>
-                      <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                        {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
-                      </span>          
-                    </fieldset>
-                  </div>
-                  <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
-                    <fieldset>
-                      <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                        {{projectCtrl.yarnQuota()}} CPU 
-                      </span>          
-                    </fieldset>    
-                  </div>
-
-                  <fieldset>
-                    <label class="text-muted" ng-show="projectCtrl.allServicesSelected()">Services</label>
-                    <div class="control-group col-md-offset-2">
-                      <div class="row" ng-repeat="projectType in projectCtrl.projectTypes">
-                        <md-checkbox class=" row md-primary" ng-click="projectCtrl.exists(projectType)">
-                          {{ projectType}}
-                        </md-checkbox>
+                    <div class="col-md-5">
+                      <label class="text-muted">Status</label>
+                      <div class="row" style="margin-left:15px; margin-bottom:0px">
+                        <fieldset>
+                          <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                            {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
+                          </span>          
+                        </fieldset>
                       </div>
-                    </div>
-                  </fieldset>
-                </div>
+                      <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                        <fieldset>
+                          <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                            {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
+                          </span>          
+                        </fieldset>
+                      </div>
+                      <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
+                        <fieldset>
+                          <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                            {{projectCtrl.yarnQuota()}} CPU 
+                          </span>          
+                        </fieldset>    
+                      </div>
 
+                      <fieldset>
+                        <label class="text-muted" ng-show="projectCtrl.allServicesSelected()">Services</label>
+                        <div class="control-group col-md-offset-1">
+                          <div class="row" ng-repeat="projectType in projectCtrl.projectTypes">
+                            <md-checkbox class=" row md-primary" ng-click="projectCtrl.exists(projectType)">
+                              {{ projectType}}
+                            </md-checkbox>
+                          </div>
+                        </div>
+                      </fieldset>
+                    </div>
+
+                  </div>
+                </div>
               </div>
+              <div class="panel-footer">              
 
-              <div >
-                <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
+                <!--<div  class="col-md-offset-1">-->
+                <!--<button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>-->
                 <button class="btn btn-primary" type="submit" 
                         ng-disabled="projectCtrl.working">
                   <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                   Save
                 </button>
+                <!--</div>-->
               </div>
+
+            </div>      
           </form>
 
-        </div>
+          <h2>Python Libraries</h2>
+          <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
 
+            <form role="form" name="pythonForm" ng-submit="pythonDepsCtrl.install()">
+              <div class="panel panel-default"  style="margin-top: 20px; width: 800px; background-color: #F7F7F7;">
+                <div class="panel-body">
 
-        <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
+                  <div class="col-md-offset-1">
 
-          <section>
-            <div class="content-wrapper">
-              <div growl reference="10" class="pull-right" ></div>
-
-
-              <div>
-                <form class="form-horizontal">
-                  <div class="form-group"  style="margin-left: 15px;">
-                    <div class="row"/>
-                    <div class="row">
-
+                    <label class="control-label row">Conda Channel Url</label>
+                    <div class="controls row">
+                      <input class="col-md-6" name="conda_channel_url"
+                             type="text"
+                             id="condaurl"
+                             ng-model="pythonDepsCtrl.condaUrl">
                     </div>
-                    <div class="row"><br></div>
+                    <label class="control-label row">Library</label>
+                    <div class="controls row">
+                      <input class="col-md-6" name="conda_library"
+                             type="text"
+                             id="condalib"
+                             ng-model="pythonDepsCtrl.library">
+
+                      <div class="col-md-2" style="margin-left: 10px; margin-bottom: 10px;">
+                        <button class="btn btn-success button-sm" type="submit" 
+                                ng-disabled="projectCtrl.working">
+                          <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          Install <i style="margin-left: 10px;" class="glyphicon glyphicon-plus"></i>
+                        </button>
+                      </div>
+                    </div>
 
                   </div>
-                </form>
-
-                <div ng-show="pythonDepsCtrl.showClusters === 1">
-
-                  <button ng-click="accordion.expandAll()">Expand all</button>
-                  <button ng-click="accordion.collapseAll()">Collapse all</button>
-
-                  <v-accordion class="vAccordion--default" multiple>
-
-                    <v-pane ng-repeat="dep in pythonDepsCtrl.deps" expanded="dep.isExpanded" control="accordion">
-                      <v-pane-header>
-                        {{ ::dep.name}}:: {{ ::dep.version}}
-                      </v-pane-header>
-                      <v-pane-content>
-                      </v-pane-content>
-                    </v-pane>
-                  </v-accordion>
-
-
-                </div>      
-                <div ng-show="pythonDepsCtrl.showServing == 1">
-                  <br>
-                  Some stuff here
                 </div>
-              </div>              
-          </section>
+                <div class="panel-footer">              
 
-        </div>
+                  <div id="updateDeps">
+
+                    <div class="row">
+
+                      <fieldset>
+                        <div class="control-group col-md-offset-1">
+                          <label class="control-label row">{{pythonDepsCtrl.condaUrl}}</label>
+                          <div class="controls row">
+
+                            <input class="col-md-6" name="library_name"
+                                   type="text"
+                                   id="projectname"
+                                   ng-model="pythonDepsCtrl.library"
+                                   disabled>
+                            <uib-progressbar class="col-md-2" ng-show="numInstalled !== numToInstall" max="numInstalled" value="numToInstall"><span style="color:white; white-space:nowrap;">{{numInstalled}} / {{numToInstall}}</span></uib-progressbar>
+
+                            <!--                              <md-progress-linear class="md-warn" md-mode="buffer" value="{{numToInstall}}" md-buffer-value="{{numInstalled}}"
+                                                  ng-disabled="false"></md-progress-linear>-->
+
+                            <button class="col-md-1 btn btn-success btn-sm" type="submit" ng-click="pythonDepsCtrl.install()" 
+                                    ng-disabled="projectCtrl.working">
+                              <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                              <i class="glyphicon glyphicon-refresh"></i>
+                            </button>
+                            <div class="col-md-1">
+                              <button class="col-md-10 btn btn-danger btn-sm" type="submit" ng-click="pythonDepsCtrl.remove()"
+                                      ng-disabled="projectCtrl.working">
+                                <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                <i class="glyphicon glyphicon-remove-circle"></i>
+                              </button>
+                            </div>
+
+                          </div>
+                        </div>
+                      </fieldset>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            </form>
+
+          </div>
+
+      </section>
+
     </div>
-
-    </section>
-
   </div>
-</div>
 </div>

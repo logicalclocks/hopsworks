@@ -3,10 +3,10 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('JobUICtrl', ['$scope', 'growl', 'JobService', '$interval', 'StorageService',
-          '$routeParams', '$location', 'KibanaService',
-          function ($scope, growl, JobService, $interval, StorageService,
-                  $routeParams, $location, KibanaService) {
+        .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'JobService', '$interval', 'StorageService',
+          '$routeParams', '$route', '$location', 'KibanaService',
+          function ($scope, $timeout, growl, JobService, $interval, StorageService,
+                  $routeParams, $route, $location, KibanaService) {
 
             var self = this;
             self.job;
@@ -17,8 +17,23 @@ angular.module('hopsWorksApp')
             self.jobName = $routeParams.name;
             self.ui = "";
             self.current = "";
+            self.loading = false;
+            self.loadingText = "";
+
+
+            var startLoading = function (label) {
+              self.loading = true;
+              self.loadingText = label;
+            };
+
+            var stopLoading = function () {
+              self.loading = false;
+              self.loadingText = "";
+            };
 
             var getJobUI = function () {
+
+              startLoading("Loading Job Details...");
 
               self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
               if (self.job) {
@@ -34,9 +49,13 @@ angular.module('hopsWorksApp')
                             if (iframe) {
                               iframe.src = self.ui;
                             }
+                            $timeout(stopLoading(), 10000);
+
                           }
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                  stopLoading();
+
                 });
                 //Send request to create index in Kibana
                 //Lower case is for elasticsearch index
@@ -53,10 +72,11 @@ angular.module('hopsWorksApp')
 
             self.yarnUI = function () {
 
-            if (self.job == undefined || self.job == false) {
+              if (self.job == undefined || self.job == false) {
                 self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
-            }
+              }
 
+              startLoading("Loading YARN UI...");
               JobService.getYarnUI(self.projectId, self.job.id).then(
                       function (success) {
 
@@ -66,8 +86,11 @@ angular.module('hopsWorksApp')
                         if (iframe !== null) {
                           iframe.src = self.ui;
                         }
+                        // This timeout is ignored when the iframe is loaded, replacing the overlay
+                        $timeout(stopLoading(), 5000);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                stopLoading();
               });
 
             };
@@ -78,6 +101,7 @@ angular.module('hopsWorksApp')
             };
 
             self.grafanaUI = function () {
+              startLoading("Loading Grafana UI...");
               JobService.getAppInfo(self.projectId, self.job.id).then(
                       function (success) {
                         var info = success.data;
@@ -102,14 +126,17 @@ angular.module('hopsWorksApp')
                         if (iframe !== null) {
                           iframe.src = self.ui;
                         }
+                        $timeout(stopLoading(), 1000);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.',
                   ttl: 15000});
+                stopLoading();
               });
             };
 
             self.backToHome = function () {
-              getJobUI();
+              StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
+              $route.reload();
             };
 
             self.refresh = function () {
@@ -120,13 +147,6 @@ angular.module('hopsWorksApp')
               if (ifram !== null) {
                 ifram.contentWindow.location.reload();
               }
-            };
-            /**
-             * Close the modal dialog.
-             * @returns {undefined}
-             */
-            self.close = function () {
-              $uibModalInstance.dismiss('cancel');
             };
 
             /**

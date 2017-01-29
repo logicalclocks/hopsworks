@@ -14,12 +14,20 @@ angular.module('hopsWorksApp')
             self.closeAll = false;
             
             self.deps = [];
+            
+            self.installing = true;
+            
+            $scope.numInstalled = 10;
+            $scope.numToInstall = 100;
            
             self.currentCluster = "";
             self.clusterName = "";
             self.projectName = "";
             self.userEmail = "";
             self.project;
+            
+            self.condaUrl = "https://repo.continuum.io/pkgs/free/linux-64/";
+            self.library = "";
            
             self.logs = [];
             
