@@ -3,33 +3,37 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService',
+        .controller('JobUICtrl', ['$scope', 'growl', 'JobService', '$interval', 'StorageService',
           '$routeParams', '$location', 'KibanaService',
-          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService,
+          function ($scope, growl, JobService, $interval, StorageService,
                   $routeParams, $location, KibanaService) {
 
             var self = this;
-//            self.job = job;
             self.job;
             self.jobtype; //Holds the type of job.
             self.execFile; //Holds the name of the main execution file
             self.showExecutions = false;
             self.projectId = $routeParams.projectID;
+            self.jobName = $routeParams.name;
             self.ui = "";
             self.current = "";
 
             var getJobUI = function () {
 
-              self.job = StorageService.recover(self.projectId + "_jobui");
+              self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
               if (self.job) {
-                JobService.getExecutionUI(projectId, self.job.id).then(
+                console.log("Job object found was: ");
+                console.log(self.job);
+                JobService.getExecutionUI(self.projectId, self.job.id).then(
                         function (success) {
 
                           self.ui = success.data;
                           self.current = "jobUI";
                           if (self.ui !== "") {
                             var iframe = document.getElementById('ui_iframe');
-                            iframe.src = self.ui;
+                            if (iframe) {
+                              iframe.src = self.ui;
+                            }
                           }
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
@@ -49,7 +53,11 @@ angular.module('hopsWorksApp')
 
             self.yarnUI = function () {
 
-              JobService.getYarnUI(projectId, job.id).then(
+            if (self.job == undefined || self.job == false) {
+                self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+            }
+
+              JobService.getYarnUI(self.projectId, self.job.id).then(
                       function (success) {
 
                         self.ui = success.data;
@@ -70,7 +78,7 @@ angular.module('hopsWorksApp')
             };
 
             self.grafanaUI = function () {
-              JobService.getAppInfo(projectId, job.id).then(
+              JobService.getAppInfo(self.projectId, self.job.id).then(
                       function (success) {
                         var info = success.data;
                         var appid = info.appId;

@@ -116,6 +116,8 @@ public class Settings {
   private static final String VARIABLE_INFLUXDB_ADDRESS = "influxdb_address";
   private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
+  
+  
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -979,6 +981,10 @@ public class Settings {
   // QUOTA
   public static final float DEFAULT_YARN_MULTIPLICATOR = 1.0f;
 
+  
+  public static final String SPARK_METRICS_PROPS = "metrics.properties";
+
+  
   /**
    * Returns the maximum image size in bytes that can be previewed in the
    * browser.

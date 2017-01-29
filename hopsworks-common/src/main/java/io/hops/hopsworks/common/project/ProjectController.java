@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -78,6 +79,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -235,7 +237,7 @@ public class ProjectController {
         this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
                 new YarnProjectsQuota(project.getName(), Integer.parseInt(
                         settings
-                                .getYarnDefaultQuota()), 0));
+                        .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
@@ -297,6 +299,38 @@ public class ProjectController {
         //Persist README.md to hdfs for Default Datasets
         datasetController.generateReadme(udfso, ds.getName(),
                 ds.getDescription(), project.getName());
+
+        // Add the metrics.properties file to the /Resources dataset
+        if (ds.equals(Settings.DefaultDataset.RESOURCES)) {
+          StringBuilder metrics_props;
+          FSDataOutputStream fsOut = null;
+          try {
+            metrics_props
+                    = ConfigFileGenerator.
+                    instantiateFromTemplate(
+                            ConfigFileGenerator.METRICS_TEMPLATE
+                    //              "spark_dir", settings.getSparkDir(),
+                    );
+            String metricsFilePath = "/Projects/" + project + "/"
+                    + ds.name() + "/" + Settings.SPARK_METRICS_PROPS;
+
+            fsOut = udfso.create(metricsFilePath);
+            fsOut.writeBytes(metrics_props.toString());
+            fsOut.flush();
+            udfso.setPermission(new org.apache.hadoop.fs.Path(metricsFilePath),
+                    new FsPermission(FsAction.ALL,
+                            FsAction.READ_EXECUTE,
+                            FsAction.NONE));
+          } catch (IOException ex) {
+            logger.log(Level.WARNING,
+                    "metrics.properties could not be generated for project"
+                    + " {0} and dataset {1}.", new Object[]{project, ds.name()});
+          } finally {
+            if (fsOut != null) {
+              fsOut.close();
+            }
+          }
+        }
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -515,7 +549,8 @@ public class ProjectController {
    * removed.
    * @throws AppException if the project could not be found.
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  @TransactionAttribute(
+          TransactionAttributeType.REQUIRES_NEW)
   public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove, DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso) throws
@@ -651,7 +686,8 @@ public class ProjectController {
    * @return a list of user names that could not be added to the project team
    * list.
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
+  @TransactionAttribute(
+          TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String email,
           List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
@@ -666,8 +702,8 @@ public class ProjectController {
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
                   equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
                   && !projectTeam.
-                          getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
-                                  getTeam()))) {
+                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
+                          getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
@@ -723,9 +759,11 @@ public class ProjectController {
                 + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 projectTeam.getProjectTeamPK().getTeamMember());
+
       } catch (IOException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null, ex);
+        Logger.getLogger(ProjectController.class
+                .getName()).log(Level.SEVERE,
+                        null, ex);
       }
     }
     return failedList;
@@ -855,7 +893,8 @@ public class ProjectController {
 //      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
 //          ". Cannot find quota for the project: " + path);
 //    }
-  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
+  public HdfsInodeAttributes
+          getHdfsQuotas(int inodeId) throws AppException {
 
     HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
     if (res == null) {
@@ -927,7 +966,8 @@ public class ProjectController {
    * @param newRole
    * @throws AppException
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  @TransactionAttribute(
+          TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
           String toUpdateEmail, String newRole) throws AppException {
     Users projOwner = project.getOwner();
@@ -1075,11 +1115,11 @@ public class ProjectController {
       if (file.length > 1) {
         logger.log(Level.WARNING,
                 "More than one spark-examples*.jar found in {0}.", dir.
-                        getAbsolutePath());
+                getAbsolutePath());
       }
       udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
-                      getName() + "/TestJob/spark-examples.jar");
+              getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);

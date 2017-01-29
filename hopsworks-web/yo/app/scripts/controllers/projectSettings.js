@@ -4,11 +4,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectSettingsCtrl', ['$uibModalInstance', '$scope', 'ProjectService', 'growl', 'projectId',
-          function ($uibModalInstance, $scope, ProjectService, growl, projectId) {
+        .controller('ProjectSettingsCtrl', ['$scope', 'ProjectService', '$routeParams', 'growl', 
+          function ($scope, ProjectService,  $routeParams, growl) {
 
             var self = this;
-            self.projectId = projectId;
+            self.projectId = $routeParams.projectID;
             self.quotas = {};
 
             self.getQuotas = function () {

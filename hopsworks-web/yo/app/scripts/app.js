@@ -428,7 +428,7 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/jobMonitor', {
+                    .when('/project/:projectID/jobMonitor/:name', {
                       templateUrl: 'views/jobMonitor.html',
                       controller: 'JobUICtrl as jobUICtrl',
                       resolve: {
