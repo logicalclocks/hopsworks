@@ -12,7 +12,7 @@
   <!-- Kibana proxy servlet -->
   <servlet>
     <servlet-name>KibanaProxyServlet</servlet-name>
-    <servlet-class>io.hops.kibana.KibanaProxyServlet</servlet-class>
+    <servlet-class>io.hops.hopsworks.api.kibana.KibanaProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:5601/</param-value>
@@ -33,7 +33,7 @@
   <!-- Grafana proxy servlet -->
   <servlet>
     <servlet-name>GrafanaProxyServlet</servlet-name>
-    <servlet-class>io.hops.kibana.GrafanaProxyServlet</servlet-class>
+    <servlet-class>io.hops.hopsworks.api.kibana.GrafanaProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:3000/</param-value>

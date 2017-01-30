@@ -367,7 +367,8 @@ public class JobService {
 
         int nbExecutors = 0;
         if (queryResult != null && queryResult.getResults() != null
-                && queryResult.getResults().get(0) != null) {
+                && queryResult.getResults().get(0) != null && 
+                queryResult.getResults().get(0).getSeries()!=null ) {
           nbExecutors = queryResult.getResults().get(0).getSeries().size();
         }
 
