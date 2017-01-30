@@ -15,7 +15,7 @@
         <section>
           <!-- Page Content -->
 <!--class="content"--> 
-          <div style="height:100%; overflow: hidden; margin-left: 20px; margin-top: 70px;" >	
+          <div style="height:100%; overflow: hidden; margin-left: 10px; margin-top: 70px;" >	
             
             <div ng-if="jobUICtrl.loading" class="loadingwrap">
               <div class="loading-content">
@@ -25,47 +25,47 @@
             </div> 
 
             <!--<div class="row" resizable r-directions="['bottom']">-->
-            <div class="row"">
+            <div class="row" style="margin-left: 10px; ">
 
               <div style="padding-bottom: 10px">
-                <span class="field-info" uib-tooltip="back to jobs page" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Job Spark Dashboard" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.backToHome();
                                     $event.stopPropagation();"
-                          class="btn btn-primary glyphicon glyphicon-home">
+                          class="btn btn-primary btn-md fa fa-bolt"> Spark
                   </button>
                 </span>
-                <span class="field-info" uib-tooltip="show yarn app ui" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show YARN App UI" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.yarnUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary glyphicon glyphicon-asterisk">
+                          class="btn btn-primary btn-md fa fa-yahoo ">ARN
                   </button>
                 </span>
-                <span class="field-info" uib-tooltip="display Kibana dashboard" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Logs in Kibana" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.kibanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary glyphicon glyphicon-open-file">
+                          class="btn btn-primary btn-md fa fa-files-o"> Logs in Kibana
                   </button>
                 </span>
-                <span class="field-info" uib-tooltip="display grafana dashboard" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.grafanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary glyphicon glyphicon-dashboard">
+                          class="btn btn-primary btn-md fa fa-bar-chart"> Metrics in Grafana
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.refresh();
                                     $event.stopPropagation();"
-                          class="btn btn-primary glyphicon glyphicon-refresh">
+                          class="btn btn-success btn-md glyphicon glyphicon-refresh">
                   </button>
                 </span>
               </div>
               <div ng-if="jobUICtrl.ui !== ''">
-                <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="100%" height ="87%"></iframe> 
+                <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe> 
               </div>
               <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
 
