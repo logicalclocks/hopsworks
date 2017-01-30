@@ -11,9 +11,11 @@ angular.module('hopsWorksApp')
 
             var self = this;
             self.projectId = $routeParams.projectID;
-            self.closeAll = false;
             
-            self.deps = [];
+            self.channels = [
+              {"https://repo.continuum.io/pkgs/free/linux-64/" : [{"pandas" : "installed"}]
+              }
+              ];
             
             self.installing = true;
             
