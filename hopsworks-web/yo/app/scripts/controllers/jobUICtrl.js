@@ -96,7 +96,7 @@ angular.module('hopsWorksApp')
             };
 
             self.kibanaUI = function () {
-              self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" + self.job.project.name.toLowerCase() + ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D" + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
+              self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" + self.job.project.name.toLowerCase() + ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D" + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
               self.current = "kibanaUI";
             };
 
@@ -110,12 +110,12 @@ angular.module('hopsWorksApp')
                         var finishTime = info.endTime;
                         //nbExecutors=;
                         if (info.now) {
-                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app="
+                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
                                   + appid + "&maxExecutorId="
                                   + info.nbExecutors + "&from="
                                   + startTime;
                         } else {
-                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app="
+                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
                                   + appid + "&maxExecutorId="
                                   + info.nbExecutors + "&from="
                                   + startTime + "&to="
