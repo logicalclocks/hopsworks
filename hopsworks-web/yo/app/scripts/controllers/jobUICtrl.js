@@ -136,7 +136,7 @@ angular.module('hopsWorksApp')
 
             self.backToHome = function () {
               StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
-              $route.reload();
+              $timeout($route.reload(), 1000);
             };
 
             self.refresh = function () {
