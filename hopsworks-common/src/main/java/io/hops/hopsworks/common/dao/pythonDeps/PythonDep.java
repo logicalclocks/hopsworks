@@ -36,6 +36,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "PythonDep.findByDependency",
           query
           = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
+  @NamedQuery(name = "PythonDep.findByDependencyAndVersion",
+          query
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version"),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version")})

@@ -122,6 +122,118 @@
           <h2>Python Libraries</h2>
           <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
 
+            
+	<div ng-repeat="channel in pythonDepsCtrl.channels">
+	
+              <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.topics.length > 0">
+              <thead>
+                <tr>
+                  <th st-sort="topicName" class="col-sm-7">Python Package</th>
+                  <th class="col-sm-1">Package</th>
+                  <th class="col-sm-1">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.topics" ng-class="{'selectedTopicOdd': row.isSelected === true}">
+                  <td class="col-sm-7">
+                    <div class="row" style="margin-left: 10px;"><b>{{row.name}}</b></div>
+
+                    <br ng-show="row.isSelected">
+                    <br ng-show="row.isSelected">
+                    <table ng-if="row.isSelected" st-table="rowCollection" class="table table-striped col-sm-4" ng-show="row.acls.length > 0">
+                      <thead>
+                        <tr>
+                          <th class="col-sm-2">Project</th>
+                          <th class="col-sm-2">UserEmail</th>
+                          <th class="col-sm-2">Permission</th>
+                          <th class="col-sm-2">Operation</th>
+                          <th class="col-sm-2">Host</th>
+                          <th class="col-sm-1">Role</th>
+                          <th class="col-sm-1">Remove</th>
+                          <th class="col-sm-1">Edit</th>
+                        </tr>
+                      </thead>
+                      <tr ng-repeat="acl in row.acls" class="td {padding-top: 10px; padding-bottom:10px}">
+                        <td ng-if="kafkaCtrl.activeId === -1">{{acl.projectName}}</td>
+                        <td ng-if="kafkaCtrl.activeId === acl.id" >
+                      <ui-select style="min-width: 100px;" name="project_name" theme="select2"
+                                 ng-model="kafkaCtrl.project"  required>
+
+                        <ui-select-match placeholder="Select a project for this acl">{{$select.selected.projectName}}</ui-select-match>
+
+                        <ui-select-choices repeat="item in kafkaCtrl.users | filter: $select.search">
+                          <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select><br>
+                      </td>
+                      <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>-->
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.userEmail}}</td>
+                      <td  ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">        
+                      <ui-select style="min-width: 200px;" name="project_member" theme="select2"
+                                 ng-model="kafkaCtrl.userEmail"  required>
+
+                        <ui-select-match placeholder="Select a version">{{$select.selected}}</ui-select-match>
+
+                        <ui-select-choices repeat="item in kafkaCtrl.project.userEmails | filter: $select.search">
+                          <div ng-bind-html="item | highlight: $select.search"></div>
+                        </ui-select-choices>
+                      </ui-select><br>
+                      </td>
+                      <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.userEmail" placeholder="user email "></td>-->
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.permissionType}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
+                        <select name="permission_type" ng-model="kafkaCtrl.permission_type">
+                          <option value="deny">Deny</option>
+                          <option value="allow">Allow</option>
+                        </select>
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.operationType}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
+                        <select name="operation_type" ng-model="kafkaCtrl.operation_type">
+                          <option value="read">read</option>
+                          <option value="write">write</option>
+                          <option value="details">details</option>
+                          <option value="*">*</option>
+                        </select>
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.host}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id" >
+                        <input type="text" class="form-control" id="aclHost" ng-model="kafkaCtrl.host" placeholder="Hostname (or * or subnet)">
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === -1" >{{acl.role}}</td>
+                      <td ng-if="kafkaCtrl.activeId === acl.id">
+                        <select name="role_type" ng-model="kafkaCtrl.role">
+                          <option value="Data Scientist">Data scientist</option>
+                          <option value="Data Owner">Data owner</option>
+                          <option value="*">*</option>
+                        </select>
+                      </td>
+                      <td>
+                        <button ng-if="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
+                          <i class="glyphicon glyphicon-remove">
+                          </i>
+                        </button>
+                        <button ng-if="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.removeAcl(row.name, acl.id)" class="btn btn-sm btn-danger">
+                          <i class="glyphicon glyphicon-remove">
+                          </i>
+                        </button>
+                      </td>
+                      <td ng-if="kafkaCtrl.activeId === -1 || kafkaCtrl.activeId === acl.id">
+                        <button ng-show="kafkaCtrl.activeId === acl.id" type="button" ng-click="kafkaCtrl.activeId = -1;kafkaCtrl.updateAcl(row.name, acl.id)" class="btn btn-sm btn-warning">
+                          Save
+                        </button>
+                        <button ng-show="kafkaCtrl.activeId === -1" type="button" ng-click="kafkaCtrl.selectAcl(acl, row.name);" class="btn btn-sm btn-primary">
+                          <i class="glyphicon glyphicon-edit">
+                          </i>
+                        </button>
+                      </td>
+                      <div class="row"/>
+                </tr>
+            </table>
+
+  
+  </div>
+	          
             <form role="form" name="pythonForm" ng-submit="pythonDepsCtrl.install()">
               <div class="panel panel-default"  style="margin-top: 20px; width: 800px; background-color: #F7F7F7;">
                 <div class="panel-body">
