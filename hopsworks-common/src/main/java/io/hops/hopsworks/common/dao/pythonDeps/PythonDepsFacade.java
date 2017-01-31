@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.pythonDeps;
 
+import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import java.util.List;
@@ -134,7 +135,17 @@ public class PythonDepsFacade {
               getStatusCode(),
               ex.getMessage());
     }
+    
+    // 4. Mark that the library is installing at all hosts
 
+    TypedQuery<Host> allHosts = em.createNamedQuery("Host.find", Host.class);
+    List<Host> hosts = allHosts.getResultList();
+    
+    
+    // 5. Send REST calls to all of the kagents using a thread pool
+    
+    
+    
   }
 
 }
