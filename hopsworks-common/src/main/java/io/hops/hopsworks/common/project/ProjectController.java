@@ -237,7 +237,7 @@ public class ProjectController {
         this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
                 new YarnProjectsQuota(project.getName(), Integer.parseInt(
                         settings
-                        .getYarnDefaultQuota()), 0));
+                                .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
@@ -307,10 +307,10 @@ public class ProjectController {
           try {
             metrics_props
                     = ConfigFileGenerator.
-                    instantiateFromTemplate(
-                            ConfigFileGenerator.METRICS_TEMPLATE
-                    //              "spark_dir", settings.getSparkDir(),
-                    );
+                            instantiateFromTemplate(
+                                    ConfigFileGenerator.METRICS_TEMPLATE
+                            //              "spark_dir", settings.getSparkDir(),
+                            );
             String metricsFilePath = "/Projects/" + project + "/"
                     + ds.name() + "/" + Settings.SPARK_METRICS_PROPS;
 
@@ -702,8 +702,8 @@ public class ProjectController {
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
                   equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
                   && !projectTeam.
-                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
-                          getTeam()))) {
+                          getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
+                                  getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
@@ -1115,11 +1115,11 @@ public class ProjectController {
       if (file.length > 1) {
         logger.log(Level.WARNING,
                 "More than one spark-examples*.jar found in {0}.", dir.
-                getAbsolutePath());
+                        getAbsolutePath());
       }
       udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
               File.separator + Settings.DIR_ROOT + File.separator + project.
-              getName() + "/TestJob/spark-examples.jar");
+                      getName() + "/TestJob/spark-examples.jar");
 
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -1164,24 +1164,107 @@ public class ProjectController {
               + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
               + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
       JSONObject resp = sendElasticsearchReq(params);
+      boolean templateCreated = false;
       if (resp.has("acknowledged")) {
-        return (Boolean) resp.get("acknowledged");
+        templateCreated = (Boolean) resp.get("acknowledged");
       }
 
+      //Create Kibana index
+      params.clear();
+      params.put("op", "PUT");
+      params.put("project", project);
+      params.put("resource", ".kibana/index-pattern");
+      params.put("data", "{\"title\" : \"" + project
+              + "\", \"fields\" : \"[{\\\"name\\\":\\\"_index\\\",\\\"type\\\":"
+                      + "\\\"string\\\",\\\"count\\\":0,\\\"scripted\\\":false,"
+                      + "\\\"indexed\\\":false,\\\"analyzed\\\":false,\\\""
+                      + "doc_values\\\":false},{\\\"name\\\":\\\"project\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+                      + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"path\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"file\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@version\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"host\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+                      + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"logger_name\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"class\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"jobname\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+                      + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"timestamp\\\","
+                      + "\\\"type\\\":\\\"number\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+                      + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"method\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"thread\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"message\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"priority\\\","
+                      + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+                      + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+                      + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@timestamp"
+                      + "\\\",\\\"type\\\":\\\"date\\\",\\\"count\\\":0,"
+                      + "\\\"scripted\\\":false,\\\"indexed\\\":true,\\\"analyzed"
+                      + "\\\":false,\\\"doc_values\\\":true},{\\\"name\\\":"
+                      + "\\\"application\\\",\\\"type\\\":\\\"string\\\",\\\"count"
+                      + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":true,"
+                      + "\\\"analyzed\\\":false,\\\"doc_values\\\":true},{"
+                      + "\\\"name\\\":\\\"_source\\\",\\\"type\\\":\\\"_source"
+                      + "\\\",\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
+                      + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values\\\":false},"
+                      + "{\\\"name\\\":\\\"_id\\\",\\\"type\\\":\\\"string\\\","
+                      + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
+                      + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{\\\"name\\\":"
+                      + "\\\"_type\\\",\\\"type\\\":\\\"string\\\",\\\"count"
+                      + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
+                      + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{"
+                      + "\\\"name\\\":\\\"_score\\\",\\\"type\\\":\\\"number\\\","
+                      + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
+                      + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values"
+                      + "\\\":false}]\"}");
+      resp = sendElasticsearchReq(params);
+      boolean kibanaIndexCreated = false;
+      if (resp.has("acknowledged")) {
+        kibanaIndexCreated = (Boolean) resp.get("acknowledged");
+      }
+
+      if (kibanaIndexCreated && templateCreated) {
+        return true;
+      }
     } else {
       //1. Delete Kibana index
-      params.put("url", settings.getPublicSearchEndpoint().substring(0,
-              settings.getPublicSearchEndpoint().indexOf("/api"))
-              + "/kibana/elasticsearch/.kibana/index-pattern/" + project);
+      params.put("project", project);
+      params.put("op", "DELETE");
+      params.put("resource", ".kibana/index-pattern");
+      JSONObject resp = sendElasticsearchReq(params);
+      boolean kibanaIndexDeleted = false;
+      if (resp != null && resp.has("acknowledged")) {
+        kibanaIndexDeleted = (Boolean) resp.get("acknowledged");
+      }
+      params.clear();
+      //2. Delete Elasticsearch Index
       params.put("project", project);
       params.put("op", "DELETE");
       params.put("resource", "");
-      //2. Delete Elasticsearch Index
-
-      JSONObject resp = sendElasticsearchReq(params);
-      boolean indexDeleted = false;
+      resp = sendElasticsearchReq(params);
+      boolean elasticIndexDeleted = false;
       if (resp != null && resp.has("acknowledged")) {
-        indexDeleted = (Boolean) resp.get("acknowledged");
+        elasticIndexDeleted = (Boolean) resp.get("acknowledged");
       }
       //3. Delete Elasticsearch Template
       params.put("resource", "_template");
@@ -1191,7 +1274,7 @@ public class ProjectController {
         templateDeleted = (Boolean) resp.get("acknowledged");
       }
 
-      if (indexDeleted && templateDeleted) {
+      if (elasticIndexDeleted && templateDeleted && kibanaIndexDeleted) {
         return true;
       }
     }
@@ -1244,6 +1327,7 @@ public class ProjectController {
               "resource") + " was not found");
     } catch (IOException ex) {
       if (ex.getMessage().contains("kibana")) {
+        logger.log(Level.WARNING, "error", ex);
         logger.log(Level.WARNING, "Kibana index could not be deleted for "
                 + params.get("project"));
       } else {
