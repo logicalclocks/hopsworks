@@ -4,8 +4,11 @@ import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Date;
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.NamedQueries;
@@ -18,6 +21,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
   @NamedQuery(name = "Host.find",
           query = "SELECT h FROM Host h"),
+  @NamedQuery(name = "Host.findBy-Id",
+          query = "SELECT h FROM Host h WHERE h.id = :id"),
   @NamedQuery(name = "Host.findBy-HostId",
           query = "SELECT h FROM Host h WHERE h.hostId = :hostId"),
   @NamedQuery(name = "Host.findBy-Hostname",
@@ -33,7 +38,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Host implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;
+
+  private static final long serialVersionUID = 1L;
+
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+
+//  @Id
   @Column(name = "hostid",
           nullable = false,
           length = 128)
@@ -215,6 +229,14 @@ public class Host implements Serializable {
       return privateIp;
     }
     return publicIp;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
   }
 
   public String getLastHeartbeatInSeconds() {
