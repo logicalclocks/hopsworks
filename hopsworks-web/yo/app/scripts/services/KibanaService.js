@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
               createIndex: function (projectName) {
                 var req = {
                   method: 'POST',
-                  url: '/hopsworks-api/kibana/elasticsearch/.kibana/index-pattern/'+projectName+'?op_type=create',
+                  url: '/kibana/elasticsearch/.kibana/index-pattern/'+projectName+'?op_type=create',
                   headers: {
                     'Content-Type': 'application/json;charset=utf-8',
                     'kbn-version':'4.6.4'

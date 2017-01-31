@@ -240,7 +240,8 @@ public class KibanaProxyServlet extends ProxyServlet {
                     email, true);
             JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
             for (int i = hits.length() - 1; i >= 0; i--) {
-              if (!projects.contains(hits.getJSONObject(i).getString("_id"))) {
+              String projectId = hits.getJSONObject(i).getString("_id");
+              if (!projects.contains(projectId) && !projectId.equals(Settings.KIBANA_DEFAULT_INDEX)) {
                 hits.remove(i);
               }
             }
