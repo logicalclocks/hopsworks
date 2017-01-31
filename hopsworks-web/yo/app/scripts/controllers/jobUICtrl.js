@@ -4,9 +4,9 @@
  */
 angular.module('hopsWorksApp')
         .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'JobService', '$interval', 'StorageService',
-          '$routeParams', '$route', '$location', 'KibanaService',
+          '$routeParams', '$route', '$location', 'KibanaService', '$sce',
           function ($scope, $timeout, growl, JobService, $interval, StorageService,
-                  $routeParams, $route, $location, KibanaService) {
+                  $routeParams, $route, $location, KibanaService, $sce) {
 
             var self = this;
             self.job;
@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
                           if (self.ui !== "") {
                             var iframe = document.getElementById('ui_iframe');
                             if (iframe) {
-                              iframe.src = self.ui;
+                              iframe.src = $sce.trustAsResourceUrl(self.ui);
                             }
                             $timeout(stopLoading(), 10000);
 
@@ -84,7 +84,8 @@ angular.module('hopsWorksApp')
                         self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
                         if (iframe !== null) {
-                          iframe.src = self.ui;
+                          iframe.src = $sce.trustAsResourceUrl(self.ui);
+//                          iframe.src = self.ui;
                         }
                         // This timeout is ignored when the iframe is loaded, replacing the overlay
                         $timeout(stopLoading(), 5000);
@@ -124,7 +125,7 @@ angular.module('hopsWorksApp')
                         self.current = "grafanaUI";
                         var iframe = document.getElementById('ui_iframe');
                         if (iframe !== null) {
-                          iframe.src = self.ui;
+                          iframe.src = $sce.trustAsResourceUrl(self.ui);
                         }
                         $timeout(stopLoading(), 1000);
                       }, function (error) {
