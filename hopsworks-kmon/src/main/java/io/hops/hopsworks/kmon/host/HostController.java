@@ -16,7 +16,7 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import io.hops.hopsworks.common.dao.command.Command;
 import io.hops.hopsworks.common.dao.command.CommandEJB;
-import io.hops.hopsworks.kmon.communication.WebCommunication;
+import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.common.dao.role.Role;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;

@@ -1,4 +1,4 @@
-package io.hops.hopsworks.kmon.communication;
+package io.hops.hopsworks.common.util;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -18,8 +18,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.kmon.struct.NodesTableItem;
-import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +25,6 @@ import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import io.hops.hopsworks.common.util.Settings;
 
 @Stateless
 public class WebCommunication {
@@ -43,9 +40,6 @@ public class WebCommunication {
   public WebCommunication() {
   }
 
-//    public String getResource(String url) {
-//        return fetchContent(url);
-//    }
   public ClientResponse getWebResponse(String url, String agentPassword) {
     ClientResponse response;
     try {

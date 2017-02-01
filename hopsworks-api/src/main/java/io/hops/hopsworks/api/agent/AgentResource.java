@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.Role;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -37,11 +38,13 @@ import javax.ws.rs.core.SecurityContext;
 public class AgentResource {
 
   @EJB
-  private HostEJB hostEJB;
+  private HostEJB hostFacade;
   @EJB
-  private RoleEJB roleEjb;
+  private RoleEJB roleFacade;
   @EJB
-  private AlertEJB alertEJB;
+  private AlertEJB alertFacade;
+  @EJB
+  private PythonDepsFacade pythonDepsFacade;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -49,7 +52,7 @@ public class AgentResource {
   @Path("ping")
   @Produces(MediaType.TEXT_PLAIN)
   public String ping() {
-    return "KTHFS Dashboard: Pong";
+    return "Kmon: Pong";
   }
 
 //    @GET
@@ -108,7 +111,7 @@ public class AgentResource {
       JsonObject json = Json.createReader(stream).readObject();
       long agentTime = json.getJsonNumber("agent-time").longValue();
       String hostId = json.getString("host-id");
-      Host host = hostEJB.findByHostId(hostId);
+      Host host = hostFacade.findByHostId(hostId);
       if (host == null) {
         logger.log(Level.WARNING, "Host with id {0} not found.", hostId);
         return Response.status(Response.Status.NOT_FOUND).build();
@@ -127,7 +130,7 @@ public class AgentResource {
       host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
       host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
       host.setCores(json.getInt("cores"));
-      hostEJB.storeHost(host, false);
+      hostFacade.storeHost(host, false);
 
       JsonArray roles = json.getJsonArray("services");
       for (int i = 0; i < roles.size(); i++) {
@@ -142,7 +145,7 @@ public class AgentResource {
         String roleName = s.getString("role");
         String service = s.getString("service");
 
-        Role role = roleEjb.find(hostId, cluster, service, roleName);
+        Role role = roleFacade.find(hostId, cluster, service, roleName);
         if (role == null) {
           role = new Role();
           role.setHostId(hostId);
@@ -187,7 +190,24 @@ public class AgentResource {
                   role);
           continue;
         }
-        roleEjb.store(role);
+        roleFacade.store(role);
+      }
+
+      if (json.containsKey("conda-ops")) {
+        JsonArray condaOps = json.getJsonArray("conda-ops");
+        for (int j = 0; j < condaOps.size(); j++) {
+          JsonObject conda = condaOps.getJsonObject(j);
+          String proj = conda.getString("proj");
+          String op = conda.getString("op");
+          String channelurl = conda.getString("channelurl");
+          String lib = conda.getString("lib");
+          String version = conda.containsKey("version") ? conda.getString(
+                  "version") : "";
+          String status = conda.getString("status");
+
+          pythonDepsFacade.agentResponse(proj, op, channelurl, lib, version,
+                  status, host.getId());
+        }
       }
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
@@ -201,7 +221,8 @@ public class AgentResource {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response alert(@Context SecurityContext sc,
           @Context HttpServletRequest req,
-          @Context HttpHeaders httpHeaders, String jsonString) {
+          @Context HttpHeaders httpHeaders, String jsonString
+  ) {
     // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
     try {
       InputStream stream = new ByteArrayInputStream(jsonString.getBytes(
@@ -230,7 +251,8 @@ public class AgentResource {
         alert.setDataSource(json.getString("DataSource"));
       }
       if (json.containsKey("CurrentValue")) {
-        alert.setCurrentValue(Boolean.toString(json.getBoolean("CurrentValue")));
+        alert.setCurrentValue(Boolean.
+                toString(json.getBoolean("CurrentValue")));
       }
       if (json.containsKey("WarningMin")) {
         alert.setWarningMin(json.getString("WarningMin"));
@@ -244,7 +266,7 @@ public class AgentResource {
       if (json.containsKey("FailureMax")) {
         alert.setFailureMax(json.getString("FailureMax"));
       }
-      alertEJB.persistAlert(alert);
+      alertFacade.persistAlert(alert);
 
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Exception: {0}", ex);

@@ -9,7 +9,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import io.hops.hopsworks.kmon.communication.WebCommunication;
+import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.kmon.struct.RoleType;

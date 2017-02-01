@@ -39,7 +39,7 @@ public class PythondepHostStatus implements Serializable {
   public enum Status {
     INSTALLED,
     INSTALLING,
-    FAILED_INSTALL
+    FAILED
   }
 
   private static final long serialVersionUID = 1L;
