@@ -80,28 +80,18 @@ public class KibanaProxyServlet extends ProxyServlet {
       index = servletRequest.getRequestURI().substring(servletRequest.
               getRequestURI().lastIndexOf("/")).replace("/", "");
       //Check if this user has access to this project
-      List<String> projects = projectController.findProjectNamesByUser(
-              email, true);
-      if (!projects.contains(index)) {
-        servletResponse.sendError(403,
-                "User is not authorized to access this index");
+      if (!isAuthorized(servletResponse, index)) {
         return;
       }
     } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
       JSONObject body = new JSONObject(myRequestWrapper.getBody());
-      List<String> projects = projectController.findProjectNamesByUser(
-              email, true);
       JSONArray jsonArray = body.optJSONArray("index");
       if (jsonArray != null) {
-        if (!projects.contains((String) jsonArray.get(0))) {
-          servletResponse.sendError(403,
-                  "User is not authorized to access this index");
+        if (!isAuthorized(servletResponse, (String) jsonArray.get(0))) {
           return;
         }
       } else {
-        if (!projects.contains((String) body.get("index"))) {
-          servletResponse.sendError(403,
-                  "User is not authorized to access this index");
+        if (!isAuthorized(servletResponse, (String) body.get("index"))) {
           return;
         }
       }
@@ -109,12 +99,8 @@ public class KibanaProxyServlet extends ProxyServlet {
             "elasticsearch/") && servletRequest.getRequestURI().contains(
                     "_mapping/field")) {
       //Check if this user has access to this project
-      List<String> projects = projectController.findProjectNamesByUser(
-              email, true);
       index = servletRequest.getRequestURI().split("/")[4];
-      if (!projects.contains(index)) {
-        servletResponse.sendError(403,
-                "User is not authorized to access this index");
+      if (!isAuthorized(servletResponse, index)) {
         return;
       }
     }
@@ -222,7 +208,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   protected void copyResponseEntity(HttpResponse proxyResponse,
           HttpServletResponse servletResponse, KibanaFilter kibanaFilter) throws
           IOException {
-    if (kibanaFilter == null) {
+    if (kibanaFilter == null || kibanaFilter == KibanaFilter.KIBANA_INDEXPATTERN) {
       super.copyResponseEntity(proxyResponse, servletResponse);
     } else {
       switch (kibanaFilter) {
@@ -240,7 +226,9 @@ public class KibanaProxyServlet extends ProxyServlet {
                     email, true);
             JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
             for (int i = hits.length() - 1; i >= 0; i--) {
-              if (!projects.contains(hits.getJSONObject(i).getString("_id"))) {
+              String projectId = hits.getJSONObject(i).getString("_id");
+              if (!projects.contains(projectId) && !projectId.equals(
+                      Settings.KIBANA_DEFAULT_INDEX)) {
                 hits.remove(i);
               }
             }
@@ -258,5 +246,21 @@ public class KibanaProxyServlet extends ProxyServlet {
       }
 
     }
+  }
+
+  /*
+   *
+   */
+  private boolean isAuthorized(HttpServletResponse servletResponse, String index)
+          throws IOException {
+    List<String> projects = projectController.findProjectNamesByUser(
+            email, true);
+    if (!projects.contains(index) && !index.equals(
+            Settings.KIBANA_DEFAULT_INDEX)) {
+      servletResponse.sendError(403,
+              "User is not authorized to access this index");
+      return false;
+    }
+    return true;
   }
 }

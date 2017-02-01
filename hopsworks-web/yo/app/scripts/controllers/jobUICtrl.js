@@ -59,12 +59,12 @@ angular.module('hopsWorksApp')
                 });
                 //Send request to create index in Kibana
                 //Lower case is for elasticsearch index
-                KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
-                        function (success) {
-                          console.log('Successful creation of Kibana index:' + self.job.project.name);
-                        }, function (error) {
-                  console.log('Did not create Kibana index:' + self.job.project.name);
-                });
+//                KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
+//                        function (success) {
+//                          console.log('Successful creation of Kibana index:' + self.job.project.name);
+//                        }, function (error) {
+//                  console.log('Did not create Kibana index:' + self.job.project.name);
+//                });
               }
             };
 
@@ -99,6 +99,11 @@ angular.module('hopsWorksApp')
             self.kibanaUI = function () {
               self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" + self.job.project.name.toLowerCase() + ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D" + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
               self.current = "kibanaUI";
+              var iframe = document.getElementById('ui_iframe');
+              if (iframe !== null) {
+                iframe.src = $sce.trustAsResourceUrl(self.ui);
+              }
+              $timeout(stopLoading(), 1000);
             };
 
             self.grafanaUI = function () {

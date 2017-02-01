@@ -746,6 +746,7 @@ public class Settings {
   public static final int ZK_PORT = 2181;
 
   // Kibana
+  public static final String KIBANA_DEFAULT_INDEX = "hopsdefault";
   private String KIBANA_IP = "10.0.2.15";
   public static final int KIBANA_PORT = 5601;
 
