@@ -1112,6 +1112,7 @@ public class ProjectController {
    */
   public boolean manageElasticsearch(String project, boolean create)
           throws IOException {
+    project = project.toLowerCase();
     Map<String, String> params = new HashMap<>();
     if (create) {
       params.put("op", "PUT");
