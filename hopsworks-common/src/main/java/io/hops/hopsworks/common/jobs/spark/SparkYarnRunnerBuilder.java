@@ -237,6 +237,8 @@ public class SparkYarnRunnerBuilder {
 
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
+        addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.
+                getProjectName());
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                 getKafka().getConsumerGroups());
         builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="

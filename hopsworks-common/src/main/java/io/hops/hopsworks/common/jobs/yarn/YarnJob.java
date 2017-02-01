@@ -169,6 +169,7 @@ public abstract class YarnJob extends HopsJob {
           serviceProps.setTruststorePwd(services.getSettings().
                   getHopsworksMasterPasswordSsl());
           serviceProps.setProjectId(jobDescription.getProject().getId());
+          serviceProps.setProjectName(jobDescription.getProject().getName());
           serviceProps.getKafka().setBrokerAddresses(services.getSettings().
                   getKafkaConnectStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().
