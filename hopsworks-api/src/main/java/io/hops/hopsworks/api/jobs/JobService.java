@@ -241,6 +241,11 @@ public class JobService {
       return Response.status(Response.Status.FORBIDDEN).build();
     } else {
       Execution execution = exeFacade.findForJob(job).get(0);
+      if (execution == null) {
+        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.
+                getName());
+        return Response.status(Response.Status.NOT_FOUND).build();
+      }
       Execution updatedExecution = exeFacade.getExecution(execution.getJob().
               getId());
       if (updatedExecution != null) {

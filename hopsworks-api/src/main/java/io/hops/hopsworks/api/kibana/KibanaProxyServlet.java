@@ -208,7 +208,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   protected void copyResponseEntity(HttpResponse proxyResponse,
           HttpServletResponse servletResponse, KibanaFilter kibanaFilter) throws
           IOException {
-    if (kibanaFilter == null || kibanaFilter == KibanaFilter.KIBANA_INDEXPATTERN) {
+    if (kibanaFilter == null) {
       super.copyResponseEntity(proxyResponse, servletResponse);
     } else {
       switch (kibanaFilter) {
@@ -242,6 +242,7 @@ public class KibanaProxyServlet extends ProxyServlet {
           }
           break;
         default:
+          super.copyResponseEntity(proxyResponse, servletResponse);
           break;
       }
 
