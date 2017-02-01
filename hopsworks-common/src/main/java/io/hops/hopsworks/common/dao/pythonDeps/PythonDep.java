@@ -6,6 +6,8 @@ import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,6 +45,14 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version")})
 public class PythonDep implements Serializable {
+  
+  
+  public enum Status {
+    INSTALLED,
+    INSTALLING,
+    FAILED
+  }
+  
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -68,6 +78,9 @@ public class PythonDep implements Serializable {
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private AnacondaRepo repoUrl;
+
+  @Enumerated(EnumType.ORDINAL)
+  private Status status = Status.INSTALLING;
 
   public PythonDep() {
   }
@@ -124,6 +137,15 @@ public class PythonDep implements Serializable {
     this.repoUrl = repoUrl;
   }
 
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  
   @Override
   public int hashCode() {
     int hash = 0;

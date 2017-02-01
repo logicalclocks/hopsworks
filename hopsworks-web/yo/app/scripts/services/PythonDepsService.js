@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
                     install: function (projectId, data) {
                         var regReq = {
                             method: 'POST',
-                            url: '/api/project/' + projectId + '/pythonDeps',
+                            url: '/api/project/' + projectId + '/pythonDeps/install',
                             headers: {'Content-Type': 'application/json'},
                             data: data,
                             dataType: "json"
@@ -25,13 +25,29 @@ angular.module('hopsWorksApp')
                     },
                     remove: function (projectId, data) {
                         var regReq = {
-                            method: 'DELETE',
-                            url: '/api/project/' + projectId + '/pythonDeps',
+                            method: 'POST',
+                            url: '/api/project/' + projectId + '/pythonDeps/remove',
                             headers: {'Content-Type': 'application/json'},
                             data: data,
                             dataType: "json"
                         }
                         return $http(regReq)
+                    },
+                    upgrade: function (projectId, data) {
+                        var regReq = {
+                            method: 'POST',
+                            url: '/api/project/' + projectId + '/pythonDeps/upgrade',
+                            headers: {'Content-Type': 'application/json'},
+                            data: data,
+                            dataType: "json"
+                        }
+                        return $http(regReq)
+                    },
+                    createEnv: function(projectId, projName){
+                      return $http.get('/api/project/'+ projectId + '/pythonDeps/createenv/' + projName)
+                    },
+                    removeEnv: function(projectId, projName){
+                      return $http.get('/api/project/'+ projectId + '/pythonDeps/removeenv/' + projName)
                     },
                     clone: function(projectId, projName){
                       return $http.get('/api/project/'+ projectId + '/pythonDeps/clone/' + projName)

@@ -41,14 +41,25 @@ public class PythondepHostStatus implements Serializable {
     INSTALLING,
     FAILED
   }
+  public enum Op {
+    CREATE_REPO,
+    REMOVE_REPO,
+    CLONE_REPO,
+    UPGRADE,
+    ADD,
+    REMOVE
+  }
 
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected PythondepHostStatusPK pythondepHostStatusPK;
 
 
-  @Enumerated(EnumType.STRING)
+  @Enumerated(EnumType.ORDINAL)
   private Status status = Status.INSTALLING;
+
+  @Enumerated(EnumType.ORDINAL)
+  private Op op;
 
   public PythondepHostStatus() {
   }
@@ -85,6 +96,14 @@ public class PythondepHostStatus implements Serializable {
     this.status = status;
   }
 
+  public Op getOp() {
+    return op;
+  }
+
+  public void setOp(Op op) {
+    this.op = op;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

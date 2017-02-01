@@ -2,7 +2,6 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
@@ -23,7 +22,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
@@ -82,14 +80,12 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/remove")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response remove(PythonDepJson removeLibrary) throws AppException {
+  public Response remove(PythonDepJson library) throws AppException {
 
-    Collection<PythonDep> pysparkDeps = new ArrayList<PythonDep>();
-    pysparkDeps = project.getPythonDepCollection();
-    GenericEntity<Collection<PythonDep>> pysparkDepsList
-            = new GenericEntity<Collection<PythonDep>>(pysparkDeps) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            pysparkDepsList).build();
+    pythonDepsFacade.removeLibrary(project,
+            library.getChannel(),
+            library.getDependency(), library.getVersion());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @POST
@@ -98,54 +94,63 @@ public class PythonDepsService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response install(PythonDepJson library) throws AppException {
 
-    List<Host> hosts = pythonDepsFacade.installLibrary(project,
+    pythonDepsFacade.addLibrary(project,
             library.getChannel(),
             library.getDependency(), library.getVersion());
 
-    List<PythonDep> libs = new ArrayList<>();
-
-    // 5. Send REST calls to all of the kagents using a thread pool - in a different thread
-    for (Host h : hosts) {
-//      web.installPythonDep(project.getName(), library)
-    }
-
-    GenericEntity<Collection<PythonDep>> pysparkDepsList
-            = new GenericEntity<Collection<PythonDep>>(libs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            pysparkDepsList).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("/update")
+  @Path("/upgrade")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response update(PythonDepJson library) throws AppException {
+  public Response upgrade(PythonDepJson library) throws AppException {
 
-    List<Host> hosts = pythonDepsFacade.updateLibrary(project,
+    pythonDepsFacade.upgradeLibrary(project,
             library.getChannel(),
             library.getDependency(), library.getVersion());
 
-    List<PythonDep> libs = new ArrayList<>();
-
-    // 5. Send REST calls to all of the kagents using a thread pool - in a different thread
-    for (Host h : hosts) {
-//      web.installPythonDep(project.getName(), library)
-    }
-
-    GenericEntity<Collection<PythonDep>> pysparkDepsList
-            = new GenericEntity<Collection<PythonDep>>(libs) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            pysparkDepsList).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
   @Path("/clone/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response doClone(@PathParam("projectName") String projectName,
+  public Response doClone(
+          @PathParam("projectName") String srcProject,
+          @PathParam("projectName") String destProject,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
+    pythonDepsFacade.cloneProject(srcProject, destProject);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("/createenv/{projectName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response createEnv(@PathParam("projectName") String projectName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    pythonDepsFacade.createProject(projectName);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("/removeenv/{projectName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removeEnv(@PathParam("projectName") String projectName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    pythonDepsFacade.removeProject(projectName);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

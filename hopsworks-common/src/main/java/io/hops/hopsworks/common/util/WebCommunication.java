@@ -275,4 +275,38 @@ public class WebCommunication {
     } catch (Exception e) {
     }
   }
+
+  public int anaconda(String hostAddress, String agentPassword, String op,
+          String project, String arg) throws Exception {
+
+    String template = "%s://%s:%s/%s";
+    String url = String.format(template, PROTOCOL, hostAddress, PORT,
+            "anaconda/", op, "/", project, "/", arg);
+
+    ClientResponse response = postWebResource(url, agentPassword, "");
+    if (response.getClientResponseStatus().getFamily()
+            == Response.Status.Family.SUCCESSFUL) {
+      return response.getStatus();
+    }
+    throw new RuntimeException("Error. Failed to execute anaconda command " + op
+            + " on " + project);
+  }
+
+  public int conda(String hostAddress, String agentPassword, String op,
+          String project, String channel, String lib, String version) throws
+          Exception {
+
+    String template = "%s://%s:%s/%s";
+    String url = String.format(template, PROTOCOL, hostAddress, PORT,
+            "anaconda/", op, "/", project, "/", channel, "/", lib, "/", version);
+
+    ClientResponse response = postWebResource(url, agentPassword, "");
+    if (response.getClientResponseStatus().getFamily()
+            == Response.Status.Family.SUCCESSFUL) {
+      return response.getStatus();
+    }
+    throw new RuntimeException("Error. Failed to execute anaconda command " + op
+            + " on " + project);
+  }
+
 }

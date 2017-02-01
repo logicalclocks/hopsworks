@@ -791,6 +791,12 @@ public class Settings {
     checkCache();
     return ZEPPELIN_SYNC_INTERVAL;
   }
+  
+  private long CONDA_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
+  public synchronized long getCondaSyncInterval() {
+    checkCache();
+    return CONDA_SYNC_INTERVAL;
+  }
 
   // Kafka
   private String KAFKA_IP = "10.0.2.15";
