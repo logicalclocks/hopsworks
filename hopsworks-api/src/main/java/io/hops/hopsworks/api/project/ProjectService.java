@@ -886,7 +886,7 @@ public class ProjectService {
     return workflowService;
   }
 
-  @Path("{id}/pysparkDeps")
+  @Path("{id}/pythonDeps")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws
           AppException {

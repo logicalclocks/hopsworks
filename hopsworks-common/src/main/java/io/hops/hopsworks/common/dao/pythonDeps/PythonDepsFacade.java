@@ -184,9 +184,12 @@ public class PythonDepsFacade {
   }
 
   public List<PythonDep> listProject(Project proj) throws AppException {
-    List<PythonDep> deps = new ArrayList<>();
-    deps.addAll(proj.getPythonDepCollection());
-    return deps;
+    List<PythonDep> libs = new ArrayList<>();
+    Collection<PythonDep> objs = proj.getPythonDepCollection();
+    if (objs != null) {
+      libs.addAll(objs);
+    }
+    return libs;
   }
 
   /**

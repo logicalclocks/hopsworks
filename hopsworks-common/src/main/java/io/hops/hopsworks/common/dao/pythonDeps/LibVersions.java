@@ -1,34 +1,37 @@
 package io.hops.hopsworks.common.dao.pythonDeps;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class PythonDepJson {
+public class LibVersions {
 
   private String channelUrl;
   private String lib;
-  private String version;
+  private List<Version> versions;
   private String status = "Not Installed";
 
-  public PythonDepJson() {
+  public LibVersions() {
   }
   /**
    * 
    * @param channelUrl
    * @param lib
-   * @param version 
+   * @param versions 
    */
-  public PythonDepJson(String channelUrl, String lib, String version) {
+  public LibVersions(String channelUrl, String lib) {
     this.channelUrl = channelUrl;
     this.lib = lib;
-    this.version = version;
   }
 
-  public PythonDepJson(PythonDep pd) {
-    this.channelUrl = pd.getRepoUrl().getUrl();
-    this.lib = pd.getDependency();
-    this.version = pd.getVersion();
-    this.status = pd.getStatus().toString();
+  public void addVersion(Version version) {
+    if (this.versions == null) {
+      this.versions = new ArrayList<>();
+    }
+    if (!versions.contains(version)) {
+        this.versions.add(version);
+    }
   }
 
   public String getChannelUrl() {
@@ -47,12 +50,12 @@ public class PythonDepJson {
     this.lib = lib;
   }
 
-  public String getVersion() {
-    return version;
+  public List<Version> getVersions() {
+    return versions;
   }
 
-  public void setVersion(String version) {
-    this.version = version;
+  public void setVersions(List<Version> versions) {
+    this.versions = versions;
   }
 
   public String getStatus() {
@@ -62,22 +65,15 @@ public class PythonDepJson {
   public void setStatus(String status) {
     this.status = status;
   }
+
   
   @Override
   public boolean equals(Object o) {
-    if (o instanceof PythonDepJson) {
-      PythonDepJson pd = (PythonDepJson) o;
+    if (o instanceof LibVersions) {
+      LibVersions pd = (LibVersions) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
               && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion().compareToIgnoreCase(this.version) == 0) {
-        return true;
-      }
-    }
-    if (o instanceof PythonDep) {
-      PythonDep pd = (PythonDep) o;
-      if (pd.getRepoUrl().getUrl().compareToIgnoreCase(this.channelUrl) == 0
-              && pd.getDependency().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion().compareToIgnoreCase(this.version) == 0) {
+              && pd.getVersions().size()==this.versions.size()) {
         return true;
       }
     }
@@ -87,6 +83,6 @@ public class PythonDepJson {
   @Override
   public int hashCode() {
     return (this.channelUrl.hashCode() / 3 + this.lib.hashCode()
-            + this.version.hashCode()) / 2;
+            + this.versions.hashCode()) / 2;
   }
 }
