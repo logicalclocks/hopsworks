@@ -31,6 +31,8 @@ angular.module('hopsWorksApp')
             self.version = "";
 
 
+
+
             self.showAlert = function (ev) {
               $mdDialog.show(
                       $mdDialog.alert()
@@ -82,7 +84,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                           growl.success("No libraries found", {title: 'No Results', ttl: 2000});
                         }
                         for (var i=0;i<self.searchResults.length;i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version" : "none" };
+                          self.selectedLibs[self.searchResults[i].lib] = {"version" : {"version":"none", "status": "Not installed" }};
                         }
 
                       }, function (error) {
@@ -93,7 +95,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
 
             self.install = function (lib, version) {
 
-              var data = {"condaurl": self.condaUrl, "lib": lib, "version": version};
+              var data = {"condaurl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {

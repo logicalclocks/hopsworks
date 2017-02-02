@@ -197,7 +197,7 @@
                           <div class="form-group">
                             <label class="col-sm-3 control-label">Version</label>
                             <div class="col-sm-6">
-                              <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version.version" theme="select2" class="form-control" title="Choose a version">
+                              <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
                                 <ui-select-match placeholder="Select a version from the list...">{{$select.selected.version}}</ui-select-match>
                                 <ui-select-choices repeat="v in row.versions | filter: $select.search">
                                   <div ng-bind-html="v.version | highlight: $select.search"></div>
@@ -214,7 +214,7 @@
                       </td>
                       <td class="col-sm-2">
                         <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'Installed'"
-                                ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version.version)">Install</button>
+                                ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version)">Install</button>
                       </td>
                     </tr>
                 </table>

@@ -38,7 +38,7 @@ public class Version {
       return false;
     }
     Version v = (Version) o;
-    if (v.version.compareToIgnoreCase(this.version) != 0) {
+    if (v.version.compareTo(this.version) != 0) {
       return false;
     }
     return true;

@@ -14,11 +14,12 @@ public class LibVersions {
 
   public LibVersions() {
   }
+
   /**
-   * 
+   *
    * @param channelUrl
    * @param lib
-   * @param versions 
+   * @param versions
    */
   public LibVersions(String channelUrl, String lib) {
     this.channelUrl = channelUrl;
@@ -30,7 +31,7 @@ public class LibVersions {
       this.versions = new ArrayList<>();
     }
     if (!versions.contains(version)) {
-        this.versions.add(version);
+      this.versions.add(version);
     }
   }
 
@@ -66,14 +67,13 @@ public class LibVersions {
     this.status = status;
   }
 
-  
   @Override
   public boolean equals(Object o) {
     if (o instanceof LibVersions) {
       LibVersions pd = (LibVersions) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
               && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersions().size()==this.versions.size()) {
+              && pd.getVersions().size() == this.versions.size()) {
         return true;
       }
     }
