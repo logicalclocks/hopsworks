@@ -81,12 +81,13 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                 return;
               }
               self.searching = true;
-              self.resultsMessageShowing = true;
               self.resultsMsg = "Conda searching can take a good few seconds......bear with us."
+              self.resultsMessageShowing = true;
 
               PythonDepsService.search(self.projectId, self.selectedLib).then(
                       function (success) {
                         self.searching = false;
+                        self.searchResults = success.data;
                         if (self.searchResults.length === 0) {
                           self.resultsMsg = "No results found.";
                         } else {
