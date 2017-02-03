@@ -273,6 +273,13 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(project);
   }
 
+  public void enableConda(Project project) {
+    if (project != null) {
+      project.setConda(true);
+    }
+    em.merge(project);
+  }
+
   public void unarchiveProject(String projectname) {
     Project project = findByName(projectname);
     if (project != null) {

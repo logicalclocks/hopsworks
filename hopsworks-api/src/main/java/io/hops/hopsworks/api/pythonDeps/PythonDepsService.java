@@ -94,6 +94,27 @@ public class PythonDepsService {
             deps).build();
   }
 
+  @GET
+  @Path("/enable")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response enable(PythonDepJson library) throws AppException {
+    pythonDepsFacade.enable(project);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("/enabled")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response enabled(PythonDepJson library) throws AppException {
+    boolean enabled = project.getConda();
+    if (enabled) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(
+            Response.Status.SERVICE_UNAVAILABLE).build();
+  }
+
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/remove")
@@ -113,12 +134,12 @@ public class PythonDepsService {
   public Response install(PythonDepJson library) throws AppException {
 
     Collection<LibVersions> response = findCondaLib(library);
-    if (response !=null && response.size() == 1) {
+    if (response != null && response.size() == 1) {
       LibVersions lv = response.iterator().next();
       throw new AppException(Response.Status.BAD_REQUEST.
               getStatusCode(),
               "Go to 'Manage Installed Libraries' tab. This python library is "
-                      + "already installed with state: " + lv.getStatus());
+              + "already installed with state: " + lv.getStatus());
     }
 
     pythonDepsFacade.addLibrary(project,
@@ -183,13 +204,14 @@ public class PythonDepsService {
   }
 
   /**
-   * 
+   *
    * @param sc
    * @param req
    * @param httpHeaders
    * @param lib
-   * @return 204 if no results found, results if successful, 500 if an error occurs.
-   * @throws AppException 
+   * @return 204 if no results found, results if successful, 500 if an error
+   * occurs.
+   * @throws AppException
    */
   @POST
   @Path("/search")
@@ -297,8 +319,7 @@ public class PythonDepsService {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Problem listing libraries with conda - report a bug.");
-      }
-      else if (errCode == 1) {
+      } else if (errCode == 1) {
         throw new AppException(Response.Status.NO_CONTENT.
                 getStatusCode(),
                 "No results found.");
