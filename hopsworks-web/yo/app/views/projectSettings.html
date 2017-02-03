@@ -130,7 +130,8 @@
                   <div class="control-group col-md-offset-1">
                     <div style="margin-top: 30px;">
                       
-                      <div uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top">Conda URL: <a href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
+                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
+                                         href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
                       <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
                                                        type="text" required y
                                                        ng-pattern="/^\s*\w*\s*$/"
@@ -172,10 +173,12 @@
                     </form>
                 </fieldset>
 
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
+                
                 <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
                   <thead>
                     <tr>
-                      <th st-sort="depName" class="col-sm-5"></th>
+                      <th st-sort="depName" class="col-sm-4"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
@@ -188,18 +191,18 @@
                   <tbody>
                     <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.searchResults" 
                         ng-class="{'selectedTopicOdd': row.isSelected === true}">
-                      <td class="col-sm-5">
+                      <td class="col-sm-4">
                         <div class="row" style="margin-left: 10px;"><b>{{row.lib}}</b></div>
                       </td>
                       <td class="col-sm-2">
-                        <div class="row" style="margin-left: 10px;">
+                        <div class="row">
 
                           <div class="form-group">
-                            <label class="col-sm-3 control-label">Version</label>
-                            <div class="col-sm-6">
+                            <label class="col-sm-3 control-label" style="margin-top: 5px;">Version</label>
+                            <div class="col-sm-8">
                               <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
                                 <ui-select-match placeholder="Select a version from the list...">{{$select.selected.version}}</ui-select-match>
-                                <ui-select-choices repeat="v in row.versions | filter: $select.search">
+                                <ui-select-choices repeat="v in row.versions | orderBy:'v.version' : false | filter: $select.search">
                                   <div ng-bind-html="v.version | highlight: $select.search"></div>
                                   <small ng-bind-html="v.status | highlight: $select.search"></small>
                                 </ui-select-choices>

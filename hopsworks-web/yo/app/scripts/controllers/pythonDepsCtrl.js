@@ -16,12 +16,18 @@ angular.module('hopsWorksApp')
 
             self.active = 0;
 
+            self.resultsMsg = "";
+            self.resultsMsgShowing = false;
+
 
             self.selectedLib = {"channelUrl": "https://repo.continuum.io/pkgs/free/linux-64/",
               "lib": "", "version": ""};
 
             self.searchText = "";
             self.searching = false;
+            self.installing = false;
+            self.uninstalling = false;
+            self.updating = false;
 
             self.installing = true;
             self.searchResults = [];
@@ -75,39 +81,57 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                 return;
               }
               self.searching = true;
+              self.resultsMessageShowing = true;
+              self.resultsMsg = "Conda searching can take a good few seconds......bear with us."
 
               PythonDepsService.search(self.projectId, self.selectedLib).then(
                       function (success) {
                         self.searching = false;
-                        self.searchResults = success.data;
                         if (self.searchResults.length === 0) {
-                          growl.success("No libraries found", {title: 'No Results', ttl: 2000});
+                          self.resultsMsg = "No results found.";
+                        } else {
+                          self.resultsMessageShowing = false;
                         }
-                        for (var i=0;i<self.searchResults.length;i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version" : {"version":"none", "status": "Not installed" }};
+                        for (var i = 0; i < self.searchResults.length; i++) {
+                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}};
                         }
 
                       }, function (error) {
                 self.searching = false;
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+                if (error.status == 204) {
+                  self.resultsMsg = "No results found.";
+                } else {
+                  self.resultsMessageShowing = false;
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+                }
               });
             };
 
             self.install = function (lib, version) {
 
-              var data = {"condaurl": self.condaUrl, "lib": lib, "version": version.version};
+              self.installing = true;
+
+              var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
+                        self.installing = false;
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                        for (var i = 0; i < self.searchResults.length; i++) {
+                          if (self.searchResults[i].lib === data.lib) {
+                            self.searchResults[i].installed = "Installed";
+                          }
+                        }
+
                       }, function (error) {
+                self.installing = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
 
             self.uninstall = function (condaUrl, lib, version) {
 
-              var data = {"condaurl": condaUrl, "lib": lib, "version": version};
+              var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
@@ -118,7 +142,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
 
             self.upgrade = function (condaUrl, lib, version) {
 
-              var data = {"condaurl": condaUrl, "lib": lib, "version": version};
+              var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});

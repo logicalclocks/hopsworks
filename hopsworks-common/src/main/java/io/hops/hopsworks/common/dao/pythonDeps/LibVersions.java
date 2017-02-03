@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.pythonDeps;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -33,6 +34,10 @@ public class LibVersions {
     if (!versions.contains(version)) {
       this.versions.add(version);
     }
+  }
+  
+  public void reverseVersionList() {
+    this.versions = Lists.reverse(this.versions); 
   }
 
   public String getChannelUrl() {

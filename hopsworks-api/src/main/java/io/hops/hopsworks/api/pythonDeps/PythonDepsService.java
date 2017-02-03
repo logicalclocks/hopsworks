@@ -113,10 +113,12 @@ public class PythonDepsService {
   public Response install(PythonDepJson library) throws AppException {
 
     Collection<LibVersions> response = findCondaLib(library);
-    if (response.size() != 1) {
+    if (response !=null && response.size() == 1) {
+      LibVersions lv = response.iterator().next();
       throw new AppException(Response.Status.BAD_REQUEST.
               getStatusCode(),
-              "The conda_url, library name, and version number could not be found.");
+              "Go to 'Manage Installed Libraries' tab. This python library is "
+                      + "already installed with state: " + lv.getStatus());
     }
 
     pythonDepsFacade.addLibrary(project,
@@ -180,6 +182,15 @@ public class PythonDepsService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
+  /**
+   * 
+   * @param sc
+   * @param req
+   * @param httpHeaders
+   * @param lib
+   * @return 204 if no results found, results if successful, 500 if an error occurs.
+   * @throws AppException 
+   */
   @POST
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -194,10 +205,13 @@ public class PythonDepsService {
 //    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
     List<PythonDep> installedDeps = new ArrayList<PythonDep>();
 
+    // 1. Reverse version numbers to have most recent first.
+    // 2. Check installation status of each version 
     // Check which of these libraries found are already installed.
     // This code is O(N^2) in the number of hits and installed libs, so
     // it is not optimal
     for (LibVersions l : response) {
+      l.reverseVersionList();
       for (PythonDep pd : installedDeps) {
         if (l.getLib().compareToIgnoreCase(pd.getDependency()) == 0) {
           List<Version> allVs = l.getVersions();
@@ -279,10 +293,15 @@ public class PythonDepsService {
 
       }
       int errCode = process.waitFor();
-      if (errCode != 0) {
+      if (errCode == 2) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
-                "Problem listing libraries with conda dying on this webserver.");
+                "Problem listing libraries with conda - report a bug.");
+      }
+      else if (errCode == 1) {
+        throw new AppException(Response.Status.NO_CONTENT.
+                getStatusCode(),
+                "No results found.");
       }
       return all;
     } catch (IOException | InterruptedException ex) {
