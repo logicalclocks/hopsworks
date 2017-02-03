@@ -67,6 +67,8 @@ import javax.persistence.ManyToMany;
           + "AND t.inode.inodePK.name = :name")})
 public class Project implements Serializable {
 
+  @Column(name = "conda")
+  private Boolean conda = false;
   @Column(name = "archived")
   private Boolean archived = false;
   @OneToMany(cascade = CascadeType.ALL,
@@ -273,6 +275,14 @@ public class Project implements Serializable {
     return true;
   }
 
+  public Boolean getConda() {
+    return conda;
+  }
+
+  public void setConda(Boolean conda) {
+    this.conda = conda;
+  }
+  
   public Boolean getArchived() {
     return archived;
   }

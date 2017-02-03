@@ -12,28 +12,27 @@ angular.module('hopsWorksApp')
             var self = this;
             self.projectId = $routeParams.projectID;
 
-            self.searching = true;
-
             self.active = 0;
 
-            self.resultsMsg = "";
+            self.enabled = false;
             self.resultsMsgShowing = false;
 
-
-            self.selectedLib = {"channelUrl": "https://repo.continuum.io/pkgs/free/linux-64/",
-              "lib": "", "version": ""};
-
+            self.resultsMsg = "";
+            
             self.searchText = "";
             self.searching = false;
             self.installing = false;
             self.uninstalling = false;
             self.updating = false;
+            self.enabling = false;
 
             self.searchResults = [];
             self.installedLibs = [];
             self.condaUrl = "https://repo.continuum.io/pkgs/free/linux-64/";
             self.selectedLibs = {};
-            self.version = "";
+
+            self.selectedLib = {"channelUrl": "https://repo.continuum.io/pkgs/free/linux-64/",
+              "lib": "", "version": ""};
 
 
 
@@ -58,9 +57,26 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
             };
 
             self.init = function () {
-
+              PythonDepsService.enabled(self.projectId).then(
+                      function (success) {
+                        self.enabled = true;
+                      }, function (error) {
+                self.enabled = false;
+              });
             };
             self.init();
+
+            self.enable = function () {
+              self.enabling = true;
+              PythonDepsService.enable(self.projectId).then(
+                      function (success) {
+                        self.enabled = true;
+                        self.enabling = false;
+                      }, function (error) {
+                self.enabling = false;
+                growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
+              });
+            };
 
 
             self.getInstalled = function () {
@@ -93,7 +109,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                           self.resultsMessageShowing = false;
                         }
                         for (var i = 0; i < self.searchResults.length; i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}, "installing" : false};
+                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}, "installing": false};
                         }
 
                       }, function (error) {

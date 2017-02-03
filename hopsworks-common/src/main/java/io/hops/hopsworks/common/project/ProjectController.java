@@ -41,6 +41,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -55,7 +56,6 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -79,7 +79,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -129,6 +128,8 @@ public class ProjectController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private OperationsLogFacade operationsLogFacade;
+  @EJB
+  private PythonDepsFacade pythonDepsFacade;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -301,36 +302,36 @@ public class ProjectController {
                 ds.getDescription(), project.getName());
 
         // Add the metrics.properties file to the /Resources dataset
-        if (ds.equals(Settings.DefaultDataset.RESOURCES)) {
-          StringBuilder metrics_props;
-          FSDataOutputStream fsOut = null;
-          try {
-            metrics_props
-                    = ConfigFileGenerator.
-                            instantiateFromTemplate(
-                                    ConfigFileGenerator.METRICS_TEMPLATE
-                            //              "spark_dir", settings.getSparkDir(),
-                            );
-            String metricsFilePath = "/Projects/" + project + "/"
-                    + ds.name() + "/" + Settings.SPARK_METRICS_PROPS;
-
-            fsOut = udfso.create(metricsFilePath);
-            fsOut.writeBytes(metrics_props.toString());
-            fsOut.flush();
-            udfso.setPermission(new org.apache.hadoop.fs.Path(metricsFilePath),
-                    new FsPermission(FsAction.ALL,
-                            FsAction.READ_EXECUTE,
-                            FsAction.NONE));
-          } catch (IOException ex) {
-            logger.log(Level.WARNING,
-                    "metrics.properties could not be generated for project"
-                    + " {0} and dataset {1}.", new Object[]{project, ds.name()});
-          } finally {
-            if (fsOut != null) {
-              fsOut.close();
-            }
-          }
-        }
+//        if (ds.equals(Settings.DefaultDataset.RESOURCES)) {
+//          StringBuilder metrics_props;
+//          FSDataOutputStream fsOut = null;
+//          try {
+//            metrics_props
+//                    = ConfigFileGenerator.
+//                            instantiateFromTemplate(
+//                                    ConfigFileGenerator.METRICS_TEMPLATE
+//                            //              "spark_dir", settings.getSparkDir(),
+//                            );
+//            String metricsFilePath = "/Projects/" + project + "/"
+//                    + ds.name() + "/" + Settings.SPARK_METRICS_PROPS;
+//
+//            fsOut = udfso.create(metricsFilePath);
+//            fsOut.writeBytes(metrics_props.toString());
+//            fsOut.flush();
+//            udfso.setPermission(new org.apache.hadoop.fs.Path(metricsFilePath),
+//                    new FsPermission(FsAction.ALL,
+//                            FsAction.READ_EXECUTE,
+//                            FsAction.NONE));
+//          } catch (IOException ex) {
+//            logger.log(Level.WARNING,
+//                    "metrics.properties could not be generated for project"
+//                    + " {0} and dataset {1}.", new Object[]{project, ds.name()});
+//          } finally {
+//            if (fsOut != null) {
+//              fsOut.close();
+//            }
+//          }
+//        }
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -1141,6 +1142,24 @@ public class ProjectController {
   public void logProject(Project project, OperationType type) {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
+  
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void createAnacondaEnv(Project project) throws AppException {
+    pythonDepsFacade.createProject(project.getName());
+
+  }
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void removeAnacondaEnv(Project project) throws AppException {
+    pythonDepsFacade.removeProject(project.getName());
+
+  }
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void cloneAnacondaEnv(Project srcProj, Project destProj) throws AppException {
+    pythonDepsFacade.cloneProject(srcProj.getName(), destProj.getName());
+
+  }
+  
 
   /**
    * Handles Kibana related indices and templates for projects.

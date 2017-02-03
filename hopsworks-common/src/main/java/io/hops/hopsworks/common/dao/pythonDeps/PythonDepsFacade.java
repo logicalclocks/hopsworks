@@ -43,7 +43,7 @@ public class PythonDepsFacade {
   @EJB
   Settings settings;
   @EJB
-  ProjectFacade project;
+  ProjectFacade projectFacade;
   @EJB
   HostEJB hostsFacade;
   @Resource
@@ -124,6 +124,10 @@ public class PythonDepsFacade {
   }
 
   public PythonDepsFacade() throws Exception {
+  }
+  
+  public void enable(Project proj) throws AppException {
+    projectFacade.enableConda(proj);
   }
 
   /**
@@ -366,7 +370,7 @@ public class PythonDepsFacade {
 
     PythondepHostStatus.Status s = PythondepHostStatus.Status.valueOf(status);
     try {
-      Project p = project.findByName(proj);
+      Project p = projectFacade.findByName(proj);
       AnacondaRepo repo = getRepo(p, channelUrl, false);
       PythonDep dep = getDep(repo, dependency, version, false);
       PythondepHostStatusPK pk = new PythondepHostStatusPK(p.getId(), dep.

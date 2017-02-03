@@ -13,6 +13,12 @@ angular.module('hopsWorksApp')
               index: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps')
               },
+              enable: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/pythonDeps/enable')
+              },
+              enabled: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/pythonDeps/enabled')
+              },
               install: function (projectId, data) {
                 var regReq = {
                   method: 'POST',

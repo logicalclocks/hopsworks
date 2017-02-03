@@ -123,13 +123,36 @@
               </uib-tab>
 
               <uib-tab index="1" heading="Install New Libraries">
-                <h2>Search and Install Python Libraries with Conda</h2>
 
-                <div class="row"></div>
+                <div ng-show="!pythonDepsCtrl.enabled">
+
+                  <div class="jumbotron" style="margin-top: 30px;">
+                    <div class="col-md-offset-1">
+                      <h1 class="display-3">Anaconda</h1>
+                      <p class="lead">Click on the button below to install Anaconda for this project.</p>
+                      <!--<p>This will install an anaconda environment for this project on every host in the system.</p>-->
+                      <p class="lead">
+                      <div style="width: 300px;">
+                        <button uib-tooltip="Enable Anaconda/Conda for this project by clicking here." tooltip-placement="top"
+                                class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
+                                ng-disabled="pythonDepsCtrl.enabling">
+                          <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          Enable Anaconda
+                        </button>
+                      </div>
+                      </p>
+                    </div>                  
+                  </div>                  
+                  <div class="row"></div>
+
+                </div>
+                <div class="row" ng-show="pythonDepsCtrl.enabled">
+                  <h2>Install Python Libraries with Anaconda</h2>                  
+                </div>
                 <fieldset>
-                  <div class="control-group col-md-offset-1">
+                  <div ng-show="pythonDepsCtrl.enabled" class="control-group col-md-offset-1">
                     <div style="margin-top: 30px;">
-                      
+
                       <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
                                          href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
                       <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
@@ -174,18 +197,18 @@
                 </fieldset>
 
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
-                
-                <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
+
+                <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
                   <thead>
                     <tr>
                       <th st-sort="depName" class="col-sm-4"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
-<!--                      <th st-sort="depName" class="col-sm-5">Library</th>
-                      <th class="col-sm-2">Version</th>
-                      <th class="col-sm-2">Status</th>
-                      <th class="col-sm-2">Actions</th>-->
+                      <!--                      <th st-sort="depName" class="col-sm-5">Library</th>
+                                            <th class="col-sm-2">Version</th>
+                                            <th class="col-sm-2">Status</th>
+                                            <th class="col-sm-2">Actions</th>-->
                     </tr>
                   </thead>
                   <tbody>
@@ -265,11 +288,11 @@
                         <div class="button-group">
                           <button type="submit" class="btn btn-primary" ng-disabled="row.status !== 'Installed'"
                                   ng-click="pythonDepsCtrl.install(row.channelUrl, row.lib, row.version)">
-                          <i ng-if="pythonDepsCtrl.upgrading" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            <i ng-if="pythonDepsCtrl.upgrading" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Upgrade</button>
                           <button type="submit" class="btn btn-primary" ng-disabled="row.status !== 'Installed'"
                                   ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
-                          <i ng-if="pythonDepsCtrl.uninstalling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            <i ng-if="pythonDepsCtrl.uninstalling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Uninstall</button>
                         </div>
                       </td>
