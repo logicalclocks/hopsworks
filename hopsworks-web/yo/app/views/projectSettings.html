@@ -149,7 +149,7 @@
                     <form name="nestedForm">
 
                       <div class="form-group row" style="margin-top: 60px;">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                           <input type="text" class="form-control" 
                                  uib-tooltip="Enter the name of the python library you are looking for, then press 'enter'."
                                  tooltip-placement="bottom"
@@ -159,7 +159,7 @@
                                                   </span>-->
 
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                           <div class="btn-group row">
                             <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.search()"
                                     ng-disabled="pythonDepsCtrl.searching">
@@ -217,7 +217,9 @@
                       </td>
                       <td class="col-sm-2">
                         <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'Installed'"
-                                ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version)">Install</button>
+                                ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version)">
+                          <i ng-if="pythonDepsCtrl.selectedLibs[row.lib].installing" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          Install</button>
                       </td>
                     </tr>
                 </table>
@@ -262,9 +264,13 @@
                       <td class="col-sm-2">
                         <div class="button-group">
                           <button type="submit" class="btn btn-primary" ng-disabled="row.status !== 'Installed'"
-                                  ng-click="pythonDepsCtrl.install(row.channelUrl, row.lib, row.version)">Upgrade</button>
+                                  ng-click="pythonDepsCtrl.install(row.channelUrl, row.lib, row.version)">
+                          <i ng-if="pythonDepsCtrl.upgrading" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Upgrade</button>
                           <button type="submit" class="btn btn-primary" ng-disabled="row.status !== 'Installed'"
-                                  ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">Uninstall</button>
+                                  ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
+                          <i ng-if="pythonDepsCtrl.uninstalling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Uninstall</button>
                         </div>
                       </td>
                     </tr>

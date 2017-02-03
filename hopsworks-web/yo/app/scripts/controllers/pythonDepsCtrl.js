@@ -29,7 +29,6 @@ angular.module('hopsWorksApp')
             self.uninstalling = false;
             self.updating = false;
 
-            self.installing = true;
             self.searchResults = [];
             self.installedLibs = [];
             self.condaUrl = "https://repo.continuum.io/pkgs/free/linux-64/";
@@ -94,7 +93,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                           self.resultsMessageShowing = false;
                         }
                         for (var i = 0; i < self.searchResults.length; i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}};
+                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}, "installing" : false};
                         }
 
                       }, function (error) {
@@ -111,43 +110,57 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
             self.install = function (lib, version) {
 
               self.installing = true;
+              self.selectedLibs[lib].installing = true;
 
               var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
                         self.installing = false;
+                        self.selectedLibs[lib].installing = false;
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
-                        for (var i = 0; i < self.searchResults.length; i++) {
-                          if (self.searchResults[i].lib === data.lib) {
-                            self.searchResults[i].installed = "Installed";
-                          }
-                        }
+                        self.resultsMessageShowing = true;
+                        self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
+                        self.searchResults = [];
+
+//                        for (var i = 0; i < self.searchResults.length; i++) {
+//                          if (self.searchResults[i].lib === data.lib) {
+//                            self.searchResults[i].installed = "Installed";
+//                          }
+//                        }
 
                       }, function (error) {
                 self.installing = false;
+                self.selectedLibs[lib].installing = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
 
             self.uninstall = function (condaUrl, lib, version) {
+              self.uninstalling = true;
 
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
                       function (success) {
+                        self.uninstalling = false;
+
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                       }, function (error) {
+                self.uninstalling = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
 
             self.upgrade = function (condaUrl, lib, version) {
+              self.upgrading = true;
 
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
+                        self.upgrading = false;
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                       }, function (error) {
+                self.upgrading = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
