@@ -5,6 +5,7 @@ import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.HopsUtils;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -13,28 +14,30 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import javax.annotation.Resource;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 import javax.ws.rs.core.Response;
 
 @Stateless
 public class PythonDepsFacade {
 
-  private final static Logger LOGGER = Logger.getLogger(PythonDepsFacade.class.
+  private final static Logger logger = Logger.getLogger(PythonDepsFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -46,8 +49,6 @@ public class PythonDepsFacade {
   ProjectFacade projectFacade;
   @EJB
   HostEJB hostsFacade;
-  @Resource
-  private UserTransaction userTransaction;
   @EJB
   private WebCommunication web;
   @Resource(lookup = "concurrent/kagentExecutorService")
@@ -75,11 +76,13 @@ public class PythonDepsFacade {
     private AnacondaOp op;
     private String arg;
 
-    public AnacondaTask(String proj, Host host, AnacondaOp op, String arg) {
+    public AnacondaTask(WebCommunication web, String proj, Host host,
+            AnacondaOp op, String arg) {
+      this.web = web;
       this.proj = proj;
       this.host = host;
       this.op = op;
-      this.arg = arg;
+      this.arg = arg == null ? "" : arg;
     }
 
     @Override
@@ -103,7 +106,9 @@ public class PythonDepsFacade {
     private CondaOp op;
     private PythonDep dep;
 
-    public CondaTask(Project proj, Host host, CondaOp op, PythonDep dep) {
+    public CondaTask(WebCommunication web, Project proj, Host host, CondaOp op,
+            PythonDep dep) {
+      this.web = web;
       this.proj = proj;
       this.host = host;
       this.op = op;
@@ -125,9 +130,37 @@ public class PythonDepsFacade {
 
   public PythonDepsFacade() throws Exception {
   }
-  
-  public void enable(Project proj) throws AppException {
-    projectFacade.enableConda(proj);
+
+  public PythonDep findPythonDeps(String lib, String version) {
+    TypedQuery<PythonDep> query = em.createNamedQuery(
+            "findByDependencyAndVersion",
+            PythonDep.class);
+    query.setParameter("lib", lib);
+    query.setParameter("version", version);
+    return query.getSingleResult();
+  }
+
+//  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public Collection<PythonDep> createProjectInDb(Project project,
+          Map<String, String> libs) throws AppException {
+    List<PythonDep> all = new ArrayList<>();
+    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
+    for (String k : libs.keySet()) {
+      PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
+      pd.setStatus(PythonDep.Status.INSTALLED);
+      Collection<Project> projs = pd.getProjectCollection();
+      projs.add(project);
+      all.add(pd);
+    }
+    Collection<PythonDep> projDeps = project.getPythonDepCollection();
+    projDeps.addAll(all);
+    for (PythonDep p : all) {
+      em.merge(project);
+      em.persist(p);
+      em.flush();
+    }
+
+    return all;
   }
 
   /**
@@ -153,18 +186,27 @@ public class PythonDepsFacade {
     return null;
   }
 
-  private AnacondaRepo getRepo(Project proj, String channelUrl, boolean create)
+  public AnacondaRepo getRepo(Project proj, String channelUrl, boolean create)
           throws
           AppException {
     TypedQuery<AnacondaRepo> query = em.createNamedQuery(
             "AnacondaRepo.findByUrl", AnacondaRepo.class);
     query.setParameter("url", channelUrl);
-    AnacondaRepo repo = query.getSingleResult();
-    if (repo == null && create) {
-      repo = new AnacondaRepo();
-      repo.setUrl(channelUrl);
-      em.persist(proj);
-      em.flush();
+    AnacondaRepo repo = null;
+    try {
+      repo = query.getSingleResult();
+    } catch (NoResultException ex) {
+      if (create) {
+        repo = new AnacondaRepo();
+        repo.setUrl(channelUrl);
+        em.persist(repo);
+        em.flush();
+      }
+
+    }
+    if (repo == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Problem adding the repo.");
     }
     return repo;
   }
@@ -175,14 +217,22 @@ public class PythonDepsFacade {
             "PythonDep.findByDependencyAndVersion", PythonDep.class);
     deps.setParameter("dependency", dependency);
     deps.setParameter("version", version);
-    PythonDep dep = deps.getSingleResult();
-    if (dep == null && create) {
-      dep = new PythonDep();
-      dep.setRepoUrl(repo);
-      dep.setDependency(dependency);
-      dep.setVersion(version);
-      em.persist(dep);
-      em.flush();
+    PythonDep dep = null;
+    try {
+      dep = deps.getSingleResult();
+    } catch (NoResultException ex) {
+      if (create) {
+        dep = new PythonDep();
+        dep.setRepoUrl(repo);
+        dep.setDependency(dependency);
+        dep.setVersion(version);
+        em.persist(dep);
+        em.flush();
+      }
+    }
+    if (dep == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Problem adding the repo.");
     }
     return dep;
   }
@@ -196,13 +246,78 @@ public class PythonDepsFacade {
     return libs;
   }
 
+  private List<Host> getHosts() throws AppException {
+    List<Host> hosts = new ArrayList<>();
+    try {
+      hosts = hostsFacade.find();
+    } catch (Exception ex) {
+      Logger.getLogger(PythonDepsFacade.class.getName()).log(Level.SEVERE, null,
+              ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Problem adding the project python deps.");
+    }
+    return hosts;
+  }
+
   /**
    *
    * @param project
    * @throws AppException
    */
-  public void createProject(String proj) throws AppException {
-    anaconda(AnacondaOp.CREATE, proj, "");
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public Map<String, String> createProject(Project proj) throws AppException {
+    anaconda(AnacondaOp.CREATE, proj.getName(), "", getHosts());
+
+    // First list the libraries already installed and put them in the 
+    Map<String, String> depVers = new HashMap<String, String>();
+    try {
+      String prog = settings.getHopsworksDomainDir() + "/bin/condalist.sh";
+      ProcessBuilder pb = new ProcessBuilder(prog);
+      Process process = pb.start();
+      StringBuilder sb = new StringBuilder();
+      BufferedReader br = new BufferedReader(new InputStreamReader(process.
+              getInputStream()));
+      String line;
+
+      while ((line = br.readLine()) != null) {
+        // returns key,value  pairs
+        String[] libVersion = line.split(",");
+        if (libVersion.length != 2) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(),
+                  "Problem listing libraries. Did conda get upgraded and change "
+                  + "its output format?");
+        }
+        // Format is:
+        // mkl,2017.0.1
+        // numpy,1.11.3
+        // openssl,1.0.2k
+
+        String key = libVersion[0];
+        String value = libVersion[1];
+        depVers.put(key, value);
+      }
+      int errCode = process.waitFor();
+      if (errCode == 2) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Problem listing libraries with conda - report a bug.");
+      } else if (errCode == 1) {
+        throw new AppException(Response.Status.NO_CONTENT.
+                getStatusCode(),
+                "No results found.");
+      }
+
+    } catch (IOException | InterruptedException ex) {
+      Logger.getLogger(HopsUtils.class
+              .getName()).log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Problem listing libraries, conda interrupted on this webserver.");
+
+    }
+
+    return depVers;
   }
 
   /**
@@ -211,7 +326,7 @@ public class PythonDepsFacade {
    * @throws AppException
    */
   public void removeProject(String proj) throws AppException {
-    anaconda(AnacondaOp.REMOVE, proj, "");
+    anaconda(AnacondaOp.REMOVE, proj, "", getHosts());
   }
 
   /**
@@ -221,7 +336,7 @@ public class PythonDepsFacade {
    */
   public void cloneProject(String srcProject, String destProj) throws
           AppException {
-    anaconda(AnacondaOp.CLONE, destProj, srcProject);
+    anaconda(AnacondaOp.CLONE, destProj, srcProject, getHosts());
   }
 
   /**
@@ -234,24 +349,17 @@ public class PythonDepsFacade {
    * @param arg
    * @throws AppException
    */
-  private void anaconda(AnacondaOp op, String proj, String arg) throws
+  private void anaconda(AnacondaOp op, String proj, String arg, List<Host> hosts)
+          throws
           AppException {
 
-    List<Host> hosts = new ArrayList<>();
-    try {
-      userTransaction.begin();
-      hosts = hostsFacade.find();
-      userTransaction.commit();
-    } catch (Exception ex) {
-      Logger.getLogger(PythonDepsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Problem adding the project python deps.");
-    }
     List<Future> waiters = new ArrayList<>();
     for (Host h : hosts) {
-      Future<?> f = kagentExecutorService.submit(new AnacondaTask(proj, h,
-              op, arg));
+      logger.info("Create anaconda enviornment for " + proj + " on " + h.
+              getHostname());
+      Future<?> f = kagentExecutorService.submit(
+              new AnacondaTask(this.web, proj, h,
+                      op, arg));
       waiters.add(f);
     }
     for (Future f : waiters) {
@@ -271,17 +379,44 @@ public class PythonDepsFacade {
 
   }
 
-  public void addLibrary(Project proj, String channelUrl, String dependency,
+  public LibStatus libStatus(Project proj, PythonDep dep)
+          throws AppException {
+    LibStatus found = new LibStatus(dep.getRepoUrl().getUrl(), dep.
+            getDependency(), dep.getVersion());
+    List<HostLibStatus> hosts = found.getHosts();
+
+    TypedQuery<PythondepHostStatus> query = em.createNamedQuery(
+            "PythondepHostStatus.findByProjectId",
+            PythondepHostStatus.class);
+    query.setParameter("projectId", proj.getId());
+    List<PythondepHostStatus> res = query.getResultList();
+
+    for (PythondepHostStatus p : res) {
+      if (p.getPythondepHostStatusPK().getDepId() == dep.getId() && p.
+              getPythondepHostStatusPK().getProjectId() == proj.getId() && p.
+              getPythondepHostStatusPK().getRepoId() == dep.getRepoUrl().getId()) {
+        HostLibStatus hls = new HostLibStatus(p.getPythondepHostStatusPK().
+                getHostId(), p.getStatus().toString());
+        hosts.add(hls);
+      }
+    }
+    return found;
+  }
+
+  public void addLibrary(Project proj, String channelUrl,
+          String dependency,
           String version) throws AppException {
     condaOp(CondaOp.INSTALL, proj, channelUrl, dependency, version);
   }
 
-  public void upgradeLibrary(Project proj, String channelUrl, String dependency,
+  public void upgradeLibrary(Project proj, String channelUrl,
+          String dependency,
           String version) throws AppException {
     condaOp(CondaOp.UPGRADE, proj, channelUrl, dependency, version);
   }
 
-  public void removeLibrary(Project proj, String channelUrl, String dependency,
+  public void removeLibrary(Project proj, String channelUrl,
+          String dependency,
           String version) throws AppException {
     condaOp(CondaOp.REMOVE, proj, channelUrl, dependency, version);
   }
@@ -292,7 +427,6 @@ public class PythonDepsFacade {
     List<Host> hosts = new ArrayList<>();
     PythonDep dep = null;
     try {
-      userTransaction.begin();
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = getRepo(proj, channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
@@ -332,21 +466,22 @@ public class PythonDepsFacade {
                 dep.getId(), repo.getId(), h.getId()));
         em.persist(phs);
       }
-      userTransaction.commit();
-    } catch (NotSupportedException | SystemException | AppException |
-            RollbackException | HeuristicMixedException |
-            HeuristicRollbackException | SecurityException |
-            IllegalStateException ex) {
+      kagentCalls(hosts, op, proj, dep);
+    } catch (Exception ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               ex.getMessage());
     }
 
-    // 5. Send REST calls to all of the kagents using a thread pool - in a different thread
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void kagentCalls(List<Host> hosts,
+          CondaOp op, Project proj, PythonDep dep) {
     List<Future> waiters = new ArrayList<>();
     for (Host h : hosts) {
-      Future<?> f = kagentExecutorService.submit(new CondaTask(proj, h,
-              op, dep));
+      Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
+              this.web, proj, h, op, dep));
       waiters.add(f);
     }
     for (Future f : waiters) {
@@ -363,6 +498,7 @@ public class PythonDepsFacade {
                 log(Level.SEVERE, null, ex);
       }
     }
+
   }
 
   public void agentResponse(String proj, String op, String channelUrl,
@@ -379,6 +515,9 @@ public class PythonDepsFacade {
       em.persist(s);
       em.flush();
     } catch (Exception ex) {
+      logger.log(Level.WARNING,
+              "Problem persisting heartbeat about new python dependencies at kagents.."
+              + ex.getMessage());
       // Do nothing
     }
 

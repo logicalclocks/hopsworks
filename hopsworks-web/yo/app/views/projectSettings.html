@@ -122,7 +122,7 @@
 
               </uib-tab>
 
-              <uib-tab index="1" heading="Install New Libraries">
+              <uib-tab index="1" heading="Python Libraries">
 
                 <div ng-show="!pythonDepsCtrl.enabled">
 
@@ -133,7 +133,7 @@
                       <!--<p>This will install an anaconda environment for this project on every host in the system.</p>-->
                       <p class="lead">
                       <div style="width: 300px;">
-                        <button uib-tooltip="Enable Anaconda/Conda for this project by clicking here." tooltip-placement="top"
+                        <button uib-tooltip="Enable Anaconda/Conda for this project by clicking here." tooltip-placement="right"
                                 class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
                                 ng-disabled="pythonDepsCtrl.enabling">
                           <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
@@ -146,7 +146,7 @@
                   <div class="row"></div>
 
                 </div>
-                <div class="row" ng-show="pythonDepsCtrl.enabled">
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
                   <h2>Install Python Libraries with Anaconda</h2>                  
                 </div>
                 <fieldset>
@@ -174,13 +174,8 @@
                       <div class="form-group row" style="margin-top: 60px;">
                         <div class="col-md-5">
                           <input type="text" class="form-control" 
-                                 uib-tooltip="Enter the name of the python library you are looking for, then press 'enter'."
-                                 tooltip-placement="bottom"
                                  placeholder="Search here ...."
                                  required ng-model="pythonDepsCtrl.selectedLib.lib"/>
-                          <!--                        <span class="input-group-addon" ng-click="pythonDepsCrl.search()">
-                                                  </span>-->
-
                         </div>
                         <div class="col-md-5">
                           <div class="btn-group row">
@@ -250,15 +245,15 @@
 
 
               </uib-tab>
-              <uib-tab index="2" heading="Manage Installed Libraries">
-                <h2>Manage Installed Python Libraries with Conda</h2>
-                <div class="row pull-left">
+              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstalled()">
+                <h2>Uninstall/Upgrade Python Libraries</h2>
+<!--                <div class="row pull-left">
                   <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
                     <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.showAlert($event)"   >
                       Show Base Libraries
                     </md-button>
                   </div>
-                </div>
+                </div>-->
                 <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.installedLibs.length > 0">
                   <thead>
                     <tr>
@@ -282,7 +277,14 @@
                         <div class="row" style="margin-left: 10px;"><b>{{row.version}}</b></div>
                       </td>
                       <td class="col-sm-2">
-                        <div class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
+                        <div ng-show="row.status !== 'INSTALLING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
+                        <div ng-show="row.status === 'INSTALLING'" class="row" style="margin-left: 10px;">
+                  <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                    <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
+                      Installing
+                    </md-button>
+                  </div>
+                        </div>
                       </td>
                       <td class="col-sm-2">
                         <div class="button-group">

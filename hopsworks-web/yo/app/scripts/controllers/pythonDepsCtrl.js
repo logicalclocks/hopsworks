@@ -56,6 +56,27 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                       );
             };
 
+            self.libStatus = function (ev, lib, version) {
+              
+              PythonDepsService.status(self.projectId, lib, version).then(
+                      function (success) {
+                        self.installedLibs = success.data;
+              // ask install status of this library for all nodes
+              // In the success handler, draw the dialog
+              $mdDialog.show(
+                      $mdDialog.alert()
+                      .parent(angular.element(document.querySelector('#popupContainer')))
+                      .clickOutsideToClose(true)
+                      .title('Pre-installed Python Libraries')
+                      .textContent('')
+                      .ok('Ack!')
+                      .targetEvent(ev)
+                      );
+                      }, function (error) {
+                self.enabled = false;
+              });
+            };
+
             self.init = function () {
               PythonDepsService.enabled(self.projectId).then(
                       function (success) {
@@ -72,6 +93,7 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;
+                        growl.success("Anaconda initialized for this project.", {title: 'Done', ttl: 5000});
                       }, function (error) {
                 self.enabling = false;
                 growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
@@ -138,7 +160,6 @@ scipy-0.18.1-np111py27_1, setuptools-27.2.0-py27_0, sip-4.18-py27_0, six-1.10.0-
                         self.resultsMessageShowing = true;
                         self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
                         self.searchResults = [];
-
 //                        for (var i = 0; i < self.searchResults.length; i++) {
 //                          if (self.searchResults[i].lib === data.lib) {
 //                            self.searchResults[i].installed = "Installed";

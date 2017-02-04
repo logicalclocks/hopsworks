@@ -141,7 +141,7 @@ public class Project implements Serializable {
   @OneToOne(optional = false)
   private Inode inode;
 
-  @JoinTable(name = "project_pythondeps",
+  @JoinTable(name = "hopsworks.project_pythondeps",
           joinColumns
           = {
             @JoinColumn(name = "project_id",

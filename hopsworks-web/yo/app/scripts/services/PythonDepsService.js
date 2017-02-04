@@ -59,6 +59,16 @@ angular.module('hopsWorksApp')
                 }
                 return $http(regReq)
               },
+              status: function (projectId, data) {
+                var regReq = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/pythonDeps/status',
+                  headers: {'Content-Type': 'application/json'},
+                  data: data,
+                  dataType: "json"
+                }
+                return $http(regReq)
+              },
               clone: function (projectId, projName) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps/clone/' + projName)
               }

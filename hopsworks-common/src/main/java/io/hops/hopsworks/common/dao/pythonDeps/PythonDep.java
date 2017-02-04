@@ -74,7 +74,7 @@ public class PythonDep implements Serializable {
   private String version;
   @ManyToMany(mappedBy = "pythonDepCollection")
   private Collection<Project> projectCollection;
-  @JoinColumn(name = "repo_url",
+  @JoinColumn(name = "repo_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private AnacondaRepo repoUrl;
@@ -93,6 +93,12 @@ public class PythonDep implements Serializable {
     this.id = id;
     this.dependency = dependency;
     this.version = version;
+  }
+  
+  public PythonDep(AnacondaRepo repoUrl, String dependency, String version) {
+    this.dependency = dependency;
+    this.version = version;
+    this.repoUrl = repoUrl;
   }
 
   public Integer getId() {

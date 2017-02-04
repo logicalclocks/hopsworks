@@ -2,8 +2,10 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.LibStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
@@ -30,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
@@ -60,6 +63,8 @@ public class PythonDepsService {
   private WebCommunication web;
   @EJB
   private Settings settings;
+  @EJB
+  private HostEJB hostsFacade;
 
   private Integer projectId;
   private Project project;
@@ -97,15 +102,18 @@ public class PythonDepsService {
   @GET
   @Path("/enable")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response enable(PythonDepJson library) throws AppException {
-    pythonDepsFacade.enable(project);
+  public Response enable() throws AppException {
+    Map<String,String> deps = pythonDepsFacade.createProject(project);
+    pythonDepsFacade.createProjectInDb(project, deps);
+
+    projectFacade.enableConda(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
   @Path("/enabled")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response enabled(PythonDepJson library) throws AppException {
+  public Response enabled() throws AppException {
     boolean enabled = project.getConda();
     if (enabled) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -131,24 +139,17 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/install")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
-    Collection<LibVersions> response = findCondaLib(library);
-    if (response != null && response.size() == 1) {
-      LibVersions lv = response.iterator().next();
-      throw new AppException(Response.Status.BAD_REQUEST.
-              getStatusCode(),
-              "Go to 'Manage Installed Libraries' tab. This python library is "
-              + "already installed with state: " + lv.getStatus());
-    }
-
-    pythonDepsFacade.addLibrary(project,
-            library.getChannelUrl(),
-            library.getLib(), library.getVersion());
+    
+    pythonDepsFacade.addLibrary(project, library.getChannelUrl(), library.
+            getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
+  
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/upgrade")
@@ -160,6 +161,20 @@ public class PythonDepsService {
             library.getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/status")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response status(PythonDepJson library) throws AppException {
+
+    PythonDep dep = pythonDepsFacade.findPythonDeps(library.getLib(), library.
+            getVersion());
+    LibStatus response = pythonDepsFacade.libStatus(project, dep);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            response).build();
   }
 
   @GET
@@ -185,12 +200,13 @@ public class PythonDepsService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    pythonDepsFacade.createProject(projectName);
+    pythonDepsFacade.createProject(project);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
+  
   @Path("/removeenv/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
@@ -224,8 +240,7 @@ public class PythonDepsService {
           PythonDepJson lib) throws AppException {
 
     Collection<LibVersions> response = findCondaLib(lib);
-//    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
-    List<PythonDep> installedDeps = new ArrayList<PythonDep>();
+    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
 
     // 1. Reverse version numbers to have most recent first.
     // 2. Check installation status of each version 
@@ -334,4 +349,5 @@ public class PythonDepsService {
 
     }
   }
+  
 }
