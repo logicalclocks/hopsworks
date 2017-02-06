@@ -154,8 +154,8 @@ public class PythonDepsFacade {
     }
     Collection<PythonDep> projDeps = project.getPythonDepCollection();
     projDeps.addAll(all);
+    em.merge(project);
     for (PythonDep p : all) {
-      em.merge(project);
       em.persist(p);
       em.flush();
     }
