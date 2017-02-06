@@ -157,8 +157,8 @@ public class PythonDepsFacade {
     em.merge(project);
     for (PythonDep p : all) {
       em.persist(p);
-      em.flush();
     }
+    em.flush();
 
     return all;
   }
@@ -508,7 +508,8 @@ public class PythonDepsFacade {
       PythonDep dep = getDep(repo, dependency, version, false);
       PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
               getId(), repo.getId(), hostId);
-      PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(op.toUpperCase()), s);
+      PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(op.
+              toUpperCase()), s);
       em.merge(s);
       em.flush();
     } catch (Exception ex) {
