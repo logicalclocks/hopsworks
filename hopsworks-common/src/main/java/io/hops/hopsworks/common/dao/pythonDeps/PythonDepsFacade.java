@@ -385,17 +385,17 @@ public class PythonDepsFacade {
             getDependency(), dep.getVersion());
     List<HostLibStatus> hosts = found.getHosts();
 
-    TypedQuery<PythondepHostStatus> query = em.createNamedQuery(
-            "PythondepHostStatus.findByProjectId",
-            PythondepHostStatus.class);
+    TypedQuery<PythonDepHostStatus> query = em.createNamedQuery(
+            "PythonDepHostStatus.findByProjectId",
+            PythonDepHostStatus.class);
     query.setParameter("projectId", proj.getId());
-    List<PythondepHostStatus> res = query.getResultList();
+    List<PythonDepHostStatus> res = query.getResultList();
 
-    for (PythondepHostStatus p : res) {
-      if (p.getPythondepHostStatusPK().getDepId() == dep.getId() && p.
-              getPythondepHostStatusPK().getProjectId() == proj.getId() && p.
-              getPythondepHostStatusPK().getRepoId() == dep.getRepoUrl().getId()) {
-        HostLibStatus hls = new HostLibStatus(p.getPythondepHostStatusPK().
+    for (PythonDepHostStatus p : res) {
+      if (p.getPythonDepHostStatusPK().getDepId() == dep.getId() && p.
+              getPythonDepHostStatusPK().getProjectId() == proj.getId() && p.
+              getPythonDepHostStatusPK().getRepoId() == dep.getRepoUrl().getId()) {
+        HostLibStatus hls = new HostLibStatus(p.getPythonDepHostStatusPK().
                 getHostId(), p.getStatus().toString());
         hosts.add(hls);
       }
@@ -439,12 +439,8 @@ public class PythonDepsFacade {
           throw new AppException(Response.Status.NOT_MODIFIED.
                   getStatusCode(),
                   "This python library is already installed on this project");
-        } else { // remove or upgrade
-          c.remove(dep);
-          proj.setPythonDepCollection(c);
-          em.merge(proj);
-          em.flush();
         }
+        c.remove(dep);
       } else if (op == CondaOp.REMOVE || op == CondaOp.UPGRADE) {
         throw new AppException(Response.Status.NOT_MODIFIED.
                 getStatusCode(),
@@ -453,18 +449,19 @@ public class PythonDepsFacade {
       }
       if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
         c.add(dep);
-        proj.setPythonDepCollection(c);
-        em.persist(proj);
-        em.flush();
       }
+      proj.setPythonDepCollection(c);
+      em.merge(proj);
+      // This flush keeps the transaction state alive - don't want it to timeout
+      em.flush();
 
       // 4. Mark that the operation is executing at all hosts
       hosts = hostsFacade.find();
       for (Host h : hosts) {
-        PythondepHostStatus phs = new PythondepHostStatus();
-        phs.setPythondepHostStatusPK(new PythondepHostStatusPK(proj.getId(),
-                dep.getId(), repo.getId(), h.getId()));
+        PythonDepHostStatus phs = new PythonDepHostStatus(proj.getId(),
+                dep.getId(), repo.getId(), h.getId(), op);
         em.persist(phs);
+        em.flush();
       }
       kagentCalls(hosts, op, proj, dep);
     } catch (Exception ex) {
@@ -504,15 +501,15 @@ public class PythonDepsFacade {
   public void agentResponse(String proj, String op, String channelUrl,
           String dependency, String version, String status, int hostId) {
 
-    PythondepHostStatus.Status s = PythondepHostStatus.Status.valueOf(status);
+    PythonDep.Status s = PythonDep.Status.valueOf(status);
     try {
       Project p = projectFacade.findByName(proj);
       AnacondaRepo repo = getRepo(p, channelUrl, false);
       PythonDep dep = getDep(repo, dependency, version, false);
-      PythondepHostStatusPK pk = new PythondepHostStatusPK(p.getId(), dep.
+      PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
               getId(), repo.getId(), hostId);
-      PythondepHostStatus phs = new PythondepHostStatus(pk, s);
-      em.persist(s);
+      PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(op.toUpperCase()), s);
+      em.merge(s);
       em.flush();
     } catch (Exception ex) {
       logger.log(Level.WARNING,

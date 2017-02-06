@@ -7,7 +7,7 @@ import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
 @Embeddable
-public class PythondepHostStatusPK implements Serializable {
+public class PythonDepHostStatusPK implements Serializable {
 
   @Basic(optional = false)
   @NotNull
@@ -27,10 +27,10 @@ public class PythondepHostStatusPK implements Serializable {
   private int hostId;
 
 
-  public PythondepHostStatusPK() {
+  public PythonDepHostStatusPK() {
   }
 
-  public PythondepHostStatusPK(int projectId, int depId, int repoId, int hostId) {
+  public PythonDepHostStatusPK(int projectId, int depId, int repoId, int hostId) {
     this.projectId = projectId;
     this.depId = depId;
     this.repoId = repoId;
@@ -82,10 +82,10 @@ public class PythondepHostStatusPK implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof PythondepHostStatusPK)) {
+    if (!(object instanceof PythonDepHostStatusPK)) {
       return false;
     }
-    PythondepHostStatusPK other = (PythondepHostStatusPK) object;
+    PythonDepHostStatusPK other = (PythonDepHostStatusPK) object;
     if (this.projectId != other.projectId) {
       return false;
     }
@@ -103,7 +103,7 @@ public class PythondepHostStatusPK implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.PythondepHostStatusPK[ projectId="
+    return "io.hops.hopsworks.common.dao.pythonDeps.PythonDepHostStatusPK[ projectId="
             + projectId + ", depId=" + depId + ", repoId=" + repoId
             + ", hostId=" + hostId + " ]";
   }

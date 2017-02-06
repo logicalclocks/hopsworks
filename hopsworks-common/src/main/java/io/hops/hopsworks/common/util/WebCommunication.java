@@ -25,6 +25,7 @@ import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import org.apache.commons.lang.StringEscapeUtils;
 
 @Stateless
 public class WebCommunication {
@@ -279,9 +280,11 @@ public class WebCommunication {
   public int anaconda(String hostAddress, String agentPassword, String op,
           String project, String arg) throws Exception {
 
+    StringBuilder path = new StringBuilder().append("anaconda/").append(op).
+            append("/").append(project).append("/").append(arg);
     String template = "%s://%s:%s/%s";
     String url = String.format(template, PROTOCOL, hostAddress, PORT,
-            "anaconda/", op, "/", project, "/", arg);
+            path.toString());
 
     ClientResponse response = postWebResource(url, agentPassword, "");
     if (response.getClientResponseStatus().getFamily()
@@ -297,8 +300,13 @@ public class WebCommunication {
           Exception {
 
     String template = "%s://%s:%s/%s";
-    String url = String.format(template, PROTOCOL, hostAddress, PORT,
-            "anaconda/", op, "/", project, "/", channel, "/", lib, "/", version);
+    String channelEscaped = StringEscapeUtils.escapeJava(channel);
+    StringBuilder path = new StringBuilder().append("anaconda/").append(op).
+            append("/").append(project).append("/").append(channelEscaped).
+            append("/").append(lib).append("/").append(version);
+
+    String url = String.format(template, PROTOCOL, hostAddress, PORT, path.
+            toString());
 
     ClientResponse response = postWebResource(url, agentPassword, "");
     if (response.getClientResponseStatus().getFamily()

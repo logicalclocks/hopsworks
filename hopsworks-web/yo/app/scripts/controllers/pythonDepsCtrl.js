@@ -19,6 +19,9 @@ angular.module('hopsWorksApp')
 
             self.resultsMsg = "";
             
+
+            $scope.sortType     = 'lib';
+            
             self.searchText = "";
             self.searching = false;
             self.installing = false;

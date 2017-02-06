@@ -257,15 +257,21 @@
                 <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.installedLibs.length > 0">
                   <thead>
                     <tr>
-                      <th st-sort="depName" class="col-sm-3">Url</th>
-                      <th st-sort="depName" class="col-sm-3">Library</th>
+                      <th st-sort="depName" class="col-sm-3">
+                        <a ng-click="sortType = 'url'">Url<span ng-show="sortType == 'url'" class="fa fa-caret-down"></span></a>
+                      </th>
+                      <th st-sort="depName" class="col-sm-3">
+                        <a ng-click="sortType = 'lib'">Library<span ng-show="sortType == 'lib'" class="fa fa-caret-down"></span></a>                      
+                      </th>
                       <th class="col-sm-2">Version</th>
-                      <th class="col-sm-2">Status</th>
+                      <th class="col-sm-2">
+                        <a ng-click="sortType = 'status'">Status<span ng-show="sortType == 'lib'" class="fa fa-caret-down"></span></a>                      
+                      </th>
                       <th class="col-sm-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installedLibs" 
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installedLibs |  orderBy:sortType:sortReverse" 
                         ng-class="{'selectedTopicOdd': row.isSelected === true}">
                       <td class="col-sm-3">
                         <div class="row" style="margin-left: 10px;"><b>{{row.channelUrl}}</b></div>
