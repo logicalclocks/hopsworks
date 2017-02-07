@@ -279,6 +279,13 @@ public class ProjectFacade extends AbstractFacade<Project> {
     }
     em.merge(project);
   }
+  
+  public void enableLogs(Project project) {
+    if (project != null) {
+      project.setLogs(true);
+    }
+    em.merge(project);
+  }
 
   public void unarchiveProject(String projectname) {
     Project project = findByName(projectname);

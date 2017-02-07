@@ -84,13 +84,11 @@ public class Settings {
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
-  
+
   private static final String VARIABLE_INFLUXDB_ADDRESS = "influxdb_address";
   private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
-  
-  
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -534,6 +532,7 @@ public class Settings {
   public static final String LOCALIZED_LIB_DIR = "__spark_libs__";
   public static final String LOCALIZED_CONF_DIR = "__spark_conf__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
+  public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
   // Distribution-defined classpath to add to processes
   public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN
@@ -604,20 +603,16 @@ public class Settings {
     return hdfsSparkJarPath(sparkUser);
   }
 
-  private static String sparkLog4JPath(String sparkUser) {
+  public static String getSparkLog4JPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/log4j.properties";
   }
 
-  public static String getSparkLog4JPath(String sparkUser) {
-    return sparkLog4JPath(sparkUser);
-  }
-
-  private static String sparkMetricsPath(String sparkUser) {
+  public static String getSparkMetricsPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/metrics.properties";
   }
 
-  public static String getSparkMetricsPath(String sparkUser) {
-    return sparkMetricsPath(sparkUser);
+  public static String getHopsutilPath(String sparkUser) {
+    return "hdfs:///user/" + sparkUser + "/" + HOPSUTIL_JAR;
   }
 
   public synchronized String getSparkDefaultClasspath() {
@@ -765,8 +760,9 @@ public class Settings {
     checkCache();
     return ZEPPELIN_SYNC_INTERVAL;
   }
-  
+
   private long CONDA_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
+
   public synchronized long getCondaSyncInterval() {
     checkCache();
     return CONDA_SYNC_INTERVAL;
@@ -794,7 +790,7 @@ public class Settings {
     checkCache();
     return KAFKA_DIR;
   }
-  
+
   private String ANACONDA_DIR = "/opt/anaconda/anaconda/envs";
 
   public synchronized String getAnacondaDir() {
@@ -809,14 +805,14 @@ public class Settings {
     return ANACONDA_ENV;
   }
 
-  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
+  private String CONDA_CHANNEL_URL
+          = "https://repo.continuum.io/pkgs/free/linux-64/";
 
   public synchronized String getCondaChannelUrl() {
     checkCache();
     return CONDA_CHANNEL_URL;
   }
-  
-  
+
   private String GVOD_REST_ENDPOINT = "http://10.0.2.15:42000";
 
   public synchronized String getGVodRestEndpoint() {
@@ -978,10 +974,8 @@ public class Settings {
   // QUOTA
   public static final float DEFAULT_YARN_MULTIPLICATOR = 1.0f;
 
-  
   public static final String SPARK_METRICS_PROPS = "metrics.properties";
 
-  
   /**
    * Returns the maximum image size in bytes that can be previewed in the
    * browser.

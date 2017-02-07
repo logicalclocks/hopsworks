@@ -106,12 +106,12 @@ public class SparkYarnRunnerBuilder {
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
             LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.ARCHIVE.toString(), null), false);
+            LocalResourceType.FILE.toString(), null), false);
     //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_METRICS_PROPERTIES, metricsPath,
             LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.ARCHIVE.toString(), null), false);
+            LocalResourceType.FILE.toString(), null), false);
 
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
@@ -119,6 +119,9 @@ public class SparkYarnRunnerBuilder {
             LocalResourceVisibility.APPLICATION.toString(),
             LocalResourceType.FILE.toString(), null),
             !appJarPath.startsWith("hdfs:"));
+    
+    
+    
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
 
@@ -136,12 +139,26 @@ public class SparkYarnRunnerBuilder {
       extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
 
     }
+    //Add hops-util.jar if it is a Kafka job
+    if (serviceProps.getKafka() != null) {
+      builder.addLocalResource(new LocalResourceDTO(
+              Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
+              LocalResourceVisibility.APPLICATION.toString(),
+              LocalResourceType.FILE.toString(), null), false);
+
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+              Settings.HOPSUTIL_JAR);
+      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
+              File.pathSeparator);
+    }
+    
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
             "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
             + Settings.LOCALIZED_CONF_DIR
             + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
             + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
             + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
+            + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
     );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");

@@ -71,6 +71,8 @@ public class Project implements Serializable {
   private Boolean conda = false;
   @Column(name = "archived")
   private Boolean archived = false;
+  @Column(name = "logs")
+  private Boolean logs = false;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -291,6 +293,14 @@ public class Project implements Serializable {
     this.archived = archived;
   }
 
+  public Boolean getLogs() {
+    return logs;
+  }
+
+  public void setLogs(Boolean logs) {
+    this.logs = logs;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<ProjectTeam> getProjectTeamCollection() {
