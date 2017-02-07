@@ -92,6 +92,7 @@
     <class>io.hops.hopsworks.common.workflows.nodes.SparkCustomNode</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
+    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDepHostStatus</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
