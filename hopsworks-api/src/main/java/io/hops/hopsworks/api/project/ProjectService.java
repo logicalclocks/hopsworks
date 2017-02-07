@@ -365,25 +365,70 @@ public class ProjectService {
             Response.Status.CREATED).entity(json).build();
   }
 
+  
+  private enum TourType {
+    
+    SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
+    KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS,
+      ProjectServiceEnum.KAFKA});
+    
+    private final String tourName;
+    private final ProjectServiceEnum[] activeServices;
+    
+    TourType(String tourName, ProjectServiceEnum[] activeServices) {
+      this.tourName = tourName;
+      this.activeServices = activeServices;
+    }
+    
+    public String getTourName() {
+      return tourName;
+    }
+    
+    public ProjectServiceEnum[] getActiveServices() {
+      return activeServices;
+    }
+  }
+  
+  private void populateActiveServices(List<ProjectServiceEnum> projectServices,
+      TourType tourType) {
+    for (ProjectServiceEnum service : tourType.getActiveServices()) {
+      projectServices.add(service);
+    }
+  }
+  
   @POST
-  @Path("starterProject")
+  @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response starterProject(
+          @PathParam("type") String type,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     ProjectDTO projectDTO = new ProjectDTO();
     JsonResponse json = new JsonResponse();
     Project project = null;
-    projectDTO.setDescription("A demo project for getting started with Spark.");
+    projectDTO.setDescription("A demo project for getting started with " + type);
 
     String owner = sc.getUserPrincipal().getName();
     String username = usersController.generateUsername(owner);
-    projectDTO.setProjectName("demo_" + username);
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     List<ProjectTeam> projectMembers = new ArrayList<>();
-    projectServices.add(ProjectServiceEnum.JOBS);
+    
+    if (TourType.SPARK.getTourName().equals(type.toLowerCase())) {
+      // It's a Spark guide
+      projectDTO.setProjectName("demo_" + TourType.SPARK.getTourName() +
+          "_" + username);
+      populateActiveServices(projectServices, TourType.SPARK);
+    } else if (TourType.KAFKA.getTourName().equals(type.toLowerCase())) {
+      // It's a Kafka guide
+      projectDTO.setProjectName("demo_" + TourType.KAFKA.getTourName() +
+          "_" + username);
+      populateActiveServices(projectServices, TourType.KAFKA);
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
+    }
+    
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {

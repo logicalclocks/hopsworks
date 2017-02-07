@@ -20,8 +20,12 @@
               <div class="row">
 
                 <ul class="nav nav-tabs">
-                  <li ng-class="{'active' : kafkaCtrl.showTopics === 1}"><a ng-click="kafkaCtrl.showTopic()">Topics</a></li>
-                  <li ng-class="{'active' : kafkaCtrl.showSchemas === 1}"><a ng-click="kafkaCtrl.showSchema()">Schemas</a></li>
+                  <li ng-class="{'active' : kafkaCtrl.showTopics === 1}"><a
+                          ng-click="kafkaCtrl.showTopic()" id="kafkaTopic">
+                    Topics</a></li>
+                  <li ng-class="{'active' : kafkaCtrl.showSchemas === 1}"><a
+                          ng-click="kafkaCtrl.showSchema()" id="kafkaSchema">
+                    Schemas</a></li>
                 </ul>                
 
               </div>
@@ -45,7 +49,8 @@
                 <br>
                 <div class="col-sm-2">
                   <button type="button"  
-                          ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
+                          ng-click="kafkaCtrl.createSchema()"
+                          class="btn btn-default btn-success control-label" id="newSchema">
                     New Avro Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                     </i> 
                   </button>
@@ -339,4 +344,29 @@
         </div>              
     </section>
   </div>
+  <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree" post-tour="closeTour()"
+        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView">
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Schemas' button to continue"
+            tourtip-step="0"
+            tourtip-element="#kafkaSchema"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.guideShowSchema()"
+            tourtip-offset-vertical="-65"
+            tourtip-offset-horizontal="38"
+    ></virtual-step>
+
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'New Avro Schema' button to continue!"
+            tourtip-step="1"
+            tourtip-element="#newSchema"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.guideCreateSchema()"
+            tourtip-offset-vertical="65"
+    ></virtual-step>
+  </tour>
 </div>

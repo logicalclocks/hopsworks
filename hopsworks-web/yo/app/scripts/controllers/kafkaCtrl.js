@@ -5,8 +5,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('KafkaCtrl', ['$scope', '$routeParams', 'growl', 'KafkaService', '$location', 'ModalService', '$interval', '$mdSidenav',
-          function ($scope, $routeParams, growl, KafkaService, $location, ModalService, $interval, $mdSidenav) {
+        .controller('KafkaCtrl', ['$scope', '$routeParams', 'growl',
+        'KafkaService', '$location', 'ModalService', '$interval',
+        '$mdSidenav', 'TourService',
+          function ($scope, $routeParams, growl, KafkaService, $location,
+          ModalService, $interval, $mdSidenav, TourService) {
               
 
             var self = this;
@@ -56,9 +59,8 @@ angular.module('hopsWorksApp')
             self.schemas = [];
            // self.schemaVersion;
             self.schemaVersions = [];
-            
-           
-            
+           self.tourService = TourService;
+           self.isGuide = false;
 
             self.selectAcl = function (acl, topicName) {
               if (self.activeId === acl.id) { //unselect the current selected ACL
@@ -138,7 +140,7 @@ angular.module('hopsWorksApp')
              */
             self.createSchema = function () {
 
-              ModalService.createSchema('lg', self.projectId).then(
+              ModalService.createSchema('lg', self.projectId, self.isGuide).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New schema added successfully.', ttl: 2000});
                           self.listSchemas();
@@ -146,7 +148,13 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-            
+
+            self.guideCreateSchema = function () {
+              self.tourService.currentStep_TourThree = 2;
+              self.isGuide = true;
+              self.createSchema();
+            };
+
             self.listSchemas = function () {
                 
                 KafkaService.getSchemasForTopics(self.projectId).then(
@@ -339,6 +347,7 @@ angular.module('hopsWorksApp')
             };
 
             self.init = function(){
+                self.tourService.currentStep_TourThree = 0;
                 self.getAllTopics();
                 self.getAllSharedTopics();              
              };
@@ -349,7 +358,13 @@ angular.module('hopsWorksApp')
               self.showSchemas = -1;
               self.showTopics = 1;
             };
-            
+
+            // NOTICE: Use only for the guided tours
+            self.guideShowSchema = function () {
+              self.tourService.currentStep_TourThree = 1;
+              self.showSchema();
+            }
+
             self.showSchema = function(){
               self.showSchemas = 1;
               self.showTopics = -1;

@@ -1,15 +1,39 @@
 angular.module('hopsWorksApp')
-        .controller('SchemaCreateCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 
-          function ($uibModalInstance, KafkaService, growl, projectId) {
+        .controller('SchemaCreateCtrl', ['$uibModalInstance', 'KafkaService',
+         'TourService', 'growl', 'projectId', 'isGuide',
+          function ($uibModalInstance, KafkaService, TourService, growl,
+          projectId, isGuide) {
 
             var self = this;
+            self.tourService = TourService;
             self.projectId = projectId;
             self.schemaName;
             self.content;
             self.version;
             self.message ="";
             self.validSchema = "valid";
-            
+            self.isGuide = isGuide;
+
+            self.init = function(){
+              if (self.isGuide === true) {
+                self.tourService.currentStep_TourFour = 0;
+              }
+            };
+
+            self.init();
+
+            self.guidePopulateSchema = function () {
+              self.schemaName = "DemoAvroName";
+              var demoSchema = new Object();
+              demoSchema.fields = [{"name": "platform", "type": "string"},
+                  {"name": "program", "type": "string"}];
+              demoSchema.name = "myrecord";
+              demoSchema.type = "record";
+
+              jsonStr = JSON.stringify(demoSchema);
+              self.content = jsonStr;
+            };
+
             self.validateSchema = function () {
                 self.validSchema = "valid";
                 
@@ -45,7 +69,13 @@ angular.module('hopsWorksApp')
                           self.message = error.data.errorMsg;;//   "schema is invalid";
               });
             };
-            
+
+            // NOTICE: Use only for the guided tours
+            self.guideValidateSchema = function () {
+              self.tourService.currentStep_TourFour = 1;
+              self.validateSchema();
+            };
+
             self.createSchema = function () {
                 
                self.schemaName_empty = 1;

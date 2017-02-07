@@ -490,7 +490,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },              
-              createSchema: function (size, projectId) {
+              createSchema: function (size, projectId, isGuide) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/schemaCreate.html',
                   controller: 'SchemaCreateCtrl as schemaCreateCtrl',
@@ -509,6 +509,9 @@ angular.module('hopsWorksApp')
                       }],
                     projectId: function () {
                       return projectId;
+                    },
+                    isGuide: function () {
+                      return isGuide;
                     }
                   }
                 });

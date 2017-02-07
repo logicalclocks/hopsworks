@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
               },
               "example": {
                 'method': 'POST',
-                 url: '/api/project/starterProject'
+                 url: '/api/project/starterProject/:type'
               },
               "delete": {
                 url: '/api/project/:id/delete',  

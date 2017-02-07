@@ -276,6 +276,9 @@ angular.module('hopsWorksApp')
 
             self.goToKafka = function () {
               self.goToUrl('kafka');
+              if (self.tourService.currentStep_TourTwo > -1) {
+                self.tourService.resetTours();
+              }
             };
 
             self.goToService = function (service) {

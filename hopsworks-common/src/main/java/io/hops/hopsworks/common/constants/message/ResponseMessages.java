@@ -80,6 +80,8 @@ public class ResponseMessages {
           = "A Project with the same name already exists in the system!";
   public final static String PROJECT_FOLDER_NOT_CREATED
           = "Project folder could not be created in HDFS.";
+  public final static String STARTER_PROJECT_BAD_REQUEST
+          = "Type of starter project is not valid";
   public final static String PROJECT_FOLDER_NOT_REMOVED
           = "Project folder could not be removed from HDFS.";
   public final static String PROJECT_REMOVAL_NOT_ALLOWED

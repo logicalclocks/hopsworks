@@ -11,7 +11,7 @@
     <form role="form" name="pickProjectForm" 
           ng-submit="schemaCreateCtrl.createSchema()" novalidate
           class="form-validate">                                                                                                                              
-        <div class="view-info">
+        <div class="view-info" id="schemaWindow">
             <div class="col-md-12">
                 <label class="control-label">Schema Name</label><br>
                 <div class="col-sm-12">
@@ -33,10 +33,45 @@
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
 
             <button class="btn btn-default" type="button" ng-click="schemaCreateCtrl.close()">Cancel</button>
-            <button class="btn btn-warning" type="button" ng-click="schemaCreateCtrl.validateSchema()">Validate</button>
-            <button class="btn btn-lightgrey" type="submit" ng-disabled="schemaCreateCtrl.validSchema">
+            <button class="btn btn-warning" type="button"
+                    ng-click="schemaCreateCtrl.validateSchema()"
+                    id="schemaValidate">Validate
+            </button>
+            <button class="btn btn-lightgrey" type="submit"
+                    ng-disabled="schemaCreateCtrl.validSchema"
+                    id="createSchema">
                 Create
             </button>
         </div>
     </form>
+    <tour class="ng-scope"
+          step="schemaCreateCtrl.tourService.currentStep_TourFour"
+          post-tour="closeTour()">
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Next OR click on the 'Validate' button to continue"
+                tourtip-step="0"
+                tourtip-element="#schemaValidate"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed="schemaCreateCtrl.guideValidateSchema()"
+                tourtip-offset-vertical="-65"
+                tourtip-offset-horizontal="-600"
+                tourtip-container-element="#schemaWindow"
+                on-show="schemaCreateCtrl.guidePopulateSchema()"
+        ></virtual-step>
+
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Next OR click on the 'Create' button to continue!"
+                tourtip-step="1"
+                tourtip-element="#createSchema"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed="schemaCreateCtrl.createSchema()"
+                tourtip-container-element="#schemaWindow"
+                tourtip-offset-vertical="-65"
+                tourtip-offset-horizontal="-600"
+        ></virtual-step>
+    </tour>
 </div>
