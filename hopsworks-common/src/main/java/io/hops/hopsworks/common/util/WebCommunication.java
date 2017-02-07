@@ -238,6 +238,9 @@ public class WebCommunication {
         params.add(key, args.get(key));
       }
     }
+    logger.log(Level.INFO,
+            "WebCommunication: Requesting url: {0} with password {1}",
+            new Object[]{url, agentPassword});
 
     ClientResponse response = webResource.queryParams(params)
             .header("Accept-Encoding", "gzip,deflate")
@@ -262,9 +265,6 @@ public class WebCommunication {
     MultivaluedMap params = new MultivaluedMapImpl();
     params.add("username", Settings.AGENT_EMAIL);
     params.add("password", agentPassword);
-    logger.log(Level.INFO,
-            "WebCommunication: Requesting url: {0} with password {1}",
-            new Object[]{url, agentPassword});
     ClientResponse response = webResource.queryParams(params)
             .header(
                     "Accept-Encoding", "gzip,deflate")
@@ -353,8 +353,7 @@ public class WebCommunication {
       args.put("version", version);
     }
 
-    ClientResponse response
-            = getWebResource(url, agentPassword, args);
+    ClientResponse response = getWebResource(url, agentPassword, args);
     Family res = response.getClientResponseStatus().getFamily();
     if (res == Response.Status.Family.SUCCESSFUL) {
       return response.getStatus();

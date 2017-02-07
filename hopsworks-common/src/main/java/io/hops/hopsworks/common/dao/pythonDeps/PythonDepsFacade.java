@@ -2,6 +2,7 @@ package io.hops.hopsworks.common.dao.pythonDeps;
 
 import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.kagent.KagentCommands;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
@@ -17,8 +18,10 @@ import io.hops.hopsworks.common.util.WebCommunication;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -504,15 +507,29 @@ public class PythonDepsFacade {
     PythonDep.Status s = PythonDep.Status.valueOf(status);
     try {
       Project p = projectFacade.findByName(proj);
-      AnacondaRepo repo = getRepo(p, channelUrl, false);
-      PythonDep dep = getDep(repo, dependency, version, false);
-      PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
-              getId(), repo.getId(), hostId);
-      PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(op.
-              toUpperCase()), s);
-      em.merge(s);
-      em.flush();
+      if (p == null) {
+        // TODO - is the transaction aborted here!??!
+        KagentCommands kc = new KagentCommands();
+        kc.setCreated(Date.from(Instant.now()));
+        kc.setCommand(KagentCommands.Op.UNINSTALL_ENV);
+        kc.setArg(proj);
+        em.persist(kc);
+      } else {
+        AnacondaRepo repo = getRepo(p, channelUrl, false);
+        PythonDep dep = getDep(repo, dependency, version, false);
+        PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
+                getId(), repo.getId(), hostId);
+        PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(
+                op.
+                toUpperCase()), s);
+        em.merge(phs);
+
+      }
+//      em.flush();
     } catch (Exception ex) {
+      // TODO - if i can't find a project, tell the node that there is a problem
+      // and to delete the project locally. Do this by putting a command in an
+      // row in a table (entity bean)
       logger.log(Level.WARNING,
               "Problem persisting heartbeat about new python dependencies at kagents.."
               + ex.getMessage());

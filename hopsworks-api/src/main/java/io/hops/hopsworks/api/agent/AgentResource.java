@@ -196,17 +196,20 @@ public class AgentResource {
       if (json.containsKey("conda-ops")) {
         JsonArray condaOps = json.getJsonArray("conda-ops");
         for (int j = 0; j < condaOps.size(); j++) {
-          JsonObject conda = condaOps.getJsonObject(j);
-          String proj = conda.getString("proj");
-          String op = conda.getString("op");
-          String channelurl = conda.getString("channelurl");
-          String lib = conda.getString("lib");
-          String version = conda.containsKey("version") ? conda.getString(
-                  "version") : "";
-          String status = conda.getString("status");
+          JsonObject entry = condaOps.getJsonObject(j);
+          for (String s : entry.keySet()) {
+            JsonObject conda = entry.getJsonObject(s);
+            String proj = conda.getString("proj");
+            String op = conda.getString("op");
+            String channelurl = conda.getString("channelurl");
+            String lib = conda.getString("lib");
+            String version = conda.containsKey("version") ? conda.getString(
+                    "version") : "";
+            String status = conda.getString("status");
 
-          pythonDepsFacade.agentResponse(proj, op, channelurl, lib, version,
-                  status, host.getId());
+            pythonDepsFacade.agentResponse(proj, op, channelurl, lib, version,
+                    status, host.getId());
+          }
         }
       }
     } catch (Exception ex) {

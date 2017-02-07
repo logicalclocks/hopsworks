@@ -1,10 +1,13 @@
 package io.hops.hopsworks.common.dao.host;
 
+import io.hops.hopsworks.common.dao.kagent.KagentCommands;
 import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,7 +16,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
 @Table(name = "hopsworks.hosts")
@@ -97,6 +103,10 @@ public class Host implements Serializable {
 
   @Column(name = "registered")
   private boolean registered;
+
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "hostId")
+  private Collection<KagentCommands> kagentCommandsCollection;
 
   public Host() {
   }
@@ -330,6 +340,17 @@ public class Host implements Serializable {
   public String getMemoryUsageInfo() {
     return FormatUtils.storage(memoryUsed) + " / " + FormatUtils.storage(
             memoryCapacity);
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<KagentCommands> getKagentCommandsCollection() {
+    return kagentCommandsCollection;
+  }
+
+  public void setKagentCommandsCollection(
+          Collection<KagentCommands> kagentCommandsCollection) {
+    this.kagentCommandsCollection = kagentCommandsCollection;
   }
 
 }

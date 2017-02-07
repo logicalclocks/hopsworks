@@ -809,7 +809,8 @@ public class Settings {
     return ANACONDA_ENV;
   }
 
-  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
+//  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
+  private String CONDA_CHANNEL_URL = "default";
 
   public synchronized String getCondaChannelUrl() {
     checkCache();

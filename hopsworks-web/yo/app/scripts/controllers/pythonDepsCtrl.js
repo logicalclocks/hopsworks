@@ -31,10 +31,11 @@ angular.module('hopsWorksApp')
 
             self.searchResults = [];
             self.installedLibs = [];
-            self.condaUrl = "https://repo.continuum.io/pkgs/free/linux-64/";
+//            https://repo.continuum.io/pkgs/free/linux-64/
+            self.condaUrl = "default";
             self.selectedLibs = {};
 
-            self.selectedLib = {"channelUrl": "https://repo.continuum.io/pkgs/free/linux-64/",
+            self.selectedLib = {"channelUrl": self.condaUrl,
               "lib": "", "version": ""};
 
 
