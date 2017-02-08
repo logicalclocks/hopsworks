@@ -38,7 +38,8 @@
                 <br>
                 <div class="col-sm-2">
                   <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
-                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
+                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label"
+                    id="newTopicBtn">
                     New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
                   </button>
 
@@ -50,7 +51,8 @@
                 <div class="col-sm-2">
                   <button type="button"  
                           ng-click="kafkaCtrl.createSchema()"
-                          class="btn btn-default btn-success control-label" id="newSchema">
+                          class="btn btn-default btn-success control-label"
+                          id="newSchemaBtn">
                     New Avro Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                     </i> 
                   </button>
@@ -344,7 +346,8 @@
         </div>              
     </section>
   </div>
-  <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree" post-tour="closeTour()"
+  <tour class="ng-scope" step="kafkaCtrl.tourService.currentStep_TourThree"
+        post-tour="closeTour()"
         ng-if="projectCtrl.showKafka() && projectCtrl.loadedView">
     <virtual-step
             class="ng-scope"
@@ -353,7 +356,7 @@
             tourtip-element="#kafkaSchema"
             tourtip-placement="bottom"
             tourtip-next-label="Next"
-            on-proceed="kafkaCtrl.guideShowSchema()"
+            on-proceed="kafkaCtrl.showSchema()"
             tourtip-offset-vertical="-65"
             tourtip-offset-horizontal="38"
     ></virtual-step>
@@ -362,10 +365,40 @@
             class="ng-scope"
             tourtip="Click Next OR click on the 'New Avro Schema' button to continue!"
             tourtip-step="1"
-            tourtip-element="#newSchema"
+            tourtip-element="#newSchemaBtn"
             tourtip-placement="bottom"
             tourtip-next-label="Next"
-            on-proceed="kafkaCtrl.guideCreateSchema()"
+            on-proceed="kafkaCtrl.createSchema()"
+            tourtip-offset-vertical="65"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Topics' tab to continue!"
+            tourtip-step="2"
+            tourtip-element="#kafkaTopic"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.showTopic()"
+            tourtip-offset-vertical="65"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'New Topic' button to continue!"
+            tourtip-step="3"
+            tourtip-element="#newTopicBtn"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.createTopic()"
+            tourtip-offset-vertical="65"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Jobs' button to continue!"
+            tourtip-step="4"
+            tourtip-element="#jobsTab"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="projectCtrl.goToJobs()"
             tourtip-offset-vertical="65"
     ></virtual-step>
   </tour>

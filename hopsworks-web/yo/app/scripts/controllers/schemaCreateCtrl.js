@@ -1,8 +1,8 @@
 angular.module('hopsWorksApp')
         .controller('SchemaCreateCtrl', ['$uibModalInstance', 'KafkaService',
-         'TourService', 'growl', 'projectId', 'isGuide',
+         'TourService', 'growl', 'projectId', 'projectIsGuide',
           function ($uibModalInstance, KafkaService, TourService, growl,
-          projectId, isGuide) {
+          projectId, projectIsGuide) {
 
             var self = this;
             self.tourService = TourService;
@@ -12,10 +12,11 @@ angular.module('hopsWorksApp')
             self.version;
             self.message ="";
             self.validSchema = "valid";
-            self.isGuide = isGuide;
+            self.projectIsGuide = projectIsGuide;
 
             self.init = function(){
-              if (self.isGuide === true) {
+              if (self.projectIsGuide) {
+                self.tourService.resetTours();
                 self.tourService.currentStep_TourFour = 0;
               }
             };
@@ -23,7 +24,7 @@ angular.module('hopsWorksApp')
             self.init();
 
             self.guidePopulateSchema = function () {
-              self.schemaName = "DemoAvroName";
+              self.schemaName = "DemoAvroSchema";
               var demoSchema = new Object();
               demoSchema.fields = [{"name": "platform", "type": "string"},
                   {"name": "program", "type": "string"}];
@@ -32,6 +33,7 @@ angular.module('hopsWorksApp')
 
               jsonStr = JSON.stringify(demoSchema);
               self.content = jsonStr;
+              self.version = 1;
             };
 
             self.validateSchema = function () {
@@ -65,19 +67,17 @@ angular.module('hopsWorksApp')
                       function (success) {
                           self.message = "schema is valid";
                           self.validSchema="";
+                          if (self.projectIsGuide) {
+                            self.tourService.resetTours();
+                            self.tourService.currentStep_TourFour = 1;
+                          }
                       }, function (error) {
                           self.message = error.data.errorMsg;;//   "schema is invalid";
               });
             };
 
-            // NOTICE: Use only for the guided tours
-            self.guideValidateSchema = function () {
-              self.tourService.currentStep_TourFour = 1;
-              self.validateSchema();
-            };
-
             self.createSchema = function () {
-                
+
                self.schemaName_empty = 1;
                self.content_empty = 1;
                self.wrong_values=1;
@@ -105,6 +105,9 @@ angular.module('hopsWorksApp')
               KafkaService.createSchema(self.projectId, schemaDetail).then(
                       function (success) {
                           $uibModalInstance.close(success);
+                          if (self.projectIsGuide) {
+                            self.tourService.resetTours();
+                          }
                       }, function (error) {
                           self.message = error.data.errorMsg;
                           self.validSchema="invalid";

@@ -1,9 +1,13 @@
 angular.module('hopsWorksApp')
-        .controller('CreateTopicCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 
-          function ($uibModalInstance, KafkaService, growl, projectId) {
+        .controller('CreateTopicCtrl', ['$uibModalInstance', 'KafkaService',
+        'growl', 'projectId', 'TourService', 'projectIsGuide',
+          function ($uibModalInstance, KafkaService, growl, projectId,
+          TourService, projectIsGuide) {
 
             var self = this;
             self.projectId = projectId;
+            self.tourService = TourService;
+            self.projectIsGuide = projectIsGuide;
             self.selectedProjectName;
             self.topicName;
             self.num_partitions;
@@ -20,6 +24,11 @@ angular.module('hopsWorksApp')
             self.schemaVersion;
             
             self.init = function() {
+                if (self.projectIsGuide) {
+                  self.tourService.resetTours();
+                  self.tourService.currentStep_TourFive = 0;
+                }
+
                 KafkaService.defaultTopicValues(self.projectId).then(
                     function (success) {
                     self.num_partitions = success.data.numOfPartitions;
@@ -38,7 +47,22 @@ angular.module('hopsWorksApp')
             };
             
             self.init();            
-            
+
+            self.guidePopulateTopic = function () {
+              self.topicName = "DemoKafkaTopic";
+              self.num_partitions = 2;
+              self.num_replicas = 1;
+
+              for (var i = 0; i < self.schemas.length; i++) {
+                if (angular.equals(self.schemas[i].name, "DemoAvroSchema")) {
+                  self.schema = self.schemas[i];
+                  break;
+                }
+              }
+
+              self.schemaVersion = 1;
+            };
+
             self.createTopic = function () {
               self.working = true;
               

@@ -5,11 +5,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('KafkaCtrl', ['$scope', '$routeParams', 'growl',
+        .controller('KafkaCtrl', ['$routeParams', 'growl',
         'KafkaService', '$location', 'ModalService', '$interval',
-        '$mdSidenav', 'TourService',
-          function ($scope, $routeParams, growl, KafkaService, $location,
-          ModalService, $interval, $mdSidenav, TourService) {
+        '$mdSidenav', 'TourService', 'ProjectService',
+          function ($routeParams, growl, KafkaService, $location,
+          ModalService, $interval, $mdSidenav, TourService, ProjectService) {
               
 
             var self = this;
@@ -43,6 +43,7 @@ angular.module('hopsWorksApp')
             self.numReplicas = "";
             self.numPartitions = "";
             self.projectName = "";
+            self.projectIsGuide = false;
             self.userEmail = "";
             self.permission_type = "Allow";
             self.operation_type = "Read";
@@ -60,7 +61,6 @@ angular.module('hopsWorksApp')
            // self.schemaVersion;
             self.schemaVersions = [];
            self.tourService = TourService;
-           self.isGuide = false;
 
             self.selectAcl = function (acl, topicName) {
               if (self.activeId === acl.id) { //unselect the current selected ACL
@@ -139,20 +139,17 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createSchema = function () {
-
-              ModalService.createSchema('lg', self.projectId, self.isGuide).then(
+              ModalService.createSchema('lg', self.projectId,
+                self.projectIsGuide).then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New schema added successfully.', ttl: 2000});
                           self.listSchemas();
+                          if (self.projectIsGuide) {
+                            self.tourService.currentStep_TourThree = 2;
+                          }
                       }, function (error) {
                 //The user changed their mind.
               });
-            };
-
-            self.guideCreateSchema = function () {
-              self.tourService.currentStep_TourThree = 2;
-              self.isGuide = true;
-              self.createSchema();
             };
 
             self.listSchemas = function () {
@@ -218,21 +215,27 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-            
+
+            self.lala = function () {
+              console.log("Step: " + self.tourService.currentStep_TourThree);
+            };
             /**
              * Navigate to the new job page.
              * @returns {undefined}
              */
             self.createTopic = function () {
-
               if(self.topics.length >10){
                   growl.info("Topic Creation aborted", {title: 'Topic limit reached', ttl: 2000});
                   return;
               }
-              ModalService.createTopic('lg', self.projectId).then(
+              ModalService.createTopic('lg', self.projectId, self.projectIsGuide)
+              .then(
                       function (success) {
                           growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
                           self.getAllTopics();
+                          if (self.projectIsGuide) {
+                            self.tourService.currentStep_TourThree = 4;
+                          }
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -347,25 +350,36 @@ angular.module('hopsWorksApp')
             };
 
             self.init = function(){
-                self.tourService.currentStep_TourThree = 0;
-                self.getAllTopics();
-                self.getAllSharedTopics();              
+              ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                function (success) {
+                  var projectNameTour = success.projectName;
+                  if (angular.equals(projectNameTour.substr(0, 5), 'demo_')) {
+                    self.tourService.currentStep_TourThree = 0;
+                    self.projectIsGuide = true;
+                  }
+                }, function (error) {
+                  $location.path('/');
+                }
+              );
+
+              self.getAllTopics();
+              self.getAllSharedTopics();
              };
             
             self.init();
 
             self.showTopic = function(){
+              if (self.projectIsGuide) {
+                self.tourService.currentStep_TourThree = 3;
+              }
               self.showSchemas = -1;
               self.showTopics = 1;
             };
 
-            // NOTICE: Use only for the guided tours
-            self.guideShowSchema = function () {
-              self.tourService.currentStep_TourThree = 1;
-              self.showSchema();
-            }
-
             self.showSchema = function(){
+              if (self.projectIsGuide) {
+                self.tourService.currentStep_TourThree = 1;
+              }
               self.showSchemas = 1;
               self.showTopics = -1;
               self.listSchemas();

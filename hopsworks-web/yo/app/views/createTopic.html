@@ -11,7 +11,7 @@
   <form role="form" name="createTopicForm" 
         ng-submit="createTopicCtrl.createTopic()" novalidate
         class="form-validate">                                                                                                                              
-    <div class="view-info">
+    <div class="view-info" id="createTopicWnd">
       <div class="col-md-12">
         <label class="control-label">Topic Name</label><br>
         <div class="col-sm-12">
@@ -71,10 +71,28 @@
     <!--<hr />-->
     <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
       <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit">
-        <i ng-if="createTopicCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+      <button class="btn btn-primary" type="submit" id="createTopicBtn">
+        <i ng-if="createTopicCtrl.working" style="margin-top: 2px"
+           class="fa fa-spinner fa-spin pull-right"></i>
         Create
       </button>
     </div>
   </form>
+  <tour class="ng-scope"
+        step="createTopicCtrl.tourService.currentStep_TourFive"
+        post-tour="closeTour()">
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Create' button to continue"
+            tourtip-step="0"
+            tourtip-element="#createTopicBtn"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="createTopicCtrl.createTopic()"
+            tourtip-offset-vertical="-65"
+            tourtip-offset-horizontal="-600"
+            tourtip-container-element="#createTopicWnd"
+            on-show="createTopicCtrl.guidePopulateTopic()"
+    ></virtual-step>
+  </tour>
 </div>
