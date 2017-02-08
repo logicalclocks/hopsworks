@@ -398,7 +398,7 @@
             tourtip-element="#jobsTab"
             tourtip-placement="right"
             tourtip-next-label="Next"
-            on-proceed="projectCtrl.goToJobs()"
+            on-proceed="projectCtrl.goToJobs(); projectCtrl.tourService.currentStep_TourSix = 0;"
             tourtip-offset-vertical="65"
     ></virtual-step>
   </tour>

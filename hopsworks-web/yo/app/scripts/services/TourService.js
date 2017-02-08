@@ -11,9 +11,12 @@ angular.module('hopsWorksApp')
                 tourService.currentStep_TourThree = -1;
                 tourService.currentStep_TourFour = -1;
                 tourService.currentStep_TourFive = -1;
+                tourService.currentStep_TourSix = -1;
+                tourService.currentStep_TourSeven = -1;
                 tourService.alive_TourOne = 15;
                 tourService.createdJobName = null;
                 tourService.activeTour = null;
+                tourService.kafkaJobCreationState = "init";
 
                 tourService.setActiveTour = function (tourName) {
                     tourService.activeTour = tourName;
@@ -27,6 +30,8 @@ angular.module('hopsWorksApp')
                     tourService.currentStep_TourThree = -1;
                     tourService.currentStep_TourFour = -1;
                     tourService.currentStep_TourFive = -1;
+                    tourService.currentStep_TourSix = -1;
+                    tourService.currentStep_TourSeven = -1;
                     tourService.createdJobName = null;
                 };
 

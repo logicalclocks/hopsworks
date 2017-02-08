@@ -12,13 +12,16 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService', 'HistoryService', 'KafkaService', '$timeout',
+          'AdamService', 'FlinkService', 'TourService', 'HistoryService',
+          'KafkaService', 'ProjectService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  AdamService, FlinkService, TourService, HistoryService, KafkaService, $timeout) {
+                  AdamService, FlinkService, TourService, HistoryService,
+                  KafkaService, ProjectService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
+            self.projectIsGuide = false;
             self.flinkjobtype;
             self.resourceType;
             //Set services as attributes 
@@ -345,6 +348,10 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.nameFilledIn = function () {
+              // For Kafka tour
+              if (self.projectIsGuide) {
+                self.tourService.currentStep_TourSeven = 1;
+              }
               if (self.phase === 0) {
                 if (!self.jobname) {
                   var date = new Date().getTime() / 1000;
@@ -363,7 +370,16 @@ angular.module('hopsWorksApp')
               }
             };
 
-
+            self.guideSetJobName = function () {
+              var jobState = self.tourService.kafkaJobCreationState;
+              if (angular.equals('producer', jobState)) {
+                self.jobname = "KafkaDemoProducer";
+                console.log("Setting producer name");
+              } else {
+                self.jobname = "KafkaDemoConsumer";
+                console.log("Setting consumer name");
+              }
+            };
 
             /**
              * Callback method for when the user selected a job type. Will then 
@@ -371,6 +387,10 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.jobTypeChosen = function () {
+            // For Kafka tour
+              if (self.projectIsGuide) {
+                self.tourService.currentStep_TourSeven = 2;
+              }
               self.phase = 2;
               self.accordion3.isOpen = true; //Open file selection
               var selectedType;
@@ -424,16 +444,41 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.guideSetJobType = function () {
+              self.jobtype = 1;
+            };
+
             self.jobTypeSpark = function () {
               self.jobtype = 1;
               self.jobTypeChosen();
             };
 
-            self.chooseParameters = function () {
+            self.chooseParameters = function (reason) {
               if (!self.runConfig.mainClass && !self.runConfig.args) {
-                self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
-                self.runConfig.args = '1 111';
+                if (angular.equals('spark', reason.toLowerCase())) {
+                  self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
+                  self.runConfig.args = '1 111';
+                } else if (angular.equals('kafka', reason.toLowerCase())) {
+                  self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
+                  var jobState = self.tourService.kafkaJobCreationState;
+                  console.log("Job state: " + jobState);
+                  if (angular.equals('producer', jobState)) {
+                    self.runConfig.args = 'producer';
+                  } else if (angular.equals('consumer', jobState)){
+                    self.runConfig.args = 'something else to choose later';
+                  } else {
+                    self.runConfig.args = 'ahhhggg';
+                  }
+                  if (projectIsGuide) {
+                    self.tourService.currentStep_TourSeven = 4;
+                  }
+                }
               }
+              // For Kafka tour
+              if (self.projectIsGuide) {
+                self.tourService.currentStep_TourSeven = 4;
+              }
+
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 7;
               }
@@ -475,6 +520,11 @@ angular.module('hopsWorksApp')
               var filename = getFileName(path);
               switch (reason.toUpperCase()) {
                 case "SPARK":
+                  // For Kafka tour
+                  if (self.projectIsGuide) {
+                    self.tourService.currentStep_TourSeven = 3;
+                  }
+
                   self.sparkState.selectedJar = filename;
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
@@ -698,10 +748,24 @@ angular.module('hopsWorksApp')
                 self.accordion5 = stored.accordion5;
                 self.accordion6 = stored.accordion6;
               }
+
+              // Check if it's a guide project
+              ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                function (success) {
+                  var projectNameTour = success.projectName;
+                  if (angular.equals(projectNameTour.substr(0, 5), 'demo_')) {
+                    self.tourService.currentStep_TourSeven = 0;
+                    self.projectIsGuide = true;
+                  }
+                }, function (error) {
+                  $location.path('/');
+                });
+
               if (self.adamState.commandList === null) {
                 self.getCommandList();
               }
             };
+
             init(); //Call upon create;
             /**
              * Select an ADAM command by sending the name to the server, gets an 

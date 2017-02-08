@@ -395,7 +395,77 @@
       </div>
          <!-- /#page-content-wrapper -->
     </section>
-    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourFour" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
+    <tour class="ng-scope"
+          step="newJobCtrl.tourService.currentStep_TourSeven"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour ==='kafka'">
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click Next OR give a name to your job kafka"
+              tourtip-step="0"
+              tourtip-element="#inputJobName"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.nameFilledIn()"
+              tourtip-offset-vertical="-65"
+              tourtip-offset-horizontal="38"
+              on-show="newJobCtrl.guideSetJobName()"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click Next OR SPARK"
+              tourtip-step="1"
+              tourtip-element="#sparkJobType"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.jobTypeChosen()"
+              tourtip-offset-vertical="100"
+              tourtip-offset-horizontal="-6"
+              on-show="newJobCtrl.guideSetJobType()"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
+              tourtip-step="2"
+              tourtip-element="#selectFileButton"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
+              tourtip-offset-vertical="200"
+              tourtip-offset-horizontal="-6"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Choose parameters on you own or click Next and let us choose for you"
+              tourtip-step="3"
+              tourtip-element="#chooseParametersAndArguments"
+              tourtip-placement="top"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.chooseParameters('kafka')"
+              tourtip-offset-vertical="10"
+              tourtip-offset-horizontal="550"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+              tourtip-step="4"
+              tourtip-element="#moreConfigs"
+              tourtip-placement="bottom"
+              tourtip-next-label="Create Job"
+              on-proceed="newJobCtrl.createJob()"
+              tourtip-offset-vertical="-65"
+              tourtip-offset-horizontal="-10"
+      ></virtual-step>
+    </tour>
+
+
+
+
+
+    <tour class="ng-scope"
+          step="projectCtrl.tourService.currentStep_TourFour"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'">
       <virtual-step
         class="ng-scope"
             <virtual-step
@@ -457,7 +527,7 @@
             tourtip-element="#chooseParametersAndArguments"
             tourtip-placement="top"
             tourtip-next-label="Next"
-            on-proceed="newJobCtrl.chooseParameters()"
+            on-proceed="newJobCtrl.chooseParameters('spark')"
             tourtip-offset-vertical="10"
             tourtip-offset-horizontal="550"
             ng-if="newJobCtrl.accordion4.visible"

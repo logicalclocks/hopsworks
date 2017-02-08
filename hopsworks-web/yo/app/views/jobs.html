@@ -360,10 +360,11 @@
 	  </div>
     <!-- /#wrapper -->
   </div>
-<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
+      post-tour="closeTour()" ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'">
   <virtual-step
     class="ng-scope"
-    tourtip="Click Next OR click on the 'New job' button to continue"
+    tourtip="Click Next OR click on the 'New job' button to continue spark"
     tourtip-step="0"
     tourtip-element="#buttonCreateJob"
     tourtip-placement="bottom"
@@ -389,4 +390,20 @@
     tourtip-offset-vertical="-65"
     ></virtual-step>
 </tour>
+    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'">
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Next OR click on the 'New job' button to continue kafka"
+                tourtip-step="0"
+                tourtip-element="#buttonCreateJob"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed="jobsCtrl.newJob(); jobsCtrl.kafkaGuideTransition();
+                    projectCtrl.tourService.currentStep_TourFour=-1"
+                tourtip-offset-vertical="-65"
+                tourtip-offset-horizontal="38"
+        ></virtual-step>
+    </tour>
 
