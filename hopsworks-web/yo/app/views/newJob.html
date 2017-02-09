@@ -71,11 +71,13 @@
             <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
               <div class="row">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                <div class="col-md-8"><input type="text"
+                                             ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
               <div class="row">
                 <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" uib-tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                <div class="col-md-8"><input type="text"
+                                             ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
             </div>
             <!-- Adam -->
@@ -418,10 +420,9 @@
               tourtip-element="#sparkJobType"
               tourtip-placement="bottom"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.jobTypeChosen()"
+              on-proceed="newJobCtrl.jobTypeSpark()"
               tourtip-offset-vertical="100"
               tourtip-offset-horizontal="-6"
-              on-show="newJobCtrl.guideSetJobType()"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
@@ -441,20 +442,22 @@
               tourtip-element="#chooseParametersAndArguments"
               tourtip-placement="top"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.chooseParameters('kafka')"
+              on-proceed="newJobCtrl.chooseParameters()"
               tourtip-offset-vertical="10"
               tourtip-offset-horizontal="550"
+              on-show="newJobCtrl.populateKafkaJobParameters()"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
-              tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+              tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
               tourtip-step="4"
               tourtip-element="#moreConfigs"
               tourtip-placement="bottom"
-              tourtip-next-label="Create Job"
+              tourtip-next-label="Next"
               on-proceed="newJobCtrl.createJob()"
               tourtip-offset-vertical="-65"
               tourtip-offset-horizontal="-10"
+              on-show="newJobCtrl.populateKafkaTopic()"
       ></virtual-step>
     </tour>
 
@@ -527,7 +530,7 @@
             tourtip-element="#chooseParametersAndArguments"
             tourtip-placement="top"
             tourtip-next-label="Next"
-            on-proceed="newJobCtrl.chooseParameters('spark')"
+            on-proceed="newJobCtrl.chooseParameters()"
             tourtip-offset-vertical="10"
             tourtip-offset-horizontal="550"
             ng-if="newJobCtrl.accordion4.visible"

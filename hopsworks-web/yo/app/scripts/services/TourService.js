@@ -16,10 +16,23 @@ angular.module('hopsWorksApp')
                 tourService.alive_TourOne = 15;
                 tourService.createdJobName = null;
                 tourService.activeTour = null;
-                tourService.kafkaJobCreationState = "init";
+                tourService.kafkaJobCreationState = "producer";
+                tourService.counter = 0;
 
                 tourService.setActiveTour = function (tourName) {
                     tourService.activeTour = tourName;
+                };
+
+                tourService.printDebug = function () {
+                  console.log("Counter: " + tourService.counter);
+                  tourService.counter++;
+                  console.log(">> kafka state: " + tourService
+                  .kafkaJobCreationState);
+                  console.log(">> TourSix: " + tourService.currentStep_TourSix);
+                  console.log(">> TourSeven: " + tourService
+                  .currentStep_TourSeven);
+
+                  return true;
                 };
 
                 tourService.resetTours = function () {

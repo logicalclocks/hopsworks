@@ -400,10 +400,20 @@
                 tourtip-element="#buttonCreateJob"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
-                on-proceed="jobsCtrl.newJob(); jobsCtrl.kafkaGuideTransition();
-                    projectCtrl.tourService.currentStep_TourFour=-1"
+                on-proceed="jobsCtrl.newJob();
+                    projectCtrl.tourService.currentStep_TourFour=-1;"
                 tourtip-offset-vertical="-65"
                 tourtip-offset-horizontal="38"
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Run to run your jobs !"
+                tourtip-step="1"
+                tourtip-element="#true"
+                tourtip-placement="bottom"
+                tourtip-next-label="Done"
+                on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+                tourtip-offset-vertical="-65"
         ></virtual-step>
     </tour>
 

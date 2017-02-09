@@ -251,6 +251,9 @@ angular.module('hopsWorksApp')
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
               }
+              if (self.tourService.currentStep_TourFive > -1) {
+                self.tourService.currentStep_TourSix = 0;
+              }
             };
 
             self.goToWorklows = function () {

@@ -24,7 +24,7 @@ angular.module('hopsWorksApp')
             self.projectIsGuide = false;
             self.flinkjobtype;
             self.resourceType;
-            //Set services as attributes 
+            //Set services as attributes
             self.ModalService = ModalService;
             self.growl = growl;
             self.projectId = $routeParams.projectID;
@@ -36,6 +36,7 @@ angular.module('hopsWorksApp')
             self.groupsSelected = false;
             self.showAdvanced = false;
             self.selectedTopics = [];
+            self.projectName = "";
             self.getAllTopics = function () {
               if (self.kafkaSelected) {
                 if (typeof self.runConfig.kafka !== "undefined" && 
@@ -43,7 +44,8 @@ angular.module('hopsWorksApp')
                   self.selectedTopics = self.runConfig.kafka.topics;
                 }
                 self.topics = [];
-                KafkaService.getProjectAndSharedTopics(self.projectId).then(
+                return KafkaService.getProjectAndSharedTopics(self.projectId)
+                .then(
                         function (success) {
                           var topics = success.data;
                           for (var i = 0; i < topics.length; i++) {
@@ -60,8 +62,9 @@ angular.module('hopsWorksApp')
                               self.topics.push({name: topics[i]['name'], ticked: false});
                             }
                           }
+                          console.log(">>> Done getting all topics");
                         }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                 });
               }
             };
@@ -301,12 +304,42 @@ angular.module('hopsWorksApp')
               self.unodeState = null;
               self.undoable = false;
             };
+
+            self.kafkaGuideTransition = function () {
+              if (angular.equals('producer', self.tourService
+                .kafkaJobCreationState)) {
+                  self.tourService.kafkaJobCreationState = "consumer";
+                  console.log("Job state is producer, setting consumer");
+              } else {
+                self.tourService.kafkaJobCreationState = "producer";
+                console.log("Job state is consumer, setting producer");
+              }
+            };
+
             /**
              * Create the job.
              * @returns {undefined}
              */
             self.createJob = function () {
               if (self.kafkaSelected) {
+                if (self.projectIsGuide) {
+                  self.runConfig.kafka.topics = self.guideKafkaTopics;
+                  if (angular.equals('producer', self.tourService
+                  .kafkaJobCreationState)) {
+                    // Go through again for the consumer. The state is
+                    // toggled in newJob.html virtual step
+                    console.log(">>> Proceed to consumer job");
+                    self.tourService.currentStep_TourSeven = 0;
+                    self.tourService.currentStep_TourSix = 0;
+                    self.kafkaGuideTransition();
+                  } else {
+                    // We are done
+                    console.log(">>> We are done!");
+                    self.tourService.currentStep_TourSeven = -1;
+                    self.tourService.currentStep_TourSix = 1;
+                    self.kafkaGuideTransition();
+                  }
+                }
                 if (self.runConfig.kafka.topics === "undefined" || self.runConfig.kafka.topics.length === 0) {
                   growl.warning("Please select topic(s) first", {title: 'Warning', ttl: 5000});
                   return;
@@ -328,7 +361,7 @@ angular.module('hopsWorksApp')
                 self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
               }
               if (self.tourService.currentStep_TourFour > -1) {
-                self.tourService.resetTours();
+                //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
                 self.tourService.createdJobName = self.jobname;
               }
@@ -444,35 +477,15 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.guideSetJobType = function () {
-              self.jobtype = 1;
-            };
-
             self.jobTypeSpark = function () {
               self.jobtype = 1;
               self.jobTypeChosen();
             };
 
-            self.chooseParameters = function (reason) {
+            self.chooseParameters = function () {
               if (!self.runConfig.mainClass && !self.runConfig.args) {
-                if (angular.equals('spark', reason.toLowerCase())) {
                   self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
                   self.runConfig.args = '1 111';
-                } else if (angular.equals('kafka', reason.toLowerCase())) {
-                  self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
-                  var jobState = self.tourService.kafkaJobCreationState;
-                  console.log("Job state: " + jobState);
-                  if (angular.equals('producer', jobState)) {
-                    self.runConfig.args = 'producer';
-                  } else if (angular.equals('consumer', jobState)){
-                    self.runConfig.args = 'something else to choose later';
-                  } else {
-                    self.runConfig.args = 'ahhhggg';
-                  }
-                  if (projectIsGuide) {
-                    self.tourService.currentStep_TourSeven = 4;
-                  }
-                }
               }
               // For Kafka tour
               if (self.projectIsGuide) {
@@ -484,8 +497,43 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.populateKafkaJobParameters = function () {
+              self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
+              var jobState = self.tourService.kafkaJobCreationState;
+              if (angular.equals('producer', jobState)) {
+                self.runConfig.args = 'producer';
+              } else if (angular.equals('consumer', jobState)) {
+                self.runConfig.args = "consumer /Projects/" +
+                  self.projectName +"/Resources/Data";
+              } else {
+                self.runConfig.args = "Internal error, something went wrong. Select manually!"
+              }
+            };
 
+            self.guideKafkaTopics = [];
 
+            self.populateKafkaTopic = function () {
+              self.accordion5.isOpen = true;
+              self.accordion5.visible = true;
+
+              self.kafkaSelected = true;
+              self.getAllTopics(self.projectId).then(
+                function(success) {
+                  console.log("Async returned: " + self.topics.length);
+                  for (var i = 0; i < self.topics.length; i++) {
+                    if (angular.equals('DemoKafkaTopic', self.topics[i]['name'])) {
+                      self.guideKafkaTopics.push(self.topics[i]);
+                      console.log("Topic found and put to config")
+                      break;
+                    }
+
+                  }
+                }, function(error) {
+                  console.log(">>> Something bad happened")
+                }
+              );
+              console.log(">>> populateKafkaTopic");
+            };
 
             /**
              * Callback method for when the main job file has been selected.
@@ -520,11 +568,6 @@ angular.module('hopsWorksApp')
               var filename = getFileName(path);
               switch (reason.toUpperCase()) {
                 case "SPARK":
-                  // For Kafka tour
-                  if (self.projectIsGuide) {
-                    self.tourService.currentStep_TourSeven = 3;
-                  }
-
                   self.sparkState.selectedJar = filename;
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
@@ -541,6 +584,11 @@ angular.module('hopsWorksApp')
                               self.sliderOptions.options['ceil'] = 300;
                             }
                             self.mainFileSelected(filename);
+                            // For Kafka tour
+                            if (self.projectIsGuide) {
+                              self.tourService.currentStep_TourSeven = 3;
+                            }
+
                             if (self.tourService.currentStep_TourFour > -1) {
                               self.tourService.currentStep_TourFour = 6;
                             }
@@ -752,8 +800,8 @@ angular.module('hopsWorksApp')
               // Check if it's a guide project
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
                 function (success) {
-                  var projectNameTour = success.projectName;
-                  if (angular.equals(projectNameTour.substr(0, 5), 'demo_')) {
+                  self.projectName = success.projectName;
+                  if (angular.equals(self.projectName.substr(0, 5), 'demo_')) {
                     self.tourService.currentStep_TourSeven = 0;
                     self.projectIsGuide = true;
                   }

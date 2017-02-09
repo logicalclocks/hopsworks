@@ -257,22 +257,7 @@ angular.module('hopsWorksApp')
               }
             };
 
-            self.kafkaGuideTransition = function () {
-              if (angular.equals('init', self.tourService
-              .kafkaJobCreationState)) {
-                self.tourService.kafkaJobCreationState = "producer";
-                console.log("Job state is none, setting producer");
-              } else {
-                if (angular.equals('producer'), self.tourService
-                .kafkaJobCreationState) {
-                  self.tourService.kafkaJobCreationState = "consumer";
-                  console.log("Job state is producer, setting consumer");
-                } else {
-                  self.tourService.kafkaJobCreationState = "init";
-                  console.log("Job state is consumer, setting none");
-                }
-              }
-            };
+
 
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
