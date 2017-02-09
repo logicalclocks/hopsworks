@@ -199,10 +199,6 @@
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
-                      <!--                      <th st-sort="depName" class="col-sm-5">Library</th>
-                                            <th class="col-sm-2">Version</th>
-                                            <th class="col-sm-2">Status</th>
-                                            <th class="col-sm-2">Actions</th>-->
                     </tr>
                   </thead>
                   <tbody>
@@ -246,13 +242,13 @@
               </uib-tab>
               <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstalled()">
                 <h2>Uninstall/Upgrade Python Libraries</h2>
-<!--                <div class="row pull-left">
-                  <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
-                    <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.showAlert($event)"   >
-                      Show Base Libraries
-                    </md-button>
-                  </div>
-                </div>-->
+                <!--                <div class="row pull-left">
+                                  <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                                    <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.showAlert($event)"   >
+                                      Show Base Libraries
+                                    </md-button>
+                                  </div>
+                                </div>-->
                 <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.installedLibs.length > 0">
                   <thead>
                     <tr>
@@ -270,7 +266,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installedLibs |  orderBy:sortType:sortReverse" 
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installedLibs|  orderBy:sortType:sortReverse" 
                         ng-class="{'selectedTopicOdd': row.isSelected === true}">
                       <td class="col-sm-3">
                         <div class="row" style="margin-left: 10px;"><b>{{row.channelUrl}}</b></div>
@@ -284,11 +280,11 @@
                       <td class="col-sm-2">
                         <div ng-show="row.status !== 'INSTALLING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
                         <div ng-show="row.status === 'INSTALLING'" class="row" style="margin-left: 10px;">
-                  <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
-                    <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
-                      Installing
-                    </md-button>
-                  </div>
+                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                            <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
+                              Installing
+                            </md-button>
+                          </div>
                         </div>
                       </td>
                       <td class="col-sm-2">
@@ -305,9 +301,63 @@
                       </td>
                     </tr>
                 </table>
-
-
               </uib-tab>
+
+
+              <uib-tab index="3" heading="Ongoing Installation Status" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstallingStatus()">
+                <h2>Ongoing installations</h2>
+
+                <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" 
+                       ng-show="pythonDepsCtrl.installingStatus.length > 0">
+                  <thead>
+                    <tr>
+                      <th st-sort="depName" class="col-sm-4">Operation</th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installingStatus" 
+                        ng-class="{'selectedTopicOdd': row.isSelected === true}">
+                      <td class="col-sm-4">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.op}}</b></div>
+                      </td>
+                      <td class="col-sm-2">
+                      </td>
+                      <td class="col-sm-2">
+                      </td>
+                      <td class="col-sm-2">
+                      </td>
+                    </tr>
+                    <tr ng-repeat="host in row.hosts" class="td {padding-top: 10px; padding-bottom:10px}">
+                      <td class="col-sm-2"/>
+                      <td class="col-sm-2">
+                        {{host.lib}}
+                      </td>
+                      <td class="col-sm-2">
+                        {{host.version}}
+                      </td>
+                      <td class="col-sm-2">
+                        {{host.status}}
+                      </td>
+                      <td class="col-sm-2">
+                        <div class="button-group">
+                          <button type="submit" class="btn btn-primary" 
+                                  ng-click="pythonDepsCtrl.uninstall(row.op, host.details)">
+                            <i ng-if="pythonDepsCtrl.uninstalling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Retry</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+
+
+
+
+              </uib-tab>              
             </uib-tabset>
           </div>
 

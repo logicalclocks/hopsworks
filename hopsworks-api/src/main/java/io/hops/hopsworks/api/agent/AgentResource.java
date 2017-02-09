@@ -1,5 +1,6 @@
 package io.hops.hopsworks.api.agent;
 
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.alert.Alert;
 import io.hops.hopsworks.common.dao.alert.AlertEJB;
 import java.util.Date;
@@ -21,14 +22,21 @@ import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.Role;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.ws.rs.POST;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 
@@ -36,6 +44,9 @@ import javax.ws.rs.core.SecurityContext;
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
 public class AgentResource {
+
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
 
   @EJB
   private HostEJB hostFacade;
@@ -45,6 +56,8 @@ public class AgentResource {
   private AlertEJB alertFacade;
   @EJB
   private PythonDepsFacade pythonDepsFacade;
+  @EJB
+  private NoCacheResponse noCacheResponse;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -101,9 +114,13 @@ public class AgentResource {
   @POST
   @Path("/heartbeat")
   @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
   public Response heartbeat(@Context SecurityContext sc,
           @Context HttpServletRequest req,
           @Context HttpHeaders httpHeaders, String jsonHb) {
+    // Commads to send as a response to the kagent to execute
+    List<CondaCommands> commands = new ArrayList<>();
+
     try {
 
       InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(
@@ -212,11 +229,23 @@ public class AgentResource {
           }
         }
       }
+
+      Collection<CondaCommands> commandsToRun = host.
+              getCondaCommandsCollection();
+      commands.addAll(commandsToRun);
+
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
-    return Response.ok().build();
+
+    GenericEntity<Collection<CondaCommands>> commandsForKagent
+            = new GenericEntity<Collection<CondaCommands>>(commands) {};
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            commandsForKagent).build();
+
+//    return Response.ok().build();
   }
 
   @POST

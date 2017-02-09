@@ -47,11 +47,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class PythonDep implements Serializable {
   
   
-  public enum Status {
-    INSTALLED,
-    INSTALLING,
-    FAILED
-  }
   
 
   private static final long serialVersionUID = 1L;
@@ -80,7 +75,7 @@ public class PythonDep implements Serializable {
   private AnacondaRepo repoUrl;
 
   @Enumerated(EnumType.ORDINAL)
-  private Status status = Status.INSTALLING;
+  private PythonDepsFacade.CondaStatus status = PythonDepsFacade.CondaStatus.INSTALLING;
 
   public PythonDep() {
   }
@@ -143,11 +138,11 @@ public class PythonDep implements Serializable {
     this.repoUrl = repoUrl;
   }
 
-  public void setStatus(Status status) {
+  public void setStatus(PythonDepsFacade.CondaStatus status) {
     this.status = status;
   }
 
-  public Status getStatus() {
+  public PythonDepsFacade.CondaStatus getStatus() {
     return status;
   }
 

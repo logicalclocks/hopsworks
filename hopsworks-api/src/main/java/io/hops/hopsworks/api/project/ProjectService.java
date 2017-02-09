@@ -438,7 +438,6 @@ public class ProjectService {
         datasetController.generateReadme(udfso, "TestJob",
                 "jar file to calculate pi",
                 project.getName());
-        projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -591,7 +590,7 @@ public class ProjectService {
       }
     }
   }
-
+  
   @POST
   @Path("{id}/delete")
   @Produces(MediaType.APPLICATION_JSON)
@@ -856,6 +855,22 @@ public class ProjectService {
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @POST
+  @Path("{id}/logs/enable")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response enableLogs(@PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    projectFacade.enableLogs(project);
+    try {
+      projectController.manageElasticsearch(project.getName(), true);
+    } catch (IOException ex) {
+      Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
+      return noCacheResponse.getNoCacheResponseBuilder(
+              Response.Status.SERVICE_UNAVAILABLE).build();
+    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

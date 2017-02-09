@@ -3,15 +3,15 @@ package io.hops.hopsworks.common.dao.pythonDeps;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class HostLibStatus {
+public class HostOpStatus {
 
   private int hostId;
   private String status;
 
-  public HostLibStatus() {
+  public HostOpStatus() {
   }
 
-  public HostLibStatus(int hostId, String status) {
+  public HostOpStatus(int hostId, String status) {
     this.hostId = hostId;
     this.status = status;
   }
@@ -35,10 +35,10 @@ public class HostLibStatus {
   // Two versions are equal if they have the same 'name', status doesn't matter.
   @Override
   public boolean equals(Object o) {
-    if (o instanceof HostLibStatus == false) {
+    if (o instanceof HostOpStatus == false) {
       return false;
     }
-    HostLibStatus v = (HostLibStatus) o;
+    HostOpStatus v = (HostOpStatus) o;
     if (v.hostId != this.hostId) {
       return false;
     }

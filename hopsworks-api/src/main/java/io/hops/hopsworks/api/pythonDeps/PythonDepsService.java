@@ -5,7 +5,7 @@ import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.LibStatus;
+import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
@@ -103,10 +103,8 @@ public class PythonDepsService {
   @Path("/enable")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response enable() throws AppException {
-    Map<String,String> deps = pythonDepsFacade.createProject(project);
+    Map<String, String> deps = pythonDepsFacade.createProject(project);
     pythonDepsFacade.createProjectInDb(project, deps);
-
-    projectFacade.enableConda(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -142,14 +140,12 @@ public class PythonDepsService {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
-    
     pythonDepsFacade.addLibrary(project, library.getChannelUrl(), library.
             getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/upgrade")
@@ -167,14 +163,18 @@ public class PythonDepsService {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/status")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response status(PythonDepJson library) throws AppException {
+  public Response status() throws AppException {
 
-    PythonDep dep = pythonDepsFacade.findPythonDeps(library.getLib(), library.
-            getVersion());
-    LibStatus response = pythonDepsFacade.libStatus(project, dep);
+//    PythonDep dep = pythonDepsFacade.findPythonDeps(library.getLib(), library.
+//            getVersion());
+    List<OpStatus> response = pythonDepsFacade.opStatus(project);
+
+    GenericEntity<Collection<OpStatus>> libsFound
+            = new GenericEntity<Collection<OpStatus>>(response) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            response).build();
+            libsFound).build();
+
   }
 
   @GET
@@ -206,7 +206,7 @@ public class PythonDepsService {
   }
 
   @GET
-  
+
   @Path("/removeenv/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
@@ -254,8 +254,8 @@ public class PythonDepsService {
           List<Version> allVs = l.getVersions();
           for (Version v : allVs) {
             if (pd.getVersion().compareToIgnoreCase(v.getVersion()) == 0) {
-              v.setStatus("Installed");
-              l.setStatus("Installed");
+              v.setStatus(pd.getStatus().toString().toLowerCase());
+              l.setStatus(pd.getStatus().toString().toLowerCase());
               break;
             }
           }
@@ -349,5 +349,5 @@ public class PythonDepsService {
 
     }
   }
-  
+
 }

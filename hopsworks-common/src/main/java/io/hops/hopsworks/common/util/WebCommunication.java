@@ -301,26 +301,25 @@ public class WebCommunication {
       HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
       HttpsURLConnection.setDefaultHostnameVerifier(hv);
     } catch (Exception e) {
+      // ??
     }
   }
 
   public int anaconda(String hostAddress, String agentPassword, String op,
           String project, String arg) throws Exception {
 
-    StringBuilder path = new StringBuilder().
-            append("anaconda/").append(settings.getSparkUser()).append('/').
-            append(op.toLowerCase()).append("/").append(project);
+    String path = "anaconda/" + settings.getSparkUser() + '/' + op.toLowerCase()
+            + "/" + project;
     String template = "%s://%s:%s/%s";
-    String url = String.format(template, PROTOCOL, hostAddress, PORT,
-            path.toString());
+    String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
     Map<String, String> args = null;
-    if (op.compareToIgnoreCase(PythonDepsFacade.AnacondaOp.CLONE.toString())
+    if (op.compareToIgnoreCase(PythonDepsFacade.CondaOp.CLONE.toString())
             == 0) {
       args = new HashMap<>();
       if (arg == null || arg.isEmpty()) {
         throw new RuntimeException(
                 "You forgot the 'srcProject' argument for the conda "
-                        + "clone environment command for project " + project);
+                + "clone environment command for project " + project);
       }
       args.put("srcproj", arg);
     }

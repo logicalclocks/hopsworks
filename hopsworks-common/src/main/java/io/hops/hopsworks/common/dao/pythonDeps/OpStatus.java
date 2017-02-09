@@ -5,24 +5,34 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class LibStatus {
+public class OpStatus {
 
-  private String channelUrl;
+  private String channelUrl = "default";
   private String lib;
   private String version;
+  private String op;
   private String status = "Not Installed";
-  private List<HostLibStatus> hosts = new ArrayList<>();
+  private List<HostOpStatus> hosts = new ArrayList<>();
 
-  public LibStatus() {
+  public OpStatus() {
   }
 
-  public LibStatus(String channelUrl, String lib, String version) {
+  public OpStatus(String op, String channelUrl, String lib, String version) {
+    this.op = op;
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
   }
 
-  public List<HostLibStatus> getHosts() {
+  public String getOp() {
+    return op;
+  }
+
+  public void setOp(String op) {
+    this.op = op;
+  }
+
+  public List<HostOpStatus> getHosts() {
     return hosts;
   }
 
@@ -30,8 +40,12 @@ public class LibStatus {
     return status;
   }
 
-  public void setHosts(List<HostLibStatus> hosts) {
+  public void setHosts(List<HostOpStatus> hosts) {
     this.hosts = hosts;
+  }
+  
+  public void addHost(HostOpStatus host) {
+    this.hosts.add(host);
   }
 
   public void setStatus(String status) {
@@ -64,11 +78,11 @@ public class LibStatus {
 
   @Override
   public boolean equals(Object o) {
-    if (o instanceof LibStatus) {
-      LibStatus pd = (LibStatus) o;
+    if (o instanceof OpStatus) {
+      OpStatus pd = (OpStatus) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
               && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion() == this.version) {
+              && pd.getVersion().compareTo(this.version) == 0) {
         return true;
       }
     }

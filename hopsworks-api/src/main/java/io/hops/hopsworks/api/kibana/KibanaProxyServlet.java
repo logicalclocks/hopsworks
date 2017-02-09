@@ -40,9 +40,6 @@ public class KibanaProxyServlet extends ProxyServlet {
   @EJB
   private ProjectController projectController;
 
-  private String email;
-  private String index;
-
   /**
    * Authorizer user to access particular index.
    *
@@ -59,7 +56,8 @@ public class KibanaProxyServlet extends ProxyServlet {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
-    email = servletRequest.getUserPrincipal().getName();
+    String email = servletRequest.getUserPrincipal().getName();
+    String index = null;
     //Do not authorize admin
     if (email.equals(Settings.AGENT_EMAIL)) {
       super.service(servletRequest, servletResponse);
@@ -80,18 +78,18 @@ public class KibanaProxyServlet extends ProxyServlet {
       index = servletRequest.getRequestURI().substring(servletRequest.
               getRequestURI().lastIndexOf("/")).replace("/", "");
       //Check if this user has access to this project
-      if (!isAuthorized(servletResponse, index)) {
+      if (!isAuthorized(servletResponse, index, email)) {
         return;
       }
     } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
       JSONObject body = new JSONObject(myRequestWrapper.getBody());
       JSONArray jsonArray = body.optJSONArray("index");
       if (jsonArray != null) {
-        if (!isAuthorized(servletResponse, (String) jsonArray.get(0))) {
+        if (!isAuthorized(servletResponse, (String) jsonArray.get(0), email)) {
           return;
         }
       } else {
-        if (!isAuthorized(servletResponse, (String) body.get("index"))) {
+        if (!isAuthorized(servletResponse, (String) body.get("index"), email)) {
           return;
         }
       }
@@ -100,7 +98,7 @@ public class KibanaProxyServlet extends ProxyServlet {
                     "_mapping/field")) {
       //Check if this user has access to this project
       index = servletRequest.getRequestURI().split("/")[4];
-      if (!isAuthorized(servletResponse, index)) {
+      if (!isAuthorized(servletResponse, index, email)) {
         return;
       }
     }
@@ -156,8 +154,8 @@ public class KibanaProxyServlet extends ProxyServlet {
         return;
       }
 
-      // Pass the response code. This method with the "reason phrase" is deprecated but it's the only way to pass the
-      //  reason along too.
+      // Pass the response code. This method with the "reason phrase" is 
+      // deprecated but it's the only way to pass the reason along too.
       //noinspection deprecation
       servletResponse.setStatus(statusCode, proxyResponse.getStatusLine().
               getReasonPhrase());
@@ -165,7 +163,8 @@ public class KibanaProxyServlet extends ProxyServlet {
       copyResponseHeaders(proxyResponse, servletRequest, servletResponse);
 
       // Send the content to the client
-      copyResponseEntity(proxyResponse, servletResponse, kibanaFilter);
+      copyResponseEntity(proxyResponse, servletResponse, kibanaFilter, email,
+              index);
 
     } catch (Exception e) {
       //abort request, according to best practice with HttpClient
@@ -203,10 +202,13 @@ public class KibanaProxyServlet extends ProxyServlet {
    * @param proxyResponse
    * @param servletResponse
    * @param kibanaFilter
+   * @param email
+   * @param index
    * @throws java.io.IOException
    */
   protected void copyResponseEntity(HttpResponse proxyResponse,
-          HttpServletResponse servletResponse, KibanaFilter kibanaFilter) throws
+          HttpServletResponse servletResponse, KibanaFilter kibanaFilter,
+          String email, String index) throws
           IOException {
     if (kibanaFilter == null) {
       super.copyResponseEntity(proxyResponse, servletResponse);
@@ -221,15 +223,24 @@ public class KibanaProxyServlet extends ProxyServlet {
             BasicHttpEntity basic = new BasicHttpEntity();
             JSONObject indices = new JSONObject(resp);
 
-            //Remove projects (_id) that do not belong to user
+            //Remove all projects other than the current one and check
+            //if user is authorizer to access it
             List<String> projects = projectController.findProjectNamesByUser(
                     email, true);
             JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
             for (int i = hits.length() - 1; i >= 0; i--) {
               String projectId = hits.getJSONObject(i).getString("_id");
-              if (!projects.contains(projectId) && !projectId.equals(
-                      Settings.KIBANA_DEFAULT_INDEX)) {
-                hits.remove(i);
+              if (index != null) {
+                if (!projects.contains(projectId) && !projectId.equals(
+                        Settings.KIBANA_DEFAULT_INDEX) && !projectId.equals(
+                                index)) {
+                  hits.remove(i);
+                }
+              } else {
+                if (!projects.contains(projectId) && !projectId.equals(
+                        Settings.KIBANA_DEFAULT_INDEX)) {
+                  hits.remove(i);
+                }
               }
             }
 
@@ -252,8 +263,10 @@ public class KibanaProxyServlet extends ProxyServlet {
   /*
    *
    */
-  private boolean isAuthorized(HttpServletResponse servletResponse, String index)
+  private boolean isAuthorized(HttpServletResponse servletResponse, String index,
+          String email)
           throws IOException {
+
     List<String> projects = projectController.findProjectNamesByUser(
             email, true);
     if (!projects.contains(index) && !index.equals(

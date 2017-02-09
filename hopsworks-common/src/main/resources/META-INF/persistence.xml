@@ -96,7 +96,7 @@
     <!-- Converters -->
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
-    <class>io.hops.hopsworks.common.dao.kagent.KagentCommands</class>
+    <class>io.hops.hopsworks.common.dao.pythonDeps.KagentCommands</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
