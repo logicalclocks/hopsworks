@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -366,31 +367,10 @@ public class ProjectService {
   }
 
   
-  private enum TourType {
-    
-    SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
-    KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS,
-      ProjectServiceEnum.KAFKA});
-    
-    private final String tourName;
-    private final ProjectServiceEnum[] activeServices;
-    
-    TourType(String tourName, ProjectServiceEnum[] activeServices) {
-      this.tourName = tourName;
-      this.activeServices = activeServices;
-    }
-    
-    public String getTourName() {
-      return tourName;
-    }
-    
-    public ProjectServiceEnum[] getActiveServices() {
-      return activeServices;
-    }
-  }
+  
   
   private void populateActiveServices(List<ProjectServiceEnum> projectServices,
-      TourType tourType) {
+      TourProjectType tourType) {
     for (ProjectServiceEnum service : tourType.getActiveServices()) {
       projectServices.add(service);
     }
@@ -413,17 +393,20 @@ public class ProjectService {
     String username = usersController.generateUsername(owner);
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     List<ProjectTeam> projectMembers = new ArrayList<>();
+    TourProjectType demoType = null;
     
-    if (TourType.SPARK.getTourName().equals(type.toLowerCase())) {
+    if (TourProjectType.SPARK.getTourName().equals(type.toLowerCase())) {
       // It's a Spark guide
-      projectDTO.setProjectName("demo_" + TourType.SPARK.getTourName() +
+      demoType = TourProjectType.SPARK;
+      projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() +
           "_" + username);
-      populateActiveServices(projectServices, TourType.SPARK);
-    } else if (TourType.KAFKA.getTourName().equals(type.toLowerCase())) {
+      populateActiveServices(projectServices, TourProjectType.SPARK);
+    } else if (TourProjectType.KAFKA.getTourName().equals(type.toLowerCase())) {
       // It's a Kafka guide
-      projectDTO.setProjectName("demo_" + TourType.KAFKA.getTourName() +
-          "_" + username);
-      populateActiveServices(projectServices, TourType.KAFKA);
+      demoType = TourProjectType.KAFKA;
+      projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() +
+          "_" + username + "_tmp");
+      populateActiveServices(projectServices, TourProjectType.KAFKA);
     } else {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
@@ -473,11 +456,17 @@ public class ProjectService {
         projectController.createProjectLogResources(owner, project, dfso,
                 udfso);
         projectController.addExampleJarToExampleProject(owner, project, dfso,
-                udfso);
+                udfso, demoType);
         //TestJob dataset
-        datasetController.generateReadme(udfso, "TestJob",
-                "jar file to calculate pi",
-                project.getName());
+        if (TourProjectType.SPARK.equals(demoType)) {
+          datasetController.generateReadme(udfso, "TestJob",
+              "jar file to calculate pi",
+              project.getName());
+        } else if (TourProjectType.KAFKA.equals(demoType)) {
+          datasetController.generateReadme(udfso, "TestJob",
+              "jar file to demonstrate Kafka streaming",
+              project.getName());
+        }
         projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {

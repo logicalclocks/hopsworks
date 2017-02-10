@@ -6,6 +6,9 @@ angular.module('hopsWorksApp')
 
                 var tourService = this;
 
+                tourService.kafkaSchemaName = "DemoAvroSchema";
+                tourService.kafkaTopicName = "DemoKafkaTopic";
+
                 tourService.currentStep_TourOne = -1;
                 tourService.currentStep_TourTwo = -1;
                 tourService.currentStep_TourThree = -1;
@@ -33,6 +36,11 @@ angular.module('hopsWorksApp')
                   .currentStep_TourSeven);
 
                   return true;
+                };
+
+                tourService.getKafkaGuideJarPath = function (endpoint, projectName) {
+                  return "hdfs://" + endpoint + "/Projects/" + projectName +
+                   "/TestJob/hops-spark.jar";
                 };
 
                 tourService.resetTours = function () {

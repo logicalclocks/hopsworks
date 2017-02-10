@@ -1050,41 +1050,54 @@ public class ProjectController {
 
     return path.substring(startIndex + 1, endIndex);
   }
-
+  
   public void addExampleJarToExampleProject(String username, Project project,
-          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
+          TourProjectType projectType) throws
           AppException {
 
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, "TestJob",
-              "jar file to calculate pi", -1, false, true, dfso, udfso);
+              "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-    String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
-            + "/";
-    try {
-      File dir = new File(exampleDir);
-      File[] file = dir.listFiles((File dir1, String name)
-              -> name.matches("spark-examples(.*).jar"));
-      if (file.length == 0) {
-        throw new IllegalStateException("No spark-examples*.jar was found in "
-                + dir.getAbsolutePath());
+    
+    if (TourProjectType.SPARK.equals(projectType)) {
+      String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
+          + "/";
+      try {
+        File dir = new File(exampleDir);
+        File[] file = dir.listFiles((File dir1, String name)
+            -> name.matches("spark-examples(.*).jar"));
+        if (file.length == 0) {
+          throw new IllegalStateException("No spark-examples*.jar was found in "
+              + dir.getAbsolutePath());
+        }
+        if (file.length > 1) {
+          logger.log(Level.WARNING,
+              "More than one spark-examples*.jar found in {0}.", dir.
+                  getAbsolutePath());
+        }
+        udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
+            File.separator + Settings.DIR_ROOT + File.separator + project.
+                getName() + "/TestJob/spark-examples.jar");
+    
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
       }
-      if (file.length > 1) {
-        logger.log(Level.WARNING,
-                "More than one spark-examples*.jar found in {0}.", dir.
-                        getAbsolutePath());
+    } else if (TourProjectType.KAFKA.equals(projectType)) {
+      // Get the JAR from /user/glassfish
+      String kafkaExampleSrc = "/user/glassfish/hops-spark.jar";
+      String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
+          + "/TestJob/hops-spark.jar";
+      try {
+        udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
       }
-      udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
-              File.separator + Settings.DIR_ROOT + File.separator + project.
-                      getName() + "/TestJob/spark-examples.jar");
-
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
     }
-
   }
 
   public YarnPriceMultiplicator getYarnMultiplicator() {

@@ -409,8 +409,6 @@
               tourtip-placement="bottom"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.nameFilledIn()"
-              tourtip-offset-vertical="-65"
-              tourtip-offset-horizontal="38"
               on-show="newJobCtrl.guideSetJobName()"
       ></virtual-step>
       <virtual-step
@@ -421,8 +419,6 @@
               tourtip-placement="bottom"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.jobTypeSpark()"
-              tourtip-offset-vertical="100"
-              tourtip-offset-horizontal="-6"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
@@ -431,9 +427,7 @@
               tourtip-element="#selectFileButton"
               tourtip-placement="bottom"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
-              tourtip-offset-vertical="200"
-              tourtip-offset-horizontal="-6"
+              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
@@ -443,8 +437,6 @@
               tourtip-placement="top"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.chooseParameters()"
-              tourtip-offset-vertical="10"
-              tourtip-offset-horizontal="550"
               on-show="newJobCtrl.populateKafkaJobParameters()"
       ></virtual-step>
       <virtual-step
@@ -452,11 +444,9 @@
               tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
               tourtip-step="4"
               tourtip-element="#moreConfigs"
-              tourtip-placement="bottom"
+              tourtip-placement="top"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.createJob()"
-              tourtip-offset-vertical="-65"
-              tourtip-offset-horizontal="-10"
               on-show="newJobCtrl.populateKafkaTopic()"
       ></virtual-step>
     </tour>

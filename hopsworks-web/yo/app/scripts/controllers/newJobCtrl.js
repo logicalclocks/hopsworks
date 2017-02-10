@@ -407,10 +407,8 @@ angular.module('hopsWorksApp')
               var jobState = self.tourService.kafkaJobCreationState;
               if (angular.equals('producer', jobState)) {
                 self.jobname = "KafkaDemoProducer";
-                console.log("Setting producer name");
               } else {
                 self.jobname = "KafkaDemoConsumer";
-                console.log("Setting consumer name");
               }
             };
 
@@ -521,7 +519,8 @@ angular.module('hopsWorksApp')
                 function(success) {
                   console.log("Async returned: " + self.topics.length);
                   for (var i = 0; i < self.topics.length; i++) {
-                    if (angular.equals('DemoKafkaTopic', self.topics[i]['name'])) {
+                    if (angular.equals(self.tourService.kafkaTopicName,
+                      self.topics[i]['name'])) {
                       self.guideKafkaTopics.push(self.topics[i]);
                       console.log("Topic found and put to config")
                       break;
