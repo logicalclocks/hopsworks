@@ -103,7 +103,7 @@ public class PythonDepsService {
   @Path("/enable")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response enable() throws AppException {
-    Map<String, String> deps = pythonDepsFacade.createProject(project);
+    Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
     pythonDepsFacade.createProjectInDb(project, deps);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -187,7 +187,9 @@ public class PythonDepsService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    pythonDepsFacade.cloneProject(srcProject, destProject);
+    Project src = projectFacade.findByName(srcProject);
+    
+    pythonDepsFacade.cloneProject(src, destProject);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -200,7 +202,7 @@ public class PythonDepsService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    pythonDepsFacade.createProject(project);
+    pythonDepsFacade.getPreInstalledLibs(project);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -214,7 +216,8 @@ public class PythonDepsService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    pythonDepsFacade.removeProject(projectName);
+    Project proj = projectFacade.findByName(projectName);
+    pythonDepsFacade.removeProject(proj);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

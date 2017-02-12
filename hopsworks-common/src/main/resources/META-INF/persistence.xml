@@ -92,11 +92,10 @@
     <class>io.hops.hopsworks.common.workflows.nodes.SparkCustomNode</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDepHostStatus</class>
+    <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
-    <class>io.hops.hopsworks.common.dao.pythonDeps.KagentCommands</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -192,6 +192,9 @@
 
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
 
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.numEnvsNotEnabled > 0">Number of hosts not provisioned with an environment yet: {{pythonDepsCtrl.numEnvsNotEnabled}}</div>
+               
+                
                 <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
                   <thead>
                     <tr>
@@ -304,7 +307,7 @@
               </uib-tab>
 
 
-              <uib-tab index="3" heading="Ongoing Installation Status" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstallingStatus()">
+              <uib-tab index="3" heading="Ongoing Installation Status" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstallationStatus()">
                 <h2>Ongoing installations</h2>
 
                 <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" 

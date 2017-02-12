@@ -75,7 +75,7 @@ public class PythonDep implements Serializable {
   private AnacondaRepo repoUrl;
 
   @Enumerated(EnumType.ORDINAL)
-  private PythonDepsFacade.CondaStatus status = PythonDepsFacade.CondaStatus.INSTALLING;
+  private PythonDepsFacade.CondaStatus status = PythonDepsFacade.CondaStatus.ONGOING;
 
   public PythonDep() {
   }

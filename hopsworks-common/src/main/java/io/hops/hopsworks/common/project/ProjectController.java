@@ -1145,21 +1145,19 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createAnacondaEnv(Project project) throws AppException {
-    pythonDepsFacade.createProject(project);
+    pythonDepsFacade.getPreInstalledLibs(project);
 
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) throws AppException {
-    pythonDepsFacade.removeProject(project.getName());
-
+    pythonDepsFacade.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void cloneAnacondaEnv(Project srcProj, Project destProj) throws
           AppException {
-    pythonDepsFacade.cloneProject(srcProj.getName(), destProj.getName());
-
+    pythonDepsFacade.cloneProject(srcProj, destProj.getName());
   }
 
   /**

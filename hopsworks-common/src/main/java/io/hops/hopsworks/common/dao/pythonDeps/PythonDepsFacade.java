@@ -66,11 +66,19 @@ public class PythonDepsFacade {
     INSTALL,
     UNINSTALL,
     UPGRADE;
+
+    public static boolean isEnvOp(CondaOp arg) {
+      if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE)
+              == 0 || arg.compareTo(CondaOp.REMOVE) == 0) {
+        return true;
+      }
+      return false;
+    }
   }
 
   public enum CondaStatus {
-    INSTALLED,
-    INSTALLING,
+    SUCCESS,
+    ONGOING,
     FAILED
   }
 
@@ -149,11 +157,14 @@ public class PythonDepsFacade {
 
   public Collection<PythonDep> createProjectInDb(Project project,
           Map<String, String> libs) throws AppException {
+
+    condaEnvironmentOp(CondaOp.CREATE, project, "", getHosts());
+
     List<PythonDep> all = new ArrayList<>();
     AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
     for (String k : libs.keySet()) {
       PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
-      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
+      pd.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
       Collection<Project> projs = pd.getProjectCollection();
       projs.add(project);
       all.add(pd);
@@ -178,7 +189,7 @@ public class PythonDepsFacade {
 //    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
 //    for (String k : libs.keySet()) {
 //      PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
-//      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
+//      pd.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
 //      Collection<Project> projs = pd.getProjectCollection();
 //      projs.add(project);
 //      all.add(pd);
@@ -296,8 +307,8 @@ public class PythonDepsFacade {
    * @throws AppException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public Map<String, String> createProject(Project proj) throws AppException {
-    condaEnvironmentOp(CondaOp.CREATE, proj.getName(), "", getHosts());
+  public Map<String, String> getPreInstalledLibs(Project proj) throws
+          AppException {
 
     // First list the libraries already installed and put them in the 
     Map<String, String> depVers = new HashMap<>();
@@ -355,7 +366,7 @@ public class PythonDepsFacade {
    * @param project
    * @throws AppException
    */
-  public void removeProject(String proj) throws AppException {
+  public void removeProject(Project proj) throws AppException {
     condaEnvironmentOp(CondaOp.REMOVE, proj, "", getHosts());
   }
 
@@ -364,9 +375,9 @@ public class PythonDepsFacade {
    * @param project
    * @throws AppException
    */
-  public void cloneProject(String srcProject, String destProj) throws
+  public void cloneProject(Project srcProject, String destProj) throws
           AppException {
-    condaEnvironmentOp(CondaOp.CLONE, destProj, srcProject, getHosts());
+    condaEnvironmentOp(CondaOp.CLONE, srcProject, destProj, getHosts());
   }
 
   /**
@@ -379,18 +390,17 @@ public class PythonDepsFacade {
    * @param arg
    * @throws AppException
    */
-  private void condaEnvironmentOp(CondaOp op, String proj, String arg,
+  public void condaEnvironmentOp(CondaOp op, Project proj, String arg,
           List<Host> hosts) throws AppException {
     for (Host h : hosts) {
-      CondaCommands cc = new CondaCommands(h.getId(), settings.getSparkUser(),
-              op, CondaStatus.INSTALLING, proj, "", "", "default",
-              Date.from(Instant.now()));
+      CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
+              op, CondaStatus.ONGOING, proj, "", "", "default",
+              Date.from(Instant.now()), arg);
       em.persist(cc);
     }
-//    
   }
 
-  private void restCondaEnvironmentOp(CondaOp op, String proj, String arg,
+  public void blockingCondaEnvironmentOp(CondaOp op, String proj, String arg,
           List<Host> hosts) throws AppException {
     List<Future> waiters = new ArrayList<>();
     for (Host h : hosts) {
@@ -443,14 +453,14 @@ public class PythonDepsFacade {
           if (cc.getStatus() == CondaStatus.FAILED) {
             failed = true;
           }
-          if (cc.getStatus() == CondaStatus.INSTALLING) {
+          if (cc.getStatus() == CondaStatus.ONGOING) {
             installing = true;
           }
         }
         if (failed) {
           os.setStatus(CondaStatus.FAILED.toString());
         } else if (installing) {
-          os.setStatus(CondaStatus.INSTALLING.toString());
+          os.setStatus(CondaStatus.ONGOING.toString());
         }
       }
       ops.add(os);
@@ -458,21 +468,35 @@ public class PythonDepsFacade {
     return ops;
   }
 
+  private void checkForOngoingEnvOp(Project proj) throws AppException {
+    List<OpStatus> ongoingOps = opStatus(proj);
+    for (OpStatus os : ongoingOps) {
+      if (CondaOp.isEnvOp(CondaOp.valueOf(os.getOp().toUpperCase()))) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "A conda environment operation is currently "
+                + "executing (create/remove/list). Wait for it to finish.");
+      }
+    }
+  }
+
   public void addLibrary(Project proj, String channelUrl,
           String dependency,
           String version) throws AppException {
+    checkForOngoingEnvOp(proj);
     condaOp(CondaOp.INSTALL, proj, channelUrl, dependency, version);
   }
 
   public void upgradeLibrary(Project proj, String channelUrl,
           String dependency,
           String version) throws AppException {
+    checkForOngoingEnvOp(proj);
     condaOp(CondaOp.UPGRADE, proj, channelUrl, dependency, version);
   }
 
   public void removeLibrary(Project proj, String channelUrl,
           String dependency,
           String version) throws AppException {
+    checkForOngoingEnvOp(proj);
     condaOp(CondaOp.UNINSTALL, proj, channelUrl, dependency, version);
   }
 
@@ -513,10 +537,9 @@ public class PythonDepsFacade {
       // 4. Mark that the operation is executing at all hosts
       hosts = hostsFacade.find();
       for (Host h : hosts) {
-        CondaCommands cc = new CondaCommands(h.getId(), settings.getSparkUser(),
-                op,
-                CondaStatus.INSTALLING, proj.getName(), lib,
-                version, channelUrl, Date.from(Instant.now()));
+        CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
+                op, CondaStatus.ONGOING, proj, lib,
+                version, channelUrl, Date.from(Instant.now()), "");
         em.persist(cc);
       }
 //      kagentCalls(hosts, op, proj, dep);
@@ -562,46 +585,45 @@ public class PythonDepsFacade {
 
   }
 
-  public void agentResponse(String proj, String op, String channelUrl,
-          String dependency, String version, String status, int hostId) {
-//  public void agentResponse(CondaCommands command, String status) {
-
-    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.
-            valueOf(status);
-    try {
-      Project p = projectFacade.findByName(proj);
-      if (p == null) {
-        // TODO - is the transaction aborted here!??!
-        CondaCommands kc = new CondaCommands();
-        kc.setCreated(Date.from(Instant.now()));
-        kc.setProj(proj);
-        kc.setOp(CondaOp.REMOVE);
-        kc.setUser(settings.getSparkUser());
-        em.persist(kc);
-      } else if (isAnacondaOp(op)) {
-
-      } else {
-//        AnacondaRepo repo = getRepo(p, channelUrl, false);
-//        PythonDep dep = getDep(repo, dependency, version, false);
-//        PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
-//                getId(), repo.getId(), hostId);
-//        PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(
-//                op.toUpperCase()), s);
-//        em.merge(phs);
-
-      }
-//      em.flush();
-    } catch (Exception ex) {
-      // TODO - if i can't find a project, tell the node that there is a problem
-      // and to delete the project locally. Do this by putting a command in an
-      // row in a table (entity bean)
-      logger.log(Level.WARNING,
-              "Problem persisting heartbeat about new python dependencies at kagents.."
-              + ex.getMessage());
-      // Do nothing
-    }
-
-  }
+//  public void agentResponse(String proj, String op, String channelUrl,
+//          String dependency, String version, String status, int hostId, String arg) {
+//
+//    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.
+//            valueOf(status);
+//    try {
+//      Project p = projectFacade.findByName(proj);
+//      if (p == null) {
+//        CondaCommands kc = new CondaCommands();
+//        kc.setCreated(Date.from(Instant.now()));
+//        kc.setProj(proj);
+//        kc.setOp(CondaOp.REMOVE);
+//        kc.setUser(settings.getSparkUser());
+//        kc.setArg(arg);
+//        em.persist(kc);
+//      } else if (isAnacondaOp(op)) {
+//
+//      } else {
+////        AnacondaRepo repo = getRepo(p, channelUrl, false);
+////        PythonDep dep = getDep(repo, dependency, version, false);
+////        PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
+////                getId(), repo.getId(), hostId);
+////        PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(
+////                op.toUpperCase()), s);
+////        em.merge(phs);
+//
+//      }
+////      em.flush();
+//    } catch (Exception ex) {
+//      // TODO - if i can't find a project, tell the node that there is a problem
+//      // and to delete the project locally. Do this by putting a command in an
+//      // row in a table (entity bean)
+//      logger.log(Level.WARNING,
+//              "Problem persisting heartbeat about new python dependencies at kagents.."
+//              + ex.getMessage());
+//      // Do nothing
+//    }
+//
+//  }
 
   private boolean isAnacondaOp(String op) {
     CondaOp condaOp = CondaOp.valueOf(op.toUpperCase());
@@ -612,17 +634,40 @@ public class PythonDepsFacade {
     return false;
   }
 
-  private void updateKagentCommandState(int id, String status) {
+  private void updateCondaComamandStatus(int id, String status, String arg) {
     PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
             status.toUpperCase());
-    CondaCommands kc = em.find(CondaCommands.class, id);
-    if (kc != null) {
-      if (s == PythonDepsFacade.CondaStatus.INSTALLED) {
-        em.remove(kc);
-      } else {
-
-      }
-    }
-
+    updateCondaComamandStatus(id, s, arg);
   }
+
+  public CondaCommands findCondaCommand(int commandId) {
+    return em.find(CondaCommands.class, commandId);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void removeCondaCommand(int commandId) {
+    CondaCommands cc = findCondaCommand(commandId);
+    if (cc != null) {
+      em.remove(cc);
+      em.flush();
+    } else {
+      logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
+              commandId);
+    }
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void updateCondaComamandStatus(int commandId, CondaStatus condaStatus,
+          String arg) {
+    CondaCommands cc = findCondaCommand(commandId);
+    if (cc != null) {
+      cc.setStatus(condaStatus);
+      cc.setArg(arg);
+      em.merge(cc);
+    } else {
+      logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
+              commandId);
+    }
+  }
+
 }

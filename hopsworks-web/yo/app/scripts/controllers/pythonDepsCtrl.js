@@ -33,6 +33,7 @@ angular.module('hopsWorksApp')
             self.installedLibs = [];
             self.installingStatus = [];
             self.selectedInstallStatus = {};
+            self.numEnvsNotEnabled = 0;
 
 //            https://repo.continuum.io/pkgs/free/linux-64/
             self.condaUrl = "default";
@@ -42,17 +43,23 @@ angular.module('hopsWorksApp')
               "lib": "", "version": ""};
 
 
-            var getInstallingStatus = function () {
+            var getInstallationStatus = function () {
               PythonDepsService.status(self.projectId).then(
                       function (success) {
                         self.installingStatus = success.data;
                         if (self.installingStatus.length === 0) {
-                          self.resultsMessageShowing = true;
-                          self.resultsMsg = "All libraries appear to be fully installed.";
+                          self.resultsMessageShowing = false;
+//                          self.resultsMsg = "All libraries appear to be fully installed.";
                         }
+                        self.numEnvsNotEnabled = 0;
                         for (var i = 0; i < self.installingStatus.length; i++) {
                           self.selectedInstallStatus[self.installingStatus[i].lib] =
                                   {"host": {"host": "none", "lib": "Not installed"}, "installing": false};
+                          if (self.installingStatus[i].op === "CREATE" ||
+                                  self.installingStatus[i].op === "REMOVE" ||
+                                  self.installingStatus[i].op === "CLONE") {
+                            self.numEnvsNotEnabled += 1;
+                          }
                         }
                       }, function (error) {
                 growl.error("Could not get installation status for libs", {title: 'Error', ttl: 3000});
@@ -60,17 +67,17 @@ angular.module('hopsWorksApp')
             };
 
             //this might be a bit to frequent for refresh rate 
-            var getInstallingStatusInterval = $interval(function () {
-              getInstallingStatus();
+            var getInstallationStatusInterval = $interval(function () {
+              getInstallationStatus();
             }, 5000);
 
-            getInstallingStatus();
+            getInstallationStatus();
 
-            self.getInstallingStatus = function () {
-              getInstallingStatus();
+            self.getInstallationStatus = function () {
+              getInstallationStatus();
             };
             $scope.$on("$destroy", function () {
-              $interval.cancel(getInstallingStatusInterval);
+              $interval.cancel(getInstallationStatusInterval);
             });
 
 
@@ -111,6 +118,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;
+                        self.getInstallationStatus();
                         growl.success("Anaconda initialized for this project.", {title: 'Done', ttl: 5000});
                       }, function (error) {
                 self.enabling = false;
@@ -173,11 +181,11 @@ angular.module('hopsWorksApp')
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
                         self.installing = false;
-                        self.selectedLibs[lib].installing = false;
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         self.resultsMessageShowing = true;
                         self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
                         self.searchResults = [];
+                        self.selectedLibs[lib].installing = false;
 //                        for (var i = 0; i < self.searchResults.length; i++) {
 //                          if (self.searchResults[i].lib === data.lib) {
 //                            self.searchResults[i].installed = "Installed";

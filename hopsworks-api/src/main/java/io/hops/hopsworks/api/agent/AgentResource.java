@@ -22,19 +22,27 @@ import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.Role;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.BlockReport;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaOp;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
@@ -45,9 +53,6 @@ import javax.ws.rs.core.SecurityContext;
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
 public class AgentResource {
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
-
   @EJB
   private HostEJB hostFacade;
   @EJB
@@ -57,7 +62,11 @@ public class AgentResource {
   @EJB
   private PythonDepsFacade pythonDepsFacade;
   @EJB
+  private ProjectFacade projFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private Settings settings;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -216,23 +225,150 @@ public class AgentResource {
           JsonObject entry = condaOps.getJsonObject(j);
           for (String s : entry.keySet()) {
             JsonObject conda = entry.getJsonObject(s);
-            String proj = conda.getString("proj");
+            String projName = conda.getString("proj");
             String op = conda.getString("op");
+            PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
+                    op.toUpperCase());
             String channelurl = conda.getString("channelurl");
-            String lib = conda.getString("lib");
+            String lib = conda.containsKey("lib") ? conda.getString("lib") : "";
             String version = conda.containsKey("version") ? conda.getString(
                     "version") : "";
+            String arg = conda.containsKey("arg") ? conda.getString("arg") : "";
             String status = conda.getString("status");
+            PythonDepsFacade.CondaStatus agentStatus
+                    = PythonDepsFacade.CondaStatus.valueOf(status.toUpperCase());
+            int commmandId = Integer.parseInt(conda.getString("id"));
 
-            pythonDepsFacade.agentResponse(proj, op, channelurl, lib, version,
-                    status, host.getId());
+            CondaCommands command = pythonDepsFacade.
+                    findCondaCommand(commmandId);
+            // If the command object does not exist, then the project
+            // has probably been removed. We needed to send a compensating action if
+            // this action was successful.
+            if (command == null) {
+//              if (PythonDepsFacade.CondaOp.isEnvOp(opType)) {
+//                if (opType == PythonDepsFacade.CondaOp.CREATE) {
+//                  List<Host> hosts = new ArrayList<>();
+//                  hosts.add(host);
+//                  pythonDepsFacade.condaEnvironmentOp(
+//                          PythonDepsFacade.CondaOp.REMOVE, projFacade.
+//                          findByName(projName), arg, hosts);
+//                }
+//              } else {
+//                // Just ignore it. It should be cleaned up when the project
+//                // is deleted
+//              }
+            } else {
+              if (agentStatus == PythonDepsFacade.CondaStatus.SUCCESS) {
+                // remove command from the DB
+                pythonDepsFacade.removeCondaCommand(commmandId);
+              } else {
+                pythonDepsFacade.
+                        updateCondaComamandStatus(commmandId, agentStatus, arg);
+              }
+              
+//            else {
+//              pythonDepsFacade.agentResponse(projName, op, channelurl, lib,
+//                      version, status, host.getId(), arg);
+//            }
+            }
           }
         }
       }
 
-      Collection<CondaCommands> commandsToRun = host.
+      List<CondaCommands> differenceList = new ArrayList<>();
+
+      if (json.containsKey("block-report")) {
+        Map<String, BlockReport> mapReports = new HashMap<>();
+
+        JsonObject envs = json.getJsonObject("block-report");
+        for (String s : envs.keySet()) {
+          JsonArray group = envs.getJsonArray(s);
+          for (int j = 0; j < group.size(); j++) {
+            JsonObject env = group.getJsonObject(j);
+            BlockReport br = new BlockReport();
+            String projName = env.getString("proj");
+            mapReports.put(projName, br);
+            br.setProject(projName);
+            JsonArray libs = json.getJsonArray("libs");
+            for (int k = 0; k < libs.size(); k++) {
+              JsonObject lib = libs.getJsonObject(k);
+              String libName = lib.getString("lib");
+              String libUrl = lib.getString("channelUrl");
+              String libVersion = lib.getString("version");
+              br.addLib(libName, libUrl, libVersion);
+            }
+          }
+        }
+
+        // get all the projects and send them down and all the dependencies
+        // for all the projects and send them down, too.
+        List<Project> allProjs = projFacade.findAll();
+        // For each project, verify all its libs are in the blockreport list
+        // Any extra blocks reported need to be removed. Any missing need to
+        // be added
+        for (Project project : allProjs) {
+          if (!mapReports.containsKey(project.getName())) {
+            CondaCommands cc = new CondaCommands(host, settings.getSparkUser(),
+                    CondaOp.CREATE, CondaStatus.ONGOING, project, "", "", "",
+                    null, "");
+            // commandId == '-1' implies this is a block report command that
+            // doesn't need to be acknowledged by the agent (no need to send as a
+            // reponse a command-status). No need to persist this command to the DB either.
+            cc.setId(-1);
+            // Need to create env on node
+            differenceList.add(cc);
+          } else {
+            BlockReport br = mapReports.get(project.getName());
+            for (PythonDep lib : project.getPythonDepCollection()) {
+              BlockReport.Lib blockLib = br.getLib(lib.getDependency());
+              if (blockLib.compareTo(lib) != 0) {
+                CondaCommands cc = new CondaCommands(host, settings.
+                        getSparkUser(),
+                        CondaOp.INSTALL, CondaStatus.ONGOING, project,
+                        lib.getDependency(),
+                        lib.getRepoUrl().getUrl(), lib.getVersion(),
+                        Date.from(Instant.now()), "");
+                cc.setId(-1);
+                differenceList.add(cc);
+              }
+              br.removeLib(blockLib.getLib());
+            }
+            // remove any extra libraries on the host
+            for (BlockReport.Lib blockLib : br.getLibs()) {
+              CondaCommands cc
+                      = new CondaCommands(host, settings.getSparkUser(),
+                              CondaOp.UNINSTALL, CondaStatus.ONGOING, project,
+                              blockLib.getLib(),
+                              blockLib.getChannelUrl(), blockLib.getVersion(),
+                              null, "");
+              cc.setId(-1);
+              differenceList.add(cc);
+            }
+            mapReports.remove(project.getName());
+          }
+        }
+        // All the conda environments that weren't in the DB, remove them.
+        for (BlockReport br : mapReports.values()) {
+          CondaCommands cc = new CondaCommands(-1);
+          cc.setHostId(host);
+          cc.setUser(settings.getSparkUser());
+          cc.setProj(br.getProject());
+          cc.setOp(PythonDepsFacade.CondaOp.REMOVE);
+          differenceList.add(cc);
+        }
+      }
+
+      Collection<CondaCommands> allCommands = host.
               getCondaCommandsCollection();
-      commands.addAll(commandsToRun);
+
+      List<CondaCommands> commandsToExec = new ArrayList<>();
+      for (CondaCommands cc : allCommands) {
+        if (cc.getStatus() != PythonDepsFacade.CondaStatus.FAILED) {
+          commandsToExec.add(cc);
+        }
+      }
+      commands.addAll(commandsToExec);
+      commands.addAll(differenceList);
 
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
