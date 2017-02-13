@@ -31,7 +31,8 @@
           <!-- Select the type of job -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
                                is-open="newJobCtrl.accordion2.isOpen" 
-                               ng-show="newJobCtrl.accordion2.visible">
+                               ng-show="newJobCtrl.accordion2.visible"
+                                id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
@@ -416,18 +417,22 @@
               tourtip="Click Next OR SPARK"
               tourtip-step="1"
               tourtip-element="#sparkJobType"
-              tourtip-placement="bottom"
+              tourtip-placement="right"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.jobTypeSpark()"
+              tourtip-offset-horizontal="350"
+              tourtip-offset-vertical="250"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
               tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
               tourtip-step="2"
               tourtip-element="#selectFileButton"
-              tourtip-placement="bottom"
+              tourtip-placement="right"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
+              tourtip-offset-horizontal="350"
+              tourtip-offset-vertical="270"
       ></virtual-step>
       <virtual-step
               class="ng-scope"

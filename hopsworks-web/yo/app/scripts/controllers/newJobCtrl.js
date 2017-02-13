@@ -499,8 +499,10 @@ angular.module('hopsWorksApp')
               self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
               var jobState = self.tourService.kafkaJobCreationState;
               if (angular.equals('producer', jobState)) {
+                console.log("It's a producer")
                 self.runConfig.args = 'producer';
               } else if (angular.equals('consumer', jobState)) {
+                console.log("It's a consumer");
                 self.runConfig.args = "consumer /Projects/" +
                   self.projectName +"/Resources/Data";
               } else {
