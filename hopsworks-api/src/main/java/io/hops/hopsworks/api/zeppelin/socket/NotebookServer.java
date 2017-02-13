@@ -16,9 +16,6 @@
  */
 package io.hops.hopsworks.api.zeppelin.socket;
 
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,9 +26,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.websocket.server.PathParam;
 import javax.websocket.CloseReason;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
@@ -40,13 +40,16 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
+
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.AngularObjectRegistryListener;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
-import org.apache.zeppelin.interpreter.InterpreterOutput;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.apache.zeppelin.interpreter.remote.RemoteAngularObjectRegistry;
@@ -62,10 +65,25 @@ import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.scheduler.Job.Status;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.quartz.SchedulerException;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.zeppelin.helium.ApplicationEventListener;
+import org.apache.zeppelin.helium.HeliumPackage;
+import org.apache.zeppelin.interpreter.InterpreterContextRunner;
+import org.apache.zeppelin.interpreter.InterpreterResultMessage;
+import org.apache.zeppelin.notebook.Folder;
+import org.apache.zeppelin.notebook.NotebookEventListener;
+import org.apache.zeppelin.notebook.repo.NotebookRepo.Revision;
+import org.apache.zeppelin.notebook.socket.WatcherMessage;
+import org.apache.zeppelin.util.WatcherSecurityKey;
+
+import io.hops.hopsworks.api.zeppelin.rest.exception.ForbiddenException;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.api.zeppelin.socket.Message.OP;
+import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
+import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
+import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -73,18 +91,43 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import javax.websocket.server.PathParam;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Zeppelin websocket service.
- * <p>
  */
 @ServerEndpoint(value = "/zeppelin/ws/{projectID}",
         configurator = ZeppelinEndpointConfig.class)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class NotebookServer implements
         JobListenerFactory, AngularObjectRegistryListener,
-        RemoteInterpreterProcessListener {
+        RemoteInterpreterProcessListener, ApplicationEventListener {
+
+  /**
+   * Job manager service type
+   */
+  protected enum JOB_MANAGER_SERVICE {
+    JOB_MANAGER_PAGE("JOB_MANAGER_PAGE");
+    private String serviceTypeKey;
+
+    JOB_MANAGER_SERVICE(String serviceType) {
+      this.serviceTypeKey = serviceType;
+    }
+
+    String getKey() {
+      return this.serviceTypeKey;
+    }
+  }
 
   private static final Logger LOG = Logger.getLogger(NotebookServer.class.
           getName());
@@ -94,6 +137,16 @@ public class NotebookServer implements
           = new HashMap<>();
   private static final Queue<Session> connectedSockets
           = new ConcurrentLinkedQueue<>();
+  private static final Map<String, Queue<Session>> userConnectedSockets
+          = new ConcurrentHashMap<>();
+  /**
+   * This is a special endpoint in the notebook websoket, Every connection in
+   * this Queue will be able to watch every websocket event, it doesnt need to
+   * be listed into the map of noteSocketMap. This can be used to get
+   * information about websocket traffic and watch what is going on.
+   */
+  private static final Queue<Session> watcherSockets = Queues.
+          newConcurrentLinkedQueue();
   private String sender;
   private Project project;
   private String userRole;
@@ -120,7 +173,7 @@ public class NotebookServer implements
   }
 
   @OnOpen
-  public void open(Session conn, EndpointConfig config, 
+  public void open(Session conn, EndpointConfig config,
           @PathParam("projectID") String projectId) {
     this.session = conn;
     this.sender = (String) config.getUserProperties().get("user");
@@ -135,7 +188,12 @@ public class NotebookServer implements
             this.sender, this);
     this.notebook = this.conf.getNotebook();
     connectedSockets.add(conn);
+    addUserConnection(this.hdfsUsername, conn);
     this.session.getUserProperties().put("projectID", this.project.getId());
+    String httpHeader = (String) config.getUserProperties().get(
+            WatcherSecurityKey.HTTP_HEADER);
+    this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER,
+            httpHeader);
     unicast(new Message(OP.CREATED_SOCKET), conn);
   }
 
@@ -163,78 +221,166 @@ public class NotebookServer implements
           messagereceived.ticket,
           ticket});
       }
-      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
+
+      boolean allowAnonymous = this.conf.getConf().isAnonymousAllowed();
+      if (!allowAnonymous && messagereceived.principal.equals("anonymous")) {
+        throw new Exception("Anonymous access not allowed ");
+      }
+
+      messagereceived.principal = this.hdfsUsername;
+      HashSet<String> userAndRoles = new HashSet<>();
+      userAndRoles.add(messagereceived.principal);
+      if (!messagereceived.roles.equals("")) {
+        HashSet<String> roles = gson.fromJson(messagereceived.roles,
+                new TypeToken<HashSet<String>>() {}.getType());
+        if (roles != null) {
+          userAndRoles.addAll(roles);
+        }
+      }
+
+      AuthenticationInfo subject = new AuthenticationInfo(messagereceived.principal,
+              messagereceived.ticket);
       /**
        * Lets be elegant here
        */
       switch (messagereceived.op) {
         case LIST_NOTES:
-          unicastNoteList(conn, subject);
+          unicastNoteList(conn, subject, userAndRoles);
           break;
         case RELOAD_NOTES_FROM_REPO:
-          broadcastReloadedNoteList(subject);
+          broadcastReloadedNoteList(subject, userAndRoles);
           break;
         case GET_HOME_NOTE:
-          sendHomeNote(conn, notebook);
+          sendHomeNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case GET_NOTE:
-          sendNote(conn, notebook, messagereceived);
+          sendNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case NEW_NOTE:
-          createNote(conn, notebook, messagereceived);
+          createNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case DEL_NOTE:
-          removeNote(conn, notebook, messagereceived);
+          removeNote(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case REMOVE_FOLDER:
+          removeFolder(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case MOVE_NOTE_TO_TRASH:
+          moveNoteToTrash(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case MOVE_FOLDER_TO_TRASH:
+          moveFolderToTrash(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case EMPTY_TRASH:
+          emptyTrash(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case RESTORE_FOLDER:
+          restoreFolder(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case RESTORE_NOTE:
+          restoreNote(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case RESTORE_ALL:
+          restoreAll(conn, userAndRoles, notebook, messagereceived);
           break;
         case CLONE_NOTE:
-          cloneNote(conn, notebook, messagereceived);
+          cloneNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case IMPORT_NOTE:
-          importNote(conn, notebook, messagereceived);
+          importNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case COMMIT_PARAGRAPH:
-          updateParagraph(conn, notebook, messagereceived);
+          updateParagraph(conn, userAndRoles, notebook, messagereceived);
           break;
         case RUN_PARAGRAPH:
-          runParagraph(conn, notebook, messagereceived);
+          runParagraph(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case RUN_ALL_PARAGRAPHS:
+          runAllParagraphs(conn, userAndRoles, notebook, messagereceived);
           break;
         case CANCEL_PARAGRAPH:
-          cancelParagraph(conn, notebook, messagereceived);
+          cancelParagraph(conn, userAndRoles, notebook, messagereceived);
           break;
         case MOVE_PARAGRAPH:
-          moveParagraph(conn, notebook, messagereceived);
+          moveParagraph(conn, userAndRoles, notebook, messagereceived);
           break;
         case INSERT_PARAGRAPH:
-          insertParagraph(conn, notebook, messagereceived);
+          insertParagraph(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case COPY_PARAGRAPH:
+          copyParagraph(conn, userAndRoles, notebook, messagereceived);
           break;
         case PARAGRAPH_REMOVE:
-          removeParagraph(conn, notebook, messagereceived);
+          removeParagraph(conn, userAndRoles, notebook, messagereceived);
           break;
         case PARAGRAPH_CLEAR_OUTPUT:
-          clearParagraphOutput(conn, notebook, messagereceived);
+          clearParagraphOutput(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case PARAGRAPH_CLEAR_ALL_OUTPUT:
+          clearAllParagraphOutput(conn, userAndRoles, notebook, messagereceived);
           break;
         case NOTE_UPDATE:
-          updateNote(conn, notebook, messagereceived);
+          updateNote(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case NOTE_RENAME:
+          renameNote(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case FOLDER_RENAME:
+          renameFolder(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case UPDATE_PERSONALIZED_MODE:
+          updatePersonalizedMode(conn, userAndRoles, notebook, messagereceived);
           break;
         case COMPLETION:
-          completion(conn, notebook, messagereceived);
+          completion(conn, userAndRoles, notebook, messagereceived);
           break;
         case PING:
           break; //do nothing
         case ANGULAR_OBJECT_UPDATED:
-          angularObjectUpdated(conn, notebook, messagereceived);
+          angularObjectUpdated(conn, userAndRoles, notebook, messagereceived);
           break;
         case ANGULAR_OBJECT_CLIENT_BIND:
-          angularObjectClientBind(conn, notebook, messagereceived);
+          angularObjectClientBind(conn, userAndRoles, notebook, messagereceived);
           break;
         case ANGULAR_OBJECT_CLIENT_UNBIND:
-          angularObjectClientUnbind(conn, notebook, messagereceived);
+          angularObjectClientUnbind(conn, userAndRoles, notebook,
+                  messagereceived);
           break;
         case LIST_CONFIGURATIONS:
-          sendAllConfigurations(conn, notebook);
+          sendAllConfigurations(conn, userAndRoles, notebook);
           break;
-        case CHECKPOINT_NOTEBOOK:
-          checkpointNotebook(conn, notebook, messagereceived);
+        case CHECKPOINT_NOTE:
+          checkpointNote(conn, notebook, messagereceived);
+          break;
+        case LIST_REVISION_HISTORY:
+          listRevisionHistory(conn, notebook, messagereceived);
+          break;
+        case SET_NOTE_REVISION:
+          setNoteRevision(conn, userAndRoles, notebook, messagereceived);
+          break;
+        case NOTE_REVISION:
+          getNoteByRevision(conn, notebook, messagereceived);
+          break;
+        case LIST_NOTE_JOBS:
+          unicastNoteJobInfo(conn, messagereceived);
+          break;
+        case UNSUBSCRIBE_UPDATE_NOTE_JOBS:
+          unsubscribeNoteJobInfo(conn);
+          break;
+        case GET_INTERPRETER_BINDINGS:
+          getInterpreterBindings(conn, messagereceived);
+          break;
+        case SAVE_INTERPRETER_BINDINGS:
+          saveInterpreterBindings(conn, messagereceived);
+          break;
+        case EDITOR_SETTING:
+          getEditorSetting(conn, messagereceived);
+          break;
+        case GET_INTERPRETER_SETTINGS:
+          getInterpreterSettings(conn, subject);
+          break;
+        case WATCHER:
+          switchConnectionToWatcher(conn, messagereceived);
           break;
         default:
           break;
@@ -253,6 +399,7 @@ public class NotebookServer implements
               reason});
     removeConnectionFromAllNote(conn);
     connectedSockets.remove(conn);
+    removeUserConnection(this.hdfsUsername, conn);
   }
 
   @OnError
@@ -261,11 +408,30 @@ public class NotebookServer implements
     connectedSockets.remove(conn);
   }
 
-  private Message deserializeMessage(String msg) {
+  private void removeUserConnection(String user, Session conn) {
+    if (userConnectedSockets.containsKey(user)) {
+      userConnectedSockets.get(user).remove(conn);
+    } else {
+      LOG.log(Level.SEVERE,
+              "Closing connection that is absent in user connections");
+    }
+  }
+
+  private void addUserConnection(String user, Session conn) {
+    if (userConnectedSockets.containsKey(user)) {
+      userConnectedSockets.get(user).add(conn);
+    } else {
+      Queue<Session> socketQueue = new ConcurrentLinkedQueue<>();
+      socketQueue.add(conn);
+      userConnectedSockets.put(user, socketQueue);
+    }
+  }
+
+  protected Message deserializeMessage(String msg) {
     return gson.fromJson(msg, Message.class);
   }
 
-  private String serializeMessage(Message m) {
+  protected String serializeMessage(Message m) {
     return gson.toJson(m);
   }
 
@@ -340,10 +506,11 @@ public class NotebookServer implements
     Notebook notebook = notebook();
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
-      List<String> ids = note.getNoteReplLoader().getInterpreters();
+      List<String> ids = notebook.getInterpreterFactory().getInterpreters(note.
+              getId());
       for (String id : ids) {
         if (id.equals(interpreterGroupId)) {
-          broadcast(note.id(), m);
+          broadcast(note.getId(), m);
         }
       }
     }
@@ -391,17 +558,14 @@ public class NotebookServer implements
     }
   }
 
-  //broadcast to every one in the same project as this.project.id
-  private void broadcastAll(Message m) {
-    for (Session conn : connectedSockets) {
-      try {
-        if (conn.getUserProperties().get("projectID").equals(
-                this.project.getId()) && conn.isOpen()) {
-          conn.getBasicRemote().sendText(serializeMessage(m));
-        }
-      } catch (IOException ex) {
-        LOG.log(Level.SEVERE, "Unable to send message " + m, ex);
-      }
+  private void multicastToUser(String user, Message m) {
+    if (!userConnectedSockets.containsKey(user)) {
+      LOG.log(Level.SEVERE,
+              "Multicasting to user {} that is not in connections map", user);
+      return;
+    }
+    for (Session conn : userConnectedSockets.get(user)) {
+      unicast(m, conn);
     }
   }
 
@@ -411,10 +575,77 @@ public class NotebookServer implements
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "socket error", e);
     }
+    broadcastToWatchers(StringUtils.EMPTY, StringUtils.EMPTY, m);
   }
 
-  public List<Map<String, String>> generateNotebooksInfo(boolean needsReload,
-          AuthenticationInfo subject) {
+  public void unicastNoteJobInfo(Session conn, Message fromMessage) throws
+          IOException {
+    addConnectionToNote(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(), conn);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    List<Map<String, Object>> noteJobs = notebook().getJobListByUnixTime(false,
+            0, subject);
+    Map<String, Object> response = new HashMap<>();
+
+    response.put("lastResponseUnixTime", System.currentTimeMillis());
+    response.put("jobs", noteJobs);
+
+    conn.getBasicRemote().sendText(serializeMessage(new Message(
+            OP.LIST_NOTE_JOBS).put("noteJobs", response)));
+  }
+
+  public void broadcastUpdateNoteJobInfo(long lastUpdateUnixTime) throws
+          IOException {
+    List<Map<String, Object>> noteJobs = new LinkedList<>();
+    Notebook notebookObject = notebook();
+    List<Map<String, Object>> jobNotes = null;
+    if (notebookObject != null) {
+      jobNotes = notebook().
+              getJobListByUnixTime(false, lastUpdateUnixTime, null);
+      noteJobs = jobNotes == null ? noteJobs : jobNotes;
+    }
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("lastResponseUnixTime", System.currentTimeMillis());
+    response.put("jobs", noteJobs != null ? noteJobs : new LinkedList<>());
+
+    broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+            new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                    response));
+  }
+
+  public void unsubscribeNoteJobInfo(Session conn) {
+    removeConnectionFromNote(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(), conn);
+  }
+
+  public void saveInterpreterBindings(Session conn, Message fromMessage) {
+    String noteId = (String) fromMessage.data.get("noteId");
+    try {
+      List<String> settingIdList = gson.fromJson(String.valueOf(
+              fromMessage.data.get("selectedSettingIds")),
+              new TypeToken<ArrayList<String>>() {}.getType());
+      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
+      notebook().
+              bindInterpretersToNote(subject.getUser(), noteId, settingIdList);
+      broadcastInterpreterBindings(noteId,
+              InterpreterBindingUtils.getInterpreterBindings(notebook(), noteId));
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Error while saving interpreter bindings", e);
+    }
+  }
+
+  public void getInterpreterBindings(Session conn, Message fromMessage) throws
+          IOException {
+    String noteId = (String) fromMessage.data.get("noteId");
+    List<InterpreterSettingsList> settingList = InterpreterBindingUtils.
+            getInterpreterBindings(notebook(), noteId);
+    conn.getBasicRemote().sendText(serializeMessage(
+            new Message(OP.INTERPRETER_BINDINGS).put("interpreterBindings",
+                    settingList)));
+  }
+
+  public List<Map<String, String>> generateNotesInfo(boolean needsReload,
+          AuthenticationInfo subject, Set<String> userAndRoles) {
+
     Notebook notebook = notebook();
 
     ZeppelinConfiguration conf = notebook.getConf();
@@ -427,21 +658,21 @@ public class NotebookServer implements
       try {
         notebook.reloadAllNotes(subject);
       } catch (IOException e) {
-        LOG.severe("Fail to reload notes from repository");
+        LOG.log(Level.SEVERE, "Fail to reload notes from repository");
       }
     }
 
-    List<Note> notes = notebook.getAllNotes();
+    List<Note> notes = notebook.getAllNotes(userAndRoles);
     List<Map<String, String>> notesInfo = new LinkedList<>();
     for (Note note : notes) {
       Map<String, String> info = new HashMap<>();
 
-      if (hideHomeScreenNotebookFromList && note.id().equals(
+      if (hideHomeScreenNotebookFromList && note.getId().equals(
               homescreenNotebookId)) {
         continue;
       }
 
-      info.put("id", note.id());
+      info.put("id", note.getId());
       info.put("name", note.getName());
       notesInfo.add(info);
     }
@@ -450,79 +681,166 @@ public class NotebookServer implements
   }
 
   public void broadcastNote(Note note) {
-    broadcast(note.id(), new Message(OP.NOTE).put("note", note));
+    broadcast(note.getId(), new Message(OP.NOTE).put("note", note));
   }
 
-  public void broadcastNoteList(AuthenticationInfo subject) {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(false, subject);
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  public void broadcastInterpreterBindings(String noteId, List settingList) {
+    broadcast(noteId, new Message(OP.INTERPRETER_BINDINGS).put(
+            "interpreterBindings", settingList));
   }
 
-  public void unicastNoteList(Session conn, AuthenticationInfo subject) {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(false, subject);
+  public void broadcastParagraph(Note note, Paragraph p) {
+    if (note.isPersonalizedMode()) {
+      broadcastParagraphs(p.getUserParagraphMap(), p);
+    } else {
+      broadcast(note.getId(), new Message(OP.PARAGRAPH).put("paragraph", p));
+    }
+  }
+
+  public void broadcastParagraphs(Map<String, Paragraph> userParagraphMap,
+          Paragraph defaultParagraph) {
+    if (null != userParagraphMap) {
+      for (String user : userParagraphMap.keySet()) {
+        multicastToUser(user,
+                new Message(OP.PARAGRAPH).put("paragraph", userParagraphMap.get(
+                        user)));
+      }
+    }
+  }
+
+  private void broadcastNewParagraph(Note note, Paragraph para) {
+    LOG.info("Broadcasting paragraph on run call instead of note.");
+    int paraIndex = note.getParagraphs().indexOf(para);
+    broadcast(note.getId(),
+            new Message(OP.PARAGRAPH_ADDED).put("paragraph", para).put("index",
+            paraIndex));
+  }
+
+  public void broadcastNoteList(AuthenticationInfo subject, HashSet userAndRoles) {
+    if (subject == null) {
+      subject = new AuthenticationInfo(StringUtils.EMPTY);
+    }
+    //send first to requesting user
+    List<Map<String, String>> notesInfo = generateNotesInfo(false, subject,
+            userAndRoles);
+    multicastToUser(subject.getUser(), new Message(OP.NOTES_INFO).put("notes",
+            notesInfo));
+    //to others afterwards
+    broadcastNoteListExcept(notesInfo, subject);
+  }
+
+  public void unicastNoteList(Session conn, AuthenticationInfo subject,
+          HashSet<String> userAndRoles) {
+    List<Map<String, String>> notesInfo = generateNotesInfo(false, subject,
+            userAndRoles);
     unicast(new Message(OP.NOTES_INFO).put("notes", notesInfo), conn);
   }
 
-  public void broadcastReloadedNoteList(AuthenticationInfo subject) {
-    List<Map<String, String>> notesInfo = generateNotebooksInfo(true, subject);
-    broadcastAll(new Message(OP.NOTES_INFO).put("notes", notesInfo));
+  public void broadcastReloadedNoteList(AuthenticationInfo subject,
+          HashSet userAndRoles) {
+    if (subject == null) {
+      subject = new AuthenticationInfo(StringUtils.EMPTY);
+    }
+
+    //reload and reply first to requesting user
+    List<Map<String, String>> notesInfo = generateNotesInfo(true, subject,
+            userAndRoles);
+    multicastToUser(subject.getUser(), new Message(OP.NOTES_INFO).put("notes",
+            notesInfo));
+    //to others afterwards
+    broadcastNoteListExcept(notesInfo, subject);
   }
 
-  void permissionError(Session conn, String op, String userAndRoles,
-          String allowed) throws IOException {
+  private void broadcastNoteListExcept(List<Map<String, String>> notesInfo,
+          AuthenticationInfo subject) {
+    Set<String> userAndRoles;
+    NotebookAuthorization authInfo = NotebookAuthorization.getInstance();
+    for (String user : userConnectedSockets.keySet()) {
+      if (subject.getUser().equals(user)) {
+        continue;
+      }
+      //reloaded already above; parameter - false
+      userAndRoles = authInfo.getRoles(user);
+      userAndRoles.add(user);
+      notesInfo = generateNotesInfo(false, new AuthenticationInfo(user),
+              userAndRoles);
+      multicastToUser(user, new Message(OP.NOTES_INFO).put("notes", notesInfo));
+    }
+  }
+
+  void permissionError(Session conn, String op, String userName,
+          Set<String> userAndRoles,
+          Set<String> allowed) throws IOException {
     LOG.log(Level.INFO,
-            "Cannot {0}. Connection readers {1}. Allowed readers{2}",
-            new Object[]{op,
-              userAndRoles, allowed});
+            "Cannot {0}. Connection readers {1}. Allowed readers {2}",
+            new Object[]{op, userAndRoles, allowed});
     Users user = userBean.findByEmail(this.sender);
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.AUTH_INFO).
-            put("info",
-                    "Insufficient privileges to " + op + " notebook.\n\n"
-                    + "Allowed users or roles: " + allowed + "\n\n"
-                    + "But the user " + user.getFname() + " " + user.getLname()
-                    + " belongs to: " + userAndRoles)));
+            put("info","Insufficient privileges to " + op + "note.\n\n"
+                    + "Allowed users or roles: " + allowed
+                    .toString() + "\n\n" + "But the user " + user.getLname()
+                    + " belongs to: " + userAndRoles.toString())));
   }
 
-  private void sendNote(Session conn, Notebook notebook,
+  private void sendNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
           Message fromMessage) throws IOException {
+
+    LOG.log(Level.INFO, "New operation from {0} : {1} : {2}", new Object[]{
+      fromMessage.principal, fromMessage.op, fromMessage.get("id")});
+
     String noteId = (String) fromMessage.get("id");
     if (noteId == null) {
       return;
     }
 
+    String user = this.hdfsUsername;
+
     Note note = notebook.getNote(noteId);
-    if (note != null && conn.isOpen()) {
-      if (this.userRole == null) {
-        permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
-                + ", " + AllowedRoles.DATA_SCIENTIST);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (note != null) {
+      if (!notebookAuthorization.isReader(noteId, userAndRoles)) {
+        permissionError(conn, "read", user, userAndRoles,
+                notebookAuthorization.getReaders(noteId));
         return;
       }
-      addConnectionToNote(note.id(), conn);
+      addConnectionToNote(note.getId(), conn);
+
+      if (note.isPersonalizedMode()) {
+        note = note.getUserNote(user);
+      }
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", note)));
-      sendAllAngularObjects(note, conn);
+      sendAllAngularObjects(note, user, conn);
+    } else {
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
+              "note", null)));
     }
   }
 
-  private void sendHomeNote(Session conn, Notebook notebook) throws IOException {
+  private void sendHomeNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
     String noteId = notebook.getConf().getString(
-            ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
-
+            ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
+    String user = this.hdfsUsername;
     Note note = null;
     if (noteId != null) {
       note = notebook.getNote(noteId);
     }
 
     if (note != null && conn.isOpen()) {
-      if (this.userRole == null) {
-        permissionError(conn, "read", this.userRole, AllowedRoles.DATA_OWNER
-                + ", " + AllowedRoles.DATA_SCIENTIST);
+      NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
+      if (!notebookAuthorization.isReader(noteId, userAndRoles)) {
+        permissionError(conn, "read", user, userAndRoles,
+            notebookAuthorization.getReaders(noteId));
         return;
       }
-      addConnectionToNote(note.id(), conn);
+      addConnectionToNote(note.getId(), conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
               "note", note)));
-      sendAllAngularObjects(note, conn);
+      sendAllAngularObjects(note, user, conn);
     } else {
       removeConnectionFromAllNote(conn);
       conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NOTE).put(
@@ -530,8 +848,9 @@ public class NotebookServer implements
     }
   }
 
-  private void updateNote(Session conn, Notebook notebook, Message fromMessage)
-          throws SchedulerException, IOException {
+  private void updateNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws SchedulerException, IOException {
     String noteId = (String) fromMessage.get("id");
     String name = (String) fromMessage.get("name");
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
@@ -542,9 +861,10 @@ public class NotebookServer implements
       return;
     }
 
-    if (this.userRole == null) {
-      permissionError(conn, "update", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "update", this.hdfsUsername, userAndRoles,
+          notebookAuthorization.getWriters(noteId));
       return;
     }
 
@@ -554,13 +874,121 @@ public class NotebookServer implements
       note.setName(name);
       note.setConfig(config);
       if (cronUpdated) {
-        notebook.refreshCron(note.id());
+        notebook.refreshCron(note.getId());
       }
 
       AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
       note.persist(subject);
+      broadcast(note.getId(), new Message(OP.NOTE_UPDATED).put("name", name).
+              put("config", config)
+              .put("info", note.getInfo()));
+      broadcastNoteList(subject, userAndRoles);
+    }
+  }
+
+  private void updatePersonalizedMode(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws SchedulerException,
+          IOException {
+    String noteId = (String) fromMessage.get("id");
+    String personalized = (String) fromMessage.get("personalized");
+    boolean isPersonalized = personalized.equals("true") ? true : false;
+
+    if (noteId == null) {
+      return;
+    }
+
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+      permissionError(conn, "persoanlized ", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getOwners(noteId));
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null) {
+      note.setPersonalizedMode(isPersonalized);
+      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      note.persist(subject);
       broadcastNote(note);
-      broadcastNoteList(subject);
+    }
+  }
+
+  private void renameNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    renameNote(conn, userAndRoles, notebook, fromMessage, "rename");
+  }
+
+  private void renameNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage, String op)
+          throws SchedulerException, IOException {
+    String noteId = (String) fromMessage.get("id");
+    String name = (String) fromMessage.get("name");
+
+    if (noteId == null) {
+      return;
+    }
+
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+      permissionError(conn, "rename", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getOwners(noteId));
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null) {
+      note.setName(name);
+
+      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+      note.persist(subject);
+      broadcastNote(note);
+      broadcastNoteList(subject, userAndRoles);
+    }
+  }
+
+  private void renameFolder(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    renameFolder(conn, userAndRoles, notebook, fromMessage, "rename");
+  }
+
+  private void renameFolder(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage, String op)
+          throws SchedulerException, IOException {
+    String oldFolderId = (String) fromMessage.get("id");
+    String newFolderId = (String) fromMessage.get("name");
+
+    if (oldFolderId == null) {
+      return;
+    }
+
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    for (Note note : notebook.getNotesUnderFolder(oldFolderId)) {
+      String noteId = note.getId();
+      if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+        permissionError(conn, op + " folder of '" + note.getName() + "'",
+                fromMessage.principal,
+                userAndRoles, notebookAuthorization.getOwners(noteId));
+        return;
+      }
+    }
+
+    Folder oldFolder = notebook.renameFolder(oldFolderId, newFolderId);
+
+    if (oldFolder != null) {
+      AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+
+      List<Note> renamedNotes = oldFolder.getNotesRecursively();
+      for (Note note : renamedNotes) {
+        note.persist(subject);
+        broadcastNote(note);
+      }
+
+      broadcastNoteList(subject, userAndRoles);
     }
   }
 
@@ -579,130 +1007,302 @@ public class NotebookServer implements
     return cronUpdated;
   }
 
-  private void createNote(Session conn, Notebook notebook, Message message)
-          throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    Note note = notebook.createNote(subject);
-    note.addParagraph(); // it's an empty note. so add one paragraph
-    if (message != null) {
-      String noteName = (String) message.get("name");
-      if (noteName == null || noteName.isEmpty()) {
-        noteName = "Note " + note.getId();
-      }
-      note.setName(noteName);
-    }
+  private void createNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message message) throws IOException {
+    AuthenticationInfo subject = new AuthenticationInfo(message.principal);
 
-    note.persist(subject);
-    addConnectionToNote(note.id(), conn);
-    conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
-            put("note", note)));
-    broadcastNoteList(subject);
+    try {
+      Note note = null;
+
+      String defaultInterpreterId = (String) message.get("defaultInterpreterId");
+      if (!StringUtils.isEmpty(defaultInterpreterId)) {
+        List<String> interpreterSettingIds = new LinkedList<>();
+        interpreterSettingIds.add(defaultInterpreterId);
+        for (String interpreterSettingId : notebook.getInterpreterFactory().
+                getDefaultInterpreterSettingList()) {
+          if (!interpreterSettingId.equals(defaultInterpreterId)) {
+            interpreterSettingIds.add(interpreterSettingId);
+          }
+        }
+        note = notebook.createNote(interpreterSettingIds, subject);
+      } else {
+        note = notebook.createNote(subject);
+      }
+
+      note.addParagraph(subject); // it's an empty note. so add one paragraph
+      if (message != null) {
+        String noteName = (String) message.get("name");
+        if (StringUtils.isEmpty(noteName)) {
+          noteName = "Note " + note.getId();
+        }
+        note.setName(noteName);
+      }
+
+      note.persist(subject);
+      addConnectionToNote(note.getId(), (Session) conn);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
+              put("note", note)));
+    } catch (FileSystemException e) {
+      LOG.log(Level.SEVERE,"Exception from createNote", e);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(OP.ERROR_INFO).put("info",
+              "Oops! There is something wrong with the notebook file system. "
+              + "Please check the logs for more details.")));
+      return;
+    }
+    broadcastNoteList(subject, userAndRoles);
   }
 
-  private void removeNote(Session conn, Notebook notebook, Message fromMessage)
-          throws IOException {
+  private void removeNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
     String noteId = (String) fromMessage.get("id");
     if (noteId == null) {
       return;
     }
 
     Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+      permissionError(conn, "remove", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getOwners(noteId));
+      return;
+    }
 
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
     notebook.removeNote(noteId, subject);
     removeNote(noteId);
-    broadcastReloadedNoteList(subject); //reload to make sure it is deleted
+    broadcastNoteList(subject, userAndRoles);
   }
 
-  private void updateParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
+  private void removeFolder(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    String folderId = (String) fromMessage.get("id");
+    if (folderId == null) {
+      return;
+    }
+
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    List<Note> notes = notebook.getNotesUnderFolder(folderId);
+    for (Note note : notes) {
+      String noteId = note.getId();
+      if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+        permissionError(conn, "remove folder of '" + note.getName() + "'",
+                fromMessage.principal,
+                userAndRoles, notebookAuthorization.getOwners(noteId));
+        return;
+      }
+    }
+
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    for (Note note : notes) {
+      notebook.removeNote(note.getId(), subject);
+      removeNote(note.getId());
+    }
+    broadcastNoteList(subject, userAndRoles);
+  }
+
+  private void moveNoteToTrash(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    String noteId = (String) fromMessage.get("id");
+    if (noteId == null) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null && !note.isTrash()) {
+      fromMessage.put("name", Folder.TRASH_FOLDER_ID + "/" + note.getName());
+      renameNote(conn, userAndRoles, notebook, fromMessage, "move");
+    }
+  }
+
+  private void moveFolderToTrash(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    String folderId = (String) fromMessage.get("id");
+    if (folderId == null) {
+      return;
+    }
+
+    Folder folder = notebook.getFolder(folderId);
+    if (folder != null && !folder.isTrash()) {
+      String trashFolderId = Folder.TRASH_FOLDER_ID + "/" + folderId;
+      if (notebook.hasFolder(trashFolderId)) {
+        DateTime currentDate = new DateTime();
+        DateTimeFormatter formatter = DateTimeFormat.forPattern(
+                "yyyy-MM-dd HH:mm:ss");
+        trashFolderId += Folder.TRASH_FOLDER_CONFLICT_INFIX + formatter.print(
+                currentDate);
+      }
+
+      fromMessage.put("name", trashFolderId);
+      renameFolder(conn, userAndRoles, notebook, fromMessage, "move");
+    }
+  }
+
+  private void restoreNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    String noteId = (String) fromMessage.get("id");
+
+    if (noteId == null) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    if (note != null && note.isTrash()) {
+      fromMessage.put("name", note.getName().replaceFirst(Folder.TRASH_FOLDER_ID
+              + "/", ""));
+      renameNote(conn, userAndRoles, notebook, fromMessage, "restore");
+    }
+  }
+
+  private void restoreFolder(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    String folderId = (String) fromMessage.get("id");
+
+    if (folderId == null) {
+      return;
+    }
+
+    Folder folder = notebook.getFolder(folderId);
+    if (folder != null && folder.isTrash()) {
+      String restoreName = folder.getId().replaceFirst(Folder.TRASH_FOLDER_ID
+              + "/", "").trim();
+
+      // if the folder had conflict when it had moved to trash before
+      Pattern p = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$");
+      Matcher m = p.matcher(restoreName);
+      restoreName = m.replaceAll("").trim();
+
+      fromMessage.put("name", restoreName);
+      renameFolder(conn, userAndRoles, notebook, fromMessage, "restore");
+    }
+  }
+
+  private void restoreAll(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    Folder trashFolder = notebook.getFolder(Folder.TRASH_FOLDER_ID);
+    if (trashFolder != null) {
+      fromMessage.data = new HashMap<>();
+      fromMessage.put("id", Folder.TRASH_FOLDER_ID);
+      fromMessage.put("name", Folder.ROOT_FOLDER_ID);
+      renameFolder(conn, userAndRoles, notebook, fromMessage, "restore trash");
+    }
+  }
+
+  private void emptyTrash(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage)
+          throws SchedulerException, IOException {
+    fromMessage.data = new HashMap<>();
+    fromMessage.put("id", Folder.TRASH_FOLDER_ID);
+    removeFolder(conn, userAndRoles, notebook, fromMessage);
+  }
+
+  private void updateParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws IOException {
     String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
     }
 
-    Map<String, Object> params = (Map<String, Object>) fromMessage
-            .get("params");
-    Map<String, Object> config = (Map<String, Object>) fromMessage
-            .get("config");
+    Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
+    Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
       return;
     }
 
     Paragraph p = note.getParagraph(paragraphId);
+
+    if (note.isPersonalizedMode()) {
+      p = p.getUserParagraphMap().get(subject.getUser());
+    }
+
     p.settings.setParams(params);
     p.setConfig(config);
     p.setTitle((String) fromMessage.get("title"));
     p.setText((String) fromMessage.get("paragraph"));
     note.persist(subject);
-    broadcast(note.id(), new Message(OP.PARAGRAPH).put("paragraph", p));
+
+    if (note.isPersonalizedMode()) {
+      Map<String, Paragraph> userParagraphMap = note.getParagraph(paragraphId).
+              getUserParagraphMap();
+      broadcastParagraphs(userParagraphMap, p);
+    } else {
+      broadcastParagraph(note, p);
+    }
   }
 
-  private void cloneNote(Session conn, Notebook notebook, Message fromMessage)
-          throws IOException, CloneNotSupportedException {
+  private void cloneNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException, CloneNotSupportedException {
     String noteId = getOpenNoteId(conn);
     String name = (String) fromMessage.get("name");
     Note newNote = notebook.cloneNote(noteId, name, new AuthenticationInfo(
-            this.hdfsUsername));
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    addConnectionToNote(newNote.id(), conn);
+            fromMessage.principal));
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    addConnectionToNote(newNote.getId(), conn);
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.NEW_NOTE).
             put("note", newNote)));
-    broadcastNoteList(subject);
+    broadcastNoteList(subject, userAndRoles);
   }
 
-  protected Note importNote(Session conn, Notebook notebook, Message fromMessage)
-          throws IOException {
+  private void clearAllParagraphOutput(Session conn,
+          HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws IOException {
+    final String noteId = (String) fromMessage.get("id");
+    if (StringUtils.isBlank(noteId)) {
+      return;
+    }
+    Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "clear output", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getOwners(noteId));
+      return;
+    }
+
+    note.clearAllParagraphOutput();
+    broadcastNote(note);
+  }
+
+  protected Note importNote(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
     Note note = null;
     if (fromMessage != null) {
-      String noteName = (String) ((Map) fromMessage.get("notebook")).get("name");
-      String noteJson = gson.toJson(fromMessage.get("notebook"));
-      AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
+      String noteName = (String) ((Map) fromMessage.get("note")).get("name");
+      String noteJson = gson.toJson(fromMessage.get("note"));
+      AuthenticationInfo subject = null;
+      if (fromMessage.principal != null) {
+        subject = new AuthenticationInfo(fromMessage.principal);
+      } else {
+        subject = new AuthenticationInfo("anonymous");
+      }
       note = notebook.importNote(noteJson, noteName, subject);
       note.persist(subject);
       broadcastNote(note);
-      broadcastNoteList(subject);
+      broadcastNoteList(subject, userAndRoles);
     }
     return note;
   }
 
-  private void removeParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
-
-    final String paragraphId = (String) fromMessage.get("id");
-    if (paragraphId == null) {
-      return;
-    }
-    String noteId = getOpenNoteId(conn);
-    final Note note = notebook.getNote(noteId);
-    NotebookAuthorization notebookAuthorization = notebook.
-            getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-//    if (!this.userRole.equals(AllowedRoles.DATA_OWNER)) {
-//      permissionError(conn, "remove", this.userRole, AllowedRoles.DATA_OWNER);
-//      return;
-//    }
-
-    /**
-     * We dont want to remove the last paragraph
-     */
-    if (!note.isLastParagraph(paragraphId)) {
-      note.removeParagraph(paragraphId);
-      note.persist(subject);
-      broadcastNote(note);
-    }
-  }
-
-  private void clearParagraphOutput(Session conn, Notebook notebook,
+  private void removeParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
           Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
@@ -710,18 +1310,51 @@ public class NotebookServer implements
     }
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
       return;
     }
 
-    note.clearParagraphOutput(paragraphId);
-    broadcastNote(note);
+    /**
+     * We dont want to remove the last paragraph
+     */
+    if (!note.isLastParagraph(paragraphId)) {
+      Paragraph para = note.removeParagraph(subject.getUser(), paragraphId);
+      note.persist(subject);
+      if (para != null) {
+        broadcast(note.getId(), new Message(OP.PARAGRAPH_REMOVED).
+                put("id", para.getId()));
+      }
+    }
   }
 
-  private void completion(Session conn, Notebook notebook, Message fromMessage)
-          throws IOException {
+  private void clearParagraphOutput(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws IOException {
+    final String paragraphId = (String) fromMessage.get("id");
+    if (paragraphId == null) {
+      return;
+    }
+    String noteId = getOpenNoteId(conn);
+    final Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
+      return;
+    }
+    note.clearParagraphOutput(paragraphId);
+    Paragraph paragraph = note.getParagraph(paragraphId);
+    broadcastParagraph(note, paragraph);
+  }
+
+  private void completion(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
     String paragraphId = (String) fromMessage.get("id");
     String buffer = (String) fromMessage.get("buf");
     int cursor = (int) Double.parseDouble(fromMessage.get("cursor").toString());
@@ -745,28 +1378,31 @@ public class NotebookServer implements
    * @param notebook the notebook.
    * @param fromMessage the message.
    */
-  private void angularObjectUpdated(Session conn, Notebook notebook,
-          Message fromMessage) {
+  private void angularObjectUpdated(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) {
     String noteId = (String) fromMessage.get("noteId");
     String paragraphId = (String) fromMessage.get("paragraphId");
     String interpreterGroupId = (String) fromMessage.get("interpreterGroupId");
     String varName = (String) fromMessage.get("name");
     Object varValue = fromMessage.get("value");
+    String user = this.hdfsUsername;
     AngularObject ao = null;
     boolean global = false;
     // propagate change to (Remote) AngularObjectRegistry
     Note note = notebook.getNote(noteId);
     if (note != null) {
-      List<InterpreterSetting> settings = note.getNoteReplLoader()
-              .getInterpreterSettings();
+      List<InterpreterSetting> settings = notebook.getInterpreterFactory().
+              getInterpreterSettings(note.getId());
       for (InterpreterSetting setting : settings) {
-        if (setting.getInterpreterGroup(note.id()) == null) {
+        if (setting.getInterpreterGroup(user, note.getId()) == null) {
           continue;
         }
-        if (interpreterGroupId.equals(setting.getInterpreterGroup(note.id()).
-                getId())) {
-          AngularObjectRegistry angularObjectRegistry = setting
-                  .getInterpreterGroup(note.id()).getAngularObjectRegistry();
+        if (interpreterGroupId.equals(setting.getInterpreterGroup(user, note.
+                getId()).getId())) {
+          AngularObjectRegistry angularObjectRegistry = setting.
+                  getInterpreterGroup(user, note.getId()).
+                  getAngularObjectRegistry();
+
           // first trying to get local registry
           ao = angularObjectRegistry.get(varName, noteId, paragraphId);
           if (ao == null) {
@@ -799,35 +1435,32 @@ public class NotebookServer implements
     if (global) { // broadcast change to all web session that uses related
       // interpreter.
       for (Note n : notebook.getAllNotes()) {
-        List<InterpreterSetting> settings = note.getNoteReplLoader()
-                .getInterpreterSettings();
+        List<InterpreterSetting> settings = notebook.getInterpreterFactory().
+                getInterpreterSettings(note.getId());
         for (InterpreterSetting setting : settings) {
-          if (setting.getInterpreterGroup(n.id()) == null) {
+          if (setting.getInterpreterGroup(user, n.getId()) == null) {
             continue;
           }
-          if (interpreterGroupId.equals(setting.getInterpreterGroup(n.id()).
-                  getId())) {
-            AngularObjectRegistry angularObjectRegistry = setting
-                    .getInterpreterGroup(n.id()).getAngularObjectRegistry();
-            this.broadcastExcept(
-                    n.id(),
+          if (interpreterGroupId.equals(setting.getInterpreterGroup(user, n.
+                  getId()).getId())) {
+            AngularObjectRegistry angularObjectRegistry = setting.
+                    getInterpreterGroup(user, n.getId()).
+                    getAngularObjectRegistry();
+            this.broadcastExcept(n.getId(),
                     new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject",
                             ao)
-                    .put("interpreterGroupId", interpreterGroupId)
-                    .put("noteId", n.id())
-                    .put("paragraphId", ao.getParagraphId()),
-                    conn);
+                    .put("interpreterGroupId", interpreterGroupId).put("noteId",
+                    n.getId())
+                    .put("paragraphId", ao.getParagraphId()), conn);
           }
         }
       }
     } else { // broadcast to all web session for the note
-      this.broadcastExcept(
-              note.id(),
+      this.broadcastExcept(note.getId(),
               new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject", ao)
-              .put("interpreterGroupId", interpreterGroupId)
-              .put("noteId", note.id())
-              .put("paragraphId", ao.getParagraphId()),
-              conn);
+              .put("interpreterGroupId", interpreterGroupId).put("noteId", note.
+              getId())
+              .put("paragraphId", ao.getParagraphId()), conn);
     }
   }
 
@@ -835,15 +1468,10 @@ public class NotebookServer implements
    * Push the given Angular variable to the target
    * interpreter angular registry given a noteId
    * and a paragraph id
-   *
-   * @param conn
-   * @param notebook
-   * @param fromMessage
-   * @throws Exception
    */
   protected void angularObjectClientBind(Session conn,
-          Notebook notebook, Message fromMessage)
-          throws Exception {
+          HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws Exception {
     String noteId = fromMessage.getType("noteId");
     String varName = fromMessage.getType("name");
     Object varValue = fromMessage.get("value");
@@ -851,14 +1479,13 @@ public class NotebookServer implements
     Note note = notebook.getNote(noteId);
 
     if (paragraphId == null) {
-      throw new IllegalArgumentException("target paragraph not specified for "
-              + "angular value bind");
+      throw new IllegalArgumentException(
+              "target paragraph not specified for " + "angular value bind");
     }
 
     if (note != null) {
       final InterpreterGroup interpreterGroup
-              = findInterpreterGroupForParagraph(note,
-                      paragraphId);
+              = findInterpreterGroupForParagraph(note, paragraphId);
 
       final AngularObjectRegistry registry = interpreterGroup.
               getAngularObjectRegistry();
@@ -882,29 +1509,23 @@ public class NotebookServer implements
    * Remove the given Angular variable to the target
    * interpreter(s) angular registry given a noteId
    * and an optional list of paragraph id(s)
-   *
-   * @param conn
-   * @param notebook
-   * @param fromMessage
-   * @throws Exception
    */
   protected void angularObjectClientUnbind(Session conn,
-          Notebook notebook, Message fromMessage)
-          throws Exception {
+          HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws Exception {
     String noteId = fromMessage.getType("noteId");
     String varName = fromMessage.getType("name");
     String paragraphId = fromMessage.getType("paragraphId");
     Note note = notebook.getNote(noteId);
 
     if (paragraphId == null) {
-      throw new IllegalArgumentException("target paragraph not specified for "
-              + "angular value unBind");
+      throw new IllegalArgumentException(
+              "target paragraph not specified for " + "angular value unBind");
     }
 
     if (note != null) {
       final InterpreterGroup interpreterGroup
-              = findInterpreterGroupForParagraph(note,
-                      paragraphId);
+              = findInterpreterGroupForParagraph(note, paragraphId);
 
       final AngularObjectRegistry registry = interpreterGroup.
               getAngularObjectRegistry();
@@ -934,43 +1555,37 @@ public class NotebookServer implements
   }
 
   private void pushAngularObjectToRemoteRegistry(String noteId,
-          String paragraphId,
-          String varName, Object varValue,
-          RemoteAngularObjectRegistry remoteRegistry,
-          String interpreterGroupId, Session conn) {
+          String paragraphId, String varName,
+          Object varValue, RemoteAngularObjectRegistry remoteRegistry,
+          String interpreterGroupId,
+          Session conn) {
 
     final AngularObject ao = remoteRegistry.addAndNotifyRemoteProcess(varName,
-            varValue,
-            noteId, paragraphId);
+            varValue, noteId, paragraphId);
 
-    this.broadcastExcept(
-            noteId,
-            new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject", ao)
-            .put("interpreterGroupId", interpreterGroupId)
-            .put("noteId", noteId)
-            .put("paragraphId", paragraphId),
-            conn);
+    this.broadcastExcept(noteId, new Message(OP.ANGULAR_OBJECT_UPDATE).put(
+            "angularObject", ao)
+            .put("interpreterGroupId", interpreterGroupId).put("noteId", noteId)
+            .put("paragraphId", paragraphId), conn);
   }
 
   private void removeAngularFromRemoteRegistry(String noteId, String paragraphId,
-          String varName, RemoteAngularObjectRegistry remoteRegistry,
-          String interpreterGroupId, Session conn) {
+          String varName,
+          RemoteAngularObjectRegistry remoteRegistry, String interpreterGroupId,
+          Session conn) {
     final AngularObject ao = remoteRegistry.
-            removeAndNotifyRemoteProcess(varName, noteId,
-                    paragraphId);
-    this.broadcastExcept(
-            noteId,
-            new Message(OP.ANGULAR_OBJECT_REMOVE).put("angularObject", ao)
-            .put("interpreterGroupId", interpreterGroupId)
-            .put("noteId", noteId)
-            .put("paragraphId", paragraphId),
-            conn);
+            removeAndNotifyRemoteProcess(varName, noteId, paragraphId);
+    this.broadcastExcept(noteId, new Message(OP.ANGULAR_OBJECT_REMOVE).put(
+            "angularObject", ao)
+            .put("interpreterGroupId", interpreterGroupId).put("noteId", noteId)
+            .put("paragraphId", paragraphId), conn);
   }
 
   private void pushAngularObjectToLocalRepo(String noteId, String paragraphId,
           String varName,
           Object varValue, AngularObjectRegistry registry,
-          String interpreterGroupId, Session conn) {
+          String interpreterGroupId,
+          Session conn) {
     AngularObject angularObject = registry.get(varName, noteId, paragraphId);
     if (angularObject == null) {
       angularObject = registry.add(varName, varValue, noteId, paragraphId);
@@ -978,14 +1593,11 @@ public class NotebookServer implements
       angularObject.set(varValue, true);
     }
 
-    this.broadcastExcept(
-            noteId,
+    this.broadcastExcept(noteId,
             new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject",
                     angularObject)
-            .put("interpreterGroupId", interpreterGroupId)
-            .put("noteId", noteId)
-            .put("paragraphId", paragraphId),
-            conn);
+            .put("interpreterGroupId", interpreterGroupId).put("noteId", noteId)
+            .put("paragraphId", paragraphId), conn);
   }
 
   private void removeAngularObjectFromLocalRepo(String noteId,
@@ -994,66 +1606,82 @@ public class NotebookServer implements
           Session conn) {
     final AngularObject removed = registry.remove(varName, noteId, paragraphId);
     if (removed != null) {
-      this.broadcastExcept(
-              noteId,
+      this.broadcastExcept(noteId,
               new Message(OP.ANGULAR_OBJECT_REMOVE).
               put("angularObject", removed)
-              .put("interpreterGroupId", interpreterGroupId)
-              .put("noteId", noteId)
-              .put("paragraphId", paragraphId),
-              conn);
+              .put("interpreterGroupId", interpreterGroupId).put("noteId",
+              noteId)
+              .put("paragraphId", paragraphId), conn);
     }
   }
 
-  private void moveParagraph(Session conn, Notebook notebook,
+  private void moveParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
           Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
     }
 
-    final int newIndex = (int) Double.parseDouble(fromMessage.get("index")
-            .toString());
+    final int newIndex = (int) Double.parseDouble(fromMessage.get("index").
+            toString());
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
       return;
     }
 
     note.moveParagraph(paragraphId, newIndex);
     note.persist(subject);
-    broadcastNote(note);
+    broadcast(note.getId(),
+            new Message(OP.PARAGRAPH_MOVED).put("id", paragraphId).put("index",
+            newIndex));
   }
 
-  private void insertParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
+  private String insertParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook, Message fromMessage) throws IOException {
     final int index = (int) Double.parseDouble(fromMessage.get("index").
             toString());
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
     NotebookAuthorization notebookAuthorization = notebook.
             getNotebookAuthorization();
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
-      return;
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
+      return null;
     }
 
-    note.insertParagraph(index);
+    Paragraph newPara = note.insertParagraph(index, subject);
     note.persist(subject);
-    broadcastNote(note);
+    broadcastNewParagraph(note, newPara);
+
+    return newPara.getId();
   }
 
-  private void cancelParagraph(Session conn, Notebook notebook,
-          Message fromMessage)
-          throws IOException {
+  private void copyParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
+    String newParaId
+            = insertParagraph(conn, userAndRoles, notebook, fromMessage);
+
+    if (newParaId == null) {
+      return;
+    }
+    fromMessage.put("id", newParaId);
+
+    updateParagraph(conn, userAndRoles, notebook, fromMessage);
+  }
+
+  private void cancelParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
       return;
@@ -1061,9 +1689,11 @@ public class NotebookServer implements
 
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
       return;
     }
 
@@ -1071,7 +1701,48 @@ public class NotebookServer implements
     p.abort();
   }
 
-  private void runParagraph(Session conn, Notebook notebook,
+  private void runAllParagraphs(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
+    final String noteId = (String) fromMessage.get("noteId");
+    if (StringUtils.isBlank(noteId)) {
+      return;
+    }
+
+    Note note = notebook.getNote(noteId);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "run all paragraphs", fromMessage.principal,
+              userAndRoles,
+              notebookAuthorization.getOwners(noteId));
+      return;
+    }
+
+    List<Map<String, Object>> paragraphs = gson.fromJson(String.valueOf(
+            fromMessage.data.get("paragraphs")),
+            new TypeToken<List<Map<String, Object>>>() {}.getType());
+
+    for (Map<String, Object> raw : paragraphs) {
+      String paragraphId = (String) raw.get("id");
+      if (paragraphId == null) {
+        continue;
+      }
+
+      String text = (String) raw.get("paragraph");
+      String title = (String) raw.get("title");
+      Map<String, Object> params = (Map<String, Object>) raw.get("params");
+      Map<String, Object> config = (Map<String, Object>) raw.get("config");
+
+      Paragraph p = setParagraphUsingMessage(note, fromMessage,
+              paragraphId, text, title, params, config);
+
+      persistAndExecuteSingleParagraph(conn, note, p);
+    }
+  }
+
+  private void runParagraph(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
           Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
     if (paragraphId == null) {
@@ -1080,51 +1751,76 @@ public class NotebookServer implements
 
     String noteId = getOpenNoteId(conn);
     final Note note = notebook.getNote(noteId);
-    if (this.userRole == null) {
-      permissionError(conn, "write", this.userRole, AllowedRoles.DATA_OWNER
-              + ", " + AllowedRoles.DATA_SCIENTIST);
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "write", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
       return;
     }
 
-    Paragraph p = note.getParagraph(paragraphId);
     String text = (String) fromMessage.get("paragraph");
-    p.setText(text);
-    p.setTitle((String) fromMessage.get("title"));
-
-    // This AuthenticationInfo object is used for secure impersonation by the Livy Interpreter to
-    // execute the Spark job as the hdfsUserName. It sets a property called "ProxyUser" in Livy
-    // Right now, an empty password is ok as a parameter
-    AuthenticationInfo authenticationInfo = new AuthenticationInfo(
-            this.hdfsUsername);
-    p.setAuthenticationInfo(authenticationInfo);
-
+    String title = (String) fromMessage.get("title");
     Map<String, Object> params = (Map<String, Object>) fromMessage.get("params");
-    p.settings.setParams(params);
     Map<String, Object> config = (Map<String, Object>) fromMessage.get("config");
-    p.setConfig(config);
-    // if it's the last paragraph, let's add a new one
-    boolean isTheLastParagraph = note.getLastParagraph().getId().equals(p.
-            getId());
-    if (!Strings.isNullOrEmpty(text) && isTheLastParagraph) {
-      note.addParagraph();
+    Paragraph p = setParagraphUsingMessage(note, fromMessage, paragraphId,
+            text, title, params, config);
+
+    persistAndExecuteSingleParagraph(conn, note, p);
+  }
+
+  private void persistAndExecuteSingleParagraph(Session conn,
+          Note note, Paragraph p) throws IOException {
+    // if it's the last paragraph and empty, let's add a new one
+    boolean isTheLastParagraph = note.isLastParagraph(p.getId());
+    if (!(p.getText().trim().equals(p.getMagic()) || Strings.isNullOrEmpty(p.
+            getText())) && isTheLastParagraph) {
+      Paragraph newPara = note.addParagraph(p.getAuthenticationInfo());
+      broadcastNewParagraph(note, newPara);
     }
 
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    note.persist(subject);
     try {
-      note.run(paragraphId);
+      note.persist(p.getAuthenticationInfo());
+    } catch (FileSystemException ex) {
+      LOG.log(Level.SEVERE,"Exception from run", ex);
+      conn.getBasicRemote().sendText(serializeMessage(
+              new Message(OP.ERROR_INFO).put("info",
+                      "Oops! There is something wrong with the notebook file system. "
+                      + "Please check the logs for more details.")));
+      // don't run the paragraph when there is error on persisting the note information
+      return;
+    }
+
+    try {
+      note.run(p.getId());
     } catch (Exception ex) {
-      LOG.log(Level.SEVERE, "Exception from run", ex);
+      LOG.log(Level.SEVERE,"Exception from run", ex);
       if (p != null) {
-        p.setReturn(new InterpreterResult(
-                InterpreterResult.Code.ERROR, ex.getMessage()), ex);
+        p.setReturn(new InterpreterResult(InterpreterResult.Code.ERROR, ex.
+                getMessage()), ex);
         p.setStatus(Status.ERROR);
-        broadcast(note.id(), new Message(OP.PARAGRAPH).put("paragraph", p));
+        broadcast(note.getId(), new Message(OP.PARAGRAPH).put("paragraph", p));
       }
     }
   }
 
-  private void sendAllConfigurations(Session conn,
+  private Paragraph setParagraphUsingMessage(Note note, Message fromMessage,
+          String paragraphId,
+          String text, String title, Map<String, Object> params,
+          Map<String, Object> config) {
+    Paragraph p = note.getParagraph(paragraphId);
+    p.setText(text);
+    p.setTitle(title);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal,
+            fromMessage.ticket);
+    p.setAuthenticationInfo(subject);
+    p.settings.setParams(params);
+    p.setConfig(config);
+
+    return p;
+  }
+
+  private void sendAllConfigurations(Session conn, HashSet<String> userAndRoles,
           Notebook notebook) throws IOException {
     ZeppelinConfiguration conf = notebook.getConf();
 
@@ -1134,32 +1830,110 @@ public class NotebookServer implements
           public boolean apply(String key) {
             return !key.contains("password") && !key.equals(
                     ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
-                        getVarName());
+                    getVarName());
           }
-        });
+      });
 
     conn.getBasicRemote().sendText(serializeMessage(new Message(
             OP.CONFIGURATIONS_INFO)
             .put("configurations", configurations)));
   }
 
-  private void checkpointNotebook(Session conn, Notebook notebook,
-          Message fromMessage) throws IOException {
+  private void checkpointNote(Session conn, Notebook notebook,
+          Message fromMessage)
+          throws IOException {
     String noteId = (String) fromMessage.get("noteId");
     String commitMessage = (String) fromMessage.get("commitMessage");
-    AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUsername);
-    notebook.checkpointNote(noteId, commitMessage, subject);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    Revision revision = notebook.checkpointNote(noteId, commitMessage, subject);
+    if (!Revision.isEmpty(revision)) {
+      List<Revision> revisions = notebook.listRevisionHistory(noteId, subject);
+      conn.getBasicRemote().sendText(serializeMessage(new Message(
+              OP.LIST_REVISION_HISTORY).put("revisionList", revisions)));
+    } else {
+      conn.getBasicRemote().sendText(serializeMessage(
+              new Message(OP.ERROR_INFO).put("info",
+                      "Couldn't checkpoint note revision: possibly storage "
+                      + "doesn't support versioning. Please check the logs for"
+                      + " more details.")));
+    }
+  }
+
+  private void listRevisionHistory(Session conn, Notebook notebook,
+          Message fromMessage)
+          throws IOException {
+    String noteId = (String) fromMessage.get("noteId");
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    List<Revision> revisions = notebook.listRevisionHistory(noteId, subject);
+
+    conn.getBasicRemote().sendText(serializeMessage(new Message(
+            OP.LIST_REVISION_HISTORY).put("revisionList", revisions)));
+  }
+
+  private void setNoteRevision(Session conn, HashSet<String> userAndRoles,
+          Notebook notebook,
+          Message fromMessage) throws IOException {
+
+    String noteId = (String) fromMessage.get("noteId");
+    String revisionId = (String) fromMessage.get("revisionId");
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+
+    NotebookAuthorization notebookAuthorization = notebook.
+            getNotebookAuthorization();
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+      permissionError(conn, "update", fromMessage.principal, userAndRoles,
+              notebookAuthorization.getWriters(noteId));
+      return;
+    }
+
+    Note headNote = null;
+    boolean setRevisionStatus;
+    try {
+      headNote = notebook.setNoteRevision(noteId, revisionId, subject);
+      setRevisionStatus = headNote != null;
+    } catch (Exception e) {
+      setRevisionStatus = false;
+      LOG.log(Level.SEVERE, "Failed to set given note revision", e);
+    }
+    if (setRevisionStatus) {
+      notebook.loadNoteFromRepo(noteId, subject);
+    }
+
+    conn.getBasicRemote().sendText(serializeMessage(new Message(
+            OP.SET_NOTE_REVISION).put("status", setRevisionStatus)));
+
+    if (setRevisionStatus) {
+      Note reloadedNote = notebook.getNote(headNote.getId());
+      broadcastNote(reloadedNote);
+    } else {
+      conn.getBasicRemote().sendText(serializeMessage(
+              new Message(OP.ERROR_INFO).put("info",
+                      "Couldn't set note to the given revision. "
+                      + "Please check the logs for more details.")));
+    }
+  }
+
+  private void getNoteByRevision(Session conn, Notebook notebook,
+          Message fromMessage)
+          throws IOException {
+    String noteId = (String) fromMessage.get("noteId");
+    String revisionId = (String) fromMessage.get("revisionId");
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    Note revisionNote = notebook.getNoteByRevision(noteId, revisionId, subject);
+    conn.getBasicRemote().sendText(serializeMessage(
+            new Message(OP.NOTE_REVISION).put("noteId", noteId).
+            put("revisionId", revisionId)
+            .put("note", revisionNote)));
   }
 
   /**
    * This callback is for the paragraph that runs on ZeppelinServer
    *
-   * @param noteId
-   * @param paragraphId
    * @param output output to append
    */
   @Override
-  public void onOutputAppend(String noteId, String paragraphId, String output) {
+  public void onOutputAppend(String noteId, String paragraphId, int index,
+          String output) {
     Message msg = new Message(OP.PARAGRAPH_APPEND_OUTPUT)
             .put("noteId", noteId)
             .put("paragraphId", paragraphId)
@@ -1171,12 +1945,11 @@ public class NotebookServer implements
   /**
    * This callback is for the paragraph that runs on ZeppelinServer
    *
-   * @param noteId
-   * @param paragraphId
    * @param output output to update (replace)
    */
   @Override
-  public void onOutputUpdated(String noteId, String paragraphId, String output) {
+  public void onOutputUpdated(String noteId, String paragraphId, int index,
+          InterpreterResult.Type type, String output) {
     Message msg = new Message(OP.PARAGRAPH_UPDATE_OUTPUT)
             .put("noteId", noteId)
             .put("paragraphId", paragraphId)
@@ -1186,8 +1959,249 @@ public class NotebookServer implements
   }
 
   /**
+   * This callback is for the paragraph that runs on ZeppelinServer
+   */
+  @Override
+  public void onOutputClear(String noteId, String paragraphId) {
+    Notebook notebook = notebook();
+    final Note note = notebook.getNote(noteId);
+    note.clearParagraphOutput(paragraphId);
+    Paragraph paragraph = note.getParagraph(paragraphId);
+    broadcastParagraph(note, paragraph);
+  }
+
+  /**
+   * When application append output
+   */
+  @Override
+  public void onOutputAppend(String noteId, String paragraphId, int index,
+          String appId,
+          String output) {
+    Message msg = new Message(OP.APP_APPEND_OUTPUT).put("noteId", noteId).put(
+            "paragraphId", paragraphId)
+            .put("index", index).put("appId", appId).put("data", output);
+    broadcast(noteId, msg);
+  }
+
+  /**
+   * When application update output
+   */
+  @Override
+  public void onOutputUpdated(String noteId, String paragraphId, int index,
+          String appId,
+          InterpreterResult.Type type, String output) {
+    Message msg = new Message(OP.APP_UPDATE_OUTPUT).put("noteId", noteId).put(
+            "paragraphId", paragraphId)
+            .put("index", index).put("type", type).put("appId", appId).put(
+            "data", output);
+    broadcast(noteId, msg);
+  }
+
+  @Override
+  public void onLoad(String noteId, String paragraphId, String appId,
+          HeliumPackage pkg) {
+    Message msg = new Message(OP.APP_LOAD).put("noteId", noteId).put(
+            "paragraphId", paragraphId)
+            .put("appId", appId).put("pkg", pkg);
+    broadcast(noteId, msg);
+  }
+
+  @Override
+  public void onStatusChange(String noteId, String paragraphId, String appId,
+          String status) {
+    Message msg = new Message(OP.APP_STATUS_CHANGE).put("noteId", noteId).put(
+            "paragraphId", paragraphId)
+            .put("appId", appId).put("status", status);
+    broadcast(noteId, msg);
+  }
+
+  @Override
+  public void onGetParagraphRunners(String noteId, String paragraphId,
+          RemoteWorksEventListener callback) {
+    Notebook notebookIns = notebook();
+    List<InterpreterContextRunner> runner = new LinkedList<>();
+
+    if (notebookIns == null) {
+      LOG.info("intepreter request notebook instance is null");
+      callback.onFinished(notebookIns);
+    }
+
+    try {
+      Note note = notebookIns.getNote(noteId);
+      if (note != null) {
+        if (paragraphId != null) {
+          Paragraph paragraph = note.getParagraph(paragraphId);
+          if (paragraph != null) {
+            runner.add(paragraph.getInterpreterContextRunner());
+          }
+        } else {
+          for (Paragraph p : note.getParagraphs()) {
+            runner.add(p.getInterpreterContextRunner());
+          }
+        }
+      }
+      callback.onFinished(runner);
+    } catch (NullPointerException e) {
+      LOG.log(Level.SEVERE, e.getMessage());
+      callback.onError();
+    }
+  }
+
+  @Override
+  public void onRemoteRunParagraph(String noteId, String paragraphId) throws
+          Exception {
+    Notebook notebookIns = notebook();
+    try {
+      if (notebookIns == null) {
+        throw new Exception("onRemoteRunParagraph notebook instance is null");
+      }
+      Note noteIns = notebookIns.getNote(noteId);
+      if (noteIns == null) {
+        throw new Exception(String.format("Can't found note id %s", noteId));
+      }
+
+      Paragraph paragraph = noteIns.getParagraph(paragraphId);
+      if (paragraph == null) {
+        throw new Exception(String.format("Can't found paragraph %s %s", noteId,
+                paragraphId));
+      }
+
+      Set<String> userAndRoles = Sets.newHashSet();
+      userAndRoles.add(SecurityUtils.getPrincipal());
+      userAndRoles.addAll(SecurityUtils.getRoles());
+      if (!notebookIns.getNotebookAuthorization().hasWriteAuthorization(
+              userAndRoles, noteId)) {
+        throw new ForbiddenException(String.format("can't execute note %s",
+                noteId));
+      }
+
+      AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
+              getPrincipal());
+      paragraph.setAuthenticationInfo(subject);
+
+      noteIns.run(paragraphId);
+
+    } catch (Exception e) {
+      throw e;
+    }
+  }
+
+  /**
+   * Notebook Information Change event
+   */
+  public static class NotebookInformationListener implements
+          NotebookEventListener {
+
+    private NotebookServer notebookServer;
+
+    public NotebookInformationListener(NotebookServer notebookServer) {
+      this.notebookServer = notebookServer;
+    }
+
+    @Override
+    public void onParagraphRemove(Paragraph p) {
+      try {
+        notebookServer.broadcastUpdateNoteJobInfo(System.currentTimeMillis()
+                - 5000);
+      } catch (IOException ioe) {
+        LOG.log(Level.SEVERE, "can not broadcast for job manager {}", ioe.
+                getMessage());
+      }
+    }
+
+    @Override
+    public void onNoteRemove(Note note) {
+      try {
+        notebookServer.broadcastUpdateNoteJobInfo(System.currentTimeMillis()
+                - 5000);
+      } catch (IOException ioe) {
+        LOG.log(Level.SEVERE, "can not broadcast for job manager {}", ioe.
+                getMessage());
+      }
+
+      List<Map<String, Object>> notesInfo = new LinkedList<>();
+      Map<String, Object> info = new HashMap<>();
+      info.put("noteId", note.getId());
+      // set paragraphs
+      List<Map<String, Object>> paragraphsInfo = new LinkedList<>();
+
+      // notebook json object root information.
+      info.put("isRunningJob", false);
+      info.put("unixTimeLastRun", 0);
+      info.put("isRemoved", true);
+      info.put("paragraphs", paragraphsInfo);
+      notesInfo.add(info);
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("lastResponseUnixTime", System.currentTimeMillis());
+      response.put("jobs", notesInfo);
+
+      notebookServer.broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+              new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                      response));
+
+    }
+
+    @Override
+    public void onParagraphCreate(Paragraph p) {
+      Notebook notebook = notebookServer.notebook();
+      List<Map<String, Object>> notebookJobs = notebook.getJobListByParagraphId(
+              p.getId());
+      Map<String, Object> response = new HashMap<>();
+      response.put("lastResponseUnixTime", System.currentTimeMillis());
+      response.put("jobs", notebookJobs);
+
+      notebookServer.broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+              new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                      response));
+    }
+
+    @Override
+    public void onNoteCreate(Note note) {
+      Notebook notebook = notebookServer.notebook();
+      List<Map<String, Object>> notebookJobs = notebook.getJobListByNoteId(note.
+              getId());
+      Map<String, Object> response = new HashMap<>();
+      response.put("lastResponseUnixTime", System.currentTimeMillis());
+      response.put("jobs", notebookJobs);
+
+      notebookServer.broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+              new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                      response));
+    }
+
+    @Override
+    public void onParagraphStatusChange(Paragraph p, Status status) {
+      Notebook notebook = notebookServer.notebook();
+      List<Map<String, Object>> notebookJobs = notebook.getJobListByParagraphId(
+              p.getId());
+
+      Map<String, Object> response = new HashMap<>();
+      response.put("lastResponseUnixTime", System.currentTimeMillis());
+      response.put("jobs", notebookJobs);
+
+      notebookServer.broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+              new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                      response));
+    }
+
+    @Override
+    public void onUnbindInterpreter(Note note, InterpreterSetting setting) {
+      Notebook notebook = notebookServer.notebook();
+      List<Map<String, Object>> notebookJobs = notebook.getJobListByNoteId(note.
+              getId());
+      Map<String, Object> response = new HashMap<>();
+      response.put("lastResponseUnixTime", System.currentTimeMillis());
+      response.put("jobs", notebookJobs);
+
+      notebookServer.broadcast(JOB_MANAGER_SERVICE.JOB_MANAGER_PAGE.getKey(),
+              new Message(OP.LIST_UPDATE_NOTE_JOBS).put("noteRunningJobs",
+                      response));
+    }
+  }
+
+  /**
    * Need description here.
-   * <p>
    */
   public static class ParagraphListenerImpl implements ParagraphJobListener {
 
@@ -1201,8 +2215,7 @@ public class NotebookServer implements
 
     @Override
     public void onProgressUpdate(Job job, int progress) {
-      notebookServer.broadcast(
-              note.id(),
+      notebookServer.broadcast(note.getId(),
               new Message(OP.PROGRESS).put("id", job.getId()).put("progress",
               job.progress()));
     }
@@ -1220,26 +2233,40 @@ public class NotebookServer implements
       }
 
       if (job.isTerminated()) {
-        LOG.log(Level.INFO, "Job {0} is finished", job.getId());
+        if (job.getStatus() == Status.FINISHED) {
+          LOG.log(Level.INFO, "Job {0} is finished successfully, status: {1}",
+                  new Object[]{job.getId(), job.getStatus()});
+        } else {
+          LOG.log(Level.SEVERE,
+                  "Job {0} is finished, status: {1}, exception: {2}, result: {3}",
+                  new Object[]{job.getId(), job.getStatus(), job.getException(),
+                    job.getReturn()});
+        }
+
         try {
           //TODO(khalid): may change interface for JobListener and pass subject from interpreter
-          note.persist(null);
+          note.persist(job instanceof Paragraph ? ((Paragraph) job).
+                  getAuthenticationInfo() : null);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, e.toString(), e);
         }
       }
-      notebookServer.broadcastNote(note);
+      if (job instanceof Paragraph) {
+        notebookServer.broadcastParagraph(note, (Paragraph) job);
+      }
+      try {
+        notebookServer.broadcastUpdateNoteJobInfo(System.currentTimeMillis()
+                - 5000);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE,"can not broadcast for job manager {}", e);
+      }
     }
 
     /**
-     * This callback is for praragraph that runs on RemoteInterpreterProcess
-     *
-     * @param paragraph
-     * @param out
-     * @param output
+     * This callback is for paragraph that runs on RemoteInterpreterProcess
      */
     @Override
-    public void onOutputAppend(Paragraph paragraph, InterpreterOutput out,
+    public void onOutputAppend(Paragraph paragraph, int idx,
             String output) {
       Message msg = new Message(OP.PARAGRAPH_APPEND_OUTPUT)
               .put("noteId", paragraph.getNote().getId())
@@ -1251,14 +2278,11 @@ public class NotebookServer implements
 
     /**
      * This callback is for paragraph that runs on RemoteInterpreterProcess
-     *
-     * @param paragraph
-     * @param out
-     * @param output
      */
     @Override
-    public void onOutputUpdate(Paragraph paragraph, InterpreterOutput out,
-            String output) {
+    public void onOutputUpdate(Paragraph paragraph, int idx,
+            InterpreterResultMessage result) {
+      String output = result.getData();
       Message msg = new Message(OP.PARAGRAPH_UPDATE_OUTPUT)
               .put("noteId", paragraph.getNote().getId())
               .put("paragraphId", paragraph.getId())
@@ -1267,6 +2291,11 @@ public class NotebookServer implements
       notebookServer.broadcast(paragraph.getNote().getId(), msg);
     }
 
+    @Override
+    public void onOutputUpdateAll(Paragraph paragraph,
+            List<InterpreterResultMessage> msgs) {
+      // TODO
+    }
   }
 
   @Override
@@ -1274,27 +2303,29 @@ public class NotebookServer implements
     return new ParagraphListenerImpl(this, note);
   }
 
-  private void sendAllAngularObjects(Note note, Session conn) throws IOException {
-    List<InterpreterSetting> settings = note.getNoteReplLoader().
-            getInterpreterSettings();
-    if (settings == null || settings.isEmpty()) {
+  public NotebookEventListener getNotebookInformationListener() {
+    return new NotebookInformationListener(this);
+  }
+
+  private void sendAllAngularObjects(Note note, String user, Session conn)
+          throws IOException {
+    List<InterpreterSetting> settings = notebook().getInterpreterFactory().
+            getInterpreterSettings(note.getId());
+    if (settings == null || settings.size() == 0) {
       return;
     }
 
     for (InterpreterSetting intpSetting : settings) {
-      AngularObjectRegistry registry = intpSetting.
-              getInterpreterGroup(note.id())
-              .getAngularObjectRegistry();
-      List<AngularObject> objects = registry.getAllWithGlobal(note.id());
+      AngularObjectRegistry registry = intpSetting.getInterpreterGroup(user,
+              note.getId()).getAngularObjectRegistry();
+      List<AngularObject> objects = registry.getAllWithGlobal(note.getId());
       for (AngularObject object : objects) {
-        conn.getBasicRemote().sendText(serializeMessage(new Message(
-                OP.ANGULAR_OBJECT_UPDATE)
-                .put("angularObject", object)
-                .put("interpreterGroupId",
-                        intpSetting.getInterpreterGroup(note.id()).getId())
-                .put("noteId", note.id())
-                .put("paragraphId", object.getParagraphId())
-        ));
+        conn.getBasicRemote().sendText(serializeMessage(
+                new Message(OP.ANGULAR_OBJECT_UPDATE).put("angularObject",
+                        object).put("interpreterGroupId", intpSetting.
+                        getInterpreterGroup(user, note.getId()).getId())
+                .put("noteId", note.getId()).put("paragraphId", object.
+                getParagraphId())));
       }
     }
   }
@@ -1313,27 +2344,21 @@ public class NotebookServer implements
 
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
-      if (object.getNoteId() != null && !note.id().equals(object.getNoteId())) {
+      if (object.getNoteId() != null && !note.getId().equals(object.getNoteId())) {
         continue;
       }
 
-      List<InterpreterSetting> intpSettings = note.getNoteReplLoader()
-              .getInterpreterSettings();
+      List<InterpreterSetting> intpSettings = notebook.getInterpreterFactory().
+              getInterpreterSettings(note.getId());
       if (intpSettings.isEmpty()) {
         continue;
       }
-      for (InterpreterSetting setting : intpSettings) {
-        if (setting.getInterpreterGroup(note.id()).getId().equals(
-                interpreterGroupId)) {
-          broadcast(
-                  note.id(),
-                  new Message(OP.ANGULAR_OBJECT_UPDATE)
-                  .put("angularObject", object)
-                  .put("interpreterGroupId", interpreterGroupId)
-                  .put("noteId", note.id())
-                  .put("paragraphId", object.getParagraphId()));
-        }
-      }
+
+      broadcast(note.getId(), new Message(OP.ANGULAR_OBJECT_UPDATE).put(
+              "angularObject", object)
+              .put("interpreterGroupId", interpreterGroupId).put("noteId", note.
+              getId())
+              .put("paragraphId", object.getParagraphId()));
     }
   }
 
@@ -1343,17 +2368,99 @@ public class NotebookServer implements
     Notebook notebook = notebook();
     List<Note> notes = notebook.getAllNotes();
     for (Note note : notes) {
-      if (noteId != null && !note.id().equals(noteId)) {
+      if (noteId != null && !note.getId().equals(noteId)) {
         continue;
       }
 
-      List<String> ids = note.getNoteReplLoader().getInterpreters();
-      for (String id : ids) {
-        if (id.equals(interpreterGroupId)) {
-          broadcast(
-                  note.id(),
+      List<String> settingIds = notebook.getInterpreterFactory().
+              getInterpreters(note.getId());
+      for (String id : settingIds) {
+        if (interpreterGroupId.contains(id)) {
+          broadcast(note.getId(),
                   new Message(OP.ANGULAR_OBJECT_REMOVE).put("name", name).put(
-                  "noteId", noteId));
+                  "noteId", noteId)
+                  .put("paragraphId", paragraphId));
+          break;
+        }
+      }
+    }
+  }
+
+  private void getEditorSetting(Session conn, Message fromMessage) throws
+          IOException {
+    String paragraphId = (String) fromMessage.get("paragraphId");
+    String replName = (String) fromMessage.get("magic");
+    String noteId = getOpenNoteId(conn);
+    String user = fromMessage.principal;
+    Message resp = new Message(OP.EDITOR_SETTING);
+    resp.put("paragraphId", paragraphId);
+    resp.put("editor", notebook().getInterpreterFactory().getEditorSetting(user,
+            noteId, replName));
+    conn.getBasicRemote().sendText(serializeMessage(resp));
+    return;
+  }
+
+  private void getInterpreterSettings(Session conn,
+          AuthenticationInfo subject)
+          throws IOException {
+    List<InterpreterSetting> availableSettings = notebook().
+            getInterpreterFactory().get();
+    conn.getBasicRemote().sendText(serializeMessage(
+            new Message(OP.INTERPRETER_SETTINGS).put("interpreterSettings",
+                    availableSettings)));
+  }
+
+  @Override
+  public void onMetaInfosReceived(String settingId,
+          Map<String, String> metaInfos) {
+    InterpreterSetting interpreterSetting = notebook().getInterpreterFactory().
+            get(settingId);
+    interpreterSetting.setInfos(metaInfos);
+  }
+
+  private void switchConnectionToWatcher(Session conn,
+          Message messagereceived)
+          throws IOException {
+    if (!isSessionAllowedToSwitchToWatcher(conn)) {
+      LOG.log(Level.SEVERE,
+              "Cannot switch this client to watcher, invalid security key");
+      return;
+    }
+    LOG.log(Level.INFO,"Going to add {} to watcher socket", conn);
+    // add the connection to the watcher.
+    if (watcherSockets.contains(conn)) {
+      LOG.info("connection alrerady present in the watcher");
+      return;
+    }
+    watcherSockets.add(conn);
+
+    // remove this connection from regular zeppelin ws usage.
+    removeConnectionFromAllNote(conn);
+    connectedSockets.remove(conn);
+    removeUserConnection(this.hdfsUsername, conn);
+  }
+
+  private boolean isSessionAllowedToSwitchToWatcher(Session session) {
+    String watcherSecurityKey = (String) session.getUserProperties().get(
+            WatcherSecurityKey.HTTP_HEADER);
+    return !(StringUtils.isBlank(watcherSecurityKey) || !watcherSecurityKey
+            .equals(WatcherSecurityKey.getKey()));
+  }
+
+  private void broadcastToWatchers(String noteId, String subject,
+          Message message) {
+    synchronized (watcherSockets) {
+      if (watcherSockets.isEmpty()) {
+        return;
+      }
+      for (Session watcher : watcherSockets) {
+        try {
+          watcher.getBasicRemote().sendText(
+                  WatcherMessage.builder(noteId).subject(subject).message(
+                  serializeMessage(message))
+                  .build().serialize());
+        } catch (IOException e) {
+          LOG.log(Level.SEVERE,"Cannot broadcast message to watcher", e);
         }
       }
     }
@@ -1386,5 +2493,4 @@ public class NotebookServer implements
     }
     return proj;
   }
-
 }

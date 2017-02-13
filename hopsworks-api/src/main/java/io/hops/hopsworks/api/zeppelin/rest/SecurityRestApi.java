@@ -64,7 +64,6 @@ public class SecurityRestApi {
    * for anonymous access, username is always anonymous.
    * After getting this ticket, access through websockets become safe
    *
-   * @param httpReq
    * @return 200 response
    */
   @GET

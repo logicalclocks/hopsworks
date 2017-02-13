@@ -14,48 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.api.zeppelin.rest.message;
+package io.hops.hopsworks.api.zeppelin.util;
 
-import java.util.List;
-import java.util.Map;
+import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
+import javax.ws.rs.core.Response.Status;
 
-import org.apache.zeppelin.dep.Dependency;
-import org.apache.zeppelin.interpreter.InterpreterOption;
 
 /**
- * NewInterpreterSetting rest api request message
- * <p>
+ * Utility method for exception in rest api.
+ *
  */
-public class NewInterpreterSettingRequest {
+public class ExceptionUtils {
 
-  private String name;
-  private String group;
-
-  private Map<String, String> properties;
-  private List<Dependency> dependencies;
-  private InterpreterOption option;
-
-  public NewInterpreterSettingRequest() {
-
+  public static javax.ws.rs.core.Response jsonResponse(Status status) {
+    return new JsonResponse<>(status).build();
   }
 
-  public String getName() {
-    return name;
-  }
-
-  public String getGroup() {
-    return group;
-  }
-
-  public Map<String, String> getProperties() {
-    return properties;
-  }
-
-  public List<Dependency> getDependencies() {
-    return dependencies;
-  }
-
-  public InterpreterOption getOption() {
-    return option;
+  public static javax.ws.rs.core.Response jsonResponseContent(Status status,
+          String message) {
+    return new JsonResponse<>(status, message).build();
   }
 }

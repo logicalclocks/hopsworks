@@ -8,7 +8,10 @@ angular.module('hopsWorksApp')
               websocketCalls.ws.reconnectIfNotNormalClose = true;
 
               websocketCalls.sendNewEvent = function (data) {
-                console.log('Send >> %o, %o', data.op, data);
+                data.principal = 'anonymous';
+                data.ticket = 'anonymous';
+                data.roles = '';
+                console.log('Send >> %o, %o, %o, %o, %o', data.op, data.principal, data.ticket, data.roles, data);
                 websocketCalls.ws.send(JSON.stringify(data));
               };
 

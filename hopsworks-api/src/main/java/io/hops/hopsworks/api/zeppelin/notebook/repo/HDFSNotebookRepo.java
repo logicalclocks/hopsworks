@@ -1,5 +1,6 @@
 package io.hops.hopsworks.api.zeppelin.notebook.repo;
 
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
@@ -9,10 +10,13 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,6 +32,7 @@ import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.NotebookImportDeserializer;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.apache.zeppelin.notebook.repo.NotebookRepo;
+import org.apache.zeppelin.notebook.repo.NotebookRepoSettingsInfo;
 import org.apache.zeppelin.scheduler.Job;
 import org.apache.zeppelin.user.AuthenticationInfo;
 import org.slf4j.Logger;
@@ -69,6 +74,10 @@ public class HDFSNotebookRepo implements NotebookRepo {
       dfs.mkdirs(path, fsPermission);
     }
     dfs.close();
+  }
+
+  private String getNotebookDirPath() {
+    return filesystemRoot.getPath();
   }
 
   private Configuration getHadoopConf() {
@@ -207,7 +216,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
   private DistributedFileSystem getUserDfs(AuthenticationInfo subject) throws
           IOException {
     UserGroupInformation ugi;
-    if (subject == null) {
+    if (subject == null || "anonymous".equals(subject.getUser())) {
       ugi = UserGroupInformation.createProxyUser(this.hdfsUser,
               UserGroupInformation.getLoginUser());
     } else {
@@ -274,7 +283,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
     DistributedFileSystem dfs = getUserDfs(subject);
     Path rootDir = getRootDir(dfs);
 
-    Path noteDir = new Path(rootDir, note.id());
+    Path noteDir = new Path(rootDir, note.getId());
     //returns dfs for the owner of the dir if the dir exists.
     //so we do not change the owner of the notebook.
     DistributedFileSystem dfsOp = getDistributedFs(noteDir, subject, dfs);
@@ -338,17 +347,65 @@ public class HDFSNotebookRepo implements NotebookRepo {
   }
 
   @Override
-  public Note get(String noteId, Revision rev, AuthenticationInfo subject)
-          throws IOException {
+  public List<Revision> revisionHistory(String noteId,
+          AuthenticationInfo subject) {
     // Auto-generated method stub
     return null;
   }
 
   @Override
-  public List<Revision> revisionHistory(String noteId,
-          AuthenticationInfo subject) {
+  public Note get(String noteId, String revId, AuthenticationInfo subject)
+          throws IOException {
+    logger.warn("Get note revision feature isn't supported in {}", this.getClass().toString());
+    return null;
+  }
+
+  @Override
+  public Note setNoteRevision(String noteId, String revId,
+          AuthenticationInfo subject) throws IOException {
     // Auto-generated method stub
     return null;
+  }
+
+  @Override
+  public List<NotebookRepoSettingsInfo> getSettings(AuthenticationInfo subject) {
+    NotebookRepoSettingsInfo repoSetting = NotebookRepoSettingsInfo.
+            newInstance();
+    List<NotebookRepoSettingsInfo> settings = Lists.newArrayList();
+
+    repoSetting.name = "Notebook Path";
+    repoSetting.type = NotebookRepoSettingsInfo.Type.INPUT;
+    repoSetting.value = Collections.emptyList();
+    repoSetting.selected = getNotebookDirPath();
+
+    settings.add(repoSetting);
+    return settings;
+  }
+
+  @Override
+  public void updateSettings(Map<String, String> settings,
+          AuthenticationInfo subject) {
+    if (settings == null || settings.isEmpty()) {
+      logger.error("Cannot update {} with empty settings", this.getClass().
+              getName());
+      return;
+    }
+    String newNotebookDirectotyPath = StringUtils.EMPTY;
+    if (settings.containsKey("Notebook Path")) {
+      newNotebookDirectotyPath = settings.get("Notebook Path");
+    }
+
+    if (StringUtils.isBlank(newNotebookDirectotyPath)) {
+      logger.error("Notebook path is invalid");
+      return;
+    }
+    logger.warn("{} will change notebook dir from {} to {}",
+            subject.getUser(), getNotebookDirPath(), newNotebookDirectotyPath);
+    try {
+      setNotebookDirectory(newNotebookDirectotyPath);
+    } catch (IOException e) {
+      logger.error("Cannot update notebook directory", e);
+    }
   }
 
 }

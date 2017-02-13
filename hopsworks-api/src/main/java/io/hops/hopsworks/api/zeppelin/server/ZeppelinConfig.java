@@ -1,6 +1,7 @@
 package io.hops.hopsworks.api.zeppelin.server;
 
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -20,6 +21,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.dep.DependencyResolver;
+import org.apache.zeppelin.helium.Helium;
+import org.apache.zeppelin.helium.HeliumApplicationFactory;
+import org.apache.zeppelin.helium.HeliumVisualizationFactory;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterFactory;
 import org.apache.zeppelin.notebook.Notebook;
@@ -57,6 +61,9 @@ public class ZeppelinConfig {
   private NotebookRepo notebookRepo;
   private DependencyResolver depResolver;
   private NotebookAuthorization notebookAuthorization;
+  private Helium helium;
+  private HeliumApplicationFactory heliumApplicationFactory;
+  private HeliumVisualizationFactory heliumVisualizationFactory;
   private Credentials credentials;
   private SearchService notebookIndex;
   private final Settings settings;
@@ -111,6 +118,19 @@ public class ZeppelinConfig {
               conf.getString(
                       ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
       this.schedulerFactory = SchedulerFactory.singleton();
+      this.heliumApplicationFactory = new HeliumApplicationFactory();
+      this.heliumVisualizationFactory = new HeliumVisualizationFactory(
+              new File(conf.getRelativeDir(
+                      ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO)),
+              new File(conf.
+                      getRelativeDir("lib/node_modules/zeppelin-tabledata")),
+              new File(conf.getRelativeDir("lib/node_modules/zeppelin-vis")));
+      this.helium = new Helium(conf.getHeliumConfPath(), conf.
+              getHeliumDefaultLocalRegistryPath(), heliumVisualizationFactory,
+              heliumApplicationFactory);
+      // create visualization bundle
+      this.heliumVisualizationFactory.bundle(helium.
+              getVisualizationPackagesToBundle());
       LOGGGER.log(Level.INFO, "Using notebook Repo class {0}",
               conf.getString(
                       ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
@@ -123,7 +143,7 @@ public class ZeppelinConfig {
         this.notebookRepo = new NotebookRepoSync(conf);
       }
       this.notebookIndex = new LuceneSearch();
-      this.notebookAuthorization = new NotebookAuthorization(conf);
+      this.notebookAuthorization = NotebookAuthorization.init(conf);
       this.credentials = new Credentials(conf.credentialsPersist(), conf.
               getCredentialsPath());
     } catch (Exception e) {
@@ -153,6 +173,9 @@ public class ZeppelinConfig {
     this.conf = zConf.getConf();
     this.depResolver = zConf.getDepResolver();
     this.schedulerFactory = zConf.getSchedulerFactory();
+    this.heliumApplicationFactory = zConf.getHeliumApplicationFactory();
+    this.heliumVisualizationFactory = zConf.getHeliumVisualizationFactory();
+    this.helium = zConf.getHelium();
     this.notebookRepo = zConf.getNotebookRepo();
     this.notebookIndex = zConf.getNotebookIndex();
     this.notebookAuthorization = zConf.getNotebookAuthorization();
@@ -187,18 +210,20 @@ public class ZeppelinConfig {
   private void setNotebookServer(NotebookServer nbs) {
     this.notebookServer = nbs;
     try {
-      this.replFactory = new InterpreterFactory(this.conf,
-              this.notebookServer,
-              this.notebookServer,
-              this.depResolver);
-      this.notebook = new Notebook(this.conf,
-              this.notebookRepo,
-              this.schedulerFactory,
-              this.replFactory,
-              this.notebookServer,
-              this.notebookIndex,
-              this.notebookAuthorization,
-              this.credentials);
+      this.replFactory = new InterpreterFactory(this.conf, this.notebookServer,
+              this.notebookServer, this.heliumApplicationFactory,
+              this.depResolver, SecurityUtils.isAuthenticated());
+      this.notebook = new Notebook(this.conf, this.notebookRepo,
+              this.schedulerFactory, this.replFactory, this.notebookServer,
+              this.notebookIndex, this.notebookAuthorization, this.credentials);
+      // to update notebook from application event from remote process.
+      this.heliumApplicationFactory.setNotebook(notebook);
+      // to update fire websocket event on application event.
+      this.heliumApplicationFactory.setApplicationEventListener(
+              this.notebookServer);
+      this.notebook.addNotebookEventListener(heliumApplicationFactory);
+      this.notebook.addNotebookEventListener(this.notebookServer.
+              getNotebookInformationListener());
     } catch (InterpreterException | IOException | RepositoryException |
             SchedulerException ex) {
       LOGGGER.log(Level.SEVERE, null, ex);
@@ -222,6 +247,18 @@ public class ZeppelinConfig {
     return this.schedulerFactory;
   }
 
+  public Helium getHelium() {
+    return helium;
+  }
+
+  public HeliumApplicationFactory getHeliumApplicationFactory() {
+    return heliumApplicationFactory;
+  }
+
+  public HeliumVisualizationFactory getHeliumVisualizationFactory() {
+    return heliumVisualizationFactory;
+  }
+  
   public NotebookServer getNotebookServer() {
     return this.notebookServer;
   }
@@ -417,6 +454,7 @@ public class ZeppelinConfig {
               instantiateFromTemplate(
                       ConfigFileGenerator.INTERPRETER_TEMPLATE,
                       "projectName", this.projectName,
+                      "zeppelin_home_dir", home,
                       "livy_url", settings.getLivyUrl()
               );
       interpreterConf = interpreter_json.toString();

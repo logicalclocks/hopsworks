@@ -52,6 +52,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.workflow.WorkflowJobService.class);
     register(io.hops.hopsworks.api.workflow.WorkflowService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.ConfigurationsRestApi.class);
+    register(io.hops.hopsworks.api.zeppelin.rest.HeliumService.class);
+    register(io.hops.hopsworks.api.zeppelin.rest.HeliumRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.InterpreterRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.InterpreterService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.LoginRestApi.class);
