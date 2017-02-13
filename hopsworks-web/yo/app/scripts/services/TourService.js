@@ -8,6 +8,8 @@ angular.module('hopsWorksApp')
 
                 tourService.kafkaSchemaName = "DemoAvroSchema";
                 tourService.kafkaTopicName = "DemoKafkaTopic";
+                tourService.kafkaProjectPrefix = "demo_kafka";
+                tourService.sparkProjectPrefix = "demo_spark";
 
                 tourService.currentStep_TourOne = -1;
                 tourService.currentStep_TourTwo = -1;
