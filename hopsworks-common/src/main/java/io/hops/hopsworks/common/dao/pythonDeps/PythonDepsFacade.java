@@ -163,7 +163,7 @@ public class PythonDepsFacade {
     List<PythonDep> all = new ArrayList<>();
     AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
     for (String k : libs.keySet()) {
-      PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
+      PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);
       pd.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
       Collection<Project> projs = pd.getProjectCollection();
       projs.add(project);
@@ -253,7 +253,7 @@ public class PythonDepsFacade {
   }
 
   private PythonDep getDep(AnacondaRepo repo, String dependency, String version,
-          boolean create) throws AppException {
+          boolean create, boolean preinstalled) throws AppException {
     TypedQuery<PythonDep> deps = em.createNamedQuery(
             "PythonDep.findByDependencyAndVersion", PythonDep.class);
     deps.setParameter("dependency", dependency);
@@ -267,6 +267,7 @@ public class PythonDepsFacade {
         dep.setRepoUrl(repo);
         dep.setDependency(dependency);
         dep.setVersion(version);
+        dep.setPreinstalled(preinstalled);
         em.persist(dep);
         em.flush();
       }
@@ -509,7 +510,7 @@ public class PythonDepsFacade {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = getRepo(proj, channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
-      dep = getDep(repo, lib, version, true);
+      dep = getDep(repo, lib, version, true, false);
 
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
@@ -674,8 +675,7 @@ public class PythonDepsFacade {
           boolean finished = true;
           for (CondaCommands c : ongoingCommands) {
             if (c.getOp().compareTo(opType) == 0 && c.getLib().compareTo(lib)
-                    == 0
-                    && c.getVersion().compareTo(version) == 0) {
+                    == 0 && c.getVersion().compareTo(version) == 0) {
               finished = false;
               break;
             }
@@ -688,6 +688,7 @@ public class PythonDepsFacade {
                       compareTo(version) == 0) {
                 pd.setStatus(condaStatus);
                 em.merge(pd);
+                break;
               }
             }
           }

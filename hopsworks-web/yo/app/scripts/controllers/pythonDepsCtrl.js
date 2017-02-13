@@ -20,13 +20,13 @@ angular.module('hopsWorksApp')
             self.resultsMsg = "";
 
 
-            $scope.sortType = 'lib';
+            $scope.sortType = 'preinstalled';
 
             self.searchText = "";
             self.searching = false;
             self.installing = false;
-            self.uninstalling = false;
-            self.updating = false;
+            self.uninstalling = {};
+            self.updating = {};
             self.enabling = false;
 
             self.searchResults = [];
@@ -49,7 +49,6 @@ angular.module('hopsWorksApp')
                         self.installingStatus = success.data;
                         if (self.installingStatus.length === 0) {
                           self.resultsMessageShowing = false;
-//                          self.resultsMsg = "All libraries appear to be fully installed.";
                         }
                         self.numEnvsNotEnabled = 0;
                         for (var i = 0; i < self.installingStatus.length; i++) {
@@ -181,9 +180,9 @@ angular.module('hopsWorksApp')
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
                         self.installing = false;
-                        growl.success("Installation done.", {title: 'Success', ttl: 3000});
-                        self.resultsMessageShowing = true;
-                        self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
+                        growl.success("Installation started. Click on the 'Ongoing Installation Status' tab for more info.", {title: 'Installing', ttl: 3000});
+                        self.resultsMessageShowing = false;
+//                        self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
                         self.searchResults = [];
                         self.selectedLibs[lib].installing = false;
 //                        for (var i = 0; i < self.searchResults.length; i++) {
@@ -200,7 +199,7 @@ angular.module('hopsWorksApp')
             };
 
             self.uninstall = function (condaUrl, lib, version) {
-              self.uninstalling = true;
+              self.uninstalling[lib] = true;
 
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
@@ -215,7 +214,7 @@ angular.module('hopsWorksApp')
             };
 
             self.upgrade = function (condaUrl, lib, version) {
-              self.upgrading = true;
+              self.upgrading[lib] = true;
 
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(

@@ -67,6 +67,11 @@ public class PythonDep implements Serializable {
           max = 128)
   @Column(name = "version")
   private String version;
+  @Basic(optional = true)
+  @Column(name = "preinstalled")
+  private boolean preinstalled;
+
+
   @ManyToMany(mappedBy = "pythonDepCollection")
   private Collection<Project> projectCollection;
   @JoinColumn(name = "repo_id",
@@ -145,6 +150,15 @@ public class PythonDep implements Serializable {
   public PythonDepsFacade.CondaStatus getStatus() {
     return status;
   }
+
+  public boolean isPreinstalled() {
+    return preinstalled;
+  }
+
+  public void setPreinstalled(boolean preinstalled) {
+    this.preinstalled = preinstalled;
+  }
+  
 
   
   @Override

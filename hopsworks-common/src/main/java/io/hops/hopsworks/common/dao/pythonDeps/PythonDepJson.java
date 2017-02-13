@@ -9,6 +9,7 @@ public class PythonDepJson {
   private String lib;
   private String version;
   private String status = "Not Installed";
+  private String preinstalled = "false";
 
   public PythonDepJson() {
   }
@@ -18,10 +19,12 @@ public class PythonDepJson {
    * @param lib
    * @param version 
    */
-  public PythonDepJson(String channelUrl, String lib, String version) {
+  public PythonDepJson(String channelUrl, String lib, String version, String 
+          preinstalled) {
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
+    this.preinstalled = preinstalled;
   }
 
   public PythonDepJson(PythonDep pd) {
@@ -29,6 +32,7 @@ public class PythonDepJson {
     this.lib = pd.getDependency();
     this.version = pd.getVersion();
     this.status = pd.getStatus().toString();
+    this.preinstalled = Boolean.toString(pd.isPreinstalled());
   }
 
   public String getChannelUrl() {
@@ -61,6 +65,14 @@ public class PythonDepJson {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public String getPreinstalled() {
+    return preinstalled;
+  }
+
+  public void setPreinstalled(String preinstalled) {
+    this.preinstalled = preinstalled;
   }
   
   @Override

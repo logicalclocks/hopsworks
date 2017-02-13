@@ -165,8 +165,6 @@ public class PythonDepsService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response status() throws AppException {
 
-//    PythonDep dep = pythonDepsFacade.findPythonDeps(library.getLib(), library.
-//            getVersion());
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
 
     GenericEntity<Collection<OpStatus>> libsFound
