@@ -181,7 +181,7 @@ angular.module('hopsWorksApp')
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
                         self.installing = false;
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                        growl.success("Installation done.", {title: 'Success', ttl: 3000});
                         self.resultsMessageShowing = true;
                         self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
                         self.searchResults = [];

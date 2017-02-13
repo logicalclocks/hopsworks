@@ -624,7 +624,6 @@ public class PythonDepsFacade {
 //    }
 //
 //  }
-
   private boolean isAnacondaOp(String op) {
     CondaOp condaOp = CondaOp.valueOf(op.toUpperCase());
     if (condaOp == CondaOp.CLONE || condaOp == CondaOp.CREATE || condaOp
@@ -632,12 +631,6 @@ public class PythonDepsFacade {
       return true;
     }
     return false;
-  }
-
-  private void updateCondaComamandStatus(int id, String status, String arg) {
-    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
-            status.toUpperCase());
-    updateCondaComamandStatus(id, s, arg);
   }
 
   public CondaCommands findCondaCommand(int commandId) {
@@ -656,14 +649,54 @@ public class PythonDepsFacade {
     }
   }
 
+//  public void updateCondaComamandStatus(int commandId, String status, String arg) {
+//    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
+//            status.toUpperCase());
+//    updateCondaComamandStatus(commandId, s, arg);
+//  }
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateCondaComamandStatus(int commandId, CondaStatus condaStatus,
-          String arg) {
+          String arg, String proj, CondaOp opType, String lib, String version) {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
-      cc.setStatus(condaStatus);
-      cc.setArg(arg);
-      em.merge(cc);
+      if (condaStatus == CondaStatus.SUCCESS) {
+        // remove completed commands
+        em.remove(cc);
+        em.flush();
+        // Check if this is the last operation for this project. If yes, set
+        // the PythonDep to be installed or 
+        // the CondaEnv operation is finished implicitly (no condaOperations are 
+        // returned => CondaEnv operation is finished).
+        if (!CondaOp.isEnvOp(opType)) {
+          Project p = projectFacade.findByName(proj);
+          Collection<CondaCommands> ongoingCommands = p.
+                  getCondaCommandsCollection();
+          boolean finished = true;
+          for (CondaCommands c : ongoingCommands) {
+            if (c.getOp().compareTo(opType) == 0 && c.getLib().compareTo(lib)
+                    == 0
+                    && c.getVersion().compareTo(version) == 0) {
+              finished = false;
+              break;
+            }
+          }
+          if (finished) {
+//          findPythonDeps(lib, version);
+            Collection<PythonDep> deps = p.getPythonDepCollection();
+            for (PythonDep pd : deps) {
+              if (pd.getDependency().compareTo(lib) == 0 && pd.getVersion().
+                      compareTo(version) == 0) {
+                pd.setStatus(condaStatus);
+                em.merge(pd);
+              }
+            }
+          }
+        }
+      } else {
+        cc.setStatus(condaStatus);
+        cc.setArg(arg);
+        em.merge(cc);
+      }
     } else {
       logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
               commandId);

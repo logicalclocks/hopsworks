@@ -223,55 +223,40 @@ public class AgentResource {
         JsonArray condaOps = json.getJsonArray("conda-ops");
         for (int j = 0; j < condaOps.size(); j++) {
           JsonObject entry = condaOps.getJsonObject(j);
-          for (String s : entry.keySet()) {
-            JsonObject conda = entry.getJsonObject(s);
-            String projName = conda.getString("proj");
-            String op = conda.getString("op");
-            PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
-                    op.toUpperCase());
-            String channelurl = conda.getString("channelurl");
-            String lib = conda.containsKey("lib") ? conda.getString("lib") : "";
-            String version = conda.containsKey("version") ? conda.getString(
-                    "version") : "";
-            String arg = conda.containsKey("arg") ? conda.getString("arg") : "";
-            String status = conda.getString("status");
-            PythonDepsFacade.CondaStatus agentStatus
-                    = PythonDepsFacade.CondaStatus.valueOf(status.toUpperCase());
-            int commmandId = Integer.parseInt(conda.getString("id"));
 
-            CondaCommands command = pythonDepsFacade.
-                    findCondaCommand(commmandId);
-            // If the command object does not exist, then the project
-            // has probably been removed. We needed to send a compensating action if
-            // this action was successful.
-            if (command == null) {
-//              if (PythonDepsFacade.CondaOp.isEnvOp(opType)) {
-//                if (opType == PythonDepsFacade.CondaOp.CREATE) {
-//                  List<Host> hosts = new ArrayList<>();
-//                  hosts.add(host);
-//                  pythonDepsFacade.condaEnvironmentOp(
-//                          PythonDepsFacade.CondaOp.REMOVE, projFacade.
-//                          findByName(projName), arg, hosts);
-//                }
-//              } else {
-//                // Just ignore it. It should be cleaned up when the project
-//                // is deleted
-//              }
+          String projName = entry.getString("proj");
+          String op = entry.getString("op");
+          PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
+                  op.toUpperCase());
+//            String channelurl = entry.getString("channelurl");
+          String lib = entry.containsKey("lib") ? entry.getString("lib") : "";
+          String version = entry.containsKey("version") ? entry.getString(
+                  "version") : "";
+          String arg = entry.containsKey("arg") ? entry.getString("arg") : "";
+          String status = entry.getString("status");
+          PythonDepsFacade.CondaStatus agentStatus
+                  = PythonDepsFacade.CondaStatus.valueOf(status.toUpperCase());
+          int commmandId = Integer.parseInt(entry.getString("id"));
+
+          CondaCommands command = pythonDepsFacade.
+                  findCondaCommand(commmandId);
+          // If the command object does not exist, then the project
+          // has probably been removed. We needed to send a compensating action if
+          // this action was successful.
+          if (command != null) {
+            if (agentStatus == PythonDepsFacade.CondaStatus.SUCCESS) {
+              // remove command from the DB
+//              pythonDepsFacade.removeCondaCommand(commmandId);
+              pythonDepsFacade.
+                      updateCondaComamandStatus(commmandId, agentStatus, arg,
+                              projName, opType, lib, version);
             } else {
-              if (agentStatus == PythonDepsFacade.CondaStatus.SUCCESS) {
-                // remove command from the DB
-                pythonDepsFacade.removeCondaCommand(commmandId);
-              } else {
-                pythonDepsFacade.
-                        updateCondaComamandStatus(commmandId, agentStatus, arg);
-              }
-              
-//            else {
-//              pythonDepsFacade.agentResponse(projName, op, channelurl, lib,
-//                      version, status, host.getId(), arg);
-//            }
+              pythonDepsFacade.
+                      updateCondaComamandStatus(commmandId, agentStatus, arg,
+                              projName, opType, lib, version);
             }
           }
+//          }
         }
       }
 
@@ -282,21 +267,36 @@ public class AgentResource {
 
         JsonObject envs = json.getJsonObject("block-report");
         for (String s : envs.keySet()) {
-          JsonArray group = envs.getJsonArray(s);
-          for (int j = 0; j < group.size(); j++) {
-            JsonObject env = group.getJsonObject(j);
+//          JsonObject installedLibs = envs.getJsonObject(s);
+          JsonArray installedLibs = envs.getJsonArray(s);
+
+          String projName = s;
+//          for (String myLib : installedLibs.keySet()) {
+//          for (String myLib : installedLibs.keySet()) {
+          for (int k = 0; k < installedLibs.size(); k++) {
+//            JsonArray agentLibs = installedLibs.getJsonArray(j);
+            JsonObject libObj = installedLibs.getJsonObject(k);
             BlockReport br = new BlockReport();
-            String projName = env.getString("proj");
             mapReports.put(projName, br);
             br.setProject(projName);
-            JsonArray libs = json.getJsonArray("libs");
-            for (int k = 0; k < libs.size(); k++) {
-              JsonObject lib = libs.getJsonObject(k);
-              String libName = lib.getString("lib");
-              String libUrl = lib.getString("channelUrl");
-              String libVersion = lib.getString("version");
-              br.addLib(libName, libUrl, libVersion);
-            }
+//            JsonArray libs = json.getJsonArray("libs");
+//            for (int k = 0; k < agentLibs.size(); k++) {
+//              JsonArray currLib = agentLibs.getJsonArray(k);
+            String libName = libObj.getString("name");
+            String libUrl = libObj.getString("channel");
+            String libVersion = libObj.getString("version");
+//              for (int m = 0; m < currLib.size(); m++) {
+//                JsonObject env = currLib.getJsonObject(j);
+//                if (env.containsKey("name"a)) {
+//                  libName = env.getString("name");
+//                } else if (env.containsKey("channel")) {
+//                  libName = env.getString("channel");
+//                } else if (env.containsKey("version")) {
+//                  libName = env.getString("version");
+//                }
+////              }
+            br.addLib(libName, libUrl, libVersion);
+//            }
           }
         }
 
@@ -307,21 +307,56 @@ public class AgentResource {
         // Any extra blocks reported need to be removed. Any missing need to
         // be added
         for (Project project : allProjs) {
+
+          Collection<CondaCommands> allCcs = project.
+                  getCondaCommandsCollection();
+
+          for (CondaCommands cc : allCcs) {
+            if (cc.getOp() == CondaOp.CREATE) {
+              // check if project is already installed
+            }
+            if (cc.getOp() == CondaOp.INSTALL) {
+              // check if project is already installed
+            }
+            if (cc.getOp() == CondaOp.UNINSTALL) {
+              // check if project is already installed
+            }
+            if (cc.getOp() == CondaOp.UPGRADE) {
+              // check if project is already installed
+            }
+
+          }
+
           if (!mapReports.containsKey(project.getName())) {
-            CondaCommands cc = new CondaCommands(host, settings.getSparkUser(),
-                    CondaOp.CREATE, CondaStatus.ONGOING, project, "", "", "",
-                    null, "");
-            // commandId == '-1' implies this is a block report command that
-            // doesn't need to be acknowledged by the agent (no need to send as a
-            // reponse a command-status). No need to persist this command to the DB either.
-            cc.setId(-1);
-            // Need to create env on node
-            differenceList.add(cc);
+            // check if a conda-command exists for creating the project and is valid.
+
+            boolean noExistingCommandInDB = true;
+            for (CondaCommands command : allCcs) {
+              if (command.getOp() == CondaOp.CREATE && command.getProj().
+                      compareTo(
+                              project.getName()) == 0) {
+                noExistingCommandInDB = false; // command already exists
+              }
+            }
+            if (noExistingCommandInDB) {
+              CondaCommands cc = new CondaCommands(host, settings.
+                      getSparkUser(), CondaOp.CREATE, CondaStatus.ONGOING,
+                      project, "", "", "", null, "");
+              // commandId == '-1' implies this is a block report command that
+              // doesn't need to be acknowledged by the agent (no need to send as a
+              // reponse a command-status). No need to persist this command to the DB either.
+              cc.setId(-1);
+              // Need to create env on node
+              differenceList.add(cc);
+            }
+
           } else {
             BlockReport br = mapReports.get(project.getName());
             for (PythonDep lib : project.getPythonDepCollection()) {
               BlockReport.Lib blockLib = br.getLib(lib.getDependency());
-              if (blockLib.compareTo(lib) != 0) {
+              if (blockLib == null) {
+
+              } else if (blockLib.compareTo(lib) != 0) {
                 CondaCommands cc = new CondaCommands(host, settings.
                         getSparkUser(),
                         CondaOp.INSTALL, CondaStatus.ONGOING, project,
