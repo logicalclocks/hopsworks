@@ -413,46 +413,65 @@
               on-show="newJobCtrl.guideSetJobName()"
       ></virtual-step>
       <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="1"
+      ></virtual-step>
+      <virtual-step
               class="ng-scope"
               tourtip="Click Next OR SPARK"
-              tourtip-step="1"
+              tourtip-step="2"
               tourtip-element="#sparkJobType"
               tourtip-placement="right"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.jobTypeSpark()"
-              tourtip-offset-horizontal="350"
-              tourtip-offset-vertical="250"
+              ng-if="newJobCtrl.accordion2.visible"
+      ></virtual-step>
+      <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="3"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
               tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
-              tourtip-step="2"
+              tourtip-step="4"
               tourtip-element="#selectFileButton"
               tourtip-placement="right"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
-              tourtip-offset-horizontal="350"
-              tourtip-offset-vertical="270"
+              ng-if="newJobCtrl.accordion3.visible"
+      ></virtual-step>
+      <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="5"
       ></virtual-step>
       <virtual-step
               class="ng-scope"
               tourtip="Choose parameters on you own or click Next and let us choose for you"
-              tourtip-step="3"
+              tourtip-step="6"
               tourtip-element="#chooseParametersAndArguments"
               tourtip-placement="top"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.chooseParameters()"
               on-show="newJobCtrl.populateKafkaJobParameters()"
+              ng-if="newJobCtrl.accordion4.visible"
       ></virtual-step>
+
       <virtual-step
               class="ng-scope"
               tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
-              tourtip-step="4"
+              tourtip-step="7"
               tourtip-element="#moreConfigs"
               tourtip-placement="top"
               tourtip-next-label="Next"
               on-proceed="newJobCtrl.createJob()"
               on-show="newJobCtrl.populateKafkaTopic()"
+              ng-if="newJobCtrl.accordion5.visible"
       ></virtual-step>
     </tour>
 

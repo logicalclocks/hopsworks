@@ -62,7 +62,6 @@ angular.module('hopsWorksApp')
                               self.topics.push({name: topics[i]['name'], ticked: false});
                             }
                           }
-                          console.log(">>> Done getting all topics");
                         }, function (error) {
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                 });
@@ -309,10 +308,8 @@ angular.module('hopsWorksApp')
               if (angular.equals('producer', self.tourService
                 .kafkaJobCreationState)) {
                   self.tourService.kafkaJobCreationState = "consumer";
-                  console.log("Job state is producer, setting consumer");
               } else {
                 self.tourService.kafkaJobCreationState = "producer";
-                console.log("Job state is consumer, setting producer");
               }
             };
 
@@ -328,13 +325,11 @@ angular.module('hopsWorksApp')
                   .kafkaJobCreationState)) {
                     // Go through again for the consumer. The state is
                     // toggled in newJob.html virtual step
-                    console.log(">>> Proceed to consumer job");
                     self.tourService.currentStep_TourSeven = 0;
                     self.tourService.currentStep_TourSix = 0;
                     self.kafkaGuideTransition();
                   } else {
                     // We are done
-                    console.log(">>> We are done!");
                     self.tourService.currentStep_TourSeven = -1;
                     self.tourService.currentStep_TourSix = 1;
                     self.kafkaGuideTransition();
@@ -383,7 +378,7 @@ angular.module('hopsWorksApp')
             self.nameFilledIn = function () {
               // For Kafka tour
               if (self.projectIsGuide) {
-                self.tourService.currentStep_TourSeven = 1;
+                self.tourService.currentStep_TourSeven = 2;
               }
               if (self.phase === 0) {
                 if (!self.jobname) {
@@ -420,7 +415,7 @@ angular.module('hopsWorksApp')
             self.jobTypeChosen = function () {
             // For Kafka tour
               if (self.projectIsGuide) {
-                self.tourService.currentStep_TourSeven = 2;
+                self.tourService.currentStep_TourSeven = 4;
               }
               self.phase = 2;
               self.accordion3.isOpen = true; //Open file selection
@@ -487,7 +482,7 @@ angular.module('hopsWorksApp')
               }
               // For Kafka tour
               if (self.projectIsGuide) {
-                self.tourService.currentStep_TourSeven = 4;
+                self.tourService.currentStep_TourSeven = 7;
               }
 
               if (self.tourService.currentStep_TourFour > -1) {
@@ -499,10 +494,8 @@ angular.module('hopsWorksApp')
               self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
               var jobState = self.tourService.kafkaJobCreationState;
               if (angular.equals('producer', jobState)) {
-                console.log("It's a producer")
                 self.runConfig.args = 'producer';
               } else if (angular.equals('consumer', jobState)) {
-                console.log("It's a consumer");
                 self.runConfig.args = "consumer /Projects/" +
                   self.projectName +"/Resources/Data";
               } else {
@@ -519,12 +512,10 @@ angular.module('hopsWorksApp')
               self.kafkaSelected = true;
               self.getAllTopics(self.projectId).then(
                 function(success) {
-                  console.log("Async returned: " + self.topics.length);
                   for (var i = 0; i < self.topics.length; i++) {
                     if (angular.equals(self.tourService.kafkaTopicName,
                       self.topics[i]['name'])) {
                       self.guideKafkaTopics.push(self.topics[i]);
-                      console.log("Topic found and put to config")
                       break;
                     }
 
@@ -533,7 +524,6 @@ angular.module('hopsWorksApp')
                   console.log(">>> Something bad happened")
                 }
               );
-              console.log(">>> populateKafkaTopic");
             };
 
             /**
@@ -587,7 +577,7 @@ angular.module('hopsWorksApp')
                             self.mainFileSelected(filename);
                             // For Kafka tour
                             if (self.projectIsGuide) {
-                              self.tourService.currentStep_TourSeven = 3;
+                              self.tourService.currentStep_TourSeven = 6;
                             }
 
                             if (self.tourService.currentStep_TourFour > -1) {
