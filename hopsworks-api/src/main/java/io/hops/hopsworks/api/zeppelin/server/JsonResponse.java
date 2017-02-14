@@ -99,9 +99,11 @@ public class JsonResponse<T> {
     if (pretty) {
       gsonBuilder.setPrettyPrinting();
     }
-    gsonBuilder.setExclusionStrategies(new JsonExclusionStrategy());
+    //will exclued options
+    //gsonBuilder.setExclusionStrategies(new JsonExclusionStrategy());
     Gson gson = gsonBuilder.create();
-    return gson.toJson(this);
+    String s = gson.toJson(this);
+    return s;
   }
 
 

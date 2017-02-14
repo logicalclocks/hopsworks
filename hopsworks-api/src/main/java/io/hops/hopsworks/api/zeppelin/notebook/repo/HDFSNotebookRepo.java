@@ -336,27 +336,31 @@ public class HDFSNotebookRepo implements NotebookRepo {
 
   @Override
   public void close() {
-    // nop
+    // no-op
   }
 
   @Override
   public Revision checkpoint(String noteId, String checkpointMsg,
           AuthenticationInfo subject) throws IOException {
-    // Auto-generated method stub
-    return null;
+    // no-op
+    logger.warn("Checkpoint feature isn't supported in {}", this.getClass().
+            toString());
+    return Revision.EMPTY;
   }
 
   @Override
   public List<Revision> revisionHistory(String noteId,
           AuthenticationInfo subject) {
-    // Auto-generated method stub
-    return null;
+    logger.warn("Get Note revisions feature isn't supported in {}", this.
+            getClass().toString());
+    return Collections.emptyList();
   }
 
   @Override
   public Note get(String noteId, String revId, AuthenticationInfo subject)
           throws IOException {
-    logger.warn("Get note revision feature isn't supported in {}", this.getClass().toString());
+    logger.warn("Get note revision feature isn't supported in {}", this.
+            getClass().toString());
     return null;
   }
 
