@@ -244,7 +244,7 @@ public class AgentResource {
           // has probably been removed. We needed to send a compensating action if
           // this action was successful.
           if (command != null) {
-            if (agentStatus == PythonDepsFacade.CondaStatus.SUCCESS) {
+            if (agentStatus == PythonDepsFacade.CondaStatus.INSTALLED) {
               // remove command from the DB
 //              pythonDepsFacade.removeCondaCommand(commmandId);
               pythonDepsFacade.

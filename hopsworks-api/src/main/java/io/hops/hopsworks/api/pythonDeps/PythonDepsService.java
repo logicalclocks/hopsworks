@@ -181,11 +181,11 @@ public class PythonDepsService {
 
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
 
-    GenericEntity<Collection<OpStatus>> libsFound
+    GenericEntity<Collection<OpStatus>> opsFound
             = new GenericEntity<Collection<OpStatus>>(response) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            libsFound).build();
+            opsFound).build();
 
   }
 

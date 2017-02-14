@@ -232,7 +232,7 @@
                         <div class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
                       </td>
                       <td class="col-sm-2">
-                        <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'SUCCESS'"
+                        <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'INSTALLED'"
                                 ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version); active = 3">
                           <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                           Install</button>
@@ -292,11 +292,11 @@
                       </td>
                       <td class="col-sm-2" ng-if="row.preinstalled === 'false'">
                         <div class="button-group">
-                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'SUCCESS'"
+                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'INSTALLED'"
                                   ng-click="pythonDepsCtrl.upgrade(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.upgrading[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Upgrade</button>
-                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'SUCCESS'"
+                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'INSTALLED'"
                                   ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Uninstall</button>
@@ -315,9 +315,9 @@
                 <h2>Ongoing installations</h2>
 
 
-                <div ng-if="pythonDepsCtrl.installingStatus.length == 0">There are no ongoing installations.</div>
+                <div ng-if="pythonDepsCtrl.opsStatus.length === 0">There are no ongoing installations.</div>
 
-                <table st-table="rowCollection" class="table table-striped" ng-if="pythonDepsCtrl.installingStatus.length > 0">
+                <table st-table="rowCollection" class="table table-striped" ng-if="pythonDepsCtrl.opsStatus.length > 0">
                   <thead>
                     <tr>
                       <th st-sort="depName" class="col-sm-4">Operation</th>
@@ -327,7 +327,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installingStatus" 
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.opsStatus" 
                         ng-class="{'selectedTopicOdd': row.isSelected === true}">
                       <td class="col-sm-4">
                         <div class="row" style="margin-left: 10px;"><b>{{row.op}}</b></div>
@@ -353,7 +353,7 @@
                         <div class="button-group">
                           <button type="submit" class="btn btn-primary" 
                                   ng-click="pythonDepsCtrl.installOneHost(row.lib, row.version, h.hostId)">
-                            <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            <i ng-if="pythonDepsCtrl.installing[h.hostId][row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Retry</button>
                         </div>
                       </td>

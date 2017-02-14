@@ -77,7 +77,7 @@ public class PythonDepsFacade {
   }
 
   public enum CondaStatus {
-    SUCCESS,
+    INSTALLED,
     ONGOING,
     FAILED
   }
@@ -164,7 +164,7 @@ public class PythonDepsFacade {
     AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
     for (String k : libs.keySet()) {
       PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);
-      pd.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
       Collection<Project> projs = pd.getProjectCollection();
       projs.add(project);
       all.add(pd);
@@ -189,7 +189,7 @@ public class PythonDepsFacade {
 //    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
 //    for (String k : libs.keySet()) {
 //      PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
-//      pd.setStatus(PythonDepsFacade.CondaStatus.SUCCESS);
+//      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
 //      Collection<Project> projs = pd.getProjectCollection();
 //      projs.add(project);
 //      all.add(pd);
@@ -439,6 +439,8 @@ public class PythonDepsFacade {
     }
     // For every unique operation, iterate through the commands and add an entry for it.
     // Inefficient, O(N^2) - but its small data
+    // Set the status for the operation as a whole (on OpStatus) based on the status of
+    // the operation on all hosts (if all finished => OpStatus.status = Installed).
     for (CondaOp co : uniqueOps) {
       OpStatus os = new OpStatus();
       os.setOp(co.toString());
@@ -659,7 +661,7 @@ public class PythonDepsFacade {
           String arg, String proj, CondaOp opType, String lib, String version) {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
-      if (condaStatus == CondaStatus.SUCCESS) {
+      if (condaStatus == CondaStatus.INSTALLED) {
         // remove completed commands
         em.remove(cc);
         em.flush();

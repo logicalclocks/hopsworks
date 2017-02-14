@@ -26,12 +26,12 @@ angular.module('hopsWorksApp')
             self.searching = false;
             self.installing = {};
             self.uninstalling = {};
-            self.updating = {};
+            self.upgrading = {};
             self.enabling = false;
 
             self.searchResults = [];
             self.installedLibs = [];
-            self.installingStatus = [];
+            self.opsStatus = [];
             self.selectedInstallStatus = {};
             self.numEnvsNotEnabled = 0;
 
@@ -46,34 +46,57 @@ angular.module('hopsWorksApp')
             var getInstallationStatus = function () {
               PythonDepsService.status(self.projectId).then(
                       function (success) {
-                        self.installingStatus = success.data;
-                        if (self.installingStatus.length === 0) {
+                        self.opsStatus = success.data;
+                        if (self.opsStatus.length === 0) {
                           self.resultsMessageShowing = false;
                         }
                         self.numEnvsNotEnabled = 0;
                         var finished = {};
-                        
-                        for (var i = 0; i < self.installingStatus.length; i++) {
-                          console.log(self.installingStatus[i]);
-                          finished[self.installingStatus[i].lib] = false;
-                          self.selectedInstallStatus[self.installingStatus[i].lib] =
+
+                        for (var i = 0; i < self.opsStatus.length; i++) {
+                          console.log(self.opsStatus[i]);
+                          if (self.opsStatus[i].status === "Installed") {
+                            if (self.opsStatus[i].op === "INSTALL") {
+                              self.installing[self.opsStatus[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+                              self.uninstalling[self.opsStatus[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UPGRADE") {
+                              self.upgrading[self.opsStatus[i].lib] = false;
+                            }
+                          }
+//                          if (self.opsStatus[i].status === "Installed") {
+//                            if (self.opsStatus[i].op === "INSTALL") {
+//                              finished[self.installing[i].lib] = false;
+//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+//                              finished[self.uninstalling[opsStatus[i].lib] = false;
+//                            } else if (self.opsStatus[i].op === "UPGRADE") {
+//                              finished[self.upgrading[i].lib] = false;
+//                            }
+//                          }
+                          self.selectedInstallStatus[self.opsStatus[i].lib] =
                                   {"host": {"host": "none", "lib": "Not installed"}, "installing": false};
-                          if (self.installingStatus[i].op === "CREATE" ||
-                                  self.installingStatus[i].op === "REMOVE" ||
-                                  self.installingStatus[i].op === "CLONE") {
+                          if (self.opsStatus[i].op === "CREATE" ||
+                                  self.opsStatus[i].op === "REMOVE" ||
+                                  self.opsStatus[i].op === "CLONE") {
                             self.numEnvsNotEnabled += 1;
                           }
                         }
 
 // If all hosts have completed for a library, making it installing false.
-                        for (var key in self.installing) {
-                          if (finished[key] !== false) {
-                            self.installing[key] = false;
-                          }
-                        }                        
-                      
-                      
-                      
+//                        for (var key in self.installing) {
+//                          if (finished[key] !== false) {
+//                            if (self.opsStatus[i].op === "INSTALL") {
+//                              self.installing[key] = false;
+//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+//                              self.uninstalling[key] = false;
+//                            } else if (self.opsStatus[i].op === "UPGRADE") {
+//                              self.upgrading[key] = false;
+//                            }
+//                          }
+//                        }
+
+
+
                       }, function (error) {
                 growl.error("Could not get installation status for libs", {title: 'Error', ttl: 3000});
               });
@@ -165,18 +188,21 @@ angular.module('hopsWorksApp')
 
 
             self.installOneHost = function (lib, version, host) {
-              
+
+              self.installing[host][lib] = true;
+
               var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.installOneHost(self.projectId, host, data).then(
                       function (success) {
-                        self.installing[lib] = false;
+                        self.installing[host][lib] = false;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+                self.installing[host][lib] = false;
               });
 
             };
-            
+
             self.install = function (lib, version) {
 
               self.installing[lib] = true;
@@ -202,11 +228,9 @@ angular.module('hopsWorksApp')
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
                       function (success) {
-                        self.uninstalling = false;
-
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+//                        growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                       }, function (error) {
-                self.uninstalling = false;
+                      self.uninstalling[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
@@ -217,10 +241,9 @@ angular.module('hopsWorksApp')
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
-                        self.upgrading = false;
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                        growl.success("Trying to update " + lib, {title: 'Updating', ttl: 3000});
                       }, function (error) {
-                self.upgrading = false;
+              self.upgrading[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
