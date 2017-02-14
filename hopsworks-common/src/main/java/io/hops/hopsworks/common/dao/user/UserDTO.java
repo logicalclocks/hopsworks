@@ -17,6 +17,7 @@ public class UserDTO {
   private String repeatedPassword;
   private boolean ToS;
   private boolean twoFactor;
+  private boolean toursEnabled;
   private String orgName;
   private String dep;
   private String street;
@@ -45,6 +46,7 @@ public class UserDTO {
     }
     this.maxNumProjects = user.getMaxNumProjects();
     this.twoFactor = user.getTwoFactor();
+    this.toursEnabled = user.getToursEnabled();
   }
 
   public String getEmail() {
@@ -143,6 +145,14 @@ public class UserDTO {
     this.twoFactor = twoFactor;
   }
 
+  public boolean getToursEnabled() {
+    return toursEnabled;
+  }
+  
+  public void setToursEnabled(boolean toursEnabled) {
+    this.toursEnabled = toursEnabled;
+  }
+  
   public String getOrgName() {
     return orgName;
   }
