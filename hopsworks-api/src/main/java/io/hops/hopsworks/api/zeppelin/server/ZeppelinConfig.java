@@ -77,6 +77,7 @@ public class ZeppelinConfig {
   private final String logDirPath;
   private final String interpreterDirPath;
   private final String libDirPath;
+  private final String repoDirPath;
 
   public ZeppelinConfig(String projectName, String owner, Settings settings,
           String interpreterConf) {
@@ -108,10 +109,14 @@ public class ZeppelinConfig {
     libDirPath = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + "lib";
+    repoDirPath = settings.getZeppelinDir() + File.separator
+            + Settings.DIR_ROOT + File.separator + this.projectName
+            + File.separator + "local-repo";
     try {
       newDir = createZeppelinDirs();//creates the necessary folders for the project in /srv/zeppelin
       newBinDir = copyBinDir();
       createSymLinks();//interpreter and lib
+      createVisCacheSymlink();//create a symlink to node and npm tar cache.
       newFile = createZeppelinConfFiles(interpreterConf);//create project specific configurations for zeppelin 
       this.conf = loadConfig();
       this.depResolver = new DependencyResolver(
@@ -170,6 +175,7 @@ public class ZeppelinConfig {
     this.logDirPath = zConf.getLogDirPath();
     this.interpreterDirPath = zConf.getInterpreterDirPath();
     this.libDirPath = zConf.getLibDirPath();
+    this.repoDirPath = zConf.getRepoDirPath();
     this.conf = zConf.getConf();
     this.depResolver = zConf.getDepResolver();
     this.schedulerFactory = zConf.getSchedulerFactory();
@@ -319,6 +325,10 @@ public class ZeppelinConfig {
     return logDirPath;
   }
 
+  public String getRepoDirPath() {
+    return repoDirPath;
+  }
+
   public NotebookAuthorization getNotebookAuthorization() {
     return notebookAuthorization;
   }
@@ -336,6 +346,7 @@ public class ZeppelinConfig {
     new File(runDirPath).mkdirs();
     new File(binDirPath).mkdirs();
     new File(logDirPath).mkdirs();
+    new File(repoDirPath).mkdirs();
     return newProjectDir;
   }
 
@@ -358,7 +369,7 @@ public class ZeppelinConfig {
     return binDir.list().length == sourceDir.list().length;
   }
 
-  //creates sym link to interpreters and libs
+  //creates symlink to interpreters and libs
   private void createSymLinks() throws IOException {
     File target = new File(settings.getZeppelinDir() + File.separator
             + "interpreter");
@@ -368,6 +379,22 @@ public class ZeppelinConfig {
     }
     target = new File(settings.getZeppelinDir() + File.separator + "lib");
     newLink = new File(libDirPath);
+    if (!newLink.exists()) {
+      Files.createSymbolicLink(newLink.toPath(), target.toPath());
+    }
+  }
+  
+  private void createVisCacheSymlink() throws IOException {
+    File target = new File(settings.getZeppelinDir() + File.separator
+            + "local-repo/vis");
+    if (!target.exists()) {
+      LOGGGER.log(Level.SEVERE,
+              "Node and npm not cached at {0}. Zeppelin will try to download "
+            + "this for every project.",
+              target.toURI());
+      return;
+    }
+    File newLink = new File(repoDirPath + File.separator + "vis");
     if (!newLink.exists()) {
       Files.createSymbolicLink(newLink.toPath(), target.toPath());
     }
@@ -505,14 +532,18 @@ public class ZeppelinConfig {
     boolean ret = false;
     File interpreter = new File(interpreterDirPath);
     File lib = new File(libDirPath);
+    File repo = new File(repoDirPath + File.separator + "vis");
     //symlinks must be deleted before we recursive delete the project dir.
     int retry = 0;
-    while (interpreter.exists() || lib.exists()) {
+    while (interpreter.exists() || lib.exists() || repo.exists()) {
       if (interpreter.exists()) {
         interpreter.delete();
       }
       if (lib.exists()) {
         lib.delete();
+      }
+      if (repo.exists()) {
+        repo.delete();
       }
       retry++;
       if (retry > DELETE_RETRY) {

@@ -85,7 +85,7 @@ public class InterpreterService {
   @Path("/livy/sessions")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response getSessions() {
+  public Response getSessions(@PathParam("projectID") String projectID) {
     LivyMsg sessions = zeppelinResource.getLivySessions();
     return new JsonResponse(Response.Status.OK, "", sessions).build();
   }
@@ -94,7 +94,8 @@ public class InterpreterService {
   @Path("/livy/sessions/{sessionId}")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response getSession(@PathParam("sessionId") int sessionId) {
+  public Response getSession(@PathParam("projectID") String projectID,
+          @PathParam("sessionId") int sessionId) {
     LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
@@ -107,7 +108,8 @@ public class InterpreterService {
   @Path("/livy/sessions/delete/{sessionId}")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response deleteSession(@PathParam("sessionId") int sessionId) {
+  public Response deleteSession(@PathParam("projectID") String projectID,
+          @PathParam("sessionId") int sessionId) {
     int res = zeppelinResource.deleteLivySession(sessionId);
     if (res == Response.Status.NOT_FOUND.getStatusCode()) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId

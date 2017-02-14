@@ -75,6 +75,7 @@ import io.hops.hopsworks.common.jobs.administration.JobAdministration;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.Settings;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
 /**
@@ -82,6 +83,7 @@ import javax.ws.rs.core.Context;
  * <p>
  */
 @RequestScoped
+@Produces("application/json")
 public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
