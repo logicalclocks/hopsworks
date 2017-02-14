@@ -6,6 +6,7 @@ angular.module('hopsWorksApp')
 
                 var tourService = this;
 
+                tourService.toursInfoStep = 0;
                 tourService.currentStep_TourOne = -1;
                 tourService.currentStep_TourTwo = -1;
                 tourService.currentStep_TourThree = -1;
@@ -15,6 +16,7 @@ angular.module('hopsWorksApp')
 
                 tourService.resetTours = function () {
 
+                    tourService.toursInfoStep = 0;
                     tourService.currentStep_TourOne = -1;
                     tourService.alive_TourOne = 15;
                     tourService.currentStep_TourTwo = -1;

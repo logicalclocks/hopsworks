@@ -20,6 +20,7 @@ angular.module('hopsWorksApp')
               ToS: '',
               authType: 'Mobile',
               twoFactor: false,
+              toursEnabled: true,
               orgName: '',
               dep: '',
               street: '',
