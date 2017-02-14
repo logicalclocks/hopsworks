@@ -29,6 +29,16 @@ angular.module('hopsWorksApp')
                 }
                 return $http(regReq)
               },
+              installOneHost: function (projectId, host, data) {
+                var regReq = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/pythonDeps/installOneHost/' + host,
+                  headers: {'Content-Type': 'application/json'},
+                  data: data,
+                  dataType: "json"
+                }
+                return $http(regReq)
+              },
               uninstall: function (projectId, data) {
                 var regReq = {
                   method: 'POST',

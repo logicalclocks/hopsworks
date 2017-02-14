@@ -234,7 +234,7 @@
                       <td class="col-sm-2">
                         <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'SUCCESS'"
                                 ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version); active = 3">
-                          <i ng-if="pythonDepsCtrl.selectedLibs[row.lib].installing" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                           Install</button>
                       </td>
                     </tr>
@@ -332,39 +332,34 @@
                       <td class="col-sm-4">
                         <div class="row" style="margin-left: 10px;"><b>{{row.op}}</b></div>
                       </td>
-                      <td class="col-sm-2">
+                      <td class="col-sm-2">{{row.lib}}
                       </td>
-                      <td class="col-sm-2">
+                      <td class="col-sm-2">{{row.version}}
                       </td>
-                      <td class="col-sm-2">
+                      <td class="col-sm-2">{{row.status}}
                       </td>
                     </tr>
-                    <tr ng-repeat="host in row.hosts" class="td {padding-top: 10px; padding-bottom:10px}">
-                      <td class="col-sm-2"/>
-                      <td class="col-sm-2">
-                        {{host.lib}}
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="h in row.hosts" 
+                        ng-class="{'selectedTopicEven': h.isSelected === true}">
+                      <td class="col-sm-4">
+                        {{h.hostId}}
                       </td>
                       <td class="col-sm-2">
-                        {{host.version}}
+                        {{h.status}}
                       </td>
                       <td class="col-sm-2">
-                        {{host.status}}
                       </td>
                       <td class="col-sm-2">
                         <div class="button-group">
                           <button type="submit" class="btn btn-primary" 
-                                  ng-click="pythonDepsCtrl.uninstall(row.op, host.details)">
-                            <i ng-if="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                  ng-click="pythonDepsCtrl.installOneHost(row.lib, row.version, h.hostId)">
+                            <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Retry</button>
                         </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
-
-
-
-
 
               </uib-tab>              
             </uib-tabset>

@@ -553,27 +553,26 @@ public class PythonDepsFacade {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void kagentCalls(List<Host> hosts,
-          CondaOp op, Project proj, PythonDep dep) {
-    List<Future> waiters = new ArrayList<>();
-    for (Host h : hosts) {
-      Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
-              this.web, proj, h, op, dep));
-      waiters.add(f);
-    }
-    for (Future f : waiters) {
-      try {
-        f.get(10, TimeUnit.SECONDS);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(PythonDepsFacade.class.getName()).
-                log(Level.SEVERE, null, ex);
-      } catch (ExecutionException ex) {
-        Logger.getLogger(PythonDepsFacade.class.getName()).
-                log(Level.SEVERE, null, ex);
-      } catch (TimeoutException ex) {
-        Logger.getLogger(PythonDepsFacade.class.getName()).
-                log(Level.SEVERE, null, ex);
-      }
+  public void blockingCondaOp(int hostId, CondaOp op,
+          Project proj, String channelUrl,
+          String lib, String version) throws AppException {
+    Host host = em.find(Host.class, hostId);
+    
+    AnacondaRepo repo = getRepo(proj, channelUrl, false);
+    PythonDep dep = getDep(repo, lib, version, false, false);
+    Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
+            this.web, proj, host, op, dep));
+    try {
+      f.get(1000, TimeUnit.SECONDS);
+    } catch (InterruptedException ex) {
+      Logger.getLogger(PythonDepsFacade.class.getName()).
+              log(Level.SEVERE, null, ex);
+    } catch (ExecutionException ex) {
+      Logger.getLogger(PythonDepsFacade.class.getName()).
+              log(Level.SEVERE, null, ex);
+    } catch (TimeoutException ex) {
+      Logger.getLogger(PythonDepsFacade.class.getName()).
+              log(Level.SEVERE, null, ex);
     }
 
   }

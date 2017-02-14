@@ -24,7 +24,7 @@ angular.module('hopsWorksApp')
 
             self.searchText = "";
             self.searching = false;
-            self.installing = false;
+            self.installing = {};
             self.uninstalling = {};
             self.updating = {};
             self.enabling = false;
@@ -51,7 +51,11 @@ angular.module('hopsWorksApp')
                           self.resultsMessageShowing = false;
                         }
                         self.numEnvsNotEnabled = 0;
+                        var finished = {};
+                        
                         for (var i = 0; i < self.installingStatus.length; i++) {
+                          console.log(self.installingStatus[i]);
+                          finished[self.installingStatus[i].lib] = false;
                           self.selectedInstallStatus[self.installingStatus[i].lib] =
                                   {"host": {"host": "none", "lib": "Not installed"}, "installing": false};
                           if (self.installingStatus[i].op === "CREATE" ||
@@ -60,6 +64,16 @@ angular.module('hopsWorksApp')
                             self.numEnvsNotEnabled += 1;
                           }
                         }
+
+// If all hosts have completed for a library, making it installing false.
+                        for (var key in self.installing) {
+                          if (finished[key] !== false) {
+                            self.installing[key] = false;
+                          }
+                        }                        
+                      
+                      
+                      
                       }, function (error) {
                 growl.error("Could not get installation status for libs", {title: 'Error', ttl: 3000});
               });
@@ -79,27 +93,6 @@ angular.module('hopsWorksApp')
               $interval.cancel(getInstallationStatusInterval);
             });
 
-
-//            self.libStatus = function (ev, lib, version) {
-//              
-//              PythonDepsService.status(self.projectId, lib, version).then(
-//                      function (success) {
-//                        self.installedLibs = success.data;
-//              // ask install status of this library for all nodes
-//              // In the success handler, draw the dialog
-//              $mdDialog.show(
-//                      $mdDialog.alert()
-//                      .parent(angular.element(document.querySelector('#popupContainer')))
-//                      .clickOutsideToClose(true)
-//                      .title('Pre-installed Python Libraries')
-//                      .textContent('')
-//                      .ok('Ack!')
-//                      .targetEvent(ev)
-//                      );
-//                      }, function (error) {
-//                self.enabled = false;
-//              });
-//            };
 
             self.init = function () {
               PythonDepsService.enabled(self.projectId).then(
@@ -170,30 +163,35 @@ angular.module('hopsWorksApp')
               });
             };
 
+
+            self.installOneHost = function (lib, version, host) {
+              
+              var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
+
+              PythonDepsService.installOneHost(self.projectId, host, data).then(
+                      function (success) {
+                        self.installing[lib] = false;
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+              });
+
+            };
+            
             self.install = function (lib, version) {
 
-              self.installing = true;
-              self.selectedLibs[lib].installing = true;
+              self.installing[lib] = true;
 
               var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
-                        self.installing = false;
                         growl.success("Installation started. Click on the 'Ongoing Installation Status' tab for more info.", {title: 'Installing', ttl: 3000});
                         self.resultsMessageShowing = false;
-//                        self.resultsMsg = "Successfully installed: " + lib + " version: " + version;
                         self.searchResults = [];
-                        self.selectedLibs[lib].installing = false;
-//                        for (var i = 0; i < self.searchResults.length; i++) {
-//                          if (self.searchResults[i].lib === data.lib) {
-//                            self.searchResults[i].installed = "Installed";
-//                          }
-//                        }
+//                        self.installing[lib] = false;
 
                       }, function (error) {
-                self.installing = false;
-                self.selectedLibs[lib].installing = false;
+                self.installing[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };

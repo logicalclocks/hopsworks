@@ -148,6 +148,20 @@ public class PythonDepsService {
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
+  @Path("/installOneHost/{hostname}")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public Response installOneHost(
+          @PathParam("hostId") String hostId,
+          PythonDepJson library) throws AppException {
+    pythonDepsFacade.blockingCondaOp(Integer.parseInt(hostId), 
+            PythonDepsFacade.CondaOp.INSTALL, project,
+            library.getChannelUrl(), library.getLib(), library.getVersion());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
   @Path("/upgrade")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response upgrade(PythonDepJson library) throws AppException {
