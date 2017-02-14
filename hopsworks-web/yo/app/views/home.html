@@ -7,11 +7,12 @@
   </div>
 
   <div ng-show="mainCtrl.searchReturned === ''" class="row" ng-controller="HomeCtrl as homeCtrl">
-    <div class="col-sm-6 col-md-2 col-lg-2">
+    <div class="col-sm-6 col-md-2 col-lg-2" id="toursBox">
       <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
         <div class="list-group">
           <a href="" class="list-group-item active">Help</a>
-          <a href="" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
+          <a href=""
+             ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.getTours();" class="list-group-item"
              ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
             Tours
@@ -170,5 +171,20 @@
       tourtip-offset-vertical="-17"
       tourtip-offset-horizontal="13"
       ></virtual-step>
+  </tour>
+
+  <tour class="ng-scope" step="homeCtrl.tourService.toursInfoStep"
+        post-tour="closeTour()"
+        ng-if="homeCtrl.loadedView && homeCtrl.toursEnabled">
+    <virtual-step
+            class="ng-scope"
+            tourtip="Follow our guided tours"
+            tourtip-step="0"
+            tourtip-element="#toursBox"
+            tourtip-placement="right"
+            tourtip-next-label="Got it!"
+            on-proceed="homeCtrl.disableTours()"
+            tourtip-offset-horizontal="50"
+    ></virtual-step>
   </tour>
 </div>

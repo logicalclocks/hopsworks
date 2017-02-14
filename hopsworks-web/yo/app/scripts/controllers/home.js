@@ -1,8 +1,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService', '$q', 'TourService', '$location', '$scope',
-          function (ProjectService, ModalService, growl, ActivityService, $q, TourService, $location, $scope) {
+        .controller('HomeCtrl', ['ProjectService', 'UserService',
+        'ModalService', 'growl', 'ActivityService', '$q', 'TourService',
+        '$location', '$scope',
+          function (ProjectService, UserService, ModalService, growl,
+          ActivityService, $q, TourService, $location, $scope) {
 
             var self = this;
 
@@ -20,6 +23,8 @@ angular.module('hopsWorksApp')
             self.tutorials = [];
             self.publicDatasets = [];
             self.working = [];
+            self.user = {};
+            self.toursEnabled;
             self.getTours = function () {
               self.tours = [
                 {'name': 'spark', 'tip': 'Take a tour of HopsWorks by creating a project and running a Spark job!'},
@@ -27,6 +32,11 @@ angular.module('hopsWorksApp')
 //                {'name': 'zeppelin', 'tip': 'Take a tour of Zeppelin by creating a Hopsworks project and running a Zeppelin notebook for Spark!'}
               ];
             };
+
+            $scope.$on('$viewContentLoaded', function () {
+              self.loadedView = true;
+              self.isToursEnabled();
+            });
 
             self.getTutorials = function () {
               self.tutorials = [
@@ -161,7 +171,28 @@ angular.module('hopsWorksApp')
 
             updateUIAfterChange(false);
 
+            self.isToursEnabled = function () {
+              if (self.toursEnabled == null) {
+                UserService.profile().then(
+                  function (success) {
+                    self.user = success.data;
+                    self.toursEnabled = self.user.toursEnabled;
+                  }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
+              }
+            };
 
+            self.disableTours = function () {
+              self.user.toursEnabled = false;
+              UserService.UpdateProfile(self.user).then(
+                function (success) {
+                  self.toursEnabled = false;
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                }
+              );
+            };
 
             self.addPublicDatasetModal = function (inodeId, name, description) {
 
