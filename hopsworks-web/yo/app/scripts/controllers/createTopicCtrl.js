@@ -49,13 +49,14 @@ angular.module('hopsWorksApp')
             self.init();            
 
             self.guidePopulateTopic = function () {
-              self.topicName = self.tourService.kafkaTopicName;
+              self.topicName = self.tourService.kafkaTopicName
+                + "_" + self.projectId;
               self.num_partitions = 2;
               self.num_replicas = 1;
 
               for (var i = 0; i < self.schemas.length; i++) {
                 if (angular.equals(self.schemas[i].name, self.tourService
-                  .kafkaSchemaName)) {
+                  .kafkaSchemaName + "_" + self.projectId)) {
                   self.schema = self.schemas[i];
                   break;
                 }

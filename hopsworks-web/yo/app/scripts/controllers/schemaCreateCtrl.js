@@ -24,7 +24,8 @@ angular.module('hopsWorksApp')
             self.init();
 
             self.guidePopulateSchema = function () {
-              self.schemaName = self.tourService.kafkaSchemaName;
+              self.schemaName = self.tourService.kafkaSchemaName
+                + "_" + self.projectId;
 
               var demoSchema = new Object();
               demoSchema.fields = [{"name": "platform", "type": "string"},

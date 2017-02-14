@@ -513,8 +513,8 @@ angular.module('hopsWorksApp')
               self.getAllTopics(self.projectId).then(
                 function(success) {
                   for (var i = 0; i < self.topics.length; i++) {
-                    if (angular.equals(self.tourService.kafkaTopicName,
-                      self.topics[i]['name'])) {
+                    if (angular.equals(self.tourService.kafkaTopicName + "_"
+                        + self.projectId, self.topics[i]['name'])) {
                       self.guideKafkaTopics.push(self.topics[i]);
                       break;
                     }
