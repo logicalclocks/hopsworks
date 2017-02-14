@@ -174,6 +174,11 @@ public class Users implements Serializable {
   @Column(name = "two_factor")
   private boolean twoFactor;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "tours_enabled")
+  private boolean toursEnabled;
+  
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
             @JoinColumn(name = "uid",
@@ -457,11 +462,19 @@ public class Users implements Serializable {
   public boolean getTwoFactor() {
     return twoFactor;
   }
-
+  
   public void setTwoFactor(boolean twoFactor) {
     this.twoFactor = twoFactor;
   }
 
+  public boolean getToursEnabled() {
+    return toursEnabled;
+  }
+  
+  public void setToursEnabled(boolean toursEnabled) {
+    this.toursEnabled = toursEnabled;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
