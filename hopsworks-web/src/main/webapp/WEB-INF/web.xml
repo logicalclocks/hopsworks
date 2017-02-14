@@ -22,7 +22,7 @@
   </servlet>
   <servlet-mapping>
     <servlet-name>AppScriptServlet</servlet-name>
-    <url-pattern>/zeppelin/app.a434b7ecf67e95b8f9c0.js</url-pattern>
+    <url-pattern>/zeppelin/app.4ece19b57e6fb1511450.js</url-pattern>
   </servlet-mapping>
   <login-config>
     <auth-method>BASIC</auth-method>
