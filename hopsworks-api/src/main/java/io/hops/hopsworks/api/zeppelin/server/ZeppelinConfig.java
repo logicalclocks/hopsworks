@@ -42,6 +42,7 @@ public class ZeppelinConfig {
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   private static final String HIVE_SITE_XML = "/hive-site.xml";
   public static final String INTERPRETER_JSON = "/interpreter.json";
+  public static final String METRICS_PROPERTIES = "/metrics.properties";
   private static final int DELETE_RETRY = 10;
 
   /**
@@ -357,6 +358,8 @@ public class ZeppelinConfig {
       createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
               toString());
     }
+    String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
+    String log4jPath = Settings.getProjectSparkLog4JPath(this.projectName);
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";
@@ -379,7 +382,8 @@ public class ZeppelinConfig {
               "java_home", javaHome,
               "ld_library_path", ldLibraryPath,
               "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.
-                      getHadoopDir() + "/bin/hadoop", "classpath", "--glob")
+                      getHadoopDir() + "/bin/hadoop", "classpath", "--glob"),
+              "spark_options", "--files " + metricsPath + "," + log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
@@ -414,12 +418,19 @@ public class ZeppelinConfig {
       interpreter_file.delete();
     }
 
+    String jobName = this.projectName.toLowerCase() + "-zeppelin";
+    String logstashID = "-D" + Settings.LOGSTASH_JOB_INFO + "="
+            + this.projectName.toLowerCase() + "," + jobName + "," + jobName;
+    String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties " + logstashID;
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.INTERPRETER_TEMPLATE,
                       "projectName", this.projectName,
-                      "livy_url", settings.getLivyUrl()
+                      "livy_url", settings.getLivyUrl(),
+                      "metrics-properties_local_path", "./metrics.properties",
+                      "metrics-properties_path", metricsPath + "," + log4jPath,
+                      "extra_spark_java_options", extraSparkJavaOptions
               );
       interpreterConf = interpreter_json.toString();
     }

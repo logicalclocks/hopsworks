@@ -110,13 +110,31 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
               },
               /**
+               * Get the app Id of the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getAppId: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/appId');
+              },
+              /**
+               * Get the project name of the given project.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getProjectName: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/projectName');
+              },
+              /**
                * Get the job ui of the given job.
                * @param {type} projectId
                * @param {type} jobId
                * @returns {unresolved} The address of the job ui.
                */
-              getExecutionUI: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/ui');
+              getExecutionUI: function (projectId, appId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/ui');
               },
               /**
                * Get the yarn ui of the given job.
@@ -124,8 +142,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {unresolved} The address of the job ui.
                */
-              getYarnUI: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/yarnui');
+              getYarnUI: function (projectId, appId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/yarnui');
               },
               /**
                * Get the app infos.
@@ -133,8 +151,8 @@ angular.module('hopsWorksApp')
                * @param {type} jobId
                * @returns {unresolved} The app info.
                */
-              getAppInfo: function (projectId, jobId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/appinfo');
+              getAppInfo: function (projectId, appId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/appinfo');
               },
               /**
                * Get the current status of all jobs in the given project.

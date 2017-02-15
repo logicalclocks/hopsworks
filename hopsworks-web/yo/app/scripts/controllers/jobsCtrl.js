@@ -263,7 +263,7 @@ angular.module('hopsWorksApp')
 
             self.showUI = function (job) {
               StorageService.store(self.projectId + "_jobui_" + job.name, job);
-              $location.path('project/' + self.projectId + '/jobMonitor/' + job.name);
+              $location.path('project/' + self.projectId + '/jobMonitor-job/' + job.name);
 
             };
 
