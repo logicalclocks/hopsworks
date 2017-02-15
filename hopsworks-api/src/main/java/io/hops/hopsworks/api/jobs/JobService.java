@@ -6,6 +6,7 @@ import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
@@ -107,6 +108,8 @@ public class JobService {
   private JobController jobController;
   @EJB
   private YarnApplicationAttemptStateFacade appAttemptStateFacade;
+  @EJB
+  private YarnApplicationstateFacade appStateFacade;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -213,9 +216,9 @@ public class JobService {
               entity(job.getJobConfig()).build();
     }
   }
-
-  /**
-   * Get the Job UI url for the specified job
+ 
+   /**
+   * Get the appId for the specified job
    * <p>
    * @param jobId
    * @param sc
@@ -224,10 +227,10 @@ public class JobService {
    * @throws AppException
    */
   @GET
-  @Path("/{jobId}/ui")
+  @Path("/{jobId}/appId")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getJobUI(@PathParam("jobId") int jobId,
+  public Response getAppId(@PathParam("jobId") int jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JobDescription job = jobFacade.findById(jobId);
@@ -253,23 +256,102 @@ public class JobService {
       }
 
       try {
-        String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(
-                execution.getAppId());
-        if (trackingUrl != null && !trackingUrl.isEmpty()) {
-          trackingUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
-                  + jobId + "/prox/" + trackingUrl;
-          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                  entity(trackingUrl).build();
-        } else {
-          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                  entity("").build();
-        }
+
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(execution.getAppId()).build();
+
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
                 getLocalizedMessage(), e);
       }
       return noCacheResponse.
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+  
+  /**
+   * Get the projectName for the specified projectId
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/projectName")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getProjectName(
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    try {
+
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(project.getName()).build();
+
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+              getLocalizedMessage(), e);
+    }
+    return noCacheResponse.
+            getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+
+  }
+  
+   /**
+   * Get the Job UI url for the specified job
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{appId}/ui")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getJobUI(@PathParam("appId") String appId,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    Response response = checkAccessRight(appId);
+    if(response!=null){
+      return response;
+    }
+    try {
+      String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(appId);
+      if (trackingUrl != null && !trackingUrl.isEmpty()) {
+        trackingUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
+                + appId + "/prox/" + trackingUrl;
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(trackingUrl).build();
+      } else {
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity("").build();
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+              getLocalizedMessage(), e);
+    }
+    return noCacheResponse.
+            getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+  }
+  
+  private Response checkAccessRight(String appId){
+    YarnApplicationstate appState = appStateFacade.findByAppId(appId);
+    
+    if (appState == null) {
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!hdfsUsersBean.getProjectName(appState.getAppuser()).equals(project.getName())) {
+      //In this case, a user is trying to access a job outside its project!!!
+      LOGGER.log(Level.SEVERE,
+              "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      return null;
     }
   }
 
@@ -283,34 +365,23 @@ public class JobService {
    * @throws AppException
    */
   @GET
-  @Path("/{jobId}/yarnui")
+  @Path("/{appId}/yarnui")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getYarnUI(@PathParam("jobId") int jobId,
+  public Response getYarnUI(@PathParam("appId") String appId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
-    if (job == null) {
-      return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-    } else if (!job.getProject().equals(project)) {
-      //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
-      return Response.status(Response.Status.FORBIDDEN).build();
+    Response response = checkAccessRight(appId);
+    if(response!=null){
+      return response;
     } else {
-      Execution execution = exeFacade.findForJob(job).get(0);
-      Execution updatedExecution = exeFacade.getExecution(execution.getJob().
-              getId());
-      if (updatedExecution != null) {
-        execution = updatedExecution;
-      }
+      
 
       try {
         String yarnUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
-                + jobId + "/prox/" + settings.getYarnWebUIAddress()
+                + appId + "/prox/" + settings.getYarnWebUIAddress()
                 + "/cluster/app/"
-                + execution.getAppId();
+                + appId;
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(yarnUrl).build();
@@ -334,37 +405,35 @@ public class JobService {
    * @throws AppException
    */
   @GET
-  @Path("/{jobId}/appinfo")
+  @Path("/{appId}/appinfo")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getAppInfo(@PathParam("jobId") int jobId,
+  public Response getAppInfo(@PathParam("appId") String appId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
-    if (job == null) {
-      return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-    } else if (!job.getProject().equals(project)) {
-      //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
-      return Response.status(Response.Status.FORBIDDEN).build();
+    Response response = checkAccessRight(appId);
+    if(response!=null){
+      return response;
     } else {
-      Execution execution = exeFacade.findForJob(job).get(0);
-
+      Execution execution = exeFacade.findByAppId(appId);
       try {
-        long startTime = execution.getSubmissionTime().getTime();
-        long endTime = startTime + execution.getExecutionDuration();
-        boolean running = false;
-        if (!execution.getState().isFinalState()) {
-          running = true;
+        long startTime = System.currentTimeMillis() - 60000;
+        long endTime = System.currentTimeMillis();
+        boolean running = true;
+        if (execution != null) {
+          startTime = execution.getSubmissionTime().getTime();
+          endTime = startTime + execution.getExecutionDuration();
+          running = false;
+          if (!execution.getState().isFinalState()) {
+            running = true;
+          }
         }
 
         InfluxDB influxDB = InfluxDBFactory.connect(settings.
                 getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
                 getInfluxDBPW());
 
-        Query query = new Query("SELECT * FROM /" + execution.getAppId()
+        Query query = new Query("SELECT * FROM /" + appId
                 + ".*.executor.threadpool.activeTasks/ limit 1", "graphite");
         QueryResult queryResult = influxDB.query(query);
 
@@ -372,12 +441,12 @@ public class JobService {
 
         int nbExecutors = 0;
         if (queryResult != null && queryResult.getResults() != null
-                && queryResult.getResults().get(0) != null && 
-                queryResult.getResults().get(0).getSeries()!=null ) {
+                && queryResult.getResults().get(0) != null && queryResult.
+                getResults().get(0).getSeries() != null) {
           nbExecutors = queryResult.getResults().get(0).getSeries().size();
         }
 
-        AppInfoDTO appInfo = new AppInfoDTO(execution.getAppId(), startTime,
+        AppInfoDTO appInfo = new AppInfoDTO(appId, startTime,
                 running, endTime, nbExecutors);
 
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -413,139 +482,128 @@ public class JobService {
    * @throws AppException
    */
   @GET
-  @Path("/{jobId}/prox/{path: .+}")
+  @Path("/{appId}/prox/{path: .+}")
   @Produces(MediaType.WILDCARD)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getProx(@PathParam("jobId") final int jobId,
+  public Response getProx(@PathParam("appId") final String appId,
           @PathParam("path") final String param,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
-    if (job == null) {
-      return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-    } else if (!job.getProject().equals(project)) {
-      //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,
-              "A user is trying to access a job outside their project!");
-      return Response.status(Response.Status.FORBIDDEN).build();
-    } else {
-      Execution execution = exeFacade.findForJob(job).get(0);
-      Execution updatedExecution = exeFacade.getExecution(execution.getJob().
-              getId());
-      if (updatedExecution != null) {
-        execution = updatedExecution;
+      
+    Response response = checkAccessRight(appId);
+    if (response != null) {
+      return response;
+    }
+    try {
+      String trackingUrl;
+      if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+        trackingUrl = param;
+      } else {
+        trackingUrl = "http://" + param;
       }
-      try {
-        String trackingUrl;
-        if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-          trackingUrl = param;
-        } else {
-          trackingUrl = "http://" + param;
-        }
-        trackingUrl = trackingUrl.replace("@hwqm", "?");
-        if (!hasAppAccessRight(trackingUrl, job)) {
-          LOGGER.log(Level.SEVERE,
-                  "A user is trying to access an app outside their project!");
-          return Response.status(Response.Status.FORBIDDEN).build();
-        }
-        org.apache.commons.httpclient.URI uri
-                = new org.apache.commons.httpclient.URI(trackingUrl, false);
+      trackingUrl = trackingUrl.replace("@hwqm", "?");
+      if (!hasAppAccessRight(trackingUrl)) {
+        LOGGER.log(Level.SEVERE,
+                "A user is trying to access an app outside their project!");
+        return Response.status(Response.Status.FORBIDDEN).build();
+      }
+      org.apache.commons.httpclient.URI uri
+              = new org.apache.commons.httpclient.URI(trackingUrl, false);
 
-        HttpClientParams params = new HttpClientParams();
-        params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-                true);
-        HttpClient client = new HttpClient(params);
-        HostConfiguration config = new HostConfiguration();
-        InetAddress localAddress = InetAddress.getLocalHost();
-        config.setLocalAddress(localAddress);
+      HttpClientParams params = new HttpClientParams();
+      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
+              true);
+      HttpClient client = new HttpClient(params);
+      HostConfiguration config = new HostConfiguration();
+      InetAddress localAddress = InetAddress.getLocalHost();
+      config.setLocalAddress(localAddress);
 
-        final HttpMethod method = new GetMethod(uri.getEscapedURI());
-        Enumeration<String> names = req.getHeaderNames();
-        while (names.hasMoreElements()) {
-          String name = names.nextElement();
-          String value = req.getHeader(name);
-          if (PASS_THROUGH_HEADERS.contains(name)) {
-            //yarn does not send back the js if encoding is not accepted
-            //but we don't want to accept encoding for the html because we
-            //need to be able to parse it
-            if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.
+      final HttpMethod method = new GetMethod(uri.getEscapedURI());
+      Enumeration<String> names = req.getHeaderNames();
+      while (names.hasMoreElements()) {
+        String name = names.nextElement();
+        String value = req.getHeader(name);
+        if (PASS_THROUGH_HEADERS.contains(name)) {
+          //yarn does not send back the js if encoding is not accepted
+          //but we don't want to accept encoding for the html because we
+          //need to be able to parse it
+          if (!name.toLowerCase().equals("accept-encoding") || trackingUrl.
                     contains(".js")) {
-              method.setRequestHeader(name, value);
-            }
+            method.setRequestHeader(name, value);
           }
         }
-        String user = req.getRemoteUser();
-        if (user != null && !user.isEmpty()) {
-          method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "="
-                  + URLEncoder.encode(user, "ASCII"));
-        }
+      }
+      String user = req.getRemoteUser();
+      if (user != null && !user.isEmpty()) {
+        method.setRequestHeader("Cookie", PROXY_USER_COOKIE_NAME + "="
+                + URLEncoder.encode(user, "ASCII"));
+      }
 
-        client.executeMethod(config, method);
-        Response.ResponseBuilder response = noCacheResponse.
-                getNoCacheResponseBuilder(Response.Status.OK);
-        for (Header header : method.getResponseHeaders()) {
-          response.header(header.getName(), header.getValue());
-        }
-        if (method.getResponseHeader("Content-Type") == null || method.
-                getResponseHeader("Content-Type").getValue().contains("html")) {
-          final String source = "http://" + method.getURI().getHost() + ":"
-                  + method.getURI().getPort();
-          if (method.getResponseHeader("Content-Length") == null) {
-            response.entity(new StreamingOutput() {
-              @Override
-              public void write(OutputStream out) throws IOException,
-                      WebApplicationException {
-                Writer writer
-                        = new BufferedWriter(new OutputStreamWriter(out));
-                InputStream stream = method.getResponseBodyAsStream();
-                Reader in = new InputStreamReader(stream, "UTF-8");
-                char[] buffer = new char[4 * 1024];
-                String remaining = "";
-                int n;
-                while ((n = in.read(buffer)) != -1) {
-                  StringBuilder strb = new StringBuilder();
-                  strb.append(buffer, 0, n);
-                  String s = remaining + strb.toString();
-                  remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
-                  s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
-                          jobId,
-                          source);
-                  writer.write(s);
-                }
-                writer.flush();
-              }
-            });
-          } else {
-            String s = hopify(method.getResponseBodyAsString(), param, jobId,
-                    source);
-            response.entity(s);
-            response.header("Content-Length", s.length());
-          }
-
-        } else {
-          response.entity(new StreamingOutput() {
+      client.executeMethod(config, method);
+      Response.ResponseBuilder responseBuilder = noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.OK);
+      for (Header header : method.getResponseHeaders()) {
+        responseBuilder.header(header.getName(), header.getValue());
+      }
+      if (method.getResponseHeader("Content-Type") == null || method.
+              getResponseHeader("Content-Type").getValue().contains("html")) {
+        final String source = "http://" + method.getURI().getHost() + ":"
+                + method.getURI().getPort();
+        if (method.getResponseHeader("Content-Length") == null) {
+          responseBuilder.entity(new StreamingOutput() {
             @Override
             public void write(OutputStream out) throws IOException,
                     WebApplicationException {
+              Writer writer
+                      = new BufferedWriter(new OutputStreamWriter(out));
               InputStream stream = method.getResponseBodyAsStream();
-              org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
-              out.flush();
+              Reader in = new InputStreamReader(stream, "UTF-8");
+              char[] buffer = new char[4 * 1024];
+              String remaining = "";
+              int n;
+              while ((n = in.read(buffer)) != -1) {
+                StringBuilder strb = new StringBuilder();
+                strb.append(buffer, 0, n);
+                String s = remaining + strb.toString();
+                remaining = s.substring(s.lastIndexOf(">") + 1, s.length());
+                s = hopify(s.substring(0, s.lastIndexOf(">") + 1), param,
+                        appId,
+                        source);
+                writer.write(s);
+              }
+              writer.flush();
             }
           });
+        } else {
+          String s = hopify(method.getResponseBodyAsString(), param, appId,
+                  source);
+          responseBuilder.entity(s);
+          responseBuilder.header("Content-Length", s.length());
         }
-        return response.build();
-      } catch (Exception e) {
-        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
-                getLocalizedMessage(), e);
-        return noCacheResponse.
-                getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+
+      } else {
+        responseBuilder.entity(new StreamingOutput() {
+          @Override
+          public void write(OutputStream out) throws IOException,
+                  WebApplicationException {
+            InputStream stream = method.getResponseBodyAsStream();
+            org.apache.hadoop.io.IOUtils.copyBytes(stream, out, 4096, true);
+            out.flush();
+          }
+        });
       }
+      return responseBuilder.build();
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+              getLocalizedMessage(), e);
+      return noCacheResponse.
+              getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
+
   }
 
-  private String hopify(String ui, String param, int jobId, String source) {
+  private String hopify(String ui, String param, String appId, String source) {
 
     //remove the link to the full cluster information in the yarn ui
     ui = ui.replaceAll(
@@ -564,33 +622,33 @@ public class JobService {
 
     ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/"
+            + project.getId() + "/jobs/" + appId + "/prox/"
             + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/"
+            + project.getId() + "/jobs/" + appId + "/prox/"
             + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/");
+            + project.getId() + "/jobs/" + appId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/");
+            + project.getId() + "/jobs/" + appId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=http)",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/");
+            + project.getId() + "/jobs/" + appId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/");
+            + project.getId() + "/jobs/" + appId + "/prox/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/" + param);
+            + project.getId() + "/jobs/" + appId + "/prox/" + param);
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
             "/hopsworks-api/api/project/"
-            + project.getId() + "/jobs/" + jobId + "/prox/" + param);
+            + project.getId() + "/jobs/" + appId + "/prox/" + param);
     return ui;
 
   }
 
-  private boolean hasAppAccessRight(String trackingUrl, JobDescription job) {
+  private boolean hasAppAccessRight(String trackingUrl) {
     String appId = "";
     if (trackingUrl.contains("application_")) {
       for (String elem : trackingUrl.split("/")) {
@@ -626,7 +684,7 @@ public class JobService {
     if (!appId.isEmpty()) {
       String appUser = yarnApplicationstateFacade.findByAppId(appId).
               getAppuser();
-      if (!job.getProject().getName().equals(hdfsUsersBean.getProjectName(
+      if (!project.getName().equals(hdfsUsersBean.getProjectName(
               appUser))) {
         return false;
       }

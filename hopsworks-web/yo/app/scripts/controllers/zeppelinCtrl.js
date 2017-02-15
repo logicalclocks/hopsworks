@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ZeppelinCtrl', ['$scope', '$routeParams','$route',
-          'growl', 'ModalService', 'ZeppelinService',
-          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService) {
+          'growl', 'ModalService', 'ZeppelinService','$location',
+          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService, $location) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -169,6 +169,26 @@ angular.module('hopsWorksApp')
                         });
             };
 
+            self.showLivyUI = function (sessionId) {
+              ZeppelinService.getLivySessionAppId(sessionId)
+                      .then(function (success) {
+                        var appId = success.data;
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
+            };
+            
+            self.showSparkUI = function (sessionId) {
+              ZeppelinService.getSparkAppId()
+                      .then(function (success) {
+                        var appId = success.data;
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId +"/" );
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
+            };
+            
             self.refreshInterpreters = function () {
               refresh();
             };

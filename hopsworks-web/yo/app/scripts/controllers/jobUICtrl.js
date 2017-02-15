@@ -15,7 +15,9 @@ angular.module('hopsWorksApp')
             self.showExecutions = false;
             self.projectId = $routeParams.projectID;
             self.jobName = $routeParams.name;
+            self.appId = $routeParams.appId;
             self.ui = "";
+            self.isLivy = $routeParams.isLivy;
             self.current = "";
             self.loading = false;
             self.loadingText = "";
@@ -31,15 +33,36 @@ angular.module('hopsWorksApp')
               self.loadingText = "";
             };
 
+            var getAppId = function (callback) {
+              if(self.appId==undefined || self.appId==false || self.appId==""){
+                  JobService.getAppId(self.projectId, self.job.id).then(
+                          function(success) {
+                            self.appId=success.data
+                            callback();
+                          }, function (error){
+                            growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                              stopLoading();
+                          });
+                }else{
+                  callback();
+                }
+            }
+            
             var getJobUI = function () {
 
               startLoading("Loading Job Details...");
-
-              self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
-              if (self.job) {
+              if(self.jobName!= undefined && self.jobName!= false && self.jobName!=""){
+                self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+              }
+              if (self.job || self.appId) {
                 console.log("Job object found was: ");
                 console.log(self.job);
-                JobService.getExecutionUI(self.projectId, self.job.id).then(
+                getAppId(getJobUIInt);
+              }
+            };
+
+            var getJobUIInt = function(){
+              JobService.getExecutionUI(self.projectId, self.appId).then(
                         function (success) {
 
                           self.ui = success.data;
@@ -57,27 +80,25 @@ angular.module('hopsWorksApp')
                   stopLoading();
 
                 });
-                //Send request to create index in Kibana
-                //Lower case is for elasticsearch index
-//                KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
-//                        function (success) {
-//                          console.log('Successful creation of Kibana index:' + self.job.project.name);
-//                        }, function (error) {
-//                  console.log('Did not create Kibana index:' + self.job.project.name);
-//                });
-              }
-            };
-
+            }
+            
             getJobUI();
 
             self.yarnUI = function () {
 
               if (self.job == undefined || self.job == false) {
-                self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+                  self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                }
               }
 
               startLoading("Loading YARN UI...");
-              JobService.getYarnUI(self.projectId, self.job.id).then(
+              getAppId(yarnUIInt);
+
+            };
+
+            var yarnUIInt = function () {
+              JobService.getYarnUI(self.projectId, self.appId).then(
                       function (success) {
 
                         self.ui = success.data;
@@ -93,22 +114,62 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
                 stopLoading();
               });
-
-            };
-
+            }
+            
             self.kibanaUI = function () {
-              self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" + self.job.project.name.toLowerCase() + ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D" + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
-              self.current = "kibanaUI";
-              var iframe = document.getElementById('ui_iframe');
-              if (iframe !== null) {
-                iframe.src = $sce.trustAsResourceUrl(self.ui);
-              }
-              $timeout(stopLoading(), 1000);
+              getAppId(kibanaUIInt);
             };
+
+            var kibanaUIInt = function () {
+              if (self.job == undefined || self.job == false) {
+                JobService.getProjectName(self.projectId).then(
+                        function (success) {
+                          var projectName = success.data;
+                          //if not zeppelin we should have a job
+                          self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
+                                  "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
+                                  "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                                  projectName.toLowerCase() +
+                                  ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
+                                  + projectName.toLowerCase() + "-zeppelin)),sort:!(%27@timestamp%27,asc))";
+                          self.current = "kibanaUI";
+                          var iframe = document.getElementById('ui_iframe');
+                          if (iframe !== null) {
+                            iframe.src = $sce.trustAsResourceUrl(self.ui);
+                          }
+                          $timeout(stopLoading(), 1000);
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error fetching project name',
+                    ttl: 15000});
+                  stopLoading();
+                });
+
+              } else {
+                self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
+                        "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
+                        "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                        self.job.project.name.toLowerCase() +
+                        ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
+                        + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
+                self.current = "kibanaUI";
+                var iframe = document.getElementById('ui_iframe');
+                if (iframe !== null) {
+                  iframe.src = $sce.trustAsResourceUrl(self.ui);
+                }
+                $timeout(stopLoading(), 1000);
+              }
+
+            }
+
 
             self.grafanaUI = function () {
               startLoading("Loading Grafana UI...");
-              JobService.getAppInfo(self.projectId, self.job.id).then(
+              getAppId(grafanaUIInt);
+              
+            };
+
+            var grafanaUIInt = function() {
+              JobService.getAppInfo(self.projectId, self.appId).then(
                       function (success) {
                         var info = success.data;
                         var appid = info.appId;
@@ -138,10 +199,12 @@ angular.module('hopsWorksApp')
                   ttl: 15000});
                 stopLoading();
               });
-            };
-
+            }
+            
             self.backToHome = function () {
-              StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
+              if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+                StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
+              }
               $timeout($route.reload(), 1000);
             };
 
