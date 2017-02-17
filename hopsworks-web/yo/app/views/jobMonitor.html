@@ -46,7 +46,8 @@
                   <button style=""
                           ng-click="jobUICtrl.kibanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-files-o"> Logs
+                          class="btn btn-primary btn-md fa fa-files-o"
+                          ng-if="!jobUICtrl.isLivy" > Logs
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
