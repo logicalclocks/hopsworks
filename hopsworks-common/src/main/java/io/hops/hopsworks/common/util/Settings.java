@@ -334,6 +334,7 @@ public class Settings {
   public static final String SPARK_CACHE_VISIBILITIES
           = "spark.yarn.cache.visibilities";
   public static final String SPARK_CACHE_TYPES = "spark.yarn.cache.types";
+  public static final String SPARK_PY_MAINCLASS = "org.apache.spark.deploy.PythonRunner";
 
   public synchronized String getSparkDir() {
     checkCache();

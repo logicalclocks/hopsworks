@@ -65,7 +65,7 @@ public class AdamController {
       throw new IllegalArgumentException(
               "The given job does not represent an Adam job.");
     }
-    ((AdamJobConfiguration) job.getJobConfig()).setJarPath(settings.
+    ((AdamJobConfiguration) job.getJobConfig()).setProgramPath(settings.
             getAdamJarHdfsPath());
     ((AdamJobConfiguration) job.getJobConfig()).setHistoryServerIp(settings.
             getSparkHistoryServerIp());
