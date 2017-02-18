@@ -4,6 +4,7 @@ import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
@@ -15,6 +16,9 @@ import javax.persistence.PersistenceContext;
 
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
+
+  private final static Logger logger = Logger.getLogger(Settings.class.
+          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -84,6 +88,7 @@ public class Settings {
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
+  private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_installed";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -91,7 +96,7 @@ public class Settings {
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
-  
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
@@ -239,6 +244,8 @@ public class Settings {
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
+      ANACONDA_INSTALLED = Boolean.parseBoolean(setStrVar(
+              VARIABLE_ANACONDA_INSTALLED, ANACONDA_INSTALLED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
@@ -618,11 +625,11 @@ public class Settings {
   public static String getProjectSparkMetricsPath(String projectName) {
     return "hdfs:///user/glassfish/metrics.properties";
   }
-  
+
   public static String getProjectSparkLog4JPath(String sparkUser) {
     return "hdfs:///user/glassfish/log4j.properties";
   }
-  
+
   public static String getHopsutilPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/" + HOPSUTIL_JAR;
   }
@@ -815,6 +822,13 @@ public class Settings {
   public synchronized String getAnacondaEnv() {
     checkCache();
     return ANACONDA_ENV;
+  }
+
+  private Boolean ANACONDA_INSTALLED = false;
+
+  public synchronized Boolean isAnacondaInstalled() {
+    checkCache();
+    return ANACONDA_INSTALLED;
   }
 
 //  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";

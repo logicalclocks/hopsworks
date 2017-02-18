@@ -15,6 +15,8 @@ angular.module('hopsWorksApp')
             self.active = 0;
 
             self.enabled = false;
+            self.installed = false;
+            
             self.resultsMsgShowing = false;
 
             self.resultsMsg = "";
@@ -123,6 +125,12 @@ angular.module('hopsWorksApp')
                         self.enabled = true;
                       }, function (error) {
                 self.enabled = false;
+              });
+              PythonDepsService.installed(self.projectId).then(
+                      function (success) {
+                        self.installed = true;
+                      }, function (error) {
+                self.installed = false;
               });
             };
             self.init();

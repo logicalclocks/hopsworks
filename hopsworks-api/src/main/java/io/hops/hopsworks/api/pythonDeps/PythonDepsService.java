@@ -109,8 +109,22 @@ public class PythonDepsService {
   }
 
   @GET
+  @Path("/installed")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response installed() throws AppException {
+    Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
+
+    if (settings.isAnacondaInstalled()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(
+            Response.Status.SERVICE_UNAVAILABLE).build();
+  }
+
+  @GET
   @Path("/enabled")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response enabled() throws AppException {
     boolean enabled = project.getConda();
     if (enabled) {
@@ -154,7 +168,7 @@ public class PythonDepsService {
   public Response installOneHost(
           @PathParam("hostId") String hostId,
           PythonDepJson library) throws AppException {
-    pythonDepsFacade.blockingCondaOp(Integer.parseInt(hostId), 
+    pythonDepsFacade.blockingCondaOp(Integer.parseInt(hostId),
             PythonDepsFacade.CondaOp.INSTALL, project,
             library.getChannelUrl(), library.getLib(), library.getVersion());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -176,7 +190,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/status")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response status() throws AppException {
 
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
@@ -200,7 +214,7 @@ public class PythonDepsService {
           @Context HttpServletRequest req) throws AppException {
 
     Project src = projectFacade.findByName(srcProject);
-    
+
     pythonDepsFacade.cloneProject(src, destProject);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

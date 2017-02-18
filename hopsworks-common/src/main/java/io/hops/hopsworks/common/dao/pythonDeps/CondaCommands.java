@@ -87,7 +87,7 @@ public class CondaCommands implements Serializable {
   private String channelUrl;
   @Size(max = 255)
   @Column(name = "arg")
-  private String arg;
+  private String arg="";
   @Size(max = 255)
   @Column(name = "lib")
   private String lib;

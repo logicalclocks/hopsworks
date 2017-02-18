@@ -122,7 +122,7 @@
 
               </uib-tab>
 
-              <uib-tab index="1" heading="Python Libraries">
+              <uib-tab index="1" heading="Python Libraries" ng-if="pythonDepsCtrl.installed">
 
                 <div ng-show="!pythonDepsCtrl.enabled">
 
@@ -243,7 +243,8 @@
 
 
               </uib-tab>
-              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled" ng-click="pythonDepsCtrl.getInstalled()">
+              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled  && pythonDepsCtrl.installed" 
+                       ng-click="pythonDepsCtrl.getInstalled()">
                 <h2>Uninstall/Upgrade Python Libraries</h2>
                 <!--                <div class="row pull-left">
                                   <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
@@ -310,7 +311,8 @@
               </uib-tab>
 
 
-              <uib-tab index="3" heading="Ongoing Installation Status" ng-show="pythonDepsCtrl.enabled" 
+              <uib-tab index="3" heading="Ongoing Installation Status" ng-if="false" 
+                       ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed" 
                        ng-click="pythonDepsCtrl.getInstallationStatus()">
                 <h2>Ongoing installations</h2>
 

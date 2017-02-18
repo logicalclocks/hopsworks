@@ -228,7 +228,7 @@ public class AgentResource {
           String op = entry.getString("op");
           PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
                   op.toUpperCase());
-//            String channelurl = entry.getString("channelurl");
+          String channelurl = entry.getString("channelurl");
           String lib = entry.containsKey("lib") ? entry.getString("lib") : "";
           String version = entry.containsKey("version") ? entry.getString(
                   "version") : "";
@@ -246,7 +246,6 @@ public class AgentResource {
           if (command != null) {
             if (agentStatus == PythonDepsFacade.CondaStatus.INSTALLED) {
               // remove command from the DB
-//              pythonDepsFacade.removeCondaCommand(commmandId);
               pythonDepsFacade.
                       updateCondaComamandStatus(commmandId, agentStatus, arg,
                               projName, opType, lib, version);
@@ -256,7 +255,6 @@ public class AgentResource {
                               projName, opType, lib, version);
             }
           }
-//          }
         }
       }
 
@@ -267,36 +265,18 @@ public class AgentResource {
 
         JsonObject envs = json.getJsonObject("block-report");
         for (String s : envs.keySet()) {
-//          JsonObject installedLibs = envs.getJsonObject(s);
           JsonArray installedLibs = envs.getJsonArray(s);
 
           String projName = s;
-//          for (String myLib : installedLibs.keySet()) {
-//          for (String myLib : installedLibs.keySet()) {
+          BlockReport br = new BlockReport();
+          mapReports.put(projName, br);
+          br.setProject(projName);
           for (int k = 0; k < installedLibs.size(); k++) {
-//            JsonArray agentLibs = installedLibs.getJsonArray(j);
             JsonObject libObj = installedLibs.getJsonObject(k);
-            BlockReport br = new BlockReport();
-            mapReports.put(projName, br);
-            br.setProject(projName);
-//            JsonArray libs = json.getJsonArray("libs");
-//            for (int k = 0; k < agentLibs.size(); k++) {
-//              JsonArray currLib = agentLibs.getJsonArray(k);
             String libName = libObj.getString("name");
             String libUrl = libObj.getString("channel");
             String libVersion = libObj.getString("version");
-//              for (int m = 0; m < currLib.size(); m++) {
-//                JsonObject env = currLib.getJsonObject(j);
-//                if (env.containsKey("name"a)) {
-//                  libName = env.getString("name");
-//                } else if (env.containsKey("channel")) {
-//                  libName = env.getString("channel");
-//                } else if (env.containsKey("version")) {
-//                  libName = env.getString("version");
-//                }
-////              }
             br.addLib(libName, libUrl, libVersion);
-//            }
           }
         }
 
@@ -310,31 +290,18 @@ public class AgentResource {
 
           Collection<CondaCommands> allCcs = project.
                   getCondaCommandsCollection();
+          logger.info("AnacondaReport: " + project.getName());
 
-          for (CondaCommands cc : allCcs) {
-            if (cc.getOp() == CondaOp.CREATE) {
-              // check if project is already installed
-            }
-            if (cc.getOp() == CondaOp.INSTALL) {
-              // check if project is already installed
-            }
-            if (cc.getOp() == CondaOp.UNINSTALL) {
-              // check if project is already installed
-            }
-            if (cc.getOp() == CondaOp.UPGRADE) {
-              // check if project is already installed
-            }
-
-          }
-
-          if (!mapReports.containsKey(project.getName())) {
+          if ((!mapReports.containsKey(project.getName()))
+                  && (project.getName().compareToIgnoreCase(settings.
+                          getAnacondaEnv())) != 0) {
+            // project not a conda environment
             // check if a conda-command exists for creating the project and is valid.
 
             boolean noExistingCommandInDB = true;
             for (CondaCommands command : allCcs) {
               if (command.getOp() == CondaOp.CREATE && command.getProj().
-                      compareTo(
-                              project.getName()) == 0) {
+                      compareTo(project.getName()) == 0) {
                 noExistingCommandInDB = false; // command already exists
               }
             }
@@ -350,13 +317,11 @@ public class AgentResource {
               differenceList.add(cc);
             }
 
-          } else {
+          } else { // This project exists as a conda env
             BlockReport br = mapReports.get(project.getName());
             for (PythonDep lib : project.getPythonDepCollection()) {
               BlockReport.Lib blockLib = br.getLib(lib.getDependency());
-              if (blockLib == null) {
-
-              } else if (blockLib.compareTo(lib) != 0) {
+              if (blockLib == null || blockLib.compareTo(lib) != 0) {
                 CondaCommands cc = new CondaCommands(host, settings.
                         getSparkUser(),
                         CondaOp.INSTALL, CondaStatus.ONGOING, project,
@@ -366,9 +331,13 @@ public class AgentResource {
                 cc.setId(-1);
                 differenceList.add(cc);
               }
-              br.removeLib(blockLib.getLib());
+              // we mark the library as checked by deleting it from the incoming br
+              if (blockLib != null) {
+                br.removeLib(blockLib.getLib());
+              }
             }
-            // remove any extra libraries on the host
+            // remove any extra libraries in the conda-env, not in the project
+            // get removed from the conda env.
             for (BlockReport.Lib blockLib : br.getLibs()) {
               CondaCommands cc
                       = new CondaCommands(host, settings.getSparkUser(),
@@ -382,8 +351,17 @@ public class AgentResource {
             mapReports.remove(project.getName());
           }
         }
-        // All the conda environments that weren't in the DB, remove them.
+        // All the conda environments that weren't in the project list, remove them.
         for (BlockReport br : mapReports.values()) {
+          // Don't delete our default environment
+
+          logger.log(Level.INFO, "BlockReport: {0} - {1}", new Object[]{br.
+            getProject(), br.getLibs().size()});
+
+          if (br.getProject().compareToIgnoreCase(settings.getAnacondaEnv())
+                  == 0) {
+            continue;
+          }
           CondaCommands cc = new CondaCommands(-1);
           cc.setHostId(host);
           cc.setUser(settings.getSparkUser());
@@ -411,12 +389,10 @@ public class AgentResource {
     }
 
     GenericEntity<Collection<CondaCommands>> commandsForKagent
-            = new GenericEntity<Collection<CondaCommands>>(commands) {};
+            = new GenericEntity<Collection<CondaCommands>>(commands) {    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             commandsForKagent).build();
-
-//    return Response.ok().build();
   }
 
   @POST
