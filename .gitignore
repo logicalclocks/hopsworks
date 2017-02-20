@@ -13,6 +13,8 @@ scripts/private_key
 yo/app/index.html
 yo/app/karma.conf.js
 
+glassfish-resources.xml
+
 ### NetBeans ###
 */nbproject/
 */build/
@@ -21,6 +23,7 @@ yo/app/karma.conf.js
 */nbdist/
 */nbactions.xml
 */nb-configuration.xml
+*/settings.xml
 .nb-gradle/
 nb-configuration.xml
 nbactions.xml
@@ -92,7 +95,7 @@ build/Release
 ## Directory-based project format:
 .idea/
 
-yo/node_modules
+hopsworks-web/yo/node_modules
 
 ## File-based project format:
 *.ipr
@@ -108,3 +111,4 @@ test/.env
 src/main/setup/glassfish-resources.xml
 */glassfish-resources.xml
 
+/hopsworks-web/yo/nbproject/private/
