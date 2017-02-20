@@ -27,18 +27,18 @@ public class InterpreterDTO {
   }
 
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning) {
-    this.id = interpreter.id();
+    this.id = interpreter.getId();
     this.name = interpreter.getName();
-    this.group = interpreter.getGroup();
+    this.group = null;
     this.notRunning = notRunning;
     sessions = new ArrayList<>();
   }
 
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning,
           List<LivyMsg.Session> runningLivySessions) {
-    this.id = interpreter.id();
+    this.id = interpreter.getId();
     this.name = interpreter.getName();
-    this.group = interpreter.getGroup();
+    this.group = null;
     this.notRunning = notRunning;
     sessions = runningLivySessions;
   }

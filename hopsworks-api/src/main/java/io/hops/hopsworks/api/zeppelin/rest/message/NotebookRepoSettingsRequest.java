@@ -16,46 +16,34 @@
  */
 package io.hops.hopsworks.api.zeppelin.rest.message;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
-import org.apache.zeppelin.dep.Dependency;
-import org.apache.zeppelin.interpreter.InterpreterOption;
+import org.apache.commons.lang.StringUtils;
 
 /**
- * NewInterpreterSetting rest api request message
- * <p>
+ * Represent payload of a notebook repo settings.
  */
-public class NewInterpreterSettingRequest {
+public class NotebookRepoSettingsRequest {
 
-  private String name;
-  private String group;
+  public static final NotebookRepoSettingsRequest EMPTY = new NotebookRepoSettingsRequest();
 
-  private Map<String, String> properties;
-  private List<Dependency> dependencies;
-  private InterpreterOption option;
+  public String name;
+  public Map<String, String> settings;
 
-  public NewInterpreterSettingRequest() {
-
+  public NotebookRepoSettingsRequest() {
+    name = StringUtils.EMPTY;
+    settings = Collections.emptyMap();
   }
 
-  public String getName() {
-    return name;
+  public boolean isEmpty() {
+    return this == EMPTY;
   }
 
-  public String getGroup() {
-    return group;
-  }
-
-  public Map<String, String> getProperties() {
-    return properties;
-  }
-
-  public List<Dependency> getDependencies() {
-    return dependencies;
-  }
-
-  public InterpreterOption getOption() {
-    return option;
+  public static boolean isEmpty(NotebookRepoSettingsRequest repoSetting) {
+    if (repoSetting == null) {
+      return true;
+    }
+    return repoSetting.isEmpty();
   }
 }

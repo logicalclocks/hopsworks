@@ -14,48 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.hops.hopsworks.api.zeppelin.rest.message;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.zeppelin.dep.Dependency;
-import org.apache.zeppelin.interpreter.InterpreterOption;
-
 /**
- * NewInterpreterSetting rest api request message
- * <p>
+ * RestartInterpreter rest api request message
  */
-public class NewInterpreterSettingRequest {
+public class RestartInterpreterRequest {
+  String noteId;
 
-  private String name;
-  private String group;
-
-  private Map<String, String> properties;
-  private List<Dependency> dependencies;
-  private InterpreterOption option;
-
-  public NewInterpreterSettingRequest() {
+  public RestartInterpreterRequest() {
 
   }
 
-  public String getName() {
-    return name;
-  }
-
-  public String getGroup() {
-    return group;
-  }
-
-  public Map<String, String> getProperties() {
-    return properties;
-  }
-
-  public List<Dependency> getDependencies() {
-    return dependencies;
-  }
-
-  public InterpreterOption getOption() {
-    return option;
+  public String getNoteId() {
+    return noteId;
   }
 }

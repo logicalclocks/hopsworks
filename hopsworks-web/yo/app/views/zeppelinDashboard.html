@@ -125,9 +125,9 @@
                                             <md-content>
                                                 <table class="table table-hover" style="width: 100%">
                                                     <tbody ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index"
-                                                        ng-show="zeppelinCtrl.display(interpreter.interpreter.group)">
+                                                        ng-show="zeppelinCtrl.display(interpreter.interpreter.name)">
                                                         <tr>
-                                                          <td><span>{{interpreter.interpreter.group}} Interpreter </span></td>
+                                                          <td><span>{{interpreter.interpreter.name}} Interpreter </span></td>
                                                           <td class="text-muted">{{interpreter.statusMsg}}</td>
                                                           <td style="text-align: right">                                      
                                                             <button ng-if="interpreter.interpreter.group === 'spark' && !interpreter.interpreter.notRunning"
@@ -141,7 +141,7 @@
                                                                       type="button" class="btn btn-danger btn-sm" 
                                                                       ng-disabled="interpreter.interpreter.notRunning">
                                                                   <span class="glyphicon glyphicon-off" ></span></button>
-                                                              <button name="livy-button" ng-if="interpreter.interpreter.group === 'livy' && interpreter.interpreter.sessions.length > 0" 
+                                                              <button name="livy-button" ng-if="interpreter.interpreter.name === 'livy' && interpreter.interpreter.sessions.length > 0" 
                                                                       data-toggle="collapse"
                                                                       data-target="#sessions"
                                                                       ng-click="zeppelinCtrl.collapse=!zeppelinCtrl.collapse ; zeppelinCtrl.selectInterpreter(interpreter)"
@@ -152,7 +152,7 @@
                                                           </td>
                                                         </tr>
 
-                                                        <tr ng-if="interpreter.interpreter.group === 'livy' && interpreter.interpreter.sessions.length > 0"
+                                                        <tr ng-if="interpreter.interpreter.name === 'livy' && interpreter.interpreter.sessions.length > 0"
                                                             ng-hide="zeppelinCtrl.collapse"
                                                             ng-repeat="session in interpreter.interpreter.sessions">
                                                           <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">

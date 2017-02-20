@@ -44,6 +44,7 @@ angular.module('hopsWorksApp')
               }
               var interpreter;
               ZeppelinService.interpreters().then(function (success) {
+                console.log('Receive interpreters<< %o', success);
                 for (var k in success.data.body) {
                   interpreter = {interpreter: success.data.body[k], 
                     statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]};
@@ -122,8 +123,7 @@ angular.module('hopsWorksApp')
 
             var init = function () {
               startLoading("Connecting to zeppelin...");
-              ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', 
-                ticket:'anonymous', op: 'LIST_NOTES'});
+              ZeppelinService.websocket().sendNewEvent({op: 'LIST_NOTES'});
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               $scope.tgState = true;
             };

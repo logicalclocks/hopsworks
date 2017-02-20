@@ -14,48 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.api.zeppelin.rest.message;
 
-import java.util.List;
-import java.util.Map;
+package io.hops.hopsworks.api.zeppelin.rest.exception;
 
-import org.apache.zeppelin.dep.Dependency;
-import org.apache.zeppelin.interpreter.InterpreterOption;
+
+import io.hops.hopsworks.api.zeppelin.util.ExceptionUtils;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 /**
- * NewInterpreterSetting rest api request message
- * <p>
+ * BadRequestException handler for WebApplicationException.
  */
-public class NewInterpreterSettingRequest {
+public class BadRequestException extends WebApplicationException {
 
-  private String name;
-  private String group;
-
-  private Map<String, String> properties;
-  private List<Dependency> dependencies;
-  private InterpreterOption option;
-
-  public NewInterpreterSettingRequest() {
-
+  public BadRequestException() {
+    super(ExceptionUtils.jsonResponse(BAD_REQUEST));
   }
 
-  public String getName() {
-    return name;
+  private static Response badRequestJson(String message) {
+    return ExceptionUtils.jsonResponseContent(BAD_REQUEST, message);
   }
 
-  public String getGroup() {
-    return group;
+  public BadRequestException(Throwable cause, String message) {
+    super(cause, badRequestJson(message));
   }
 
-  public Map<String, String> getProperties() {
-    return properties;
-  }
-
-  public List<Dependency> getDependencies() {
-    return dependencies;
-  }
-
-  public InterpreterOption getOption() {
-    return option;
+  public BadRequestException(String message) {
+    super(badRequestJson(message));
   }
 }
