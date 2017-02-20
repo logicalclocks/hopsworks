@@ -35,6 +35,7 @@ public class Settings {
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
           = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
+  private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -202,6 +203,7 @@ public class Settings {
               HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -687,8 +689,17 @@ public class Settings {
     return ELASTIC_IP;
   }
 
-  public static final int ELASTIC_PORT = 9300;
+  private int ELASTIC_PORT = 9300;
 
+  public synchronized int getElasticPort() {
+    checkCache();
+    return ELASTIC_PORT;
+  }
+  
+  public synchronized String getElasticEndpoint() {
+    return getElasticIp() + ":" + getElasticPort();
+  }
+  
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
@@ -979,6 +990,8 @@ public class Settings {
           = "hopsworks.kafka.consumergroups";
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR
           = "hopsworks.kafka.restendpoint";
+  
+  public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   public static int FILE_PREVIEW_TXT_SIZE = 100;
