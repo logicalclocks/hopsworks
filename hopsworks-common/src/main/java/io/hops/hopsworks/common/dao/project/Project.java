@@ -31,8 +31,12 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.workflow.Workflow;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 
 @Entity
 @Table(name = "hopsworks.project")
@@ -61,11 +65,15 @@ import io.hops.hopsworks.common.dao.workflow.Workflow;
   @NamedQuery(name = "Project.findByInodeId",
           query
           = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-                  + "AND t.inode.inodePK.name = :name")})
+          + "AND t.inode.inodePK.name = :name")})
 public class Project implements Serializable {
 
+  @Column(name = "conda")
+  private Boolean conda = false;
   @Column(name = "archived")
   private Boolean archived = false;
+  @Column(name = "logs")
+  private Boolean logs = false;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -82,6 +90,10 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<Workflow> workflowCollection;
+
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "projectId")
+  private Collection<CondaCommands> condaCommandsCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -135,6 +147,18 @@ public class Project implements Serializable {
             referencedColumnName = "partition_id")})
   @OneToOne(optional = false)
   private Inode inode;
+
+  @JoinTable(name = "hopsworks.project_pythondeps",
+          joinColumns
+          = {
+            @JoinColumn(name = "project_id",
+                    referencedColumnName = "id")},
+          inverseJoinColumns
+          = {
+            @JoinColumn(name = "dep_id",
+                    referencedColumnName = "id")})
+  @ManyToMany
+  private Collection<PythonDep> pythonDepCollection;
 
   public Project() {
   }
@@ -258,12 +282,28 @@ public class Project implements Serializable {
     return true;
   }
 
+  public Boolean getConda() {
+    return conda;
+  }
+
+  public void setConda(Boolean conda) {
+    this.conda = conda;
+  }
+
   public Boolean getArchived() {
     return archived;
   }
 
   public void setArchived(Boolean archived) {
     this.archived = archived;
+  }
+
+  public Boolean getLogs() {
+    return logs;
+  }
+
+  public void setLogs(Boolean logs) {
+    this.logs = logs;
   }
 
   @XmlTransient
@@ -316,6 +356,27 @@ public class Project implements Serializable {
 
   public void setWorkflowCollection(Collection<Workflow> workflowCollection) {
     this.workflowCollection = workflowCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<PythonDep> getPythonDepCollection() {
+    return pythonDepCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<CondaCommands> getCondaCommandsCollection() {
+    return condaCommandsCollection;
+  }
+
+  public void setCondaCommandsCollection(
+          Collection<CondaCommands> condaCommandsCollection) {
+    this.condaCommandsCollection = condaCommandsCollection;
+  }
+
+  public void setPythonDepCollection(Collection<PythonDep> pythonDepCollection) {
+    this.pythonDepCollection = pythonDepCollection;
   }
 
   @Override

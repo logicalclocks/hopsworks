@@ -1,16 +1,25 @@
 package io.hops.hopsworks.common.dao.host;
 
+import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.Date;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
 @Table(name = "hopsworks.hosts")
@@ -18,6 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
   @NamedQuery(name = "Host.find",
           query = "SELECT h FROM Host h"),
+  @NamedQuery(name = "Host.findBy-Id",
+          query = "SELECT h FROM Host h WHERE h.id = :id"),
   @NamedQuery(name = "Host.findBy-HostId",
           query = "SELECT h FROM Host h WHERE h.hostId = :hostId"),
   @NamedQuery(name = "Host.findBy-Hostname",
@@ -33,7 +44,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Host implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;
+
+  private static final long serialVersionUID = 1L;
+
   @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+
   @Column(name = "hostid",
           nullable = false,
           length = 128)
@@ -84,6 +103,10 @@ public class Host implements Serializable {
 
   @Column(name = "registered")
   private boolean registered;
+
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "hostId")
+  private Collection<CondaCommands> condaCommandsCollection;
 
   public Host() {
   }
@@ -217,6 +240,14 @@ public class Host implements Serializable {
     return publicIp;
   }
 
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
   public String getLastHeartbeatInSeconds() {
 
     DecimalFormat df = new DecimalFormat("#,###,##0.0");
@@ -309,6 +340,17 @@ public class Host implements Serializable {
   public String getMemoryUsageInfo() {
     return FormatUtils.storage(memoryUsed) + " / " + FormatUtils.storage(
             memoryCapacity);
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<CondaCommands> getCondaCommandsCollection() {
+    return condaCommandsCollection;
+  }
+
+  public void setCondaCommandsCollection(
+          Collection<CondaCommands> condaCommandsCollection) {
+    this.condaCommandsCollection = condaCommandsCollection;
   }
 
 }

@@ -2,8 +2,13 @@ package io.hops.hopsworks.api.kibana;
 
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.project.ProjectDTO;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +26,8 @@ public class GrafanaProxyServlet extends ProxyServlet {
   private UserManager userManager;
   @EJB
   private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private ProjectController projectController;
 
   @Override
   protected void service(HttpServletRequest servletRequest,
@@ -39,10 +46,24 @@ public class GrafanaProxyServlet extends ProxyServlet {
                   "You don't have the access right for this application");
           return;
         }
-        String user = hdfsUsersBean.getUserName(appState.getAppuser());
-
-        String userEmail = userManager.getUserByUsername(user).getEmail();
-        if (!userEmail.equals(email)) {
+        String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
+        ProjectDTO project;
+        try {
+          project = projectController.getProjectByName(projectName);
+        } catch (AppException ex) {
+          throw new ServletException(ex);
+        }
+        
+        Users user = userManager.getUserByEmail(email);
+        
+        boolean inTeam = false;
+        for(ProjectTeam pt: project.getProjectTeam()){
+          if(pt.getUser().equals(user)){
+            inTeam = true;
+            break;
+          }
+        }
+        if(!inTeam){
           servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                   "You don't have the access right for this application");
           return;

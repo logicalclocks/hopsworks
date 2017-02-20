@@ -41,6 +41,9 @@ public class ConfigFileGenerator {
   public static final String HIVE_SITE_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
           + "hive_site_template.xml";
+  public static final String METRICS_TEMPLATE
+          = TEMPLATE_ROOT + File.separator
+          + "metrics_template.properties";
 
   /**
    * @param filePath

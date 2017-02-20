@@ -278,7 +278,7 @@
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
               <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
+                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" style="width:121px" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
                   Kafka
                 </button>
               </div>
@@ -299,7 +299,7 @@
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
               <div class="text-right col-md-4"></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()">
+                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()" style="width:121px">
                   Advanced
                 </button>
               </div>
@@ -406,7 +406,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.nameFilledIn()"
-            tourtip-offset-vertical="-26"
+            tourtip-offset-vertical="5"
             ></virtual-step>
             <virtual-step
             ng-hide="true"    
@@ -422,7 +422,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.jobTypeSpark()"
-            tourtip-offset-vertical="-70"
+            tourtip-offset-vertical="-15"
             tourtip-offset-horizontal="-6"
             ng-if="newJobCtrl.accordion2.visible"
             ></virtual-step>
@@ -440,7 +440,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
-            tourtip-offset-vertical="-65"
+            tourtip-offset-vertical="-14"
             tourtip-offset-horizontal="-5"
             ng-if="newJobCtrl.accordion3.visible"
             ></virtual-step>
@@ -458,8 +458,8 @@
             tourtip-placement="top"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.chooseParameters()"
-            tourtip-offset-vertical="10"
-            tourtip-offset-horizontal="550"
+            tourtip-offset-vertical="70"
+            tourtip-offset-horizontal="750"
             ng-if="newJobCtrl.accordion4.visible"
             ></virtual-step>
             <virtual-step
@@ -470,8 +470,8 @@
             tourtip-placement="bottom"
             tourtip-next-label="Create Job"
             on-proceed="newJobCtrl.createJob()"
-            tourtip-offset-vertical="-65"
-            tourtip-offset-horizontal="-10"
+            tourtip-offset-vertical="-15"
+            tourtip-offset-horizontal="10"
             ng-if="newJobCtrl.accordion5.visible"
             ></virtual-step>
     </tour>

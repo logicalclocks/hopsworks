@@ -1,7 +1,6 @@
-package io.hops.hopsworks.kmon.struct;
+package io.hops.hopsworks.common.util;
 
 import java.io.Serializable;
-import io.hops.hopsworks.common.util.FormatUtils;
 
 public class NodesTableItem implements Serializable {
 

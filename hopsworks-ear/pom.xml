@@ -34,6 +34,8 @@
         <configuration>
           <version>6</version>
           <defaultLibBundleDir>lib</defaultLibBundleDir>
+          <fileNameMapping>standard</fileNameMapping>
+          <!--<generateModuleId>true</generateModuleId>-->
         </configuration>
       </plugin>
     </plugins>

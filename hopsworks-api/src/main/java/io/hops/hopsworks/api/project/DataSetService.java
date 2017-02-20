@@ -575,7 +575,7 @@ public class DataSetService {
 
       if (pathArray.length > 4 && !this.dataset.isEditable()) {// a folder in the dataset
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You can not perform this action on a shard dataset.");
+                "You can not perform this action on a shared dataset.");
       }
       if (!this.dataset.isEditable()) {
         //remove the entry in the table that represents shared ds
@@ -654,6 +654,10 @@ public class DataSetService {
     String sourcePath = inodes.getPath(sourceInode);
     String destProject = "";
     String destDir = dto.getDestPath();
+    //If destDir does not start with /Project, moving is in the same project
+    if (!destDir.startsWith("/Projects/")){
+      destDir = "/Projects/"+project.getName()+"/"+destDir;
+    }
     if (destDir.startsWith("/Projects/") && sourcePath.startsWith("/Projects/")) {
       destDir = destDir.replace("/Projects/", "");
       destProject = destDir.substring(0, destDir.indexOf("/"));

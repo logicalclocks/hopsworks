@@ -1,0 +1,375 @@
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="ProjectCtrl as projectCtrl">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+    <div class="job-content-wrapper">
+      <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
+    </div>
+    <div class="">
+
+      <section>
+        <div class="content-wrapper">
+          <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
+
+
+          <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
+
+            <uib-tabset active="activeForm" >
+              <uib-tab index="0" heading="Project Settings">
+
+
+                <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()">
+
+                  <h2>Project Settings</h2> 
+                  <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;">
+                    <div class="panel-body">
+                      <div id="updateSettings">
+
+                        <div class="row">
+
+                          <div class="col-md-7">
+                            <fieldset>
+                              <div class="control-group col-md-offset-1">
+                                <label class="control-label">Name</label>
+                                <div class="controls">
+                                  <input class="form-control" name="project_name"
+                                         type="text"
+                                         id="projectname"
+                                         ng-model="projectCtrl.currentProject.projectName"
+                                         disabled>
+                                </div>
+                                <p></p>
+                                <label class="control-label">Description</label>
+                                <div class="controls">
+                                  <textarea class="form-control" style="resize:none;"
+                                            ng-model="projectCtrl.currentProject.description"
+                                            rows="3">
+                                  </textarea>
+                                </div>
+                                <p></p>
+                                <label class="control-label">Data Retention Period</label>
+                                <div class='input-group date col-md-8' id='schedulePicker'>
+                                  <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="YYYY-MM-DD" class="form-control">
+                                  <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                  </span>
+                                </div>
+                                <script type="text/javascript">
+                                              $(function () {
+                                                $('#schedulePicker').datetimepicker({
+                                                  format: 'YYYY-MM-DD'
+                                                }).on('dp.change', function (e) {
+                                                  $('#dpInput').trigger('input');
+                                                });
+                                              });</script>
+
+                                <p></p>
+                              </div>
+                            </fieldset>
+                          </div>
+
+                          <div class="col-md-5">
+                            <label class="text-muted">Status</label>
+                            <div class="row" style="margin-left:15px; margin-bottom:0px">
+                              <fieldset>
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                  {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
+                                </span>          
+                              </fieldset>
+                            </div>
+                            <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                              <fieldset>
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                  {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
+                                </span>          
+                              </fieldset>
+                            </div>
+                            <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
+                              <fieldset>
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                  {{projectCtrl.yarnQuota()}} CPU 
+                                </span>          
+                              </fieldset>    
+                            </div>
+
+                            <fieldset>
+                              <label class="text-muted" ng-show="projectCtrl.allServicesSelected()">Services</label>
+                              <div class="control-group col-md-offset-1">
+                                <div class="row" ng-repeat="projectType in projectCtrl.projectTypes">
+                                  <md-checkbox class=" row md-primary" ng-click="projectCtrl.exists(projectType)">
+                                    {{ projectType}}
+                                  </md-checkbox>
+                                </div>
+                              </div>
+                            </fieldset>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>      
+                  <button class="btn btn-primary" type="submit" 
+                          ng-disabled="projectCtrl.working">
+                    <i ng-if="projectCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                    Save
+                  </button>
+
+                </form>
+
+              </uib-tab>
+
+              <uib-tab index="1" heading="Python Libraries" ng-if="pythonDepsCtrl.installed">
+
+                <div ng-show="!pythonDepsCtrl.enabled">
+
+                  <div class="jumbotron" style="margin-top: 30px;">
+                    <div class="col-md-offset-1">
+                      <h1 class="display-3">Anaconda</h1>
+                      <p class="lead">Click on the button below to install Anaconda for this project.</p>
+                      <!--<p>This will install an anaconda environment for this project on every host in the system.</p>-->
+                      <p class="lead">
+                      <div style="width: 300px;">
+                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
+                                ng-disabled="pythonDepsCtrl.enabling">
+                          <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          Enable Anaconda
+                        </button>
+                      </div>
+                      </p>
+                    </div>                  
+                  </div>                  
+                  <div class="row"></div>
+
+                </div>
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
+                  <h2>Install Python Libraries with Anaconda</h2>                  
+                </div>
+                <fieldset>
+                  <div ng-show="pythonDepsCtrl.enabled" class="control-group col-md-offset-1">
+                    <div style="margin-top: 30px;">
+
+                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
+                                         href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
+                      <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
+                                                       type="text" required y
+                                                       ng-pattern="/^\s*\w*\s*$/"
+                                                       uib-tooltip="You can search a different conda repository by entering the full URL for repo here."
+                                                       tooltip-placement="top"
+                                                       ng-model="pythonDepsCtrl.condaUrl">-->
+                      <!--        from-group                   <div role="alert">
+                                                  <span class="error" ng-show="nestedForm.input.$error.required">
+                                                    Required!</span>
+                                                  <span class="error" ng-show="nestedForm.input.$error.pattern">
+                                                    Invalid input: no spaces allowed in the channel name.</span>
+                                                </div>-->
+                    </div>
+                    <div class="row"></div>
+                    <form name="nestedForm">
+
+                      <div class="form-group row" style="margin-top: 60px;">
+                        <div class="col-md-5">
+                          <input type="text" class="form-control" 
+                                 placeholder="Search here ...."
+                                 required ng-model="pythonDepsCtrl.selectedLib.lib"/>
+                        </div>
+                        <div class="col-md-5">
+                          <div class="btn-group row">
+                            <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.search()"
+                                    ng-disabled="pythonDepsCtrl.searching">
+                              <i ng-if="pythonDepsCtrl.searching" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                              Search <i class="fa fa-search"></i>
+
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                </fieldset>
+
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
+
+                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.numEnvsNotEnabled > 0">Number of hosts not provisioned with an environment yet: {{pythonDepsCtrl.numEnvsNotEnabled}}</div>
+               
+                
+                <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
+                  <thead>
+                    <tr>
+                      <th st-sort="depName" class="col-sm-4"></th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.searchResults" 
+                        ng-class="{'selectedTopicOdd': row.isSelected === true}">
+                      <td class="col-sm-4">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.lib}}</b></div>
+                      </td>
+                      <td class="col-sm-2">
+                        <div class="row">
+
+                          <div class="form-group">
+                            <label class="col-sm-3 control-label" style="margin-top: 5px;">Version</label>
+                            <div class="col-sm-8">
+                              <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
+                                <ui-select-match placeholder="Select a version from the list...">{{$select.selected.version}}</ui-select-match>
+                                <ui-select-choices repeat="v in row.versions | orderBy:'v.version' : false | filter: $select.search">
+                                  <div ng-bind-html="v.version | highlight: $select.search"></div>
+                                  <small ng-bind-html="v.status | highlight: $select.search"></small>
+                                </ui-select-choices>
+                              </ui-select>
+                            </div>                              
+
+                          </div>
+                        </div>
+                      </td>
+                      <td class="col-sm-2">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
+                      </td>
+                      <td class="col-sm-2">
+                        <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'INSTALLED'"
+                                ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version); active = 3">
+                          <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                          Install</button>
+                      </td>
+                    </tr>
+                </table>
+
+
+
+              </uib-tab>
+              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled  && pythonDepsCtrl.installed" 
+                       ng-click="pythonDepsCtrl.getInstalled()">
+                <h2>Uninstall/Upgrade Python Libraries</h2>
+                <!--                <div class="row pull-left">
+                                  <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                                    <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.showAlert($event)"   >
+                                      Show Base Libraries
+                                    </md-button>
+                                  </div>
+                                </div>-->
+                <table st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.installedLibs.length > 0">
+                  <thead>
+                    <tr>
+                      <th st-sort="depName" class="col-sm-3">
+                        <a ng-click="sortType = 'url'">Url<span ng-show="sortType == 'url'" class="fa fa-caret-down"></span></a>
+                      </th>
+                      <th st-sort="depName" class="col-sm-3">
+                        <a ng-click="sortType = 'lib'">Library<span ng-show="sortType == 'lib'" class="fa fa-caret-down"></span></a>                      
+                      </th>
+                      <th class="col-sm-2">Version</th>
+                      <th class="col-sm-2">
+                        <a ng-click="sortType = 'status'">Status<span ng-show="sortType == 'status'" class="fa fa-caret-down"></span></a>                      
+                      </th>
+                      <th class="col-sm-2"><a ng-click="sortType = 'preinstalled'">User-Installed<span ng-show="sortType == 'preinstalled'" class="fa fa-caret-down"></span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.installedLibs|  orderBy:sortType:sortReverse" 
+                        ng-class="{'selectedTopicOdd': row.isSelected === true}">
+                      <td class="col-sm-3">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.channelUrl}}</b></div>
+                      </td>
+                      <td class="col-sm-3">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.lib}}</b></div>
+                      </td>
+                      <td class="col-sm-2">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.version}}</b></div>
+                      </td>
+                      <td class="col-sm-2">
+                        <div ng-show="row.status !== 'ONGOING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
+                        <div ng-show="row.status === 'ONGOING'" class="row" style="margin-left: 10px;">
+                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                            <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
+                              Installing
+                            </md-button>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="col-sm-2" ng-if="row.preinstalled === 'false'">
+                        <div class="button-group">
+                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'INSTALLED'"
+                                  ng-click="pythonDepsCtrl.upgrade(row.channelUrl, row.lib, row.version)">
+                            <i ng-if="pythonDepsCtrl.upgrading[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Upgrade</button>
+                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'INSTALLED'"
+                                  ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
+                            <i ng-if="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Uninstall</button>
+                        </div>
+                      </td>
+                      <td class="col-sm-2" ng-if="row.preinstalled === 'true'">
+                        Pre-installed Library
+                      </td>
+                    </tr>
+                </table>
+              </uib-tab>
+
+
+              <uib-tab index="3" heading="Ongoing Installation Status" ng-if="false" 
+                       ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed" 
+                       ng-click="pythonDepsCtrl.getInstallationStatus()">
+                <h2>Ongoing installations</h2>
+
+
+                <div ng-if="pythonDepsCtrl.opsStatus.length === 0">There are no ongoing installations.</div>
+
+                <table st-table="rowCollection" class="table table-striped" ng-if="pythonDepsCtrl.opsStatus.length > 0">
+                  <thead>
+                    <tr>
+                      <th st-sort="depName" class="col-sm-4">Operation</th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                      <th class="col-sm-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="row in pythonDepsCtrl.opsStatus" 
+                        ng-class="{'selectedTopicOdd': row.isSelected === true}">
+                      <td class="col-sm-4">
+                        <div class="row" style="margin-left: 10px;"><b>{{row.op}}</b></div>
+                      </td>
+                      <td class="col-sm-2">{{row.lib}}
+                      </td>
+                      <td class="col-sm-2">{{row.version}}
+                      </td>
+                      <td class="col-sm-2">{{row.status}}
+                      </td>
+                    </tr>
+                    <tr st-select-row="row" st-select-mode="single" ng-repeat="h in row.hosts" 
+                        ng-class="{'selectedTopicEven': h.isSelected === true}">
+                      <td class="col-sm-4">
+                        {{h.hostId}}
+                      </td>
+                      <td class="col-sm-2">
+                        {{h.status}}
+                      </td>
+                      <td class="col-sm-2">
+                      </td>
+                      <td class="col-sm-2">
+                        <div class="button-group">
+                          <button type="submit" class="btn btn-primary" 
+                                  ng-click="pythonDepsCtrl.installOneHost(row.lib, row.version, h.hostId)">
+                            <i ng-if="pythonDepsCtrl.installing[h.hostId][row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Retry</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+              </uib-tab>              
+            </uib-tabset>
+          </div>
+
+
+      </section>
+
+    </div>
+  </div>
+</div>

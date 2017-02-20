@@ -5,6 +5,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
+import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.api.workflow.WorkflowService;
@@ -94,6 +95,8 @@ public class ProjectService {
   private BiobankingService biobanking;
   @Inject
   private WorkflowService workflowService;
+  @Inject
+  private PythonDepsService pysparkService;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -146,8 +149,9 @@ public class ProjectService {
           @Context HttpServletRequest req) {
 
     List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects
-            = new GenericEntity<List<Project>>(list) {};
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
+            list) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -403,7 +407,8 @@ public class ProjectService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
         }
-        LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
+        LocalhostServices.
+                createUserCertificates(settings.getIntermediateCaDir(),
                         project.getName(), user.getUsername());
         certificateBean.putUserCerts(project.getName(), user.getUsername());
       } catch (IOException ex) {
@@ -433,7 +438,6 @@ public class ProjectService {
         datasetController.generateReadme(udfso, "TestJob",
                 "jar file to calculate pi",
                 project.getName());
-        projectController.manageElasticsearch(project.getName(), true);
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.
@@ -586,7 +590,7 @@ public class ProjectService {
       }
     }
   }
-
+  
   @POST
   @Path("{id}/delete")
   @Produces(MediaType.APPLICATION_JSON)
@@ -793,7 +797,6 @@ public class ProjectService {
           @Context HttpServletRequest req) throws AppException {
 
     List<DataSetDTO> publicDatasets = datasetFacade.findPublicDatasets();
-
     GenericEntity<List<DataSetDTO>> datasets
             = new GenericEntity<List<DataSetDTO>>(publicDatasets) {};
 
@@ -855,6 +858,22 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
+  @POST
+  @Path("{id}/logs/enable")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response enableLogs(@PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    projectFacade.enableLogs(project);
+    try {
+      projectController.manageElasticsearch(project.getName(), true);
+    } catch (IOException ex) {
+      Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
+      return noCacheResponse.getNoCacheResponseBuilder(
+              Response.Status.SERVICE_UNAVAILABLE).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
   @Path("{id}/kafka")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public KafkaService kafka(
@@ -881,4 +900,18 @@ public class ProjectService {
     this.workflowService.setProject(project);
     return workflowService;
   }
+
+  @Path("{id}/pythonDeps")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws
+          AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.pysparkService.setProject(project);
+    return pysparkService;
+  }
+
 }

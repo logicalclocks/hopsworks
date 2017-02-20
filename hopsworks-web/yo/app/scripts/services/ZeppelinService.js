@@ -74,6 +74,12 @@ angular.module('hopsWorksApp')
               },
               stopLivySession: function (settingId, sessionId) {
                 return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
+              },
+              getLivySessionAppId: function (sessionId) {
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/livy/sessions/appId/' + sessionId);
+              },
+              getSparkAppId: function () {
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/spark/appId');
               }
             };
           }]);

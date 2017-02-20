@@ -130,6 +130,12 @@
                                                           <td><span>{{interpreter.interpreter.name}} Interpreter </span></td>
                                                           <td class="text-muted">{{interpreter.statusMsg}}</td>
                                                           <td style="text-align: right">                                      
+                                                            <button ng-if="interpreter.interpreter.group === 'spark' && !interpreter.interpreter.notRunning"
+                                                                ng-click="zeppelinCtrl.showSparkUI()"
+                                                                    type="button" class="btn btn-info btn-sm" 
+                                                                    ng-disabled="interpreter.interpreter.notRunning">
+                                                                <span class="glyphicon glyphicon-eye-open" ></span>
+                                                            </button>
                                                               <button ng-if="interpreter.interpreter.sessions.length === 0"
                                                                       ng-click="zeppelinCtrl.stopInterpreter(interpreter)"
                                                                       type="button" class="btn btn-danger btn-sm" 
@@ -142,7 +148,7 @@
                                                                       type="button" class="btn btn-sm" 
                                                                       ng-disabled="interpreter.interpreter.notRunning">
                                                                   <span class="glyphicon" ng-class="{'glyphicon glyphicon-menu-right': !zeppelinCtrl.collapse, 'glyphicon glyphicon-menu-down': zeppelinCtrl.collapse}" ></span>
-                                                              </button>                                      
+                                                              </button>       
                                                           </td>
                                                         </tr>
 
@@ -153,6 +159,11 @@
                                                             {{session.owner + " : livy-session-" + session.id}}
                                                           </td>
                                                           <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">
+                                                            <button ng-click="zeppelinCtrl.showLivyUI(session.id)"
+                                                                    type="button" class="btn btn-info btn-sm" 
+                                                                    ng-disabled="interpreter.interpreter.notRunning">
+                                                                <span class="glyphicon glyphicon-eye-open" ></span>
+                                                            </button>
                                                             <button ng-click="zeppelinCtrl.stopLivySession(interpreter, session.id)"
                                                                     type="button" class="btn btn-danger btn-sm" 
                                                                     ng-disabled="interpreter.interpreter.notRunning">
