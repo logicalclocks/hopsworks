@@ -23,9 +23,6 @@ public class RoleHostInfo {
   }
 
   public Health getHealth() {
-//    if (host.getHealth() == Health.Good && role.getHealth() == Health.Good) {
-//      return Health.Good;
-//    }
     if (role.getHealth() == Health.Good) {
       return Health.Good;
     }
@@ -33,10 +30,6 @@ public class RoleHostInfo {
   }
 
   public Status getStatus() {
-
-//      if(host.getHealth() == Health.Good) {
     return role.getStatus();
-//      }
-//      return Status.TimedOut;
   }
 }

@@ -3,117 +3,219 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('jobUICtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'projectId', '$interval', 'StorageService', '$routeParams', '$location','KibanaService',
-          function ($scope, $uibModalInstance, growl, JobService, job, projectId, $interval, StorageService, $routeParams, $location, KibanaService) {
+        .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'JobService', '$interval', 'StorageService',
+          '$routeParams', '$route', '$location', 'KibanaService', '$sce',
+          function ($scope, $timeout, growl, JobService, $interval, StorageService,
+                  $routeParams, $route, $location, KibanaService, $sce) {
 
             var self = this;
-            this.job = job;
-            this.jobtype; //Holds the type of job.
-            this.execFile; //Holds the name of the main execution file
-            this.showExecutions = false;
-            this.projectId = $routeParams.projectID;
-            this.ui = "";
-            self.current="";
+            self.job;
+            self.jobtype; //Holds the type of job.
+            self.execFile; //Holds the name of the main execution file
+            self.showExecutions = false;
+            self.projectId = $routeParams.projectID;
+            self.jobName = $routeParams.name;
+            self.appId = $routeParams.appId;
+            self.ui = "";
+            self.isLivy = $routeParams.isLivy;
+            self.current = "";
+            self.loading = false;
+            self.loadingText = "";
 
-            var getJobUI = function () {
 
-              JobService.getExecutionUI(projectId, job.id).then(
-                      function (success) {
-
-                        self.ui = success.data;
-                        self.current = "jobUI";
-                        if(self.ui!==""){
-                          var iframe = document.getElementById('ui_iframe');
-                          iframe.src = self.ui;
-                        }
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
-              });
-              //Send request to create index in Kibana
-              //Lower case is for elasticsearch index
-              KibanaService.createIndex(self.job.project.name.toLowerCase()).then(
-                function (success) {
-                  console.log('Successful creation of Kibana index:'+self.job.project.name);
-                }, function (error) {
-                  console.log('Did not create Kibana index:'+self.job.project.name);
-              });
-
+            var startLoading = function (label) {
+              self.loading = true;
+              self.loadingText = label;
             };
 
+            var stopLoading = function () {
+              self.loading = false;
+              self.loadingText = "";
+            };
+
+            var getAppId = function (callback) {
+              if(self.appId==undefined || self.appId==false || self.appId==""){
+                  JobService.getAppId(self.projectId, self.job.id).then(
+                          function(success) {
+                            self.appId=success.data
+                            callback();
+                          }, function (error){
+                            growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                              stopLoading();
+                          });
+                }else{
+                  callback();
+                }
+            }
+            
+            var getJobUI = function () {
+
+              startLoading("Loading Job Details...");
+              if(self.jobName!= undefined && self.jobName!= false && self.jobName!=""){
+                self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+              }
+              if (self.job || self.appId) {
+                console.log("Job object found was: ");
+                console.log(self.job);
+                getAppId(getJobUIInt);
+              }
+            };
+
+            var getJobUIInt = function(){
+              JobService.getExecutionUI(self.projectId, self.appId).then(
+                        function (success) {
+
+                          self.ui = success.data;
+                          self.current = "jobUI";
+                          if (self.ui !== "") {
+                            var iframe = document.getElementById('ui_iframe');
+                            if (iframe) {
+                              iframe.src = $sce.trustAsResourceUrl(self.ui);
+                            }
+                            $timeout(stopLoading(), 10000);
+
+                          }
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                  stopLoading();
+
+                });
+            }
+            
             getJobUI();
 
             self.yarnUI = function () {
 
-              JobService.getYarnUI(projectId, job.id).then(
+              if (self.job == undefined || self.job == false) {
+                if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+                  self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                }
+              }
+
+              startLoading("Loading YARN UI...");
+              getAppId(yarnUIInt);
+
+            };
+
+            var yarnUIInt = function () {
+              JobService.getYarnUI(self.projectId, self.appId).then(
                       function (success) {
 
                         self.ui = success.data;
                         self.current = "yarnUI";
                         var iframe = document.getElementById('ui_iframe');
-                        if(iframe!==null){
-                          iframe.src = self.ui;
+                        if (iframe !== null) {
+                          iframe.src = $sce.trustAsResourceUrl(self.ui);
+//                          iframe.src = self.ui;
                         }
+                        // This timeout is ignored when the iframe is loaded, replacing the overlay
+                        $timeout(stopLoading(), 5000);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                stopLoading();
               });
-
-            };
+            }
             
             self.kibanaUI = function () {
-              self.ui = "/hopsworks/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:"+self.job.project.name.toLowerCase()+",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"+self.job.name+")),sort:!(%27@timestamp%27,asc))";
-              self.current = "kibanaUI";
+              getAppId(kibanaUIInt);
             };
-            
+
+            var kibanaUIInt = function () {
+              if (self.job == undefined || self.job == false) {
+                JobService.getProjectName(self.projectId).then(
+                        function (success) {
+                          var projectName = success.data;
+                          //if not zeppelin we should have a job
+                          self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
+                                  "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
+                                  "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                                  projectName.toLowerCase() +
+                                  ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
+                                  + projectName.toLowerCase() + "-zeppelin)),sort:!(%27@timestamp%27,asc))";
+                          self.current = "kibanaUI";
+                          var iframe = document.getElementById('ui_iframe');
+                          if (iframe !== null) {
+                            iframe.src = $sce.trustAsResourceUrl(self.ui);
+                          }
+                          $timeout(stopLoading(), 1000);
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error fetching project name',
+                    ttl: 15000});
+                  stopLoading();
+                });
+
+              } else {
+                self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
+                        "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
+                        "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                        self.job.project.name.toLowerCase() +
+                        ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
+                        + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
+                self.current = "kibanaUI";
+                var iframe = document.getElementById('ui_iframe');
+                if (iframe !== null) {
+                  iframe.src = $sce.trustAsResourceUrl(self.ui);
+                }
+                $timeout(stopLoading(), 1000);
+              }
+
+            }
+
+
             self.grafanaUI = function () {
-              JobService.getAppInfo(projectId, job.id).then(
-                      function(success) {
+              startLoading("Loading Grafana UI...");
+              getAppId(grafanaUIInt);
+              
+            };
+
+            var grafanaUIInt = function() {
+              JobService.getAppInfo(self.projectId, self.appId).then(
+                      function (success) {
                         var info = success.data;
                         var appid = info.appId;
-                        var startTime= info.startTime;
-                        var finishTime=info.endTime;
+                        var startTime = info.startTime;
+                        var finishTime = info.endTime;
                         //nbExecutors=;
-                        if(info.now){
-                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
-                                  + appid + "&maxExecutorId=" 
-                                  + info.nbExecutors + "&from=" 
+                        if (info.now) {
+                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
+                                  + appid + "&maxExecutorId="
+                                  + info.nbExecutors + "&from="
                                   + startTime;
-                        }else{
-                          self.ui = "/hopsworks/grafana/dashboard/script/spark.js?app=" 
-                                  + appid +  "&maxExecutorId=" 
-                                  + info.nbExecutors + "&from=" 
-                                  + startTime + "&to=" 
+                        } else {
+                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
+                                  + appid + "&maxExecutorId="
+                                  + info.nbExecutors + "&from="
+                                  + startTime + "&to="
                                   + finishTime;
                         }
                         self.current = "grafanaUI";
                         var iframe = document.getElementById('ui_iframe');
-                        if(iframe!==null){
-                          iframe.src = self.ui;
+                        if (iframe !== null) {
+                          iframe.src = $sce.trustAsResourceUrl(self.ui);
                         }
+                        $timeout(stopLoading(), 1000);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', 
+                growl.error(error.data.errorMsg, {title: 'Error fetching ui.',
                   ttl: 15000});
+                stopLoading();
               });
-            };
+            }
             
             self.backToHome = function () {
-              getJobUI();
+              if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
+                StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
+              }
+              $timeout($route.reload(), 1000);
             };
 
             self.refresh = function () {
               var ifram = document.getElementById('ui_iframe');
-              if(self.current==="grafanaUI"){
+              if (self.current === "grafanaUI") {
                 self.grafanaUI();
               }
-              if(ifram!==null){
+              if (ifram !== null) {
                 ifram.contentWindow.location.reload();
               }
-            };
-            /**
-             * Close the modal dialog.
-             * @returns {undefined}
-             */
-            self.close = function () {
-              $uibModalInstance.dismiss('cancel');
             };
 
             /**
@@ -124,7 +226,7 @@ angular.module('hopsWorksApp')
             });
 
             self.poller = $interval(function () {
-              if(self.ui!==""){
+              if (self.ui !== "") {
                 $interval.cancel(self.poller);
                 return;
               }

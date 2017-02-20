@@ -4,11 +4,13 @@
           "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
+<!--
   <module name="RegexpSingleline">
      <property name="format" value="((//.*)|(\*.*))TODO[^(]" />
      <property name="message" value='All TODOs should be named.  e.g. "TODO(Ermias): Remove hardcoded string."' />
      <property name="severity" value="warning" />
   </module>
+-->
   <!--Until we have a proper header file -->
   <module name="RegexpSingleline">
     <property name="format" value="((//.*)|(\*.*))To change this license header," />

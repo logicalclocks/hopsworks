@@ -18,6 +18,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String mainClass;
   private String args;
   private String historyServerIp;
+  private String anacondaDir;
 
   //Kafka properties
   private int numberOfExecutors = 1;
@@ -48,6 +49,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
+  protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
 
   public SparkJobConfiguration() {
     super();
@@ -95,6 +97,16 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public int getNumberOfExecutors() {
     return numberOfExecutors;
   }
+
+  public String getAnacondaDir() {
+    return anacondaDir;
+  }
+
+  public void setAnacondaDir(String anacondaDir) {
+    this.anacondaDir = anacondaDir;
+  }
+  
+  
 
   /**
    * Set the number of executors to be requested for this job. This should be
@@ -238,6 +250,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
+    obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir());
     return obj;
   }
 

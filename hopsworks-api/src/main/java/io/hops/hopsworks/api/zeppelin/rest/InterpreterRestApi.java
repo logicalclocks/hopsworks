@@ -56,6 +56,7 @@ import org.sonatype.aether.repository.RemoteRepository;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
@@ -75,6 +76,8 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.administration.JobAdministration;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.Settings;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Interpreter Rest API
@@ -106,7 +109,9 @@ public class InterpreterRestApi {
   private Settings settings;
   @EJB
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
-
+  @EJB
+  private NoCacheResponse noCacheResponse;
+  
   Gson gson = new Gson();
 
   public InterpreterRestApi() {
@@ -288,6 +293,75 @@ public class InterpreterRestApi {
     InterpreterDTO interpreter = new InterpreterDTO(setting,
             !zeppelinResource.isInterpreterRunning(setting, project));
     return new JsonResponse(Status.OK, "", interpreter).build();
+  }
+
+  /**
+   * Get livy session Yarn AppId
+   *
+   * @param sessionId
+   * @param settingId
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("/livy/sessions/appId/{sessionId}")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response getLivySessionAppId(@PathParam("sessionId") int sessionId) 
+          throws AppException {
+    LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+    if (session == null) {
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
+              + "' not found.").build();
+    }
+    String projName = hdfsUserBean.getProjectName(session.getProxyUser());
+    String username = hdfsUserBean.getUserName(session.getProxyUser());
+    if (!this.project.getName().equals(projName)) {
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+              "You can't stop sessions in another project.");
+    }
+    if (!this.user.getUsername().equals(username) && this.roleInProject.equals(
+            AllowedRoles.DATA_SCIENTIST)) {
+      throw new AppException(Status.BAD_REQUEST.getStatusCode(),
+              "You are not authorized to stop this session.");
+    }
+    
+    List<YarnApplicationstate> appStates = appStateBean.findByAppname("livy-session-" + sessionId);
+    if(appStates==null || appStates.isEmpty()){
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
+              + "' not running.").build();
+    }
+    
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(appStates.get(0).getApplicationid()).build();
+    
+  }
+
+
+  /**
+   * Get spark interpreter Yarn AppId
+   *
+   * @param sessionId
+   * @param settingId
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("/spark/appId")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response getSparkSessionAppId() 
+          throws AppException {
+    
+    
+    
+    List<YarnApplicationstate> appStates = appStateBean.findByAppname(this.project.getName() + "-Zeppelin");
+    if(appStates==null || appStates.isEmpty()){
+      return new JsonResponse(Response.Status.NOT_FOUND, 
+              "Zeppelin not running for project " + this.project.getName()).build();
+    }
+    
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+                entity(appStates.get(0).getApplicationid()).build();
+    
   }
 
   /**

@@ -1,9 +1,10 @@
-package io.hops.hopsworks.kmon.communication;
+package io.hops.hopsworks.common.util;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -18,16 +19,18 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.kmon.struct.NodesTableItem;
-import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import io.hops.hopsworks.common.util.Settings;
+import javax.ws.rs.core.Response.Status.Family;
+import org.apache.commons.lang.StringEscapeUtils;
 
 @Stateless
 public class WebCommunication {
@@ -39,13 +42,12 @@ public class WebCommunication {
   private static String PROTOCOL = "https";
   private static int PORT = 8090;
   private static String NOT_AVAILABLE = "Not available.";
+  @EJB
+  private Settings settings;
 
   public WebCommunication() {
   }
 
-//    public String getResource(String url) {
-//        return fetchContent(url);
-//    }
   public ClientResponse getWebResponse(String url, String agentPassword) {
     ClientResponse response;
     try {
@@ -214,6 +216,12 @@ public class WebCommunication {
 
   private ClientResponse getWebResource(String url, String agentPassword) throws
           Exception {
+    return getWebResource(url, agentPassword, null);
+  }
+
+  private ClientResponse getWebResource(String url, String agentPassword,
+          Map<String, String> args) throws
+          Exception {
 
     if (DISABLE_CERTIFICATE_VALIDATION) {
       disableCertificateValidation();
@@ -224,6 +232,16 @@ public class WebCommunication {
     MultivaluedMap params = new MultivaluedMapImpl();
     params.add("username", Settings.AGENT_EMAIL);
     params.add("password", agentPassword);
+
+    if (args != null) {
+      for (String key : args.keySet()) {
+        params.add(key, args.get(key));
+      }
+    }
+    logger.log(Level.INFO,
+            "WebCommunication: Requesting url: {0} with password {1}",
+            new Object[]{url, agentPassword});
+
     ClientResponse response = webResource.queryParams(params)
             .header("Accept-Encoding", "gzip,deflate")
             .get(ClientResponse.class);
@@ -233,6 +251,11 @@ public class WebCommunication {
 
   private ClientResponse postWebResource(String url, String agentPassword,
           String body) throws Exception {
+    return postWebResource(url, agentPassword, "", "", body);
+  }
+
+  private ClientResponse postWebResource(String url, String agentPassword,
+          String channelUrl, String version, String body) throws Exception {
     if (DISABLE_CERTIFICATE_VALIDATION) {
       disableCertificateValidation();
     }
@@ -243,10 +266,9 @@ public class WebCommunication {
     params.add("username", Settings.AGENT_EMAIL);
     params.add("password", agentPassword);
     ClientResponse response = webResource.queryParams(params)
-            .header("Accept-Encoding", "gzip,deflate")
+            .header(
+                    "Accept-Encoding", "gzip,deflate")
             .post(ClientResponse.class, body);
-
-    logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);
     return response;
   }
 
@@ -279,6 +301,64 @@ public class WebCommunication {
       HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
       HttpsURLConnection.setDefaultHostnameVerifier(hv);
     } catch (Exception e) {
+      // ??
     }
   }
+
+  public int anaconda(String hostAddress, String agentPassword, String op,
+          String project, String arg) throws Exception {
+
+    String path = "anaconda/" + settings.getSparkUser() + '/' + op.toLowerCase()
+            + "/" + project;
+    String template = "%s://%s:%s/%s";
+    String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
+    Map<String, String> args = null;
+    if (op.compareToIgnoreCase(PythonDepsFacade.CondaOp.CLONE.toString())
+            == 0) {
+      args = new HashMap<>();
+      if (arg == null || arg.isEmpty()) {
+        throw new RuntimeException(
+                "You forgot the 'srcProject' argument for the conda "
+                + "clone environment command for project " + project);
+      }
+      args.put("srcproj", arg);
+    }
+    ClientResponse response = getWebResource(url, agentPassword, args);
+    Family res = response.getClientResponseStatus().getFamily();
+    if (res == Response.Status.Family.SUCCESSFUL) {
+      return response.getStatus();
+    }
+    throw new RuntimeException("Error. Failed to execute anaconda command " + op
+            + " on " + project + ". Result was: " + res);
+  }
+
+  public int conda(String hostAddress, String agentPassword, String op,
+          String project, String channel, String lib, String version) throws
+          Exception {
+
+    String template = "%s://%s:%s/%s";
+    String channelEscaped = StringEscapeUtils.escapeJava(channel);
+    String path = "conda/" + settings.getSparkUser() + '/' + op.toLowerCase()
+            + "/" + project + "/" + lib;
+
+    String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
+
+    Map<String, String> args = new HashMap<>();
+
+    if (!channel.isEmpty()) {
+      args.put("channelurl", channelEscaped);
+    }
+    if (!version.isEmpty()) {
+      args.put("version", version);
+    }
+
+    ClientResponse response = getWebResource(url, agentPassword, args);
+    Family res = response.getClientResponseStatus().getFamily();
+    if (res == Response.Status.Family.SUCCESSFUL) {
+      return response.getStatus();
+    }
+    throw new RuntimeException("Error. Failed to execute conda command " + op
+            + " on " + project + ". Result was: " + res);
+  }
+
 }
