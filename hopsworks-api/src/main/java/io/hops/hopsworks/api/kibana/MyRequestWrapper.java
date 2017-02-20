@@ -26,8 +26,13 @@ public class MyRequestWrapper extends HttpServletRequestWrapper {
     try {
       InputStream inputStream = request.getInputStream();
       if (inputStream != null) {
-        bufferedReader = new BufferedReader(new InputStreamReader(inputStream,
-                request.getCharacterEncoding()));
+        if (request.getCharacterEncoding() != null) {
+          bufferedReader = new BufferedReader(new InputStreamReader(inputStream,
+                  request.getCharacterEncoding()));
+        } else {
+          bufferedReader
+                  = new BufferedReader(new InputStreamReader(inputStream));
+        }
         char[] charBuffer = new char[128];
         int bytesRead = -1;
         while ((bytesRead = bufferedReader.read(charBuffer)) > 0) {

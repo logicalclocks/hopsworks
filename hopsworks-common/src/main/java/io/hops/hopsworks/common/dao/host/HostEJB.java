@@ -79,10 +79,11 @@ public class HostEJB implements Serializable {
     if (register) {
       em.merge(host);
     } else {
-      Host h = em.find(Host.class, host.getHostId());
+      Host h = findByHostId(host.getHostId());
       host.setPrivateIp(h.getPrivateIp());
       host.setPublicIp(h.getPublicIp());
       host.setCores(h.getCores());
+      host.setId(h.getId());
       em.merge(host);
     }
     return host;

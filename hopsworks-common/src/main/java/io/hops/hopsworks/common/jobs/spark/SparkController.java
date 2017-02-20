@@ -169,6 +169,7 @@ public class SparkController {
 
     config.setJarPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());
+    config.setAnacondaDir(settings.getAnacondaDir());
     return config;
   }
 

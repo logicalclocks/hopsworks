@@ -116,7 +116,8 @@ public class HopsUtils {
       StringBuilder classpath = new StringBuilder();
 
       for (String path : sb.toString().split(File.pathSeparator)) {
-        if (!path.contains("yarn")) {
+        if (!path.contains("yarn") && !path.contains("jersey") && !path.
+                contains("servlet")) {
           classpath.append(path).append(File.pathSeparator);
         }
       }

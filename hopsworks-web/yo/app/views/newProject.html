@@ -25,9 +25,8 @@
                   class="text-danger ng-hide">This field is required</span>
 
             <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.pattern"
-                  class="text-danger ng-hide">Invalid project name. Spaces
-              in project names and special characters such as __, /, \, ?,
-              *, :, |, ', ", <, >, %, (, ), &, ;, #, å, ä, ö, ü, etc. are not allowed.</span>
+                  class="text-danger ng-hide">Invalid project name. You are not allowed to use spaces in project names and special characters such as __, /, \, ?,
+              *, :, |, ', ", <, >, %, (, ), &, ;, #, å, ä, ö, ü, etc..</span>
 
             <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.maxlength"
                   class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>

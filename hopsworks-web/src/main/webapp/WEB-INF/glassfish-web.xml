@@ -14,7 +14,7 @@
   </security-role-mapping>
   <security-role-mapping>
     <role-name>HOPS_USER</role-name>
-    <group-name>HOPS_USER</group-name>
+    <group-name>HOPS_USER</group-name>/we
   </security-role-mapping>
   <security-role-mapping>
     <role-name>AGENT</role-name>

@@ -13,6 +13,8 @@ scripts/private_key
 yo/app/index.html
 yo/app/karma.conf.js
 
+glassfish-resources.xml
+
 ### NetBeans ###
 */nbproject/
 */build/

@@ -207,7 +207,7 @@ public class KafkaService {
     } catch (Exception ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
-              "Error while retrieving topic details. Did you define topic ACLs?");
+              "Error while retrieving topic details. Is Kafka running?");
     }
 
     GenericEntity<List<PartitionDetailsDTO>> topics

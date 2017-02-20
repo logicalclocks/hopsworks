@@ -913,7 +913,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-
               newWorkflow: function (size) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/newWorkflow.html',
