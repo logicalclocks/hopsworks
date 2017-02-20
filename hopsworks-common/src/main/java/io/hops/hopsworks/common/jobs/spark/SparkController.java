@@ -167,10 +167,10 @@ public class SparkController {
           config.setMainClass(atts.getValue(Name.MAIN_CLASS));
         }
       }
-    } else if (path.endsWith(".py")) {
+    } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
-    config.setProgramPath(path);
+    config.setAppPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());
     return config;
   }

@@ -169,7 +169,7 @@ public class SparkService {
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
-      String path = config.getJarPath();
+      String path = config.getAppPath();
 //      if (!path.startsWith("hdfs")) {
 //        path = "hdfs://" + path;
 //      }

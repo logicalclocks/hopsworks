@@ -66,7 +66,7 @@ public class SparkJob extends YarnJob {
     //i.e. AdamJob
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(
-              jobconfig.getJarPath(), jobconfig.getMainClass(),
+              jobconfig.getAppPath(), jobconfig.getMainClass(),
               JobType.SPARK);
       runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments

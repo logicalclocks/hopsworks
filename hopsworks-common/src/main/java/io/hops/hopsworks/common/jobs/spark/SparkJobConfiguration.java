@@ -14,7 +14,7 @@ import io.hops.hopsworks.common.util.Settings;
 @XmlRootElement
 public class SparkJobConfiguration extends YarnJobConfiguration {
 
-  private String jarPath;
+  private String appPath;
   private String mainClass;
   private String args;
   private String historyServerIp;
@@ -53,17 +53,17 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     super();
   }
 
-  public String getJarPath() {
-    return jarPath;
+  public String getAppPath() {
+    return appPath;
   }
 
   /**
    * Set the path to the main executable jar. No default value.
    * <p/>
-   * @param jarPath
+   * @param appPath
    */
-  public void setProgramPath(String jarPath) {
-    this.jarPath = jarPath;
+  public void setAppPath(String appPath) {
+    this.appPath = appPath;
   }
 
   public String getMainClass() {
@@ -226,8 +226,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     if (!Strings.isNullOrEmpty(mainClass)) {
       obj.set(KEY_MAINCLASS, mainClass);
     }
-    if (!Strings.isNullOrEmpty(jarPath)) {
-      obj.set(KEY_JARPATH, jarPath);
+    if (!Strings.isNullOrEmpty(appPath)) {
+      obj.set(KEY_JARPATH, appPath);
     }
     //Then: fields that can never be null or emtpy.
     obj.set(KEY_EXECCORES, "" + executorCores);
@@ -295,7 +295,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.args = jsonArgs;
     this.executorCores = Integer.parseInt(jsonExeccors);
     this.executorMemory = Integer.parseInt(jsonExecmem);
-    this.jarPath = jsonJarpath;
+    this.appPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
 

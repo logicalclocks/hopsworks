@@ -53,7 +53,7 @@ public class ExecutionController {
 //        }
 //        int execId = exec.getId();
 //        AdamJobConfiguration adamConfig = (AdamJobConfiguration) job.getJobConfig();
-//        String path = adamConfig.getJarPath();
+//        String path = adamConfig.getAppPath();
 //        String[] parts = path.split("/");
 //        String pathOfInode = path.replace("hdfs://" + parts[2], "");
 //        
@@ -76,7 +76,7 @@ public class ExecutionController {
         SparkJobConfiguration config = (SparkJobConfiguration) job.
                 getJobConfig();
 
-        String path = config.getJarPath();
+        String path = config.getAppPath();
         String patternString = "hdfs://(.*)\\s";
         Pattern p = Pattern.compile(patternString);
         Matcher m = p.matcher(path);
