@@ -886,7 +886,7 @@ public class ProjectController {
   public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
           DistributedFileSystemOps dfso)
           throws IOException {
-    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)),
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(projectname)),
             diskspaceQuotaInMB);
   }
 

@@ -8,7 +8,6 @@
            </cookie-properties>
       </session-config>
   -->
-
   <property name="allowLinking" value="true"/>
   <security-role-mapping>
     <role-name>HOPS_ADMIN</role-name>

@@ -12,7 +12,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 @Singleton
-
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
 
