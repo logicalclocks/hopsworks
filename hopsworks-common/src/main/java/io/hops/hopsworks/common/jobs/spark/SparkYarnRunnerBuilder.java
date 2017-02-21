@@ -221,7 +221,8 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
             + "/lib/native/");
     //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
-
+    addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.getElastic().getRestEndpoint());
+    
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
@@ -233,7 +234,10 @@ public class SparkYarnRunnerBuilder {
             append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+"
                     + "PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
-            append(this.hadoopDir).append("/lib/native/");
+            append(this.hadoopDir).append("/lib/native/").
+            append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").
+                append(serviceProps.getElastic().getRestEndpoint());
+    
     if (serviceProps != null) {
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {

@@ -153,6 +153,7 @@ public abstract class YarnJob extends HopsJob {
             getProjectServicesCollection();
     if (projectServices != null && !projectServices.isEmpty()) {
       serviceProps = new ServiceProperties();
+      serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
       Iterator<ProjectServices> iter = projectServices.iterator();
       while (iter.hasNext()) {
         ProjectServices projectService = iter.next();
