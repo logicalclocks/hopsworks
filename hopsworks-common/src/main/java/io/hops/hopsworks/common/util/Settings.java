@@ -93,6 +93,7 @@ public class Settings {
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
+  private static final String VARIABLE_RESOURCE_DIRS = "resources";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -248,6 +249,7 @@ public class Settings {
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
+      RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       cached = true;
     }
   }
@@ -1079,7 +1081,14 @@ public class Settings {
     }
 
   }
-
+  
+  public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
+  
+  public synchronized String getResourceDirs() {
+    checkCache();
+    return RESOURCE_DIRS;
+  }
+  
   public Settings() {
   }
 

@@ -273,6 +273,7 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(username);
     List<ProjectServiceEnum> services = projectServicesFacade.
             findEnabledServicesForProject(project);
+    String[] subResources = settings.getResourceDirs().split(";");
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
@@ -290,6 +291,12 @@ public class ProjectController {
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, searchableResources, globallyVisible, dfso,
                 udfso);
+        if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
+          for (String sub : subResources) {
+            datasetController.createSubDirectory(user, project, ds.getName(),
+                    sub, -1, "", false, dfso, udfso);
+          }
+        }
 
         if (searchableResources) {
           Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.
