@@ -6,6 +6,7 @@ import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.File;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
@@ -339,6 +340,11 @@ public class FlinkYarnRunnerBuilder {
             getProjectKeystoreName(project, jobUser));
     builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
             getProjectTruststoreName(project, jobUser));
+    String stagingPath = File.separator + "Projects" + File.separator + project
+            + File.separator
+            + Settings.PROJECT_STAGING_DIR;
+    builder.localResourcesBasePath(stagingPath);
+    
     //Add extra files to local resources, use filename as key
     //Get filesystem
     if (!extraFiles.isEmpty()) {

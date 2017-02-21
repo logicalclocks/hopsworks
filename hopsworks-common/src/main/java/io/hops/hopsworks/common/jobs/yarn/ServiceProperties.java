@@ -12,6 +12,8 @@ public class ServiceProperties {
   private String truststorePwd;
   private Integer projectId;
   private String projectName;
+  
+  private ElasticProperties elastic;
 
   public ServiceProperties() {
   }
@@ -46,6 +48,14 @@ public class ServiceProperties {
 
   public void setKafka(KafkaProperties kafka) {
     this.kafka = kafka;
+  }
+
+  public ElasticProperties getElastic() {
+    return elastic;
+  }
+
+  public void setElastic(ElasticProperties elastic) {
+    this.elastic = elastic;
   }
 
   public void initKafka() {

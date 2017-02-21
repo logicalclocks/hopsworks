@@ -4,7 +4,6 @@ import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
@@ -16,9 +15,6 @@ import javax.persistence.PersistenceContext;
 
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
-
-  private final static Logger logger = Logger.getLogger(Settings.class.
-          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -35,6 +31,7 @@ public class Settings {
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
           = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
+  private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -203,6 +200,7 @@ public class Settings {
               HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -567,7 +565,7 @@ public class Settings {
           = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
   public static final String FLINK_KAFKA_CERTS_DIR
-          = "/srv/glassfish/domain1/config";
+          = "/srv/hops/domain1/config";
 
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
@@ -690,8 +688,17 @@ public class Settings {
     return ELASTIC_IP;
   }
 
-  public static final int ELASTIC_PORT = 9300;
+  private int ELASTIC_PORT = 9300;
 
+  public synchronized int getElasticPort() {
+    checkCache();
+    return ELASTIC_PORT;
+  }
+  
+  public synchronized String getElasticEndpoint() {
+    return getElasticIp() + ":" + getElasticPort();
+  }
+  
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
@@ -982,6 +989,8 @@ public class Settings {
           = "hopsworks.kafka.consumergroups";
   public static final String KAFKA_REST_ENDPOINT_ENV_VAR
           = "hopsworks.kafka.restendpoint";
+  
+  public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   public static int FILE_PREVIEW_TXT_SIZE = 100;
