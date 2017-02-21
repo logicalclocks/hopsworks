@@ -4,7 +4,6 @@ import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
@@ -16,9 +15,6 @@ import javax.persistence.PersistenceContext;
 
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
-
-  private final static Logger logger = Logger.getLogger(Settings.class.
-          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -564,7 +560,7 @@ public class Settings {
           = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
   public static final String FLINK_KAFKA_CERTS_DIR
-          = "/srv/glassfish/domain1/config";
+          = "/srv/hops/domain1/config";
 
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
