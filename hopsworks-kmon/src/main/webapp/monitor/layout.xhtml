@@ -23,6 +23,9 @@
     <h:form class="stylelayout" id="formToolbar">  
       <p:toolbar styleClass="MainToolbar">  
         <p:toolbarGroup align="left">  
+          <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks')}"/>
+        </p:toolbarGroup> 
+        <p:toolbarGroup align="left">  
           <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}"/>
         </p:toolbarGroup> 
 
@@ -32,12 +35,13 @@
           <p:commandButton value="Alerts" action="alerts"/>
         </p:toolbarGroup>  
 
-        <!--            <p:toolbarGroup align="right">  
+                    <p:toolbarGroup align="right">  
                        <p:commandButton id="userBtn" value="" type="button" icon="ui-icon-person"/>  
                        <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                          <p:menuitem value="Backup / Restore" action="backuprestore" /> 
+                          <!--<p:menuitem value="Backup / Restore" action="backuprestore" />--> 
+                          <p:menuitem value="Logout" action='#{roleEnforcementPoint.logOut()}'/> 
                        </p:menu>  
-                    </p:toolbarGroup>  -->
+                    </p:toolbarGroup>  
 
       </p:toolbar> 
 
