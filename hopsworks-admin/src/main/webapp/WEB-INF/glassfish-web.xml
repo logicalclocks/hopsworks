@@ -27,4 +27,10 @@
     <role-name>AUDITOR</role-name>
     <group-name>AUDITOR</group-name>
   </security-role-mapping>
+  <session-config>
+    <cookie-properties>
+      <property name="cookieName" value="SESSIONID"/>
+      <property name="cookiePath" value="/"/>
+    </cookie-properties>
+  </session-config>
 </glassfish-web-app>

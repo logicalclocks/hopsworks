@@ -20,8 +20,9 @@ angular.module('hopsWorksApp')
             self.resultsMsgShowing = false;
 
             self.resultsMsg = "";
-
-
+           
+            self.pythonVersionOpen = false;
+            
             $scope.sortType = 'preinstalled';
 
             self.searchText = "";
@@ -135,9 +136,9 @@ angular.module('hopsWorksApp')
             };
             self.init();
 
-            self.enable = function () {
+            self.enable = function (version) {
               self.enabling = true;
-              PythonDepsService.enable(self.projectId).then(
+              PythonDepsService.enable(self.projectId, version).then(
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;

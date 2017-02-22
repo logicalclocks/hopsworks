@@ -130,14 +130,30 @@
                     <div class="col-md-offset-1">
                       <h1 class="display-3">Anaconda</h1>
                       <p class="lead">Click on the button below to install Anaconda for this project.</p>
-                      <!--<p>This will install an anaconda environment for this project on every host in the system.</p>-->
+                      <p>You cannot change the version of python after you have selected enabled the anaconda environment for this project.</p>
                       <p class="lead">
                       <div style="width: 300px;">
-                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
+<!--                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
                                 ng-disabled="pythonDepsCtrl.enabling">
                           <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                           Enable Anaconda
-                        </button>
+                        </button>-->
+
+    <div class="btn-group" uib-dropdown is-open="pythonDepsCtrl.pythonVersionOpen">
+      <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button" class="btn btn-primary" 
+              uib-dropdown-toggle >
+Activate Anaconda<span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('2.7')">Python 2.7</a></li>
+        <li class="divider"></li>
+        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
+      </ul>
+    </div>
+                        
+                        
+                        
+                        
                       </div>
                       </p>
                     </div>                  

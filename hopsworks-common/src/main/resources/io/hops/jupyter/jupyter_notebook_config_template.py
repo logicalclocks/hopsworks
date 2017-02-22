@@ -1,5 +1,6 @@
 from hdfscontents import HdfsContentsManager
 c = get_config()
+c.NotebookApp.contents_manager_class = HdfsContentsManager
 
 # Set options for certfile, ip, password, and toggle off
 # browser auto-opening
@@ -17,7 +18,6 @@ c.NotebookApp.open_browser = False
 # It is a good idea to set a known, fixed port for server access
 c.NotebookApp.port = %%project_port%%
 
-c.NotebookApp.contents_manager_class = HdfsContentsManager
 c.HdfsContentsManager.user_id = '%%project_name%%'
 c.HdfsContentsManager.hadoop_home = '%%hadoop_home%%'
 

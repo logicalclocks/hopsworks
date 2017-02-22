@@ -16,6 +16,7 @@
   <welcome-file-list>
     <welcome-file>clusters.xhtml</welcome-file>
   </welcome-file-list>
+  
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>
@@ -54,6 +55,12 @@
     tells everyone (especially hackers) that our application is based on java -->
     <cookie-config>
       <name>SESSIONID</name>
+      <path>/</path>
     </cookie-config>
   </session-config>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
 </web-app>
