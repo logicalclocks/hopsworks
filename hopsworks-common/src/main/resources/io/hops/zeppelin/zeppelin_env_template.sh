@@ -15,5 +15,6 @@ export SPARK_SUBMIT_OPTIONS="%%spark_options%%"
 export MPLBACKEND="agg"
 
 # These are setting the project-specific conda environment directory for python
-export PYSPARK_PYTHON=%%anaconda_env_dir%%
-export PYTHONPATH=%%anaconda_env_dir%%
+export PYSPARK_PYTHON=%%anaconda_env_dir%%/bin/python
+# export PYTHONPATH=%%anaconda_env_dir%%
+export PYLIB=%%anaconda_env_dir%%/lib

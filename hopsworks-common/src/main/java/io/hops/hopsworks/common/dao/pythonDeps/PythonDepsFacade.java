@@ -85,11 +85,11 @@ public class PythonDepsFacade {
   public class AnacondaTask implements Runnable {
 
     @EJB
-    private WebCommunication web;
-    private String proj;
-    private Host host;
-    private CondaOp op;
-    private String arg;
+    private final WebCommunication web;
+    private final String proj;
+    private final Host host;
+    private final CondaOp op;
+    private final String arg;
 
     public AnacondaTask(WebCommunication web, String proj, Host host,
             CondaOp op, String arg) {
@@ -115,11 +115,11 @@ public class PythonDepsFacade {
   public class CondaTask implements Runnable {
 
     @EJB
-    private WebCommunication web;
-    private Project proj;
-    private Host host;
-    private CondaOp op;
-    private PythonDep dep;
+    private final WebCommunication web;
+    private final Project proj;
+    private final Host host;
+    private final CondaOp op;
+    private final PythonDep dep;
 
     public CondaTask(WebCommunication web, Project proj, Host host, CondaOp op,
             PythonDep dep) {
@@ -156,9 +156,9 @@ public class PythonDepsFacade {
   }
 
   public Collection<PythonDep> createProjectInDb(Project project,
-          Map<String, String> libs) throws AppException {
+          Map<String, String> libs, String pythonVersion) throws AppException {
 
-    condaEnvironmentOp(CondaOp.CREATE, project, "", getHosts());
+    condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
 
     List<PythonDep> all = new ArrayList<>();
     AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);

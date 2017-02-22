@@ -102,9 +102,9 @@ public class PythonDepsService {
   @GET
   @Path("/enable")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response enable() throws AppException {
+  public Response enable(@PathParam("pythonVersion") String pythonVersion) throws AppException {
     Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
-    pythonDepsFacade.createProjectInDb(project, deps);
+    pythonDepsFacade.createProjectInDb(project, deps, pythonVersion);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
