@@ -6,9 +6,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,13 +32,11 @@ public class JupyterConfig {
   private final String logDirPath;
   private final String libDirPath;
 
-  public JupyterConfig(String projectName, String owner, Settings settings,
-          String interpreterConf) {
+  public JupyterConfig(String projectName, String owner, Settings settings) {
     this.projectName = projectName;
     this.settings = settings;
     boolean newDir = false;
     boolean newFile = false;
-    boolean newBinDir = false;
     projectDirPath = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
     confDirPath = settings.getJupyterDir() + File.separator
@@ -64,7 +59,6 @@ public class JupyterConfig {
             + File.separator + "lib";
     try {
       newDir = createJupyterDirs();//creates the necessary folders for the project in /srv/zeppelin
-      newBinDir = copyBinDir();
       createSymLinks();//interpreter and lib
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
@@ -141,24 +135,6 @@ public class JupyterConfig {
     return newProjectDir;
   }
 
-  //copies /srv/zeppelin/bin to /srv/zeppelin/this.project/bin
-  private boolean copyBinDir() throws IOException {
-    String source = settings.getJupyterDir() + File.separator + "bin";
-    File binDir = new File(binDirPath);
-    File sourceDir = new File(source);
-    if (binDir.list().length == sourceDir.list().length) {
-      //should probably check if the files are the same
-      return false;
-    }
-    Path destinationPath;
-    for (File file : sourceDir.listFiles()) {
-      destinationPath = Paths.get(binDirPath + File.separator + file.getName());
-      Files.copy(file.toPath(), destinationPath,
-              StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    return binDir.list().length == sourceDir.list().length;
-  }
 
   //creates symlink to interpreters and libs
   private void createSymLinks() throws IOException {
@@ -173,7 +149,7 @@ public class JupyterConfig {
   
 
   // returns true if one of the conf files were created anew 
-  private boolean createZeppelinConfFiles(String interpreterConf) throws
+  private boolean createConfigFiles() throws
           IOException {
     File jupyter_custom_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
     File jupyter_notebook_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);

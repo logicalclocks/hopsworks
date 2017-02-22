@@ -100,11 +100,13 @@ public class PythonDepsService {
   }
 
   @GET
-  @Path("/enable")
+  @Path("/enable/{version}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response enable(@PathParam("pythonVersion") String pythonVersion) throws AppException {
+  public Response enable(@PathParam("version") String version,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
-    pythonDepsFacade.createProjectInDb(project, deps, pythonVersion);
+    pythonDepsFacade.createProjectInDb(project, deps, version);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -162,7 +164,7 @@ public class PythonDepsService {
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("/installOneHost/{hostname}")
+  @Path("/installOneHost/{hostId}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response installOneHost(

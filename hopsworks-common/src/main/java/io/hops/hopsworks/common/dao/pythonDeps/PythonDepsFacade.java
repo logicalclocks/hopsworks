@@ -157,7 +157,14 @@ public class PythonDepsFacade {
 
   public Collection<PythonDep> createProjectInDb(Project project,
           Map<String, String> libs, String pythonVersion) throws AppException {
-
+    if (pythonVersion.compareToIgnoreCase("2.7") != 0 ||
+            pythonVersion.compareToIgnoreCase("3.5")!= 0) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), 
+              "Invalid version of python " + pythonVersion 
+                      + " (valid: '2.7', and '3.5'");
+    }
+    
+    
     condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
 
     List<PythonDep> all = new ArrayList<>();
