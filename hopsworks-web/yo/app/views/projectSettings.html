@@ -130,16 +130,33 @@
                     <div class="col-md-offset-1">
                       <h1 class="display-3">Anaconda</h1>
                       <p class="lead">Click on the button below to install Anaconda for this project.</p>
-                      <!--<p>This will install an anaconda environment for this project on every host in the system.</p>-->
+                      <p>You cannot change the version of python after you have selected enabled the anaconda environment for this project.</p>
                       <p class="lead">
                       <div style="width: 300px;">
-                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
-                                ng-disabled="pythonDepsCtrl.enabling">
-                          <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-                          Enable Anaconda
-                        </button>
+                        <!--                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
+                                                        ng-disabled="pythonDepsCtrl.enabling">
+                                                  <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                                  Enable Anaconda
+                                                </button>-->
+
+                        <div class="btn-group" uib-dropdown is-open="pythonDepsCtrl.pythonVersionOpen">
+                          <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button" 
+                                  class="btn btn-success btn-lg" 
+                                  uib-dropdown-toggle >
+                            Activate Anaconda &nbsp;<span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('2.7')">Python 2.7</a></li>
+                            <li class="divider"></li>
+                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
+                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.5')">Python 3.5</a></li>
+                          </ul>
+                        </div>
+
+
+
+
                       </div>
-                      </p>
                     </div>                  
                   </div>                  
                   <div class="row"></div>
@@ -193,8 +210,8 @@
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
 
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.numEnvsNotEnabled > 0">Number of hosts not provisioned with an environment yet: {{pythonDepsCtrl.numEnvsNotEnabled}}</div>
-               
-                
+
+
                 <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">
                   <thead>
                     <tr>
@@ -243,7 +260,7 @@
 
 
               </uib-tab>
-              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled  && pythonDepsCtrl.installed" 
+              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed" 
                        ng-click="pythonDepsCtrl.getInstalled()">
                 <h2>Uninstall/Upgrade Python Libraries</h2>
                 <!--                <div class="row pull-left">
@@ -283,8 +300,8 @@
                       </td>
                       <td class="col-sm-2">
                         <div ng-show="row.status !== 'ONGOING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
-                        <div ng-show="row.status === 'ONGOING'" class="row" style="margin-left: 10px;">
-                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                        <div ng-show="row.status === 'ONGOING'" class="row">
+                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin>
                             <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
                               Installing
                             </md-button>

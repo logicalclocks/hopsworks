@@ -16,6 +16,7 @@
   <welcome-file-list>
     <welcome-file>clusters.xhtml</welcome-file>
   </welcome-file-list>
+  
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>
@@ -47,13 +48,9 @@
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>
   </login-config>
-  <session-config>
-    <!-- on production systems you might have another value for the timeout -->
-    <session-timeout>30</session-timeout>
-    <!-- we don't want to use the default name JSESSIONID because this
-    tells everyone (especially hackers) that our application is based on java -->
-    <cookie-config>
-      <name>SESSIONID</name>
-    </cookie-config>
-  </session-config>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
 </web-app>

@@ -103,7 +103,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a smartphone account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for HopsWorks on your behalf.\n\n";
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
