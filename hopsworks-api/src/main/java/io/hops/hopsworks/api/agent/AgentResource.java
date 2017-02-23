@@ -384,7 +384,7 @@ public class AgentResource {
       commands.addAll(differenceList);
 
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
+      logger.log(Level.SEVERE, ex.getMessage());
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 

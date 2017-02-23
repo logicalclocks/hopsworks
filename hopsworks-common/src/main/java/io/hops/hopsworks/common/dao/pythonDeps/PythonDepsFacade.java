@@ -85,11 +85,11 @@ public class PythonDepsFacade {
   public class AnacondaTask implements Runnable {
 
     @EJB
-    private WebCommunication web;
-    private String proj;
-    private Host host;
-    private CondaOp op;
-    private String arg;
+    private final WebCommunication web;
+    private final String proj;
+    private final Host host;
+    private final CondaOp op;
+    private final String arg;
 
     public AnacondaTask(WebCommunication web, String proj, Host host,
             CondaOp op, String arg) {
@@ -115,11 +115,11 @@ public class PythonDepsFacade {
   public class CondaTask implements Runnable {
 
     @EJB
-    private WebCommunication web;
-    private Project proj;
-    private Host host;
-    private CondaOp op;
-    private PythonDep dep;
+    private final WebCommunication web;
+    private final Project proj;
+    private final Host host;
+    private final CondaOp op;
+    private final PythonDep dep;
 
     public CondaTask(WebCommunication web, Project proj, Host host, CondaOp op,
             PythonDep dep) {
@@ -156,9 +156,16 @@ public class PythonDepsFacade {
   }
 
   public Collection<PythonDep> createProjectInDb(Project project,
-          Map<String, String> libs) throws AppException {
+          Map<String, String> libs, String pythonVersion) throws AppException {
+    if (pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
+            compareToIgnoreCase("3.5") != 0 && pythonVersion.
+            compareToIgnoreCase("3.6") != 0) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid version of python " + pythonVersion
+              + " (valid: '2.7', and '3.5'");
+    }
 
-    condaEnvironmentOp(CondaOp.CREATE, project, "", getHosts());
+    condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
 
     List<PythonDep> all = new ArrayList<>();
     AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
@@ -559,7 +566,7 @@ public class PythonDepsFacade {
           Project proj, String channelUrl,
           String lib, String version) throws AppException {
     Host host = em.find(Host.class, hostId);
-    
+
     AnacondaRepo repo = getRepo(proj, channelUrl, false);
     PythonDep dep = getDep(repo, lib, version, false, false);
     Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(

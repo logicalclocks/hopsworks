@@ -90,40 +90,9 @@
   <login-config>
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>
-    <form-login-config>
+<!--    <form-login-config>
       <form-login-page>/hopsworks/#/login</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
-    </form-login-config>
+    </form-login-config>-->
   </login-config>
-  <session-config>
-    <!-- on production systems you might have another value for the timeout -->
-    <session-timeout>30</session-timeout>
-    <!-- we don't want to use the default name JSESSIONID because this
-    tells everyone (especially hackers) that our application is based on java -->
-    <cookie-config>
-      <name>SESSIONID</name>
-    </cookie-config>
-  </session-config>
-  <!-- PrimeFaces FileUpload Filter -->
-  <filter>
-    <filter-name>PrimeFaces FileUpload Filter</filter-name>
-    <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>PrimeFaces FileUpload Filter</filter-name>
-    <servlet-name>Faces Servlet</servlet-name>
-  </filter-mapping>
-<!--  <filter>
-    <filter-name>LoginFilter</filter-name>
-    <filter-class>io.hops.hopsworks.admin.security.ua.LoginFilter</filter-class>
-    <init-param>
-      <param-name>avoid-urls</param-name>
-      <param-value>html</param-value>
-    </init-param>
-  </filter>
-  <filter-mapping>
-    <filter-name>LoginFilter</filter-name>
-    <url-pattern>/security/*</url-pattern>
-    <url-pattern>/index.xhtml</url-pattern>
-  </filter-mapping>-->
 </web-app>

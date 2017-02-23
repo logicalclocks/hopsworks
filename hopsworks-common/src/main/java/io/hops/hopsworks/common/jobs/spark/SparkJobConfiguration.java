@@ -49,7 +49,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
+// See: https://www.continuum.io/blog/developer-blog/using-anaconda-
+  //    pyspark-distributed-language-processing-hadoop-cluster
   protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
+  protected static final String KEY_PYSPARK_PYLIB = "PYLIB";
 
   public SparkJobConfiguration() {
     super();
@@ -57,7 +60,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public String getJarPath() {
     return jarPath;
-  }
+  } 
 
   /**
    * Set the path to the main executable jar. No default value.
@@ -105,8 +108,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public void setAnacondaDir(String anacondaDir) {
     this.anacondaDir = anacondaDir;
   }
-  
-  
 
   /**
    * Set the number of executors to be requested for this job. This should be
@@ -250,7 +251,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
-    obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir());
+    obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
+    obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
     return obj;
   }
 

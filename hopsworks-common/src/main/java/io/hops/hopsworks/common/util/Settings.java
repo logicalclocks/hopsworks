@@ -40,6 +40,9 @@ public class Settings {
   private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
           = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
+  private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
+  private static final String VARIABLE_JUPYTER_PROJECTS_DIR
+          = "jupyter_projects_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
@@ -84,7 +87,7 @@ public class Settings {
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
-  private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_installed";
+  private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_enabled";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -191,6 +194,9 @@ public class Settings {
               ZEPPELIN_PROJECTS_DIR);
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
+      JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
+      JUPYTER_PROJECTS_DIR = setDirVar(VARIABLE_JUPYTER_PROJECTS_DIR,
+              JUPYTER_PROJECTS_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -788,12 +794,23 @@ public class Settings {
     return ZEPPELIN_SYNC_INTERVAL;
   }
 
-  private long CONDA_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
+  
+  
+  // Jupyter
+  private String JUPYTER_DIR = "/srv/jupyter";
 
-  public synchronized long getCondaSyncInterval() {
+  public synchronized String getJupyterDir() {
     checkCache();
-    return CONDA_SYNC_INTERVAL;
+    return JUPYTER_DIR;
   }
+
+  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/Projects";
+
+  public synchronized String getJupyterProjectsDir() {
+    checkCache();
+    return JUPYTER_PROJECTS_DIR;
+  }
+
 
   // Kafka
   private String KAFKA_IP = "10.0.2.15";

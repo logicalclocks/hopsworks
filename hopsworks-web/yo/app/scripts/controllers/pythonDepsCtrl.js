@@ -20,8 +20,9 @@ angular.module('hopsWorksApp')
             self.resultsMsgShowing = false;
 
             self.resultsMsg = "";
-
-
+           
+            self.pythonVersionOpen = false;
+            
             $scope.sortType = 'preinstalled';
 
             self.searchText = "";
@@ -135,9 +136,9 @@ angular.module('hopsWorksApp')
             };
             self.init();
 
-            self.enable = function () {
+            self.enable = function (version) {
               self.enabling = true;
-              PythonDepsService.enable(self.projectId).then(
+              PythonDepsService.enable(self.projectId, version).then(
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;
@@ -219,7 +220,7 @@ angular.module('hopsWorksApp')
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
-                        growl.success("Installation started. Click on the 'Ongoing Installation Status' tab for more info.", {title: 'Installing', ttl: 3000});
+                        growl.success("Click on the 'Installed Python Libraries' tab for more info.", {title: 'Installing', ttl: 5000});
                         self.resultsMessageShowing = false;
                         self.searchResults = [];
 //                        self.installing[lib] = false;
