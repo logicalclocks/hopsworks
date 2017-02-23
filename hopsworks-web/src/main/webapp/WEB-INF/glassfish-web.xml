@@ -26,9 +26,12 @@
     <group-name>AUDITOR</group-name>
   </security-role-mapping>
   <session-config>
-    <cookie-properties>
-      <property name="cookieName" value="SESSIONID"/>
-      <property name="cookiePath" value="/"/>
-    </cookie-properties>
-  </session-config>
+    <session-timeout>
+      30
+    </session-timeout>
+    <cookie-config>
+      <name>SESSIONID</name>
+      <path>/</path>
+    </cookie-config>
+  </session-config> 
 </glassfish-web-app>

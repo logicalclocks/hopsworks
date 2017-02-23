@@ -228,7 +228,7 @@ public class AgentResource {
           String op = entry.getString("op");
           PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
                   op.toUpperCase());
-          String channelurl = entry.getString("channelurl");
+          String channelurl = entry.getString("channelUrl");
           String lib = entry.containsKey("lib") ? entry.getString("lib") : "";
           String version = entry.containsKey("version") ? entry.getString(
                   "version") : "";
@@ -384,7 +384,7 @@ public class AgentResource {
       commands.addAll(differenceList);
 
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
+      logger.log(Level.SEVERE, ex.getMessage());
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 

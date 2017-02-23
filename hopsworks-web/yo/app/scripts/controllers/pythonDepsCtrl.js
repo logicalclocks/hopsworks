@@ -220,7 +220,7 @@ angular.module('hopsWorksApp')
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
-                        growl.success("Installation started. Click on the 'Ongoing Installation Status' tab for more info.", {title: 'Installing', ttl: 3000});
+                        growl.success("Click on the 'Installed Python Libraries' tab for more info.", {title: 'Installing', ttl: 5000});
                         self.resultsMessageShowing = false;
                         self.searchResults = [];
 //                        self.installing[lib] = false;

@@ -148,6 +148,7 @@
                           <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
                             <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('2.7')">Python 2.7</a></li>
                             <li class="divider"></li>
+                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
                             <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.5')">Python 3.5</a></li>
                           </ul>
                         </div>
@@ -299,8 +300,8 @@
                       </td>
                       <td class="col-sm-2">
                         <div ng-show="row.status !== 'ONGOING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
-                        <div ng-show="row.status === 'ONGOING'" class="row" style="margin-left: 10px;">
-                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
+                        <div ng-show="row.status === 'ONGOING'" class="row">
+                          <div class="dialog-demo-content" layout="row" layout-wrap layout-margin>
                             <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.libStatus($event, row.lib, row.version)"   >
                               Installing
                             </md-button>

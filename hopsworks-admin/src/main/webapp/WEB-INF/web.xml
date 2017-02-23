@@ -95,14 +95,4 @@
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>-->
   </login-config>
-  <session-config>
-    <!-- on production systems you might have another value for the timeout -->
-    <session-timeout>30</session-timeout>
-    <!-- we don't want to use the default name JSESSIONID because this
-    tells everyone (especially hackers) that our application is based on java -->
-    <cookie-config>
-      <name>SESSIONID</name>
-      <path>/</path>
-    </cookie-config>
-  </session-config>
 </web-app>
