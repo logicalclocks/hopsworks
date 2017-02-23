@@ -60,7 +60,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public String getJarPath() {
     return jarPath;
-  }
+  } 
 
   /**
    * Set the path to the main executable jar. No default value.
