@@ -228,7 +228,7 @@ public class AgentResource {
           String op = entry.getString("op");
           PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
                   op.toUpperCase());
-          String channelurl = entry.getString("channelUrl");
+          String channelurl = entry.getString("channelurl");
           String lib = entry.containsKey("lib") ? entry.getString("lib") : "";
           String version = entry.containsKey("version") ? entry.getString(
                   "version") : "";

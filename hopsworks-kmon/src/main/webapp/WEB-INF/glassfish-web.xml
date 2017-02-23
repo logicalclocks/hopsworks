@@ -21,11 +21,11 @@
     <role-name>AUDITOR</role-name>
     <group-name>AUDITOR</group-name>
   </security-role-mapping>
-  <session-config>
+<!--  <session-config>
     <session-timeout>30</session-timeout>
     <cookie-config>
       <name>SESSIONID</name>
       <path>/</path>
     </cookie-config>
-  </session-config>
+  </session-config>-->
 </glassfish-web-app>
