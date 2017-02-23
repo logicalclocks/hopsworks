@@ -970,10 +970,11 @@ public class Settings {
   public static final String TMP_CERT_STORE_REMOTE
           = "/user/glassfish/kafkacerts";
 
-  //Used to retrieve schema by KafkaUtil
+  //Used to retrieve schema by HopsUtil
   public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
   public static final String KAFKA_PROJECTNAME_ENV_VAR = "hopsworks.projectname";
+  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.jobname";
   public static final String KAFKA_BROKERADDR_ENV_VAR
           = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";

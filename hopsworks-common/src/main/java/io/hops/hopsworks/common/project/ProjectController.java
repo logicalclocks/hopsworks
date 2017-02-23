@@ -1188,6 +1188,7 @@ public class ProjectController {
               + "{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host"
               + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
               + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
+              + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
               + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
       JSONObject resp = sendElasticsearchReq(params);
       boolean templateCreated = false;
@@ -1229,7 +1230,7 @@ public class ProjectController {
               + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
               + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
               + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"timestamp\\\","
-              + "\\\"type\\\":\\\"number\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\"type\\\":\\\"date\\\",\\\"count\\\":0,\\\"scripted"
               + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
               + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"method\\\","
               + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
