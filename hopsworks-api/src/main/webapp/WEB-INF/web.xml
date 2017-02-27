@@ -126,16 +126,15 @@
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>
   </login-config>
-  <session-config>
-    <session-timeout>30</session-timeout>
-    <cookie-config>
-      <name>SESSIONID</name>
-      <path>/</path>
-    </cookie-config>
-  </session-config>
   <context-param>
     <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
     <param-value>true</param-value>
   </context-param>
-  
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <name>JSESSIONID</name>
+      <path>/</path>
+    </cookie-config>
+  </session-config>  
 </web-app>
