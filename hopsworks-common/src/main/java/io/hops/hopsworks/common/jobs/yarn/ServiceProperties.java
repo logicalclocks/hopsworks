@@ -13,17 +13,20 @@ public class ServiceProperties {
   private Integer projectId;
   private String projectName;
   private String restEndpoint;
-  
+  private String jobName;
+  private ElasticProperties elastic;
+
   public ServiceProperties() {
   }
 
   public ServiceProperties(String keystorePwd, String truststorePwd,
-          Integer projectId, String projectName, String restEndPoint) {
+          Integer projectId, String projectName, String restEndPoint, String jobName) {
     this.keystorePwd = keystorePwd;
     this.truststorePwd = truststorePwd;
     this.projectId = projectId;
     this.projectName = projectName;
     this.restEndpoint = restEndPoint;
+    this.jobName = jobName;
   }
 
   public String getKeystorePwd() {
@@ -48,6 +51,14 @@ public class ServiceProperties {
 
   public void setKafka(KafkaProperties kafka) {
     this.kafka = kafka;
+  }
+
+  public ElasticProperties getElastic() {
+    return elastic;
+  }
+
+  public void setElastic(ElasticProperties elastic) {
+    this.elastic = elastic;
   }
 
   public void initKafka() {
@@ -76,6 +87,14 @@ public class ServiceProperties {
 
   public void setRestEndpoint(String restEndPoint) {
     this.restEndpoint = restEndPoint;
+  }
+  
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
   }
 
 }

@@ -14,13 +14,12 @@ and open the template in the editor.
     <ui:composition>
       <h:form class="stylelayout" id="formToolbar">  
         <p:toolbar styleClass="MainToolbar">
-          <p:toolbarGroup align="left">  
-            <p:commandLink value="HopsWorks" action="adminIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
-            <p:commandLink value="HopsWorks" action="welcome" rendered="#{!roleEnforcementPoint.loggedIn}"/>
-          </p:toolbarGroup> 
-
           <p:toolbarGroup align="left">              
+            <p:commandLink value="HopsWorks" action="welcome" rendered="#{!roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup>  
+          <p:toolbarGroup align="left">  
+            <p:commandLink value="Admin Home" action="adminIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
+          </p:toolbarGroup> 
 
 
           <p:toolbarGroup align="right" rendered="#{roleEnforcementPoint.loggedIn}">
@@ -29,7 +28,7 @@ and open the template in the editor.
             <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
               <p:menuitem value="My Account" action="profile" /> 
               <p:separator/>
-<!--              <p:menuitem value="Logout" action='#{roleEnforcementPoint.logOut()}'/> -->
+              <p:menuitem value="Logout" action='#{roleEnforcementPoint.logOut()}'/> 
             </p:menu>  
           </p:toolbarGroup>  
 

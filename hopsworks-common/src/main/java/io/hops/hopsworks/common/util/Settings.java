@@ -4,7 +4,6 @@ import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
@@ -13,12 +12,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 @Singleton
-
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings {
-
-  private final static Logger logger = Logger.getLogger(Settings.class.
-          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -35,6 +30,7 @@ public class Settings {
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
           = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
+  private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -44,6 +40,9 @@ public class Settings {
   private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
           = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
+  private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
+  private static final String VARIABLE_JUPYTER_PROJECTS_DIR
+          = "jupyter_projects_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
@@ -88,7 +87,7 @@ public class Settings {
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
-  private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_installed";
+  private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_enabled";
 
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
@@ -96,6 +95,7 @@ public class Settings {
   private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
+  private static final String VARIABLE_RESOURCE_DIRS = "resources";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -194,6 +194,9 @@ public class Settings {
               ZEPPELIN_PROJECTS_DIR);
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
+      JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
+      JUPYTER_PROJECTS_DIR = setDirVar(VARIABLE_JUPYTER_PROJECTS_DIR,
+              JUPYTER_PROJECTS_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -202,6 +205,7 @@ public class Settings {
               HOPSWORKS_INSTALL_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
+      ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -250,6 +254,7 @@ public class Settings {
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
+      RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       cached = true;
     }
   }
@@ -564,7 +569,7 @@ public class Settings {
           = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
   public static final String FLINK_KAFKA_CERTS_DIR
-          = "/srv/glassfish/domain1/config";
+          = "/srv/hops/domain1/config";
 
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
@@ -687,8 +692,17 @@ public class Settings {
     return ELASTIC_IP;
   }
 
-  public static final int ELASTIC_PORT = 9300;
+  private int ELASTIC_PORT = 9300;
 
+  public synchronized int getElasticPort() {
+    checkCache();
+    return ELASTIC_PORT;
+  }
+  
+  public synchronized String getElasticEndpoint() {
+    return getElasticIp() + ":" + getElasticPort();
+  }
+  
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
@@ -780,12 +794,23 @@ public class Settings {
     return ZEPPELIN_SYNC_INTERVAL;
   }
 
-  private long CONDA_SYNC_INTERVAL = 24 * 60 * 60 * 1000;
+  
+  
+  // Jupyter
+  private String JUPYTER_DIR = "/srv/jupyter";
 
-  public synchronized long getCondaSyncInterval() {
+  public synchronized String getJupyterDir() {
     checkCache();
-    return CONDA_SYNC_INTERVAL;
+    return JUPYTER_DIR;
   }
+
+  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/Projects";
+
+  public synchronized String getJupyterProjectsDir() {
+    checkCache();
+    return JUPYTER_PROJECTS_DIR;
+  }
+
 
   // Kafka
   private String KAFKA_IP = "10.0.2.15";
@@ -962,9 +987,12 @@ public class Settings {
   public static final String TMP_CERT_STORE_REMOTE
           = "/user/glassfish/kafkacerts";
 
-  //Used to retrieve schema by KafkaUtil
+
+  //Used to retrieve schema by HopsUtil
+  public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
   public static final String KAFKA_PROJECTNAME_ENV_VAR = "hopsworks.projectname";
+  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.jobname";
   public static final String KAFKA_BROKERADDR_ENV_VAR
           = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
@@ -978,6 +1006,8 @@ public class Settings {
           = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_ENV_VAR
           = "hopsworks.restendpoint";
+  
+  public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   public static int FILE_PREVIEW_TXT_SIZE = 100;
@@ -1069,7 +1099,14 @@ public class Settings {
     }
 
   }
-
+  
+  public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
+  
+  public synchronized String getResourceDirs() {
+    checkCache();
+    return RESOURCE_DIRS;
+  }
+  
   public Settings() {
   }
 

@@ -228,7 +228,8 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
                 getTruststorePwd());
     //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
-
+    addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.getElastic().getRestEndpoint());
+    
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
@@ -237,8 +238,6 @@ public class SparkYarnRunnerBuilder {
             append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").
             append(project.toLowerCase()).append(",").append(jobName).
             append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
-            append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+"
-                    + "PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
             append(this.hadoopDir).append("/lib/native/").
             append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR + "=").
@@ -246,7 +245,10 @@ public class SparkYarnRunnerBuilder {
             append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
             append(serviceProps.getKeystorePwd()).
             append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
-            append(serviceProps.getTruststorePwd());
+            append(serviceProps.getTruststorePwd()).
+            append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").
+            append(serviceProps.getElastic().getRestEndpoint());
+    
     if (serviceProps != null) {
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
@@ -255,11 +257,12 @@ public class SparkYarnRunnerBuilder {
                 getBrokerAddresses());
         addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
                 getKafka().getTopics());
-
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
         addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.
                 getProjectName());
+        addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.
+                getJobName());
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                 getKafka().getConsumerGroups());
         builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
@@ -271,7 +274,13 @@ public class SparkYarnRunnerBuilder {
                 append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
                 append(serviceProps.getKafka().getTopics()).
                 append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
-                serviceProps.getProjectId());
+                serviceProps.getProjectId()).
+                append(" -D" + Settings.KAFKA_PROJECTNAME_ENV_VAR + "=").
+                append(serviceProps.getProjectName()).
+                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").
+                append(serviceProps.getProjectId()).
+                append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").
+                append(serviceProps.getJobName());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());

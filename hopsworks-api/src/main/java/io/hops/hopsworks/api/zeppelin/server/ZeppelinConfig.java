@@ -413,6 +413,9 @@ public class ZeppelinConfig {
             + Settings.DIR_ROOT + File.separator + this.projectName;
     String notebookDir = File.separator + Settings.DIR_ROOT + File.separator
             + this.projectName;
+    String resourceDir = File.separator + Settings.DIR_ROOT + File.separator
+            + this.projectName + File.separator
+            + Settings.DefaultDataset.RESOURCES.getName();
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
@@ -486,6 +489,7 @@ public class ZeppelinConfig {
     String logstashID = "-D" + Settings.LOGSTASH_JOB_INFO + "="
             + this.projectName.toLowerCase() + "," + jobName + "," + jobName;
     String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties " + logstashID;
+    String hdfsResourceDir = "hdfs://" + resourceDir + File.separator;
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
               instantiateFromTemplate(
@@ -495,7 +499,11 @@ public class ZeppelinConfig {
                       "livy_url", settings.getLivyUrl(),
                       "metrics-properties_local_path", "./metrics.properties",
                       "metrics-properties_path", metricsPath + "," + log4jPath,
-                      "extra_spark_java_options", extraSparkJavaOptions
+                      "extra_spark_java_options", extraSparkJavaOptions,
+                      "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "spark.yarn.stagingDir", hdfsResourceDir,
+                      "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "livy.spark.yarn.stagingDir", hdfsResourceDir
               );
       interpreterConf = interpreter_json.toString();
     }

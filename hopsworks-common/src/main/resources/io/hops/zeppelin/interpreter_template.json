@@ -89,7 +89,9 @@
         "zeppelin.R.cmd": "R" ,
         "spark.metrics.conf": "%%metrics-properties_local_path%%",
         "spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
-        "spark.executor.extraJavaOptions": "%%extra_spark_java_options%%"       
+        "spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
+        "spark.sql.warehouse.dir": "%%spark.sql.warehouse.dir%%",
+        "spark.yarn.stagingDir": "%%spark.yarn.stagingDir%%"
       },
       "status": "READY",
       "interpreterGroup": [
@@ -270,14 +272,15 @@
       "group": "livy",
       "properties": {
         "zeppelin.livy.pull_status.interval.millis": "1000",
-        "livy.spark.executor.memory": "",
         "zeppelin.livy.session.create_timeout": "120",
         "zeppelin.livy.principal": "",
         "zeppelin.livy.spark.sql.maxResult": "1000",
         "zeppelin.livy.keytab": "",
         "zeppelin.livy.concurrentSQL": "false",
-        "livy.spark.executor.cores": "",
         "zeppelin.livy.displayAppInfo": "false",
+        "zeppelin.livy.url": "%%livy_url%%",
+        "livy.spark.executor.memory": "",
+        "livy.spark.executor.cores": "",
         "livy.spark.dynamicAllocation.minExecutors": "",
         "livy.spark.driver.cores": "",
         "livy.spark.jars.packages": "",
@@ -287,9 +290,10 @@
         "livy.spark.dynamicAllocation.maxExecutors": "",
         "livy.spark.dynamicAllocation.initialExecutors": "",
         "livy.spark.driver.memory": "",
-        "zeppelin.livy.url": "%%livy_url%%",
         "livy.spark.metrics.conf": "%%metrics-properties_local_path%%",
-        "livy.spark.files": "%%metrics-properties_path%%"
+        "livy.spark.files": "%%metrics-properties_path%%",
+        "livy.spark.sql.warehouse.dir": "%%livy.spark.sql.warehouse.dir%%",
+        "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%"
       },
       "status": "READY",
       "interpreterGroup": [

@@ -273,6 +273,7 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(username);
     List<ProjectServiceEnum> services = projectServicesFacade.
             findEnabledServicesForProject(project);
+    String[] subResources = settings.getResourceDirs().split(";");
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
@@ -290,6 +291,12 @@ public class ProjectController {
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, searchableResources, globallyVisible, dfso,
                 udfso);
+        if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
+          for (String sub : subResources) {
+            datasetController.createSubDirectory(user, project, ds.getName(),
+                    sub, -1, "", false, dfso, udfso);
+          }
+        }
 
         if (searchableResources) {
           Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.
@@ -879,7 +886,7 @@ public class ProjectController {
   public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
           DistributedFileSystemOps dfso)
           throws IOException {
-    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)),
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(projectname)),
             diskspaceQuotaInMB);
   }
 
@@ -1181,6 +1188,7 @@ public class ProjectController {
               + "{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host"
               + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
               + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
+              + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
               + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
       JSONObject resp = sendElasticsearchReq(params);
       boolean templateCreated = false;
@@ -1222,7 +1230,7 @@ public class ProjectController {
               + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
               + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
               + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"timestamp\\\","
-              + "\\\"type\\\":\\\"number\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\"type\\\":\\\"date\\\",\\\"count\\\":0,\\\"scripted"
               + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
               + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"method\\\","
               + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"

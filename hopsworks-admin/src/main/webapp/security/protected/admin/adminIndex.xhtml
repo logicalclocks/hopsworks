@@ -63,21 +63,6 @@
             </p:column>
 
             <p:column>
-              <h:commandLink  action="consentMgmt">
-                <p:graphicImage id="consent" 
-                                value="/resources/images/users/consent.jpg" 
-                                width="100"
-                                height="100"
-                                title="Consent and Ethical Approval"
-                                >
-                </p:graphicImage>
-
-              </h:commandLink>            
-              <br></br>
-              <p:outputLabel style="text-align: left"  value="Consent Management"></p:outputLabel>
-            </p:column>
-
-            <p:column>
               <h:commandLink  action="projectsMgmt">
                 <p:graphicImage id="projects"
                                 value="/resources/images/users/projects.png"
@@ -91,6 +76,7 @@
               <br></br>
               <p:outputLabel style="text-align: left"  value="Projects Management"></p:outputLabel>
             </p:column>
+
             <p:column>
               <h:commandLink  action="jobMgmt">
                 <p:graphicImage id="jobs"
@@ -121,24 +107,6 @@
 
             </p:column>
 
-
-            <p:column>
-
-              <h:commandLink  action="yubikeyUsers">
-                <p:graphicImage id="yubikey" 
-                                value="/resources/images/users/yubikey.png" 
-                                width="100"
-                                height="100"
-                                title="New Yubikey Requests"
-                                >
-                </p:graphicImage>
-              </h:commandLink>
-              <br></br>
-              <p:outputLabel style="text-align: left"  value="Yubikey Users"></p:outputLabel>
-
-            </p:column>
-
-
             <p:column>
               <h:commandLink  action="spamUsers">
 
@@ -152,37 +120,6 @@
               </h:commandLink>
               <br></br>
               <p:outputLabel style="text-align: left"  value="Spam Requests"></p:outputLabel>
-            </p:column>
-
-            <p:column>
-              <h:commandLink  action="maintenance">
-
-                <p:graphicImage id="maintenance"
-                                value="/resources/images/users/maintenance.png"
-                                width="100"
-                                height="100"
-                                title="Site Maintenance"
-                                >
-                </p:graphicImage>
-              </h:commandLink>
-              <br></br>
-              <p:outputLabel style="text-align: left"  value="Site Maintenance"></p:outputLabel>
-            </p:column>
-
-
-            <p:column>
-              <h:commandLink  action="adminAuditIndex">
-                <p:graphicImage id="audit" 
-                                value="/resources/images/users/audit.png" 
-                                width="100"
-                                height="100"
-                                title="Audit Management"
-                                >
-                </p:graphicImage>
-              </h:commandLink>
-              <br></br>
-              <p:outputLabel style="text-align: left"  value="Audit Management"></p:outputLabel>
-
             </p:column>
           </h:panelGrid>
         </h:form>

@@ -154,6 +154,10 @@ public abstract class YarnJob extends HopsJob {
     if (projectServices != null && !projectServices.isEmpty()) {
       serviceProps = new ServiceProperties();
       serviceProps.setRestEndpoint(services.getSettings().getRestEndpoint());
+      serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
+      serviceProps.setProjectId(jobDescription.getProject().getId());
+      serviceProps.setProjectName(jobDescription.getProject().getName());
+      serviceProps.setJobName(jobDescription.getName());
       Iterator<ProjectServices> iter = projectServices.iterator();
       while (iter.hasNext()) {
         ProjectServices projectService = iter.next();
@@ -175,8 +179,6 @@ public abstract class YarnJob extends HopsJob {
                 && jobDescription.getJobConfig().getKafka() != null) {
           serviceProps.initKafka();
           //Set Kafka specific properties to serviceProps
-          serviceProps.setProjectId(jobDescription.getProject().getId());
-          serviceProps.setProjectName(jobDescription.getProject().getName());
           serviceProps.getKafka().setBrokerAddresses(services.getSettings().
                   getKafkaConnectStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().
