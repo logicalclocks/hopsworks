@@ -12,16 +12,18 @@ public class ServiceProperties {
   private String truststorePwd;
   private Integer projectId;
   private String projectName;
-
+  private String restEndpoint;
+  
   public ServiceProperties() {
   }
 
   public ServiceProperties(String keystorePwd, String truststorePwd,
-          Integer projectId, String projectName) {
+          Integer projectId, String projectName, String restEndPoint) {
     this.keystorePwd = keystorePwd;
     this.truststorePwd = truststorePwd;
     this.projectId = projectId;
     this.projectName = projectName;
+    this.restEndpoint = restEndPoint;
   }
 
   public String getKeystorePwd() {
@@ -66,6 +68,14 @@ public class ServiceProperties {
 
   public void setProjectName(String projectName) {
     this.projectName = projectName;
+  }
+
+  public String getRestEndpoint() {
+    return restEndpoint;
+  }
+
+  public void setRestEndpoint(String restEndPoint) {
+    this.restEndpoint = restEndPoint;
   }
 
 }

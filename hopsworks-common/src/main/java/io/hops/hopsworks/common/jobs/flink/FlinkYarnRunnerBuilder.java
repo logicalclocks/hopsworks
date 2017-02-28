@@ -373,20 +373,19 @@ public class FlinkYarnRunnerBuilder {
         cluster.addHopsworksResource(dto.getName(), resource);
       }
     }
+    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps
+              .getRestEndpoint());
+    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getKeystorePwd());
+    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getTruststorePwd());
     if (serviceProps.getKafka() != null) {
-      addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, serviceProps.
-              getKafka().getSessionId());
+      
       addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
               getKafka().
               getBrokerAddresses());
-      addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getKeystorePwd());
-      addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getTruststorePwd());
       addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
               getKafka().getTopics());
-      addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
-              getKafka().getRestEndpoint());
       addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
               serviceProps.getProjectId()));
       if (serviceProps.getKafka().getConsumerGroups() != null) {
