@@ -1137,9 +1137,10 @@ public class ProjectController {
       }
     } else if (TourProjectType.KAFKA.equals(projectType)) {
       // Get the JAR from /user/glassfish
-      String kafkaExampleSrc = "/user/glassfish/hops-spark.jar";
+      String kafkaExampleSrc = "/user/glassfish/" + Settings
+          .HOPS_KAFKA_TOUR_JAR;
       String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-          + "/TestJob/hops-spark.jar";
+          + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
       try {
         udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
       } catch (IOException ex) {

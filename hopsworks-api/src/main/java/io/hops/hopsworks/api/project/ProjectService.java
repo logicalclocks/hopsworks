@@ -409,7 +409,7 @@ public class ProjectService {
       // It's a Kafka guide
       demoType = TourProjectType.KAFKA;
       projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() +
-          "_" + username + "_tmp");
+          "_" + username);
       populateActiveServices(projectServices, TourProjectType.KAFKA);
     } else {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
