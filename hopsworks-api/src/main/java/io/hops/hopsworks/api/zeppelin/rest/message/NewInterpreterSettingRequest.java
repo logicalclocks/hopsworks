@@ -28,12 +28,12 @@ import org.apache.zeppelin.interpreter.InterpreterOption;
  */
 public class NewInterpreterSettingRequest {
 
-  String name;
-  String group;
+  private String name;
+  private String group;
 
-  Map<String, String> properties;
-  List<Dependency> dependencies;
-  InterpreterOption option;
+  private Map<String, String> properties;
+  private List<Dependency> dependencies;
+  private InterpreterOption option;
 
   public NewInterpreterSettingRequest() {
 

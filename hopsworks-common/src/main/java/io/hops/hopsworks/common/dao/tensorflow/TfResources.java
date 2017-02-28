@@ -72,9 +72,9 @@ public class TfResources implements Serializable {
           mappedBy = "resourceId")
   private Collection<TfTasks> tfTasksCollection;
   @JoinColumn(name = "host_id",
-          referencedColumnName = "hostid")
+          referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Host hostId;
+  private Host host;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "resourceId")
   private Collection<TfExecutions> tfExecutionsCollection;
@@ -145,12 +145,12 @@ public class TfResources implements Serializable {
     this.tfTasksCollection = tfTasksCollection;
   }
 
-  public Host getHostId() {
-    return hostId;
+  public Host getHost() {
+    return host;
   }
 
-  public void setHostId(Host hostId) {
-    this.hostId = hostId;
+  public void setHost(Host host) {
+    this.host = host;
   }
 
   @XmlTransient

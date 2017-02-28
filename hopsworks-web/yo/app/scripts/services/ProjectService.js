@@ -51,6 +51,10 @@ angular.module('hopsWorksApp')
                 url: '/api/project/getMoreInfo/:type/:inodeId',
                 'method': 'GET'
               },
+              "enableLogs": {
+                url: '/api/project/:id/logs/enable',
+                'method': 'POST'
+              },
               "getPublicDatasets": {
                 url: '/api/project/getPublicDatasets',
                 'method': 'GET',

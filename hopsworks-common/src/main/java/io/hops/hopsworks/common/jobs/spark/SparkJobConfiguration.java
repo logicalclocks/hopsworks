@@ -18,6 +18,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String mainClass;
   private String args;
   private String historyServerIp;
+  private String anacondaDir;
 
   //Kafka properties
   private int numberOfExecutors = 1;
@@ -48,6 +49,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_EXECCORES = "EXECCORES";
   protected static final String KEY_EXECMEM = "EXECMEM";
   protected static final String KEY_HISTORYSERVER = "HISTORYSERVER";
+// See: https://www.continuum.io/blog/developer-blog/using-anaconda-
+  //    pyspark-distributed-language-processing-hadoop-cluster
+  protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
+  protected static final String KEY_PYSPARK_PYLIB = "PYLIB";
 
   public SparkJobConfiguration() {
     super();
@@ -55,7 +60,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public String getJarPath() {
     return jarPath;
-  }
+  } 
 
   /**
    * Set the path to the main executable jar. No default value.
@@ -94,6 +99,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public int getNumberOfExecutors() {
     return numberOfExecutors;
+  }
+
+  public String getAnacondaDir() {
+    return anacondaDir;
+  }
+
+  public void setAnacondaDir(String anacondaDir) {
+    this.anacondaDir = anacondaDir;
   }
 
   /**
@@ -238,6 +251,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
     obj.set(KEY_TYPE, JobType.SPARK.name());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
+    obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
+    obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
     return obj;
   }
 

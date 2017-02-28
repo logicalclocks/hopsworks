@@ -64,7 +64,7 @@ public class ZeppelinResource {
 
     for (FileObject file : pidFiles) {
       if (file.getName().toString().contains("interpreter-" + interpreter.
-              getGroup() + "-")) {
+              getName() + "-")) {
         running = isProccessAlive(readPid(file));
         //in the rare case were there are more that one pid files for the same 
         //interpreter break only when we find running one
@@ -93,7 +93,7 @@ public class ZeppelinResource {
     boolean running = false;
     for (FileObject file : pidFiles) {
       if (file.getName().toString().contains("interpreter-" + interpreter.
-              getGroup() + "-")) {
+              getName() + "-")) {
         running = isProccessAlive(readPid(file));
         if (running) {
           forceKillProccess(readPid(file));

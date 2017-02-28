@@ -106,12 +106,12 @@ public class SparkYarnRunnerBuilder {
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
             LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.ARCHIVE.toString(), null), false);
+            LocalResourceType.FILE.toString(), null), false);
     //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
             Settings.SPARK_METRICS_PROPERTIES, metricsPath,
             LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.ARCHIVE.toString(), null), false);
+            LocalResourceType.FILE.toString(), null), false);
 
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
@@ -119,6 +119,9 @@ public class SparkYarnRunnerBuilder {
             LocalResourceVisibility.APPLICATION.toString(),
             LocalResourceType.FILE.toString(), null),
             !appJarPath.startsWith("hdfs:"));
+    
+    
+    
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
 
@@ -136,12 +139,26 @@ public class SparkYarnRunnerBuilder {
       extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
 
     }
+    //Add hops-util.jar if it is a Kafka job
+    if (serviceProps.getKafka() != null) {
+      builder.addLocalResource(new LocalResourceDTO(
+              Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
+              LocalResourceVisibility.APPLICATION.toString(),
+              LocalResourceType.FILE.toString(), null), false);
+
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+              Settings.HOPSUTIL_JAR);
+      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
+              File.pathSeparator);
+    }
+    
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
             "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
             + Settings.LOCALIZED_CONF_DIR
             + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
             + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
             + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
+            + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
     );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
@@ -204,7 +221,8 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
             + "/lib/native/");
     //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
-
+    addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.getElastic().getRestEndpoint());
+    
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
@@ -213,10 +231,13 @@ public class SparkYarnRunnerBuilder {
             append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").
             append(project.toLowerCase()).append(",").append(jobName).
             append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
-            append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+"
-                    + "PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
+//            append("-XX:+PrintReferenceGC -verbose:gc -XX:+PrintGCDetails -XX:+"
+//                    + "PrintGCTimeStamps -XX:+PrintAdaptiveSizePolicy ").
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
-            append(this.hadoopDir).append("/lib/native/");
+            append(this.hadoopDir).append("/lib/native/").
+            append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").
+                append(serviceProps.getElastic().getRestEndpoint());
+    
     if (serviceProps != null) {
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
@@ -234,9 +255,12 @@ public class SparkYarnRunnerBuilder {
         addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
                 getKafka().
                 getRestEndpoint());
-
         addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
                 serviceProps.getProjectId()));
+        addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.
+                getProjectName());
+        addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.
+                getJobName());
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                 getKafka().getConsumerGroups());
         builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
@@ -254,8 +278,12 @@ public class SparkYarnRunnerBuilder {
                 append(serviceProps.getKafka().getTopics()).
                 append(" -D" + Settings.KAFKA_REST_ENDPOINT_ENV_VAR + "=").
                 append(serviceProps.getKafka().getRestEndpoint()).
-                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
-                serviceProps.getProjectId());
+                append(" -D" + Settings.KAFKA_PROJECTNAME_ENV_VAR + "=").
+                append(serviceProps.getProjectName()).
+                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").
+                append(serviceProps.getProjectId()).
+                append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").
+                append(serviceProps.getJobName());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());

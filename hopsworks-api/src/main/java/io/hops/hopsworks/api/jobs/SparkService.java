@@ -24,7 +24,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -39,6 +38,7 @@ import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.util.Settings;
 
 /**
  * Service offering functionality to run a Spark fatjar job.
@@ -65,9 +65,9 @@ public class SparkService {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-  @EJB
   private DistributedFsService dfs;
+  @EJB
+  private Settings settings;
 
   private Project project;
 
@@ -134,12 +134,12 @@ public class SparkService {
       logger.log(Level.SEVERE, "Failed to inspect jar.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error reading jar file: " + ex.
-              getLocalizedMessage());
+                      getLocalizedMessage());
     } catch (IllegalArgumentException e) {
       logger.log(Level.WARNING, "Got a non-jar file to inspect as Spark jar.");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error reading jar file: " + e.
-              getLocalizedMessage());
+                      getLocalizedMessage());
     } finally {
       if (udfso != null) {
         udfso.close();
@@ -169,13 +169,6 @@ public class SparkService {
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
-      String path = config.getJarPath();
-//      if (!path.startsWith("hdfs")) {
-//        path = "hdfs://" + path;
-//      }
-//      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-//      path = path.replaceFirst("hdfs:/*Projects",
-//          "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 
       if (user == null) {
         //Should not be possible, but, well...
@@ -185,7 +178,9 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Spark job");
       }
-
+      if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
+        config.setAnacondaDir(settings.getAnacondaDir() + "/" + project.getName());
+      }
       JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
               getName(), project, email);

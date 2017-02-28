@@ -526,8 +526,8 @@ public class YarnRunner {
     for (CharSequence str : vargs) {
       amcommand.append(str).append(" ");
     }
-    logger.log(Level.INFO, "Completed setting up app master command: {0}",
-            amcommand.toString());
+//    logger.log(Level.INFO, "Completed setting up app master command: {0}",
+//            amcommand.toString());
     List<String> amCommands = new ArrayList<>();
     amCommands.add(amcommand.toString());
     return amCommands;

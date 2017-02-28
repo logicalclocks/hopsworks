@@ -78,6 +78,7 @@
 .content {
     flex: 1;
     display: flex;
+    align-self: flex-start;
     flex-flow: column nowrap;
     justify-content: space-around;
     align-content: space-around;

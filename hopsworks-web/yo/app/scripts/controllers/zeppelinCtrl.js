@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ZeppelinCtrl', ['$scope', '$routeParams','$route',
-          'growl', 'ModalService', 'ZeppelinService',
-          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService) {
+          'growl', 'ModalService', 'ZeppelinService','$location',
+          function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService, $location) {
 
             var self = this;
             self.interpretersRefreshing = false;
@@ -27,9 +27,9 @@ angular.module('hopsWorksApp')
               getNotesInProject(null, false);
             };
             
-            var startLoading = function (lable) {
+            var startLoading = function (label) {
               self.loading = true;
-              self.loadingText = lable;
+              self.loadingText = label;
             };
             
             var stopLoading = function () {
@@ -44,6 +44,7 @@ angular.module('hopsWorksApp')
               }
               var interpreter;
               ZeppelinService.interpreters().then(function (success) {
+                console.log('Receive interpreters<< %o', success);
                 for (var k in success.data.body) {
                   interpreter = {interpreter: success.data.body[k], 
                     statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]};
@@ -122,8 +123,7 @@ angular.module('hopsWorksApp')
 
             var init = function () {
               startLoading("Connecting to zeppelin...");
-              ZeppelinService.websocket().sendNewEvent({principal: 'anonymous', 
-                ticket:'anonymous', op: 'LIST_NOTES'});
+              ZeppelinService.websocket().sendNewEvent({op: 'LIST_NOTES'});
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               $scope.tgState = true;
             };
@@ -169,6 +169,26 @@ angular.module('hopsWorksApp')
                         });
             };
 
+            self.showLivyUI = function (sessionId) {
+              ZeppelinService.getLivySessionAppId(sessionId)
+                      .then(function (success) {
+                        var appId = success.data;
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
+            };
+            
+            self.showSparkUI = function (sessionId) {
+              ZeppelinService.getSparkAppId()
+                      .then(function (success) {
+                        var appId = success.data;
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId +"/" );
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
+            };
+            
             self.refreshInterpreters = function () {
               refresh();
             };

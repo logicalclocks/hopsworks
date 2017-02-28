@@ -153,6 +153,10 @@ public abstract class YarnJob extends HopsJob {
             getProjectServicesCollection();
     if (projectServices != null && !projectServices.isEmpty()) {
       serviceProps = new ServiceProperties();
+      serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
+      serviceProps.setProjectId(jobDescription.getProject().getId());
+      serviceProps.setProjectName(jobDescription.getProject().getName());
+      serviceProps.setJobName(jobDescription.getName());
       Iterator<ProjectServices> iter = projectServices.iterator();
       while (iter.hasNext()) {
         ProjectServices projectService = iter.next();
@@ -168,7 +172,6 @@ public abstract class YarnJob extends HopsJob {
                   getHopsworksMasterPasswordSsl());
           serviceProps.setTruststorePwd(services.getSettings().
                   getHopsworksMasterPasswordSsl());
-          serviceProps.setProjectId(jobDescription.getProject().getId());
           serviceProps.getKafka().setBrokerAddresses(services.getSettings().
                   getKafkaConnectStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().
