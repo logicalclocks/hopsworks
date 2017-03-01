@@ -20,8 +20,12 @@
               <div class="row">
 
                 <ul class="nav nav-tabs">
-                  <li ng-class="{'active' : kafkaCtrl.showTopics === 1}"><a ng-click="kafkaCtrl.showTopic()">Topics</a></li>
-                  <li ng-class="{'active' : kafkaCtrl.showSchemas === 1}"><a ng-click="kafkaCtrl.showSchema()">Schemas</a></li>
+                  <li ng-class="{'active' : kafkaCtrl.showTopics === 1}"><a
+                          ng-click="kafkaCtrl.showTopic()" id="kafkaTopic">
+                    Topics</a></li>
+                  <li ng-class="{'active' : kafkaCtrl.showSchemas === 1}"><a
+                          ng-click="kafkaCtrl.showSchema()" id="kafkaSchema">
+                    Schemas</a></li>
                 </ul>                
 
               </div>
@@ -34,7 +38,8 @@
                 <br>
                 <div class="col-sm-2">
                   <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
-                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label">
+                          ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label"
+                    id="newTopicBtn">
                     New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
                   </button>
 
@@ -44,8 +49,9 @@
               <div ng-show="kafkaCtrl.showSchemas === 1">
                 <br>
                 <div class="col-sm-2">
-                  <button type="button"  
-                          ng-click="kafkaCtrl.createSchema()" class="btn btn-default btn-success control-label">
+                  <button  id="newSchemaBtn" type="button"
+                          ng-click="kafkaCtrl.createSchema()"
+                          class="btn btn-default btn-success control-label">
                     New Avro Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                     </i> 
                   </button>
@@ -336,9 +342,62 @@
               </tbody>
             </table>
           </div>
-        </div>              
-      </div>              
-  </div>              
-</section>
-</div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <tour class="ng-scope" step="kafkaCtrl.tourService.currentStep_TourThree"
+        post-tour="closeTour()"
+        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView">
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Schemas' tab to continue!"
+            tourtip-step="0"
+            tourtip-element="#kafkaSchema"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.showSchema()"
+    ></virtual-step>
+
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'New Avro Schema' button to continue!"
+            tourtip-step="1"
+            tourtip-element="#newSchemaBtn"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.createSchema()"
+            tourtip-offset-vertical="120"
+            tourtip-offset-horizontal="400"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Topics' tab to continue!"
+            tourtip-step="2"
+            tourtip-element="#kafkaTopic"
+            tourtip-placement="bottom"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.showTopic()"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'New Topic' button to continue!"
+            tourtip-step="3"
+            tourtip-element="#newTopicBtn"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="kafkaCtrl.createTopic()"
+            tourtip-offset-vertical="120"
+            tourtip-offset-horizontal="400"
+    ></virtual-step>
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Jobs' button to continue!"
+            tourtip-step="4"
+            tourtip-element="#jobsTab"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="projectCtrl.goToJobs(); projectCtrl.tourService.currentStep_TourSix = 0;"
+    ></virtual-step>
+  </tour>
 </div>

@@ -63,6 +63,14 @@ angular.module('hopsWorksApp')
             };
 
             self.initTour = function () {
+              if (angular.equals(self.currentProject.projectName.substr(0, 10),
+                self.tourService.sparkProjectPrefix)) {
+                self.tourService.setActiveTour('spark');
+              } else if (angular.equals(self.currentProject.projectName
+                .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
+                self.tourService.setActiveTour('kafka');
+              }
+
               if ($location.url() === "/project/" + self.pId) {
                 self.tourService.currentStep_TourTwo = 0;
               } else if ($location.url() === "/project/" + self.pId + "/" + "jobs") {
@@ -257,6 +265,9 @@ angular.module('hopsWorksApp')
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
               }
+              if (self.tourService.currentStep_TourFive > -1) {
+                self.tourService.currentStep_TourSix = 0;
+              }
             };
 
             self.goToWorklows = function () {
@@ -282,6 +293,9 @@ angular.module('hopsWorksApp')
 
             self.goToKafka = function () {
               self.goToUrl('kafka');
+              if (self.tourService.currentStep_TourTwo > -1) {
+                self.tourService.resetTours();
+              }
             };
 
             self.goToSettings = function () {

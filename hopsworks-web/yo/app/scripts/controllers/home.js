@@ -27,7 +27,8 @@ angular.module('hopsWorksApp')
             self.toursEnabled;
             self.getTours = function () {
               self.tours = [
-                {'name': 'spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'}
+                {'name': 'spark', 'tip': 'Take a tour of HopsWorks by creating a project and running a Spark job!'},
+                {'name': 'kafka', 'tip': 'Take a tour of HopsWorks by creating a project and running a Kafka job!'}
 //                {'name': 'zeppelin', 'tip': 'Take a tour of Zeppelin by creating a Hopsworks project and running a Zeppelin notebook for Spark!'}
               ];
             };
@@ -257,23 +258,25 @@ angular.module('hopsWorksApp')
                 growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
               });
             };
-            self.createExampleProject = function () {
-              $scope.creating['spark'] = true;
-              ProjectService.example().$promise.then(
+
+            self.createExampleProject = function (tourName) {
+              $scope.creating[tourName] = true;
+              ProjectService.example({type: tourName}).$promise.then(
                       function (success) {
-                        $scope.creating['spark'] = false;
+                        $scope.creating[tourName] = false;
+                        self.tourService.setActiveTour(tourName);
                         growl.success("Created Example Project", {title: 'Success', ttl: 10000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
                         // To make sure the new project is refreshed
 //                        self.showTours = false;
                         if (success.errorMsg) {
-                          $scope.creating['spark'] = false;
+                          $scope.creating[tourName] = false;
                           growl.warning("some problem", {title: 'Error', ttl: 10000});
                         }
                       },
                       function (error) {
-                        $scope.creating['spark'] = false;
+                        $scope.creating[tourName] = false;
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
               );

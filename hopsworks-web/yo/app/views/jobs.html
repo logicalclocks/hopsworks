@@ -12,7 +12,7 @@
     </div>
     <div class="">
       <!-- Page Content -->
-      <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >	
+      <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >
         <div class="row rg-row-top" resizable r-directions="['bottom']">
           <div class="row">
             <div class=" col-md-6"
@@ -25,10 +25,10 @@
             </div>
           </div>
           <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
-            No Job to show. 
+            No Job to show.
           </h3>
           <div ng-show="jobsCtrl.jobs.length > 0">
-            <div style="height:100%;">                  
+            <div style="height:100%;">
               <div class="row form-inline">
                 <div class="col-sm-6 col-md-6 col-lg-6 form-group">
                   <label>Search: <input class="form-control" style="margin-left: 10px;" ng-model="jobsCtrl.jobFilter">
@@ -43,7 +43,7 @@
                     </label>
                   </div>
                 </div>
-              </div> 
+              </div>
               <div style="height:85%; overflow: auto;" >
                 <table class="table table-hover">
                   <thead>
@@ -94,7 +94,7 @@
                       dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.id);">
                       <td id="{{job.name === projectCtrl.tourService.createdJobName}}">
                         <button style="border-color: #20AD28; min-width: 64px;"
-                                ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();" 
+                                ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();"
                                 class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
                           <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> Run</button>
                         <button
@@ -231,20 +231,20 @@
                       </td>
                       <td>
                         <div class="btn-group" role="group">
-                          <button 
+                          <button
                             uib-tooltip="Delete"
                             ng-click="jobsCtrl.toggle(job, $index);
                                             jobsCtrl.deleteJob(job.id, job.name);
                                             $event.stopPropagation();"
-                            type="button" class="btn btn-danger glyphicon glyphicon-trash">                                       
+                            type="button" class="btn btn-danger glyphicon glyphicon-trash">
                           </button>
                           <button uib-tooltip="Job UI"
                                   type="button" class="btn btn-info glyphicon glyphicon-eye-open"
                                   ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
-                                                  $event.stopPropagation();">                                            
+                                                  $event.stopPropagation();">
                           </button>
                           <div uib-dropdown class="btn-group" role="group" style="z-index: auto;">
-                            <button type="button" 
+                            <button type="button"
                                     uib-dropdown-toggle class="btn btn-default glyphicon"
                                     style="font-family: sans-serif;"
                                     >
@@ -264,7 +264,7 @@
                       </td>
                     </tr>
                   </tbody>
-                </table>                 
+                </table>
                 <dir-pagination-controls
                   class="pull-right"
                   max-size="5"
@@ -279,15 +279,15 @@
         <!-- right side -->
         <div class="row rg-row-bottom" style="overflow-y: auto;">
           <h3 class="text-muted" style="text-align: center;" ng-show="!jobsCtrl.hasSelectJob">
-            Click on a job to see execution logs. 
+            Click on a job to see execution logs.
           </h3>
-          <h3 class="text-muted" style="text-align: center;" 
+          <h3 class="text-muted" style="text-align: center;"
               ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution() && jobsCtrl.fetchingLogs == 0">
-            No execution log found. 
+            No execution log found.
           </h3>
-          <h3 class="text-muted" style="text-align: center;" 
+          <h3 class="text-muted" style="text-align: center;"
               ng-show="jobsCtrl.hasSelectJob && !jobsCtrl.getNumOfExecution() && jobsCtrl.fetchingLogs == 1">
-            Retrieving logs, please wait... 
+            Retrieving logs, please wait...
           </h3>
           <section ng-show="jobsCtrl.hasSelectJob && jobsCtrl.getNumOfExecution()">
             <h5 class="text-muted pull-right"> Number of executions {{jobsCtrl.getNumOfExecution()}}</h5>
@@ -346,7 +346,7 @@
                                        {{item.err}}                                     
                         </textarea>
                         <div ng-show="item.errPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No error information available" readonly>
-                          {{item.err}}                                     
+                          {{item.err}}
                           <a href="#{{item.errPath}}">here!</a>
                         </div>
                       </div>
@@ -361,33 +361,57 @@
     </div>
     <!-- /#wrapper -->
   </div>
-  <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
-    <virtual-step
-      class="ng-scope"
-      tourtip="Click Next OR click on the 'New job' button to continue"
-      tourtip-step="0"
-      tourtip-element="#buttonCreateJob"
-      tourtip-placement="bottom"
-      tourtip-next-label="Next"
-      on-proceed="jobsCtrl.newJob()"
-      tourtip-offset-vertical="-15"
-      tourtip-offset-horizontal="35"
-      ></virtual-step>
-    <virtual-step
-      class="ng-scope"
-      tourtip="invisible"
-      tourtip-step="1"
-      ng-hide="true"
-      ></virtual-step>
-    <virtual-step
-      class="ng-scope"
-      tourtip="Click Run to run your job !"
-      tourtip-step="2"
-      tourtip-element="#true"
-      tourtip-placement="bottom"
-      tourtip-next-label="Done"
-      on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
-      tourtip-offset-vertical="-15"
-      ></virtual-step>
-  </tour>
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
+      post-tour="closeTour()" ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'">
+  <virtual-step
+    class="ng-scope"
+    tourtip="Click Next OR click on the 'New job' button to continue spark"
+    tourtip-step="0"
+    tourtip-element="#buttonCreateJob"
+    tourtip-placement="bottom"
+    tourtip-next-label="Next"
+    on-proceed="jobsCtrl.newJob()"
+    tourtip-offset-vertical="-15"
+    tourtip-offset-horizontal="35"
+    ></virtual-step>
+  <virtual-step
+    class="ng-scope"
+    tourtip="invisible"
+    tourtip-step="1"
+    ng-hide="true"
+    ></virtual-step>
+  <virtual-step
+    class="ng-scope"
+    tourtip="Click Run to run your job !"
+    tourtip-step="2"
+    tourtip-element="#true"
+    tourtip-placement="bottom"
+    tourtip-next-label="Done"
+    on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+    tourtip-offset-vertical="-15"
+    ></virtual-step>
+</tour>
+    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'">
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Next OR click on the 'New job' button to continue kafka"
+                tourtip-step="0"
+                tourtip-element="#buttonCreateJob"
+                tourtip-placement="bottom"
+                tourtip-next-label="Next"
+                on-proceed="jobsCtrl.newJob();
+                    projectCtrl.tourService.currentStep_TourFour=-1;"
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="Click Run to run your jobs !"
+                tourtip-step="1"
+                tourtip-element="#true"
+                tourtip-placement="bottom"
+                tourtip-next-label="Done"
+                on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+        ></virtual-step>
+    </tour>
 

@@ -39,9 +39,11 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToKafka()" ng-show="projectCtrl.showKafka()">
+      <li ng-click="projectCtrl.goToKafka()"
+          ng-show="projectCtrl.showKafka()">
         <a>
-          Kafka<img class="pull-right" style="margin-left:10px" height="25" src="images/kafka_logo.png"/> 
+          Kafka<img class="pull-right" style="margin-left:10px" height="25"
+                    src="images/kafka_logo.png" id="kafkaTab"/>
         </a>
       </li>
       
@@ -105,11 +107,14 @@
   </nav>
 </aside>
 
-<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo" post-tour="closeTour()" ng-if="projectCtrl.showJobs() && projectCtrl.loadedView">
+<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo"
+      post-tour="closeTour()"
+      ng-if="projectCtrl.showJobs() && projectCtrl.loadedView">
     <virtual-step
+        ng-if="projectCtrl.tourService.activeTour === 'spark'"
         id="TourTwo"
         class="ng-scope"
-        tourtip="Click Next, OR click on the Job tab to continue"
+        tourtip="Click Next, OR click on the Jobs tab to continue"
         tourtip-step="0"
         tourtip-element="#jobsTab"
         tourtip-placement="right"
@@ -118,4 +123,17 @@
         tourtip-offset-vertical="-18"
         tourtip-offset-horizontal="-13"
         ></virtual-step>
+
+  <virtual-step
+          ng-if="projectCtrl.tourService.activeTour === 'kafka'"
+          id="TourTwo"
+          class="ng-scope"
+          tourtip="Click Next, OR click on the Kafka tab to continue"
+          tourtip-step="0"
+          tourtip-element="#kafkaTab"
+          tourtip-placement="right"
+          tourtip-next-label="Next"
+          on-proceed="projectCtrl.goToKafka()"
+          tourtip-offset-vertical="-15"
+  ></virtual-step>
 </tour> 
