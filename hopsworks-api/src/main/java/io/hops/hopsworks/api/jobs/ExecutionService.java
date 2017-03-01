@@ -106,8 +106,6 @@ public class ExecutionService {
               "You are not authorized for this invocation.");
     }
     try {
-      //Set sessionId to JobConfiguration so that is used by Services like Kafka
-      job.getJobConfig().setSessionId(req.getSession().getId());
       Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(exec).build();

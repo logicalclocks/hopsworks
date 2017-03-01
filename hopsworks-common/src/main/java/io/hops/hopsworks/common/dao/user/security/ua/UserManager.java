@@ -273,6 +273,16 @@ public class UserManager {
     return existing;
   }
 
+  public List<String> findGroups(String userName) {
+    Users user = getUserByUsername(userName);
+    String sql
+            = "SELECT group_name FROM hopsworks.bbc_group INNER JOIN hopsworks.people_group "
+            + "ON (hopsworks.people_group.gid = hopsworks.bbc_group.gid "
+            + "AND hopsworks.people_group.uid = " + user.getUid() + " )";
+    List existing = em.createNativeQuery(sql).getResultList();
+    return existing;
+  }
+  
   /**
    * Remove user's group based on uid/gid.
    *

@@ -22,8 +22,7 @@ public abstract class JobConfiguration implements JsonReduceable {
   protected String appName;
   protected ScheduleDTO schedule;
   protected KafkaDTO kafka;
-  protected String sessionId = "";
-
+  
   protected final static String KEY_APPNAME = "APPNAME";
   protected final static String KEY_SCHEDULE = "SCHEDULE";
   protected final static String KEY_KAFKA = "KAFKA";
@@ -65,14 +64,6 @@ public abstract class JobConfiguration implements JsonReduceable {
 
   public void setKafka(KafkaDTO kafka) {
     this.kafka = kafka;
-  }
-
-  public String getSessionId() {
-    return sessionId;
-  }
-
-  public void setSessionId(String sessionId) {
-    this.sessionId = sessionId;
   }
 
   /**

@@ -981,11 +981,12 @@ public class Settings {
 
   public static final String KAFKA_ACL_WILDCARD = "*";
   public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
-  public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
-  public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
+  public static final String K_CERTIFICATE = "k_certificate";
+  public static final String T_CERTIFICATE = "t_certificate";
 
   public static final String TMP_CERT_STORE_REMOTE
           = "/user/glassfish/kafkacerts";
+
 
   //Used to retrieve schema by HopsUtil
   public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
@@ -1003,8 +1004,8 @@ public class Settings {
           = "hopsworks.truststore.password";
   public static final String KAFKA_CONSUMER_GROUPS
           = "hopsworks.kafka.consumergroups";
-  public static final String KAFKA_REST_ENDPOINT_ENV_VAR
-          = "hopsworks.kafka.restendpoint";
+  public static final String HOPSWORKS_REST_ENDPOINT_ENV_VAR
+          = "hopsworks.restendpoint";
   
   public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
 

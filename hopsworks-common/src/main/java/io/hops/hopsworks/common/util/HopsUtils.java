@@ -178,8 +178,8 @@ public class HopsUtils {
               > 0) {
 
         Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-        kafkaCertFiles.put(Settings.KAFKA_T_CERTIFICATE, userCert.getUserCert());
-        kafkaCertFiles.put(Settings.KAFKA_K_CERTIFICATE, userCert.getUserKey());
+        kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
+        kafkaCertFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
         //Create tmp cert directory if not exists for certificates to be copied to hdfs.
         //Certificates will later be deleted from this directory when copied to HDFS. 
         File certDir = new File(localTmpDir);
@@ -215,9 +215,9 @@ public class HopsUtils {
 //              tCert.setReadable(true, true);
 //              tCert.setWritable(false);
               if (!kCert.exists()) {
-                Files.write(kafkaCertFiles.get(Settings.KAFKA_K_CERTIFICATE),
+                Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
                         kCert);
-                Files.write(kafkaCertFiles.get(Settings.KAFKA_T_CERTIFICATE),
+                Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
                         tCert);
               }
             } else //If it is a Flink job, copy the certificates into the glassfish config dir
@@ -235,24 +235,22 @@ public class HopsUtils {
                   t_k_cert.setReadable(true, true);
                   t_k_cert.setWritable(false);
                   if (!f_k_cert.exists()) {
-                    Files.write(kafkaCertFiles.get(
-                            Settings.KAFKA_K_CERTIFICATE),
+                    Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
                             f_k_cert);
-                    Files.write(kafkaCertFiles.get(
-                            Settings.KAFKA_T_CERTIFICATE),
+                    Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
                             t_k_cert);
                   }
-                  jobSystemProperties.put(Settings.KAFKA_K_CERTIFICATE,
+                  jobSystemProperties.put(Settings.K_CERTIFICATE,
                           Settings.FLINK_KAFKA_CERTS_DIR
                           + File.separator + kCertName);
-                  jobSystemProperties.put(Settings.KAFKA_T_CERTIFICATE,
+                  jobSystemProperties.put(Settings.T_CERTIFICATE,
                           Settings.FLINK_KAFKA_CERTS_DIR
                           + File.separator + tCertName);
                   break;
                 case SPARK:
-                  kafkaCerts.put(Settings.KAFKA_K_CERTIFICATE, new File(
+                  kafkaCerts.put(Settings.K_CERTIFICATE, new File(
                           localTmpDir + File.separator + kCertName));
-                  kafkaCerts.put(Settings.KAFKA_T_CERTIFICATE, new File(
+                  kafkaCerts.put(Settings.T_CERTIFICATE, new File(
                           localTmpDir + File.separator + tCertName));
                   for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
                     if (!entry.getValue().exists()) {
