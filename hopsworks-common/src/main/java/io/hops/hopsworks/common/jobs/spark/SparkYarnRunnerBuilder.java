@@ -124,6 +124,19 @@ public class SparkYarnRunnerBuilder {
     
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
+    
+    //Add hops-util.jar if it is a Kafka job
+    if (serviceProps.getKafka() != null) {
+      builder.addLocalResource(new LocalResourceDTO(
+              Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
+              LocalResourceVisibility.APPLICATION.toString(),
+              LocalResourceType.FILE.toString(), null), false);
+
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+              Settings.HOPSUTIL_JAR);
+      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
+              File.pathSeparator);
+    }
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
@@ -137,21 +150,8 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
               dto.getName());
       extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
-
     }
-    //Add hops-util.jar if it is a Kafka job
-    if (serviceProps.getKafka() != null) {
-      builder.addLocalResource(new LocalResourceDTO(
-              Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
-              LocalResourceVisibility.APPLICATION.toString(),
-              LocalResourceType.FILE.toString(), null), false);
-
-      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-              Settings.HOPSUTIL_JAR);
-      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
-              File.pathSeparator);
-    }
-    
+        
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
             "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
             + Settings.LOCALIZED_CONF_DIR
@@ -236,7 +236,7 @@ public class SparkYarnRunnerBuilder {
             append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
             append(this.hadoopDir).append("/lib/native/").
             append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").
-                append(serviceProps.getElastic().getRestEndpoint());
+            append(serviceProps.getElastic().getRestEndpoint());
     
     if (serviceProps != null) {
       //Handle Kafka properties
@@ -261,6 +261,7 @@ public class SparkYarnRunnerBuilder {
                 getProjectName());
         addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.
                 getJobName());
+        addSystemProperty(Settings.HOPSUTIL_JOBTYPE_ENV_VAR, jobType.getName());
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
                 getKafka().getConsumerGroups());
         builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
@@ -283,7 +284,9 @@ public class SparkYarnRunnerBuilder {
                 append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").
                 append(serviceProps.getProjectId()).
                 append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").
-                append(serviceProps.getJobName());
+                append(serviceProps.getJobName()).
+                append(" -D" + Settings.HOPSUTIL_JOBTYPE_ENV_VAR + "=").
+                append(jobType.getName());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());
