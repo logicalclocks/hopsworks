@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -369,25 +370,52 @@ public class ProjectService {
         Response.Status.CREATED).entity(json).build();
   }
 
+  
+  
+  
+  private void populateActiveServices(List<ProjectServiceEnum> projectServices,
+      TourProjectType tourType) {
+    for (ProjectServiceEnum service : tourType.getActiveServices()) {
+      projectServices.add(service);
+    }
+  }
+  
   @POST
-  @Path("starterProject")
+  @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response starterProject(
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @PathParam("type") String type,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
     ProjectDTO projectDTO = new ProjectDTO();
     JsonResponse json = new JsonResponse();
     Project project = null;
-    projectDTO.setDescription("A demo project for getting started with Spark.");
+    projectDTO.setDescription("A demo project for getting started with " + type);
 
     String owner = sc.getUserPrincipal().getName();
     String username = usersController.generateUsername(owner);
-    projectDTO.setProjectName("demo_" + username);
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     List<ProjectTeam> projectMembers = new ArrayList<>();
-    projectServices.add(ProjectServiceEnum.JOBS);
+    TourProjectType demoType = null;
+    
+    if (TourProjectType.SPARK.getTourName().equals(type.toLowerCase())) {
+      // It's a Spark guide
+      demoType = TourProjectType.SPARK;
+      projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() +
+          "_" + username);
+      populateActiveServices(projectServices, TourProjectType.SPARK);
+    } else if (TourProjectType.KAFKA.getTourName().equals(type.toLowerCase())) {
+      // It's a Kafka guide
+      demoType = TourProjectType.KAFKA;
+      projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() +
+          "_" + username);
+      populateActiveServices(projectServices, TourProjectType.KAFKA);
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
+    }
+    
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {
@@ -433,11 +461,17 @@ public class ProjectService {
         projectController.createProjectLogResources(owner, project, dfso,
             udfso);
         projectController.addExampleJarToExampleProject(owner, project, dfso,
-            udfso);
+                udfso, demoType);
         //TestJob dataset
-        datasetController.generateReadme(udfso, "TestJob",
-            "jar file to calculate pi",
-            project.getName());
+        if (TourProjectType.SPARK.equals(demoType)) {
+          datasetController.generateReadme(udfso, "TestJob",
+              "jar file to calculate pi",
+              project.getName());
+        } else if (TourProjectType.KAFKA.equals(demoType)) {
+          datasetController.generateReadme(udfso, "TestJob",
+              "jar file to demonstrate Kafka streaming",
+              project.getName());
+        }
       } catch (ProjectInternalFoldersFailedException ee) {
         try {
           projectController.

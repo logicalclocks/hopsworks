@@ -257,6 +257,8 @@ angular.module('hopsWorksApp')
               }
             };
 
+
+
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };

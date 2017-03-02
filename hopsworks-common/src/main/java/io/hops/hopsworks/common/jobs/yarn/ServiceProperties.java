@@ -12,19 +12,20 @@ public class ServiceProperties {
   private String truststorePwd;
   private Integer projectId;
   private String projectName;
+  private String restEndpoint;
   private String jobName;
-
   private ElasticProperties elastic;
 
   public ServiceProperties() {
   }
 
   public ServiceProperties(String keystorePwd, String truststorePwd,
-      Integer projectId, String projectName, String jobName) {
+          Integer projectId, String projectName, String restEndPoint, String jobName) {
     this.keystorePwd = keystorePwd;
     this.truststorePwd = truststorePwd;
     this.projectId = projectId;
     this.projectName = projectName;
+    this.restEndpoint = restEndPoint;
     this.jobName = jobName;
   }
 
@@ -80,6 +81,14 @@ public class ServiceProperties {
     this.projectName = projectName;
   }
 
+  public String getRestEndpoint() {
+    return restEndpoint;
+  }
+
+  public void setRestEndpoint(String restEndPoint) {
+    this.restEndpoint = restEndPoint;
+  }
+  
   public String getJobName() {
     return jobName;
   }

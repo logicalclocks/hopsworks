@@ -548,6 +548,8 @@ public class Settings {
   public static final String LOCALIZED_CONF_DIR = "__spark_conf__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
+  public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark-0.1.jar";
+  
   // Distribution-defined classpath to add to processes
   public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN
@@ -981,18 +983,20 @@ public class Settings {
 
   public static final String KAFKA_ACL_WILDCARD = "*";
   public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
-  public static final String KAFKA_K_CERTIFICATE = "kafka_k_certificate";
-  public static final String KAFKA_T_CERTIFICATE = "kafka_t_certificate";
+  public static final String K_CERTIFICATE = "k_certificate";
+  public static final String T_CERTIFICATE = "t_certificate";
 
   public static final String TMP_CERT_STORE_REMOTE
           = "/user/glassfish/kafkacerts";
+
 
   //Used to retrieve schema by HopsUtil
   public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
   public static final String KAFKA_PROJECTNAME_ENV_VAR = "hopsworks.projectname";
-  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.jobname";
-  public static final String HOPSUTIL_JOBTYPE_ENV_VAR = "hopsworks.jobtype";
+  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.job.name";
+  public static final String HOPSUTIL_JOBTYPE_ENV_VAR = "hopsworks.job.type";
+  public static final String HOPSUTIL_APPID_ENV_VAR = "hopsworks.job.appid";
   public static final String KAFKA_BROKERADDR_ENV_VAR
           = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
@@ -1004,8 +1008,8 @@ public class Settings {
           = "hopsworks.truststore.password";
   public static final String KAFKA_CONSUMER_GROUPS
           = "hopsworks.kafka.consumergroups";
-  public static final String KAFKA_REST_ENDPOINT_ENV_VAR
-          = "hopsworks.kafka.restendpoint";
+  public static final String HOPSWORKS_REST_ENDPOINT_ENV_VAR
+          = "hopsworks.restendpoint";
   
   public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
 

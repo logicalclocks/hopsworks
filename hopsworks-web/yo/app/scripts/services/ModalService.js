@@ -490,7 +490,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },              
-              createSchema: function (size, projectId) {
+              createSchema: function (size, projectId, projectIsGuide) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/schemaCreate.html',
                   controller: 'SchemaCreateCtrl as schemaCreateCtrl',
@@ -509,6 +509,9 @@ angular.module('hopsWorksApp')
                       }],
                     projectId: function () {
                       return projectId;
+                    },
+                    projectIsGuide: function () {
+                      return projectIsGuide;
                     }
                   }
                 });
@@ -576,7 +579,7 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
               },   
               
-              createTopic: function (size, projectId) {
+              createTopic: function (size, projectId, projectIsGuide) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/createTopic.html',
                   controller: 'CreateTopicCtrl as createTopicCtrl',
@@ -595,6 +598,9 @@ angular.module('hopsWorksApp')
                       }],
                     projectId: function () {
                       return projectId;
+                    },
+                    projectIsGuide: function () {
+                      return projectIsGuide;
                     }
                   }
                 });
