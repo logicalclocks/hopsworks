@@ -101,13 +101,13 @@ public class UserService {
   public Response updateProfile(@FormParam("firstName") String firstName,
           @FormParam("lastName") String lastName,
           @FormParam("telephoneNum") String telephoneNum,
-          @FormParam("toursEnabled") Boolean toursEnabled,
+          @FormParam("toursState") Integer toursState,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
 
     UserDTO userDTO = userController.updateProfile(sc.getUserPrincipal().
-            getName(), firstName, lastName, telephoneNum, toursEnabled, req);
+            getName(), firstName, lastName, telephoneNum, toursState, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
