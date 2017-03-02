@@ -994,7 +994,9 @@ public class Settings {
   public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
   public static final String KAFKA_PROJECTNAME_ENV_VAR = "hopsworks.projectname";
-  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.jobname";
+  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.job.name";
+  public static final String HOPSUTIL_JOBTYPE_ENV_VAR = "hopsworks.job.type";
+  public static final String HOPSUTIL_APPID_ENV_VAR = "hopsworks.job.appid";
   public static final String KAFKA_BROKERADDR_ENV_VAR
           = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";

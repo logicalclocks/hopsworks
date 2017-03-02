@@ -21,7 +21,7 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
  * for any Spark job to be started and builds a YarnRunner instance.
- *
+ * <p>
  */
 public class SparkYarnRunnerBuilder {
 
@@ -51,14 +51,14 @@ public class SparkYarnRunnerBuilder {
   private JobType jobType;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass,
-          JobType jobType) {
+      JobType jobType) {
     if (appJarPath == null || appJarPath.isEmpty()) {
       throw new IllegalArgumentException(
-              "Path to application jar cannot be empty!");
+          "Path to application jar cannot be empty!");
     }
     if (mainClass == null || mainClass.isEmpty()) {
       throw new IllegalArgumentException(
-              "Name of the main class cannot be empty!");
+          "Name of the main class cannot be empty!");
     }
     this.appJarPath = appJarPath;
     this.mainClass = mainClass;
@@ -78,10 +78,10 @@ public class SparkYarnRunnerBuilder {
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project, String sparkUser,
-          String jobUser,
-          final String hadoopDir, final String sparkDir,
-          final String nameNodeIpPort)
-          throws IOException {
+      String jobUser,
+      final String hadoopDir, final String sparkDir,
+      final String nameNodeIpPort)
+      throws IOException {
 
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
@@ -93,73 +93,71 @@ public class SparkYarnRunnerBuilder {
     this.hadoopDir = hadoopDir;
 
     String stagingPath = File.separator + "Projects" + File.separator + project
-            + File.separator
-            + Settings.PROJECT_STAGING_DIR + File.separator
-            + YarnRunner.APPID_PLACEHOLDER;
+        + File.separator
+        + Settings.PROJECT_STAGING_DIR + File.separator
+        + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
 
     builder.addLocalResource(new LocalResourceDTO(
-            Settings.LOCALIZED_LIB_DIR, hdfsSparkJarPath,
-            LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.ARCHIVE.toString(), null), false);
+        Settings.LOCALIZED_LIB_DIR, hdfsSparkJarPath,
+        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.ARCHIVE.toString(), null), false);
     //Add log4j
     builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
-            LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.FILE.toString(), null), false);
+        Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
+        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
     //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_METRICS_PROPERTIES, metricsPath,
-            LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.FILE.toString(), null), false);
+        Settings.SPARK_METRICS_PROPERTIES, metricsPath,
+        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
 
     //Add app jar  
     builder.addLocalResource(new LocalResourceDTO(
-            Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
-            LocalResourceVisibility.APPLICATION.toString(),
-            LocalResourceType.FILE.toString(), null),
-            !appJarPath.startsWith("hdfs:"));
-    
-    
-    
+        Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
+        LocalResourceVisibility.APPLICATION.toString(),
+        LocalResourceType.FILE.toString(), null),
+        !appJarPath.startsWith("hdfs:"));
+
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
 
     //Add hops-util.jar if it is a Kafka job
     if (serviceProps.getKafka() != null) {
       builder.addLocalResource(new LocalResourceDTO(
-              Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
-              LocalResourceVisibility.APPLICATION.toString(),
-              LocalResourceType.FILE.toString(), null), false);
+          Settings.HOPSUTIL_JAR, Settings.getHopsutilPath(sparkUser),
+          LocalResourceVisibility.APPLICATION.toString(),
+          LocalResourceType.FILE.toString(), null), false);
 
       builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-              Settings.HOPSUTIL_JAR);
+          Settings.HOPSUTIL_JAR);
       extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
-              File.pathSeparator);
+          File.pathSeparator);
     }
-    
+
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
       if (dto.getName().equals(Settings.K_CERTIFICATE) || dto.getName().
-              equals(Settings.T_CERTIFICATE)) {
+          equals(Settings.T_CERTIFICATE)) {
         //Set deletion to true so that certs are removed
         builder.addLocalResource(dto, true);
       } else {
         builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
       }
       builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-              dto.getName());
+          dto.getName());
       extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
 
     }
-    
+
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-            "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
-            + Settings.LOCALIZED_CONF_DIR
-            + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
-            + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
-            + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
-            + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
+        "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
+        + Settings.LOCALIZED_CONF_DIR
+        + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
+        + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
+        + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
+        + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
     );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
@@ -171,29 +169,29 @@ public class SparkYarnRunnerBuilder {
 
     if (extraClassPathFiles.toString().length() > 0) {
       addSystemProperty(Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
-              extraClassPathFiles.toString().substring(0, extraClassPathFiles.
-                      length() - 1));
+          extraClassPathFiles.toString().substring(0, extraClassPathFiles.
+              length() - 1));
     }
 
     //If DynamicExecutors are not enabled, set the user defined number 
     //of executors
     if (dynamicExecutors) {
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(
-              dynamicExecutors));
+          dynamicExecutors));
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-              String.valueOf(numberOfExecutorsMin));
+          String.valueOf(numberOfExecutorsMin));
       //TODO: Fill in the init and max number of executors. Should it be a per job
       //or global setting?
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-              String.valueOf(numberOfExecutorsMax));
+          String.valueOf(numberOfExecutorsMax));
       addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-              String.valueOf(numberOfExecutorsInit));
+          String.valueOf(numberOfExecutorsInit));
       //Dynamic executors requires the shuffle service to be enabled
       addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
       //spark.shuffle.service.enabled
     } else {
       addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(
-              numberOfExecutors));
+          numberOfExecutors));
     }
 
     List<String> jobSpecificProperties = new ArrayList<>();
@@ -205,82 +203,65 @@ public class SparkYarnRunnerBuilder {
 
     //These properties are set sot that spark history server picks them up
     addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(
-            driverMemory) + "m");
+        driverMemory) + "m");
     addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(
-            driverCores));
+        driverCores));
     addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
     addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
-            executorCores));
+        executorCores));
     addSystemProperty(Settings.SPARK_DRIVER_STAGINGDIR_ENV, stagingPath);
     //Add log4j property
-    addSystemProperty(Settings.SPARK_LOG4J_CONFIG,
-            Settings.SPARK_LOG4J_PROPERTIES);
+    addSystemProperty(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
-    addSystemProperty(Settings.LOGSTASH_JOB_INFO,
-            project.toLowerCase() + "," + jobName + ","
-            + YarnRunner.APPID_PLACEHOLDER);
-    addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir
-            + "/lib/native/");
-    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.
-                getRestEndpoint());
-    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
-                getKeystorePwd());
-    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
-                getTruststorePwd());
-    //addSystemProperty(Settings.SPARK_METRICS_ENV, Settings.SPARK_METRICS_PROPERTIES);
-    addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.getElastic().getRestEndpoint());
-    
+    addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
+        + YarnRunner.APPID_PLACEHOLDER);
+    addSystemProperty(Settings.HOPSUTIL_APPID_ENV_VAR, YarnRunner.APPID_PLACEHOLDER);
+    addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir + "/lib/native/");
+
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
     extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
-            append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").
-            append(Settings.SPARK_LOG4J_PROPERTIES).append(" ").
-            append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").
-            append(project.toLowerCase()).append(",").append(jobName).
-            append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
-            append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
-            append(this.hadoopDir).append("/lib/native/").
-            append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR + "=").
-            append(serviceProps.getRestEndpoint()).
-            append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").
-            append(serviceProps.getKeystorePwd()).
-            append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").
-            append(serviceProps.getTruststorePwd()).
-            append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").
-            append(serviceProps.getElastic().getRestEndpoint());
-    
+        append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").append(Settings.SPARK_LOG4J_PROPERTIES).
+        append(" ").
+        append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(project.toLowerCase()).append(",").
+        append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
+        append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").append(this.hadoopDir).append("/lib/native/").
+        append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").append(YarnRunner.APPID_PLACEHOLDER).
+        append("/lib/native/");
+
     if (serviceProps != null) {
+      addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
+      addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.getKeystorePwd());
+      addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.getTruststorePwd());
+      addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.getElastic().getRestEndpoint());
+      addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.getJobName());
+      addSystemProperty(Settings.HOPSUTIL_JOBTYPE_ENV_VAR, jobType.getName());
+
+      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR + "=").
+          append(serviceProps.getRestEndpoint()).
+          append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").append(serviceProps.getKeystorePwd()).
+          append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").append(serviceProps.getTruststorePwd()).
+          append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").append(serviceProps.getElastic().getRestEndpoint()).
+          append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(serviceProps.getProjectId()).
+          append(" -D" + Settings.KAFKA_PROJECTNAME_ENV_VAR + "=").append(serviceProps.getProjectName()).
+          append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(serviceProps.getProjectId()).
+          append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").append(serviceProps.getJobName()).
+          append(" -D" + Settings.HOPSUTIL_JOBTYPE_ENV_VAR + "=").append(jobType.getName());
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
-        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
-                getKafka().
-                getBrokerAddresses());
-        addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
-                getKafka().getTopics());
-        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
-                serviceProps.getProjectId()));
-        addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.
-                getProjectName());
-        addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.
-                getJobName());
-        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
-                getKafka().getConsumerGroups());
-        builder.addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "="
-                + serviceProps.getKafka().
-                        getConsumerGroups());
+        addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());
+        addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.getKafka().getTopics());
+        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(serviceProps.getProjectId()));
+        addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.getProjectName());
+
+        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.getKafka().getConsumerGroups());
+        builder.
+            addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "=" + serviceProps.getKafka().getConsumerGroups());
         extraJavaOptions.
-                append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
-                append(serviceProps.getKafka().getBrokerAddresses()).
-                append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
-                append(serviceProps.getKafka().getTopics()).
-                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
-                serviceProps.getProjectId()).
-                append(" -D" + Settings.KAFKA_PROJECTNAME_ENV_VAR + "=").
-                append(serviceProps.getProjectName()).
-                append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").
-                append(serviceProps.getProjectId()).
-                append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").
-                append(serviceProps.getJobName());
+            append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
+            append(serviceProps.getKafka().getBrokerAddresses()).
+            append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
+            append(serviceProps.getKafka().getTopics());
       }
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());
@@ -299,10 +280,10 @@ public class SparkYarnRunnerBuilder {
       //already set, create a java system property.
       for (String property : sparkProperties.stringPropertyNames()) {
         if (!jobSpecificProperties.contains(property) && sparkProperties.
-                getProperty(property) != null && !sparkProperties.getProperty(
-                property).isEmpty()) {
+            getProperty(property) != null && !sparkProperties.getProperty(
+            property).isEmpty()) {
           addSystemProperty(property,
-                  sparkProperties.getProperty(property).trim());
+              sparkProperties.getProperty(property).trim());
         }
       }
     } finally {
@@ -314,7 +295,7 @@ public class SparkYarnRunnerBuilder {
       //Exclude "hopsworks.yarn.appid" property because we do not want to 
       //escape it now
       String option;
-      if (s.equals(Settings.LOGSTASH_JOB_INFO)) {
+      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSUTIL_APPID_ENV_VAR)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {
         option = escapeForShell("-D" + s + "=" + sysProps.get(s));
@@ -371,18 +352,18 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder addExtraFile(LocalResourceDTO dto) {
     if (dto.getName() == null || dto.getName().isEmpty()) {
       throw new IllegalArgumentException(
-              "Filename in extra file mapping cannot be null or empty.");
+          "Filename in extra file mapping cannot be null or empty.");
     }
     if (dto.getPath() == null || dto.getPath().isEmpty()) {
       throw new IllegalArgumentException(
-              "Location in extra file mapping cannot be null or empty.");
+          "Location in extra file mapping cannot be null or empty.");
     }
     this.extraFiles.add(dto);
     return this;
   }
 
   public SparkYarnRunnerBuilder addExtraFiles(
-          List<LocalResourceDTO> projectLocalResources) {
+      List<LocalResourceDTO> projectLocalResources) {
     if (projectLocalResources != null && !projectLocalResources.isEmpty()) {
       this.extraFiles.addAll(projectLocalResources);
     }
@@ -392,7 +373,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setNumberOfExecutors(int numberOfExecutors) {
     if (numberOfExecutors < 1) {
       throw new IllegalArgumentException(
-              "Number of executors cannot be less than 1.");
+          "Number of executors cannot be less than 1.");
     }
     this.numberOfExecutors = numberOfExecutors;
     return this;
@@ -401,7 +382,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setExecutorCores(int executorCores) {
     if (executorCores < 1) {
       throw new IllegalArgumentException(
-              "Number of executor cores cannot be less than 1.");
+          "Number of executor cores cannot be less than 1.");
     }
     this.executorCores = executorCores;
     return this;
@@ -430,8 +411,8 @@ public class SparkYarnRunnerBuilder {
   public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
     if (numberOfExecutorsMax > Settings.SPARK_MAX_EXECS) {
       throw new IllegalArgumentException(
-              "Maximum number of  executors cannot be greate than:"
-              + Settings.SPARK_MAX_EXECS);
+          "Maximum number of  executors cannot be greate than:"
+          + Settings.SPARK_MAX_EXECS);
     }
     this.numberOfExecutorsMax = numberOfExecutorsMax;
   }
@@ -447,7 +428,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
     if (executorMemoryMB < 1) {
       throw new IllegalArgumentException(
-              "Executor memory bust be greater than zero.");
+          "Executor memory bust be greater than zero.");
     }
     this.executorMemory = "" + executorMemoryMB + "m";
     return this;
@@ -456,7 +437,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setExecutorMemoryGB(float executorMemoryGB) {
     if (executorMemoryGB <= 0) {
       throw new IllegalArgumentException(
-              "Executor memory must be greater than zero.");
+          "Executor memory must be greater than zero.");
     }
     int mem = (int) (executorMemoryGB * 1024);
     this.executorMemory = "" + mem + "m";
@@ -474,14 +455,14 @@ public class SparkYarnRunnerBuilder {
     memory = memory.toLowerCase();
     if (!memory.endsWith("m") && !memory.endsWith("g")) {
       throw new IllegalArgumentException(
-              "Memory string does not follow the necessary format.");
+          "Memory string does not follow the necessary format.");
     } else {
       String memnum = memory.substring(0, memory.length() - 1);
       try {
         Integer.parseInt(memnum);
       } catch (NumberFormatException e) {
         throw new IllegalArgumentException(
-                "Memory string does not follow the necessary format.", e);
+            "Memory string does not follow the necessary format.", e);
       }
     }
     this.executorMemory = memory;
@@ -491,7 +472,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setDriverMemoryMB(int driverMemoryMB) {
     if (driverMemoryMB < 1) {
       throw new IllegalArgumentException(
-              "Driver memory must be greater than zero.");
+          "Driver memory must be greater than zero.");
     }
     this.driverMemory = driverMemoryMB;
     return this;
@@ -500,7 +481,7 @@ public class SparkYarnRunnerBuilder {
   public SparkYarnRunnerBuilder setDriverMemoryGB(int driverMemoryGB) {
     if (driverMemoryGB <= 0) {
       throw new IllegalArgumentException(
-              "Driver memory must be greater than zero.");
+          "Driver memory must be greater than zero.");
     }
     int mem = driverMemoryGB * 1024;
     this.driverMemory = mem;
