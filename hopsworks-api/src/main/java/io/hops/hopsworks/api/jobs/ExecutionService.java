@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
@@ -59,6 +60,8 @@ public class ExecutionService {
   private ExecutionController executionController;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
 
@@ -140,8 +143,9 @@ public class ExecutionService {
 
     //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
     DistributedFileSystemOps udfso = null;
+    String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     try {
-      udfso = dfs.getDfsOps(user.getUsername());
+      udfso = dfs.getDfsOps(username);
       String marker = File.separator + "Projects" + File.separator + job.getProject().getName() + File.separator
           + "Resources" + File.separator + ".marker-" + job.getJobType().getName().toLowerCase() + "-" + job.getName()
           + "-" + appid;
