@@ -16,8 +16,17 @@
              ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showTours, 'glyphicon-triangle-bottom':homeCtrl.showTours}"></span>
             Tours
+
             <span class="glyphicon glyphicon-expand pull-right"></span>
-            <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">              
+
+            <div ng-show="homeCtrl.showTours" ng-init="homeCtrl.initCheckBox()" style="margin-top: 10px">
+              <md-checkbox md-no-ink aria-label="Tour tips" class="md-primary"
+                ng-model="homeCtrl.showTourTips" ng-change="homeCtrl.toggleTourTips()"
+                ng-click="homeCtrl.showTours = !homeCtrl.showTours">
+                        Tour tips
+              </md-checkbox>
+            </div>
+            <div ng-show="homeCtrl.showTours" ng-repeat="tour in homeCtrl.tours">
               <button style="margin: 0px; padding-bottom: 5px; padding-top: 5px; padding-left: 0px; padding-right: 0px;" uib-popover="Take a tour of Hopsworks by creating a project and running a Spark job!"
                       type="button" class="btn btn-default btn-block" ng-click="homeCtrl.showTours = !homeCtrl.showTours; homeCtrl.createExampleProject(tour.name)">
                 <span style="margin-right: 5px" class="glyphicon glyphicon-play-circle pull-right" ng-hide="isCreating(tour.name) === true"></span>
@@ -25,6 +34,7 @@
                 <span class="button-text">{{tour.name}}</span>
               </button>
             </div>
+
           </a>
           <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
             <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
@@ -32,7 +42,7 @@
             <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
             <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
               <div>
-                <button style="padding-bottom: 2px; padding-top: 2px; padding-left: 0px; padding-right: 0px;" 
+                <button style="padding-bottom: 2px; padding-top: 2px; padding-left: 0px; padding-right: 0px;"
                         uib-popover="Add this public dataset to one of your projects."
                         type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
                   <span>{{dataset.name}}</span>
@@ -61,7 +71,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="col-sm-6 col-md-1 col-lg-1"></div>
     <div class="col-sm-6 col-md-3 col-lg-3 sidebar">
       <span class="list-group-item active">
@@ -175,7 +185,9 @@
 
   <tour class="ng-scope" step="homeCtrl.tourService.toursInfoStep"
         post-tour="closeTour()"
-        ng-if="homeCtrl.loadedView && homeCtrl.toursEnabled">
+        ng-if="homeCtrl.loadedView
+          && (homeCtrl.tourService.informAndTips
+            || homeCtrl.tourService.informOnly)">
     <virtual-step
             class="ng-scope"
             tourtip="Follow our guided tours"
@@ -183,7 +195,7 @@
             tourtip-element="#toursBox"
             tourtip-placement="right"
             tourtip-next-label="Got it!"
-            on-proceed="homeCtrl.disableTours()"
+            on-proceed="homeCtrl.disableInformBalloon()"
             tourtip-offset-horizontal="50"
     ></virtual-step>
   </tour>

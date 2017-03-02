@@ -6,11 +6,11 @@
 </div>
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
-    
 
-    <form role="form" name="pickProjectForm" 
+
+    <form role="form" name="pickProjectForm"
           ng-submit="schemaCreateCtrl.createSchema()" novalidate
-          class="form-validate">                                                                                                                              
+          class="form-validate">
         <div class="view-info">
             <div class="col-md-12">
                 <label class="control-label">Schema Name</label><br>
@@ -26,7 +26,7 @@
                               id="schemaContent"
                               ng-model="schemaCreateCtrl.content" placeholder="schema content"></textarea>
                 </div>
-                
+
             </div>
             <div ng-if="schemaCreateCtrl.content_empty=== -1" style="color: red">{{"Content should not be empty"}}</div>
         </div>
@@ -48,7 +48,9 @@
     </form>
     <tour class="ng-scope"
           step="schemaCreateCtrl.tourService.currentStep_TourFour"
-          post-tour="closeTour()">
+          post-tour="closeTour()"
+          ng-if="schemaCreateCtrl.tourService.informAndTips
+            || schemaCreateCtrl.tourService.tipsOnly">
         <virtual-step
                 class="ng-scope"
                 tourtip="Click Next OR click on the 'Validate' button to continue"
