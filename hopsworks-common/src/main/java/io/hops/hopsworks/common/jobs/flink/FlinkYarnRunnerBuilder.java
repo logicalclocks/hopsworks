@@ -6,6 +6,7 @@ import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.File;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
@@ -339,6 +340,11 @@ public class FlinkYarnRunnerBuilder {
             getProjectKeystoreName(project, jobUser));
     builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
             getProjectTruststoreName(project, jobUser));
+    String stagingPath = File.separator + "Projects" + File.separator + project
+            + File.separator
+            + Settings.PROJECT_STAGING_DIR;
+    builder.localResourcesBasePath(stagingPath);
+    
     //Add extra files to local resources, use filename as key
     //Get filesystem
     if (!extraFiles.isEmpty()) {
@@ -373,20 +379,19 @@ public class FlinkYarnRunnerBuilder {
         cluster.addHopsworksResource(dto.getName(), resource);
       }
     }
+    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps
+              .getRestEndpoint());
+    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getKeystorePwd());
+    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
+              getTruststorePwd());
     if (serviceProps.getKafka() != null) {
-      addSystemProperty(Settings.KAFKA_SESSIONID_ENV_VAR, serviceProps.
-              getKafka().getSessionId());
+      
       addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
               getKafka().
               getBrokerAddresses());
-      addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getKeystorePwd());
-      addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getTruststorePwd());
       addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
               getKafka().getTopics());
-      addSystemProperty(Settings.KAFKA_REST_ENDPOINT_ENV_VAR, serviceProps.
-              getKafka().getRestEndpoint());
       addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
               serviceProps.getProjectId()));
       if (serviceProps.getKafka().getConsumerGroups() != null) {

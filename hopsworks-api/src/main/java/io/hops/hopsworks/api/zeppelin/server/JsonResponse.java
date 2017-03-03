@@ -19,11 +19,9 @@ package io.hops.hopsworks.api.zeppelin.server;
 import java.util.ArrayList;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import org.apache.zeppelin.interpreter.InterpreterInfoSerializer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.zeppelin.interpreter.InterpreterSetting;
 
 /**
  * Json response builder.
@@ -97,16 +95,17 @@ public class JsonResponse<T> {
 
   @Override
   public String toString() {
-    GsonBuilder gsonBuilder = new GsonBuilder().registerTypeAdapter(
-            InterpreterSetting.InterpreterInfo.class,
-            new InterpreterInfoSerializer());
+    GsonBuilder gsonBuilder = new GsonBuilder();
     if (pretty) {
       gsonBuilder.setPrettyPrinting();
     }
-    gsonBuilder.setExclusionStrategies(new JsonExclusionStrategy());
+    //will exclued options
+    //gsonBuilder.setExclusionStrategies(new JsonExclusionStrategy());
     Gson gson = gsonBuilder.create();
-    return gson.toJson(this);
+    String s = gson.toJson(this);
+    return s;
   }
+
 
   public javax.ws.rs.core.Response.Status getCode() {
     return status;

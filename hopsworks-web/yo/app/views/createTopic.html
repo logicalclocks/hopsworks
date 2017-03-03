@@ -69,12 +69,30 @@
     </div>
     <div class="row"></div>
     <!--<hr />-->
-    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px" id="createTopicWnd">
       <button class="btn btn-default" type="button" ng-click="createTopicCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit">
-        <i ng-if="createTopicCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+      <button class="btn btn-primary" type="submit" id="createTopicBtn">
+        <i ng-if="createTopicCtrl.working" style="margin-top: 2px"
+           class="fa fa-spinner fa-spin pull-right"></i>
         Create
       </button>
     </div>
   </form>
+  <tour class="ng-scope"
+        step="createTopicCtrl.tourService.currentStep_TourFive"
+        post-tour="closeTour()">
+    <virtual-step
+            class="ng-scope"
+            tourtip="Click Next OR click on the 'Create' button to continue"
+            tourtip-step="0"
+            tourtip-element="#createTopicBtn"
+            tourtip-placement="right"
+            tourtip-next-label="Next"
+            on-proceed="createTopicCtrl.createTopic()"
+            tourtip-offset-horizontal="-750"
+            tourtip-offset-vertical="250"
+            tourtip-container-element="#createTopicWnd"
+            on-show="createTopicCtrl.guidePopulateTopic()"
+    ></virtual-step>
+  </tour>
 </div>

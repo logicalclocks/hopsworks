@@ -30,7 +30,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 
 @ManagedBean(name = "projectsmanagement")
 @ViewScoped
@@ -155,7 +154,8 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(projectname, quota);
   }
 
-  public void onRowEdit(RowEditEvent event, DistributedFileSystemOps dfso)
+//  , DistributedFileSystemOps dfso
+  public void onRowEdit(RowEditEvent event)
           throws IOException {
     ProjectsManagement row = (ProjectsManagement) event.getObject();
     if (row.getDisabled()) {
@@ -166,7 +166,7 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(row.getProjectname(), row.
             getYarnQuotaRemaining());
     projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
-            this.hdfsquota, dfso);
+            this.hdfsquota);
   }
 
   public void onRowCancel(RowEditEvent event) {

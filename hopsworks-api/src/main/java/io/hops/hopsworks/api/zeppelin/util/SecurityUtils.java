@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.zeppelin.util;
 
 //import org.apache.shiro.subject.Subject;
+import com.google.common.collect.Sets;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 
 import java.net.InetAddress;
@@ -25,11 +26,18 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tools for securing Zeppelin
  */
 public class SecurityUtils {
+  
+  private static final String ANONYMOUS = "anonymous";
+  private static final HashSet<String> EMPTY_HASHSET = Sets.newHashSet();
+  private static boolean isEnabled = false;
+  private static final Logger log = LoggerFactory.getLogger(SecurityUtils.class);
 
   public static Boolean isValidOrigin(String sourceHost,
           ZeppelinConfiguration conf)
@@ -85,6 +93,16 @@ public class SecurityUtils {
     }
     //}
     return roles;
+  }
+  
+    /**
+   * Checked if shiro enabled or not
+   */
+  public static boolean isAuthenticated() {
+    if (!isEnabled) {
+      return false;
+    }
+    return true;
   }
 
 }

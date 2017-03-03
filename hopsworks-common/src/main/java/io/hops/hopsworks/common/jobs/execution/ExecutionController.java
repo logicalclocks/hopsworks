@@ -90,6 +90,12 @@ public class ExecutionController {
         activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName,
                 job.getProject(), user);
         break;
+      case PYSPARK:
+        exec = sparkController.startJob(job, user);
+        if (exec == null) {
+          throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
+        }
+        break;
       default:
         throw new IllegalArgumentException(
                 "Unsupported job type: " + job.

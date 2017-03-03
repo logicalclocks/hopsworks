@@ -35,6 +35,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
+    register(io.hops.hopsworks.api.pythonDeps.PythonDepsService.class);
     register(io.hops.hopsworks.api.user.ActivityService.class);
     register(io.hops.hopsworks.api.user.AuthService.class);
     register(io.hops.hopsworks.api.user.UserService.class);
@@ -42,7 +43,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);
     register(io.hops.hopsworks.api.util.DownloadService.class);
     register(io.hops.hopsworks.api.util.EndpointService.class);
-    register(io.hops.hopsworks.api.util.KibanaService.class);
     register(io.hops.hopsworks.api.util.LocalFsService.class);
     register(io.hops.hopsworks.api.util.UploadService.class);
     register(io.hops.hopsworks.api.util.VariablesService.class);
@@ -52,6 +52,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.workflow.WorkflowJobService.class);
     register(io.hops.hopsworks.api.workflow.WorkflowService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.ConfigurationsRestApi.class);
+    register(io.hops.hopsworks.api.zeppelin.rest.HeliumService.class);
+    register(io.hops.hopsworks.api.zeppelin.rest.HeliumRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.InterpreterRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.InterpreterService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.LoginRestApi.class);
@@ -59,9 +61,10 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.NotebookService.class);
     register(io.hops.hopsworks.api.zeppelin.rest.SecurityRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
-
+    register(io.hops.hopsworks.api.app.ApplicationService.class);
+    
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
-
+    
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);

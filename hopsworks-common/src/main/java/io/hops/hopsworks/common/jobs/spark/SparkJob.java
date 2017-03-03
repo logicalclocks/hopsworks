@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -67,7 +66,7 @@ public class SparkJob extends YarnJob {
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(
               jobconfig.getAppPath(), jobconfig.getMainClass(),
-              JobType.SPARK);
+              jobconfig.getType());
       runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
       if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {

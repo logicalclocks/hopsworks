@@ -33,7 +33,7 @@ public class AppScriptServlet extends HttpServlet {
       ServletContext context = getServletContext();
       // Read the script file chunk by chunk
       InputStream is = context.getResourceAsStream(
-              "/zeppelin/scripts/scripts.6ddd912ca4c10818.js");
+              "/zeppelin/app.4ece19b57e6fb1511450.js");
       StringBuilder script = new StringBuilder();
       byte[] buffer = new byte[1024];
       while (is.available() > 0) {

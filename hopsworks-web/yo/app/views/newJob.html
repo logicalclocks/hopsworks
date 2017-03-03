@@ -31,10 +31,11 @@
           <!-- Select the type of job -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}" 
                                is-open="newJobCtrl.accordion2.isOpen" 
-                               ng-show="newJobCtrl.accordion2.visible">
+                               ng-show="newJobCtrl.accordion2.visible"
+                                id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>
+              <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
           </div>
@@ -68,14 +69,16 @@
                                ng-show="newJobCtrl.accordion4.visible"
                                id="chooseParametersAndArguments">
             <!-- Spark, Flink-->
-            <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3">
-              <div class="row">
+            <div ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 4 || newJobCtrl.jobtype == 3">
+              <div class="row" ng-show="newJobCtrl.jobtype == 4">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                <div class="col-md-8"><input type="text"
+                                             ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
               <div class="row">
                 <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" uib-tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text" ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                <div class="col-md-8"><input type="text"
+                                             ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
               </div>
             </div>
             <!-- Adam -->
@@ -278,7 +281,7 @@
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
               <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
+                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" style="width:121px" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
                   Kafka
                 </button>
               </div>
@@ -299,7 +302,7 @@
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
               <div class="text-right col-md-4"></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()">
+                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()" style="width:121px">
                   Advanced
                 </button>
               </div>
@@ -361,7 +364,7 @@
                       {{resource.path}}
                     </td>
                     <td>
-                      <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'private'">
+                      <select name="visibility" ng-model="resource.visibility" ng-init="resource.visibility = 'application'">
                         <option value="public">Public</option>
                         <option value="private">Private</option>
                         <option value="application">Application</option>
@@ -395,7 +398,91 @@
       </div>
          <!-- /#page-content-wrapper -->
     </section>
-    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourFour" post-tour="closeTour()" ng-if="projectCtrl.loadedView">
+    <tour class="ng-scope"
+          step="newJobCtrl.tourService.currentStep_TourSeven"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour ==='kafka'">
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click Next OR give a name to your job kafka"
+              tourtip-step="0"
+              tourtip-element="#inputJobName"
+              tourtip-placement="bottom"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.nameFilledIn()"
+              on-show="newJobCtrl.guideSetJobName()"
+      ></virtual-step>
+      <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="1"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click Next OR SPARK"
+              tourtip-step="2"
+              tourtip-element="#sparkJobType"
+              tourtip-placement="right"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.jobTypeSpark()"
+              ng-if="newJobCtrl.accordion2.visible"
+      ></virtual-step>
+      <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="3"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
+              tourtip-step="4"
+              tourtip-element="#selectFileButton"
+              tourtip-placement="right"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
+              ng-if="newJobCtrl.accordion3.visible"
+      ></virtual-step>
+      <virtual-step
+              ng-hide="true"
+              class="ng-scope"
+              tourtip="invisible"
+              tourtip-step="5"
+      ></virtual-step>
+      <virtual-step
+              class="ng-scope"
+              tourtip="Choose parameters on you own or click Next and let us choose for you"
+              tourtip-step="6"
+              tourtip-element="#chooseParametersAndArguments"
+              tourtip-placement="top"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.chooseParameters()"
+              on-show="newJobCtrl.populateKafkaJobParameters()"
+              ng-if="newJobCtrl.accordion4.visible"
+      ></virtual-step>
+
+      <virtual-step
+              class="ng-scope"
+              tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
+              tourtip-step="7"
+              tourtip-element="#moreConfigs"
+              tourtip-placement="top"
+              tourtip-next-label="Next"
+              on-proceed="newJobCtrl.createJob()"
+              on-show="newJobCtrl.populateKafkaTopic()"
+              ng-if="newJobCtrl.accordion5.visible"
+      ></virtual-step>
+    </tour>
+
+
+
+
+
+    <tour class="ng-scope"
+          step="projectCtrl.tourService.currentStep_TourFour"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'">
       <virtual-step
         class="ng-scope"
             <virtual-step
@@ -406,7 +493,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.nameFilledIn()"
-            tourtip-offset-vertical="-26"
+            tourtip-offset-vertical="5"
             ></virtual-step>
             <virtual-step
             ng-hide="true"    
@@ -422,7 +509,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.jobTypeSpark()"
-            tourtip-offset-vertical="-70"
+            tourtip-offset-vertical="-15"
             tourtip-offset-horizontal="-6"
             ng-if="newJobCtrl.accordion2.visible"
             ></virtual-step>
@@ -440,7 +527,7 @@
             tourtip-placement="bottom"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
-            tourtip-offset-vertical="-65"
+            tourtip-offset-vertical="-14"
             tourtip-offset-horizontal="-5"
             ng-if="newJobCtrl.accordion3.visible"
             ></virtual-step>
@@ -458,8 +545,8 @@
             tourtip-placement="top"
             tourtip-next-label="Next"
             on-proceed="newJobCtrl.chooseParameters()"
-            tourtip-offset-vertical="10"
-            tourtip-offset-horizontal="550"
+            tourtip-offset-vertical="70"
+            tourtip-offset-horizontal="750"
             ng-if="newJobCtrl.accordion4.visible"
             ></virtual-step>
             <virtual-step
@@ -470,8 +557,8 @@
             tourtip-placement="bottom"
             tourtip-next-label="Create Job"
             on-proceed="newJobCtrl.createJob()"
-            tourtip-offset-vertical="-65"
-            tourtip-offset-horizontal="-10"
+            tourtip-offset-vertical="-15"
+            tourtip-offset-horizontal="10"
             ng-if="newJobCtrl.accordion5.visible"
             ></virtual-step>
     </tour>

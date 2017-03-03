@@ -153,9 +153,24 @@ public abstract class YarnJob extends HopsJob {
             getProjectServicesCollection();
     if (projectServices != null && !projectServices.isEmpty()) {
       serviceProps = new ServiceProperties();
+      serviceProps.setRestEndpoint(services.getSettings().getRestEndpoint());
+      serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
+      serviceProps.setProjectId(jobDescription.getProject().getId());
+      serviceProps.setProjectName(jobDescription.getProject().getName());
+      serviceProps.setJobName(jobDescription.getName());
       Iterator<ProjectServices> iter = projectServices.iterator();
       while (iter.hasNext()) {
         ProjectServices projectService = iter.next();
+        HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
+                  getProject(), user.getUsername(),
+                  services.getSettings().getHopsworksTmpCertDir(),
+                  Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
+                  dfso, projectLocalResources, jobSystemProperties,
+                  nameNodeIpPort);
+        serviceProps.setKeystorePwd(services.getSettings().
+                  getHopsworksMasterPasswordSsl());
+        serviceProps.setTruststorePwd(services.getSettings().
+                  getHopsworksMasterPasswordSsl());
         //If the project is of type KAFKA
         if (projectService.getProjectServicesPK().getService()
                 == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()
@@ -164,28 +179,15 @@ public abstract class YarnJob extends HopsJob {
                 && jobDescription.getJobConfig().getKafka() != null) {
           serviceProps.initKafka();
           //Set Kafka specific properties to serviceProps
-          serviceProps.setKeystorePwd(services.getSettings().
-                  getHopsworksMasterPasswordSsl());
-          serviceProps.setTruststorePwd(services.getSettings().
-                  getHopsworksMasterPasswordSsl());
-          serviceProps.setProjectId(jobDescription.getProject().getId());
           serviceProps.getKafka().setBrokerAddresses(services.getSettings().
                   getKafkaConnectStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().
                   getRestEndpoint());
           serviceProps.getKafka().setTopics(jobDescription.getJobConfig().
                   getKafka().getTopics());
-          serviceProps.getKafka().setSessionId(jobDescription.getJobConfig().
-                  getSessionId());
           serviceProps.getKafka().setProjectConsumerGroups(jobDescription.
                   getProject().getName(), jobDescription.
                   getJobConfig().getKafka().getConsumergroups());
-          HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
-                  getProject(), user.getUsername(),
-                  services.getSettings().getHopsworksTmpCertDir(),
-                  Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
-                  dfso, projectLocalResources, jobSystemProperties,
-                  nameNodeIpPort);
           return true;
         }
       }

@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -61,6 +62,9 @@ public class ProjectsManagementController {
 
   @EJB
   private InodeFacade inodes;
+
+  @EJB
+  private DistributedFsService dfs;
 
   /**
    *
@@ -102,16 +106,29 @@ public class ProjectsManagementController {
   /**
    *
    * @param projectname
-   * @param quotaInGBs size of quota for project subtree in HDFS in MBs
+   * @param quotaInMBs
+   * size of quota for project subtree in HDFS in MBs
    * @throws IOException
    */
-  public void setHdfsSpaceQuota(String projectname, long quotaInMBs,
-          DistributedFileSystemOps dfso) throws IOException {
-    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
+  public void setHdfsSpaceQuota(String projectname, long quotaInMBs) throws
+          IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+
+      projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
+    } catch (Exception e) {
+      // Do something
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+
+    }
   }
 
-  public void setHdfsNumFilesQuota(String projectname, long quotaInMBs,
-          DistributedFileSystemOps dfso) throws IOException {
+  public void setHdfsNumFilesQuota(String projectname, long quotaInMBs) throws
+          IOException {
 //    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
   }
 

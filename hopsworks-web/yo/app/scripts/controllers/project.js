@@ -4,10 +4,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', '$route', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService',
-          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, $route, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
 
             var self = this;
@@ -63,6 +63,14 @@ angular.module('hopsWorksApp')
             };
 
             self.initTour = function () {
+              if (angular.equals(self.currentProject.projectName.substr(0, 10),
+                self.tourService.sparkProjectPrefix)) {
+                self.tourService.setActiveTour('spark');
+              } else if (angular.equals(self.currentProject.projectName
+                .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
+                self.tourService.setActiveTour('kafka');
+              }
+
               if ($location.url() === "/project/" + self.pId) {
                 self.tourService.currentStep_TourTwo = 0;
               } else if ($location.url() === "/project/" + self.pId + "/" + "jobs") {
@@ -222,7 +230,7 @@ angular.module('hopsWorksApp')
                                 if (success.errorMsg) {
                                   growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
                                 }
-                                $uibModalStack.getTop().key.close();
+                                $route.reload();
                               }, function (error) {
                         self.working = false;
                         growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -230,11 +238,10 @@ angular.module('hopsWorksApp')
                       );
             };
 
-            self.close = function () {
-              $uibModalStack.getTop().key.dismiss();
-            };
-
             $scope.showHamburger = $location.path().indexOf("project") > -1;
+            
+            // Show the searchbar if you are (1) within a project on datasets or (2) on the landing page
+//            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
 
 
             self.goToUrl = function(serviceName) {
@@ -247,9 +254,19 @@ angular.module('hopsWorksApp')
             };
 
             self.goToJobs = function () {
+              ProjectService.enableLogs({id: self.currentProject.projectId}).$promise.then(
+                        function (success) {
+                            
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
+                });
+              
               self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
+              }
+              if (self.tourService.currentStep_TourFive > -1) {
+                self.tourService.currentStep_TourSix = 0;
               }
             };
 
@@ -276,6 +293,13 @@ angular.module('hopsWorksApp')
 
             self.goToKafka = function () {
               self.goToUrl('kafka');
+              if (self.tourService.currentStep_TourTwo > -1) {
+                self.tourService.resetTours();
+              }
+            };
+
+            self.goToSettings = function () {
+              self.goToUrl('settings');
             };
 
             self.goToService = function (service) {

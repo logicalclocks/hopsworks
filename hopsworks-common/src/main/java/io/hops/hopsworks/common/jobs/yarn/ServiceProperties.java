@@ -11,15 +11,22 @@ public class ServiceProperties {
   private String keystorePwd;
   private String truststorePwd;
   private Integer projectId;
+  private String projectName;
+  private String restEndpoint;
+  private String jobName;
+  private ElasticProperties elastic;
 
   public ServiceProperties() {
   }
 
   public ServiceProperties(String keystorePwd, String truststorePwd,
-          Integer projectId) {
+          Integer projectId, String projectName, String restEndPoint, String jobName) {
     this.keystorePwd = keystorePwd;
     this.truststorePwd = truststorePwd;
     this.projectId = projectId;
+    this.projectName = projectName;
+    this.restEndpoint = restEndPoint;
+    this.jobName = jobName;
   }
 
   public String getKeystorePwd() {
@@ -46,6 +53,14 @@ public class ServiceProperties {
     this.kafka = kafka;
   }
 
+  public ElasticProperties getElastic() {
+    return elastic;
+  }
+
+  public void setElastic(ElasticProperties elastic) {
+    this.elastic = elastic;
+  }
+
   public void initKafka() {
     kafka = new KafkaProperties();
   }
@@ -56,6 +71,30 @@ public class ServiceProperties {
 
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
+  }
+
+  public String getProjectName() {
+    return projectName;
+  }
+
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
+
+  public String getRestEndpoint() {
+    return restEndpoint;
+  }
+
+  public void setRestEndpoint(String restEndPoint) {
+    this.restEndpoint = restEndPoint;
+  }
+  
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
   }
 
 }

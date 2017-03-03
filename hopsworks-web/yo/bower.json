@@ -71,6 +71,7 @@
     "angular-ui-select": "^0.19.4",
     "angular-smart-table": "^2.1.8",
     "angular-aria": "^1.4.8",
-    "angular-xeditable": "^0.2.0"
+    "angular-xeditable": "^0.2.0",
+    "jquery": "2.0.3"
   }
 }

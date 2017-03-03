@@ -18,7 +18,6 @@ angular.module('hopsWorksApp')
             self.buttonArray = [];
             self.workingArray = [];
             self.jobFilter = "";
-
             self.hasSelectJob = false;
 
             self.currentjob = null;
@@ -47,6 +46,7 @@ angular.module('hopsWorksApp')
 
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
+              self.workingArray[id] = "true";
             };
 
             self.stopbuttonClickedToggle = function (id, display) {
@@ -57,6 +57,7 @@ angular.module('hopsWorksApp')
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
                 case "SPARK":
+                case "PYSPARK":
                   jobType = 1;
                   break;
                 case "ADAM":
@@ -68,9 +69,9 @@ angular.module('hopsWorksApp')
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
               if (jobType === 1) {
                 sparkState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
-                mainFileTxt = "JAR file";
+                mainFileTxt = "App file";
                 mainFileVal = sparkState.selectedJar;
                 jobDetailsTxt = "Job details";
               } else if (jobType === 2) {
@@ -84,7 +85,7 @@ angular.module('hopsWorksApp')
                 jobDetailsTxt = "Job arguments";
               } else if (jobType === 3) {
                 flinkState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
@@ -209,7 +210,6 @@ angular.module('hopsWorksApp')
 
             self.runJob = function (job, index) {
               var jobId = job.id;
-
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.multiplicator;
@@ -235,7 +235,7 @@ angular.module('hopsWorksApp')
             };
 
             self.stopJob = function (jobId) {
-              self.stopbuttonClickedToggle(jobId, true);
+              self.stopbuttonClickedToggle(jobId, "false");
               JobService.stopJob(self.projectId, jobId).then(
                       function (success) {
                         self.getRunStatus();
@@ -257,12 +257,16 @@ angular.module('hopsWorksApp')
               }
             };
 
+
+
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);
             };
 
             self.showUI = function (job) {
-              ModalService.jobUI('xlg', job, self.projectId);
+              StorageService.store(self.projectId + "_jobui_" + job.name, job);
+              $location.path('project/' + self.projectId + '/jobMonitor-job/' + job.name);
+
             };
 
             self.showLogs = function (jobId) {
@@ -323,11 +327,15 @@ angular.module('hopsWorksApp')
               self.selectedIndex = index;
               self.currentToggledIndex = index;
               self.currentjob = job;
+              StorageService.remove(self.projectId + "_jobui_" + job.name)
+              StorageService.store(self.projectId + "_jobui_" + job.name, job)
+
             };
             
             //untoggle is not used in the jobsCtrl
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
+              StorageService.remove(self.projectId + "_jobui_" + job.name)
               //reset all jobs showing flag
               angular.forEach(self.jobs, function (temp, key) {
                 temp.showing = false;

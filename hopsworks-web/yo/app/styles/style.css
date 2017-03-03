@@ -542,3 +542,7 @@ md-input-container {
   overflow: auto;
 }
 
+.btn-huge{
+    padding-top:10px;
+    padding-bottom:10px;
+}

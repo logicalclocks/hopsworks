@@ -172,7 +172,7 @@ public class ElasticService {
     return TransportClient.builder().settings(settings).build()
             .addTransportAddress(new InetSocketTransportAddress(
                     new InetSocketAddress(getElasticIpAsString(),
-                            Settings.ELASTIC_PORT)));
+                            this.settings.getElasticPort())));
   }
 
   /**

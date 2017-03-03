@@ -1,5 +1,6 @@
 package io.hops.hopsworks.kmon.communication;
 
+import io.hops.hopsworks.common.util.WebCommunication;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -11,7 +12,7 @@ import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
-import io.hops.hopsworks.kmon.struct.NodesTableItem;
+import io.hops.hopsworks.common.util.NodesTableItem;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 

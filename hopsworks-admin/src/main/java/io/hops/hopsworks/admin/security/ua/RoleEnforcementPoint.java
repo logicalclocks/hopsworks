@@ -125,7 +125,9 @@ public class RoleEnforcementPoint implements Serializable {
               PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()).isEmpty())
               || !(userManager.findAllByStatus(
                       PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()).
-              isEmpty());
+              isEmpty()
+              || !(userManager.findAllByStatus(
+              PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()).isEmpty()));
     }
     return open_requests;
   }
@@ -151,21 +153,22 @@ public class RoleEnforcementPoint implements Serializable {
   public String logOut() {
     try {
       getRequest().getSession().invalidate();
-      
+
       FacesContext ctx = FacesContext.getCurrentInstance();
-      HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
+      HttpSession sess = (HttpSession) ctx.getExternalContext().
+              getSession(false);
       HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-            getRequest();
+              getRequest();
 
       String ip = AuditUtil.getIPAddress();
       String browser = AuditUtil.getBrowserInfo();
       String os = AuditUtil.getOSInfo();
       String macAddress = AuditUtil.getMacAddress(ip);
-      
+
       am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.
               getValue(), ip,
               browser, os, macAddress, UserAuditActions.SUCCESS.name());
-      
+
       userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
       req.logout();
       if (null != sess) {

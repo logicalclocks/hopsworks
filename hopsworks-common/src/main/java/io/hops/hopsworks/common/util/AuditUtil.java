@@ -207,7 +207,8 @@ public class AuditUtil {
     String cpath = req.getContextPath();
 
     String url = domain.substring(0, domain.indexOf(cpath));
-    return url + cpath;
+//    return url + cpath;
+    return url;
   }
 
   public static String getApplicationUri() {

@@ -207,7 +207,7 @@ public class KafkaService {
     } catch (Exception ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
-              "Error while retrieving topic details. Did you define topic ACLs?");
+              "Error while retrieving topic details. Is Kafka running?");
     }
 
     GenericEntity<List<PartitionDetailsDTO>> topics
@@ -535,27 +535,6 @@ public class KafkaService {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
     }
-  }
-
-  //when do we need this api? It's used when the KafKa clients want to access
-  // the schema for a give topic which a message is published to and consumerd from
-  @GET
-  @Path("/schema/{topic}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getSchemaForTopics(@PathParam("topic") String topicName,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    SchemaDTO schemaDto = kafka.getSchemaForTopic(topicName);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            schemaDto).build();
   }
 
   //This API used is to select a schema and its version from the list

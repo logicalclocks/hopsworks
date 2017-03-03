@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
               },
               "example": {
                 'method': 'POST',
-                 url: '/api/project/starterProject'
+                 url: '/api/project/starterProject/:type'
               },
               "delete": {
                 url: '/api/project/:id/delete',  
@@ -50,6 +50,10 @@ angular.module('hopsWorksApp')
               "getMoreInfo": {
                 url: '/api/project/getMoreInfo/:type/:inodeId',
                 'method': 'GET'
+              },
+              "enableLogs": {
+                url: '/api/project/:id/logs/enable',
+                'method': 'POST'
               },
               "getPublicDatasets": {
                 url: '/api/project/getPublicDatasets',

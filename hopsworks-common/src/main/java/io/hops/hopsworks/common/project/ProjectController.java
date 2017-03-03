@@ -41,6 +41,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -127,6 +128,8 @@ public class ProjectController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private OperationsLogFacade operationsLogFacade;
+  @EJB
+  private PythonDepsFacade pythonDepsFacade;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -235,7 +238,7 @@ public class ProjectController {
         this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
                 new YarnProjectsQuota(project.getName(), Integer.parseInt(
                         settings
-                                .getYarnDefaultQuota()), 0));
+                        .getYarnDefaultQuota()), 0));
         this.yarnProjectsQuotaFacade.flushEm();
         //Add the activity information
         logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
@@ -270,6 +273,7 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(username);
     List<ProjectServiceEnum> services = projectServicesFacade.
             findEnabledServicesForProject(project);
+    String[] subResources = settings.getResourceDirs().split(";");
     try {
       for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
         boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
@@ -287,6 +291,12 @@ public class ProjectController {
         datasetController.createDataset(user, project, ds.getName(), ds.
                 getDescription(), -1, searchableResources, globallyVisible, dfso,
                 udfso);
+        if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
+          for (String sub : subResources) {
+            datasetController.createSubDirectory(user, project, ds.getName(),
+                    sub, -1, "", false, dfso, udfso);
+          }
+        }
 
         if (searchableResources) {
           Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.
@@ -297,6 +307,38 @@ public class ProjectController {
         //Persist README.md to hdfs for Default Datasets
         datasetController.generateReadme(udfso, ds.getName(),
                 ds.getDescription(), project.getName());
+
+        // Add the metrics.properties file to the /Resources dataset
+//        if (ds.equals(Settings.DefaultDataset.RESOURCES)) {
+//          StringBuilder metrics_props;
+//          FSDataOutputStream fsOut = null;
+//          try {
+//            metrics_props
+//                    = ConfigFileGenerator.
+//                            instantiateFromTemplate(
+//                                    ConfigFileGenerator.METRICS_TEMPLATE
+//                            //              "spark_dir", settings.getSparkDir(),
+//                            );
+//            String metricsFilePath = "/Projects/" + project + "/"
+//                    + ds.name() + "/" + Settings.SPARK_METRICS_PROPS;
+//
+//            fsOut = udfso.create(metricsFilePath);
+//            fsOut.writeBytes(metrics_props.toString());
+//            fsOut.flush();
+//            udfso.setPermission(new org.apache.hadoop.fs.Path(metricsFilePath),
+//                    new FsPermission(FsAction.ALL,
+//                            FsAction.READ_EXECUTE,
+//                            FsAction.NONE));
+//          } catch (IOException ex) {
+//            logger.log(Level.WARNING,
+//                    "metrics.properties could not be generated for project"
+//                    + " {0} and dataset {1}.", new Object[]{project, ds.name()});
+//          } finally {
+//            if (fsOut != null) {
+//              fsOut.close();
+//            }
+//          }
+//        }
       }
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
@@ -515,7 +557,8 @@ public class ProjectController {
    * removed.
    * @throws AppException if the project could not be found.
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  @TransactionAttribute(
+          TransactionAttributeType.REQUIRES_NEW)
   public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove, DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso) throws
@@ -651,7 +694,8 @@ public class ProjectController {
    * @return a list of user names that could not be added to the project team
    * list.
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
+  @TransactionAttribute(
+          TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String email,
           List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
@@ -666,8 +710,8 @@ public class ProjectController {
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
                   equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
                   && !projectTeam.
-                          getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
-                                  getTeam()))) {
+                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.
+                          getTeam()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
@@ -723,9 +767,11 @@ public class ProjectController {
                 + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 projectTeam.getProjectTeamPK().getTeamMember());
+
       } catch (IOException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null, ex);
+        Logger.getLogger(ProjectController.class
+                .getName()).log(Level.SEVERE,
+                        null, ex);
       }
     }
     return failedList;
@@ -840,7 +886,7 @@ public class ProjectController {
   public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
           DistributedFileSystemOps dfso)
           throws IOException {
-    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(projectname)),
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(projectname)),
             diskspaceQuotaInMB);
   }
 
@@ -855,7 +901,8 @@ public class ProjectController {
 //      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
 //          ". Cannot find quota for the project: " + path);
 //    }
-  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
+  public HdfsInodeAttributes
+          getHdfsQuotas(int inodeId) throws AppException {
 
     HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
     if (res == null) {
@@ -927,7 +974,8 @@ public class ProjectController {
    * @param newRole
    * @throws AppException
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  @TransactionAttribute(
+          TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, String owner,
           String toUpdateEmail, String newRole) throws AppException {
     Users projOwner = project.getOwner();
@@ -1052,39 +1100,53 @@ public class ProjectController {
   }
 
   public void addExampleJarToExampleProject(String username, Project project,
-          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
+          DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
+          TourProjectType projectType) throws
           AppException {
 
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, "TestJob",
-              "jar file to calculate pi", -1, false, true, dfso, udfso);
+              "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
-    String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
-            + "/";
-    try {
-      File dir = new File(exampleDir);
-      File[] file = dir.listFiles((File dir1, String name)
-              -> name.matches("spark-examples(.*).jar"));
-      if (file.length == 0) {
-        throw new IllegalStateException("No spark-examples*.jar was found in "
-                + dir.getAbsolutePath());
+    
+    if (TourProjectType.SPARK.equals(projectType)) {
+      String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
+          + "/";
+      try {
+        File dir = new File(exampleDir);
+        File[] file = dir.listFiles((File dir1, String name)
+            -> name.matches("spark-examples(.*).jar"));
+        if (file.length == 0) {
+          throw new IllegalStateException("No spark-examples*.jar was found in "
+              + dir.getAbsolutePath());
+        }
+        if (file.length > 1) {
+          logger.log(Level.WARNING,
+              "More than one spark-examples*.jar found in {0}.", dir.
+                  getAbsolutePath());
+        }
+        udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
+            File.separator + Settings.DIR_ROOT + File.separator + project.
+                getName() + "/TestJob/spark-examples.jar");
+    
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
       }
-      if (file.length > 1) {
-        logger.log(Level.WARNING,
-                "More than one spark-examples*.jar found in {0}.", dir.
-                        getAbsolutePath());
+    } else if (TourProjectType.KAFKA.equals(projectType)) {
+      // Get the JAR from /user/glassfish
+      String kafkaExampleSrc = "/user/glassfish/" + Settings
+          .HOPS_KAFKA_TOUR_JAR;
+      String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
+          + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
+      try {
+        udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
       }
-      udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
-              File.separator + Settings.DIR_ROOT + File.separator + project.
-                      getName() + "/TestJob/spark-examples.jar");
-
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
     }
-
   }
 
   public YarnPriceMultiplicator getYarnMultiplicator() {
@@ -1100,6 +1162,23 @@ public class ProjectController {
 
   public void logProject(Project project, OperationType type) {
     operationsLogFacade.persist(new OperationsLog(project, type));
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void createAnacondaEnv(Project project) throws AppException {
+    pythonDepsFacade.getPreInstalledLibs(project);
+
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void removeAnacondaEnv(Project project) throws AppException {
+    pythonDepsFacade.removeProject(project);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void cloneAnacondaEnv(Project srcProj, Project destProj) throws
+          AppException {
+    pythonDepsFacade.cloneProject(srcProj, destProj.getName());
   }
 
   /**
@@ -1123,26 +1202,110 @@ public class ProjectController {
               + "{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host"
               + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
               + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
+              + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
               + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
       JSONObject resp = sendElasticsearchReq(params);
+      boolean templateCreated = false;
       if (resp.has("acknowledged")) {
-        return (Boolean) resp.get("acknowledged");
+        templateCreated = (Boolean) resp.get("acknowledged");
       }
 
+      //Create Kibana index
+      params.clear();
+      params.put("op", "PUT");
+      params.put("project", project);
+      params.put("resource", ".kibana/index-pattern");
+      params.put("data", "{\"title\" : \"" + project
+              + "\", \"fields\" : \"[{\\\"name\\\":\\\"_index\\\",\\\"type\\\":"
+              + "\\\"string\\\",\\\"count\\\":0,\\\"scripted\\\":false,"
+              + "\\\"indexed\\\":false,\\\"analyzed\\\":false,\\\""
+              + "doc_values\\\":false},{\\\"name\\\":\\\"project\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+              + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"path\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"file\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@version\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"host\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+              + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"logger_name\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"class\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"jobname\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+              + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"timestamp\\\","
+              + "\\\"type\\\":\\\"date\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
+              + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"method\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"thread\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"message\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"priority\\\","
+              + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
+              + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
+              + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@timestamp"
+              + "\\\",\\\"type\\\":\\\"date\\\",\\\"count\\\":0,"
+              + "\\\"scripted\\\":false,\\\"indexed\\\":true,\\\"analyzed"
+              + "\\\":false,\\\"doc_values\\\":true},{\\\"name\\\":"
+              + "\\\"application\\\",\\\"type\\\":\\\"string\\\",\\\"count"
+              + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":true,"
+              + "\\\"analyzed\\\":false,\\\"doc_values\\\":true},{"
+              + "\\\"name\\\":\\\"_source\\\",\\\"type\\\":\\\"_source"
+              + "\\\",\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
+              + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values\\\":false},"
+              + "{\\\"name\\\":\\\"_id\\\",\\\"type\\\":\\\"string\\\","
+              + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
+              + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{\\\"name\\\":"
+              + "\\\"_type\\\",\\\"type\\\":\\\"string\\\",\\\"count"
+              + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
+              + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{"
+              + "\\\"name\\\":\\\"_score\\\",\\\"type\\\":\\\"number\\\","
+              + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
+              + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values"
+              + "\\\":false}]\"}");
+      resp = sendElasticsearchReq(params);
+      boolean kibanaIndexCreated = false;
+      if (resp.has("acknowledged")) {
+        kibanaIndexCreated = (Boolean) resp.get("acknowledged");
+      }
+
+      if (kibanaIndexCreated && templateCreated) {
+        return true;
+      }
     } else {
       //1. Delete Kibana index
-      params.put("url", settings.getPublicSearchEndpoint().substring(0,
-              settings.getPublicSearchEndpoint().indexOf("/api"))
-              + "/kibana/elasticsearch/.kibana/index-pattern/" + project);
+      params.put("project", project);
+      params.put("op", "DELETE");
+      params.put("resource", ".kibana/index-pattern");
+      JSONObject resp = sendElasticsearchReq(params);
+      boolean kibanaIndexDeleted = false;
+      if (resp != null && resp.has("acknowledged")) {
+        kibanaIndexDeleted = (Boolean) resp.get("acknowledged");
+      }
+      params.clear();
+      //2. Delete Elasticsearch Index
       params.put("project", project);
       params.put("op", "DELETE");
       params.put("resource", "");
-      //2. Delete Elasticsearch Index
-
-      JSONObject resp = sendElasticsearchReq(params);
-      boolean indexDeleted = false;
+      resp = sendElasticsearchReq(params);
+      boolean elasticIndexDeleted = false;
       if (resp != null && resp.has("acknowledged")) {
-        indexDeleted = (Boolean) resp.get("acknowledged");
+        elasticIndexDeleted = (Boolean) resp.get("acknowledged");
       }
       //3. Delete Elasticsearch Template
       params.put("resource", "_template");
@@ -1152,7 +1315,7 @@ public class ProjectController {
         templateDeleted = (Boolean) resp.get("acknowledged");
       }
 
-      if (indexDeleted && templateDeleted) {
+      if (elasticIndexDeleted && templateDeleted && kibanaIndexDeleted) {
         return true;
       }
     }
@@ -1205,6 +1368,7 @@ public class ProjectController {
               "resource") + " was not found");
     } catch (IOException ex) {
       if (ex.getMessage().contains("kibana")) {
+        logger.log(Level.WARNING, "error", ex);
         logger.log(Level.WARNING, "Kibana index could not be deleted for "
                 + params.get("project"));
       } else {

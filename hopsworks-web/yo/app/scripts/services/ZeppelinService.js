@@ -8,7 +8,10 @@ angular.module('hopsWorksApp')
               websocketCalls.ws.reconnectIfNotNormalClose = true;
 
               websocketCalls.sendNewEvent = function (data) {
-                console.log('Send >> %o, %o', data.op, data);
+                data.principal = 'anonymous';
+                data.ticket = 'anonymous';
+                data.roles = '';
+                console.log('Send >> %o, %o, %o, %o, %o', data.op, data.principal, data.ticket, data.roles, data);
                 websocketCalls.ws.send(JSON.stringify(data));
               };
 
@@ -71,6 +74,12 @@ angular.module('hopsWorksApp')
               },
               stopLivySession: function (settingId, sessionId) {
                 return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/livy/sessions/delete/' + settingId + '/' + sessionId);
+              },
+              getLivySessionAppId: function (sessionId) {
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/livy/sessions/appId/' + sessionId);
+              },
+              getSparkAppId: function () {
+                return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/spark/appId');
               }
             };
           }]);

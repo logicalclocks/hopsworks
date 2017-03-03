@@ -48,6 +48,7 @@ import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.zeppelin.notebook.NotebookAuthorization;
 
 /**
  * Created for org.apache.zeppelin.rest.message on 17/03/16.
@@ -115,6 +116,9 @@ public class LoginRestApi {
 
         response = new JsonResponse(Response.Status.OK, "", data);
         //if no exception, that's it, we're done!
+        
+        //set roles for user in NotebookAuthorization module
+        NotebookAuthorization.getInstance().setRoles(principal, roles);
       } catch (UnknownAccountException uae) {
         //username wasn't in the system, show them an error message?
         LOG.error("Exception in login: ", uae);

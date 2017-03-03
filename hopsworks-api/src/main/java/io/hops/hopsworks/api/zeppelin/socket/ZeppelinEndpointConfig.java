@@ -1,11 +1,14 @@
 package io.hops.hopsworks.api.zeppelin.socket;
 
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
+import org.apache.zeppelin.util.WatcherSecurityKey;
 
 public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
 
@@ -17,6 +20,14 @@ public class ZeppelinEndpointConfig extends ServerEndpointConfig.Configurator {
   public void modifyHandshake(ServerEndpointConfig config,
           HandshakeRequest request, HandshakeResponse response) {
 
+    Map<String, List<String>> headers = request.getHeaders();
+    if (headers != null && headers.containsKey(WatcherSecurityKey.HTTP_HEADER)) {
+      List<String> header = headers.get(WatcherSecurityKey.HTTP_HEADER);
+      if (header.size() > 0) {
+        config.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, header.
+                get(0));
+      }
+    }
     HttpSession httpSession = (HttpSession) request.getHttpSession();
     String user = request.getUserPrincipal().getName();
     config.getUserProperties().put("httpSession", httpSession);

@@ -16,8 +16,19 @@
     <module>hopsworks-admin</module>
     <module>hopsworks-api</module>
     <module>hopsworks-ear</module>
-    <module>hopsworks-web</module>
   </modules>
+
+  <profiles>
+    <profile>
+      <id>web</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation> 
+      <modules>
+        <module>hopsworks-web</module>
+      </modules>
+    </profile>
+  </profiles>
 
   <properties>
     <java.version>1.8</java.version>

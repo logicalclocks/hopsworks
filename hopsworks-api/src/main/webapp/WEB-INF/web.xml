@@ -12,7 +12,7 @@
   <!-- Kibana proxy servlet -->
   <servlet>
     <servlet-name>KibanaProxyServlet</servlet-name>
-    <servlet-class>io.hops.kibana.KibanaProxyServlet</servlet-class>
+    <servlet-class>io.hops.hopsworks.api.kibana.KibanaProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:5601/</param-value>
@@ -33,7 +33,7 @@
   <!-- Grafana proxy servlet -->
   <servlet>
     <servlet-name>GrafanaProxyServlet</servlet-name>
-    <servlet-class>io.hops.kibana.GrafanaProxyServlet</servlet-class>
+    <servlet-class>io.hops.hopsworks.api.kibana.GrafanaProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:3000/</param-value>
@@ -68,7 +68,7 @@
     </init-param-->
     <init-param>
       <param-name>swagger.api.basepath</param-name>
-      <param-value>http://localhost:8080/hopsworks-api/api</param-value>
+      <param-value>/hopsworks-api/api</param-value>
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
@@ -126,14 +126,15 @@
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>
   </login-config>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
   <session-config>
-    <!-- on production systems you might have another value for the timeout -->
     <session-timeout>30</session-timeout>
-    <!-- we don't want to use the default name JSESSIONID because this
-    tells everyone (especially hackers) that our application is based on java -->
     <cookie-config>
-      <name>SESSIONID</name>
+      <name>JSESSIONID</name>
       <path>/</path>
     </cookie-config>
-  </session-config>
+  </session-config>  
 </web-app>

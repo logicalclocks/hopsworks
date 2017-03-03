@@ -27,7 +27,7 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of blocked acouunt
    */
-  public final static String BIOBANKCLOUD_SUPPORT_EMAIL
+  public final static String HOPSWORKS_SUPPORT_EMAIL
           = "support@hops.io";
 
   /*
@@ -64,7 +64,7 @@ public class UserAccountsEmailMessages {
   /**
    * Build an email message for Yubikey users upon registration.
    *
-   * @param username
+   * @param path
    * @param key
    * @return
    */
@@ -79,12 +79,12 @@ public class UserAccountsEmailMessages {
             + "Afterwards we will activate your account within 48 hours and send "
             + "you a Yubikey stick to your address.\n\n\n";
 
-    String url = path + "/security/validate_account.xhtml?key=" + key;
+    String url = path + "/hopsworks-admin/security/validate_account.xhtml?key=" + key;
 
     String l3 = "To confirm your email click " + url + " \n\n";
 
     String l4 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3 + l4;
 
@@ -94,7 +94,7 @@ public class UserAccountsEmailMessages {
   /**
    * Build an email message for mobile users upon registration.
    *
-   * @param username
+   * @param path
    * @param key
    * @return
    */
@@ -103,18 +103,18 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a smartphone account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for HopsWorks on your behalf.\n\n";
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
             + ACCOUNT_ACITVATION_PERIOD
             + " hours after validating your email address.\n\n\n";
 
-    String url = path + "/security/validate_account.xhtml?key=" + key;
+    String url = path + "/hopsworks-admin/security/validate_account.xhtml?key=" + key;
 
     String l3 = "To confirm your email click " + url + " \n\n";
     String l4 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3 + l4;
 
@@ -129,7 +129,7 @@ public class UserAccountsEmailMessages {
     String l2
             = "If you have any questions please visit www.hops.io or contact support@hops.io";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3;
     return message;
@@ -144,7 +144,7 @@ public class UserAccountsEmailMessages {
 
     String tmp_pass = "Password:" + random_password + "\n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + tmp_pass + l3;
     return message;
@@ -157,7 +157,7 @@ public class UserAccountsEmailMessages {
             + "A security question change has been requested on your behalf.\n\n";
     String l2 = "Your security question has been changed successfully.\n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3;
     return message;
@@ -170,7 +170,7 @@ public class UserAccountsEmailMessages {
             + "We receieved an account deactivation request and your HopsWorks "
             + "account has been deactivated.\n\n";
     String l2 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2;
     return message;
@@ -189,7 +189,7 @@ public class UserAccountsEmailMessages {
             + "A password reset has been requested on your behalf.\n\n";
     String l2 = "Your password has been changed successfully.\n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2 + l3;
 
     return message;
@@ -203,7 +203,7 @@ public class UserAccountsEmailMessages {
     String l2 = "You can login with your username: " + username
             + " and other credentials you setup.\n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2 + l3;
 
     return message;
@@ -218,7 +218,7 @@ public class UserAccountsEmailMessages {
             = "We sent a Yubikey device to your postal address. You can use that "
             + "device in addition to usename/password to login to the platform. \n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2 + l3;
 
     return message;
@@ -230,7 +230,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "Your HopsWorks account request has been rejected.\n\n";
     String l2 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2;
 
     return message;
@@ -247,7 +247,7 @@ public class UserAccountsEmailMessages {
 
     String tmp_pass = "Code:" + random_password + "\n\n\n";
     String l2 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + tmp_pass + l2;
 
@@ -264,7 +264,7 @@ public class UserAccountsEmailMessages {
             + ACCOUNT_ACITVATION_PERIOD
             + " hours and a new device will be sent to your postal address.\n\n\n";
     String l3 = "If you have any questions please contact "
-            + BIOBANKCLOUD_SUPPORT_EMAIL;
+            + HOPSWORKS_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3;
 
