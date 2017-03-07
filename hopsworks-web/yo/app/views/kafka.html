@@ -26,7 +26,7 @@
                   <li ng-class="{'active' : kafkaCtrl.showSchemas === 1}"><a
                           ng-click="kafkaCtrl.showSchema()" id="kafkaSchema">
                     Schemas</a></li>
-                </ul>                
+                </ul>
 
               </div>
               <div class="row"><br></div>
@@ -37,10 +37,10 @@
                 </div>
                 <br>
                 <div class="col-sm-2">
-                  <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0" 
+                  <button type="button" ng-disabled="kafkaCtrl.maxNumTopics - kafkaCtrl.numTopicsUsed <= 0"
                           ng-click="kafkaCtrl.createTopic()" class="btn btn-default btn-success control-label"
                     id="newTopicBtn">
-                    New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i> 
+                    New Topic<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i>
                   </button>
 
                 </div>
@@ -53,10 +53,10 @@
                           ng-click="kafkaCtrl.createSchema()"
                           class="btn btn-default btn-success control-label">
                     New Avro Schema<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                    </i> 
+                    </i>
                   </button>
                 </div>
-              </div>              
+              </div>
             </div>
           </form>
 
@@ -108,7 +108,7 @@
                       </td>
                       <!--<td ng-if="kafkaCtrl.activeId === acl.id"><input type="text" class="form-control" id="aclUsername" ng-model="kafkaCtrl.projectName" placeholder="project name"></td>-->
                       <td ng-if="kafkaCtrl.activeId === -1" >{{acl.userEmail}}</td>
-                      <td  ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">        
+                      <td  ng-if="kafkaCtrl.activeId === acl.id" style="text-align: center;">
                       <ui-select style="min-width: 200px;" name="project_member" theme="select2"
                                  ng-model="kafkaCtrl.userEmail"  required>
 
@@ -220,15 +220,15 @@
             </td>
 
             <td class="col-sm-1" style="vertical-align: top !important;">
-              <button type="button" 
-                      ng-click="kafkaCtrl.addAcl(row.name)" class="btn btn-default btn-primary btn-sm"> 
+              <button type="button"
+                      ng-click="kafkaCtrl.addAcl(row.name)" class="btn btn-default btn-primary btn-sm">
                 <i class="glyphicon glyphicon-plus">
                 </i>
               </button>
             </td>
 
             <td class="col-sm-1" style="vertical-align: top !important;">
-              <button  type="button" 
+              <button  type="button"
                        ng-click="kafkaCtrl.shareTopic(row.name)" class="btn btn-default btn-success btn-sm">
                 <i class="glyphicon glyphicon-share-alt">
                 </i>
@@ -265,7 +265,7 @@
             <br ng-show="row.isSelected">
 
             <div ng-show="kafkaCtrl.sharedTopics.length > 0"><br></div>
-            <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.sharedTopics.length > 0"> 
+            <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.sharedTopics.length > 0">
               <thead>
                 <tr>
                   <th class="col-sm-10">Shared Topics</th>
@@ -290,7 +290,7 @@
             </table>
 
 
-          </div>      
+          </div>
           <div ng-show="kafkaCtrl.showSchemas == 1">
             <br>
             <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.schemas.length > 0">
@@ -323,13 +323,13 @@
               <td class="col-sm-2">
                 <button type="button"
                         ng-click="kafkaCtrl.viewSchemaContent(row.name, $index)" class="btn btn-sm btn-primary">
-                  View<i style="margin-left: 10px"></i> 
+                  View<i style="margin-left: 10px"></i>
                 </button>
               </td>
               <td class="col-sm-2">
                 <button type="button"
                         ng-click="kafkaCtrl.updateSchemaContent(row)" class="btn btn-sm btn-primary">
-                  Update<i style="margin-left: 10px"></i> 
+                  Update<i style="margin-left: 10px"></i>
                 </button>
               </td>
               <td class="col-sm-2">
@@ -338,7 +338,7 @@
                   </i>
                 </button>
               </td>
-              </tr>                
+              </tr>
               </tbody>
             </table>
           </div>
@@ -348,7 +348,9 @@
   </div>
   <tour class="ng-scope" step="kafkaCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
-        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView">
+        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView
+          && (projectCtrl.tourService.informAndTips
+              || projectCtrl.tourService.tipsOnly)">
     <virtual-step
             class="ng-scope"
             tourtip="Click Next OR click on the 'Schemas' tab to continue!"

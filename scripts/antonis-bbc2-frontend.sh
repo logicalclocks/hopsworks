@@ -7,7 +7,7 @@ export key=private_key
 usr=antonis
 basedir=/srv/hops/domain1
 
-scp -i $HOME/.ssh/bbc_id_rsa ${usr}@${SERVER}:/home/${usr}/hopsworks-chef/.vagrant/machines/default/virtualbox/private_key .  
+scp -i $HOME/.ssh/bbc_id_rsa ${usr}@${SERVER}:/home/${usr}/rpc_tls/hopsworks-chef/.vagrant/machines/default/virtualbox/private_key .  
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd ${basedir} && sudo chown -R glassfish:vagrant docroot && sudo chmod -R 775 *"
 
 scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -P ${PORT} -r ../hopsworks-web/yo/app/ vagrant@${SERVER}:${basedir}/docroot
