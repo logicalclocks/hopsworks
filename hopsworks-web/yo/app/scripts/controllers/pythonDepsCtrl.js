@@ -214,8 +214,12 @@ angular.module('hopsWorksApp')
 
             self.install = function (lib, version) {
 
+              if (version.version === undefined || version.version === null || version.version.toUpperCase() === "NONE") {
+                growl.error("Select a version to install from the dropdown list", {title: 'Error', ttl: 3000});
+                return;
+              }
               self.installing[lib] = true;
-
+              
               var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(

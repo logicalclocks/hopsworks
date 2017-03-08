@@ -188,13 +188,13 @@ angular.module('hopsWorksApp')
                   function (success) {
                     self.user = success.data;
                     var tourState = self.user.toursState;
-                    if (tourState == 0) {
+                    if (tourState === 0) {
                       self.tourService.setInformAndTipsState();
-                    } else if (tourState == 1) {
+                    } else if (tourState === 1) {
                       self.tourService.setTipsOnlyState();
-                    } else if (tourState == 2) {
+                    } else if (tourState === 2) {
                       self.tourService.setInformOnly();
-                    } else if (tourState == 3) {
+                    } else if (tourState === 3) {
                       self.tourService.setShowNothingState();
                     } else {
                       self.tourService.setDefaultTourState();
