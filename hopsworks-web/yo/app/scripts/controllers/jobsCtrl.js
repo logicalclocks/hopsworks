@@ -47,10 +47,31 @@ angular.module('hopsWorksApp')
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
               self.workingArray[id] = "true";
+//              StorageService.store(self.projectId + "_jobstopclicked_"+id, self.workingArray[id]);
+//              var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+//              console.log("status: "+status);
             };
 
             self.stopbuttonClickedToggle = function (id, display) {
               self.workingArray[id] = display;
+              var jobClickStatus = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+              StorageService.store(self.projectId + "_jobstopclicked_"+id, jobClickStatus);
+              if(jobClickStatus === "stopping"){
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, "killing");
+              } else {
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, "stopping");
+              }
+            };
+            
+            self.getJobClickStatus = function(id){
+              var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+              if(status === "stopping" || status === "killing"){
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, status);
+              }
+              if(status !== "stopping" && status !== "killing"){
+                status = "running";
+              }
+              return status;
             };
 
             self.copy = function () {
@@ -220,6 +241,7 @@ angular.module('hopsWorksApp')
                                           function (success) {
                                             self.toggle(job, index);
                                             self.buttonClickedToggle(job.id, true);
+                                            StorageService.store(self.projectId + "_jobstopclicked_"+job.id, "running");
 //                                            self.stopbuttonClickedToggle(job.id, false);
                                             self.getRunStatus();
                                           }, function (error) {
@@ -235,7 +257,7 @@ angular.module('hopsWorksApp')
             };
 
             self.stopJob = function (jobId) {
-              self.stopbuttonClickedToggle(jobId, "false");
+              self.stopbuttonClickedToggle(jobId, "true");
               JobService.stopJob(self.projectId, jobId).then(
                       function (success) {
                         self.getRunStatus();
@@ -244,7 +266,14 @@ angular.module('hopsWorksApp')
                           ' job', ttl: 15000});
               });
             };
-
+            
+            self.killJob = function (jobId) {
+              ModalService.confirm('sm', 'Confirm', 'Attemping to stop your job. For streaming jobs this operation can take a few minutes... Do you really want to kill this job and risk losing streaming events?').then(
+                function (success) {
+                  self.stopJob(jobId);
+                }
+              );
+            };
             /**
              * Navigate to the new job page.
              * @returns {undefined}
