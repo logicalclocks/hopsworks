@@ -362,7 +362,7 @@
                           Retry log
                         </button><br>
                         <textarea ng-show="item.errPath === undefined" class="form-control" rows="15" placeholer="No error information available" readonly>
-                                       {{item.err}}                                     
+                                       {{item.err}}
                         </textarea>
                         <div ng-show="item.errPath !== undefined" contenteditable="false" class="form-control" rows="15" placeholer="No error information available" readonly>
                           {{item.err}}
@@ -381,7 +381,9 @@
     <!-- /#wrapper -->
   </div>
 <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
-      post-tour="closeTour()" ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'">
+      post-tour="closeTour()" ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'
+        && (projectCtrl.tourService.informAndTips
+            || projectCtrl.tourService.tipsOnly)">
   <virtual-step
     class="ng-scope"
     tourtip="Click Next OR click on the 'New job' button to continue spark"
@@ -412,7 +414,9 @@
 </tour>
     <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
           post-tour="closeTour()"
-          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'">
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
+            && (projectCtrl.tourService.informAndTips
+                || projectCtrl.tourService.tipsOnly)">
         <virtual-step
                 class="ng-scope"
                 tourtip="Click Next OR click on the 'New job' button to continue kafka"
@@ -433,4 +437,3 @@
                 on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
         ></virtual-step>
     </tour>
-
