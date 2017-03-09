@@ -181,7 +181,8 @@ angular.module('hopsWorksApp')
                           self.resultsMessageShowing = false;
                         }
                         for (var i = 0; i < self.searchResults.length; i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}, "installing": false};
+                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": self.searchResults[i].versions[0].version, 
+                              "status": self.searchResults[i].versions[0].status}, "installing": false};
                         }
 
                       }, function (error) {
@@ -197,6 +198,12 @@ angular.module('hopsWorksApp')
 
 
             self.installOneHost = function (lib, version, host) {
+
+              if (version.version === undefined || version.version === null || version.version.toUpperCase() === "NONE") {
+                growl.error("Select a version to install from the dropdown list", {title: 'Error', ttl: 3000});
+                return;
+              }
+
 
               self.installing[host][lib] = true;
 
