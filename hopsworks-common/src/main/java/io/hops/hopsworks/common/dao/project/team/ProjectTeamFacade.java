@@ -129,8 +129,8 @@ public class ProjectTeamFacade {
    * @param member
    * @return
    */
-  public List<ProjectTeam> findByMember(Users member) {
-    Query query = em.createNamedQuery("ProjectTeam.findByTeamMember",
+  public List<ProjectTeam> findActiveByMember(Users member) {
+    Query query = em.createNamedQuery("ProjectTeam.findActiveByTeamMember",
             ProjectTeam.class).setParameter("user", member);
     List<ProjectTeam> x = query.getResultList();
 
@@ -275,6 +275,22 @@ public class ProjectTeamFacade {
             Users.class);
     query.setParameter("email", email);
     updateTeamRole(project, query.getSingleResult(), teamRole);
+  }
+
+  /**
+   * Update the team role of all users in Project <i>project</i>.
+   * <p/>
+   * @param project
+   * @param teamRole
+   */
+  public List<ProjectTeam> updateTeamRole(Project project, ProjectRoleTypes teamRole) {
+    List<ProjectTeam> teamMembers = findMembersByProject(project);
+    for (ProjectTeam meberber : teamMembers) {
+      meberber.setTeamRole(teamRole.getRole());
+      meberber.setTimestamp(new Date());
+      em.merge(meberber);
+    }
+    return teamMembers;
   }
 
   /**

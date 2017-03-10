@@ -85,7 +85,10 @@ import io.hops.hopsworks.common.dao.metadata.Template;
   @NamedQuery(name = "Inode.findRootByName",
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId "
-          + "AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId")})
+          + "AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId"),
+  @NamedQuery(name = "Inode.findHistoryFileByHdfsUser",
+      query = "SELECT i FROM Inode i WHERE i.hdfsUser = :hdfsUser AND " + "i.inodePK.name LIKE '%snappy%'")})
+
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;

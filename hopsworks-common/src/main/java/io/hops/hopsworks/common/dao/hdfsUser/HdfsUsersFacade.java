@@ -5,6 +5,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.List;
 
 @Stateless
 public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
@@ -35,6 +36,16 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
     }
   }
 
+  public List<HdfsUsers> findProjectUsers(String projectName) {
+    try {
+      return em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class).
+              setParameter("name", projectName).
+              getResultList();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
   public void persist(HdfsUsers user) {
     em.persist(user);
   }

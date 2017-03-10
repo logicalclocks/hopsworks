@@ -5,6 +5,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.List;
 
 @Stateless
 public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
@@ -50,6 +51,16 @@ public class HdfsGroupsFacade extends AbstractFacade<HdfsGroups> {
     if (g != null) {
       em.createNamedQuery("HdfsGroups.delete", HdfsGroups.class).
               setParameter("id", group.getId()).executeUpdate();
+    }
+  }
+  
+  public List<HdfsGroups> findProjectGroups(String projectName) {
+    try {
+      return em.createNamedQuery("HdfsGroups.findProjectGroups", HdfsGroups.class).
+              setParameter("name", projectName).
+              getResultList();
+    } catch (NoResultException e) {
+      return null;
     }
   }
 }

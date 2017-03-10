@@ -279,23 +279,6 @@ angular.module('hopsWorksApp')
               );
             };
 
-            self.deleteOnlyProject = function (projectId) {
-              self.working[projectId] = true;
-              ProjectService.remove({id: projectId}).$promise.then(
-                      function (success) {
-                        growl.success(success.successMessage, {title: 'Success', ttl: 15000});
-                        updateUIAfterChange(false);
-                        if (self.tourService.currentStep_TourOne > -1) {
-                          self.tourService.resetTours();
-                        }
-                        self.working[projectId] = false;
-                      },
-                      function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                        self.working[projectId] = false;
-                      }
-              );
-            };
             self.deleteProjectAndDatasets = function (projectId) {
               self.working[projectId] = true;
               ProjectService.delete({id: projectId}).$promise.then(

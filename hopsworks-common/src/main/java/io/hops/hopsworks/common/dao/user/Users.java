@@ -176,7 +176,7 @@ public class Users implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "tours_enabled")
+  @Column(name = "tours_state")
   private boolean toursEnabled;
   
   @JoinTable(name = "hopsworks.people_group",
