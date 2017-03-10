@@ -295,7 +295,7 @@ public class FlinkYarnRunnerBuilder {
   public void setParallelism(int parallelism) {
     this.parallelism = parallelism;
   }
-
+ 
   /**
    * This method will block until the ApplicationMaster/JobManager have been
    * deployed on YARN.
@@ -308,13 +308,14 @@ public class FlinkYarnRunnerBuilder {
    * @param flinkConfDir
    * @param flinkConfFile
    * @param nameNodeIpPort
+   * @param certsDir
    * @return
    * @throws java.io.IOException
    */
   protected YarnRunner getYarnRunner(String project, final String flinkUser,
           String jobUser, String hadoopDir, final String flinkDir,
           final String flinkConfDir, final String flinkConfFile,
-          final String nameNodeIpPort) throws IOException {
+          final String nameNodeIpPort, final String certsDir) throws IOException {
 
     //Create the YarnRunner builder for Flink, proceed with setting values
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
@@ -336,10 +337,8 @@ public class FlinkYarnRunnerBuilder {
 
     builder.setFlinkCluster(cluster);
     //Remove any Kafka certificates after job is finished
-    builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
-            getProjectKeystoreName(project, jobUser));
-    builder.addFilesToRemove(Settings.FLINK_KAFKA_CERTS_DIR + "/" + HopsUtils.
-            getProjectTruststoreName(project, jobUser));
+    builder.addFilesToRemove(certsDir + "/" + HopsUtils.getProjectKeystoreName(project, jobUser));
+    builder.addFilesToRemove(certsDir + "/" + HopsUtils.getProjectTruststoreName(project, jobUser));
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR;
@@ -379,24 +378,16 @@ public class FlinkYarnRunnerBuilder {
         cluster.addHopsworksResource(dto.getName(), resource);
       }
     }
-    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps
-              .getRestEndpoint());
-    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getKeystorePwd());
-    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.
-              getTruststorePwd());
+    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
+    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.getKeystorePwd());
+    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.getTruststorePwd());
     if (serviceProps.getKafka() != null) {
       
-      addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
-              getKafka().
-              getBrokerAddresses());
-      addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
-              getKafka().getTopics());
-      addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
-              serviceProps.getProjectId()));
+      addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());
+      addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.getKafka().getTopics());
+      addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(serviceProps.getProjectId()));
       if (serviceProps.getKafka().getConsumerGroups() != null) {
-        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,
-                serviceProps.getKafka().getConsumerGroups());
+        addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,serviceProps.getKafka().getConsumerGroups());
       }
     }
     if (!sysProps.isEmpty()) {

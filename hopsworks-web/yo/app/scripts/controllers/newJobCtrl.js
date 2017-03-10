@@ -567,6 +567,9 @@ angular.module('hopsWorksApp')
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
                             self.runConfig = success.data;
+                            if(self.runConfig.type.toLowerCase() == "pyspark"){
+                              self.jobtype = 4;
+                            }
                             //Update the min/max spark executors based on 
                             //backend configuration 
                             if (typeof runConfig !== 'undefined') {

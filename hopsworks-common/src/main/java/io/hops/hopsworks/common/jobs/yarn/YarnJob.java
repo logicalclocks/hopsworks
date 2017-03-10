@@ -31,8 +31,6 @@ import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 
 public abstract class YarnJob extends HopsJob {
 
@@ -149,28 +147,20 @@ public abstract class YarnJob extends HopsJob {
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     //Check if this job is using Kakfa, and include certificate
     //in local resources
+    serviceProps = new ServiceProperties();
+    serviceProps.setRestEndpoint(services.getSettings().getRestEndpoint());
+    serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
+    serviceProps.setProjectId(jobDescription.getProject().getId());
+    serviceProps.setProjectName(jobDescription.getProject().getName());
+    serviceProps.setJobName(jobDescription.getName());
+    serviceProps.setKeystorePwd(services.getSettings().getHopsworksMasterPasswordSsl());
+    serviceProps.setTruststorePwd(services.getSettings().getHopsworksMasterPasswordSsl());
     Collection<ProjectServices> projectServices = jobDescription.getProject().
             getProjectServicesCollection();
     if (projectServices != null && !projectServices.isEmpty()) {
-      serviceProps = new ServiceProperties();
-      serviceProps.setRestEndpoint(services.getSettings().getRestEndpoint());
-      serviceProps.setElastic(new ElasticProperties(services.getSettings().getElasticEndpoint()));
-      serviceProps.setProjectId(jobDescription.getProject().getId());
-      serviceProps.setProjectName(jobDescription.getProject().getName());
-      serviceProps.setJobName(jobDescription.getName());
       Iterator<ProjectServices> iter = projectServices.iterator();
       while (iter.hasNext()) {
         ProjectServices projectService = iter.next();
-        HopsUtils.copyUserKafkaCerts(services.getUserCerts(), projectService.
-                  getProject(), user.getUsername(),
-                  services.getSettings().getHopsworksTmpCertDir(),
-                  Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
-                  dfso, projectLocalResources, jobSystemProperties,
-                  nameNodeIpPort);
-        serviceProps.setKeystorePwd(services.getSettings().
-                  getHopsworksMasterPasswordSsl());
-        serviceProps.setTruststorePwd(services.getSettings().
-                  getHopsworksMasterPasswordSsl());
         //If the project is of type KAFKA
         if (projectService.getProjectServicesPK().getService()
                 == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()

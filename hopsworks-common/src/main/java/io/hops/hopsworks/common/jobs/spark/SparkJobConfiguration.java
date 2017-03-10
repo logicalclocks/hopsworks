@@ -19,7 +19,9 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String args;
   private String historyServerIp;
   private String anacondaDir;
-
+  private JobType type;
+  
+  
   //Kafka properties
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -222,12 +224,22 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   @Override
   public JobType getType() {
-    if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
-      return JobType.PYSPARK;
-    } else {
-      return JobType.SPARK;
-    }
+    return type;
   }
+
+  public void setType(JobType type) {
+    this.type = type;
+  }
+  
+
+//  @Override
+//  public JobType getType() {
+//    if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
+//      return JobType.PYSPARK;
+//    } else {
+//      return JobType.SPARK;
+//    }
+//  }
 
   @Override
   public MutableJsonObject getReducedJsonObject() {
@@ -253,7 +265,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_DYNEXECS_MAX_SELECTED, "" + selectedMaxExecutors);
     obj.set(KEY_DYNEXECS_INIT, "" + numberOfExecutorsInit);
 
-    obj.set(KEY_TYPE, JobType.SPARK.name());
+    obj.set(KEY_TYPE, type.getName());
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
     obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
@@ -277,7 +289,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
-      if (type != JobType.SPARK) {
+      if (type != JobType.SPARK && type != JobType.PYSPARK) {
         throw new IllegalArgumentException("JobType must be SPARK.");
       }
       //First: fields that can be null or empty

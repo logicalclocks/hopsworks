@@ -165,10 +165,12 @@ public class SparkController {
         Attributes atts = mf.getMainAttributes();
         if (atts.containsKey(Name.MAIN_CLASS)) {
           config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+          config.setType(JobType.SPARK);
         }
       }
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
+      config.setType(JobType.PYSPARK);
     }
     config.setAppPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());

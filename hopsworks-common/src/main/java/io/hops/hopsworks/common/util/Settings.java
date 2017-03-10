@@ -577,8 +577,6 @@ public class Settings {
   public static final String FLINK_AM_MAIN
       = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
-  public static final String FLINK_KAFKA_CERTS_DIR
-          = "/srv/hops/domain1/config";
 
   //Zeppelin constants
   public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
@@ -1032,6 +1030,10 @@ public class Settings {
 
   public String getHopsworksTmpCertDir() {
     return getHopsworksDomainDir() + File.separator + "kafkacerts";
+  }
+  
+  public String getFlinkKafkaCertDir() {
+    return getHopsworksDomainDir() + File.separator + "config";
   }
 
   //Dataset request subject
