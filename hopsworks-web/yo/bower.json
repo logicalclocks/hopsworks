@@ -62,6 +62,7 @@
   "moduleName": "hopsWorksApp",
   "resolutions": {
     "angular": "1.5.9",
+    "angular-route": "^1.5.9",
     "showdown": "1.x",
     "angular-animate": "~1.5.x",
     "angular-cookies": "^1.5.8",
@@ -70,7 +71,7 @@
     "eonasdan-bootstrap-datetimepicker": "^4.17.42",
     "angular-ui-select": "^0.19.4",
     "angular-smart-table": "^2.1.8",
-    "angular-aria": "^1.4.8",
+    "angular-aria": "^1.5.8",
     "angular-xeditable": "^0.2.0",
     "jquery": "2.0.3"
   }

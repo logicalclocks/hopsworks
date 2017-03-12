@@ -67,15 +67,15 @@ angular.module('hopsWorksApp')
                               self.upgrading[self.opsStatus[i].lib] = false;
                             }
                           }
-//                          if (self.opsStatus[i].status === "Installed") {
-//                            if (self.opsStatus[i].op === "INSTALL") {
-//                              finished[self.installing[i].lib] = false;
-//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
-//                              finished[self.uninstalling[opsStatus[i].lib] = false;
-//                            } else if (self.opsStatus[i].op === "UPGRADE") {
-//                              finished[self.upgrading[i].lib] = false;
-//                            }
-//                          }
+                          if (self.opsStatus[i].status === "Installed") {
+                            if (self.opsStatus[i].op === "INSTALL") {
+                              finished[self.installing[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+                              finished[self.uninstalling[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UPGRADE") {
+                              finished[self.upgrading[i].lib] = false;
+                            }
+                          }
                           self.selectedInstallStatus[self.opsStatus[i].lib] =
                                   {"host": {"host": "none", "lib": "Not installed"}, "installing": false};
                           if (self.opsStatus[i].op === "CREATE" ||
@@ -86,17 +86,23 @@ angular.module('hopsWorksApp')
                         }
 
 // If all hosts have completed for a library, making it installing false.
-//                        for (var key in self.installing) {
-//                          if (finished[key] !== false) {
-//                            if (self.opsStatus[i].op === "INSTALL") {
-//                              self.installing[key] = false;
-//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
-//                              self.uninstalling[key] = false;
-//                            } else if (self.opsStatus[i].op === "UPGRADE") {
-//                              self.upgrading[key] = false;
-//                            }
-//                          }
-//                        }
+                        var installed = true;
+                        var uninstalled = true;
+                        var upgraded = true; 
+                        for (var key in self.installing) {
+                          if (finished[key] !== false) {
+                            if (self.opsStatus[i].op === "INSTALL") {
+                              installed = false;
+                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+                              uninstalled = false;
+                            } else if (self.opsStatus[i].op === "UPGRADE") {
+                              upgraded = false;
+                            }
+                          }
+                        }
+                        self.installing[key] = installed;
+                        self.uninstalling[key] = uninstalled;
+                        self.upgrading[key] = upgraded;
 
 
 
@@ -110,7 +116,7 @@ angular.module('hopsWorksApp')
               getInstallationStatus();
             }, 5000);
 
-            getInstallationStatusInterval();
+//            getInstallationStatus();
 
             self.getInstallationStatus = function () {
               getInstallationStatus();
