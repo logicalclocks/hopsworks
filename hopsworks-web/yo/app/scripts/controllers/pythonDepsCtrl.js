@@ -110,7 +110,7 @@ angular.module('hopsWorksApp')
               getInstallationStatus();
             }, 5000);
 
-            getInstallationStatus();
+            getInstallationStatusInterval();
 
             self.getInstallationStatus = function () {
               getInstallationStatus();
