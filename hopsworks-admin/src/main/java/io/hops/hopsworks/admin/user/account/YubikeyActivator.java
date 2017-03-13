@@ -161,7 +161,7 @@ public class YubikeyActivator implements Serializable {
                 PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
                 UserAuditActions.SUCCESS.name(), "", yubi.getUid());
 
-        if (!"#".equals(this.sgroup.trim()) && (this.sgroup != null
+        if (!"#!".equals(this.sgroup.trim()) && (this.sgroup != null
                 || !this.sgroup.isEmpty())) {
           BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(this.sgroup);
           userManager.registerGroup(this.selectedYubikyUser, bbcGroup.getGid());

@@ -4,7 +4,7 @@
     <ul class="nav sidebar-nav" ng-cloak>
 
       <li style="background: #1a1a1a;">
-        <a href="#/project/{{projectCtrl.currentProject.projectId}}" class="text-center">
+        <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="text-center">
           {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
           ? '...' : ''}}
         </a>
