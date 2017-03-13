@@ -2,7 +2,6 @@ package io.hops.hopsworks.kmon.host;
 
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.host.Host;
-import com.sun.jersey.api.client.ClientResponse;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
@@ -20,6 +19,7 @@ import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.common.dao.role.Role;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
+import java.io.Reader;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import javax.annotation.Resource;
@@ -27,6 +27,7 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
 
 @ManagedBean
 @RequestScoped
@@ -243,26 +244,26 @@ public class HostController implements Serializable {
     public Command call() {
       FacesMessage message;
       try {
-        ClientResponse response = web.doCommand(hostAddress, agentPassword,
+        Response response = web.doCommand(hostAddress, agentPassword,
                 cluster, service, role, command);
 
         Thread.sleep(3000);
-
-        if (response.getClientResponseStatus().getFamily()
-                == Response.Status.Family.SUCCESSFUL) {
+        int code = response.getStatus();
+        Family res = Response.Status.Family.familyOf(code);
+        if (res == Response.Status.Family.SUCCESSFUL) {
           c.succeeded();
           String messageText = "";
           Role r = roleEjb.find(hostId, cluster, service, role);
 
           if (command.equalsIgnoreCase("start")) {
             JsonObject json
-                    = Json.createReader(response.getEntityInputStream()).
+                    = Json.createReader(response.readEntity(Reader.class)).
                     readObject();
             messageText = json.getString("msg");
             r.setStatus(Status.Started);
 
           } else if (command.equalsIgnoreCase("stop")) {
-            messageText = command + ": " + response.getEntity(String.class);
+            messageText = command + ": " + response.readEntity(String.class);
             r.setStatus(Status.Stopped);
           }
           roleEjb.store(r);
@@ -273,7 +274,7 @@ public class HostController implements Serializable {
           c.failed();
           if (response.getStatus() == 400) {
             message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",
-                    command + ": " + response.getEntity(String.class));
+                    command + ": " + response.readEntity(String.class));
           } else {
             message = new FacesMessage(FacesMessage.SEVERITY_FATAL,
                     "Server Error", "");

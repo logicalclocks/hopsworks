@@ -90,7 +90,7 @@ public class UsersController {
     user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
     user.setSecret(otpSecret);
     user.setTwoFactor(newUser.isTwoFactor());
-    user.setToursEnabled(newUser.getToursEnabled());
+    user.setToursState(newUser.getToursState());
     user.setOrcid("-");
     user.setMobile(newUser.getTelephoneNum());
     user.setTitle("-");
@@ -355,7 +355,7 @@ public class UsersController {
   }
 
   public UserDTO updateProfile(String email, String firstName, String lastName,
-          String telephoneNum, Boolean toursEnabled, HttpServletRequest req)
+          String telephoneNum, Integer toursState, HttpServletRequest req)
       throws AppException {
     Users user = userBean.findByEmail(email);
 
@@ -372,8 +372,8 @@ public class UsersController {
     if (telephoneNum != null) {
       user.setMobile(telephoneNum);
     }
-    if (toursEnabled != null) {
-      user.setToursEnabled(toursEnabled);
+    if (toursState != null) {
+      user.setToursState(toursState);
     }
     am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
             AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,

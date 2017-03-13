@@ -18,7 +18,6 @@ angular.module('hopsWorksApp')
             self.buttonArray = [];
             self.workingArray = [];
             self.jobFilter = "";
-
             self.hasSelectJob = false;
 
             self.currentjob = null;
@@ -47,6 +46,7 @@ angular.module('hopsWorksApp')
 
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
+              self.workingArray[id] = "true";
             };
 
             self.stopbuttonClickedToggle = function (id, display) {
@@ -209,7 +209,6 @@ angular.module('hopsWorksApp')
 
             self.runJob = function (job, index) {
               var jobId = job.id;
-
               ProjectService.uberPrice({id: self.projectId}).$promise.then(
                       function (success) {
                         var price = success.multiplicator;
@@ -235,7 +234,7 @@ angular.module('hopsWorksApp')
             };
 
             self.stopJob = function (jobId) {
-              self.stopbuttonClickedToggle(jobId, true);
+              self.stopbuttonClickedToggle(jobId, "false");
               JobService.stopJob(self.projectId, jobId).then(
                       function (success) {
                         self.getRunStatus();
@@ -256,6 +255,8 @@ angular.module('hopsWorksApp')
                 self.tourService.resetTours();
               }
             };
+
+
 
             self.showDetails = function (job) {
               ModalService.jobDetails('lg', job, self.projectId);

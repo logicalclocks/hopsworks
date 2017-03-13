@@ -1,9 +1,5 @@
 package io.hops.hopsworks.common.util;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
@@ -17,10 +13,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +25,11 @@ import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status.Family;
 import org.apache.commons.lang.StringEscapeUtils;
 
@@ -48,8 +49,8 @@ public class WebCommunication {
   public WebCommunication() {
   }
 
-  public ClientResponse getWebResponse(String url, String agentPassword) {
-    ClientResponse response;
+  public Response getWebResponse(String url, String agentPassword) {
+    Response response;
     try {
       response = getWebResource(url, agentPassword);
       return response;
@@ -161,13 +162,14 @@ public class WebCommunication {
     for (String param : params) {
       optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
     }
-    ClientResponse response = postWebResource(url, agentPassword,
+    Response response = postWebResource(url, agentPassword,
             optionsAndParams);
-    if (response.getClientResponseStatus().getFamily()
-            == Response.Status.Family.SUCCESSFUL) {
-      String responseString = response.getEntity(String.class);
+    int code = response.getStatus();
+    Family res = Response.Status.Family.familyOf(code);
+    if (res == Response.Status.Family.SUCCESSFUL) {
+      String responseString = response.readEntity(String.class);
       if (path.equalsIgnoreCase("execute/continue")) {
-        JsonObject json = Json.createReader(response.getEntityInputStream()).
+        JsonObject json = Json.createReader(response.readEntity(Reader.class)).
                 readObject();
         responseString = json.getString("before");
       }
@@ -176,7 +178,7 @@ public class WebCommunication {
     throw new RuntimeException("Did not succeed to execute command.");
   }
 
-  public ClientResponse doCommand(String hostAddress, String agentPassword,
+  public Response doCommand(String hostAddress, String agentPassword,
           String cluster, String service, String role, String command) throws
           Exception {
     String url = createUrl("do", hostAddress, agentPassword, cluster, service,
@@ -196,10 +198,11 @@ public class WebCommunication {
   private String fetchContent(String url, String agentPassword) {
     String content = NOT_AVAILABLE;
     try {
-      ClientResponse response = getWebResource(url, agentPassword);
-      if (response.getClientResponseStatus().getFamily()
-              == Response.Status.Family.SUCCESSFUL) {
-        content = response.getEntity(String.class);
+      Response response = getWebResource(url, agentPassword);
+      int code = response.getStatus();
+      Family res = Response.Status.Family.familyOf(code);
+      if (res == Response.Status.Family.SUCCESSFUL) {
+        content = response.readEntity(String.class);
       }
     } catch (Exception e) {
       logger.log(Level.SEVERE, null, e);
@@ -214,61 +217,57 @@ public class WebCommunication {
     return log;
   }
 
-  private ClientResponse getWebResource(String url, String agentPassword) throws
+  private Response getWebResource(String url, String agentPassword) throws
           Exception {
     return getWebResource(url, agentPassword, null);
   }
 
-  private ClientResponse getWebResource(String url, String agentPassword,
+  private Response getWebResource(String url, String agentPassword,
           Map<String, String> args) throws
           Exception {
 
     if (DISABLE_CERTIFICATE_VALIDATION) {
       disableCertificateValidation();
     }
-    Client client = Client.create();
-    WebResource webResource = client.resource(url);
+    Client client = ClientBuilder.newClient();
+    WebTarget webResource = client.target(url);
 
-    MultivaluedMap params = new MultivaluedMapImpl();
-    params.add("username", Settings.AGENT_EMAIL);
-    params.add("password", agentPassword);
-
+    webResource.queryParam("username", Settings.AGENT_EMAIL);
+    webResource.queryParam("password", agentPassword);
     if (args != null) {
       for (String key : args.keySet()) {
-        params.add(key, args.get(key));
+        webResource.queryParam(key, args.get(key));
       }
     }
     logger.log(Level.INFO,
             "WebCommunication: Requesting url: {0} with password {1}",
             new Object[]{url, agentPassword});
 
-    ClientResponse response = webResource.queryParams(params)
+    Response response = webResource.request()
             .header("Accept-Encoding", "gzip,deflate")
-            .get(ClientResponse.class);
+            .get(Response.class);
     logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);
     return response;
   }
 
-  private ClientResponse postWebResource(String url, String agentPassword,
+  private Response postWebResource(String url, String agentPassword,
           String body) throws Exception {
     return postWebResource(url, agentPassword, "", "", body);
   }
 
-  private ClientResponse postWebResource(String url, String agentPassword,
+  private Response postWebResource(String url, String agentPassword,
           String channelUrl, String version, String body) throws Exception {
     if (DISABLE_CERTIFICATE_VALIDATION) {
       disableCertificateValidation();
     }
-    Client client = Client.create();
-    WebResource webResource = client.resource(url);
+    Client client = ClientBuilder.newClient();
+    WebTarget webResource = client.target(url);
+    webResource.queryParam("username", Settings.AGENT_EMAIL);
+    webResource.queryParam("password", agentPassword);
 
-    MultivaluedMap params = new MultivaluedMapImpl();
-    params.add("username", Settings.AGENT_EMAIL);
-    params.add("password", agentPassword);
-    ClientResponse response = webResource.queryParams(params)
-            .header(
-                    "Accept-Encoding", "gzip,deflate")
-            .post(ClientResponse.class, body);
+    Response response = webResource.request()
+            .header("Accept-Encoding", "gzip,deflate")
+            .post(Entity.entity(body, MediaType.TEXT_PLAIN), Response.class);
     return response;
   }
 
@@ -323,8 +322,9 @@ public class WebCommunication {
       }
       args.put("srcproj", arg);
     }
-    ClientResponse response = getWebResource(url, agentPassword, args);
-    Family res = response.getClientResponseStatus().getFamily();
+    Response response = getWebResource(url, agentPassword, args);
+    int code = response.getStatus();
+    Family res = Response.Status.Family.familyOf(code);
     if (res == Response.Status.Family.SUCCESSFUL) {
       return response.getStatus();
     }
@@ -352,8 +352,9 @@ public class WebCommunication {
       args.put("version", version);
     }
 
-    ClientResponse response = getWebResource(url, agentPassword, args);
-    Family res = response.getClientResponseStatus().getFamily();
+    Response response = getWebResource(url, agentPassword, args);
+    int code = response.getStatus();
+    Family res = Response.Status.Family.familyOf(code);
     if (res == Response.Status.Family.SUCCESSFUL) {
       return response.getStatus();
     }

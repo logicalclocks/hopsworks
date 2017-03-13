@@ -11,7 +11,7 @@ import java.io.File;
 public class KafkaProperties extends ServiceProperties {
 
   private String brokerAddresses;
-  private String sessionId;
+  
   private String restEndpoint;
   //Comma-separated list of consumer groups
   private String consumerGroups;
@@ -19,14 +19,6 @@ public class KafkaProperties extends ServiceProperties {
   private String topics;
 
   public KafkaProperties() {
-  }
-
-  public String getSessionId() {
-    return sessionId;
-  }
-
-  public void setSessionId(String sessionId) {
-    this.sessionId = sessionId;
   }
 
   public String getBrokerAddresses() {
@@ -90,7 +82,7 @@ public class KafkaProperties extends ServiceProperties {
   @Override
   public String toString() {
     return "KafkaProperties{" + "brokerAddresses=" + brokerAddresses
-            + ", sessionId=" + sessionId + ", restEndpoint=" + restEndpoint
+            + ", restEndpoint=" + restEndpoint
             + ", consumerGroups=" + consumerGroups + ", topics=" + topics + '}';
   }
 

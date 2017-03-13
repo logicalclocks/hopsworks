@@ -177,7 +177,7 @@ public class Users implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "tours_state")
-  private boolean toursEnabled;
+  private int toursState;
   
   @JoinTable(name = "hopsworks.people_group",
           joinColumns = {
@@ -467,12 +467,12 @@ public class Users implements Serializable {
     this.twoFactor = twoFactor;
   }
 
-  public boolean getToursEnabled() {
-    return toursEnabled;
+  public int getToursState() {
+    return toursState;
   }
   
-  public void setToursEnabled(boolean toursEnabled) {
-    this.toursEnabled = toursEnabled;
+  public void setToursState(int toursState) {
+    this.toursState = toursState;
   }
   
   @Override
