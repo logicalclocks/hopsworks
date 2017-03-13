@@ -386,7 +386,6 @@ public class ProjectService {
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
     ProjectDTO projectDTO = new ProjectDTO();
-    JsonResponse json = new JsonResponse();
     Project project = null;
     projectDTO.setDescription("A demo project for getting started with " + type);
 
@@ -443,8 +442,6 @@ public class ProjectService {
         udfso.close();
       }
     }
-    json.setStatus("201");// Created 
-    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
         entity(project).build();
   }

@@ -5,6 +5,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import java.util.ArrayList;
 import java.util.List;
 
 @Stateless
@@ -37,15 +38,26 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
   }
 
   public List<HdfsUsers> findProjectUsers(String projectName) {
+    List<HdfsUsers> users = null;
     try {
-      return em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class).
-              setParameter("name", projectName).
-              getResultList();
+      users = em.createNamedQuery("HdfsUsers.findProjectUsers", HdfsUsers.class).setParameter("name",
+          projectName).getResultList();
     } catch (NoResultException e) {
-      return null;
     }
+    try {
+      HdfsUsers user = em.createNamedQuery("HdfsUsers.findByName", HdfsUsers.class).setParameter("name", projectName).
+          getSingleResult();
+      if (user != null) {
+        if (users == null) {
+          users = new ArrayList<>();
+        }
+        users.add(user);
+      }
+    } catch (NoResultException e) {
+    }
+    return users;    
   }
-  
+ 
   public void persist(HdfsUsers user) {
     em.persist(user);
   }
@@ -60,8 +72,7 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
     }
     HdfsUsers u = em.find(HdfsUsers.class, user.getId());
     if (u != null) {
-      em.createNamedQuery("HdfsUsers.delete", HdfsUsers.class).
-              setParameter("id", user.getId()).executeUpdate();
+      em.remove(u);
     }
   }
 }

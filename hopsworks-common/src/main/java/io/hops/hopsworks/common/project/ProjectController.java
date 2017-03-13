@@ -221,31 +221,8 @@ public class ProjectController {
                 getStatusCode(), "An error occurend when creating the project");
       }
 
-      //proceed to all the verrifications and set up local variable    
-      //  verify that the project folder does not exist
-      //  verify that users and groups corresponding to this project name does not already exist in HDFS
-      //  verify that Quota for this project name does not already exist in YARN
-      //  verify that There is no logs folders corresponding to this project name
-      //  verify that There is no certificates corresponding to this project name in the certificate generator
-      try {
-        if (existingProjectFolder(project) || !noExistingUser(projectName)
-                || !noExistingGroup(projectName)
-                || !verifyQuota(projectName) || !verifyLogs(dfso, projectName)
-                || !noExistingCertificates(projectName)) {
-          logger.log(Level.WARNING,
-                  "some elements of project {0} already exist in the system "
-                  + "Possible inconsistency!",
-                  projectName);
-          cleanup(project);
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                  getStatusCode(),
-                  "some elements of project already exist in the system");
-        }
-      } catch (IOException | EJBException ex) {
-        cleanup(project);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while running verifications");
-      }
+      verifyProject(project, dfso);
+      
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project);
@@ -319,9 +296,7 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso, udfso);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null,
-                ex);
+        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,null,ex);
         cleanup(project);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "error while creating project sub folders");
@@ -356,6 +331,35 @@ public class ProjectController {
       }
     }
 
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  private void verifyProject(Project project, DistributedFileSystemOps dfso) throws AppException {
+    //proceed to all the verrifications and set up local variable    
+    //  verify that the project folder does not exist
+    //  verify that users and groups corresponding to this project name does not already exist in HDFS
+    //  verify that Quota for this project name does not already exist in YARN
+    //  verify that There is no logs folders corresponding to this project name
+    //  verify that There is no certificates corresponding to this project name in the certificate generator
+    try {
+      if (existingProjectFolder(project) || !noExistingUser(project.getName())
+          || !noExistingGroup(project.getName())
+          || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.getName())
+          || !noExistingCertificates(project.getName())) {
+        logger.log(Level.WARNING,
+            "some elements of project {0} already exist in the system "
+            + "Possible inconsistency!",
+            project.getName());
+        cleanup(project);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(),
+            "some elements of project already exist in the system");
+      }
+    } catch (IOException | EJBException ex) {
+      cleanup(project);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(), "error while running verifications");
+    }
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -544,9 +548,7 @@ public class ProjectController {
       }
 
       if (searchableResources) {
-        Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.
-                getName());
-        datasetController.logDataset(dataset, OperationType.Add);
+        logDataSet(project, ds);
       }
 
       //Persist README.md to hdfs for Default Datasets
@@ -557,6 +559,12 @@ public class ProjectController {
 
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  private void logDataSet(Project project, Settings.DefaultDataset ds) {
+    Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.getName());
+    datasetController.logDataset(dataset, OperationType.Add);
+  }
+  
   /**
    *
    * @param username
@@ -793,8 +801,8 @@ public class ProjectController {
                   getStatusCode(), "error while removing project");
         }
       }
-      return;
     }
+    return;
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
@@ -815,6 +823,11 @@ public class ProjectController {
         dfso.setOwner(location, "glassfish", "glassfish");
       }
 
+      Path dumy = new Path("/tmp/" + project.getName());
+      if (dfso.exists(dumy.toString())) {
+        dfso.setOwner(dumy, "glassfish", "glassfish");
+      }
+      
       //remove kafka topics
       removeKafkaTopics(project);
 
@@ -859,12 +872,11 @@ public class ProjectController {
 
       //Delete elasticsearch template for this project
       removeElasticsearch(project.getName());
-    
+
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
       
       //remove dumy Inode
-      Path dumy = new Path("/tmp/" + project.getName());
       dfso.rm(dumy, true);
 
       //remove folder
