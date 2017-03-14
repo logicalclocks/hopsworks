@@ -49,7 +49,7 @@
                     <div class="message-from">{{msg.from.fname}} {{msg.from.lname}}</div>
                   </div>
                   <div ng-click="mainCtrl.openMessageModal(msg)" class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
-                  <a ng-if="msg.path" href="#/{{msg.path}}"> go to requested path.</a>
+                  <a ng-if="msg.path" href="#!/{{msg.path}}"> go to requested path.</a>
                 </div>
               </li>
               <a ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
@@ -64,7 +64,7 @@
               <li ng-show="mainCtrl.isAdmin()==='true'"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
               <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <!--<li><a ng-click="mainCtrl.sshKeysModal()"><i class="fa fa-key"></i> Ssh Keys</a></li>-->
-              <li><a href="#/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
+              <li><a href="#!/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
             </ul>
           </li>
         </ul>
