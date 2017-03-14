@@ -53,7 +53,7 @@ public class ExecutionController {
 //        }
 //        int execId = exec.getId();
 //        AdamJobConfiguration adamConfig = (AdamJobConfiguration) job.getJobConfig();
-//        String path = adamConfig.getJarPath();
+//        String path = adamConfig.getAppPath();
 //        String[] parts = path.split("/");
 //        String pathOfInode = path.replace("hdfs://" + parts[2], "");
 //        
@@ -76,7 +76,7 @@ public class ExecutionController {
         SparkJobConfiguration config = (SparkJobConfiguration) job.
                 getJobConfig();
 
-        String path = config.getJarPath();
+        String path = config.getAppPath();
         String patternString = "hdfs://(.*)\\s";
         Pattern p = Pattern.compile(patternString);
         Matcher m = p.matcher(path);
@@ -89,6 +89,12 @@ public class ExecutionController {
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
         activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName,
                 job.getProject(), user);
+        break;
+      case PYSPARK:
+        exec = sparkController.startJob(job, user);
+        if (exec == null) {
+          throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
+        }
         break;
       default:
         throw new IllegalArgumentException(

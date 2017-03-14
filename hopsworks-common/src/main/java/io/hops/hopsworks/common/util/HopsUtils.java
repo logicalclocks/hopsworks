@@ -45,7 +45,7 @@ public class HopsUtils {
    * @return
    */
   public static <E extends Enum<E>> boolean isInEnum(String value,
-          Class<E> enumClass) {
+      Class<E> enumClass) {
     for (E e : enumClass.getEnumConstants()) {
       if (e.name().equals(value)) {
         return true;
@@ -60,7 +60,7 @@ public class HopsUtils {
 
   public static int projectPartitionId(String name) {
     return calculatePartitionId(ROOT_INODE_ID, PROJECTS_DIR_NAME,
-            PROJECTS_DIR_DEPTH);
+        PROJECTS_DIR_DEPTH);
   }
 
   public static int dataSetPartitionId(Inode parent, String name) {
@@ -76,7 +76,7 @@ public class HopsUtils {
   }
 
   private static int partitionIdHashFunction(int parentId, String name,
-          int depth) {
+      int depth) {
     if (depth == ROOT_DIR_DEPTH) {
       return ROOT_DIR_PARTITION_KEY;
     } else {
@@ -104,8 +104,8 @@ public class HopsUtils {
       }
       StringBuilder sb = new StringBuilder();
       try (BufferedReader br
-              = new BufferedReader(new InputStreamReader(process.
-                      getInputStream()))) {
+          = new BufferedReader(new InputStreamReader(process.
+              getInputStream()))) {
         String line;
         while ((line = br.readLine()) != null) {
           sb.append(line);
@@ -117,7 +117,7 @@ public class HopsUtils {
 
       for (String path : sb.toString().split(File.pathSeparator)) {
         if (!path.contains("yarn") && !path.contains("jersey") && !path.
-                contains("servlet")) {
+            contains("servlet")) {
           classpath.append(path).append(File.pathSeparator);
         }
       }
@@ -140,10 +140,20 @@ public class HopsUtils {
   }
 
   public static void copyUserKafkaCerts(CertsFacade userCerts,
-          Project project, String username,
-          String localTmpDir, String remoteTmpDir) {
+      Project project, String username,
+      String localTmpDir, String remoteTmpDir) {
     copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
-            null, null, null, null, null);
+        null, null, null, null, null, null);
+  }
+
+  public static void copyUserKafkaCerts(CertsFacade userCerts,
+      Project project, String username,
+      String localTmpDir, String remoteTmpDir, JobType jobType,
+      DistributedFileSystemOps dfso,
+      List<LocalResourceDTO> projectLocalResources,
+      Map<String, String> jobSystemProperties, String nameNodeIpPort) {
+    copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
+        jobType, dfso, projectLocalResources, jobSystemProperties, nameNodeIpPort, null);
   }
 
   /**
@@ -161,21 +171,22 @@ public class HopsUtils {
    * @param projectLocalResources
    * @param jobSystemProperties
    * @param nameNodeIpPort
+   * @param flinkCertsDir
    */
   public static void copyUserKafkaCerts(CertsFacade userCerts,
-          Project project, String username,
-          String localTmpDir, String remoteTmpDir, JobType jobType,
-          DistributedFileSystemOps dfso,
-          List<LocalResourceDTO> projectLocalResources,
-          Map<String, String> jobSystemProperties, String nameNodeIpPort) {
+      Project project, String username,
+      String localTmpDir, String remoteTmpDir, JobType jobType,
+      DistributedFileSystemOps dfso,
+      List<LocalResourceDTO> projectLocalResources,
+      Map<String, String> jobSystemProperties, String nameNodeIpPort, String flinkCertsDir) {
     try {
       //Pull the certificate of the client
       UserCerts userCert = userCerts.findUserCert(project.getName(),
-              username);
+          username);
       //Check if the user certificate was actually retrieved
       if (userCert.getUserCert() != null && userCert.getUserCert().length > 0
-              && userCert.getUserKey() != null && userCert.getUserKey().length
-              > 0) {
+          && userCert.getUserKey() != null && userCert.getUserKey().length
+          > 0) {
 
         Map<String, byte[]> kafkaCertFiles = new HashMap<>();
         kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
@@ -196,62 +207,50 @@ public class HopsUtils {
         Map<String, File> kafkaCerts = new HashMap<>();
         try {
           String kCertName = HopsUtils.getProjectKeystoreName(project.getName(),
-                  username);
+              username);
           String tCertName = HopsUtils.getProjectTruststoreName(project.
-                  getName(), username);
+              getName(), username);
 
           // if file doesnt exists, then create it
           try {
             if (jobType == null) {
               //Copy the certificates in the local tmp dir
               File kCert = new File(localTmpDir
-                      + File.separator + kCertName);
-//              kCert.setExecutable(false);
-//              kCert.setReadable(true, true);
-//              kCert.setWritable(false);
+                  + File.separator + kCertName);
               File tCert = new File(localTmpDir
-                      + File.separator + tCertName);
-//              tCert.setExecutable(false);
-//              tCert.setReadable(true, true);
-//              tCert.setWritable(false);
+                  + File.separator + tCertName);
               if (!kCert.exists()) {
                 Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                        kCert);
+                    kCert);
                 Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                        tCert);
+                    tCert);
               }
             } else //If it is a Flink job, copy the certificates into the glassfish config dir
             {
               switch (jobType) {
                 case FLINK:
-                  File f_k_cert = new File(Settings.FLINK_KAFKA_CERTS_DIR
-                          + File.separator + kCertName);
+                  File f_k_cert = new File(flinkCertsDir + File.separator + kCertName);
                   f_k_cert.setExecutable(false);
                   f_k_cert.setReadable(true, true);
                   f_k_cert.setWritable(false);
-                  File t_k_cert = new File(Settings.FLINK_KAFKA_CERTS_DIR
-                          + File.separator + tCertName);
+                  File t_k_cert = new File(flinkCertsDir + File.separator + tCertName);
                   t_k_cert.setExecutable(false);
                   t_k_cert.setReadable(true, true);
                   t_k_cert.setWritable(false);
                   if (!f_k_cert.exists()) {
                     Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                            f_k_cert);
+                        f_k_cert);
                     Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                            t_k_cert);
+                        t_k_cert);
                   }
-                  jobSystemProperties.put(Settings.K_CERTIFICATE,
-                          Settings.FLINK_KAFKA_CERTS_DIR
-                          + File.separator + kCertName);
-                  jobSystemProperties.put(Settings.T_CERTIFICATE,
-                          Settings.FLINK_KAFKA_CERTS_DIR
-                          + File.separator + tCertName);
+                  jobSystemProperties.put(Settings.K_CERTIFICATE, flinkCertsDir + File.separator + kCertName);
+                  jobSystemProperties.put(Settings.T_CERTIFICATE, flinkCertsDir + File.separator + tCertName);
                   break;
                 case SPARK:
                   kafkaCerts.put(Settings.K_CERTIFICATE, new File(
-                          localTmpDir + File.separator + kCertName));
+                      localTmpDir + File.separator + kCertName));
                   kafkaCerts.put(Settings.T_CERTIFICATE, new File(
-                          localTmpDir + File.separator + tCertName));
+                      localTmpDir + File.separator + tCertName));
                   for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
                     if (!entry.getValue().exists()) {
                       entry.getValue().createNewFile();
@@ -263,46 +262,46 @@ public class HopsUtils {
                     //by the YarnJob
                     if (!dfso.exists(remoteTmpDir)) {
                       dfso.mkdir(
-                              new Path(remoteTmpDir), new FsPermission(
-                                      FsAction.ALL,
-                                      FsAction.ALL, FsAction.ALL));
+                          new Path(remoteTmpDir), new FsPermission(
+                              FsAction.ALL,
+                              FsAction.ALL, FsAction.ALL));
                     }
                     //Put project certificates in its own dir
                     String certUser = project.getName() + "__"
-                            + username;
+                        + username;
                     String remoteTmpProjDir = remoteTmpDir + File.separator
-                            + certUser;
+                        + certUser;
                     if (!dfso.exists(remoteTmpProjDir)) {
                       dfso.mkdir(
-                              new Path(remoteTmpProjDir),
-                              new FsPermission(FsAction.ALL,
-                                      FsAction.ALL, FsAction.NONE));
+                          new Path(remoteTmpProjDir),
+                          new FsPermission(FsAction.ALL,
+                              FsAction.ALL, FsAction.NONE));
                       dfso.setOwner(new Path(remoteTmpProjDir),
-                              certUser, certUser);
+                          certUser, certUser);
                     }
                     Files.write(kafkaCertFiles.get(entry.getKey()), entry.
-                            getValue());
+                        getValue());
                     dfso.copyToHDFSFromLocal(true, entry.getValue().
-                            getAbsolutePath(),
-                            remoteTmpDir + File.separator + certUser
-                            + File.separator
-                            + entry.getValue().getName());
+                        getAbsolutePath(),
+                        remoteTmpDir + File.separator + certUser
+                        + File.separator
+                        + entry.getValue().getName());
 
                     dfso.setPermission(new Path(remoteTmpProjDir
-                            + File.separator
-                            + entry.getValue().getName()),
-                            new FsPermission(FsAction.ALL, FsAction.NONE,
-                                    FsAction.NONE));
+                        + File.separator
+                        + entry.getValue().getName()),
+                        new FsPermission(FsAction.ALL, FsAction.NONE,
+                            FsAction.NONE));
                     dfso.setOwner(new Path(remoteTmpProjDir + File.separator
-                            + entry.getValue().getName()), certUser, certUser);
+                        + entry.getValue().getName()), certUser, certUser);
 
                     projectLocalResources.add(new LocalResourceDTO(
-                            entry.getKey(),
-                            "hdfs://" + nameNodeIpPort + remoteTmpDir
-                            + File.separator + certUser + File.separator
-                            + entry.getValue().getName(),
-                            LocalResourceVisibility.APPLICATION.toString(),
-                            LocalResourceType.FILE.toString(), null));
+                        entry.getKey(),
+                        "hdfs://" + nameNodeIpPort + remoteTmpDir
+                        + File.separator + certUser + File.separator
+                        + entry.getValue().getName(),
+                        LocalResourceVisibility.APPLICATION.toString(),
+                        LocalResourceType.FILE.toString(), null));
                   }
                   break;
                 default:
@@ -311,7 +310,7 @@ public class HopsUtils {
             }
           } catch (IOException ex) {
             LOG.log(Level.SEVERE,
-                    "Error writing Kakfa certificates to local fs", ex);
+                "Error writing Kakfa certificates to local fs", ex);
           }
 
         } finally {

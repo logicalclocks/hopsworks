@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.Path;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -29,10 +30,10 @@ import io.hops.hopsworks.common.util.Settings;
 public class FlinkJob extends YarnJob {
 
   private static final Logger LOG = Logger.getLogger(
-          FlinkJob.class.getName());
+      FlinkJob.class.getName());
   private final FlinkJobConfiguration jobconfig;
   private final String flinkDir;
-  private final String glassfishDomainsDir;
+  private final String glassfishDomainDir;
   private final String flinkConfDir;
   private final String flinkConfFile;
   private final String flinkUser;
@@ -53,21 +54,21 @@ public class FlinkJob extends YarnJob {
    * @param glassfishDomainsDir
    */
   public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, final String hadoopDir,
-          final String flinkDir, final String flinkConfDir,
-          final String flinkConfFile, final String nameNodeIpPort,
-          String flinkUser, String jobUser, final String glassfishDomainsDir) {
+      Users user, final String hadoopDir,
+      final String flinkDir, final String flinkConfDir,
+      final String flinkConfFile, final String nameNodeIpPort,
+      String flinkUser, String jobUser, final String glassfishDomainsDir) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
-              "JobDescription must contain a FlinkJobConfiguration object. Received: "
-              + job.getJobConfig().getClass());
+          "JobDescription must contain a FlinkJobConfiguration object. Received: "
+          + job.getJobConfig().getClass());
     }
     this.jobconfig = (FlinkJobConfiguration) job.getJobConfig();
     this.jobconfig.setFlinkConfDir(flinkConfDir);
     this.jobconfig.setFlinkConfFile(flinkConfFile);
     this.flinkDir = flinkDir;
-    this.glassfishDomainsDir = glassfishDomainsDir;
+    this.glassfishDomainDir = glassfishDomainsDir;
     this.flinkConfDir = flinkConfDir;
     this.flinkConfFile = flinkConfFile;
     this.flinkUser = flinkUser;
@@ -76,13 +77,19 @@ public class FlinkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
+    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), jobDescription.getProject(), user.getUsername(),
+        services.getSettings().getHopsworksTmpCertDir(),
+        Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
+        dfso, projectLocalResources, jobSystemProperties,
+        nameNodeIpPort, services.getSettings().getFlinkKafkaCertDir());
+    
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Flink Job");
     }
 
     FlinkYarnRunnerBuilder flinkBuilder = new FlinkYarnRunnerBuilder(
-            jobconfig.getJarPath(), jobconfig.getMainClass());
+        jobconfig.getJarPath(), jobconfig.getMainClass());
     //https://ci.apache.org/projects/flink/flink-docs-release-0.10/setup/yarn_setup.html
     /*
      * If you do not want to keep the Flink YARN client running all the time,
@@ -94,10 +101,10 @@ public class FlinkJob extends YarnJob {
     flinkBuilder.setName(jobconfig.getAppName());
     flinkBuilder.setConfigurationDirectory(jobconfig.getFlinkConfDir());
     flinkBuilder.setConfigurationFilePath(new Path(
-            jobconfig.getFlinkConfFile()));
+        jobconfig.getFlinkConfFile()));
     //Flink specific conf object
     flinkBuilder.setFlinkLoggingConfigurationPath(new Path(
-            jobconfig.getFlinkConfDir()));
+        jobconfig.getFlinkConfDir()));
 
     flinkBuilder.setTaskManagerMemory(jobconfig.getTaskManagerMemory());
     flinkBuilder.setTaskManagerSlots(jobconfig.getSlots());
@@ -120,7 +127,7 @@ public class FlinkJob extends YarnJob {
     }
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
       for (Map.Entry<String, String> jobSystemProperty : jobSystemProperties.
-              entrySet()) {
+          entrySet()) {
 //        //If the properties are the Kafka certificates, append glassfish path
 //        if (jobSystemProperty.getKey().equals(Settings.KAFKA_K_CERTIFICATE)
 //                || jobSystemProperty.getKey().equals(
@@ -130,33 +137,33 @@ public class FlinkJob extends YarnJob {
 //                          getValue());
 //        } else {
         flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
-                jobSystemProperty.getValue());
+            jobSystemProperty.getValue());
 //        }
       }
     }
     try {
       runner = flinkBuilder.
-              getYarnRunner(jobDescription.getProject().getName(),
-                      flinkUser, jobUser, hadoopDir, flinkDir, flinkConfDir,
-                      flinkConfFile, nameNodeIpPort);
+          getYarnRunner(jobDescription.getProject().getName(),
+              flinkUser, jobUser, hadoopDir, flinkDir, flinkConfDir,
+              flinkConfFile, nameNodeIpPort, glassfishDomainDir + "/domain1/config/");
 
     } catch (IOException e) {
       LOG.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
+          "Failed to create YarnRunner.", e);
       writeToLogs(new IOException("Failed to start Yarn client.", e));
       return false;
     }
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-            jobDescription.
+        jobDescription.
             getProject().
             getName())
-            + Settings.FLINK_DEFAULT_OUTPUT_PATH;
+        + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-            jobDescription.
+        jobDescription.
             getProject().
             getName())
-            + Settings.FLINK_DEFAULT_OUTPUT_PATH;
+        + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
     return true;
@@ -174,20 +181,20 @@ public class FlinkJob extends YarnJob {
     //ones are found
 
     Collection<ProjectServices> projectServices = jobDescription.getProject().
-            getProjectServicesCollection();
+        getProjectServicesCollection();
     Iterator<ProjectServices> iter = projectServices.iterator();
     boolean removeKafkaCerts = true;
     while (iter.hasNext()) {
       ProjectServices projectService = iter.next();
       //If the project is of type KAFKA
       if (projectService.getProjectServicesPK().getService()
-              == ProjectServiceEnum.KAFKA) {
+          == ProjectServiceEnum.KAFKA) {
         List<Execution> execs = services.getExecutionFacade().
-                findForProjectByType(jobDescription.getProject(), JobType.FLINK);
+            findForProjectByType(jobDescription.getProject(), JobType.FLINK);
         if (execs != null) {
           execs.addAll(services.getExecutionFacade().
-                  findForProjectByType(jobDescription.getProject(),
-                          JobType.SPARK));
+              findForProjectByType(jobDescription.getProject(),
+                  JobType.SPARK));
         }
         //Find if this project has running jobs
         if (execs != null && !execs.isEmpty()) {
@@ -202,15 +209,15 @@ public class FlinkJob extends YarnJob {
     }
     if (removeKafkaCerts) {
       String k_certName = jobDescription.getProject().getName() + "__"
-              + jobDescription.getProject().getOwner().getUsername()
-              + "__kstore.jks";
+          + jobDescription.getProject().getOwner().getUsername()
+          + "__kstore.jks";
       String t_certName = jobDescription.getProject().getName() + "__"
-              + jobDescription.getProject().getOwner().getUsername()
-              + "__tstore.jks";
-      File k_cert = new File(this.glassfishDomainsDir + "/domain1/config/"
-              + k_certName);
-      File t_cert = new File(this.glassfishDomainsDir + "/domain1/config/"
-              + t_certName);
+          + jobDescription.getProject().getOwner().getUsername()
+          + "__tstore.jks";
+      File k_cert = new File(glassfishDomainDir + "/domain1/config/"
+          + k_certName);
+      File t_cert = new File(glassfishDomainDir + "/domain1/config/"
+          + t_certName);
       if (k_cert.exists()) {
         k_cert.delete();
       }
@@ -227,10 +234,10 @@ public class FlinkJob extends YarnJob {
     try {
       Runtime rt = Runtime.getRuntime();
       Process pr = rt.exec(this.hadoopDir + "/bin/yarn application -kill "
-              + appid);
+          + appid);
     } catch (IOException ex1) {
       LOG.log(Level.SEVERE, "Unable to stop flink cluster with appID:"
-              + appid, ex1);
+          + appid, ex1);
     }
   }
 

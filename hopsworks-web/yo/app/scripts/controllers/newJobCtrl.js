@@ -351,7 +351,7 @@ angular.module('hopsWorksApp')
               self.runConfig.appName = self.jobname;
               self.runConfig.flinkjobtype = self.flinkjobtype;
               self.runConfig.localResources = self.localResources;
-              if (self.getJobType() === "SPARK" || self.getJobType() === "ADAM") {
+              if (self.getJobType() === "SPARK" || self.getJobType() === "PYSPARK" || self.getJobType() === "ADAM") {
                 self.runConfig.selectedMinExecutors = self.sliderOptions.min;
                 self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
               }
@@ -422,7 +422,8 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "JAR file";
+                case 4:
+                  self.accordion3.title = "App file (.jar, .py)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   break;
@@ -465,11 +466,17 @@ angular.module('hopsWorksApp')
                   return "ADAM";
                 case 3:
                   return "FLINK";
+                case 4:
+                  return "PYSPARK";
                 default:
                   return null;
               }
             };
 
+            /**
+             * Used by tour.
+             * @returns {undefined}
+             */
             self.jobTypeSpark = function () {
               self.jobtype = 1;
               self.jobTypeChosen();
@@ -478,7 +485,7 @@ angular.module('hopsWorksApp')
             self.chooseParameters = function () {
               if (!self.runConfig.mainClass && !self.runConfig.args) {
                   self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
-                  self.runConfig.args = '1 111';
+                  self.runConfig.args = '10';
               }
               // For Kafka tour
               if (self.projectIsGuide) {
@@ -559,13 +566,19 @@ angular.module('hopsWorksApp')
               var filename = getFileName(path);
               switch (reason.toUpperCase()) {
                 case "SPARK":
+                case "PYSPARK":
                   self.sparkState.selectedJar = filename;
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
                             self.runConfig = success.data;
+                            if(self.runConfig.appPath.toLowerCase().endsWith(".py")){
+                              self.jobtype = 4;
+                            } else {
+                              self.jobtype = 1;
+                            }
                             //Update the min/max spark executors based on 
                             //backend configuration 
-                            if (typeof runConfig !== 'undefined') {
+                            if (typeof self.runConfig !== 'undefined') {
                               self.sliderOptions.options['floor'] = self.runConfig.
                                       minExecutors;
                               self.sliderOptions.options['ceil'] = self.runConfig.
@@ -772,7 +785,7 @@ angular.module('hopsWorksApp')
                     });
                   }
                 }
-                if (self.jobtype === 1) {
+                if (self.jobtype === 1 || self.jobtype === 4) {
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype === 2) {
                   self.adamState = stored.adamState;

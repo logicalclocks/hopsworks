@@ -89,7 +89,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
           String appId) {
     SparkJobConfiguration configuration = (SparkJobConfiguration) jobDesc.
             getJobConfig();
-    String inodePath = configuration.getJarPath();
+    String inodePath = configuration.getAppPath();
     String patternString = "hdfs://(.*)\\s";
     Pattern p = Pattern.compile(patternString);
     Matcher m = p.matcher(inodePath);

@@ -122,9 +122,9 @@ public class SparkService {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
-      SparkJobConfiguration config = sparkController.inspectJar(path, username,
+      SparkJobConfiguration config = sparkController.inspectProgram(path, username,
               udfso);
-      //SparkJobConfiguration config = sparkController.inspectJar(path, username, req.getSession().getId());
+      //SparkJobConfiguration config = sparkController.inspectProgram(path, username, req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(config).build();
     } catch (AccessControlException ex) {
