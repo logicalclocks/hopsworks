@@ -283,7 +283,7 @@ public class AdminProfileAdministration implements Serializable {
    */
   public void updateStatusByAdmin() {
     // Update status
-    if (!"#".equals(selectedStatus)) {
+    if (!"#!".equals(selectedStatus)) {
       editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
               getValue());
       userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
@@ -309,7 +309,7 @@ public class AdminProfileAdministration implements Serializable {
     BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(newGroup);
 
     // Register a new group
-    if (!"#".equals(newGroup)) {
+    if (!"#!".equals(newGroup)) {
       userManager.registerGroup(editingUser, bbcGroup.getGid());
       am.registerRoleChange(sessionState.getLoggedInUser(),
               RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
@@ -329,7 +329,7 @@ public class AdminProfileAdministration implements Serializable {
     BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(selectedGroup);
 
     // Remove a group
-    if (!"#".equals(selectedGroup)) {
+    if (!"#!".equals(selectedGroup)) {
       userManager.removeGroup(editingUser, bbcGroup.getGid());
 
       am.registerRoleChange(sessionState.getLoggedInUser(),
@@ -338,10 +338,10 @@ public class AdminProfileAdministration implements Serializable {
       MessagesController.addInfoMessage("Success", "User updated successfully.");
     }
 
-    if ("#".equals(selectedGroup)) {
+    if ("#!".equals(selectedGroup)) {
 
-      if (("#".equals(selectedStatus))
-              || "#".equals(newGroup)) {
+      if (("#!".equals(selectedStatus))
+              || "#!".equals(newGroup)) {
         am.registerRoleChange(sessionState.getLoggedInUser(),
                 RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.FAILED.
                 name(), bbcGroup.getGroupName(), editingUser);

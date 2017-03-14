@@ -11,7 +11,7 @@ import java.io.File;
 public class KafkaProperties extends ServiceProperties {
 
   private String brokerAddresses;
-  
+
   private String restEndpoint;
   //Comma-separated list of consumer groups
   private String consumerGroups;
@@ -29,14 +29,6 @@ public class KafkaProperties extends ServiceProperties {
     this.brokerAddresses = brokerAddresses;
   }
 
-  public String getRestEndpoint() {
-    return restEndpoint;
-  }
-
-  public void setRestEndpoint(String restEndpoint) {
-    this.restEndpoint = restEndpoint;
-  }
-
   public String getConsumerGroups() {
     return consumerGroups;
   }
@@ -49,17 +41,15 @@ public class KafkaProperties extends ServiceProperties {
    * @param consumerGroups
    */
   public void setProjectConsumerGroups(String projectName,
-          ConsumerGroupDTO[] consumerGroups) {
+      ConsumerGroupDTO[] consumerGroups) {
     this.consumerGroups = "";
     StringBuilder sb = new StringBuilder();
     sb.append(projectName).append("__").append(
-            Settings.KAFKA_DEFAULT_CONSUMER_GROUP).append(File.pathSeparator);
+        Settings.KAFKA_DEFAULT_CONSUMER_GROUP).append(File.pathSeparator);
     if (consumerGroups != null) {
       for (ConsumerGroupDTO consumerGroup : consumerGroups) {
-        if (!consumerGroup.getName().equals(
-                Settings.KAFKA_DEFAULT_CONSUMER_GROUP)) {
-          sb.append(projectName).append("__").append(consumerGroup.getName()).
-                  append(File.pathSeparator);
+        if (!consumerGroup.getName().equals(Settings.KAFKA_DEFAULT_CONSUMER_GROUP)) {
+          sb.append(projectName).append("__").append(consumerGroup.getName()).append(File.pathSeparator);
         }
       }
     }
@@ -82,8 +72,8 @@ public class KafkaProperties extends ServiceProperties {
   @Override
   public String toString() {
     return "KafkaProperties{" + "brokerAddresses=" + brokerAddresses
-            + ", restEndpoint=" + restEndpoint
-            + ", consumerGroups=" + consumerGroups + ", topics=" + topics + '}';
+        + ", restEndpoint=" + restEndpoint
+        + ", consumerGroups=" + consumerGroups + ", topics=" + topics + '}';
   }
 
 }

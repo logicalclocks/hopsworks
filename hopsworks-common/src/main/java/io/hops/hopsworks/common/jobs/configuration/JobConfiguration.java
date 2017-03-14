@@ -147,6 +147,7 @@ public abstract class JobConfiguration implements JsonReduceable {
           conf = new AdamJobConfiguration();
           break;
         case SPARK:
+        case PYSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -177,6 +178,7 @@ public abstract class JobConfiguration implements JsonReduceable {
           conf = new AdamJobConfiguration();
           break;
         case SPARK:
+        case PYSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -195,6 +197,7 @@ public abstract class JobConfiguration implements JsonReduceable {
     public static Set<JobType> getSupportedTypes() {
       return EnumSet.of(JobType.ADAM,
               JobType.SPARK,
+              JobType.PYSPARK,
               JobType.FLINK,
               JobType.ERASURE_CODING);
     }

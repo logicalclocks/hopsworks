@@ -118,7 +118,7 @@
             <div class="message-view scroll">
                 <div ng-bind-html="messageCtrl.selectedMsg.content"></div>
                 <div>
-                    <a ng-if="messageCtrl.selectedMsg.path" ng-click="messageCtrl.close()" href="#/{{messageCtrl.selectedMsg.path}}">
+                    <a ng-if="messageCtrl.selectedMsg.path" ng-click="messageCtrl.close()" href="#!/{{messageCtrl.selectedMsg.path}}">
                       Go to requested path.
                     </a>
                 </div>

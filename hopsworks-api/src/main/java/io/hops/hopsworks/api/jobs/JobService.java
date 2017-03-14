@@ -1124,6 +1124,12 @@ public class JobService {
   public SparkService spark() {
     return this.spark.setProject(project);
   }
+  
+  @Path("/pyspark")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public SparkService pyspark() {
+    return this.spark.setProject(project);
+  }
 
   @Path("/adam")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})

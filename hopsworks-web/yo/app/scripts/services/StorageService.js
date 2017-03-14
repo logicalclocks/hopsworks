@@ -23,10 +23,10 @@ angular.module('hopsWorksApp')
                   if ($window.Storage) {
                     if (value === null) {
                       $window.localStorage.setItem(key, value);
-                      console.log("LocalStorage: storing key: " + key);
+//                      console.log("LocalStorage: storing key: " + key);
                     } else {
                       $window.localStorage.setItem(key, $window.JSON.stringify(value));
-                      console.log("LocalStorage: storing key/value: " + key + " -- " + value);
+//                      console.log("LocalStorage: storing key/value: " + key + " -- " + value);
                     }
                     return true;
                   } else {
@@ -58,7 +58,7 @@ angular.module('hopsWorksApp')
                 try {
                   if ($window.Storage) {
                     var retval = $window.localStorage.getItem(key);
-                    console.log("LocalStorage: retrieved for key: " + key + " --- " + retval);
+//                    console.log("LocalStorage: retrieved for key: " + key + " --- " + retval);
                     $window.localStorage.removeItem(key);
                     if (retval) {
                       return $window.JSON.parse(retval);
@@ -77,7 +77,7 @@ angular.module('hopsWorksApp')
                 try {
                   if ($window.Storage) {
                     $window.localStorage.removeItem(key);
-                    console.log("LocalStorage: removing key from local storage: " + key);
+//                    console.log("LocalStorage: removing key from local storage: " + key);
                     return true;
                   } else {
                     return false;

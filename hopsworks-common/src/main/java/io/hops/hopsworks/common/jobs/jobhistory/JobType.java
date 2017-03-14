@@ -5,6 +5,7 @@ public enum JobType {
   YARN("Yarn"),
   FLINK("Flink"),
   SPARK("Spark"),
+  PYSPARK("PySpark"),
   ADAM("ADAM"),
   ERASURE_CODING("ERASURE_CODING");
 
