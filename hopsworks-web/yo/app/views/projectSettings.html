@@ -165,10 +165,18 @@
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
                   <h2>Install Python Libraries with Anaconda</h2>                  
                 </div>
+                <div class="row">
+                  <div class="col-md-offset-1 col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
+                    <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                         aria-valuenow="{{pythonDepsCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                      Number of hosts left: {{pythonDepsCtrl.numEnvsNotEnabled}}
+                    </div>
+                  </div>
+                </div>
+
                 <fieldset>
                   <div ng-show="pythonDepsCtrl.enabled" class="control-group col-md-offset-1">
-                    <div style="margin-top: 30px;">
-
+                    <div style="margin-top: 5px;">
                       <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
                                          href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
                       <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
@@ -186,8 +194,7 @@
                     </div>
                     <div class="row"></div>
                     <form name="nestedForm">
-
-                      <div class="form-group row" style="margin-top: 60px;">
+                      <div class="form-group row" style="margin-top: 40px;">
                         <div class="col-md-5">
                           <input type="text" class="form-control" 
                                  placeholder="Search here ...."
@@ -205,11 +212,12 @@
                         </div>
                       </div>
                     </form>
+                  </div>
                 </fieldset>
 
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.resultsMessageShowing">{{pythonDepsCtrl.resultsMsg}}</div>
 
-                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.numEnvsNotEnabled > 0">Number of hosts not provisioned with an environment yet: {{pythonDepsCtrl.numEnvsNotEnabled}}</div>
+                <!--                <div class="col-md-offset-1" ng-show="pythonDepsCtrl.numEnvsNotEnabled > 0">Number of hosts not provisioned with an environment yet: {{pythonDepsCtrl.numEnvsNotEnabled}}</div>-->
 
 
                 <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped" ng-show="pythonDepsCtrl.searchResults.length > 0">

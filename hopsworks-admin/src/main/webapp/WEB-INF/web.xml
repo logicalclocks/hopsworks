@@ -94,13 +94,5 @@
       <form-login-page>/hopsworks/#/login</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>-->
-  </login-config>
-  <session-config>
-    <session-timeout>30</session-timeout>
-    <cookie-config>
-      <name>JSESSIONID</name>
-      <path>/</path>
-    </cookie-config>
-  </session-config> 
-  
+  </login-config>  
 </web-app>
