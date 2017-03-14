@@ -44,7 +44,7 @@ import javax.ws.rs.core.SecurityContext;
 public class ApplicationService {
 
   final static Logger logger = Logger.getLogger(ApplicationService.class.
-          getName());
+      getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -65,11 +65,11 @@ public class ApplicationService {
   @Path("mail")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response sendEmail(@Context SecurityContext sc,
-          @Context HttpServletRequest req, EmailJsonDTO mailInfo) throws
-          AppException {
+      @Context HttpServletRequest req, EmailJsonDTO mailInfo) throws
+      AppException {
 
     String projectUser = checkAndGetProjectUser(mailInfo.
-            getKeyStoreBytes(), mailInfo.getKeyStorePwd().toCharArray());
+        getKeyStoreBytes(), mailInfo.getKeyStorePwd().toCharArray());
 
     assertAdmin(projectUser);
 
@@ -81,12 +81,12 @@ public class ApplicationService {
       email.sendEmail(dest, Message.RecipientType.TO, subject, message);
     } catch (MessagingException ex) {
       Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, null,
-              ex);
+          ex);
       return noCacheResponse.getNoCacheResponseBuilder(
-              Response.Status.SERVICE_UNAVAILABLE).build();
+          Response.Status.SERVICE_UNAVAILABLE).build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            build();
+        build();
 
   }
 
@@ -97,28 +97,36 @@ public class ApplicationService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getSchemaForTopics(@Context SecurityContext sc,
-          @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws
-          AppException {
+      @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws
+      AppException {
 
     String projectUser = checkAndGetProjectUser(topicInfo.getKeyStoreBytes(),
-            topicInfo.getKeyStorePwd().toCharArray());
+        topicInfo.getKeyStorePwd().toCharArray());
 
     Project project = projectFacade.findByName(hdfsUserBean.getProjectName(
-            projectUser));
+        projectUser));
 
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          "Incomplete request!");
     }
 
     SchemaDTO schemaDto = kafka.getSchemaForTopic(topicInfo.getTopicName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(schemaDto).build();
+        entity(schemaDto).build();
 
   }
 
+  /**
+   * Returns the project user from the keystore and verifies it.
+   *
+   * @param keyStore
+   * @param keyStorePwd
+   * @return
+   * @throws AppException
+   */
   private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd)
-          throws AppException {
+      throws AppException {
     try {
       KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
       ByteArrayInputStream stream = new ByteArrayInputStream(keyStore);
@@ -136,17 +144,16 @@ public class ApplicationService {
       }
 
       UserCerts userCert = certificateBean.findUserCert(hdfsUserBean.
-              getProjectName(projectUser), hdfsUserBean.getUserName(projectUser));
+          getProjectName(projectUser), hdfsUserBean.getUserName(projectUser));
 
       if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                "Certificat error!");
+            "Certificate error!");
       }
       return projectUser;
-    } catch (IOException | CertificateException | KeyStoreException |
-            NoSuchAlgorithmException ex) {
+    } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Certificat error!");
+          "Certificate error!");
     }
   }
 
@@ -154,7 +161,7 @@ public class ApplicationService {
     String user = hdfsUserBean.getUserName(projectUser);
     if (!userManager.findGroups(user).contains("HOPS_ADMIN")) {
       throw new AppException((Response.Status.UNAUTHORIZED.getStatusCode()),
-              "only admins can call this function");
+          "only admins can call this function");
     }
   }
 }

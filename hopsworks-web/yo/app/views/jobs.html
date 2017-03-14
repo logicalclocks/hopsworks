@@ -93,25 +93,40 @@
                     <tr
                       dir-paginate="job in jobsCtrl.jobs| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize" ng-class="{'active':$index === jobsCtrl.selectedIndex}" ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showLogs(job.id);">
                       <td id="{{job.name === projectCtrl.tourService.createdJobName}}">
-                        <button style="border-color: #20AD28; min-width: 64px;"
+                        <button style="border-color: #20AD28; min-width: 64px; width:60%;"
                                 ng-click="jobsCtrl.showLogs(job.id);jobsCtrl.runJob(job, $index);$event.stopPropagation();"
                                 class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
                           <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> Run
                         </button>
                         <button
-                          ng-show="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]"
+                          ng-show="(jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]) && jobsCtrl.getJobClickStatus(job.id)==='running'"
                           ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
                                                   jobsCtrl.runningInfo['' + job.id].state === 'Starting Application Master' ||
-                                                  jobsCtrl.runningInfo['' + job.id].state === 'Initializing'  ||
-                                                  jobsCtrl.workingArray[job.id] === 'false'"
+                                                  jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
                           ng-click="jobsCtrl.toggle(job, $index);
                                           jobsCtrl.stopJob(job.id);
                                           jobsCtrl.showLogs(job.id);
                                           $event.stopPropagation();"
-                          class="btn btn-danger btn-sm">
-                          <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.workingArray[job.id]==='true'"></span>
-                          <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.workingArray[job.id]==='false'" ></span>
+                          class="btn btn-danger btn-sm"
+                          style="width: 60%;">
+                          <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.id)==='running'"></span>
+                          <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.id)==='stopping'" ></span>
                           Stop
+                        </button>
+                        <button
+                          ng-show="(jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]) && (jobsCtrl.getJobClickStatus(job.id)==='stopping' || jobsCtrl.getJobClickStatus(job.id)==='killing')"
+                          ng-disabled="!jobsCtrl.runningInfo['' + job.id].running ||
+                                                  jobsCtrl.runningInfo['' + job.id].state === 'Starting Application Master' ||
+                                                  jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
+                          ng-click="jobsCtrl.toggle(job, $index);
+                                          jobsCtrl.killJob(job.id);
+                                          jobsCtrl.showLogs(job.id);
+                                          $event.stopPropagation();"
+                          class="btn btn-danger btn-sm"
+                          style="width: 60%;">
+                          <span class="glyphicon glyphicon-stop" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.id)==='running'"></span>
+                          <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="jobsCtrl.getJobClickStatus(job.id)==='stopping' || jobsCtrl.getJobClickStatus(job.id)==='killing'" ></span>
+                          Kill
                         </button>
                       </td>
                       <td>

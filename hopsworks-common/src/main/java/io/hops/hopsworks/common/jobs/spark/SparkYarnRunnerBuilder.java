@@ -26,7 +26,7 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 public class SparkYarnRunnerBuilder {
 
   //Necessary parameters
-  private final String appJarPath, mainClass;
+  private final String appPath, mainClass;
 
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
@@ -50,17 +50,17 @@ public class SparkYarnRunnerBuilder {
 
   private JobType jobType;
 
-  public SparkYarnRunnerBuilder(String appJarPath, String mainClass,
+  public SparkYarnRunnerBuilder(String appPath, String mainClass,
       JobType jobType) {
-    if (appJarPath == null || appJarPath.isEmpty()) {
+    if (appPath == null || appPath.isEmpty()) {
       throw new IllegalArgumentException(
-          "Path to application jar cannot be empty!");
+          "Path to application executable cannot be empty!");
     }
     if (mainClass == null || mainClass.isEmpty()) {
       throw new IllegalArgumentException(
           "Name of the main class cannot be empty!");
     }
-    this.appJarPath = appJarPath;
+    this.appPath = appPath;
     this.mainClass = mainClass;
     this.jobType = jobType;
   }
@@ -113,13 +113,40 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.PRIVATE.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
-    //Add app jar  
+    //Add app file
+    String appExecName = null;
+    if (jobType == JobType.SPARK) {
+      appExecName = Settings.SPARK_LOCRSC_APP_JAR;
+    } else if (jobType == JobType.PYSPARK) {
+      //set app file from path
+      appExecName = appPath.substring(appPath.lastIndexOf(File.separator) + 1);
+//Add pyspark libs as local resources
+      //Add pyspark.zip
+//      builder.addLocalResource(new LocalResourceDTO(
+//          Settings.PYSPARK_ZIP, Settings.getPySparkZipPath(sparkUser),
+//          LocalResourceVisibility.PRIVATE.toString(),
+//          LocalResourceType.ARCHIVE.toString(), null), false);
+//      //py4j-0.10.4-src.zip
+//      builder.addLocalResource(new LocalResourceDTO(
+//          Settings.PYSPARK_PY4J, Settings.getPySpark4JPath(sparkUser),
+//          LocalResourceVisibility.PRIVATE.toString(),
+//          LocalResourceType.ARCHIVE.toString(), null), false);
+
+      //Add libs to PYTHONPATH
+      builder.addToAppMasterEnvironment("PYTHONPATH", "/srv/hops/spark/python/lib/" + Settings.PYSPARK_ZIP
+          + File.pathSeparator + "/srv/hops/spark/python/lib/"
+          + Settings.PYSPARK_PY4J);
+
+      addSystemProperty(Settings.SPARK_APP_NAME_ENV, jobName);
+      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, "/srv/hops/spark/python/lib/" + Settings.PYSPARK_ZIP
+          + File.pathSeparator + "/srv/hops/spark/python/lib/" + Settings.PYSPARK_PY4J);
+    }
+
     builder.addLocalResource(new LocalResourceDTO(
-        Settings.SPARK_LOCRSC_APP_JAR, appJarPath,
+        appExecName, appPath,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null),
-        !appJarPath.startsWith("hdfs:"));
-
+        !appPath.startsWith("hdfs:"));
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
 
@@ -143,7 +170,7 @@ public class SparkYarnRunnerBuilder {
         //Set deletion to true so that certs are removed
         builder.addLocalResource(dto, true);
       } else {
-        builder.addLocalResource(dto, !appJarPath.startsWith("hdfs:"));
+        builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
       }
       builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
           dto.getName());
@@ -163,6 +190,7 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", jobUser);
+
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
@@ -270,6 +298,10 @@ public class SparkYarnRunnerBuilder {
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
+    //TODO(set app file from path)
+    if (jobType == JobType.PYSPARK) {
+      amargs.append(" --primary-py-file ").append(appExecName);
+    }
 
     Properties sparkProperties = new Properties();
     InputStream is = null;

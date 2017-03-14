@@ -128,10 +128,10 @@ angular.module('hopsWorksApp')
                           //if not zeppelin we should have a job
                           self.ui = "/hopsworks-api/kibana/app/kibana#!/discover?_g=(refreshInterval:" +
                                   "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
-                                  "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                                  "&_a=(columns:!(%27timestamp%27,priority,application,logger_name,thread,message,host),index:" +
                                   projectName.toLowerCase() +
                                   ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
-                                  + projectName.toLowerCase() + "-zeppelin)),sort:!(%27@timestamp%27,asc))";
+                                  + projectName.toLowerCase() + "-zeppelin)),sort:!(%27timestamp%27,desc))";
                           self.current = "kibanaUI";
                           var iframe = document.getElementById('ui_iframe');
                           if (iframe !== null) {
@@ -147,10 +147,10 @@ angular.module('hopsWorksApp')
               } else {
                 self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
                         "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
-                        "&_a=(columns:!(%27@timestamp%27,priority,application,logger_name,thread,message,host),index:" +
+                        "&_a=(columns:!(%27timestamp%27,priority,application,logger_name,thread,message,host),index:" +
                         self.job.project.name.toLowerCase() +
                         ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
-                        + self.job.name + ")),sort:!(%27@timestamp%27,asc))";
+                        + self.job.name + ")),sort:!(%27timestamp%27,desc))";
                 self.current = "kibanaUI";
                 var iframe = document.getElementById('ui_iframe');
                 if (iframe !== null) {

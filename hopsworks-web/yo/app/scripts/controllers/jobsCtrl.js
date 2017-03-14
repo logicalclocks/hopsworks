@@ -7,8 +7,8 @@
 
 angular.module('hopsWorksApp')
         .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
-                    'TourService', 'ProjectService',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService) {
+                    'TourService', 'ProjectService','$timeout',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -33,11 +33,18 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.refreshSlider = function () {
+              $timeout(function () {
+                $scope.$broadcast('rzSliderForceRender');
+              });
+            };
+            
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
                         self.currentjob = job;
                         self.currentjob.runConfig = success.data;
+                        self.refreshSlider();
                         self.copy();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
@@ -47,10 +54,31 @@ angular.module('hopsWorksApp')
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
               self.workingArray[id] = "true";
+//              StorageService.store(self.projectId + "_jobstopclicked_"+id, self.workingArray[id]);
+//              var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+//              console.log("status: "+status);
             };
 
             self.stopbuttonClickedToggle = function (id, display) {
               self.workingArray[id] = display;
+              var jobClickStatus = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+              StorageService.store(self.projectId + "_jobstopclicked_"+id, jobClickStatus);
+              if(jobClickStatus === "stopping"){
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, "killing");
+              } else {
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, "stopping");
+              }
+            };
+            
+            self.getJobClickStatus = function(id){
+              var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
+              if(status === "stopping" || status === "killing"){
+                StorageService.store(self.projectId + "_jobstopclicked_"+id, status);
+              }
+              if(status !== "stopping" && status !== "killing"){
+                status = "running";
+              }
+              return status;
             };
 
             self.copy = function () {
@@ -64,13 +92,17 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   jobType = 3;
+                case "PYSPARK":
+                  jobType = 4;
+                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 1) {
+              if (jobType === 1 || jobType === 4) {
+                
                 sparkState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
-                mainFileTxt = "JAR file";
+                mainFileTxt = "App file";
                 mainFileVal = sparkState.selectedJar;
                 jobDetailsTxt = "Job details";
               } else if (jobType === 2) {
@@ -84,7 +116,7 @@ angular.module('hopsWorksApp')
                 jobDetailsTxt = "Job arguments";
               } else if (jobType === 3) {
                 flinkState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.jarPath)
+                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
@@ -219,6 +251,7 @@ angular.module('hopsWorksApp')
                                           function (success) {
                                             self.toggle(job, index);
                                             self.buttonClickedToggle(job.id, true);
+                                            StorageService.store(self.projectId + "_jobstopclicked_"+job.id, "running");
 //                                            self.stopbuttonClickedToggle(job.id, false);
                                             self.getRunStatus();
                                           }, function (error) {
@@ -234,7 +267,7 @@ angular.module('hopsWorksApp')
             };
 
             self.stopJob = function (jobId) {
-              self.stopbuttonClickedToggle(jobId, "false");
+              self.stopbuttonClickedToggle(jobId, "true");
               JobService.stopJob(self.projectId, jobId).then(
                       function (success) {
                         self.getRunStatus();
@@ -243,7 +276,14 @@ angular.module('hopsWorksApp')
                           ' job', ttl: 15000});
               });
             };
-
+            
+            self.killJob = function (jobId) {
+              ModalService.confirm('sm', 'Confirm', 'Attemping to stop your job. For streaming jobs this operation can take a few minutes... Do you really want to kill this job and risk losing streaming events?').then(
+                function (success) {
+                  self.stopJob(jobId);
+                }
+              );
+            };
             /**
              * Navigate to the new job page.
              * @returns {undefined}

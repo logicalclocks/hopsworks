@@ -33,7 +33,7 @@ import io.hops.hopsworks.common.util.Settings;
 public class SparkController {
 
   private static final Logger LOG = Logger.getLogger(SparkController.class.
-          getName());
+      getName());
 
   @EJB
   private AsynchronousJobExecutor submitter;
@@ -61,16 +61,16 @@ public class SparkController {
    * Spark job.
    */
   public Execution startJob(final JobDescription job, final Users user) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK) {
+    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
       throw new IllegalArgumentException(
-              "Job configuration is not a Spark job configuration.");
+          "Job configuration is not a Spark job configuration.");
     }
 
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
@@ -81,10 +81,10 @@ public class SparkController {
         @Override
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
-                  getHadoopDir(), settings.getSparkDir(),
-                  hdfsLeDescriptorsFacade.getSingleEndpoint(),
-                  settings.getSparkUser(), job.getProject().getName() + "__"
-                  + user.getUsername());
+              getHadoopDir(), settings.getSparkDir(),
+              hdfsLeDescriptorsFacade.getSingleEndpoint(),
+              settings.getSparkUser(), job.getProject().getName() + "__"
+              + user.getUsername());
         }
       });
     } catch (InterruptedException ex) {
@@ -98,18 +98,18 @@ public class SparkController {
       submitter.startExecution(sparkjob);
     } else {
       LOG.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
+          "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
     activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.
-            getProject(),
-            user.asUser());
+        getProject(),
+        user.asUser());
     return jh;
   }
 
   public void stopJob(JobDescription job, Users user, String appid) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot stop a null job.");
@@ -117,20 +117,20 @@ public class SparkController {
       throw new NullPointerException("Cannot stop a job as a null user.");
     } else if (job.getJobType() != JobType.SPARK) {
       throw new IllegalArgumentException(
-              "Job configuration is not a Spark job configuration.");
+          "Job configuration is not a Spark job configuration.");
     }
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
-            getHadoopDir(), settings.getSparkDir(),
-            hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
-            hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()));
+        getHadoopDir(), settings.getSparkDir(),
+        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
+        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()));
 
     submitter.stopExecution(sparkjob, appid);
 
   }
 
   /**
-   * Inspect the jar on the given path for execution. Returns a
+   * Inspect the jar or.py on the given path for execution. Returns a
    * SparkJobConfiguration object with a default
    * configuration for this job.
    * <p/>
@@ -141,33 +141,36 @@ public class SparkController {
    * @throws org.apache.hadoop.security.AccessControlException
    * @throws IOException
    */
-  public SparkJobConfiguration inspectJar(String path, String username,
-          DistributedFileSystemOps dfso) throws
-          AccessControlException, IOException,
-          IllegalArgumentException {
+  public SparkJobConfiguration inspectProgram(String path, String username,
+      DistributedFileSystemOps dfso) throws
+      AccessControlException, IOException,
+      IllegalArgumentException {
     LOG.log(Level.INFO, "Executing Spark job by {0} at path: {1}",
-            new Object[]{username, path});
-    if (!path.endsWith(".jar")) {
-      throw new IllegalArgumentException("Path does not point to a jar file.");
+        new Object[]{username, path});
+    if (!path.endsWith(".jar") && !path.endsWith(".py")) {
+      throw new IllegalArgumentException("Path does not point to a jar or .py file.");
     }
     HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
     // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
     path = path.replaceFirst("hdfs:/*Projects",
-            "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+        "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
     LOG.log(Level.INFO, "Really executing Spark job by {0} at path: {1}",
-            new Object[]{username, path});
-
+        new Object[]{username, path});
     SparkJobConfiguration config = new SparkJobConfiguration();
-    JarInputStream jis = new JarInputStream(dfso.open(path));
-    Manifest mf = jis.getManifest();
-    if (mf != null) {
-      Attributes atts = mf.getMainAttributes();
-      if (atts.containsKey(Name.MAIN_CLASS)) {
-        config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+    //If the main program is in a jar, try to set main class from it
+    if (path.endsWith(".jar")) {
+      JarInputStream jis = new JarInputStream(dfso.open(path));
+      Manifest mf = jis.getManifest();
+      if (mf != null) {
+        Attributes atts = mf.getMainAttributes();
+        if (atts.containsKey(Name.MAIN_CLASS)) {
+          config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+        }
       }
+    } else {
+      config.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
-
-    config.setJarPath(path);
+    config.setAppPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());
     return config;
   }
