@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -329,6 +330,10 @@ public abstract class YarnJob extends HopsJob {
    * }
    * }
    */
+  
+  final EnumSet<YarnApplicationState> finalAppState = EnumSet.of(
+      YarnApplicationState.FINISHED, YarnApplicationState.FAILED,
+      YarnApplicationState.KILLED);
   /**
    * Monitor the state of the job.
    * <p/>
@@ -393,7 +398,7 @@ public abstract class YarnJob extends HopsJob {
                   + getExecution() + ". Tried " + failures + " time(s).", ex);
         }
         //Remove local and hdfs files (localresources)this job uses
-        if (!removedFiles && appState == YarnApplicationState.RUNNING) {
+        if (!removedFiles && finalAppState.contains(appState)) {
           try {
             runner.removeAllNecessary();
             removedFiles = true;
@@ -415,6 +420,7 @@ public abstract class YarnJob extends HopsJob {
           updateFinalStatus(JobFinalStatus.KILLED);
           updateProgress(0);
           finalState = JobState.KILLED;
+          runner.removeAllNecessary();
         } catch (YarnException | IOException ex) {
           LOG.log(Level.SEVERE,
                   "Failed to cancel execution, " + getExecution()
