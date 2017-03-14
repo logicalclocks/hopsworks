@@ -145,7 +145,7 @@ angular.module('hopsWorksApp')
                 });
 
               } else {
-                self.ui = "/hopsworks-api/kibana/app/kibana#/discover?_g=(refreshInterval:" +
+                self.ui = "/hopsworks-api/kibana/app/kibana#!/discover?_g=(refreshInterval:" +
                         "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
                         "&_a=(columns:!(%27timestamp%27,priority,application,logger_name,thread,message,host),index:" +
                         self.job.project.name.toLowerCase() +
