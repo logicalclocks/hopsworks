@@ -7,8 +7,8 @@
 
 angular.module('hopsWorksApp')
         .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
-                    'TourService', 'ProjectService',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService) {
+                    'TourService', 'ProjectService','$timeout',
+          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -33,11 +33,18 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.refreshSlider = function () {
+              $timeout(function () {
+                $scope.$broadcast('rzSliderForceRender');
+              });
+            };
+            
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
                         self.currentjob = job;
                         self.currentjob.runConfig = success.data;
+                        self.refreshSlider();
                         self.copy();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error fetching job configuration.', ttl: 15000});
@@ -78,7 +85,6 @@ angular.module('hopsWorksApp')
               var jobType;
               switch (self.currentjob.jobType.toUpperCase()) {
                 case "SPARK":
-                case "PYSPARK":
                   jobType = 1;
                   break;
                 case "ADAM":
@@ -86,9 +92,13 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   jobType = 3;
+                case "PYSPARK":
+                  jobType = 4;
+                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 1) {
+              if (jobType === 1 || jobType === 4) {
+                
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };

@@ -68,7 +68,7 @@ public class SparkController {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK ) {
+    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
       throw new IllegalArgumentException(
           "Job configuration is not a Spark job configuration.");
     }
@@ -165,12 +165,10 @@ public class SparkController {
         Attributes atts = mf.getMainAttributes();
         if (atts.containsKey(Name.MAIN_CLASS)) {
           config.setMainClass(atts.getValue(Name.MAIN_CLASS));
-          config.setType(JobType.SPARK);
         }
       }
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);
-      config.setType(JobType.PYSPARK);
     }
     config.setAppPath(path);
     config.setHistoryServerIp(settings.getSparkHistoryServerIp());
