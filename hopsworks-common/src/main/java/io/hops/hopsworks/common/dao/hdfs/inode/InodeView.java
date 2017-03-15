@@ -85,7 +85,7 @@ public final class InodeView {
             = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
     this.shared
-            = (!parent.inodePK.getName().equals(ds.getProjectId().getName()));
+            = (!parent.inodePK.getName().equals(ds.getProject().getName()));
     if (this.shared) {
       this.name = parent.inodePK.getName() + Settings.SHARED_FILE_SEPARATOR
               + this.name;

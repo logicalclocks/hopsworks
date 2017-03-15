@@ -263,8 +263,8 @@ public class ProjectService {
     List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
     List<String> sharedWith = new ArrayList<>();
     for (Dataset d : projectsContainingInode) {
-      if (!d.getProjectId().getId().equals(proj.getId())) {
-        sharedWith.add(d.getProjectId().getName());
+      if (!d.getProject().getId().equals(proj.getId())) {
+        sharedWith.add(d.getProject().getName());
       }
     }
     DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
