@@ -198,23 +198,23 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>logout</from-outcome>
-      <url-pattern>/hopsworks/#/index.xhtml</url-pattern>
+      <url-pattern>/hopsworks/#!/index.xhtml</url-pattern>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>login</from-outcome>
-      <url-pattern>/hopsworks/#/login</url-pattern>
+      <url-pattern>/hopsworks/#!/login</url-pattern>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>welcome</from-outcome>
-      <url-pattern>/hopsworks/#/login</url-pattern>
+      <url-pattern>/hopsworks/#!/login</url-pattern>
       <redirect/>
     </navigation-case>
     
     <navigation-case>
       <from-outcome>home</from-outcome>
-      <url-pattern>/hopsworks/#/home</url-pattern>
+      <url-pattern>/hopsworks/#!/home</url-pattern>
       <redirect/>
     </navigation-case>      
   </navigation-rule>

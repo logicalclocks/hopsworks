@@ -16,13 +16,15 @@ angular.module('hopsWorksApp')
 
             self.enabled = false;
             self.installed = false;
-            
+
+            $scope.activeForm;
+
             self.resultsMsgShowing = false;
 
             self.resultsMsg = "";
-           
+
             self.pythonVersionOpen = false;
-            
+
             $scope.sortType = 'preinstalled';
 
             self.searchText = "";
@@ -37,6 +39,8 @@ angular.module('hopsWorksApp')
             self.opsStatus = [];
             self.selectedInstallStatus = {};
             self.numEnvsNotEnabled = 0;
+            self.numEnvs = 0;
+
 
 //            https://repo.continuum.io/pkgs/free/linux-64/
             self.condaUrl = "default";
@@ -45,16 +49,35 @@ angular.module('hopsWorksApp')
             self.selectedLib = {"channelUrl": self.condaUrl,
               "lib": "", "version": ""};
 
+            self.progress = function () {
+              var percent = ((self.numEnvs - self.numEnvsNotEnabled) / self.numEnvs) * 100;
+              if (percent === 0) {
+                return 5;
+              }
+              return percent;
+            };
 
             var getInstallationStatus = function () {
               PythonDepsService.status(self.projectId).then(
                       function (success) {
                         self.opsStatus = success.data;
+
                         if (self.opsStatus.length === 0) {
+                          if (self.resultsMessageShowing === true) {
+                            // If there were operations outstanding, but now there are no outstanding ops, 
+                            // then refresh installed libraries
+                            self.getInstalled();
+                          }
                           self.resultsMessageShowing = false;
+                        }
+
+                        var firstRun = false;
+                        if (self.numEnvsNotEnabled === 0) {
+                          firstRun = true;
                         }
                         self.numEnvsNotEnabled = 0;
                         var finished = {};
+                        self.installing = {};
 
                         for (var i = 0; i < self.opsStatus.length; i++) {
                           console.log(self.opsStatus[i]);
@@ -67,15 +90,15 @@ angular.module('hopsWorksApp')
                               self.upgrading[self.opsStatus[i].lib] = false;
                             }
                           }
-//                          if (self.opsStatus[i].status === "Installed") {
-//                            if (self.opsStatus[i].op === "INSTALL") {
-//                              finished[self.installing[i].lib] = false;
-//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
-//                              finished[self.uninstalling[opsStatus[i].lib] = false;
-//                            } else if (self.opsStatus[i].op === "UPGRADE") {
-//                              finished[self.upgrading[i].lib] = false;
-//                            }
-//                          }
+                          if (self.opsStatus[i].status === "Installed") {
+                            if (self.opsStatus[i].op === "INSTALL") {
+                              finished[self.installing[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+                              finished[self.uninstalling[i].lib] = false;
+                            } else if (self.opsStatus[i].op === "UPGRADE") {
+                              finished[self.upgrading[i].lib] = false;
+                            }
+                          }
                           self.selectedInstallStatus[self.opsStatus[i].lib] =
                                   {"host": {"host": "none", "lib": "Not installed"}, "installing": false};
                           if (self.opsStatus[i].op === "CREATE" ||
@@ -84,20 +107,28 @@ angular.module('hopsWorksApp')
                             self.numEnvsNotEnabled += 1;
                           }
                         }
+                        if (firstRun === true) {
+                          self.numEnvs = self.numEnvsNotEnabled;
+                        }
 
 // If all hosts have completed for a library, making it installing false.
-//                        for (var key in self.installing) {
-//                          if (finished[key] !== false) {
-//                            if (self.opsStatus[i].op === "INSTALL") {
-//                              self.installing[key] = false;
-//                            } else if (self.opsStatus[i].op === "UNINSTALL") {
-//                              self.uninstalling[key] = false;
-//                            } else if (self.opsStatus[i].op === "UPGRADE") {
-//                              self.upgrading[key] = false;
-//                            }
-//                          }
-//                        }
-
+                        var installed = true;
+                        var uninstalled = true;
+                        var upgraded = true;
+                        for (var key in self.installing) {
+                          if (finished[key] !== false) {
+                            if (self.opsStatus[i].op === "INSTALL") {
+                              installed = false;
+                            } else if (self.opsStatus[i].op === "UNINSTALL") {
+                              uninstalled = false;
+                            } else if (self.opsStatus[i].op === "UPGRADE") {
+                              upgraded = false;
+                            }
+                          }
+                        }
+                        self.installing[key] = installed;
+                        self.uninstalling[key] = uninstalled;
+                        self.upgrading[key] = upgraded;
 
 
                       }, function (error) {
@@ -109,8 +140,6 @@ angular.module('hopsWorksApp')
             var getInstallationStatusInterval = $interval(function () {
               getInstallationStatus();
             }, 5000);
-
-            getInstallationStatus();
 
             self.getInstallationStatus = function () {
               getInstallationStatus();
@@ -181,7 +210,8 @@ angular.module('hopsWorksApp')
                           self.resultsMessageShowing = false;
                         }
                         for (var i = 0; i < self.searchResults.length; i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": "none", "status": "Not installed"}, "installing": false};
+                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": self.searchResults[i].versions[0].version,
+                              "status": self.searchResults[i].versions[0].status}, "installing": false};
                         }
 
                       }, function (error) {
@@ -197,6 +227,12 @@ angular.module('hopsWorksApp')
 
 
             self.installOneHost = function (lib, version, host) {
+
+              if (version.version === undefined || version.version === null || version.version.toUpperCase() === "NONE") {
+                growl.error("Select a version to install from the dropdown list", {title: 'Error', ttl: 3000});
+                return;
+              }
+
 
               self.installing[host][lib] = true;
 
@@ -214,6 +250,10 @@ angular.module('hopsWorksApp')
 
             self.install = function (lib, version) {
 
+              if (version.version === undefined || version.version === null || version.version.toUpperCase() === "NONE") {
+                growl.error("Select a version to install from the dropdown list", {title: 'Error', ttl: 3000});
+                return;
+              }
               self.installing[lib] = true;
 
               var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
@@ -223,8 +263,8 @@ angular.module('hopsWorksApp')
                         growl.success("Click on the 'Installed Python Libraries' tab for more info.", {title: 'Installing', ttl: 5000});
                         self.resultsMessageShowing = false;
                         self.searchResults = [];
-//                        self.installing[lib] = false;
-
+                        self.getInstalled();
+                        $scope.activeForm = 2;
                       }, function (error) {
                 self.installing[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
@@ -237,9 +277,10 @@ angular.module('hopsWorksApp')
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
                       function (success) {
-//                        growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                        self.getInstalled();
+                        self.uninstalling[lib] = false;
                       }, function (error) {
-                      self.uninstalling[lib] = false;
+                self.uninstalling[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
@@ -250,9 +291,11 @@ angular.module('hopsWorksApp')
               var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
-                        growl.success("Trying to update " + lib, {title: 'Updating', ttl: 3000});
+                        growl.success("Sending command to update: " + lib, {title: 'Updating', ttl: 3000});
+                        self.getInstalled();
+                        self.upgrading[lib] = false;
                       }, function (error) {
-              self.upgrading[lib] = false;
+                self.upgrading[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };

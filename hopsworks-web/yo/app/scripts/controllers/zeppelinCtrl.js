@@ -197,7 +197,7 @@ angular.module('hopsWorksApp')
               getNotesInProject(null, false);
             };
             self.openNote = function (note) {
-              window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
+              window.open(getLocationBase() + "/zeppelin/#!/notebook/" + note.id);
             };
 
             self.openZeppelin = function () {

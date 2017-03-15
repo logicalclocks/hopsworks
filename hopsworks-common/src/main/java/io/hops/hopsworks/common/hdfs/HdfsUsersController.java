@@ -373,6 +373,20 @@ public class HdfsUsersController {
     }
   }
 
+   /**
+   * Deletes the project group and all associated groups from HDFS
+   * <p>
+   * @param project
+   * @param dsInProject
+   * @throws java.io.IOException
+   */
+  public void deleteGroups(List<HdfsGroups> hdfsDsGroups) throws
+          IOException {
+    for (HdfsGroups hdfsDsGroup : hdfsDsGroups) {
+      removeHdfsGroup(hdfsDsGroup);
+    }
+  }
+  
   /**
    * Deletes all users associated with this project from HDFS
    * <p>
@@ -394,6 +408,20 @@ public class HdfsUsersController {
       hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
       dfsService.removeDfsOps(hdfsUsername);
       removeHdfsUser(hdfsUser);
+    }
+  }
+  
+  /**
+   * Deletes all users associated with this project from HDFS
+   * <p>
+   * @param project
+   * @param projectTeam
+   * @throws java.io.IOException
+   */
+  public void deleteUsers(Collection<HdfsUsers> users) throws IOException {
+    for (HdfsUsers user : users) {
+      dfsService.removeDfsOps(user.getName());
+      removeHdfsUser(user);
     }
   }
 
@@ -457,6 +485,40 @@ public class HdfsUsersController {
     hdfsGroupsFacade.merge(hdfsGroup);
   }
 
+  /**
+   * Returns all the hdfs username corresponding to projectName
+   * <p>
+   * @param projectName
+   * @return
+   */
+  public List<HdfsUsers> getAllProjectHdfsUsers(String projectName) {
+    return hdfsUsersFacade.findProjectUsers(projectName);
+  }
+
+  /**
+   * Returns all the hdfs groupname corresponding to projectName
+   * <p>
+   * @param projectName
+   * @return
+   */
+  public List<HdfsGroups> getAllProjectHdfsGroups(String projectName) {
+    return hdfsGroupsFacade.findProjectGroups(projectName);
+  }
+
+  public List<HdfsGroups> listProjectGroups(Project project, List<Dataset> dsInProject) {
+    if (project == null) {
+      throw new IllegalArgumentException("One or more arguments are null.");
+    }
+    List<HdfsGroups> projectGroups = new ArrayList<>();
+    projectGroups.add(hdfsGroupsFacade.findByName(project.getName()));
+    String dsGroups;
+    for (Dataset ds : dsInProject) {
+      dsGroups = getHdfsGroupName(project, ds);
+      projectGroups.add(hdfsGroupsFacade.findByName(dsGroups));
+    }
+    return projectGroups;
+  }
+  
   /**
    * Returns the hdfs username for the user in this project
    * <p>

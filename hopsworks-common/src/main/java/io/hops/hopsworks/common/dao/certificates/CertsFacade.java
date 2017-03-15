@@ -116,32 +116,21 @@ public class CertsFacade {
     return new ArrayList<>();
   }
 
-  public void putUserCerts(String projectname, String username) {
-    try (FileInputStream kfin = new FileInputStream(new File("/tmp/"
+  public void putUserCerts(String projectname, String username) throws IOException {
+    FileInputStream kfin = new FileInputStream(new File("/tmp/"
             + projectname + "__" + username + "__kstore.jks"));
-            FileInputStream tfin = new FileInputStream(new File("/tmp/"
-                    + projectname + "__" + username + "__tstore.jks"))) {
+    FileInputStream tfin = new FileInputStream(new File("/tmp/"
+            + projectname + "__" + username + "__tstore.jks"));
 
-      byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
-      byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
+    byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
+    byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
 
-      UserCerts uc = new UserCerts(projectname, username);
-      uc.setUserKey(kStoreBlob);
-      uc.setUserCert(tStoreBlob);
-      em.persist(uc);
-      em.flush();
+    UserCerts uc = new UserCerts(projectname, username);
+    uc.setUserKey(kStoreBlob);
+    uc.setUserCert(tStoreBlob);
+    em.persist(uc);
+    em.flush();
 
-      // TODO - DO NOT SWALLOW EXCEPTIONS!!!
-    } catch (FileNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
-    } catch (IOException ex) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
-    } catch (Throwable ex) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
-    }
   }
 
   public void putServiceCerts(String service) {

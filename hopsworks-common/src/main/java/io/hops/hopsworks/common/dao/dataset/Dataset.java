@@ -49,7 +49,11 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           = "SELECT d FROM Dataset d WHERE d.description = :description"),
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
-          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.projectId = :projectId")})
+          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.projectId = :projectId"),
+  @NamedQuery(name = "Dataset.findSharedWithProject",
+          query
+          = "SELECT d FROM Dataset d WHERE d.projectId = :projectId AND "
+                  + "d.shared = true")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;

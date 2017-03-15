@@ -333,6 +333,49 @@ public class KafkaFacade {
     }
   }
 
+  public void removeAllTopicsFromProject(Project project) throws
+          InterruptedException, AppException {
+
+    TypedQuery<ProjectTopics> query = em.createNamedQuery(
+            "ProjectTopics.findByProjectId", ProjectTopics.class);
+    query.setParameter("projectId", project.getId());
+    List<ProjectTopics> topics = query.getResultList();
+
+    if (topics == null || topics.isEmpty()) {
+      return;
+    }
+
+    ZkClient zkClient = null;
+    ZkConnection zkConnection = null;
+
+    try {
+      zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
+              sessionTimeoutMs, connectionTimeout, ZKStringSerializer$.MODULE$);
+      zkConnection = new ZkConnection(settings.getZkConnectStr());
+      for (ProjectTopics topic : topics) {
+        //remove from database
+        em.remove(topic);
+
+        //remove from zookeeper
+        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+        try {
+          AdminUtils.deleteTopic(zkUtils, topic.getProjectTopicsPK().
+                  getTopicName());
+        } catch (TopicAlreadyMarkedForDeletionException ex) {
+          //ignore this error, if the topic is already being removed it will end
+          //up in the state that we want.
+        }
+      }
+    } finally {
+      if (zkClient != null) {
+        zkClient.close();
+      }
+      if (zkConnection != null) {
+        zkConnection.close();
+      }
+    }
+  }
+   
   public TopicDefaultValueDTO topicDefaultValues() throws AppException {
 
     Set<String> brokers = getBrokerEndpoints();
@@ -847,8 +890,7 @@ public class KafkaFacade {
     }
     try {
       HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(),
-              settings.getHopsworksTmpCertDir(), Settings.TMP_CERT_STORE_REMOTE,
-              null, null, null, null, null);
+              settings.getHopsworksTmpCertDir(), Settings.TMP_CERT_STORE_REMOTE);
 
       for (String brokerAddress : brokers) {
         brokerAddress = brokerAddress.split("://")[1];

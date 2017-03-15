@@ -38,7 +38,7 @@
     <url-pattern>*.xhtml</url-pattern>
   </servlet-mapping>
   <welcome-file-list>
-    <welcome-file>/hopsworks/#/login</welcome-file>
+    <welcome-file>/hopsworks/#!/login</welcome-file>
   </welcome-file-list>
   <servlet>
     <servlet-name>UploadServlet</servlet-name>
@@ -91,16 +91,8 @@
     <auth-method>BASIC</auth-method>
     <realm-name>cauthRealm</realm-name>
     <!--    <form-login-config>
-      <form-login-page>/hopsworks/#/login</form-login-page>
+      <form-login-page>/hopsworks/#!/login</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>-->
-  </login-config>
-  <session-config>
-    <session-timeout>30</session-timeout>
-    <cookie-config>
-      <name>JSESSIONID</name>
-      <path>/</path>
-    </cookie-config>
-  </session-config> 
-  
+  </login-config>  
 </web-app>

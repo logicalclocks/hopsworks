@@ -30,9 +30,9 @@ import io.hops.hopsworks.common.dao.user.Users;
           query = "SELECT s FROM ProjectTeam s"),
   @NamedQuery(name = "ProjectTeam.findByProject",
           query = "SELECT s FROM ProjectTeam s WHERE s.project = :project"),
-  @NamedQuery(name = "ProjectTeam.findByTeamMember",
+  @NamedQuery(name = "ProjectTeam.findActiveByTeamMember",
           query
-          = "SELECT s FROM ProjectTeam s WHERE s.user = :user"),
+          = "SELECT s FROM ProjectTeam s WHERE s.user = :user AND s.teamRole != \"Under removal\" "),
   @NamedQuery(name = "ProjectTeam.findByTeamRole",
           query = "SELECT s FROM ProjectTeam s WHERE s.teamRole = :teamRole"),
   @NamedQuery(name = "ProjectTeam.countStudiesByMember",
