@@ -297,7 +297,7 @@ public class ElasticService {
     }
 
     Dataset dataset = datasetFacade.findByNameAndProjectId(project, dsName);
-    final int datasetId = dataset.getIdForInode();
+    final int datasetId = dataset.geInodeId();
 
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
