@@ -120,6 +120,18 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     return ds;
   }
 
+  /**
+   * Finds all data sets shared with a project.
+   * <p/>
+   * @param project
+   * @return
+   */
+  public List<Dataset> findSharedWithProject(Project project) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findSharedWithProject", Dataset.class).setParameter(
+        "projectId", project);
+    return query.getResultList();
+  }
+    
   public void persistDataset(Dataset dataset) {
     em.persist(dataset);
   }
