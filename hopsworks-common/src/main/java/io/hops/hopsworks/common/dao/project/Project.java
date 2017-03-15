@@ -84,7 +84,7 @@ public class Project implements Serializable {
           mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectId")
+          mappedBy = "project")
   private Collection<Dataset> datasetCollection;
 
   @OneToMany(cascade = CascadeType.ALL,

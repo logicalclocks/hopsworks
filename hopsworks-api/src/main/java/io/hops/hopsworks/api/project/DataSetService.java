@@ -351,6 +351,97 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
+  
+  @POST
+  @Path("/unshareDataSet")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response unshareDataSet(
+      DataSetDTO dataSets,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
+
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    JsonResponse json = new JsonResponse();
+    Inode parent = inodes.getProjectRoot(this.project.getName());
+    if (dataSets == null || dataSets.getName() == null || dataSets.getName().
+        isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NAME_EMPTY);
+    }
+    if (dataSets.getProjectIds() == null || dataSets.getProjectIds().isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "No project selected.");
+    }
+    for (int projectId : dataSets.getProjectIds()) {
+      Project proj = projectFacade.find(projectId);
+      if (proj == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.PROJECT_NOT_FOUND);
+      }
+      Inode inode = inodes.findByInodePK(parent, dataSets.getName(),
+          HopsUtils.dataSetPartitionId(parent, dataSets.getName()));
+      Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
+      if (ds == null) {//if parent id and project are not the same it is a shared ds.
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            "You can not unshare this dataset you are not the owner.");
+      }
+
+      Dataset dst = datasetFacade.findByProjectAndInode(proj, inode);
+      if (dst == null) {//proj already have the dataset.
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            "Dataset not shared with " + proj.getName());
+      }
+
+      hdfsUsersBean.unshareDataset(proj, ds);
+
+      datasetFacade.removeDataset(dst);
+
+      activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSets.
+          getName() + " with project " + proj.getName(), project, user);
+    }
+    json.setSuccessMessage("The Dataset was successfully unshared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        json).build();
+  }
+
+  @POST
+  @Path("/projectsSharedWith")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response getProjectSharedWith(
+      DataSetDTO dataSet,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
+
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    JsonResponse json = new JsonResponse();
+    Inode parent = inodes.getProjectRoot(this.project.getName());
+    if (dataSet == null || dataSet.getName() == null || dataSet.getName().
+        isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NAME_EMPTY);
+    }
+    if (dataSet.getProjectId() == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "No project selected.");
+    }
+    Project proj = projectFacade.find(dataSet.getProjectId());
+    if (proj == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+
+    List<Project> list = datasetFacade.findProjectSharedWith(project, dataSet.getName());
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
+        list) {
+    };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        projects).build();
+  }
 
   @GET
   @Path("/accept/{inodeId}")

@@ -188,13 +188,13 @@ angular.module('hopsWorksApp')
                   function (success) {
                     self.user = success.data;
                     var tourState = self.user.toursState;
-                    if (tourState == 0) {
+                    if (tourState === 0) {
                       self.tourService.setInformAndTipsState();
-                    } else if (tourState == 1) {
+                    } else if (tourState === 1) {
                       self.tourService.setTipsOnlyState();
-                    } else if (tourState == 2) {
+                    } else if (tourState === 2) {
                       self.tourService.setInformOnly();
-                    } else if (tourState == 3) {
+                    } else if (tourState === 3) {
                       self.tourService.setShowNothingState();
                     } else {
                       self.tourService.setDefaultTourState();
@@ -340,23 +340,6 @@ angular.module('hopsWorksApp')
               );
             };
 
-            self.deleteOnlyProject = function (projectId) {
-              self.working[projectId] = true;
-              ProjectService.remove({id: projectId}).$promise.then(
-                      function (success) {
-                        growl.success(success.successMessage, {title: 'Success', ttl: 15000});
-                        updateUIAfterChange(false);
-                        if (self.tourService.currentStep_TourOne > -1) {
-                          self.tourService.resetTours();
-                        }
-                        self.working[projectId] = false;
-                      },
-                      function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                        self.working[projectId] = false;
-                      }
-              );
-            };
             self.deleteProjectAndDatasets = function (projectId) {
               self.working[projectId] = true;
               ProjectService.delete({id: projectId}).$promise.then(

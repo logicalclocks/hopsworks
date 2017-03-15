@@ -115,7 +115,7 @@
       </div>
       <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
         <a ng-class="{disabled: project.project.archived, disabled: homeCtrl.working[project.project.id]}"
-          href="#/project/{{project.project.id}}"
+          href="#!/project/{{project.project.id}}"
           class="list-group-item"
           context-menu
           data-target="menu-{{$index}}"
@@ -145,15 +145,6 @@
                               Share...</span>
                           </a>
                         </li>-->
-            <li>
-              <a class="pointer"
-                 role="menuitem"
-                 tabindex="1"
-                 ng-click="homeCtrl.deleteOnlyProject(project.project.id)">
-                <span><i class="fa fa-trash"></i>
-                  Remove and keep DataSets</span>
-              </a>
-            </li>
             <li>
               <a class="pointer"
                  role="menuitem"

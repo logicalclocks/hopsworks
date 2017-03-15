@@ -1,11 +1,11 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export PORT=2222
+export PORT=2223
 export WEBPORT=8080
 export SERVER=localhost
 export key=private_key
-usr=jdowling
-basedir=/srv/hops/domain1
+usr=${USER}
+basedir=/srv/hops/domains/domain1
 
 scp ${usr}@${SERVER}:/home/${usr}/NetBeansProjects/hopsworks-chef/.vagrant/machines/default/virtualbox/private_key .  
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd ${basedir} && sudo chown -R glassfish:vagrant docroot && sudo chmod -R 775 *"

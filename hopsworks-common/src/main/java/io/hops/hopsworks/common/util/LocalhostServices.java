@@ -81,6 +81,20 @@ public class LocalhostServices {
     return stdout;
   }
 
+  public static boolean isPresentProjectCertificates(String intermediateCaDir,
+          String projectName) {
+    File certFolder = new File(intermediateCaDir + "/certs/");
+    String[] certs = certFolder.list();
+    if (certs != null && certs.length > 0) {
+      for (String certFile : certs) {
+        if (certFile.startsWith(projectName)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
   //Make this asynchronous and call back UserCertsFacade.putUSer()
   public static String createUserCertificates(String intermediateCaDir,
           String projectName, String userName) throws IOException {

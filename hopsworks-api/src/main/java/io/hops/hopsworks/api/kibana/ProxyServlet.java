@@ -601,7 +601,8 @@ public class ProxyServlet extends HttpServlet {
     if (queryString != null) {
       int fragIdx = queryString.indexOf('#');
       if (fragIdx >= 0) {
-        fragment = queryString.substring(fragIdx + 1);
+        fragment = queryString.substring(fragIdx + 2); // '#!', not '#'
+//        fragment = queryString.substring(fragIdx + 1);
         queryString = queryString.substring(0, fragIdx);
       }
     }

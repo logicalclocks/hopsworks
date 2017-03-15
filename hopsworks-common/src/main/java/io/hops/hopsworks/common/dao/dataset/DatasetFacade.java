@@ -21,7 +21,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
 
   @EJB
   private InodeFacade inodes;
-
+  
   @Override
   protected EntityManager getEntityManager() {
     return em;
@@ -74,6 +74,28 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
   }
 
+  public List<Project> findProjectSharedWith(Project project, String name) {
+    Dataset dataset = findByNameAndProjectId(project, name);
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInode",Dataset.class);
+    query.setParameter("inode", dataset.getInode());
+    List<Dataset> datasets =null;
+    try {
+      datasets = query.getResultList();
+    } catch (NoResultException e) {
+      return null;
+    }
+    if(datasets==null){
+      return null;
+    }
+    List<Project> projects = new ArrayList<>();
+    for(Dataset ds : datasets){
+      if(!ds.getProject().equals(project)){
+        projects.add(ds.getProject());
+      }
+    }
+    return projects;
+  }
+  
   /**
    * Find by project and dataset name
    * <p/>
@@ -120,6 +142,18 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     return ds;
   }
 
+  /**
+   * Finds all data sets shared with a project.
+   * <p/>
+   * @param project
+   * @return
+   */
+  public List<Dataset> findSharedWithProject(Project project) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findSharedWithProject", Dataset.class).setParameter(
+        "projectId", project);
+    return query.getResultList();
+  }
+    
   public void persistDataset(Dataset dataset) {
     em.persist(dataset);
   }

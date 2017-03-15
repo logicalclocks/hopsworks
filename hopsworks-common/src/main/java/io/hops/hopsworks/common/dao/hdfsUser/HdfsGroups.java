@@ -27,6 +27,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "HdfsGroups.findAll",
           query
           = "SELECT h FROM HdfsGroups h"),
+  @NamedQuery(name = "HdfsGroups.findProjectGroups",
+      query = "SELECT h FROM HdfsGroups h WHERE h.name LIKE CONCAT(:name, '__%')"),
   @NamedQuery(name = "HdfsGroups.delete",
           query
           = "DELETE FROM HdfsGroups h WHERE h.id =:id"),

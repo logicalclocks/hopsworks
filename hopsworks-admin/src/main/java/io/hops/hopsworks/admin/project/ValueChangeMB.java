@@ -45,7 +45,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
           ProjectRoleTypes role) {
     try {
       projectTeamController.updateTeamRole(sessionState.getActiveProject(),
-              email, role.getTeam());
+              email, role.getRole());
       activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to "
               + role, sessionState.getActiveProject(), sessionState.
               getLoggedInUsername());
