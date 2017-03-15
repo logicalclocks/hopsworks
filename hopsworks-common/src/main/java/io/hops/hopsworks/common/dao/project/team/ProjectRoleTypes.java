@@ -3,7 +3,8 @@ package io.hops.hopsworks.common.dao.project.team;
 public enum ProjectRoleTypes {
 
   DATA_OWNER("Data owner"),
-  DATA_SCIENTIST("Data scientist");
+  DATA_SCIENTIST("Data scientist"),
+  UNDER_REMOVAL("Under removal");
 
   String role;
 
@@ -11,7 +12,7 @@ public enum ProjectRoleTypes {
     this.role = role;
   }
 
-  public String getTeam() {
+  public String getRole() {
     return this.role;
   }
 

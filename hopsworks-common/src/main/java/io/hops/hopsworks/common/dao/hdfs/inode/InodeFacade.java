@@ -217,7 +217,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
-    int partitionId = HopsUtils.projectPartitionId(name);
+    int partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
             Inode.class);
     query.setParameter("name", name);
@@ -434,4 +434,18 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return new Pair<>(project, dataset);
   }
 
+  /**
+   * Find all the Inodes that have <i>userId</i> as userId and correspond to an
+   * history file.
+   * <p/>
+   * @param userId
+   * @return
+   */
+  public List<Inode> findHistoryFileByHdfsUser(HdfsUsers hdfsUser) {
+    TypedQuery<Inode> query = em.createNamedQuery(
+            "Inode.findHistoryFileByHdfsUser",
+            Inode.class);
+    query.setParameter("hdfsUser", hdfsUser);
+    return query.getResultList();
+  }
 }
