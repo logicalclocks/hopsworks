@@ -89,6 +89,18 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
+                makeEditable: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/makeEditable',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
                 acceptDataset: function (inodeId) {
                   return $http.get('/api/project/' + id + '/dataset/accept/' + inodeId);
                 },
