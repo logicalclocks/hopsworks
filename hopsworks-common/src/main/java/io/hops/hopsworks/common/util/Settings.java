@@ -312,7 +312,9 @@ public class Settings {
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-
+  public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
+  public static final String SPARK_PYTHONPATH = "PYTHONPATH";
+  
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
   public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
@@ -551,8 +553,9 @@ public class Settings {
   public static final String SPARK_JARS = "spark.yarn.jars";
   public static final String SPARK_ARCHIVE = "spark.yarn.archive";
   // Subdirectory where Spark libraries will be placed.
-  public static final String LOCALIZED_LIB_DIR = "__spark_libs__";
-  public static final String LOCALIZED_CONF_DIR = "__spark_conf__";
+  public static final String SPARK_LOCALIZED_LIB_DIR = "__spark_libs__";
+  public static final String SPARK_LOCALIZED_CONF_DIR = "__spark_conf__";
+  public static final String SPARK_LOCALIZED_PYTHON_DIR = "__pyfiles__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
   public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark-0.1.jar";

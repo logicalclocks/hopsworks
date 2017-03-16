@@ -101,6 +101,30 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
+                unshareDataSet: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/unshareDataSet',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
+                projectsSharedWith: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/projectsSharedWith',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
                 acceptDataset: function (inodeId) {
                   return $http.get('/api/project/' + id + '/dataset/accept/' + inodeId);
                 },

@@ -641,6 +641,18 @@ This will make all its files unavailable to other projects unless you share it e
                       }, function (error) {
               });
             };
+
+            /**
+             * Opens a modal dialog for unsharing.
+             * @returns {undefined}
+             */
+            self.unshare = function (name) {
+              ModalService.unshareDataset('md', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+              });
+            };
             
             /**
              * Upon click on a inode in the browser:
