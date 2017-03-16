@@ -151,7 +151,6 @@ angular.module('hopsWorksApp')
                         self.job.project.name.toLowerCase() +
                         ",interval:auto,query:(query_string:(analyze_wildcard:!t,query:jobname%3D"
                         + self.job.name + ")),sort:!(%27timestamp%27,desc))";
-                console.log("kibana ui:"+self.ui);
                 self.current = "kibanaUI";
                 var iframe = document.getElementById('ui_iframe');
                 if (iframe !== null) {

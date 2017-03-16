@@ -128,6 +128,7 @@ public class SparkYarnRunnerBuilder {
 
       addSystemProperty(Settings.SPARK_APP_NAME_ENV, jobName);
       addSystemProperty(Settings.SPARK_YARN_IS_PYTHON_ENV, "true");
+      addSystemProperty("spark.executorEnv.LD_LIBRARY_PATH", "$JAVA_HOME/jre/lib/amd64/server");
     }
 
     builder.addLocalResource(new LocalResourceDTO(
@@ -160,13 +161,12 @@ public class SparkYarnRunnerBuilder {
           if (dto.getName().endsWith(".py")) {
             dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
           } else {
-            pythonPath.append(File.pathSeparator).append(dto.getName());
+            pythonPath.append(File.pathSeparator).append("$PWD/").append(dto.getName());
           }
-        } else {
-          builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
-          extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
         }
         builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
+        extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
       }
     }
 
@@ -323,7 +323,8 @@ public class SparkYarnRunnerBuilder {
       //Exclude "hopsworks.yarn.appid" property because we do not want to 
       //escape it now
       String option;
-      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSUTIL_APPID_ENV_VAR)) {
+      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSUTIL_APPID_ENV_VAR) || s.equals(
+          Settings.SPARK_EXECUTORENV_PYTHONPATH)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {
         option = escapeForShell("-D" + s + "=" + sysProps.get(s));
@@ -333,7 +334,7 @@ public class SparkYarnRunnerBuilder {
 
     //Add local resources to spark environment too
     for (String s : jobArgs) {
-      amargs.append(" --arg ").append(s);
+      amargs.append(" --arg '").append(s).append("'");
     }
 
     builder.amArgs(amargs.toString());
