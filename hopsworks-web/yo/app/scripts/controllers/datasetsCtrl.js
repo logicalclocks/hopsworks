@@ -555,7 +555,7 @@ This will make all its files unavailable to other projects unless you share it e
 
               ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                        growl.success(success);
                         getDirContents();
                       }, function (error) {
 //                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
