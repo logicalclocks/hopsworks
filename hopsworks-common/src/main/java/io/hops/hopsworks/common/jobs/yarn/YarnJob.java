@@ -113,14 +113,16 @@ public abstract class YarnJob extends HopsJob {
    * @return True if the AM was started, false otherwise.
    * @throws IllegalStateException If the YarnRunner has not been set yet.
    */
-  protected final boolean startApplicationMaster(DistributedFileSystemOps udfso) throws IllegalStateException {
+  protected final boolean startApplicationMaster(DistributedFileSystemOps udfso,
+      DistributedFileSystemOps dfso) throws IllegalStateException {
     if (runner == null) {
       throw new IllegalStateException(
               "The YarnRunner has not been initialized yet.");
     }
     try {
       updateState(JobState.STARTING_APP_MASTER);
-      monitor = runner.startAppMaster();
+      monitor = runner.startAppMaster(services, jobDescription.getProject(),
+          dfso, user.getUsername());
       started = true;
       updateExecution(null, -1, null, null, monitor.getApplicationId().
               toString(), null, null, null, 0);
@@ -139,6 +141,14 @@ public abstract class YarnJob extends HopsJob {
               + getExecution()
               + ". Aborting execution",
               e, udfso);
+      try {
+        runner.removeAllNecessary();
+      } catch (IOException ex) {
+        LOG.log(Level.WARNING, "Failed to remove files for failed execution "
+            + getExecution());
+        writeLog("Failed to remove files for failed execution " +
+            getExecution(), ex, udfso);
+      }
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     }
@@ -512,7 +522,7 @@ public abstract class YarnJob extends HopsJob {
   protected void runJob(DistributedFileSystemOps udfso,
           DistributedFileSystemOps dfso) {
     // Try to start the AM
-    boolean proceed = startApplicationMaster(udfso);
+    boolean proceed = startApplicationMaster(udfso, dfso);
 
     if (!proceed) {
       return;

@@ -4,7 +4,6 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import org.apache.hadoop.fs.Path;
@@ -113,7 +112,7 @@ public class FlinkYarnRunnerBuilder {
     this.jobArgs.addAll(Arrays.asList(jobArgs));
     return this;
   }
-
+  
   //@Override
   public void setAppJarPath(String appJarPath) {
     this.appJarPath = appJarPath;
@@ -336,9 +335,7 @@ public class FlinkYarnRunnerBuilder {
     cluster.setLocalJarPath(new Path("file://" + flinkDir + "/flink.jar"));
 
     builder.setFlinkCluster(cluster);
-    //Remove any Kafka certificates after job is finished
-    builder.addFilesToRemove(certsDir + "/" + HopsUtils.getProjectKeystoreName(project, jobUser));
-    builder.addFilesToRemove(certsDir + "/" + HopsUtils.getProjectTruststoreName(project, jobUser));
+    
     String stagingPath = File.separator + "Projects" + File.separator + project
             + File.separator
             + Settings.PROJECT_STAGING_DIR;
@@ -393,7 +390,7 @@ public class FlinkYarnRunnerBuilder {
     if (!sysProps.isEmpty()) {
       dynamicPropertiesEncoded = new StringBuilder();
       for (String s : sysProps.keySet()) {
-        String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+        String option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
         builder.addJavaOption(option);
         cluster.addHopsworksParam(option);
         dynamicPropertiesEncoded.append(s).append("=").append(sysProps.get(s)).
@@ -452,41 +449,6 @@ public class FlinkYarnRunnerBuilder {
 
     public YarnDeploymentException(String message, Throwable cause) {
       super(message, cause);
-    }
-  }
-
-  /**
-   * Taken from Apache Spark code: Escapes a string for inclusion in a command
-   * line executed by Yarn. Yarn executes commands
-   * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
-   * really work. The
-   * argument is enclosed in single quotes and some key characters are escaped.
-   * <p/>
-   * @param s A single argument.
-   * @return Argument quoted for execution via Yarn's generated shell script.
-   */
-  private String escapeForShell(String s) {
-    if (s != null) {
-      StringBuilder escaped = new StringBuilder("'");
-      for (int i = 0; i < s.length(); i++) {
-        switch (s.charAt(i)) {
-          case '$':
-            escaped.append("\\$");
-            break;
-          case '"':
-            escaped.append("\\\"");
-            break;
-          case '\'':
-            escaped.append("'\\''");
-            break;
-          default:
-            escaped.append(s.charAt(i));
-            break;
-        }
-      }
-      return escaped.append("'").toString();
-    } else {
-      return s;
     }
   }
 
