@@ -37,10 +37,10 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           = "SELECT d FROM Dataset d WHERE d.inode = :inode"),
   @NamedQuery(name = "Dataset.findByProjectAndInode",
           query
-          = "SELECT d FROM Dataset d WHERE d.projectId = :projectId AND d.inode = :inode"),
+          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND d.inode = :inode"),
   @NamedQuery(name = "Dataset.findByProject",
           query
-          = "SELECT d FROM Dataset d WHERE d.projectId = :projectId"),
+          = "SELECT d FROM Dataset d WHERE d.project = :projectId"),
   @NamedQuery(name = "Dataset.findAllPublic",
           query
           = "SELECT d FROM Dataset d WHERE d.publicDs = 1 AND d.shared = 0"),
@@ -49,10 +49,10 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           = "SELECT d FROM Dataset d WHERE d.description = :description"),
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
-          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.projectId = :projectId"),
+          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :projectId"),
   @NamedQuery(name = "Dataset.findSharedWithProject",
           query
-          = "SELECT d FROM Dataset d WHERE d.projectId = :projectId AND "
+          = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "
                   + "d.shared = true")})
 public class Dataset implements Serializable {
 
@@ -82,7 +82,7 @@ public class Dataset implements Serializable {
 
   @Basic(optional = false)
   @Column(name = "inode_id")
-  private int idForInode = 0;
+  private int InodeId = 0;
 
   @Size(max = 3000)
   @Column(name = "description")
@@ -90,7 +90,7 @@ public class Dataset implements Serializable {
   @JoinColumn(name = "projectId",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Project projectId;
+  private Project project;
   @Basic(optional = false)
   @NotNull
   @Column(name = "editable")
@@ -126,14 +126,14 @@ public class Dataset implements Serializable {
   public Dataset(Integer id, Inode inode) {
     this.id = id;
     this.inode = inode;
-    this.idForInode = inode.getId();
+    this.InodeId = inode.getId();
     this.name = inode.getInodePK().getName();
   }
 
   public Dataset(Inode inode, Project project) {
     this.inode = inode;
-    this.projectId = project;
-    this.idForInode = inode.getId();
+    this.project = project;
+    this.InodeId = inode.getId();
     this.name = inode.getInodePK().getName();
   }
 
@@ -161,12 +161,12 @@ public class Dataset implements Serializable {
     this.description = description;
   }
 
-  public Project getProjectId() {
-    return projectId;
+  public Project getProject() {
+    return project;
   }
 
-  public void setProjectId(Project projectId) {
-    this.projectId = projectId;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   public boolean isEditable() {
@@ -244,12 +244,12 @@ public class Dataset implements Serializable {
    *
    * @return
    */
-  public int getIdForInode() {
-    return idForInode;
+  public int geInodeId() {
+    return InodeId;
   }
 
-  public void setIdForInode(int idForInode) {
-    this.idForInode = idForInode;
+  public void setInodeId(int InodeId) {
+    this.InodeId = InodeId;
   }
 
   @Override

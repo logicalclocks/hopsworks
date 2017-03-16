@@ -301,6 +301,8 @@ public class HdfsUsersController {
     String hdfsUsername;
     HdfsUsers hdfsUser;
 
+    List<String> hdfsUsersToFlush = new ArrayList<>();
+    
     hdfsUser = hdfsUsersFacade.findByName(project.getName());
     if (hdfsUser == null) {
       hdfsUser = new HdfsUsers(project.getName());
@@ -308,6 +310,7 @@ public class HdfsUsersController {
     }
     if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
       hdfsGroup.getHdfsUsersCollection().add(hdfsUser);
+      hdfsUsersToFlush.add(hdfsUser.getName());
     }
 
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
@@ -322,19 +325,78 @@ public class HdfsUsersController {
         hdfsUser = new HdfsUsers(hdfsUsername);
       }
       if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
-        try {
-          dfsService.getDfsOps().flushCache(hdfsUsername, datasetGroup);
-        } catch (IOException ex) {
-          //FIXME: take an action?
-          LOGGER.log(Level.WARNING,
-                  "Error while trying flush the cache", ex);
-        }
         hdfsGroup.getHdfsUsersCollection().add(hdfsUser);
+        hdfsUsersToFlush.add(hdfsUser.getName());
       }
     }
     hdfsGroupsFacade.merge(hdfsGroup);
+    for (String userName : hdfsUsersToFlush) {
+      try {
+        dfsService.getDfsOps().flushCache(userName, datasetGroup);
+      } catch (IOException ex) {
+        //FIXME: take an action?
+        LOGGER.log(Level.WARNING,
+            "Error while trying flush the cache", ex);
+      }
+    }
   }
 
+  /**
+   * Removes all members of project to the dataset's group.
+   * <p>
+   * @param project
+   * @param dataset
+   */
+  public void unshareDataset(Project project, Dataset dataset) {
+    if (project == null || dataset == null) {
+      throw new IllegalArgumentException("One or more arguments are null.");
+    }
+    String datasetGroup = getHdfsGroupName(dataset);
+    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
+    if (hdfsGroup == null) {
+      throw new IllegalArgumentException("Dataset group not found");
+    }
+    if (hdfsGroup.getHdfsUsersCollection() == null) {
+      hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
+    }
+    String hdfsUsername;
+    HdfsUsers hdfsUser;
+
+    List<String> hdfsUsersToFlush = new ArrayList<>();
+
+    hdfsUser = hdfsUsersFacade.findByName(project.getName());
+    if (hdfsUser != null && hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
+      hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
+      hdfsUsersToFlush.add(hdfsUser.getName());
+    }
+
+    Collection<ProjectTeam> projectTeam = projectTeamFacade.
+        findMembersByProject(project);
+
+    //every member of the project the ds is going to be unshard with is removed from the dataset group.
+    for (ProjectTeam member : projectTeam) {
+      hdfsUsername = getHdfsUserName(project, member.getUser());
+      hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+      if (hdfsUser == null) {
+        hdfsUser = new HdfsUsers(hdfsUsername);
+      }
+      if (hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
+        hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
+        hdfsUsersToFlush.add(hdfsUser.getName());
+      }
+    }
+    hdfsGroupsFacade.merge(hdfsGroup);
+    for (String userName : hdfsUsersToFlush) {
+      try {
+        dfsService.getDfsOps().flushCache(userName, datasetGroup);
+      } catch (IOException ex) {
+        //FIXME: take an action?
+        LOGGER.log(Level.WARNING,
+            "Error while trying flush the cache", ex);
+      }
+    }
+  }
+  
   /**
    * Deletes the project group from HDFS
    * <p>

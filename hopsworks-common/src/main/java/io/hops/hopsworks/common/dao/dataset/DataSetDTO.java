@@ -19,6 +19,7 @@ public class DataSetDTO {
   private boolean editable;
   private int template;
   private Integer projectId;
+  private List<Integer> projectIds;
   private String projectName;
   private String templateName;
   private List<UserCardDTO> projectTeam;
@@ -97,6 +98,14 @@ public class DataSetDTO {
 
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
+  }
+
+  public List<Integer> getProjectIds() {
+    return projectIds;
+  }
+
+  public void setProjectIds(List<Integer> projectIds) {
+    this.projectIds = projectIds;
   }
 
   public String getProjectName() {
