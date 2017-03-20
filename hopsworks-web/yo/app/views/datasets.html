@@ -105,6 +105,24 @@
                                 Share DataSet</span>
                             </a>
                           </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="2"
+                               ng-click="datasetsCtrl.unshare(dataset.name)">
+                              <span><i class="fa fa-undo"></i>
+                                Unshare DataSet</span>
+                            </a>
+                          </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="2"
+                               ng-click="datasetsCtrl.makeEditable(dataset.name)">
+                              <span><i class="glyphicon glyphicon-edit"></i>
+                                Make Editable</span>
+                            </a>
+                          </li>
                           <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"

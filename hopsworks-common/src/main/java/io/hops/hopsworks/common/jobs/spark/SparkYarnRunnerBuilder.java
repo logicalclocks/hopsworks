@@ -86,6 +86,7 @@ public class SparkYarnRunnerBuilder {
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
     String metricsPath = Settings.getSparkMetricsPath(sparkUser);
+    StringBuilder pythonPath = null;
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
@@ -99,7 +100,7 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     builder.addLocalResource(new LocalResourceDTO(
-        Settings.LOCALIZED_LIB_DIR, hdfsSparkJarPath,
+        Settings.SPARK_LOCALIZED_LIB_DIR, hdfsSparkJarPath,
         LocalResourceVisibility.PRIVATE.toString(),
         LocalResourceType.ARCHIVE.toString(), null), false);
     //Add log4j
@@ -118,28 +119,15 @@ public class SparkYarnRunnerBuilder {
     if (jobType == JobType.SPARK) {
       appExecName = Settings.SPARK_LOCRSC_APP_JAR;
     } else if (jobType == JobType.PYSPARK) {
+      pythonPath = new StringBuilder();
+      pythonPath.append("$PWD/").append(Settings.SPARK_LOCALIZED_PYTHON_DIR).append(File.pathSeparator).
+          append("/srv/hops/spark/python/lib/").append(Settings.PYSPARK_ZIP).append(File.pathSeparator).
+          append("/srv/hops/spark/python/lib/").append(Settings.PYSPARK_PY4J);
       //set app file from path
       appExecName = appPath.substring(appPath.lastIndexOf(File.separator) + 1);
-//Add pyspark libs as local resources
-      //Add pyspark.zip
-//      builder.addLocalResource(new LocalResourceDTO(
-//          Settings.PYSPARK_ZIP, Settings.getPySparkZipPath(sparkUser),
-//          LocalResourceVisibility.PRIVATE.toString(),
-//          LocalResourceType.ARCHIVE.toString(), null), false);
-//      //py4j-0.10.4-src.zip
-//      builder.addLocalResource(new LocalResourceDTO(
-//          Settings.PYSPARK_PY4J, Settings.getPySpark4JPath(sparkUser),
-//          LocalResourceVisibility.PRIVATE.toString(),
-//          LocalResourceType.ARCHIVE.toString(), null), false);
-
-      //Add libs to PYTHONPATH
-      builder.addToAppMasterEnvironment("PYTHONPATH", "/srv/hops/spark/python/lib/" + Settings.PYSPARK_ZIP
-          + File.pathSeparator + "/srv/hops/spark/python/lib/"
-          + Settings.PYSPARK_PY4J);
 
       addSystemProperty(Settings.SPARK_APP_NAME_ENV, jobName);
-      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, "/srv/hops/spark/python/lib/" + Settings.PYSPARK_ZIP
-          + File.pathSeparator + "/srv/hops/spark/python/lib/" + Settings.PYSPARK_PY4J);
+      addSystemProperty(Settings.SPARK_YARN_IS_PYTHON_ENV, "true");
     }
 
     builder.addLocalResource(new LocalResourceDTO(
@@ -149,7 +137,6 @@ public class SparkYarnRunnerBuilder {
         !appPath.startsWith("hdfs:"));
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
-
     //Add hops-util.jar if it is a Kafka job
     if (serviceProps.getKafka() != null) {
       builder.addLocalResource(new LocalResourceDTO(
@@ -159,22 +146,29 @@ public class SparkYarnRunnerBuilder {
 
       builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
           Settings.HOPSUTIL_JAR);
-      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(
-          File.pathSeparator);
     }
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
+      if (jobType == JobType.PYSPARK) {
+        //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
+        //github.com/apache/spark/blob/v2.1.0/yarn/src/main/scala/org/apache/spark/deploy/yarn/Client.scala#L624
+        if (dto.getName().endsWith(".py")) {
+          dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
+        } else {
+          pythonPath.append(File.pathSeparator).append(dto.getName());
+        }
+      } else {
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
+        extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
+      }
       builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
-      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-          dto.getName());
-      extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
     }
 
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-        "$PWD/" + Settings.LOCALIZED_CONF_DIR + File.pathSeparator
-        + Settings.LOCALIZED_CONF_DIR
-        + File.pathSeparator + Settings.LOCALIZED_LIB_DIR + "/*"
+        "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
+        + Settings.SPARK_LOCALIZED_CONF_DIR
+        + File.pathSeparator + Settings.SPARK_LOCALIZED_LIB_DIR + "/*"
         + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
         + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
         + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
@@ -245,10 +239,11 @@ public class SparkYarnRunnerBuilder {
         append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").append(Settings.SPARK_LOG4J_PROPERTIES).
         append(" ").
         append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(project.toLowerCase()).append(",").
-        append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).append(" ").
+        append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).
+        append(" ").
         append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").append(this.hadoopDir).append("/lib/native/").
-        append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").append(YarnRunner.APPID_PLACEHOLDER).
-        append("/lib/native/");
+        append(" ").
+        append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").append(YarnRunner.APPID_PLACEHOLDER);
 
     if (serviceProps != null) {
       addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
@@ -294,6 +289,9 @@ public class SparkYarnRunnerBuilder {
     //TODO(set app file from path)
     if (jobType == JobType.PYSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
+      //Add libs to PYTHONPATH
+      builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
+      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPath.toString());
     }
 
     Properties sparkProperties = new Properties();

@@ -237,7 +237,7 @@ public class YarnRunner {
 
       //Set up commands
       List<String> amCommands = setUpCommands();
-
+//      amCommands.add(0, "mkdir -p __pyfiles__");
       //Set up container launch context
       ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
               localResources, env, amCommands, null, null, null);

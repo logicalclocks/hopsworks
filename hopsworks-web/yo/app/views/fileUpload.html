@@ -1,7 +1,8 @@
 <div flow-object="fileUploadCtrl.existingFlowObject" flow-init
      flow-file-error="fileUploadCtrl.fileErrorHandler( $file, $message, $flow )"
      flow-error="fileUploadCtrl.errorHandler( $file, $message, $flow )"
-     flow-file-added="fileUploadCtrl.fileAddedHandler($file, $flow)">
+     flow-file-added="fileUploadCtrl.fileAddedHandler($file, $flow)"
+     flow-complete="fileUploadCtrl.flowCompleteHandler($flow)">
 
   <div growl reference="1" class="pull-right" ></div>
 

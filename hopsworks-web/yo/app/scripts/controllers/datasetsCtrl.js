@@ -555,7 +555,7 @@ This will make all its files unavailable to other projects unless you share it e
 
               ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
+                        growl.success(success);
                         getDirContents();
                       }, function (error) {
 //                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
@@ -630,6 +630,30 @@ This will make all its files unavailable to other projects unless you share it e
               });
             };
 
+            /**
+             * Opens a modal dialog to make dataset editable
+             * @returns {undefined}
+             */
+            self.makeEditable = function (name) {
+              ModalService.makeEditable('md', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+              });
+            };
+
+            /**
+             * Opens a modal dialog for unsharing.
+             * @returns {undefined}
+             */
+            self.unshare = function (name) {
+              ModalService.unshareDataset('md', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+              });
+            };
+            
             /**
              * Upon click on a inode in the browser:
              *  + If folder: open folder, fetch contents from server and display.
