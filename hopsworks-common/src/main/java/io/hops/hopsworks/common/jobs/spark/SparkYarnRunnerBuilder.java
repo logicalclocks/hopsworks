@@ -150,24 +150,19 @@ public class SparkYarnRunnerBuilder {
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
-      if (dto.getName().equals(Settings.K_CERTIFICATE) || dto.getName().equals(Settings.T_CERTIFICATE)) {
-        //Set deletion to true so that certs are removed
-        builder.addLocalResource(dto, true);
-      } else {
-        if (jobType == JobType.PYSPARK) {
-          //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
-          //github.com/apache/spark/blob/v2.1.0/yarn/src/main/scala/org/apache/spark/deploy/yarn/Client.scala#L624
-          if (dto.getName().endsWith(".py")) {
-            dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
-          } else {
-            pythonPath.append(File.pathSeparator).append(dto.getName());
-          }
+      if (jobType == JobType.PYSPARK) {
+        //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
+        //github.com/apache/spark/blob/v2.1.0/yarn/src/main/scala/org/apache/spark/deploy/yarn/Client.scala#L624
+        if (dto.getName().endsWith(".py")) {
+          dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
         } else {
-          builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
-          extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
+          pythonPath.append(File.pathSeparator).append(dto.getName());
         }
-        builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
+      } else {
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
+        extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
       }
+      builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
     }
 
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
@@ -326,7 +321,7 @@ public class SparkYarnRunnerBuilder {
       if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSUTIL_APPID_ENV_VAR)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {
-        option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+        option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
       }
       builder.addJavaOption(option);
     }
@@ -545,41 +540,6 @@ public class SparkYarnRunnerBuilder {
       classPath = classPath + ":" + s;
     }
     return this;
-  }
-
-  /**
-   * Taken from Apache Spark code: Escapes a string for inclusion in a command
-   * line executed by Yarn. Yarn executes commands
-   * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
-   * really work. The
-   * argument is enclosed in single quotes and some key characters are escaped.
-   * <p/>
-   * @param s A single argument.
-   * @return Argument quoted for execution via Yarn's generated shell script.
-   */
-  public static String escapeForShell(String s) {
-    if (s != null) {
-      StringBuilder escaped = new StringBuilder("'");
-      for (int i = 0; i < s.length(); i++) {
-        switch (s.charAt(i)) {
-          case '$':
-            escaped.append("\\$");
-            break;
-          case '"':
-            escaped.append("\\\"");
-            break;
-          case '\'':
-            escaped.append("'\\''");
-            break;
-          default:
-            escaped.append(s.charAt(i));
-            break;
-        }
-      }
-      return escaped.append("'").toString();
-    } else {
-      return s;
-    }
   }
 
 }
