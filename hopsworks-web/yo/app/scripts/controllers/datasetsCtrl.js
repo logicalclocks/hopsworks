@@ -631,6 +631,18 @@ This will make all its files unavailable to other projects unless you share it e
             };
 
             /**
+             * Opens a modal dialog to make dataset editable
+             * @returns {undefined}
+             */
+            self.makeEditable = function (name) {
+              ModalService.makeEditable('md', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+              });
+            };
+
+            /**
              * Opens a modal dialog for unsharing.
              * @returns {undefined}
              */
