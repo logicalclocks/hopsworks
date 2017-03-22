@@ -2,6 +2,7 @@ package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.ejb.ConcurrencyManagement;
@@ -13,7 +14,7 @@ import javax.persistence.PersistenceContext;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class Settings {
+public class Settings implements Serializable {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

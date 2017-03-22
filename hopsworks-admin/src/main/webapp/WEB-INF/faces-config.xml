@@ -176,6 +176,11 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>ndbBackups</from-outcome>
+      <to-view-id>/security/protected/admin/ndbBackups.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>mobUsers</from-outcome>
       <to-view-id>/security/protected/admin/mobileUsers.xhtml</to-view-id>
       <redirect/>
@@ -188,6 +193,26 @@
     <navigation-case>
       <from-outcome>yubikeyUsers</from-outcome>
       <to-view-id>/security/protected/admin/yubikeyUers.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>BACKUP_OK</from-outcome>
+      <to-view-id>/security/protected/admin/ndbBackups.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>BACKUP_FAILED</from-outcome>
+      <to-view-id>/security/protected/admin/ndbBackupFailed.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>RESTORE_OK</from-outcome>
+      <to-view-id>/security/protected/admin/ndbBackups.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>RESTORE_FAILED</from-outcome>
+      <to-view-id>/security/protected/admin/ndbBackupFailed.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 
