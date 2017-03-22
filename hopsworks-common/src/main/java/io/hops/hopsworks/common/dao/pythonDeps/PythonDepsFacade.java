@@ -168,20 +168,22 @@ public class PythonDepsFacade {
     condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
 
     List<PythonDep> all = new ArrayList<>();
-    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
-    for (String k : libs.keySet()) {
-      PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);
-      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
-      Collection<Project> projs = pd.getProjectCollection();
-      projs.add(project);
-      all.add(pd);
-    }
-    Collection<PythonDep> projDeps = project.getPythonDepCollection();
-    projDeps.addAll(all);
-    em.merge(project);
-    for (PythonDep p : all) {
-      em.persist(p);
-    }
+    //TODO(Theofilos): Comment out for now, until anaconda root environment is fixed
+
+//    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
+//    for (String k : libs.keySet()) {
+//      PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);
+//      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
+//      Collection<Project> projs = pd.getProjectCollection();
+//      projs.add(project);
+//      all.add(pd);
+//    }
+//    Collection<PythonDep> projDeps = project.getPythonDepCollection();
+//    projDeps.addAll(all);
+//    em.merge(project);
+//    for (PythonDep p : all) {
+//      em.persist(p);
+//    }
 
     projectFacade.enableConda(project);
     em.flush();
