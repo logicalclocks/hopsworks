@@ -273,7 +273,7 @@ public class YarnRunner {
   //------------------------- UTILITY METHODS ---------------------------------
   //---------------------------------------------------------------------------
   private void fillInAppid(String id) {
-    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id);
+    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id).replace("\\", "");
     if (logPathsAreAggregated) {
       aggregatedLogPath = aggregatedLogPath.replaceAll(APPID_REGEX, id);
     }
