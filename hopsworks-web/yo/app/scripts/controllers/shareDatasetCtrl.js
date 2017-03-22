@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName) {
+    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'ModalService',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, ModalService) {
 
             var self = this;
 
@@ -36,6 +36,33 @@ angular.module('hopsWorksApp')
                     self.dataSet.editable = false;
                 }
 
+            };
+            
+            self.makeEditable = function () {
+                if ($scope.dataSetForm.$valid) {
+                    dataSetService.makeEditable(self.dataSet)
+                        .then(function (success) {
+                            $uibModalInstance.close(success);
+                        },
+                        function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        });
+                } else {
+                    self.dataSet.editable = false;
+                }
+
+            };
+            
+              /**
+             * Opens a modal dialog to make dataset editable
+             * @returns {undefined}
+             */
+            self.makeEditableModal = function () {
+              ModalService.makeEditable('md', dsName).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                      }, function (error) {
+              });
             };
             
             $scope.omitCurrentProject = function (project) {
