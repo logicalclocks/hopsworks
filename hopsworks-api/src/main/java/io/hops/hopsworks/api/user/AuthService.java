@@ -201,9 +201,9 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
 
     try {
+      req.getSession().invalidate();
       req.logout();
       json.setStatus("SUCCESS");
-      req.getSession().invalidate();
       if (user != null) {
         userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
         am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
