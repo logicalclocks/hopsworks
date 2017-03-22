@@ -11,7 +11,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -58,10 +57,7 @@ public class SparkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
-    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), jobDescription.getProject(), user.getUsername(),
-        services.getSettings().getHopsworksTmpCertDir(),
-        Settings.TMP_CERT_STORE_REMOTE, jobDescription.getJobType(),
-        dfso, projectLocalResources, jobSystemProperties, nameNodeIpPort);
+    
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");

@@ -17,6 +17,12 @@
  */
 package io.hops.hopsworks.common.jobs.flink;
 
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.flink.client.CliFrontend;
 import org.apache.flink.client.deployment.ClusterDescriptor;
 import org.apache.flink.configuration.ConfigConstants;
@@ -55,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -419,6 +426,19 @@ public abstract class AbstractYarnClusterDescriptor implements
     }
   }
 
+  private AsynchronousJobExecutor services;
+  private Project project;
+  private String username;
+  private List<String> javaOptions;
+  
+  public void setCertsObjects(AsynchronousJobExecutor services, Project
+      project, String username, List<String> javaOptions) {
+    this.services = services;
+    this.project = project;
+    this.username = username;
+    this.javaOptions = javaOptions;
+  }
+  
   @Override
   public YarnClusterClient deploy() {
 
@@ -436,6 +456,11 @@ public abstract class AbstractYarnClusterDescriptor implements
 //				return ugi.doAs(new PrivilegedExceptionAction<YarnClusterClient>() {
 //					@Override
 //					public YarnClusterClient run() throws Exception {
+      if (services == null || project == null || username == null
+          || javaOptions == null) {
+        throw new InvalidObjectException("Necessary objects for materializing" +
+            " user certificates are null");
+      }
       return deployInternal();
 //					}
 //				});
@@ -490,7 +515,35 @@ public abstract class AbstractYarnClusterDescriptor implements
         LOG.debug("Error details", e);
       }
     }
-
+  
+    // Create application via yarnClient
+    final YarnClientApplication yarnApplication = yarnClient.createApplication();
+    GetNewApplicationResponse appResponse = yarnApplication.
+        getNewApplicationResponse();
+  
+    Map<String, String> jobSystemProperties = new HashMap<>(2);
+  
+    // Certificates are materialized locally so DFSClient can be set to null
+    // LocalResources are not used by Flink, so set it null
+    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
+        services.getSettings().getHopsworksTmpCertDir(),
+        Settings.TMP_CERT_STORE_REMOTE, JobType.FLINK,
+        null, null, jobSystemProperties,
+        null, services.getSettings().getFlinkKafkaCertDir(),
+        appResponse.getApplicationId().toString());
+  
+    StringBuilder tmpBuilder = new StringBuilder();
+    for (Map.Entry<String, String> prop : jobSystemProperties.entrySet()) {
+      String option = YarnRunner.escapeForShell("-D" + prop.getKey() + "="
+          + prop.getValue());
+      javaOptions.add(option);
+      addHopsworksParam(option);
+      tmpBuilder.append(prop.getKey()).append("=").append(prop.getValue())
+          .append("@@");
+    }
+    
+    dynamicPropertiesEncoded += tmpBuilder.toString();
+    
     // ------------------ Add dynamic properties to local flinkConfiguraton ------
     Map<String, String> dynProperties = getDynamicProperties(
             dynamicPropertiesEncoded);
@@ -548,11 +601,8 @@ public abstract class AbstractYarnClusterDescriptor implements
       taskManagerMemoryMb = yarnMinAllocationMB;
     }
 
-    // Create application via yarnClient
-    final YarnClientApplication yarnApplication = yarnClient.createApplication();
-    GetNewApplicationResponse appResponse = yarnApplication.
-            getNewApplicationResponse();
-
+    
+    
     Resource maxRes = appResponse.getMaximumResourceCapability();
     final String NOTE
             = "Please check the 'yarn.scheduler.maximum-allocation-mb' and the "

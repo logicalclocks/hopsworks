@@ -14,7 +14,7 @@ angular.module('hopsWorksApp')
             self.templateId = templateId;
             self.errorMsg;
             self.files = {};
-
+            
             self.datasets = [];
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
@@ -53,5 +53,19 @@ angular.module('hopsWorksApp')
             self.fileAddedHandler = function (file, flow) {
               console.log(file.name);
               self.files[file.name] = '';
+            };
+            
+            self.flowCompleteHandler = function (flow){
+              var length = flow.files.length;
+              for(var i=0; i<length; i++){
+                var file = flow.files[i];
+                if(file.progress()!=1){
+                  return;
+                }
+                if(file.error){
+                  return;
+                }
+              }
+              $uibModalInstance.close("All files uploaded successfully");
             };
           }]);

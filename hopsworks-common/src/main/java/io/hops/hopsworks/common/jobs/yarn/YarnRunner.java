@@ -1,10 +1,13 @@
 package io.hops.hopsworks.common.jobs.yarn;
 
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterDescriptor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.jobs.spark.SparkYarnRunnerBuilder;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
@@ -101,7 +104,83 @@ public class YarnRunner {
 
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
-
+  
+  /**
+   * Taken from Apache Spark code: Escapes a string for inclusion in a command
+   * line executed by Yarn. Yarn executes commands
+   * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
+   * really work. The
+   * argument is enclosed in single quotes and some key characters are escaped.
+   * <p/>
+   * @param s A single argument.
+   * @return Argument quoted for execution via Yarn's generated shell script.
+   */
+  public static String escapeForShell(String s) {
+    if (s != null) {
+      StringBuilder escaped = new StringBuilder("'");
+      for (int i = 0; i < s.length(); i++) {
+        switch (s.charAt(i)) {
+          case '$':
+            escaped.append("\\$");
+            break;
+          case '"':
+            escaped.append("\\\"");
+            break;
+          case '\'':
+            escaped.append("'\\''");
+            break;
+          default:
+            escaped.append(s.charAt(i));
+            break;
+        }
+      }
+      return escaped.append("'").toString();
+    } else {
+      return s;
+    }
+  }
+  
+  /**
+   * This method is only used by Spark family jobs. Flink jobs copy their
+   * certificates in FlinkJob since it's a little bit problematic the way it
+   * submits a job to Yarn
+   * @param services
+   * @param project
+   * @param jobType
+   * @param dfso
+   * @param username
+   * @param applicationId
+   */
+  private void copyUserCertificates(AsynchronousJobExecutor services,
+      Project project, JobType jobType, DistributedFileSystemOps dfso,
+      String username, String applicationId) {
+    List<LocalResourceDTO> materialResources = new ArrayList<>(2);
+    Map<String, String> systemProperties = new HashMap<>(2);
+    
+    
+    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
+        services.getSettings().getHopsworksTmpCertDir(),
+        Settings.TMP_CERT_STORE_REMOTE, jobType,
+        dfso, materialResources, systemProperties, nameNodeIpPort,
+        applicationId);
+    
+    String appDir = "hdfs://" + nameNodeIpPort + Settings
+        .TMP_CERT_STORE_REMOTE
+        + File.separator + project.getName() + Settings.DOUBLE_UNDERSCORE
+        + username + File.separator + applicationId;
+    filesToRemove.add(appDir);
+    
+    for (LocalResourceDTO materialDTO : materialResources) {
+      amLocalResourcesOnHDFS.put(materialDTO.getName(), materialDTO);
+    }
+    
+    for (Map.Entry<String, String> sysProp : systemProperties.entrySet()) {
+      String option = YarnRunner.escapeForShell("-D" + sysProp.getKey() + "=" +
+          sysProp.getValue());
+      javaOptions.add(option);
+    }
+  }
+  
   //---------------------------------------------------------------------------
   //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
   //---------------------------------------------------------------------------
@@ -114,7 +193,11 @@ public class YarnRunner {
    * files.
    * @throws java.net.URISyntaxException
    */
-  public YarnMonitor startAppMaster() throws YarnException, IOException,
+  public YarnMonitor startAppMaster(AsynchronousJobExecutor services,
+      Project project, DistributedFileSystemOps dfso,
+      String username)
+      throws
+      YarnException, IOException,
           URISyntaxException {
     logger.info("Starting application master.");
     YarnClient newClient = YarnClient.createYarnClient();
@@ -129,6 +212,9 @@ public class YarnRunner {
       //And replace all occurences of $APPID with the real id.
       fillInAppid(appId.toString());
 
+      copyUserCertificates(services, project, jobType, dfso, username,
+          appId.toString());
+      
       //Check resource requests and availabilities
       checkAmResourceRequest(appResponse);
 
@@ -178,8 +264,15 @@ public class YarnRunner {
       monitor = new YarnMonitor(appId, newClient);
 
     } else if (jobType == JobType.FLINK) {
+      // Objects needed for materializing user certificates
+      flinkCluster.setCertsObjects(services, project, username, javaOptions);
+      
       YarnClusterClient client = flinkCluster.deploy();
       appId = client.getApplicationId();
+      String certsAppDir = Paths.get(services.getSettings()
+          .getFlinkKafkaCertDir(), appId.toString()).toString();
+      filesToRemove.add(certsAppDir);
+      
       fillInAppid(appId.toString());
       newClient.init(conf);
       monitor = new YarnMonitor(appId, newClient);
@@ -412,21 +505,16 @@ public class YarnRunner {
         types.append(entry.getValue().getType()).append(",");
       }
       //Remove the last comma (,) and add them to javaOptions
-      javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
-              + Settings.SPARK_CACHE_FILENAMES + "=" + uris.substring(0, uris.
-                      length() - 1)));
-      javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
-              + Settings.SPARK_CACHE_TIMESTAMPS + "=" + timestamps.substring(0,
-                      timestamps.length() - 1)));
-      javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
-              + Settings.SPARK_CACHE_SIZES + "=" + sizes.substring(0, sizes.
-                      length() - 1)));
-      javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
-              + Settings.SPARK_CACHE_VISIBILITIES + "=" + visibilities.
-                      substring(0, visibilities.length() - 1)));
-      javaOptions.add(SparkYarnRunnerBuilder.escapeForShell("-D"
-              + Settings.SPARK_CACHE_TYPES + "=" + types.substring(0, types.
-                      length() - 1)));
+      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_FILENAMES +
+          "=" + uris.substring(0, uris.length() - 1)));
+      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_TIMESTAMPS +
+          "=" + timestamps.substring(0,timestamps.length() - 1)));
+      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_SIZES +
+          "=" + sizes.substring(0, sizes.length() - 1)));
+      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_VISIBILITIES
+          + "=" + visibilities.substring(0, visibilities.length() - 1)));
+      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_TYPES +
+          "=" + types.substring(0, types.length() - 1)));
     }
     return localResources;
   }
@@ -540,7 +628,7 @@ public class YarnRunner {
         fs.delete(new Path(s), true);
 
       } else {
-        Files.deleteIfExists(Paths.get(s));
+        org.apache.commons.io.FileUtils.deleteQuietly(new File(s));
       }
     }
     conf = null;
