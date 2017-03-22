@@ -45,9 +45,9 @@ angular.module('hopsWorksApp')
                self.content_empty = 1;
                self.wrong_values=1;
                 
-                if(!self.schemaName){
-                  self.schemaName_empty = -1;
-                  self.wrong_values = -1;
+              if(!self.schemaName){
+                self.schemaName_empty = -1;
+                self.wrong_values = -1;
               }
               
               if(!self.content){
