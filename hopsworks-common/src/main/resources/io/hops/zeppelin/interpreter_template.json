@@ -78,7 +78,7 @@
         "zeppelin.spark.importImplicit": "true",
         "zeppelin.spark.concurrentSQL": "false",
         "zeppelin.spark.useHiveContext": "true",
-        "zeppelin.pyspark.python": "python",
+        "zeppelin.pyspark.python": "%%zeppelin.python_conda_path%%",
         "zeppelin.dep.localrepo": "local-repo",
         "zeppelin.R.knitr": "true",
         "zeppelin.spark.maxResult": "1000",
@@ -212,7 +212,7 @@
       "name": "python",
       "group": "python",
       "properties": {
-        "zeppelin.python": "python",
+        "zeppelin.python": "%%zeppelin.python_conda_path%%",
         "zeppelin.python.maxResult": "1000"
       },
       "status": "READY",

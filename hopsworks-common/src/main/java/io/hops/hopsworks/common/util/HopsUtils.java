@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,9 +152,11 @@ public class HopsUtils {
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties, String nameNodeIpPort) {
+      Map<String, String> jobSystemProperties, String nameNodeIpPort,
+      String applicationId) {
     copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
-        jobType, dfso, projectLocalResources, jobSystemProperties, nameNodeIpPort, null);
+        jobType, dfso, projectLocalResources, jobSystemProperties, nameNodeIpPort,
+        null, applicationId);
   }
 
   /**
@@ -178,7 +181,8 @@ public class HopsUtils {
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties, String nameNodeIpPort, String flinkCertsDir) {
+      Map<String, String> jobSystemProperties, String nameNodeIpPort,
+      String flinkCertsDir, String applicationId) {
     try {
       //Pull the certificate of the client
       UserCerts userCert = userCerts.findUserCert(project.getName(),
@@ -229,11 +233,18 @@ public class HopsUtils {
             {
               switch (jobType) {
                 case FLINK:
-                  File f_k_cert = new File(flinkCertsDir + File.separator + kCertName);
+                  File appDir = Paths.get(flinkCertsDir, applicationId).toFile();
+                  if (!appDir.exists()) {
+                    appDir.mkdir();
+                  }
+                  
+                  File f_k_cert = new File(appDir.toString() + File.separator +
+                      kCertName);
                   f_k_cert.setExecutable(false);
                   f_k_cert.setReadable(true, true);
                   f_k_cert.setWritable(false);
-                  File t_k_cert = new File(flinkCertsDir + File.separator + tCertName);
+                  File t_k_cert = new File(appDir.toString() + File.separator +
+                      tCertName);
                   t_k_cert.setExecutable(false);
                   t_k_cert.setReadable(true, true);
                   t_k_cert.setWritable(false);
@@ -243,8 +254,8 @@ public class HopsUtils {
                     Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
                         t_k_cert);
                   }
-                  jobSystemProperties.put(Settings.K_CERTIFICATE, flinkCertsDir + File.separator + kCertName);
-                  jobSystemProperties.put(Settings.T_CERTIFICATE, flinkCertsDir + File.separator + tCertName);
+                  jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
+                  jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
                   break;
                 case SPARK:
                   kafkaCerts.put(Settings.K_CERTIFICATE, new File(
@@ -279,27 +290,36 @@ public class HopsUtils {
                       dfso.setOwner(new Path(remoteTmpProjDir),
                           certUser, certUser);
                     }
+                    
+                    String remoteProjAppDir = remoteTmpProjDir + File.separator
+                        + applicationId;
+                    Path remoteProjAppPath = new Path(remoteProjAppDir);
+                    if (!dfso.exists(remoteProjAppDir)) {
+                      dfso.mkdir(remoteProjAppPath,
+                          new FsPermission(FsAction.ALL,
+                              FsAction.ALL, FsAction.NONE));
+                      dfso.setOwner(remoteProjAppPath, certUser, certUser);
+                    }
+                    
                     Files.write(kafkaCertFiles.get(entry.getKey()), entry.
                         getValue());
                     dfso.copyToHDFSFromLocal(true, entry.getValue().
                         getAbsolutePath(),
-                        remoteTmpDir + File.separator + certUser
-                        + File.separator
+                        remoteProjAppDir + File.separator
                         + entry.getValue().getName());
 
-                    dfso.setPermission(new Path(remoteTmpProjDir
+                    dfso.setPermission(new Path(remoteProjAppDir
                         + File.separator
                         + entry.getValue().getName()),
                         new FsPermission(FsAction.ALL, FsAction.NONE,
                             FsAction.NONE));
-                    dfso.setOwner(new Path(remoteTmpProjDir + File.separator
+                    dfso.setOwner(new Path(remoteProjAppDir + File.separator
                         + entry.getValue().getName()), certUser, certUser);
 
                     projectLocalResources.add(new LocalResourceDTO(
                         entry.getKey(),
-                        "hdfs://" + nameNodeIpPort + remoteTmpDir
-                        + File.separator + certUser + File.separator
-                        + entry.getValue().getName(),
+                        "hdfs://" + nameNodeIpPort + remoteProjAppDir +
+                            File.separator + entry.getValue().getName(),
                         LocalResourceVisibility.APPLICATION.toString(),
                         LocalResourceType.FILE.toString(), null));
                   }

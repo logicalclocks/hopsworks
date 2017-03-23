@@ -168,6 +168,8 @@ public class PythonDepsFacade {
     condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
 
     List<PythonDep> all = new ArrayList<>();
+    //TODO(Theofilos): Comment out for now, until anaconda root environment is fixed
+
 //    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
 //    for (String k : libs.keySet()) {
 //      PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);

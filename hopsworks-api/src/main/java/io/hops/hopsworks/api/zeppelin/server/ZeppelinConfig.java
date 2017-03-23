@@ -427,6 +427,7 @@ public class ZeppelinConfig {
     }
     String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
     String log4jPath = Settings.getProjectSparkLog4JPath(this.projectName);
+    String zeppelinPythonPath = settings.getAnacondaDir() + "/envs/"+this.projectName+"/bin/python";
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";
@@ -442,8 +443,7 @@ public class ZeppelinConfig {
               ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
               "spark_dir", settings.getSparkDir(),
               "hadoop_dir", settings.getHadoopDir(),
-              "anaconda_env_dir", settings.getAnacondaDir() + "/"
-              + this.projectName,
+              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/" + this.projectName,
               // TODO: This should be the project__username, not just the projectname
               "hadoop_username", this.projectName,
               "java_home", javaHome,
@@ -503,7 +503,8 @@ public class ZeppelinConfig {
                       "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
                       "spark.yarn.stagingDir", hdfsResourceDir,
                       "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
-                      "livy.spark.yarn.stagingDir", hdfsResourceDir
+                      "livy.spark.yarn.stagingDir", hdfsResourceDir,
+                      "zeppelin.python_conda_path", zeppelinPythonPath
               );
       interpreterConf = interpreter_json.toString();
     }

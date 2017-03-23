@@ -312,8 +312,10 @@ public class Settings {
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
+  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
+  public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
   
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
@@ -627,6 +629,10 @@ public class Settings {
   public static String getHdfsSparkJarPath(String sparkUser) {
     return hdfsSparkJarPath(sparkUser);
   }
+  
+  public static String getPySparkLibsPath(String sparkUser) {
+    return "hdfs:///user/" + sparkUser;
+  }
 
   public static String getSparkLog4JPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/log4j.properties";
@@ -845,7 +851,7 @@ public class Settings {
     return KAFKA_DIR;
   }
 
-  private String ANACONDA_DIR = "/opt/anaconda/anaconda/envs";
+  private String ANACONDA_DIR = "/srv/hops/anaconda/anaconda/envs";
 
   public synchronized String getAnacondaDir() {
     checkCache();

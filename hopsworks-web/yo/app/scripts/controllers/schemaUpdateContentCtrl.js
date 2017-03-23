@@ -26,10 +26,7 @@ angular.module('hopsWorksApp')
                 self.validateSchema = function () {
                    
                     self.validSchema = "invalid";
-                    
-                    var ugly = document.getElementById('myPrettyJson');
-                    self.contents = ugly.textContent;
-                    
+
                     if(!self.contents){
                         self.content_empty = -1;
                         self.wrong_values = -1;
@@ -54,10 +51,7 @@ angular.module('hopsWorksApp')
                     });
                  };
                 
-                self.createSchema = function () {
-                    
-                    var ugly = document.getElementById('myPrettyJson');
-                    self.contents = ugly.textContent;
+                self.createSchema = function () {                   
                     
                     var schemaDetail = {};
                     schemaDetail.name = schemaName;
@@ -71,6 +65,12 @@ angular.module('hopsWorksApp')
                                  self.message = error.data.errorMsg;
                                  self.validSchema="invalid";
                     });
+                };
+                
+                $scope.doWith = function (newJson) {
+                  self.content_empty = 1;
+                  self.wrong_values = 1;
+                  self.contents = JSON.stringify(newJson, null, 2);
                 };
 
                 self.close = function () {
