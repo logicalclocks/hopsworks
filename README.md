@@ -61,6 +61,11 @@ Both the frontend and backend are packaged together in a single war file.
 To access the admin page go to index.xhtml.
 
 
+You can also build Hopsworks without the frontend (for Java EE development and testing):
+```
+mvn install -P-web
+```
+
 ## Front-end Development Tips
 
 The javascript produced by building maven is obsfuscated. For debugging javascript, we recommend that you use the following script

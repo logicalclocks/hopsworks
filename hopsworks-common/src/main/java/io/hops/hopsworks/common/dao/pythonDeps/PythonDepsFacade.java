@@ -17,7 +17,6 @@ import io.hops.hopsworks.common.util.WebCommunication;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -405,7 +404,7 @@ public class PythonDepsFacade {
     for (Host h : hosts) {
       CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
               op, CondaStatus.ONGOING, proj, "", "", "default",
-              Date.from(Instant.now()), arg);
+              new Date(), arg);
       em.persist(cc);
     }
   }
@@ -551,7 +550,7 @@ public class PythonDepsFacade {
       for (Host h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
                 op, CondaStatus.ONGOING, proj, lib,
-                version, channelUrl, Date.from(Instant.now()), "");
+                version, channelUrl, new Date(), "");
         em.persist(cc);
       }
 //      kagentCalls(hosts, op, proj, dep);
