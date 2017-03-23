@@ -172,8 +172,8 @@ public class SparkYarnRunnerBuilder {
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.FILE.toString(), null), false);
 
-      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-          Settings.HOPSUTIL_JAR);
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,Settings.HOPSUTIL_JAR);
+      extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(File.pathSeparator);
     }
 
     //Add extra files to local resources, use filename as key
