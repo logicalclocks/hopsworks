@@ -123,7 +123,7 @@ public class SparkYarnRunnerBuilder {
 
     builder.addLocalResource(new LocalResourceDTO(
         Settings.PYSPARK_PY4J,
-        Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_ZIP,
+        Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_PY4J,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.ARCHIVE.toString(), null), false);
 
