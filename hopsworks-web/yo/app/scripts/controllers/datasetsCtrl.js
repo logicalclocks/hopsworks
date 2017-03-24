@@ -626,6 +626,7 @@ This will make all its files unavailable to other projects unless you share it e
               ModalService.shareDataset('md', name).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        getDirContents();
                       }, function (error) {
               });
             };
@@ -638,6 +639,7 @@ This will make all its files unavailable to other projects unless you share it e
               ModalService.makeEditable('md', name).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        getDirContents();
                       }, function (error) {
               });
             };

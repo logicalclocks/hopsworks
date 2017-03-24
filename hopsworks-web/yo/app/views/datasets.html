@@ -71,7 +71,10 @@
                                   {{dataset.owner| limitTo: 17}}
                                 </span>
                               </small>
-                              <span class="pull-right dataset-icon" ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true}"></span>
+                              <span class="pull-right dataset-icon" 
+                                    ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true, 'fa fa-users': (dataset.sharedWith > 0 && dataset.publicDs === false)}"
+                                    data-toggle="tooltip"
+                                    title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"></span>
                             </div>
                           </a>
                         </div>
@@ -105,7 +108,7 @@
                                 Share DataSet</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.sharedWith > 0" ng-show="projectCtrl.role === 'Data owner'">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
