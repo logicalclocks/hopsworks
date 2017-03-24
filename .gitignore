@@ -102,9 +102,9 @@ hopsworks-web/yo/node_modules
 *.iws
 
 ## Test Files
-*/test/Gemfile.lock
-*/test/.env
-*/test/vendor
+hopsworks-ear/test/Gemfile.lock
+hopsworks-ear/test/.env
+hopsworks-ear/test/vendor
 
 ###########glassfish##############
 src/main/setup/glassfish-resources.xml
