@@ -33,6 +33,7 @@ public final class InodeView {
   private String permission;
   private String email;
   private boolean publicDs = false;
+  private int sharedWith = 0;
 
   public InodeView() {
   }
@@ -273,6 +274,14 @@ public final class InodeView {
 
   public boolean isPublicDs() {
     return publicDs;
+  }
+
+  public int getSharedWith() {
+    return sharedWith;
+  }
+
+  public void setSharedWith(int sharedWith) {
+    this.sharedWith = sharedWith;
   }
 
   @Override

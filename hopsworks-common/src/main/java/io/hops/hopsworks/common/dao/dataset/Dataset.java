@@ -32,6 +32,9 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
   @NamedQuery(name = "Dataset.findById",
           query
           = "SELECT d FROM Dataset d WHERE d.id = :id"),
+  @NamedQuery(name = "Dataset.findByInodeId",
+          query
+          = "SELECT d FROM Dataset d WHERE d.InodeId = :inodeId"),
   @NamedQuery(name = "Dataset.findByInode",
           query
           = "SELECT d FROM Dataset d WHERE d.inode = :inode"),

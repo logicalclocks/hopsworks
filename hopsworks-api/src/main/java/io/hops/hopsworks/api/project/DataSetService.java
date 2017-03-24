@@ -164,6 +164,8 @@ public class DataSetService {
       } else {
         projPath = Settings.getProjectPath(this.project.getName());
       }
+      List<Dataset> inodeOccurrence = datasetFacade.findByInodeId(ds.geInodeId());
+      int sharedWith = inodeOccurrence.size() - 1 ; // -1 for ds itself 
       inodeView = new InodeView(parent, ds, projPath + File.separator + ds.
               getInode()
               .getInodePK().getName());
@@ -172,6 +174,7 @@ public class DataSetService {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
       }
+      inodeView.setSharedWith(sharedWith);
       kids.add(inodeView);
       if (inodeView.getName().
               equals(Settings.DefaultDataset.NOTEBOOKS.getName())) {

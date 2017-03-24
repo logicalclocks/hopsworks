@@ -61,6 +61,13 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
                     "inode", inode);
     return query.getResultList();
   }
+  
+  public List<Dataset> findByInodeId(int inodeId) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInodeId",
+            Dataset.class).setParameter(
+                    "inodeId", inodeId);
+    return query.getResultList();
+  }
 
   public Dataset findByNameAndProjectId(Project project, String name) {
     TypedQuery<Dataset> query = em.createNamedQuery(
