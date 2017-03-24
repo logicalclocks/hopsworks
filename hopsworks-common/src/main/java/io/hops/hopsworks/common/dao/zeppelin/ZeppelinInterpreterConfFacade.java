@@ -43,7 +43,7 @@ public class ZeppelinInterpreterConfFacade extends AbstractFacade<ZeppelinInterp
     }
     ZeppelinInterpreterConfs conf = new ZeppelinInterpreterConfs(projectName,
             new Date(System.currentTimeMillis()), intrepeterConf);
-    em.persist(conf);
+    em.merge(conf);
     em.flush();
     return conf;
   }

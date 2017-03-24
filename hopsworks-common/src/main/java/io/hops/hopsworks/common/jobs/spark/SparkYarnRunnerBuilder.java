@@ -115,38 +115,33 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.PRIVATE.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
-    builder.addLocalResource(new LocalResourceDTO(
-        Settings.PYSPARK_ZIP,
-        Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_ZIP,
-        LocalResourceVisibility.APPLICATION.toString(),
-        LocalResourceType.ARCHIVE.toString(), null), false);
-
-    builder.addLocalResource(new LocalResourceDTO(
-        Settings.PYSPARK_PY4J,
-        Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_PY4J,
-        LocalResourceVisibility.APPLICATION.toString(),
-        LocalResourceType.ARCHIVE.toString(), null), false);
-
     //Add app file
     String appExecName = null;
     if (jobType == JobType.SPARK) {
       appExecName = Settings.SPARK_LOCRSC_APP_JAR;
     } else if (jobType == JobType.PYSPARK) {
+      builder.addLocalResource(new LocalResourceDTO(
+          Settings.PYSPARK_ZIP,
+//          sparkDir + File.separator + "python/lib" + File.separator + Settings.PYSPARK_ZIP,
+          Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_ZIP,
+          LocalResourceVisibility.APPLICATION.toString(),
+          LocalResourceType.ARCHIVE.toString(), null), false);
+
+      builder.addLocalResource(new LocalResourceDTO(
+          Settings.PYSPARK_PY4J,
+//          sparkDir + File.separator + "python/lib" + File.separator + Settings.PYSPARK_PY4J,
+          Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_PY4J,
+          LocalResourceVisibility.APPLICATION.toString(),
+          LocalResourceType.ARCHIVE.toString(), null), false);
+
       pythonPath = new StringBuilder();
       pythonPath
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
-          //          .append("$PWD/").append(Settings.PYSPARK_ZIP).append(File.pathSeparator)
-          //          .append("$PWD/").append(Settings.PYSPARK_PY4J)
-          //          .append(File.pathSeparator)
           .append(File.pathSeparator).append(Settings.PYSPARK_ZIP)
           .append(File.pathSeparator).append(Settings.PYSPARK_PY4J);
       pythonPathExecs = new StringBuilder();
       pythonPathExecs
-          //          .append("{{PWD}}/")
-          .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)//.append("<CPS>")
-          //          .append("{{PWD}}/").append(Settings.PYSPARK_ZIP).append("<CPS>")
-          //          .append("{{PWD}}/").append(Settings.PYSPARK_PY4J)
-          //          .append(File.pathSeparator)
+          .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
           .append(File.pathSeparator).append(Settings.PYSPARK_ZIP)
           .append(File.pathSeparator).append(Settings.PYSPARK_PY4J);
       //set app file from path
@@ -172,7 +167,7 @@ public class SparkYarnRunnerBuilder {
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.FILE.toString(), null), false);
 
-      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,Settings.HOPSUTIL_JAR);
+      builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, Settings.HOPSUTIL_JAR);
       extraClassPathFiles.append(Settings.HOPSUTIL_JAR).append(File.pathSeparator);
     }
 
@@ -212,12 +207,6 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", jobUser);
-//    builder.addToAppMasterEnvironment("SPARK_DIST_CLASSPATH",
-//        "\"/srv/hops/hadoop/etc/hadoop:/srv/hops/hadoop-2.7.3/share/hadoop/common/lib/*:"
-//        + "/srv/hops/hadoop-2.7.3/share/hadoop/common/*:/srv/hops/hadoop-2.7.3/share/hadoop/hdfs:/srv/hops/"
-//        + "hadoop-2.7.3/share/hadoop/hdfs/lib/*:/srv/hops/hadoop-2.7.3/share/hadoop/hdfs/*:/srv/hops/hadoop-2.7.3/"
-//        + "share/hadoop/yarn/lib/*:/srv/hops/hadoop-2.7.3/share/hadoop/yarn/*:/srv/hops/hadoop-2.7.3/share/hadoop/"
-//        + "mapreduce/lib/*:/srv/hops/hadoop-2.7.3/share/hadoop/mapreduce/*:/contrib/capacity-scheduler/*.jar\"");
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
