@@ -515,7 +515,7 @@ md-input-container {
 
 .fields-in-table {
   border-style: solid;
-  border-bottom: #ddd; 
+  border-top: 0px; 
   padding-left:10px;
   display: flex;
   flex-direction: column;
@@ -545,4 +545,8 @@ md-input-container {
 .btn-huge{
     padding-top:10px;
     padding-bottom:10px;
+}
+
+.ui-select-bootstrap > .ui-select-match > .btn {
+  height: 30px;
 }

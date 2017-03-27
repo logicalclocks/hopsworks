@@ -1,6 +1,6 @@
 <form ng-submit="modifyFieldCtrl.modifyField()" class="noMargin" name="modifyFieldForm">
   <div class="modal-header">
-    <button type="button" class="close" ng-click="cancel()">&times;</button>
+    <button type="button" class="close" ng-click="modifyFieldCtrl.cancel()">&times;</button>
     <h4 class="modal-title">Modify field '{{modifyFieldCtrl.fieldName}}'</h4>
   </div>
 
@@ -63,33 +63,38 @@
       </div>
     </div>
 
-    <div class="">
-      <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true">
-        <label class="control-label" ng-if="modifyFieldCtrl.selectedItem.id === 1" 
-               for="maxCharSize">Number of characters</label>
-
-        <span ng-if="modifyFieldCtrl.selectedItem.id === 1">
-          <input size="10"
-                 id="sizeFieldInput"
-                 type="text"
-                 uib-tooltip="You can set the maximum number of characters this field will accept"
-                 ng-model="modifyFieldCtrl.card.sizefield.value"
-                 ng-blur="metadataCtrl.doneEditingSizeField(modifyFieldCtrl.card)"
-                 ng-enter="metadataCtrl.doneEditingSizeField(card)"
-                 ng-focus="modifyFieldCtrl.card == metadataCtrl.editedField"/>
-        </span>
-      </fieldset>
+    <div style="width: 35%;">
+      <div class="alert alert-danger fade in" ng-show="modifyFieldCtrl.updating">
+        <a class="close" data-dismiss="alert">&times;</a>
+        <strong>This will replace all existing values.</strong>
+      </div>
       <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.fieldSelectItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a single-select value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(1)"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(1)"></button>   
+        <ng-form name="innerForm">
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="text" ng-model="choice.value" name="choice" placeholder="Enter a single-select value" required>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default fa fa-plus"  ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(1)" ng-disabled='innerForm.choice.$error.required'></button>
+              <button type="button" class="btn btn-default fa fa-minus"  ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(1)"></button>
+            </div>
+          </div>
+        </ng-form>
       </fieldset>
 
       <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.multiSelectItems">
-        <input type="text" ng-model="choice.value" name="" placeholder="Enter a multi-select value">
-        <button type="button" class="glyphicon glyphicon-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(2)"></button>
-        <button type="button" class="glyphicon glyphicon-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(2)"></button> 
+        <ng-form name="innerForm">
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="text" ng-model="choice.value" name="choice" placeholder="Enter a multi-select value" required>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default fa fa-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(2)" ng-disabled='innerForm.choice.$error.required'></button>
+              <button type="button" class="btn btn-default fa fa-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(2)"></button>
+            </div>
+          </div>
+        </ng-form>
       </fieldset>
+      <div class="alert alert-danger fade in" ng-show="modifyFieldForm.innerForm.$error.required">
+        <a class="close" data-dismiss="alert">&times;</a>
+        <strong>A value is required</strong>
+      </div>
     </div>
   </div>
 

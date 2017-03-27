@@ -78,6 +78,10 @@
           </div>
         </ng-form>
       </fieldset>
+      <div class="alert alert-danger fade in" ng-if="newFieldForm.$submitted &amp;&amp; newFieldForm.innerForm.$error.required">
+        <a class="close" data-dismiss="alert">&times;</a>
+        <strong>A value is required</strong>
+      </div>
     </div>
   </div>
   <div class="modal-footer">

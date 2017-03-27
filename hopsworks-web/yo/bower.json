@@ -68,7 +68,7 @@
     "ng-sortable": "^1.3.6",
     "angular-bootstrap": "^2.1.3",
     "eonasdan-bootstrap-datetimepicker": "^4.17.42",
-    "angular-ui-select": "^0.19.4",
+    "angular-ui-select": "^0.19.6",
     "angular-smart-table": "^2.1.8",
     "angular-aria": "^1.4.8",
     "angular-xeditable": "^0.2.0",

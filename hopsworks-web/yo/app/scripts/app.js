@@ -672,6 +672,14 @@ angular.module('hopsWorksApp', [
             return out;
           };
         })
+        
+        .filter('unique', function () {
+          return function (arr, field) {
+            return _.uniq(arr, function (a) {
+              return a[field];
+            });
+          };
+        })
 
         //restrict the number of displayed characters
         .filter('cut', function () {
