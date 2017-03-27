@@ -23,6 +23,7 @@ module SessionHelper
     user[:ToS]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
+    user[:testUser]         = true
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
   end
@@ -115,7 +116,7 @@ module SessionHelper
   
   def create_deactivated_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
-     create_validated_user(params)
+    create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
     user.status = 5
@@ -125,7 +126,7 @@ module SessionHelper
   
   def create_lostdevice_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
-     create_validated_user(params)
+    create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
     user.status = 7

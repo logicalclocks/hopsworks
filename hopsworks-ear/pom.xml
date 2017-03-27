@@ -220,7 +220,7 @@
               <specSourceDirectory>${basedir}/test/spec</specSourceDirectory>
               <launchDirectory>${basedir}/test</launchDirectory>
               <testReportDirectory>${basedir}</testReportDirectory>
-              <reportName>/orders-test-report.html</reportName>
+              <reportName>/test-report.html</reportName>
               <jrubyVersion>9.1.2.0</jrubyVersion>
             </configuration>
             <extensions>true</extensions>
