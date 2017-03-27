@@ -852,11 +852,20 @@ public class Settings implements Serializable {
     return KAFKA_DIR;
   }
 
-  private String ANACONDA_DIR = "/srv/hops/anaconda/anaconda/envs";
+  private String ANACONDA_DIR = "/srv/hops/anaconda/anaconda";
 
   public synchronized String getAnacondaDir() {
     checkCache();
     return ANACONDA_DIR;
+  }
+  
+  /**
+   * Constructs the path to the project environment in Anaconda
+   * @param projectName
+   * @return 
+   */
+  public String getAnacondaProjectDir(String projectName){
+    return getAnacondaDir() + File.separator + "envs" + File.separator + projectName;
   }
 
   private String ANACONDA_ENV = "kagent";

@@ -202,10 +202,10 @@ public class NotebookServer implements
     Notebook notebook = notebook();
     try {
       Message messagereceived = deserializeMessage(msg);
-      LOG.log(Level.INFO, "RECEIVE << {0}", messagereceived.op);
-      LOG.log(Level.INFO, "RECEIVE PRINCIPAL << {0}", messagereceived.principal);
-      LOG.log(Level.INFO, "RECEIVE TICKET << {0}", messagereceived.ticket);
-      LOG.log(Level.INFO, "RECEIVE ROLES << {0}", messagereceived.roles);
+      LOG.log(Level.FINE, "RECEIVE << {0}", messagereceived.op);
+      LOG.log(Level.FINE, "RECEIVE PRINCIPAL << {0}", messagereceived.principal);
+      LOG.log(Level.FINE, "RECEIVE TICKET << {0}", messagereceived.ticket);
+      LOG.log(Level.FINE, "RECEIVE ROLES << {0}", messagereceived.roles);
 
       String ticket = TicketContainer.instance.getTicket(
               messagereceived.principal);
