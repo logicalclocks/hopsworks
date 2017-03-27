@@ -40,7 +40,7 @@ import org.apache.hadoop.security.AccessControlException;
 
 /**
  * Contains business logic pertaining DataSet management.
- *  
+ * <p>
  */
 @Stateless
 public class DatasetController {
@@ -213,7 +213,7 @@ public class DatasetController {
       dsRelativePath = dsRelativePath.substring(1);
     }
     //The array representing the DataSet-relative path
-    String[] relativePathArray = dsRelativePath.split(File.separator); 
+    String[] relativePathArray = dsRelativePath.split(File.separator);
     String fullPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
             + datasetName + "/" + dsRelativePath;
     //Parameter checking
@@ -328,6 +328,26 @@ public class DatasetController {
 
     Path location = new Path(path);
     udfso.setPermission(location, pemission);
+  }
+
+  public void recursiveChangeOwnershipAndPermission(String path, Users user,
+          FsPermission pemission, DistributedFileSystemOps udfso) // , Inode ds
+          throws
+          IOException {
+
+    // TODO: recursively change ownership of all files to the dataset owner
+    //       recursively change permissions of all files to remove group write
+//    List<Inode> children = new ArrayList<>(); 
+//    inodes.getAllChildren(ds, children);
+//    for (Inode i : children) {
+//      if (i.isDir()) {
+////        recursiveChangeOwnershipAndPermission(i.getP, user, pemission, udfso, ds);
+//      }
+//    }
+//    while ()
+    Path location = new Path(path);
+    udfso.setPermission(location, pemission);
+
   }
 
   /**

@@ -78,6 +78,9 @@
 .file.greyed {
   background-color: #f3f3f4;
 }
+.file.notAccepted {
+  background-color: #fff7f7;
+}
 
 .file .icon, .file .image {
   height: 100px;
@@ -128,6 +131,24 @@
   border-image: none;
   border-style: solid;
   border-width: 0.6em;
+  bottom: 0;
+  display: inline-block;
+  height: 0;
+  line-height: 0;
+  position: absolute;
+  right: 0;
+  width: 0;
+}
+
+.editable {
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  border-color: transparent #d1d1d1 #d1d1d1 transparent;
+  border-image: none;
+  border-style: solid;
+  border-width: 0.1em;
   bottom: 0;
   display: inline-block;
   height: 0;

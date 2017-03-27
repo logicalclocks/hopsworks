@@ -101,6 +101,18 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
+                removeEditable: function (dataSet) {
+                  var regReq = {
+                    method: 'POST',
+                    url: '/api/project/' + id + '/dataset/removeEditable',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    data: dataSet
+                  };
+
+                  return $http(regReq);
+                },
                 unshareDataSet: function (dataSet) {
                   var regReq = {
                     method: 'POST',

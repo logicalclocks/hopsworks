@@ -21,6 +21,7 @@
                 <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
                 <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
                 <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Exclusive</a>
+                <a ng-click="datasetsCtrl.isPublic = true; datasetsCtrl.status = true;" class="file-control">Public</a>
                 <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
                 <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
               </div>
@@ -52,18 +53,24 @@
                            class="file-box"
                            context-menu
                            data-target="menu-{{ dataset.name}}">
-                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name}">
+                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name, 
+                                  'notAccepted' : dataset.status === false}">
                           <a>
-                            <span class="corner"></span>
-                            <div data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                            <span class="corner" ng-if="dataset.permission !== 'rwxrwx--T'"></span>
+                            <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="projectCtrl.browseDataset(dataset)">
+                              <i class="glyphicon" ng-class="{'glyphicon-eye-open' : datasetsCtrl.selected !== dataset.name}"></i>
+                            </div>
+                            <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
                             <div class="file-name" data-toggle="tooltip" title="Click on the bottom section to view metadata for this dataset." 
                                  ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
                               <span data-toggle="tooltip"
-                                    title="{{dataset.name.length > 22 ? dataset.name:''}}">
-                                {{dataset.name}}
+                                    title="{{dataset.name.length > 17 ? dataset.name:''}}">
+                                {{dataset.name| limitTo: 17}}
                               </span>                          
+                            <span class="glyphicon glyphicon-edit pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
+                                    title="This dataset is editable by all project members."></span>
                               <br/>
                               <small><b>Owner:</b> 
                                 <span data-toggle="tooltip"
@@ -71,10 +78,23 @@
                                   {{dataset.owner| limitTo: 17}}
                                 </span>
                               </small>
-                              <span class="pull-right dataset-icon" 
-                                    ng-class="{'glyphicon glyphicon-globe': dataset.publicDs === true, 'fa fa-users': (dataset.sharedWith > 0 && dataset.publicDs === false)}"
+                              <span ng-if="dataset.publicDs === true" class="pull-right dataset-icon glyphicon glyphicon-globe"  data-toggle="tooltip"
+                                      title="Dataset is public (to the world)">
+                              </span>
+                              <span ng-if="dataset.publicDs !== true && datasetsCtrl.isSharedDs(dataset.name) === false" 
+                                    class="pull-right dataset-icon"
+                                    ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.status === true)}"
                                     data-toggle="tooltip"
-                                    title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"></span>
+                                    title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"
+                                    >
+                              </span>
+                              <span ng-if="dataset.publicDs !== true && datasetsCtrl.isSharedDs(dataset.name) === true" 
+                                    class="pull-right dataset-icon"
+                                    ng-class="{'fa fa-users': (dataset.sharedWith > 0 && dataset.status === true)}"
+                                    data-toggle="tooltip"
+                                    title="Shared Dataset"
+                                    >
+                              </span>
                             </div>
                           </a>
                         </div>
@@ -117,13 +137,22 @@
                                 Unshare DataSet</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'" ng-show="projectCtrl.role === 'Data owner'">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
                                ng-click="datasetsCtrl.makeEditable(dataset.name)">
                               <span><i class="glyphicon glyphicon-edit"></i>
                                 Make Editable</span>
+                            </a>
+                          </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission === 'rwxrwx--T'" ng-show="projectCtrl.role === 'Data owner'">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="2"
+                               ng-click="datasetsCtrl.removeEditable(dataset.name)">
+                              <span><i class="glyphicon glyphicon-edit"></i>
+                                Remove Editable</span>
                             </a>
                           </li>
                           <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
@@ -146,6 +175,7 @@
                             </a>
                           </li>
                           <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
+<!--
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
@@ -155,6 +185,7 @@
                                 Compress</span>
                             </a>
                           </li>
+-->
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
