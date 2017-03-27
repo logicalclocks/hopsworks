@@ -427,7 +427,8 @@ public class ZeppelinConfig {
     }
     String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
     String log4jPath = Settings.getProjectSparkLog4JPath(this.projectName);
-    String zeppelinPythonPath = settings.getAnacondaDir() + "/envs/"+this.projectName+"/bin/python";
+    String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName) + File.separator + "bin"
+        + File.separator + "python";
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";

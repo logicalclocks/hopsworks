@@ -149,7 +149,11 @@ public class SparkYarnRunnerBuilder {
 
       addSystemProperty(Settings.SPARK_APP_NAME_ENV, jobName);
       addSystemProperty(Settings.SPARK_YARN_IS_PYTHON_ENV, "true");
-      addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, "$JAVA_HOME/jre/lib/amd64/server");
+      if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
+        addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, System.getenv("LD_LIBRARY_PATH"));
+      } else {
+        addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, "$JAVA_HOME/jre/lib/amd64/server");
+      }
     }
 
     builder.addLocalResource(new LocalResourceDTO(

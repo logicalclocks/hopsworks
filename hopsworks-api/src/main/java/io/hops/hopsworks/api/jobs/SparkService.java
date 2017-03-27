@@ -179,7 +179,7 @@ public class SparkService {
         config.setAppName("Untitled Spark job");
       }
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
-        config.setAnacondaDir(settings.getAnacondaDir() + "/" + project.getName());
+        config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
       JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.

@@ -163,8 +163,8 @@ public abstract class YarnJob extends HopsJob {
         new ElasticProperties(services.getSettings().getElasticEndpoint()));
 
     if (jobDescription.getProject().getConda()) {
-      serviceProps.initAnaconda(services.getSettings().getAnacondaDir() + "/envs/" + jobDescription.getProject().
-          getName() + "/bin/python");
+      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobDescription.getProject().getName())
+          + File.separator + "bin" + File.separator + "python");
     }
     Collection<ProjectServices> projectServices = jobDescription.getProject().
         getProjectServicesCollection();
