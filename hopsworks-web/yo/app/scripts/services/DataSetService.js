@@ -21,7 +21,7 @@ angular.module('hopsWorksApp')
                  * @returns {unresolved}
                  */
                 getContents: function (relativePath) {
-                  return $http.get('/api/project/' + id + '/dataset/' + relativePath);
+                  return $http.get('/api/project/' + id + '/dataset/getContent/' + relativePath);
                 },
                 /**
                  * Checks the existence of a file. Should be caled before fileDownload.
@@ -30,6 +30,15 @@ angular.module('hopsWorksApp')
                  */
                 checkFileExist: function (fileName) {
                   return $http.get('/api/project/' + id + '/dataset/fileExists/' + fileName);
+                },
+                /**
+                 * Get file or folder to which the path points. 
+                 * The parameter is a path relative to the project root folder.
+                 * @param {type} relativePath
+                 * @returns {unresolved}
+                 */
+                getFile: function (relativePath) {
+                  return $http.get('/api/project/' + id + '/dataset/getFile/' + relativePath);
                 },
                 /**
                  * Downloads a file using location.href. This can replace the

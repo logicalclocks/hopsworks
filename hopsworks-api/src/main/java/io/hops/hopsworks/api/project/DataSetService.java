@@ -143,6 +143,7 @@ public class DataSetService {
   }
 
   @GET
+  @Path("/getContent/")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findDataSetsInProjectID(
@@ -224,7 +225,7 @@ public class DataSetService {
    * @throws AppException
    */
   @GET
-  @Path("/{path: .+}")
+  @Path("/getContent/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getDirContent(
@@ -258,6 +259,36 @@ public class DataSetService {
             inodeViews).build();
   }
 
+  @GET
+  @Path("/getFile/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response getFile(@PathParam("path") String path,
+      @Context SecurityContext sc) throws
+      AppException, AccessControlException {
+    String fullpath = getFullPath(path);
+    Inode inode = inodes.getInodeAtPath(fullpath);
+
+    if(inode==null){
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),ResponseMessages.DATASET_NOT_FOUND);
+    }
+    
+    InodeView inodeView;
+    Users user;
+
+    inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().getName());
+    user = userfacade.findByUsername(inodeView.getOwner());
+    if (user != null) {
+      inodeView.setOwner(user.getFname() + " " + user.getLname());
+      inodeView.setEmail(user.getEmail());
+    }
+
+    GenericEntity<InodeView> inodeViews
+        = new GenericEntity<InodeView>(inodeView) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        inodeViews).build();
+  }
+  
   @POST
   @Path("/shareDataSet")
   @Produces(MediaType.APPLICATION_JSON)
@@ -1082,7 +1113,7 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-
+  
   @GET
   @Path("filePreview/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)

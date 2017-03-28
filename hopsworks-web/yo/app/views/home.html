@@ -1,12 +1,12 @@
 <div class="container" ng-controller="MainCtrl as mainCtrl" style="width: 1500px;">
   <div ng-include="'nav.html'"></div>
-  <div ng-show="mainCtrl.searchReturned !== ''" class="row">
+  <div ng-show="mainCtrl.searchTerm.length > 3" class="row">
     <div id="projectSearchResults">
       <div ng-include="'views/search.html'"></div>
     </div>
   </div>
 
-  <div ng-show="mainCtrl.searchReturned === ''" class="row" ng-controller="HomeCtrl as homeCtrl">
+  <div ng-show="mainCtrl.searchTerm.length <= 3" class="row" ng-controller="HomeCtrl as homeCtrl">
     <div class="col-sm-6 col-md-2 col-lg-2" id="toursBox">
       <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
         <div class="list-group">
@@ -73,7 +73,7 @@
     </div>
 
     <div class="col-sm-6 col-md-1 col-lg-1"></div>
-    <div class="col-sm-6 col-md-3 col-lg-3 sidebar">
+    <div class="col-sm-3 col-md-3 col-lg-3 sidebar">
       <span class="list-group-item active">
         <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
 

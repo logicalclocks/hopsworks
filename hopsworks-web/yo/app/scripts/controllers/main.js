@@ -104,9 +104,12 @@ angular.module('hopsWorksApp')
             self.resultItems = 0;
             self.currentPage = 1;
             self.pageSize = 16;
+            
             self.hitEnter = function (evt) {
               if (angular.equals(evt.keyCode, 13)) {
                 self.search();
+              } else if (angular.equals(evt.keyCode, 27)) {
+                self.clearSearch();
               }
             };
 
@@ -118,6 +121,12 @@ angular.module('hopsWorksApp')
                 self.searchResult = [];
                 self.searchReturned = "";
               }
+            };
+            
+            self.clearSearch = function () {
+                self.searchResult = [];
+                self.searchReturned = "";
+                self.searchTerm = "";
             };
 
             self.search = function () {
@@ -254,6 +263,19 @@ angular.module('hopsWorksApp')
                 });
               } else if (result.type === 'ds') {
                 ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(
+                  function (response) {
+                    var projects;
+                    console.log(response);
+                    ProjectService.query().$promise.then(
+                      function (success) {
+                        projects = success;
+                        ModalService.viewSearchResult('lg', response, result, projects);
+                      }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
+                  });
+              } else if (result.type ==='inode') {
+                ProjectService.getInodeInfo({id: $routeParams.projectID, inodeId: result.id}).$promise.then(
                   function (response) {
                     var projects;
                     console.log(response);

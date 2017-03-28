@@ -10,7 +10,7 @@
   <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'" style="padding-bottom:10px;">
     <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;" >
       <label style="font-size: 16px;">{{table.name| limitTo: 25}}</label>
-      <span type="button" class="btn btn-xs fa-minus-square-o pull-right" 
+      <span type="button" class="btn btn-xs fa fa-minus-square-o pull-right" 
             style="background-color:#D8D8D8;margin-right: 5px;"
             data-toggle="collapse" 
             data-target="#metadatadiv{{$index}}"> </span>

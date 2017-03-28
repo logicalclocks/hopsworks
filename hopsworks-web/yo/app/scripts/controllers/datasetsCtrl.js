@@ -3,10 +3,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
           'DataSetService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$showdown',
+          'MetadataHelperService', '$showdown', '$rootScope',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
-                  $showdown) {
+                  $showdown, $rootScope) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -16,7 +16,8 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
-
+            self.highlighted;
+            
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
 //            self.fileDetail = null; //The details about the currently selected file.
@@ -178,6 +179,11 @@ angular.module('hopsWorksApp')
                         console.log(success);
 //                        alert('Execution time: ' + (new Date().getTime() - self.dir_timing)); 
                         console.log('Execution time: ' + (new Date().getTime() - self.dir_timing));
+                        if ($rootScope.selectedFile) {
+                          var filePathArray = self.pathArray.concat($rootScope.selectedFile);
+                          self.getFile(filePathArray);
+                          $rootScope.selectedFile = undefined;
+                        }
                       }, function (error) {
                 if (error.data.errorMsg.indexOf("Path is not a directory.") > -1) {
                   var popped = newPathArray.pop();
@@ -200,6 +206,24 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.getFile = function (pathComponents) {
+              var newPathArray;
+              
+              newPathArray = pathComponents;
+              
+              //Convert into a path
+              var newPath = getPath(newPathArray);
+               dataSetService.getFile(newPath).then(
+                       function (success) {
+                         self.highlighted = success.data;
+                         self.select(self.highlighted.name, self.highlighted, undefined);
+                         $scope.search = self.highlighted.name;
+                       }, function (error) {
+                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                       });
+            };
+            
+            
             var init = function () {
               //Check if the current dataset is set
               if ($routeParams.datasetName) {
@@ -213,10 +237,13 @@ angular.module('hopsWorksApp')
                 //file name is set: get the contents
                 var paths = $routeParams.fileName.split("/");
                 paths.forEach(function (entry) {
-                  self.routeParamArray.push(entry);
+                  if(entry!==""){
+                    self.routeParamArray.push(entry);
+                  }
                 });
-              }
+              }             
               getDirContents();
+              
               self.tgState = true;
             };
 
@@ -563,7 +590,7 @@ This will make all its files unavailable to other projects unless you share it e
 
               ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId).then(
                       function (success) {
-                        growl.success(success);
+                        growl.success(success, {ttl:5000});
                         getDirContents();
                       }, function (error) {
 //                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
@@ -751,7 +778,7 @@ This will make all its files unavailable to other projects unless you share it e
               // 1. Turn off the selected file at the top of the browser.
               // Add existing selected file (idempotent, if already added)
               // If file already selected, deselect it.
-              if (event.ctrlKey) {
+              if (event && event.ctrlKey) {
 
               } else {
                 self.selectedFiles = {};
@@ -764,6 +791,7 @@ This will make all its files unavailable to other projects unless you share it e
               self.selectedFiles[file.name] = file;
               self.selectedFiles[file.name].selectedIndex = selectedIndex;
               self.menustyle.opacity = 1.0;
+              console.log(self.selectedFiles);
             };
 
             self.haveSelected = function (file) {
