@@ -22,7 +22,8 @@ angular.module('hopsWorksApp')
             self.tourService = TourService;
             self.location = $location;
             self.cloak = true;
-
+            self.isClosed = true;
+	      
             self.role = "";
 
             self.endpoint = '...';
@@ -51,6 +52,7 @@ angular.module('hopsWorksApp')
             $scope.$on('$viewContentLoaded', function () {
               self.loadedView = true;
             });
+
 
             var getEndpoint = function () {
               EndpointService.findEndpoint().then(
