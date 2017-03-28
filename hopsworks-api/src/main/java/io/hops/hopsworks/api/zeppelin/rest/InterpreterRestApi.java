@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.zeppelin.rest;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -115,6 +117,8 @@ public class InterpreterRestApi {
   private NoCacheResponse noCacheResponse;
   
   Gson gson = new Gson();
+  private final EnumSet<YarnApplicationState> PREDICATE = EnumSet.of
+      (YarnApplicationState.RUNNING);
 
   public InterpreterRestApi() {
   }
@@ -677,8 +681,7 @@ public class InterpreterRestApi {
       hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
       for (JobAdministration.YarnApplicationReport report : yarnAppReport) {
         if (hdfsUsername.equals(report.getUser()) && report.getName().
-                startsWith("livy-session-") && report.getState().equals(
-                "RUNNING")) {
+                startsWith("livy-session-")) {
           try {
             id = Integer.parseInt(report.getName().substring(
                     "livy-session-".length()));
@@ -702,7 +705,7 @@ public class InterpreterRestApi {
     client.start();
     try {
       //Create our custom YarnApplicationReport Pojo
-      for (ApplicationReport appReport : client.getApplications()) {
+      for (ApplicationReport appReport : client.getApplications(PREDICATE)) {
         reports.add(jobAdmin.new YarnApplicationReport(appReport.
                 getApplicationId().
                 toString(),
@@ -728,9 +731,8 @@ public class InterpreterRestApi {
     client.start();
     try {
       //Create our custom YarnApplicationReport Pojo
-      for (ApplicationReport appReport : client.getApplications()) {
-        if (username.equals(appReport.getUser()) && appReport.
-                getYarnApplicationState().name().equals("RUNNING")) {
+      for (ApplicationReport appReport : client.getApplications(PREDICATE)) {
+        if (username.equals(appReport.getUser())) {
           reports.add(jobAdmin.new YarnApplicationReport(appReport.
                   getApplicationId().
                   toString(),
