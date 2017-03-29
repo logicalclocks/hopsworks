@@ -3,8 +3,14 @@ module SessionHelper
     unless @cookies
       user = create_user
       post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-      @cookies = {"SESSIONID"=> json_body[:sessionID]}
-      @user = user
+      if !headers["set_cookie"][1].nil?
+        cookie = headers["set_cookie"][1].split(';')[0].split('=')
+        @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
+        @user = user
+      else 
+        @cookies = {"SESSIONID"=> json_body[:sessionID]}
+        @user = user
+      end
     end
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
@@ -33,7 +39,7 @@ module SessionHelper
     register_user(params)
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
-    get "/hopsworks/security/validate_account.xhtml", {params: {key: key}}
+    get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
   end
   
   def set_two_factor(value)

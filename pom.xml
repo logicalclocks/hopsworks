@@ -36,11 +36,11 @@
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
-    <glassfish.hostname>localhost</glassfish.hostname>
+    <glassfish.hostname>bbc3.sics.se</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
     <glassfish.passwd>adminpw</glassfish.passwd>           
-    <glassfish.port>8080</glassfish.port>
-    <glassfish.admin_port>4848</glassfish.admin_port>
+    <glassfish.port>25100</glassfish.port>
+    <glassfish.admin_port>27100</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
 

@@ -98,7 +98,7 @@ describe "session" do
       register_user(email: email)
       user = User.find_by(email: email)
       key = user.username + user.validation_key
-      get "/hopsworks/security/validate_account.xhtml", {params: {key: key}}
+      get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
       expect_status(200)
     end
 

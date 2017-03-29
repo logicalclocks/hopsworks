@@ -25,10 +25,13 @@ import io.hops.hopsworks.common.util.PKIUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.kafka.CsrDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 
 @Path("/agentservice")
 @Stateless
 @RolesAllowed({"AGENT"})
+@Api(value = "Agent service",
+        description = "Agent Rest Api")
 public class AgentService {
 
   final static Logger logger = Logger.getLogger(AgentService.class.getName());

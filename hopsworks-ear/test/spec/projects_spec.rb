@@ -64,9 +64,9 @@ describe 'projects' do
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
-      it 'should fail with invalid params' do
+      it 'should create a project given only name' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-        expect_status(500)
+        expect_status(201)
       end
     end
   end
@@ -262,7 +262,7 @@ describe 'projects' do
       end
       it "should fail to change the role of the project owner" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@project[:username]}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_json(errorMsg: "Can not change the role of a project owner.")
+        expect_json(errorMsg: "Chaning the role of the project owner is not allowed.")
         expect_status(400)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
         memb = json_body.detect { |e| e[:user][:email] == @project[:username] }

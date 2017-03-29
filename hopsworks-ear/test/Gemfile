@@ -10,6 +10,7 @@ gem 'ci_reporter_rspec'
 gem 'net-ssh', '~> 2.1.0'
 gem 'session', '3.2.0'
 gem 'launchy', '2.4.3'
+gem 'coderay', '1.1.1'
 
 group :development do
   gem 'dotenv'

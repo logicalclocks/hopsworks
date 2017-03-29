@@ -6,6 +6,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.maintenance.Maintenance;
 import io.hops.hopsworks.common.maintenance.MaintenanceController;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -21,6 +22,8 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("/banner")
 @Stateless
+@Api(value = "Banner service",
+        description = "Banner Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class BannerService {
 

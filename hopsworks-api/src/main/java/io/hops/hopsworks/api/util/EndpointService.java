@@ -5,6 +5,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -21,6 +22,8 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("/endpoint")
 @RequestScoped
+@Api(value = "Endpoint service",
+        description = "Endpoint Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class EndpointService {
 

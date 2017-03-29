@@ -44,5 +44,5 @@ module ProjectHelper
    with_valid_session
    get "#{ENV['HOPSWORKS_API']}/project/getAll"
       json_body.map{|project| project[:id]}.each{|i| post "#{ENV['HOPSWORKS_API']}/project/#{i}/delete" }
-     end
   end
+end

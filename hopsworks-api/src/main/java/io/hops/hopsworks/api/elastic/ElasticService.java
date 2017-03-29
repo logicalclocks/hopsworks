@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
@@ -64,6 +65,8 @@ import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@Api(value = "Elastic service",
+        description = "Elastic Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
