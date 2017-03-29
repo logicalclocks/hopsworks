@@ -14,9 +14,7 @@
 
         <section>
           <!-- Page Content -->
-<!--class="content"--> 
-          <div style="height:100%; overflow: hidden; margin-left: 10px; margin-top: 70px;" >	
-            
+          <div class="content" style="height:100%; overflow: hidden; margin-left: 2px;" ng-class="{'hide-border': projectCtrl.isClosed, 'expanded-job-monitor': !projectCtrl.isClosed}">	
             <div ng-if="jobUICtrl.loading" class="loadingwrap">
               <div class="loading-content">
                 <div class="loader-in-wrap"></div>

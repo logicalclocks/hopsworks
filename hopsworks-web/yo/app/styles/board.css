@@ -192,3 +192,11 @@ div.story h3, div.task h3 {
 .xwdith {
   width: 500px;
 }
+
+.hide-border {
+    margin-top: 50px;
+}
+
+.expanded-job-monitor {
+    margin-top: -5px;
+}

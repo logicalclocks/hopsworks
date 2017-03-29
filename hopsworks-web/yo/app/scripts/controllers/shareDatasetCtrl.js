@@ -52,6 +52,21 @@ angular.module('hopsWorksApp')
                 }
 
             };
+
+          self.removeEditable = function () {
+                if ($scope.dataSetForm.$valid) {
+                    dataSetService.removeEditable(self.dataSet)
+                        .then(function (success) {
+                            $uibModalInstance.close(success);
+                        },
+                        function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        });
+                } else {
+                    self.dataSet.editable = false;
+                }
+
+            };
             
               /**
              * Opens a modal dialog to make dataset editable

@@ -6,7 +6,7 @@
   <security-role-mapping>
     <role-name>HOPS_ADMIN</role-name>
     <group-name>HOPS_ADMIN</group-name>
-    <principal-name>CN=Hopsworks,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>
+    <!--<principal-name>CN=Hopsworks,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>-->
   </security-role-mapping>
   <security-role-mapping>
     <role-name>HOPS_USER</role-name>

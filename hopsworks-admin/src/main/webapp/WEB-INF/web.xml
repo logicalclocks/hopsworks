@@ -95,4 +95,15 @@
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>-->
   </login-config>  
+  
+  <session-config>
+    <session-timeout>600</session-timeout>
+    <cookie-config>
+      <name>SESSION</name>
+      <path>/</path>
+      <http-only>false</http-only>
+      <secure>false</secure>
+    </cookie-config>
+  </session-config>  
+  
 </web-app>

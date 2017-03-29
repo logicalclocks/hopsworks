@@ -89,6 +89,14 @@ angular.module('hopsWorksApp')
             });
 
 
+            self.isSharedDs = function (name) {
+              var top = name.split("::");
+              if (top.length === 1) {
+                return false;
+              }
+              return true;
+            };
+            
             self.isShared = function () {
               var top = self.pathArray[0].split("::");
               if (top.length === 1) {
@@ -643,6 +651,19 @@ This will make all its files unavailable to other projects unless you share it e
                       }, function (error) {
               });
             };
+            
+            /**
+             * Opens a modal dialog to remove editable from the dataset 
+             * @returns {undefined}
+             */
+            self.removeEditable = function (name) {
+              ModalService.removeEditable('md', name).then(
+                      function (success) {
+                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        getDirContents();
+                      }, function (error) {
+              });
+            };
 
             /**
              * Opens a modal dialog for unsharing.
@@ -652,6 +673,7 @@ This will make all its files unavailable to other projects unless you share it e
               ModalService.unshareDataset('md', name).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                        getDirContents();
                       }, function (error) {
               });
             };

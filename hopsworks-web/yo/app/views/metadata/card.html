@@ -27,14 +27,14 @@
           <i class="fa fa-trash-o"></i>
         </a>
 
-        <div uib-dropdown  class="dropdown position-fixed" id="menu-{{$card.title}}"> 
+        <div uib-dropdown  class="dropdown" id="menu-{{$card.title}}" style="z-index: inherit;"> 
           <a class="btn" uib-dropdown-toggle 
              style="width: 20px; height: 20px;padding:2px;"
              uib-tooltip="configure this field">
             <i class="fa fa-cog"></i>
           </a>
 
-          <ul uib-dropdown-menu class="dropdown-amore">
+          <ul uib-dropdown-menu class="dropdown-amore dropdown-menu-right">
             <li>
               <a ng-click="metadataCtrl.makeSearchable(card);
                 $event.stopPropagation()">

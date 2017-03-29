@@ -46,7 +46,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @Path("/auth")
 @Stateless
-@Api(value = "Auth", description = "Authentication service")
+@Api(value = "Auth",
+        description = "Authentication service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 

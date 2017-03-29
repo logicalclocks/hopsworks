@@ -130,7 +130,7 @@ public class ElasticService {
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
     srb = srb.setTypes(Settings.META_PROJECT_TYPE,
             Settings.META_DATASET_TYPE);
-    srb = srb.setQuery(this.globalSearchQuery(searchTerm));
+    srb = srb.setQuery(this.globalSearchQuery(searchTerm.toLowerCase()));
     srb = srb.addHighlightedField("name");
     logger.
             log(Level.INFO, "Global search Elastic query is: {0}", srb.
@@ -213,8 +213,8 @@ public class ElasticService {
     final int projectId = project.getId();
 
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
-    srb = srb.setTypes(Settings.META_INODE_TYPE);
-    srb = srb.setQuery(projectSearchQuery(searchTerm));
+    srb = srb.setTypes(Settings.META_INODE_TYPE, Settings.META_DATASET_TYPE);
+    srb = srb.setQuery(projectSearchQuery(searchTerm.toLowerCase()));
     srb = srb.addHighlightedField("name");
     srb = srb.setRouting(String.valueOf(projectId));
 
@@ -302,7 +302,7 @@ public class ElasticService {
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
     srb = srb.setTypes(Settings.META_INODE_TYPE);
-    srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm));
+    srb = srb.setQuery(this.datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
     //TODO: https://github.com/elastic/elasticsearch/issues/14999 
     //srb = srb.addHighlightedField("name");
     srb = srb.setRouting(String.valueOf(project.getId()));
@@ -341,7 +341,7 @@ public class ElasticService {
    */
   private QueryBuilder globalSearchQuery(String searchTerm) {
     //FIXME: consider metadata search as well
-    QueryBuilder nameDescQuery = getNameDescriptionMetadataQuery(searchTerm);
+    QueryBuilder nameDescQuery = getAllQuery(searchTerm);
 
     QueryBuilder query = boolQuery()
             .must(nameDescQuery);
@@ -357,7 +357,7 @@ public class ElasticService {
    */
   private QueryBuilder projectSearchQuery(String searchTerm) {
     //FIXME: consider metadata search as well
-    QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
+    QueryBuilder query = getAllQuery(searchTerm);
 
     return query;
   }
@@ -373,7 +373,7 @@ public class ElasticService {
     QueryBuilder hasParent = hasParentQuery(
             Settings.META_DATASET_TYPE, matchQuery(Settings.META_ID, datasetId));
 
-    QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
+    QueryBuilder query = getAllQuery(searchTerm);
 
     QueryBuilder cq = boolQuery()
             .must(hasParent)
@@ -381,6 +381,10 @@ public class ElasticService {
     return cq;
   }
 
+  private QueryBuilder getAllQuery(String searchTerm) {
+    return boolQuery().should(wildcardQuery("_all", String.format("*%s*", searchTerm)));
+  }
+  
   /**
    * Creates the main query condition. Applies filters on the texts describing a
    * document i.e. on the description

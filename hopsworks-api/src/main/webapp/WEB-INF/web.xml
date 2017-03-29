@@ -62,10 +62,6 @@
       <param-name>swagger.api.title</param-name>
       <param-value>Hopsworks api</param-value>
     </init-param>
-    <!--init-param>
-      <param-name>scan.all.resources</param-name>
-      <param-value>true</param-value>
-    </init-param-->
     <init-param>
       <param-name>swagger.api.basepath</param-name>
       <param-value>/hopsworks-api/api</param-value>
@@ -130,4 +126,14 @@
     <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
     <param-value>true</param-value>
   </context-param>
+  
+  <session-config>
+    <session-timeout>600</session-timeout>
+    <cookie-config>
+      <name>SESSION</name>
+      <path>/</path>
+      <http-only>false</http-only>
+      <secure>false</secure>
+    </cookie-config>
+  </session-config>    
 </web-app>

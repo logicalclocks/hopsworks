@@ -20,7 +20,8 @@ var mainModule = angular.module('hopsWorksApp')
                     self.multiSelectItems = [];
                     self.selectedItem = "1";
                     self.existingRawData = false;
-
+                    self.updating = false;
+                    
                     self.items = [];
 
                     MetadataActionService.fetchFieldTypes($cookies.get('email'))
@@ -99,7 +100,7 @@ var mainModule = angular.module('hopsWorksApp')
                     };
 
                     self.update = function () {
-
+                      self.updating = true;
                       switch (self.selectedItem.id) {
                         case 1:
                           self.multiSelectItems = [];

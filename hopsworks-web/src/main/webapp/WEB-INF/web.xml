@@ -29,4 +29,15 @@
     <realm-name>cauthRealm</realm-name>
   </login-config>
   
+  
+  <session-config>
+    <session-timeout>600</session-timeout>
+    <cookie-config>
+      <name>SESSION</name>
+      <path>/</path>
+      <http-only>true</http-only>
+      <secure>false</secure>
+    </cookie-config>
+  </session-config>  
+  
 </web-app>
