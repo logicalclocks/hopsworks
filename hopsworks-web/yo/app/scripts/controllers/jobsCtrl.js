@@ -92,12 +92,15 @@ angular.module('hopsWorksApp')
                   break;
                 case "FLINK":
                   jobType = 3;
+                  break;
                 case "PYSPARK":
                   jobType = 4;
                   break;
+                case "TFSPARK":
+                  jobType = 5;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
-              if (jobType === 1 || jobType === 4) {
+              if (jobType === 1 || jobType === 4 || jobType === 5 ) {
                 
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)

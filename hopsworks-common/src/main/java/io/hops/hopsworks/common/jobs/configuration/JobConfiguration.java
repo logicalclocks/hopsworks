@@ -148,6 +148,7 @@ public abstract class JobConfiguration implements JsonReduceable {
           break;
         case SPARK:
         case PYSPARK:
+        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -179,6 +180,7 @@ public abstract class JobConfiguration implements JsonReduceable {
           break;
         case SPARK:
         case PYSPARK:
+        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -198,6 +200,7 @@ public abstract class JobConfiguration implements JsonReduceable {
       return EnumSet.of(JobType.ADAM,
               JobType.SPARK,
               JobType.PYSPARK,
+              JobType.TFSPARK,
               JobType.FLINK,
               JobType.ERASURE_CODING);
     }

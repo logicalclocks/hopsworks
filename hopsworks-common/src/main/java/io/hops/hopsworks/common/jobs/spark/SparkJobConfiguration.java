@@ -19,7 +19,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String args;
   private String historyServerIp;
   private String anacondaDir;
-  
+
   //Kafka properties
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -31,6 +31,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int selectedMinExecutors = Settings.SPARK_INIT_EXECS;
   private int selectedMaxExecutors = Settings.SPARK_INIT_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
+
+  private boolean tfOnSpark;
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
@@ -53,6 +55,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   //    pyspark-distributed-language-processing-hadoop-cluster
   protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
   protected static final String KEY_PYSPARK_PYLIB = "PYLIB";
+  protected static final String KEY_IS_TFONSPARK = "IS_TFONSPARK";
 
   public SparkJobConfiguration() {
     super();
@@ -107,6 +110,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public void setAnacondaDir(String anacondaDir) {
     this.anacondaDir = anacondaDir;
+  }
+
+  public boolean isTfOnSpark() {
+    return tfOnSpark;
+  }
+
+  public void setTfOnSpark(boolean tfOnSpark) {
+    this.tfOnSpark = tfOnSpark;
   }
 
   /**
@@ -222,14 +233,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   @Override
   public JobType getType() {
-    if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
+    if (isTfOnSpark()) {
+      return JobType.TFSPARK;
+    } else if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
       return JobType.PYSPARK;
     } else {
       return JobType.SPARK;
     }
   }
-
-
 
   @Override
   public MutableJsonObject getReducedJsonObject() {
@@ -259,6 +270,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
     obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
+    obj.set(KEY_IS_TFONSPARK, Boolean.toString(tfOnSpark));
     return obj;
   }
 
@@ -275,11 +287,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     String jsonNumexecsMaxSelected = "";
     String jsonNumexecsInit = "";
     String jsonDynexecs = "NOT_AVAILABLE";
-
+    String jsonTfOnSpark = "";
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
-      if (type != JobType.SPARK && type != JobType.PYSPARK) {
+      if (type != JobType.SPARK && type != JobType.PYSPARK && type != JobType.TFSPARK) {
         throw new IllegalArgumentException("JobType must be SPARK.");
       }
       //First: fields that can be null or empty
@@ -297,6 +309,9 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
         jsonNumexecsMinSelected = json.getString(KEY_DYNEXECS_MIN_SELECTED);
         jsonNumexecsMaxSelected = json.getString(KEY_DYNEXECS_MAX_SELECTED);
         jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
+      }
+      if (json.containsKey(KEY_IS_TFONSPARK)) {
+        jsonTfOnSpark = json.getString(KEY_IS_TFONSPARK);
       }
 
       hs = json.getString(KEY_HISTORYSERVER);
@@ -323,6 +338,9 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       this.selectedMinExecutors = Integer.parseInt(jsonNumexecsMinSelected);
       this.selectedMaxExecutors = Integer.parseInt(jsonNumexecsMaxSelected);
       this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
+    }
+    if (!jsonTfOnSpark.equals("")) {
+      this.tfOnSpark = Boolean.parseBoolean(jsonTfOnSpark);
     }
     this.historyServerIp = hs;
 

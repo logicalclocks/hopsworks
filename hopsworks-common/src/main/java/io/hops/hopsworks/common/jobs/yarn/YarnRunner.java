@@ -202,7 +202,8 @@ public class YarnRunner {
     logger.info("Starting application master.");
     YarnClient newClient = YarnClient.createYarnClient();
     YarnMonitor monitor = null;
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK|| jobType == JobType.ADAM) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || 
+        jobType == JobType.TFSPARK) {
       //Get application id
       yarnClient.start();
 
@@ -486,7 +487,7 @@ public class YarnRunner {
     }
     //For Spark 2.0, loop through local resources and add their properties
     //as system properties (javaOptions)
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
       StringBuilder uris = new StringBuilder();
       StringBuilder timestamps = new StringBuilder();
       StringBuilder sizes = new StringBuilder();
