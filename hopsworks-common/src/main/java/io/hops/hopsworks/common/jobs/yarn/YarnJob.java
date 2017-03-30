@@ -466,6 +466,7 @@ public abstract class YarnJob extends HopsJob {
         try {
           org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(services.getInodeFacade().getPath(child));
           dfso.setOwner(path, jobUser, child.getHdfsGroup().getName());
+          dfso.setPermission(path, new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE));
         } catch (IOException ex) {
           LOG.log(Level.WARNING, "Could not fix owner of inode:{0}, {1}", new Object[]{child.getId(), ex.getMessage()});
         }
