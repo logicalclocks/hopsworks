@@ -119,7 +119,7 @@
           </div>
         </div>
       </div>
-      <div ng-show="viewSearchResultCtrl.type === 'Dataset'" class="panel panel-default" id="panel3">
+      <div ng-show="viewSearchResultCtrl.type === 'Dataset'" ng-if="viewSearchResultCtrl.content.type !== 'inode'" class="panel panel-default" id="panel3">
         <div class="panel-heading" style="background: #fff" ng-click="viewSearchResultCtrl.getReadme()">
           <h4 class="panel-title" style="color: black">
             <a data-toggle="collapse" data-target="#readme">
@@ -141,7 +141,7 @@
           </div> 
         </div> 
       </div>
-      <div ng-if="viewSearchResultCtrl.type === 'Dataset'" class="col-xs-9" style="padding-left: 0px; margin-top: -10px; ">
+      <div ng-if="viewSearchResultCtrl.type === 'Dataset' && viewSearchResultCtrl.content.type !== 'inode'" class="col-xs-9" style="padding-left: 0px; margin-top: -10px; ">
         <label class="text-muted control-label">Projects</label>
         <ui-select name="project_name" theme="select2" style="min-width: 300px;" title="Choose a project"
                    ng-model="viewSearchResultCtrl.request.projectId"required>
@@ -165,9 +165,9 @@
     </div>        
     <br ng-show="viewSearchResultCtrl.type === 'Dataset'" style="margin:15px">
     <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-
+      <button ng-show="viewSearchResultCtrl.content.details.project_id===viewSearchResultCtrl.thisProjectId" class="btn btn-default" type="button" ng-click="viewSearchResultCtrl.goto()">Go to</button>
       <button class="btn btn-default" type="button" ng-click="viewSearchResultCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required">
+      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required" ng-if="viewSearchResultCtrl.content.type !== 'inode'">
         Send {{viewSearchResultCtrl.requestType}} request
       </button>
 

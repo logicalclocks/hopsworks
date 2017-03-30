@@ -7,21 +7,21 @@
         <div ng-include="'navProject.html'"></div>
         <div>
           <section>  
-              <div ng-show="mainCtrl.searchReturned !== ''" class="content-wrapper">
+<!--              <div ng-show="mainCtrl.searchReturned !== ''" class="content-wrapper">
                   <div id="projectSearchResults">
                       <div ng-include="'views/search.html'"></div>
                   </div>
-              </div>
+              </div>-->
               <div ng-if="zeppelinCtrl.loading" class="loadingwrap">
                 <div class="loading-content">
                   <div class="loader-in-wrap"></div>
                   {{zeppelinCtrl.loadingText}}
                 </div>
               </div> 
-                <div class="content-wrapper" ng-show="mainCtrl.searchReturned === ''">                      
+                <div class="content-wrapper">                      
                     <div growl reference="10" class="pull-right" ></div>
                     <h3>
-                        <div class="col-lg-3" style="margin-top: -17px; margin-left: 13px;">
+                        <div class="col-sm-3 col-md-3 col-lg-3 " style="margin-top: -17px; margin-left: 13px;">
                             <button class="btn btn-success" ng-click="zeppelinCtrl.createNewNote()" type="button" id="newNotebook">
                                 Create New Notebook
                             </button>
@@ -55,6 +55,18 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="file-box">
+                                    <div  class="file" ng-click="zeppelinCtrl.createNewNote()">
+                                        <div class="icon">
+                                            <i class="glyphicon glyphicon-plus"></i>
+                                        </div>
+                                        <div class="file-name">
+                                            <div style="text-align: center; color: green;">
+                                                Create New Notebook
+                                            </div>                                                
+                                        </div>
+                                    </div>
+                                </div> 
                                 <div ng-repeat="note in zeppelinCtrl.notes track by $index">
                                     <div class="file-box" context-menu data-target="menu-{{ $index}}">
                                         <div class="file" ng-click="zeppelinCtrl.openNote(note)">
@@ -88,32 +100,17 @@
                                         </ul>
                                     </div>
                                 </div> 
-                                 <!--end repeat--> 
-
-                                <div class="file-box"
-                                     context-menu
-                                     data-target="menu-{{ $index}}">
-                                    <div  class="file" ng-click="zeppelinCtrl.createNewNote()">
-                                        <div class="icon">
-                                            <i class="glyphicon glyphicon-plus"></i>
-                                        </div>
-                                        <div class="file-name">
-                                            <div style="text-align: center; color: green;">
-                                                Create New Notebook
-                                            </div>                                                
-                                        </div>
-                                    </div>
-                                </div>                                 
+                                 <!--end repeat-->                                 
                             </div>
                         </div>
                     </div>
                 </div> <!--content wrapper -->
 
-                <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}" ng-show="mainCtrl.searchReturned === ''">
+                <div class="ds-sidenav" ng-class="{open: zeppelinCtrl.tgState}">
                     <div class="ibox float-e-margins" style="margin-bottom: -25px; height: 95%;">
                         <div class="file-manager">
                             <div>
-                                <md-content class="md-padding" style="padding-top: 0px; min-width: 300px;">
+                                <md-content class="md-padding" style="padding-top: 0px;">
                                     <md-tabs md-dynamic-height md-border-bottom>
                                         <md-tab label="Interpreters">
                                             <div ng-show="zeppelinCtrl.interpreters === null">
