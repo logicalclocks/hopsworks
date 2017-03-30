@@ -175,6 +175,7 @@ public class HopsUtils {
    * @param jobSystemProperties
    * @param nameNodeIpPort
    * @param flinkCertsDir
+   * @param applicationId
    */
   public static void copyUserKafkaCerts(CertsFacade userCerts,
       Project project, String username,
@@ -183,168 +184,159 @@ public class HopsUtils {
       List<LocalResourceDTO> projectLocalResources,
       Map<String, String> jobSystemProperties, String nameNodeIpPort,
       String flinkCertsDir, String applicationId) {
-    try {
-      //Pull the certificate of the client
-      UserCerts userCert = userCerts.findUserCert(project.getName(),
-          username);
-      //Check if the user certificate was actually retrieved
-      if (userCert.getUserCert() != null && userCert.getUserCert().length > 0
-          && userCert.getUserKey() != null && userCert.getUserKey().length
-          > 0) {
+    //Pull the certificate of the client
+    UserCerts userCert = userCerts.findUserCert(project.getName(),
+        username);
+    //Check if the user certificate was actually retrieved
+    if (userCert.getUserCert() != null && userCert.getUserCert().length > 0
+        && userCert.getUserKey() != null && userCert.getUserKey().length
+        > 0) {
 
-        Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-        kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
-        kafkaCertFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
-        //Create tmp cert directory if not exists for certificates to be copied to hdfs.
-        //Certificates will later be deleted from this directory when copied to HDFS. 
-        File certDir = new File(localTmpDir);
-        if (!certDir.exists()) {
-          try {
-            certDir.setExecutable(false);
-            certDir.setReadable(true, true);
-            certDir.setWritable(true, true);
-            certDir.mkdir();
-          } catch (SecurityException ex) {
-            LOG.log(Level.SEVERE, ex.getMessage());//handle it
-          }
-        }
-        Map<String, File> kafkaCerts = new HashMap<>();
+      Map<String, byte[]> kafkaCertFiles = new HashMap<>();
+      kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
+      kafkaCertFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
+      //Create tmp cert directory if not exists for certificates to be copied to hdfs.
+      //Certificates will later be deleted from this directory when copied to HDFS. 
+      File certDir = new File(localTmpDir);
+      if (!certDir.exists()) {
         try {
-          String kCertName = HopsUtils.getProjectKeystoreName(project.getName(),
-              username);
-          String tCertName = HopsUtils.getProjectTruststoreName(project.
-              getName(), username);
-
-          // if file doesnt exists, then create it
-          try {
-            if (jobType == null) {
-              //Copy the certificates in the local tmp dir
-              File kCert = new File(localTmpDir
-                  + File.separator + kCertName);
-              File tCert = new File(localTmpDir
-                  + File.separator + tCertName);
-              if (!kCert.exists()) {
-                Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                    kCert);
-                Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                    tCert);
-              }
-            } else //If it is a Flink job, copy the certificates into the glassfish config dir
-            {
-              switch (jobType) {
-                case FLINK:
-                  File appDir = Paths.get(flinkCertsDir, applicationId).toFile();
-                  if (!appDir.exists()) {
-                    appDir.mkdir();
-                  }
-                  
-                  File f_k_cert = new File(appDir.toString() + File.separator +
-                      kCertName);
-                  f_k_cert.setExecutable(false);
-                  f_k_cert.setReadable(true, true);
-                  f_k_cert.setWritable(false);
-                  File t_k_cert = new File(appDir.toString() + File.separator +
-                      tCertName);
-                  t_k_cert.setExecutable(false);
-                  t_k_cert.setReadable(true, true);
-                  t_k_cert.setWritable(false);
-                  if (!f_k_cert.exists()) {
-                    Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                        f_k_cert);
-                    Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                        t_k_cert);
-                  }
-                  jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
-                  jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
-                  break;
-                case SPARK:
-                  kafkaCerts.put(Settings.K_CERTIFICATE, new File(
-                      localTmpDir + File.separator + kCertName));
-                  kafkaCerts.put(Settings.T_CERTIFICATE, new File(
-                      localTmpDir + File.separator + tCertName));
-                  for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
-                    if (!entry.getValue().exists()) {
-                      entry.getValue().createNewFile();
-                    }
-
-                    //Write the actual file(cert) to localFS
-                    //Create HDFS kafka certificate directory. This is done
-                    //So that the certificates can be used as LocalResources
-                    //by the YarnJob
-                    if (!dfso.exists(remoteTmpDir)) {
-                      dfso.mkdir(
-                          new Path(remoteTmpDir), new FsPermission(
-                              FsAction.ALL,
-                              FsAction.ALL, FsAction.ALL));
-                    }
-                    //Put project certificates in its own dir
-                    String certUser = project.getName() + "__"
-                        + username;
-                    String remoteTmpProjDir = remoteTmpDir + File.separator
-                        + certUser;
-                    if (!dfso.exists(remoteTmpProjDir)) {
-                      dfso.mkdir(
-                          new Path(remoteTmpProjDir),
-                          new FsPermission(FsAction.ALL,
-                              FsAction.ALL, FsAction.NONE));
-                      dfso.setOwner(new Path(remoteTmpProjDir),
-                          certUser, certUser);
-                    }
-                    
-                    String remoteProjAppDir = remoteTmpProjDir + File.separator
-                        + applicationId;
-                    Path remoteProjAppPath = new Path(remoteProjAppDir);
-                    if (!dfso.exists(remoteProjAppDir)) {
-                      dfso.mkdir(remoteProjAppPath,
-                          new FsPermission(FsAction.ALL,
-                              FsAction.ALL, FsAction.NONE));
-                      dfso.setOwner(remoteProjAppPath, certUser, certUser);
-                    }
-                    
-                    Files.write(kafkaCertFiles.get(entry.getKey()), entry.
-                        getValue());
-                    dfso.copyToHDFSFromLocal(true, entry.getValue().
-                        getAbsolutePath(),
-                        remoteProjAppDir + File.separator
-                        + entry.getValue().getName());
-
-                    dfso.setPermission(new Path(remoteProjAppDir
-                        + File.separator
-                        + entry.getValue().getName()),
-                        new FsPermission(FsAction.ALL, FsAction.NONE,
-                            FsAction.NONE));
-                    dfso.setOwner(new Path(remoteProjAppDir + File.separator
-                        + entry.getValue().getName()), certUser, certUser);
-
-                    projectLocalResources.add(new LocalResourceDTO(
-                        entry.getKey(),
-                        "hdfs://" + nameNodeIpPort + remoteProjAppDir +
-                            File.separator + entry.getValue().getName(),
-                        LocalResourceVisibility.APPLICATION.toString(),
-                        LocalResourceType.FILE.toString(), null));
-                  }
-                  break;
-                default:
-                  break;
-              }
-            }
-          } catch (IOException ex) {
-            LOG.log(Level.SEVERE,
-                "Error writing Kakfa certificates to local fs", ex);
-          }
-
-        } finally {
-          //In case the certificates where not removed
-          for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
-            if (entry.getValue().exists()) {
-              entry.getValue().delete();
-            }
-          }
+          certDir.setExecutable(false);
+          certDir.setReadable(true, true);
+          certDir.setWritable(true, true);
+          certDir.mkdir();
+        } catch (SecurityException ex) {
+          LOG.log(Level.SEVERE, ex.getMessage());//handle it
         }
       }
-    } finally {
-      if (dfso != null) {
-        dfso.close();
+      Map<String, File> kafkaCerts = new HashMap<>();
+      try {
+        String kCertName = HopsUtils.getProjectKeystoreName(project.getName(),
+            username);
+        String tCertName = HopsUtils.getProjectTruststoreName(project.
+            getName(), username);
+
+        // if file doesnt exists, then create it
+        try {
+          if (jobType == null) {
+            //Copy the certificates in the local tmp dir
+            File kCert = new File(localTmpDir
+                + File.separator + kCertName);
+            File tCert = new File(localTmpDir
+                + File.separator + tCertName);
+            if (!kCert.exists()) {
+              Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
+                  kCert);
+              Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
+                  tCert);
+            }
+          } else //If it is a Flink job, copy the certificates into the glassfish config dir
+          {
+            switch (jobType) {
+              case FLINK:
+                File appDir = Paths.get(flinkCertsDir, applicationId).toFile();
+                if (!appDir.exists()) {
+                  appDir.mkdir();
+                }
+
+                File f_k_cert = new File(appDir.toString() + File.separator + kCertName);
+                f_k_cert.setExecutable(false);
+                f_k_cert.setReadable(true, true);
+                f_k_cert.setWritable(false);
+                File t_k_cert = new File(appDir.toString() + File.separator + tCertName);
+                t_k_cert.setExecutable(false);
+                t_k_cert.setReadable(true, true);
+                t_k_cert.setWritable(false);
+                if (!f_k_cert.exists()) {
+                  Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
+                      f_k_cert);
+                  Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
+                      t_k_cert);
+                }
+                jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
+                jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
+                break;
+              case SPARK:
+                kafkaCerts.put(Settings.K_CERTIFICATE, new File(
+                    localTmpDir + File.separator + kCertName));
+                kafkaCerts.put(Settings.T_CERTIFICATE, new File(
+                    localTmpDir + File.separator + tCertName));
+                for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
+                  if (!entry.getValue().exists()) {
+                    entry.getValue().createNewFile();
+                  }
+
+                  //Write the actual file(cert) to localFS
+                  //Create HDFS kafka certificate directory. This is done
+                  //So that the certificates can be used as LocalResources
+                  //by the YarnJob
+                  if (!dfso.exists(remoteTmpDir)) {
+                    dfso.mkdir(
+                        new Path(remoteTmpDir), new FsPermission(
+                            FsAction.ALL,
+                            FsAction.ALL, FsAction.ALL));
+                  }
+                  //Put project certificates in its own dir
+                  String certUser = project.getName() + "__"
+                      + username;
+                  String remoteTmpProjDir = remoteTmpDir + File.separator
+                      + certUser;
+                  if (!dfso.exists(remoteTmpProjDir)) {
+                    dfso.mkdir(
+                        new Path(remoteTmpProjDir),
+                        new FsPermission(FsAction.ALL,
+                            FsAction.ALL, FsAction.NONE));
+                    dfso.setOwner(new Path(remoteTmpProjDir),
+                        certUser, certUser);
+                  }
+
+                  String remoteProjAppDir = remoteTmpProjDir + File.separator
+                      + applicationId;
+                  Path remoteProjAppPath = new Path(remoteProjAppDir);
+                  if (!dfso.exists(remoteProjAppDir)) {
+                    dfso.mkdir(remoteProjAppPath,
+                        new FsPermission(FsAction.ALL,
+                            FsAction.ALL, FsAction.NONE));
+                    dfso.setOwner(remoteProjAppPath, certUser, certUser);
+                  }
+
+                  Files.write(kafkaCertFiles.get(entry.getKey()), entry.
+                      getValue());
+                  dfso.copyToHDFSFromLocal(true, entry.getValue().
+                      getAbsolutePath(),
+                      remoteProjAppDir + File.separator
+                      + entry.getValue().getName());
+
+                  dfso.setPermission(new Path(remoteProjAppDir
+                      + File.separator
+                      + entry.getValue().getName()),
+                      new FsPermission(FsAction.ALL, FsAction.NONE,
+                          FsAction.NONE));
+                  dfso.setOwner(new Path(remoteProjAppDir + File.separator
+                      + entry.getValue().getName()), certUser, certUser);
+
+                  projectLocalResources.add(new LocalResourceDTO(
+                      entry.getKey(),
+                      "hdfs://" + nameNodeIpPort + remoteProjAppDir + File.separator + entry.getValue().getName(),
+                      LocalResourceVisibility.APPLICATION.toString(),
+                      LocalResourceType.FILE.toString(), null));
+                }
+                break;
+              default:
+                break;
+            }
+          }
+        } catch (IOException ex) {
+          LOG.log(Level.SEVERE,
+              "Error writing Kakfa certificates to local fs", ex);
+        }
+
+      } finally {
+        //In case the certificates where not removed
+        for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
+          if (entry.getValue().exists()) {
+            entry.getValue().delete();
+          }
+        }
       }
     }
   }
