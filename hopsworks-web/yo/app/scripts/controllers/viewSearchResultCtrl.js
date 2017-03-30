@@ -1,10 +1,11 @@
 angular.module('hopsWorksApp')
-        .controller('ViewSearchResultCtrl', ['$scope', '$uibModalInstance', 'RequestService', 'DataSetService',  'growl', 'response', 'result', 'projects','$showdown',
-          function ($scope, $uibModalInstance, RequestService, DataSetService, growl, response, result, projects, $showdown) {
+        .controller('ViewSearchResultCtrl', ['$scope', '$uibModalInstance', 'RequestService', 'DataSetService',  'growl', 'response', 'result', 'projects','$showdown','$routeParams','$location','$rootScope',
+          function ($scope, $uibModalInstance, RequestService, DataSetService, growl, response, result, projects, $showdown, $routeParams, $location, $rootScope) {
             var self = this;
             self.request = {'inodeId': "", 'projectId': "", 'message': ""};
             self.projects = projects;
             self.content = result;
+            self.thisProjectId = $routeParams.projectID;
             if (result.type === 'proj') {
               self.type = 'Project';
               self.requestType = 'join';
@@ -70,6 +71,20 @@ angular.module('hopsWorksApp')
             
             self.close = function () {
               $uibModalInstance.dismiss('cancel');
+            };
+            
+            self.goto = function(){
+              var splitedPath = self.content.details.path.split("/");
+              var parentPath = "/";
+
+              for (var i = 3; i < splitedPath.length - 1; i++) {
+                parentPath = parentPath + splitedPath[i] + "/";
+              }
+              $rootScope.selectedFile = splitedPath[splitedPath.length-1];
+              
+              $location.path("/project/" + self.thisProjectId + "/datasets" + parentPath);
+              
+              $uibModalInstance.dismiss('close');
             };
           }]);
 

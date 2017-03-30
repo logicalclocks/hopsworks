@@ -34,6 +34,7 @@ public final class InodeView {
   private String email;
   private boolean publicDs = false;
   private int sharedWith = 0;
+  private boolean searchable = false;
 
   public InodeView() {
   }
@@ -102,6 +103,7 @@ public final class InodeView {
     this.permission = FsPermission.
             createImmutable(ds.getInode().getPermission()).toString();
     this.publicDs = ds.isPublicDs();
+    this.searchable=ds.isSearchable();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -282,6 +284,14 @@ public final class InodeView {
 
   public void setSharedWith(int sharedWith) {
     this.sharedWith = sharedWith;
+  }
+
+  public boolean isSearchable() {
+    return searchable;
+  }
+
+  public void setSearchable(boolean searchable) {
+    this.searchable = searchable;
   }
 
   @Override

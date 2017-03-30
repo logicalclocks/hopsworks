@@ -9,7 +9,7 @@
           <div class="content-wrapper">
             <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
             <!-- Page Content -->
-        <div ng-show="mainCtrl.searchReturned !== ''">
+        <div ng-show="mainCtrl.searchTerm.length > 3">
 
           <div id="projectSearchResults">
 
@@ -19,7 +19,7 @@
 
         </div>
 
-            <div ng-show="mainCtrl.searchReturned === ''">
+            <div ng-show="mainCtrl.searchTerm.length <= 3">
 
             <!--        <div class="col-lg-2" style="max-width: 250px">
 <div class="ibox float-e-margins">
