@@ -91,6 +91,7 @@ public class ExecutionController {
                 job.getProject(), user);
         break;
       case PYSPARK:
+      case TFSPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());

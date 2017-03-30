@@ -69,7 +69,7 @@ angular.module('hopsWorksApp')
 
               if (self.job.runConfig.type === "sparkJobConfiguration") {
                 self.jobtype = "Spark";
-                self.execFile = getFileName(job.runConfig.jarPath);
+                self.execFile = getFileName(job.runConfig.appPath);
               } else if (self.job.runConfig.type === "adamJobConfiguration") {
                 self.jobtype = "ADAM";
                 self.execFile = job.runConfig.selectedCommand.command;

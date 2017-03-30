@@ -37,6 +37,7 @@ angular.module('hopsWorksApp')
             self.showAdvanced = false;
             self.selectedTopics = [];
             self.projectName = "";
+            self.tfOnSpark = false;
             self.getAllTopics = function () {
               if (self.kafkaSelected) {
                 if (typeof self.runConfig.kafka !== "undefined" && 
@@ -355,6 +356,9 @@ angular.module('hopsWorksApp')
                 self.runConfig.selectedMinExecutors = self.sliderOptions.min;
                 self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
               }
+              if(self.getJobType() === "TFSPARK" && self.tfOnSpark === true){
+                self.runConfig.tfOnSpark = true;
+              }
               if (self.tourService.currentStep_TourFour > -1) {
                 //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
@@ -422,10 +426,20 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                case 4:
                   self.accordion3.title = "App file (.jar, .py)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
+                  break;
+                case 4:
+                  self.accordion3.title = "App file (.py)";
+                  self.accordion4.title = "Job details";
+                  selectedType = "PySpark";
+                  break;
+                case 5:
+                  self.accordion3.title = "App file (.py)";
+                  self.accordion4.title = "Job details";
+                  selectedType = "TensorFlowOnSpark";
+                  self.tfOnSpark = true;
                   break;
                 case 2:
                   self.accordion3.title = "ADAM command";
@@ -468,6 +482,8 @@ angular.module('hopsWorksApp')
                   return "FLINK";
                 case 4:
                   return "PYSPARK";
+                case 5:
+                  return "TFSPARK";
                 default:
                   return null;
               }
@@ -567,14 +583,19 @@ angular.module('hopsWorksApp')
               switch (reason.toUpperCase()) {
                 case "SPARK":
                 case "PYSPARK":
+                case "TFSPARK":
                   self.sparkState.selectedJar = filename;
                   SparkService.inspectJar(self.projectId, path).then(
                           function (success) {
                             self.runConfig = success.data;
-                            if(self.runConfig.appPath.toLowerCase().endsWith(".py")){
-                              self.jobtype = 4;
+                            if(reason.toUpperCase() === "TFSPARK"){
+                              self.jobtype = 5;
                             } else {
-                              self.jobtype = 1;
+                              if(self.runConfig.appPath.toLowerCase().endsWith(".py")){
+                                self.jobtype = 4;
+                              } else {
+                                self.jobtype = 1;
+                              }
                             }
                             //Update the min/max spark executors based on 
                             //backend configuration 
@@ -742,7 +763,7 @@ angular.module('hopsWorksApp')
                 //Job information
                 self.jobtype = stored.jobtype;
                 self.jobname = stored.jobname;
-                self.localResources = stored.localResources;
+                self.localResources = stored.runConfig.localResources;
                 self.phase = stored.phase;
                 self.runConfig = stored.runConfig;
                 if (self.runConfig) {
@@ -785,7 +806,7 @@ angular.module('hopsWorksApp')
                     });
                   }
                 }
-                if (self.jobtype === 1 || self.jobtype === 4) {
+                if (self.jobtype === 1 || self.jobtype === 4 || self.jobtype === 5) {
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype === 2) {
                   self.adamState = stored.adamState;
