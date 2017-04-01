@@ -41,6 +41,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.util.AuditUtil;
 
 @ManagedBean
@@ -465,12 +466,20 @@ public class PeopleAdministration implements Serializable {
         return;
       }
 
-      userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
-              getValue());
-
+      try {
+        userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
+                getValue());
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
               PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
               UserAuditActions.SUCCESS.name(), "", user1);
+      } catch (ApplicationException | IllegalArgumentException ex) {
+        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
+                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+                RolesAuditActions.FAILED.name(), "User could not be activated.",
+                user1);
+        MessagesController.addSecurityErrorMessage("Account activation problem not be granted.");
+      }
+      
 
       userTransaction.commit();
 
