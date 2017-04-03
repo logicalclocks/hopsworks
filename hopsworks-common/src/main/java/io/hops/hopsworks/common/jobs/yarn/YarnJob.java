@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.jobs.yarn;
 
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -32,6 +33,8 @@ import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
 
 public abstract class YarnJob extends HopsJob {
 
@@ -448,6 +451,31 @@ public abstract class YarnJob extends HopsJob {
     }
   }
 
+  //TODO(Theofilos): Temporary fix for TensorFlowOnSpark. Should be removed.
+  /**
+   * Change the owner of all the files that are owned by the super user, to the one that ran the job.
+   * @param dfso 
+   */
+  private void fixOwner(DistributedFileSystemOps dfso) {
+    String projectName = jobDescription.getProject().getName();
+    Inode parent = services.getInodeFacade().getInodeAtPath("/Projects/" + projectName);
+    List<Inode> children = new ArrayList<>();
+    services.getInodeFacade().getAllChildren(parent, children);
+
+    for (Inode child : children) {
+      if (child.getHdfsUser() != null && child.getHdfsUser().getName().
+          equals(services.getSettings().getYarnSuperUser())) {
+        try {
+          org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(services.getInodeFacade().getPath(child));
+          dfso.setOwner(path, jobUser, child.getHdfsGroup().getName());
+          dfso.setPermission(path, new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE));
+        } catch (IOException ex) {
+          LOG.log(Level.WARNING, "Could not fix owner of inode:{0}, {1}", new Object[]{child.getId(), ex.getMessage()});
+        }
+      }
+    }
+  }
+  
   /**
    * Copy the AM logs to their final destination.
    *
@@ -535,6 +563,9 @@ public abstract class YarnJob extends HopsJob {
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs(udfso);
     updateState(getFinalState());
+    if(jobDescription.getJobConfig().getType() == JobType.TFSPARK){
+      fixOwner(dfso);
+    }
   }
 
   @Override

@@ -45,6 +45,7 @@ public class DataSetDTO {
     this.sharedWith = sharedWith;
     this.projectTeam = new ArrayList<>();
     this.isPublic = ds.isPublicDs();
+    this.searchable = ds.isSearchable();
     //this have to be done because project team contains too much info.
     for (ProjectTeam member : project.getProjectTeamCollection()) {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
@@ -52,6 +53,18 @@ public class DataSetDTO {
     }
   }
 
+  public DataSetDTO(String name, int inodeId, Project project) {
+    this.inodeId = inodeId;
+    this.name = name;
+    this.projectName = project.getName();
+    this.projectTeam = new ArrayList<>();
+    //this have to be done because project team contains too much info.
+    for (ProjectTeam member : project.getProjectTeamCollection()) {
+      projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
+              getUser().getLname(), member.getUser().getEmail()));
+    }
+  }
+  
   public Integer getInodeId() {
     return inodeId;
   }

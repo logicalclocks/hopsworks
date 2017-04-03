@@ -22,6 +22,11 @@
             <span class="glyphicon" ng-class="{'glyphicon-th-list' : !listView, 'glyphicon-th': listView}" 
                   aria-hidden="true" style="font-size: 20px;"></span></a>
       </li>
+      <li>
+          <a ng-click="mainCtrl.clearSearch()"
+             data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true" style="font-size: 20px;"></span></a>
+      </li>
     </ul>
   </nav>
   <section id="filterdropdown" class="collapse search-result-filter">

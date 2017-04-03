@@ -533,12 +533,8 @@ public class ProjectController {
         continue;
       }
 
-      //Only mark the resources dataset as searchable
-      boolean searchableResources = ds.equals(
-              Settings.DefaultDataset.RESOURCES);
-
       datasetController.createDataset(user, project, ds.getName(), ds.
-              getDescription(), -1, searchableResources, globallyVisible, dfso,
+              getDescription(), -1, false, globallyVisible, dfso,
               udfso);
       if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
         for (String sub : subResources) {
@@ -547,9 +543,6 @@ public class ProjectController {
         }
       }
 
-      if (searchableResources) {
-        logDataSet(project, ds);
-      }
 
       //Persist README.md to hdfs for Default Datasets
       datasetController.generateReadme(udfso, ds.getName(),

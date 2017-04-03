@@ -55,7 +55,11 @@
             <strong>Job details</strong>
           </div>
         </div>
-        <div class="row">
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
+          <div class="text-right col-md-4">Python main class <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row" ng-show="!jobDetailCtrl.job.runConfig.appPath.endsWith('.py')">
           <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
         </div>

@@ -337,7 +337,9 @@ public class Settings implements Serializable {
   public static final String SPARK_PY_MAINCLASS = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
   public static final String PYSPARK_PY4J = "py4j-0.10.4-src.zip";
-
+  public static final String TFSPARK_PYTHON_ZIP = "Python.zip";
+  public static final String TFSPARK_PYTHON_NAME = "Python";
+  public static final String TFSPARK_ZIP = "tfspark.zip";
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;

@@ -119,21 +119,40 @@ public class SparkYarnRunnerBuilder {
     String appExecName = null;
     if (jobType == JobType.SPARK) {
       appExecName = Settings.SPARK_LOCRSC_APP_JAR;
-    } else if (jobType == JobType.PYSPARK) {
+    } else if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
       builder.addLocalResource(new LocalResourceDTO(
           Settings.PYSPARK_ZIP,
-//          sparkDir + File.separator + "python/lib" + File.separator + Settings.PYSPARK_ZIP,
           Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_ZIP,
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
 
       builder.addLocalResource(new LocalResourceDTO(
           Settings.PYSPARK_PY4J,
-//          sparkDir + File.separator + "python/lib" + File.separator + Settings.PYSPARK_PY4J,
           Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.PYSPARK_PY4J,
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
+      if (jobType == JobType.TFSPARK) {
+        LocalResourceDTO pythonZip = new LocalResourceDTO(
+            Settings.TFSPARK_PYTHON_NAME,
+            Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.TFSPARK_PYTHON_ZIP,
+            LocalResourceVisibility.APPLICATION.toString(),
+            LocalResourceType.ARCHIVE.toString(), null);
 
+        builder.addLocalResource(pythonZip, false);
+        extraFiles.add(pythonZip);
+        LocalResourceDTO tfsparkZip = new LocalResourceDTO(
+            Settings.TFSPARK_ZIP,
+            Settings.getPySparkLibsPath(sparkUser) + File.separator + Settings.TFSPARK_ZIP,
+            LocalResourceVisibility.APPLICATION.toString(),
+            LocalResourceType.ARCHIVE.toString(), null);
+        builder.addLocalResource(tfsparkZip, false);
+        extraFiles.add(tfsparkZip);
+        if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
+          addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, System.getenv("LD_LIBRARY_PATH"));
+        } else {
+          addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, "$JAVA_HOME/jre/lib/amd64/server");
+        }
+      }
       pythonPath = new StringBuilder();
       pythonPath
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
@@ -149,11 +168,7 @@ public class SparkYarnRunnerBuilder {
 
       addSystemProperty(Settings.SPARK_APP_NAME_ENV, jobName);
       addSystemProperty(Settings.SPARK_YARN_IS_PYTHON_ENV, "true");
-      if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
-        addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, System.getenv("LD_LIBRARY_PATH"));
-      } else {
-        addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, "$JAVA_HOME/jre/lib/amd64/server");
-      }
+
     }
 
     builder.addLocalResource(new LocalResourceDTO(
@@ -181,7 +196,7 @@ public class SparkYarnRunnerBuilder {
         //Set deletion to true so that certs are removed
         builder.addLocalResource(dto, true);
       } else {
-        if (jobType == JobType.PYSPARK) {
+        if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
           //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
           //github.com/apache/spark/blob/v2.1.0/yarn/src/main/scala/org/apache/spark/deploy/yarn/Client.scala#L624
           if (dto.getName().endsWith(".py")) {
@@ -317,6 +332,7 @@ public class SparkYarnRunnerBuilder {
             append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
             append(serviceProps.getKafka().getTopics());
       }
+
       extraJavaOptions.append("'");
       builder.addJavaOption(extraJavaOptions.toString());
     }
@@ -326,18 +342,22 @@ public class SparkYarnRunnerBuilder {
     amargs.append(mainClass);
     //TODO(set app file from path)
 
-    if (jobType == JobType.PYSPARK) {
+    if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
       //Check if anaconda is enabled
-      if (serviceProps.isAnacondaEnabled()) {
-        //Add libs to PYTHONPATH
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
-        addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPathExecs.toString());
+      if (jobType == JobType.TFSPARK) {
+        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, Settings.TFSPARK_PYTHON_NAME + "/bin/python");
       } else {
-        //Throw error in Hopswors UI to notify user to enable Anaconda
-        throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
+        if (serviceProps.isAnacondaEnabled()) {
+          //Add libs to PYTHONPATH
+          builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
+        } else {
+          //Throw error in Hopswors UI to notify user to enable Anaconda
+          throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
+        }
       }
+      builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
+      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPathExecs.toString());
     }
 
     Properties sparkProperties = new Properties();

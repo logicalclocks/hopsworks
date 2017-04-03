@@ -179,17 +179,43 @@ public class ProjectService {
       @PathParam("id") Integer id) throws AppException {
     MoreInfoDTO info = null;
     if (id != null) {
-      if ("proj".equals(type)) {
-        Project proj = projectFacade.find(id);
-        info = new MoreInfoDTO(proj);
-      } else if ("ds".equals(type)) {
-        info = datasetInfo(id);
+      switch (type){
+        case "proj":
+          Project proj = projectFacade.find(id);
+          info = new MoreInfoDTO(proj);
+          break;
+        case "ds":
+          info = datasetInfo(id);
+          break;
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         info).build();
   }
 
+  @GET
+  @Path("{id}/getMoreInfo/{type}/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getMoreInfo(@PathParam("id") Integer projectId, @PathParam("type") String type,
+      @PathParam("inodeId") Integer id) throws AppException {
+    MoreInfoDTO info = null;
+    if (id != null) {
+      switch (type){
+        case "proj":
+          Project proj = projectFacade.find(id);
+          info = new MoreInfoDTO(proj);
+          break;
+        case "ds":
+        case "inode":
+          info = inodeInfo(id, projectId);
+          break;
+      }
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        info).build();
+  }
+  
   @GET
   @Path("/readme/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -229,6 +255,10 @@ public class ProjectService {
     if (inode == null) {
       return null;
     }
+    List<Dataset> ds = datasetFacade.findByInode(inode);
+    if(ds !=null && !ds.isEmpty() && !ds.get(0).isSearchable()){
+      return null;
+    }
     MoreInfoDTO info = new MoreInfoDTO(inode);
     Users user = userManager.getUserByUsername(info.getUser());
     info.setUser(user.getFname() + " " + user.getLname());
@@ -236,7 +266,25 @@ public class ProjectService {
     info.setPath(inodes.getPath(inode));
     return info;
   }
-
+  
+  private MoreInfoDTO inodeInfo(Integer inodeId, Integer projectId) {
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      return null;
+    }
+    String group = inode.getHdfsGroup().getName();
+    Project project = projectFacade.find(projectId);
+    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
+      return null;
+    }
+    MoreInfoDTO info = new MoreInfoDTO(inode);
+    Users user = userManager.getUserByUsername(info.getUser());
+    info.setUser(user.getFname() + " " + user.getLname());
+    info.setSize(inodes.getSize(inode));
+    info.setPath(inodes.getPath(inode));
+    return info;
+  }
+  
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -272,6 +320,32 @@ public class ProjectService {
         dataset).build();
   }
 
+  @GET
+  @Path("{id}/getInodeInfo/{inodeId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response getDatasetInfo(
+      @PathParam("id") Integer projectId,
+      @PathParam("inodeId") Integer inodeId,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+    Inode inode = inodes.findById(inodeId);
+    if (inode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NOT_FOUND);
+    }
+    String group = inode.getHdfsGroup().getName();
+    Project project = projectFacade.find(projectId);
+    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NOT_PUBLIC);
+    }
+
+    DataSetDTO dataset = new DataSetDTO(inode.getInodePK().getName(), inodeId, project);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+        dataset).build();
+  }
+  
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)

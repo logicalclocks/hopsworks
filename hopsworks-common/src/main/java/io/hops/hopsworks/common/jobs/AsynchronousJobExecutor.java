@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.LocalBean;
@@ -33,6 +34,8 @@ public class AsynchronousJobExecutor {
   @EJB
   private DistributedFsService dfs;
   @EJB
+  private InodeFacade inodeFacade;
+  @EJB
   private JobsHistoryFacade jhf;
   @EJB
   private CertsFacade userCerts;
@@ -59,6 +62,10 @@ public class AsynchronousJobExecutor {
 
   public DistributedFsService getFsService() {
     return dfs;
+  }
+
+  public InodeFacade getInodeFacade() {
+    return inodeFacade;
   }
 
   public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
