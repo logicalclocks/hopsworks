@@ -41,7 +41,6 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
@@ -56,6 +55,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
@@ -189,15 +189,15 @@ public class ElasticService {
    * @throws AppException
    */
   @GET
-  @Path("projectsearch/{projectName}/{searchTerm}")
+  @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response projectSearch(
-          @PathParam("projectName") String projectName,
+          @PathParam("projectId") Integer projectId,
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    if (projectName == null || searchTerm == null) {
+    if (projectId == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
@@ -212,14 +212,12 @@ public class ElasticService {
               getStatusCode(), ResponseMessages.ELASTIC_TYPE_NOT_FOUND);
     }
 
-    Project project = projectFacade.findByName(projectName);
-    final int projectId = project.getId();
+    Project project = projectFacade.find(projectId);
 
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
     srb = srb.setTypes(Settings.META_INODE_TYPE, Settings.META_DATASET_TYPE);
-    srb = srb.setQuery(projectSearchQuery(searchTerm.toLowerCase()));
+    srb = srb.setQuery(projectSearchQuery(project, searchTerm.toLowerCase()));
     srb = srb.addHighlightedField("name");
-    srb = srb.setRouting(String.valueOf(projectId));
 
     logger.log(Level.INFO, "Project Elastic query is: {0}", srb.toString());
     ListenableActionFuture<SearchResponse> futureResponse = srb.execute();
@@ -358,11 +356,17 @@ public class ElasticService {
    * @param searchTerm
    * @return
    */
-  private QueryBuilder projectSearchQuery(String searchTerm) {
-    //FIXME: consider metadata search as well
-    QueryBuilder query = getAllQuery(searchTerm);
-
-    return query;
+  private QueryBuilder projectSearchQuery(Project project, String searchTerm) {
+    
+    List<Dataset> datasets = datasetFacade.findByProject(project);
+    BoolQueryBuilder datasetsQuery = boolQuery();
+    for(Dataset dataset: datasets){
+      datasetsQuery.should(matchQuery(Settings.META_DATASET_ID_FIELD, dataset.geInodeId()));
+      datasetsQuery.should(matchQuery(Settings.META_ID, dataset.geInodeId()));
+    }
+    
+    QueryBuilder searchQuery = getAllQuery(searchTerm);
+    return boolQuery().must(datasetsQuery).must(searchQuery);
   }
 
   /**
@@ -373,13 +377,12 @@ public class ElasticService {
    */
   private QueryBuilder datasetSearchQuery(int datasetId, String searchTerm) {
     //FIXME: consider metadata search as well
-    QueryBuilder hasParent = hasParentQuery(
-            Settings.META_DATASET_TYPE, matchQuery(Settings.META_ID, datasetId));
-
+    QueryBuilder dataset = matchQuery(Settings.META_DATASET_ID_FIELD, datasetId);
+    
     QueryBuilder query = getAllQuery(searchTerm);
 
     QueryBuilder cq = boolQuery()
-            .must(hasParent)
+            .must(dataset)
             .must(query);
     return cq;
   }
