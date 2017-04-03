@@ -284,20 +284,13 @@ public abstract class HopsJob {
   }
 
   /**
-   * Write a message to the application logs.
-   * <p/>
-   * @param message
-   */
-  protected final void writeToLogs(String message) {
-    //TODO(Theofilos): implement this.
-  }
-
-  /**
    * Write an Exception message to the application logs.
    * <p/>
+   * @param message
    * @param e
+   * @throws java.io.IOException
    */
-  protected final void writeToLogs(Exception e) {
-    writeToLogs(e.getLocalizedMessage());
-  }
+  protected abstract void writeToLogs(String message, Exception e) throws IOException;
+  
+  protected abstract void writeToLogs(String message) throws IOException;
 }

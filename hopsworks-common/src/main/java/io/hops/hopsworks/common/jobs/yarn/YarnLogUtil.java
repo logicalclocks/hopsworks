@@ -27,15 +27,19 @@ public class YarnLogUtil {
   }
 
   public static void writeLog(DistributedFileSystemOps dfs, String dst,
-          String message, Exception exception) {
+      String message, Exception exception) {
     PrintStream writer = null;
     try {
       writer = new PrintStream(dfs.create(dst));
-      writer.print(message + "\n" + exception.getMessage());
+      if (exception != null) {
+        writer.print(message + "\n" + exception.getMessage());
+      } else {
+        writer.print(message);
+      }
     } catch (IOException ex) {
       if (writer != null) {
         writer.print(YarnLogUtil.class.getName()
-                + ": Failed to write logs.\n" + ex.getMessage());
+            + ": Failed to write logs.\n" + ex.getMessage());
       }
       LOGGER.log(Level.SEVERE, null, ex);
     } finally {
