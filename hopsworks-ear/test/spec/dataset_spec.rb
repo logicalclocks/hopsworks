@@ -23,13 +23,13 @@ describe 'dataset' do
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "The Dataset was created successfully.")
         expect_status(200)
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:description]).to eq ("test dataset")
         expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(ds[:permission]).to eq ("rwxr-x---")
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{dsname}"
         ds = json_body.detect { |d| d[:name] == "README.md" }
         expect(ds).to be_present
       end
@@ -40,13 +40,13 @@ describe 'dataset' do
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: "The Dataset was created successfully.")
         expect_status(200)
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:description]).to eq ("test dataset")
         expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(ds[:permission]).to eq ("rwxr-x---")
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{dsname}"
         ds = json_body.detect { |d| d[:name] == "README.md" }
         expect(ds).to be_nil
       end
@@ -59,7 +59,7 @@ describe 'dataset' do
         reset_session
       end
       it "should fail to get dataset list" do
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -69,7 +69,7 @@ describe 'dataset' do
         with_valid_project
       end
       it "should return dataset list" do
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
         expect_json_types :array
         expect_status(200)
       end
@@ -101,18 +101,18 @@ describe 'dataset' do
         delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
+      end     
+      it "should fail to delete dataset belonging to someone else." do
+        with_valid_project
+        dsname = "dataset_#{short_random_id}"
+        create_dataset_by_name(@project, dsname)
+        member = create_user
+        #add_member(member[:email], "Data owner")
+        create_session(member[:email],"Pass123")
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
+        expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied")})
+        expect_status(403)
       end
-    end
-    it "should fail to delete dataset belonging to someone else." do
-      with_valid_project
-      dsname = "dataset_#{short_random_id}"
-      create_dataset_by_name(@project, dsname)
-      member = create_user
-      add_member(member[:email], "Data owner")
-      create_session(member[:email],"Pass123")
-      delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
-      expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied")})
-      expect_status(403)
     end
     context 'with authentication and sufficient privilege' do
       before :all do

@@ -135,6 +135,13 @@
           <type>gem</type>
           <scope>test</scope>
         </dependency>
+        <dependency>
+          <groupId>rubygems</groupId>
+          <artifactId>coderay</artifactId>
+          <version>1.1.1</version>
+          <type>gem</type>
+          <scope>test</scope>
+        </dependency>
       </dependencies>
       <build>
         <plugins>

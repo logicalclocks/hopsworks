@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.message.MessageController;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
@@ -35,6 +36,8 @@ import org.elasticsearch.common.Strings;
 @Path("/message")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Message service",
+        description = "Message Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MessageService {
 

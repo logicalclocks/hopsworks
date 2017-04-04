@@ -40,11 +40,14 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 
 @Path("/request")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@Api(value = "Request service",
+        description = "Request Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RequestService {
 

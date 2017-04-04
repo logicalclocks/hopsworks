@@ -53,10 +53,9 @@ def clean_test_data
   require 'net/ssh'
   require 'net/ssh/shell'
   if ENV['RSPEC_SSH'] && ENV['RSPEC_SSH']=="true"
-    Net::SSH::start(ENV['RSPEC_SSH_HOST'], 'root') do |ssh|
+    Net::SSH::start(ENV['RSPEC_SSH_HOST'], "#{ENV['RSPEC_SSH_USER']}") do |ssh|
       ssh.shell do |sh|
         puts "Remote HDFS Clean-up starting"
-        sh.execute("su #{ENV['RSPEC_SSH_USER']}")
         sh.execute("cd #{ENV['RSPEC_SSH_USER_DIR']}")
         sh.execute("vagrant ssh -c 'sudo -u glassfish /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ") 
         puts "Remote HDFS Clean-up finished"
@@ -67,7 +66,6 @@ def clean_test_data
         sh.execute("vagrant ssh -c 'sudo cat /srv/hops/tables.sql | sudo /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
         sh.execute("vagrant ssh -c 'sudo cat /srv/hops/rows.sql | sudo /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
         sh.execute("vagrant ssh -c 'sudo cat /srv/hops/views.sql | sudo /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-        sh.execute("exit") # exit glassfish user
         res = sh.execute("exit")
         res.on_finish do |val1, val2|
         puts "DB Clean-up finished"

@@ -115,8 +115,8 @@ describe 'projects' do
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
-        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
+        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
       end
     end
     context 'with authentication and sufficient privilege' do
@@ -125,8 +125,8 @@ describe 'projects' do
       end
       it "should delete project" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
-        expect_json(successMessage: "The project and all related files were removed successfully.")
         expect_status(200)
+        expect_json(successMessage: "The project and all related files were removed successfully.")
       end
     end
   end
@@ -149,22 +149,23 @@ describe 'projects' do
         reset_session
       end
       it "should fail to add member" do
-        #project = get_project
+        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
       it "should fail to remove a team member" do
+        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data scientist")
         create_session(member[:email],"Pass123")
-        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
@@ -172,12 +173,13 @@ describe 'projects' do
         expect(memb).to be_present
       end
       it "should fail to change member role" do
+        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data owner")
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
@@ -315,16 +317,15 @@ describe 'projects' do
         field_errors = json_body[:fieldErrors]
         expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
       end
-      
       it "should allow a new member with sufficient privilege (Data owner) to add a member" do
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data owner")
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
+        expect_status(200)
         expect_json(successMessage: "One member added successfully")
         expect_json(errorMsg: "")
-        expect_status(200)
       end
     end
   end
