@@ -105,22 +105,6 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    try {
-      runner = runnerbuilder.
-          getYarnRunner(jobDescription.getProject().getName(),
-              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
-
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE,
-          "Failed to create YarnRunner.", e);
-      try {
-        writeToLogs("Failed to start Yarn client", e);
-      } catch (IOException ex) {
-        LOG.log(Level.SEVERE, "Failed to write logs for failed application.", e);
-      }
-      return false;
-    }
-
     String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
         jobDescription.
             getProject().
@@ -133,6 +117,23 @@ public class SparkJob extends YarnJob {
         + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
+
+    try {
+      runner = runnerbuilder.
+          getYarnRunner(jobDescription.getProject().getName(),
+              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
+
+    } catch (IOException e) {
+      LOG.log(Level.WARNING,
+          "Failed to create YarnRunner.", e);
+      try {
+        writeToLogs(e.getLocalizedMessage());
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Failed to write logs for failed application.", ex);
+      }
+      return false;
+    }
+
     return true;
   }
 

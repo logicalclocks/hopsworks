@@ -190,7 +190,7 @@ angular.module('hopsWorksApp')
                 }
                 if (self.logset.length > 1) {
                   return self.logset.length;
-                } else if (self.logset.length === 1 && self.logset[0].appId !== '') {
+                } else if (self.logset.length === 1) {
                   return 1;
                 } else {
                   return 0;

@@ -547,14 +547,14 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected void writeToLogs(String message, Exception e) throws IOException{
-    writeLog(message,e, services.getFileOperations(jobUser));
+  protected void writeToLogs(String message, Exception e) throws IOException {
+    writeLog(message, e, services.getFileOperations(jobUser));
   }
+
   @Override
-  protected void writeToLogs(String message) throws IOException{
+  protected void writeToLogs(String message) throws IOException {
     writeToLogs(message, null);
   }
-  
 
   @Override
   protected void runJob(DistributedFileSystemOps udfso,
