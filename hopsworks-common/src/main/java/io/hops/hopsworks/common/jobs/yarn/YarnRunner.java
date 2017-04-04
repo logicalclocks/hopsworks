@@ -204,7 +204,8 @@ public class YarnRunner {
     logger.info("Starting application master.");
     YarnClient newClient = YarnClient.createYarnClient();
     YarnMonitor monitor = null;
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || jobType == JobType.TFSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || 
+        jobType == JobType.TFSPARK) {
       //Get application id
       yarnClient.start();
 
