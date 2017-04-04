@@ -171,7 +171,7 @@ angular.module('hopsWorksApp')
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "projectCentric") {
-                elasticService.projectSearch(UtilsService.getProjectName(), self.searchTerm)
+                elasticService.projectSearch($routeParams.projectID, self.searchTerm)
                         .then(function (response) {
                           self.searching = false;
                           var searchHits = response.data;
@@ -190,7 +190,7 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "datasetCentric") {
-                elasticService.datasetSearch($routeParams.projectID, UtilsService.getDatasetName(), self.searchTerm)
+                elasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm)
                         .then(function (response) {
                           self.searching = false;
                           var searchHits = response.data;
