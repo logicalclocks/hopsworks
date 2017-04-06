@@ -66,8 +66,8 @@ public class OperationsLog implements Serializable {
     this.opOn = OperationOn.Dataset;
     this.opType = opType;
     this.projectId = dataset.getProject().getId();
-    this.datasetId = dataset.geInodeId();
-    this.inodeId = dataset.geInodeId();
+    this.datasetId = dataset.getInodeId();
+    this.inodeId = dataset.getInodeId();
   }
 
   public OperationsLog(Project project, OperationType opType) {
@@ -85,7 +85,7 @@ public class OperationsLog implements Serializable {
     this.opOn = OperationOn.Schema;
     this.opType = opType;
     this.projectId = project.getId();
-    this.datasetId = dataset.geInodeId();
+    this.datasetId = dataset.getInodeId();
     this.inodeId = inode.getId();
   }
 
