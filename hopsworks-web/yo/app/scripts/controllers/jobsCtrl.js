@@ -345,6 +345,7 @@ angular.module('hopsWorksApp')
                                 function (success) {
                                   getAllJobs();
                                   self.hasSelectJob = false;
+                                  StorageService.remove(self.projectId + "_jobui_" + job.name);
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Failed to delete job', ttl: 15000});

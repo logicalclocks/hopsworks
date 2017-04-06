@@ -53,6 +53,7 @@ angular.module('hopsWorksApp')
               startLoading("Loading Job Details...");
               if(self.jobName!= undefined && self.jobName!= false && self.jobName!=""){
                 self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
               }
               if (self.job || self.appId) {
                 console.log("Job object found was: ");
@@ -89,6 +90,7 @@ angular.module('hopsWorksApp')
               if (self.job == undefined || self.job == false) {
                 if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
                   self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                  StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
                 }
               }
 
