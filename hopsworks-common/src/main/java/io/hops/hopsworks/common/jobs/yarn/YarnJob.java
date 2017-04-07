@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -573,6 +574,27 @@ public abstract class YarnJob extends HopsJob {
     updateState(JobState.AGGREGATING_LOGS);
     copyLogs(udfso);
     updateState(getFinalState());
+    try {
+      //If application is not FINISHED or SUCCEEDED , try to delete a marker file if it exists
+      if (getFinalState() != JobState.FINISHED || JobFinalStatus.getJobFinalStatus(monitor.getFinalApplicationStatus())
+          != JobFinalStatus.SUCCEEDED) {
+        String marker = Settings.getJobMarkerFile(jobDescription, monitor.getApplicationId().
+            toString());
+        try {
+          if (udfso.exists(marker)) {
+            udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
+          }
+        } catch (IOException ex) {
+          LOG.log(Level.WARNING, "Could not remove marker file for job:" + jobDescription.getName() + ", with appId:"
+              + monitor.getApplicationId().
+                  toString());
+        }
+      }
+    } catch (YarnException | IOException ex) {
+      LOG.log(Level.WARNING, "Could not remove marker file for job:" + jobDescription.getName() + ", with appId:"
+          + monitor.getApplicationId().
+              toString());
+    }
     if(jobDescription.getJobConfig().getType() == JobType.TFSPARK){
       fixOwner(dfso);
     }

@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.File;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -146,10 +145,7 @@ public class ExecutionService {
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     try {
       udfso = dfs.getDfsOps(username);
-      String marker = File.separator + "Projects" + File.separator + job.getProject().getName() + File.separator
-          + "Resources" + File.separator + ".marker-" + job.getJobType().getName().toLowerCase() + "-" + job.getName()
-          + "-" + appid;
-
+      String marker = Settings.getJobMarkerFile(job, appid);
       if (udfso.exists(marker)) {
         udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Job stopped").build();

@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.io.Serializable;
@@ -669,6 +670,18 @@ public class Settings implements Serializable {
 
   public static String getSparkDefaultClasspath(String sparkDir) {
     return sparkDefaultClasspath(sparkDir);
+  }
+  
+  /**
+   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
+   * @param job
+   * @param appId
+   * @return 
+   */
+  public static String getJobMarkerFile(JobDescription job, String appId) {
+    return getHdfsRootPath(job.getProject().getName()) + "Resources/.marker-" + job.getJobType().getName().toLowerCase()
+        + "-" + job.getName()
+        + "-" + appId;
   }
 
   public static String getHdfsRootPath(String projectname) {
