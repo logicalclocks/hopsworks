@@ -247,7 +247,7 @@ public class Dataset implements Serializable {
    *
    * @return
    */
-  public int geInodeId() {
+  public int getInodeId() {
     return InodeId;
   }
 
