@@ -67,6 +67,10 @@ angular.module('hopsWorksApp')
 
             self.createTopic = function () {
               self.working = true;
+              self.wrong_values = 1;
+              self.replication_wrong_value = 1;
+              self.topicName_wrong_value = 1;
+              self.topicSchema_wrong_value = 1;
               
               if(self.max_num_replicas < self.num_replicas){
                 self.replication_wrong_value =-1;

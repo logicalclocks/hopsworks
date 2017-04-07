@@ -144,7 +144,11 @@ public class FlinkJob extends YarnJob {
     } catch (IOException e) {
       LOG.log(Level.SEVERE,
           "Failed to create YarnRunner.", e);
-      writeToLogs(new IOException("Failed to start Yarn client.", e));
+      try {
+        writeToLogs("Failed to start Yarn client.");
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Failed to write logs for failed application.", e);
+      }
       return false;
     }
 

@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.util.Settings;
 public class SparkJob extends YarnJob {
 
   private static final Logger LOG = Logger.
-          getLogger(SparkJob.class.getName());
+      getLogger(SparkJob.class.getName());
 
   private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
@@ -40,14 +40,14 @@ public class SparkJob extends YarnJob {
    * @param jobUser
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user, final String hadoopDir,
-          final String sparkDir, final String nameNodeIpPort, String sparkUser,
-          String jobUser) {
+      Users user, final String hadoopDir,
+      final String sparkDir, final String nameNodeIpPort, String sparkUser,
+      String jobUser) {
     super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
-              "JobDescription must contain a SparkJobConfiguration object. Received: "
-              + job.getJobConfig().getClass());
+          "JobDescription must contain a SparkJobConfiguration object. Received: "
+          + job.getJobConfig().getClass());
     }
     this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
@@ -57,7 +57,7 @@ public class SparkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
-    
+
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
@@ -66,8 +66,8 @@ public class SparkJob extends YarnJob {
     //i.e. AdamJob
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(
-              jobconfig.getAppPath(), jobconfig.getMainClass(),
-              jobconfig.getType());
+          jobconfig.getAppPath(), jobconfig.getMainClass(),
+          jobconfig.getType());
       runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
       if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
@@ -85,7 +85,7 @@ public class SparkJob extends YarnJob {
       runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
       runnerbuilder.setNumberOfExecutorsMax(jobconfig.getSelectedMaxExecutors());
       runnerbuilder.setNumberOfExecutorsInit(jobconfig.
-              getNumberOfExecutorsInit());
+          getNumberOfExecutorsInit());
     }
     //Set Yarn running options
     runnerbuilder.setDriverMemoryMB(jobconfig.getAmMemory());
@@ -99,36 +99,41 @@ public class SparkJob extends YarnJob {
     runnerbuilder.addExtraFiles(projectLocalResources);
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
       for (Entry<String, String> jobSystemProperty : jobSystemProperties.
-              entrySet()) {
+          entrySet()) {
         runnerbuilder.addSystemProperty(jobSystemProperty.getKey(),
-                jobSystemProperty.getValue());
+            jobSystemProperty.getValue());
       }
     }
 
+    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+        jobDescription.
+            getProject().
+            getName())
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
+    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+        jobDescription.
+            getProject().
+            getName())
+        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
+    setStdOutFinalDestination(stdOutFinalDestination);
+    setStdErrFinalDestination(stdErrFinalDestination);
+
     try {
       runner = runnerbuilder.
-              getYarnRunner(jobDescription.getProject().getName(),
-                      sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
+          getYarnRunner(jobDescription.getProject().getName(),
+              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
 
     } catch (IOException e) {
-      LOG.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
-      writeToLogs(new IOException("Failed to start Yarn client.", e));
+      LOG.log(Level.WARNING,
+          "Failed to create YarnRunner.", e);
+      try {
+        writeToLogs(e.getLocalizedMessage());
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Failed to write logs for failed application.", ex);
+      }
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-            jobDescription.
-            getProject().
-            getName())
-            + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-            jobDescription.
-            getProject().
-            getName())
-            + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    setStdOutFinalDestination(stdOutFinalDestination);
-    setStdErrFinalDestination(stdErrFinalDestination);
     return true;
   }
 

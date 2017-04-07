@@ -166,7 +166,7 @@ public class DataSetService {
         projPath = Settings.getProjectPath(this.project.getName());
       }
       List<Dataset> inodeOccurrence = datasetFacade.
-              findByInodeId(ds.geInodeId());
+              findByInodeId(ds.getInodeId());
       int sharedWith = inodeOccurrence.size() - 1; // -1 for ds itself 
       inodeView = new InodeView(parent, ds, projPath + File.separator + ds.
               getInode()

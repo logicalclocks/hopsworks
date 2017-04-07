@@ -69,4 +69,14 @@ public class ErasureCodeJob extends HopsJob {
   protected void cleanup() {
   }
 
+  @Override
+  protected void writeToLogs(String message, Exception e) throws IOException {
+    throw new UnsupportedOperationException("Not supported yet."); 
+  }
+
+  @Override
+  protected void writeToLogs(String message) throws IOException {
+    throw new UnsupportedOperationException("Not supported yet."); 
+  }
+
 }
