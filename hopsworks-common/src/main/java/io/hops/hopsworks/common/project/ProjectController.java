@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterFacade;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -134,6 +135,8 @@ public class ProjectController {
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private PythonDepsFacade pythonDepsFacade;
+  @EJB
+  private JupyterFacade jupyterFacade;
   @EJB
   private JobDescriptionFacade jobFacade;
   @EJB
@@ -871,6 +874,12 @@ public class ProjectController {
       
       //remove dumy Inode
       dfso.rm(dumy, true);
+      
+      //remove anaconda repos
+      removeAnacondaEnv(project);
+
+      //remove anaconda repos
+      removeJupyter(project);
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
@@ -1477,7 +1486,12 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) throws AppException {
-    pythonDepsFacade.removeProject(project);
+      pythonDepsFacade.removeProject(project);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void removeJupypter(Project project) throws AppException {
+    jupyterFacade.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

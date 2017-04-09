@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -272,6 +272,11 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.goToJupyter = function () {
+               self.goToUrl('jupyter');
+            };
+
+
             self.goToWorklows = function () {
                self.goToUrl('workflows');
             };
@@ -356,6 +361,10 @@ angular.module('hopsWorksApp')
 
             self.sizeOnDisk = function (fileSizeInBytes) {
               return convertSize(fileSizeInBytes);
+            };
+
+            self.showJupyter = function () {
+              return showService("Jupyter");
             };
 
             self.showZeppelin = function () {

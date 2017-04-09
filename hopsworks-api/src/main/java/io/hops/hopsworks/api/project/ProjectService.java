@@ -84,6 +84,8 @@ public class ProjectService {
   @Inject
   private KafkaService kafka;
   @Inject
+  private JupyterService jupyter;
+  @Inject
   private DataSetService dataSet;
   @Inject
   private LocalFsService localFs;
@@ -776,6 +778,20 @@ public class ProjectService {
     this.kafka.setProjectId(id);
 
     return this.kafka;
+  }
+  
+  @Path("{id}/jupyter")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public JupyterService jupyter(
+      @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.jupyter.setProjectId(id);
+
+    return this.jupyter;
   }
 
   @Path("{id}/workflows")

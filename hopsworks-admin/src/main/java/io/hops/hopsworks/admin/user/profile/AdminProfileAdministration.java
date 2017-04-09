@@ -31,7 +31,10 @@ import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.util.AuditUtil;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @ManagedBean
 @ViewScoped
@@ -286,14 +289,21 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#!".equals(selectedStatus)) {
       editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
               getValue());
-      userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
-              selectedStatus).getValue());
-      am.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.CHANGEDSTATUS.name(),
-              UserAuditActions.SUCCESS.
-              name(), selectedStatus, editingUser);
-      MessagesController.addInfoMessage("Success",
-              "Status updated successfully.");
+      try {
+        userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
+                selectedStatus).getValue());
+        am.registerAccountChange(sessionState.getLoggedInUser(),
+                AccountsAuditActions.CHANGEDSTATUS.name(),
+                UserAuditActions.SUCCESS.
+                name(), selectedStatus, editingUser);
+        MessagesController.addInfoMessage("Success",
+                "Status updated successfully.");
+      } catch (ApplicationException ex) {
+        MessagesController.addInfoMessage("Problem",
+                "Could not update account status.");
+        Logger.getLogger(AdminProfileAdministration.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
     } else {
       am.registerAccountChange(sessionState.getLoggedInUser(),
               AccountsAuditActions.CHANGEDSTATUS.name(),

@@ -1,11 +1,13 @@
-package io.hops.hopsworks.api.jupyter;
+package io.hops.hopsworks.common.dao.jupyter;
 
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,7 +16,8 @@ public class JupyterConfig {
   private static final Logger LOGGGER = Logger.getLogger(JupyterConfig.class.
           getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
-  private static final String JUPYTER_NOTEBOOK_CONFIG = "/jupyter_notebook_config.py";
+  private static final String JUPYTER_NOTEBOOK_CONFIG
+          = "/jupyter_notebook_config.py";
   private static final String JUPYTER_CUSTOM_JS = "/custom.js";
   private static final int DELETE_RETRY = 10;
 
@@ -31,6 +34,10 @@ public class JupyterConfig {
   private final String binDirPath;
   private final String logDirPath;
   private final String libDirPath;
+
+  // <hdfs_username, process> pairs
+  private static ConcurrentHashMap<String, Process> runningServers
+          = new ConcurrentHashMap<>();
 
   public JupyterConfig(String projectName, String owner, Settings settings) {
     this.projectName = projectName;
@@ -84,7 +91,56 @@ public class JupyterConfig {
     this.libDirPath = jConf.getLibDirPath();
   }
 
- 
+  /**
+   * If an existing process is running for this username, kill it.
+   * Starts a new process with that username.
+   *
+   * @param hdfsUsername
+   * @param process
+   * @return
+   */
+  public synchronized static void addNotebookServer(String hdfsUsername,
+          Process process) {
+    removeNotebookServer(hdfsUsername);
+    runningServers.put(hdfsUsername, process);
+  }
+
+  public synchronized static boolean removeNotebookServer(String hdfsUsername) {
+    if (runningServers.containsKey(hdfsUsername)) {
+      Process oldProcess = runningServers.get(hdfsUsername);
+      if (oldProcess != null) {
+        oldProcess.destroyForcibly();
+        return true;
+      }
+      runningServers.remove(hdfsUsername);
+    }
+    return false;
+  }
+
+  /**
+   * This only works on Linux systems. From Java 9, you can just call
+   * p.getPid();
+   * http://stackoverflow.com/questions/4750470/how-to-get-pid-of-process-ive-just-started-within-java-program
+   *
+   * @param p
+   * @return
+   */
+  public static synchronized long getPidOfProcess(Process p) {
+    long pid = -1;
+
+    try {
+      if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+        Field f = p.getClass().getDeclaredField("pid");
+        f.setAccessible(true);
+        pid = f.getLong(p);
+        f.setAccessible(false);
+      }
+    } catch (Exception e) {
+      pid = -1;
+    }
+    return pid;
+  }
+
   public String getProjectName() {
     return projectName;
   }
@@ -121,8 +177,6 @@ public class JupyterConfig {
     return logDirPath;
   }
 
-
-
   //returns true if the project dir was created 
   private boolean createJupyterDirs() {
     File projectDir = new File(projectDirPath);
@@ -135,7 +189,6 @@ public class JupyterConfig {
     return newProjectDir;
   }
 
-
   //creates symlink to interpreters and libs
   private void createSymLinks() throws IOException {
     File target = new File(settings.getJupyterDir() + File.separator
@@ -146,13 +199,13 @@ public class JupyterConfig {
       Files.createSymbolicLink(newLink.toPath(), target.toPath());
     }
   }
-  
 
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles() throws
           IOException {
     File jupyter_custom_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
-    File jupyter_notebook_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
+    File jupyter_notebook_config_file = new File(confDirPath
+            + JUPYTER_NOTEBOOK_CONFIG);
     File log4j_file = new File(confDirPath + LOG4J_PROPS);
     String home = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
@@ -222,7 +275,6 @@ public class JupyterConfig {
 //              );
 //      interpreterConf = interpreter_json.toString();
 //    }
- 
     return createdSh || createdXml;
   }
 
@@ -246,7 +298,6 @@ public class JupyterConfig {
 //    }
 //    return conf;
 //  }
-
   /**
    * Closes all resources and deletes project dir
    * /srv/zeppelin/Projects/this.projectName recursive.
@@ -286,7 +337,8 @@ public class JupyterConfig {
 
   private boolean removeProjectConfFiles() {
     File jupyter_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
-    File zeppelin_site_xml_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
+    File zeppelin_site_xml_file
+            = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     boolean ret = false;
     if (jupyter_js_file.exists()) {
       ret = jupyter_js_file.delete();
@@ -296,6 +348,5 @@ public class JupyterConfig {
     }
     return ret;
   }
-
 
 }
