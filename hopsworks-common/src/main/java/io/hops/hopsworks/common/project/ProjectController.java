@@ -143,11 +143,11 @@ public class ProjectController {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private KafkaFacade kafkaFacade;
-  
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-   /**
+  /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
    * project.
@@ -186,9 +186,9 @@ public class ProjectController {
           projectServices.add(se);
         } catch (IllegalArgumentException iex) {
           logger.log(Level.SEVERE,
-              ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
+                  ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), s
-              + ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
+                  + ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
         }
       }
     }
@@ -216,16 +216,16 @@ public class ProjectController {
           throw new AppException(Response.Status.CONFLICT.
                   getStatusCode(), "A project with this name already exist");
         }
-      }catch (AppException ex) {
+      } catch (AppException ex) {
         throw ex;
-      }catch (Exception ex) {
+      } catch (Exception ex) {
         logger.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
 
       verifyProject(project, dfso);
-      
+
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project);
@@ -257,10 +257,10 @@ public class ProjectController {
       //update the project with the project folder inode
       try {
         setProjectInode(project, dfso);
-      } catch (AppException |EJBException ex) {
+      } catch (AppException | EJBException ex) {
         cleanup(project);
         throw ex;
-      } catch (IOException ex){
+      } catch (IOException ex) {
         cleanup(project);
         logger.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -272,8 +272,7 @@ public class ProjectController {
 
         setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
                 dfso, owner);
-        
-        
+
       } catch (IOException | EJBException ex) {
         cleanup(project);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -299,7 +298,8 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso, udfso);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,null,ex);
+        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
+                null, ex);
         cleanup(project);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "error while creating project sub folders");
@@ -318,9 +318,9 @@ public class ProjectController {
       }
 
       //Create Template for this project in elasticsearch
-      try{
+      try {
         addElasticsearch(project.getName());
-      }catch(IOException ex){
+      } catch (IOException ex) {
         cleanup(project);
       }
       return project;
@@ -335,9 +335,10 @@ public class ProjectController {
     }
 
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void verifyProject(Project project, DistributedFileSystemOps dfso) throws AppException {
+  private void verifyProject(Project project, DistributedFileSystemOps dfso)
+          throws AppException {
     //proceed to all the verrifications and set up local variable    
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
@@ -346,28 +347,30 @@ public class ProjectController {
     //  verify that There is no certificates corresponding to this project name in the certificate generator
     try {
       if (existingProjectFolder(project) || !noExistingUser(project.getName())
-          || !noExistingGroup(project.getName())
-          || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.getName())
-          || !noExistingCertificates(project.getName())) {
+              || !noExistingGroup(project.getName())
+              || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.
+              getName())
+              || !noExistingCertificates(project.getName())) {
         logger.log(Level.WARNING,
-            "some elements of project {0} already exist in the system "
-            + "Possible inconsistency!",
-            project.getName());
+                "some elements of project {0} already exist in the system "
+                + "Possible inconsistency!",
+                project.getName());
         cleanup(project);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "some elements of project already exist in the system");
+                getStatusCode(),
+                "some elements of project already exist in the system");
       }
     } catch (IOException | EJBException ex) {
       cleanup(project);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "error while running verifications");
+              getStatusCode(), "error while running verifications");
     }
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Project createProject(String projectName, Users user,
-          String projectDescription, DistributedFileSystemOps dfso) throws AppException, IOException {
+          String projectDescription, DistributedFileSystemOps dfso) throws
+          AppException, IOException {
     if (projectFacade.numProjectsLimitReached(user)) {
       logger.log(Level.SEVERE,
               "You have reached the maximum number of allowed projects.");
@@ -375,7 +378,7 @@ public class ProjectController {
               ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
     } else if (projectFacade.projectExists(projectName)) {
       logger.log(Level.INFO, "Project with name {0} already exists!",
-             projectName);
+              projectName);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_EXISTS);
     }
@@ -410,16 +413,17 @@ public class ProjectController {
     logProject(project, OperationType.Add);
     return project;
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void setProjectInode(Project project, DistributedFileSystemOps dfso) throws AppException, IOException{
+  private void setProjectInode(Project project, DistributedFileSystemOps dfso)
+          throws AppException, IOException {
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
     if (projectInode == null) {
       logger.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
               project.getName());
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Couldn't get Inode for the project: " +
-              project.getName());
+              getStatusCode(), "Couldn't get Inode for the project: " + project.
+              getName());
     }
     project.setInode(projectInode);
     this.projectFacade.mergeProject(project);
@@ -427,26 +431,28 @@ public class ProjectController {
     Path dumy = new Path("/tmp/" + project.getName());
     dfso.rm(dumy, true);
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void createCertificates(Project project, Users owner) throws IOException {
+  private void createCertificates(Project project, Users owner) throws
+          IOException {
     LocalhostServices.
             createUserCertificates(settings.getIntermediateCaDir(), project.
                     getName(), owner.getUsername());
     userCertsFacade.putUserCerts(project.getName(), owner.getUsername());
   }
-  
-  private boolean existingProjectFolder(Project project){
+
+  private boolean existingProjectFolder(Project project) {
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
-    if(projectInode!=null){
+    if (projectInode != null) {
       return true;
     }
     return false;
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private boolean noExistingUser(String projectName) {
-    List<HdfsUsers> hdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
+    List<HdfsUsers> hdfsUsers = hdfsUsersBean.
+            getAllProjectHdfsUsers(projectName);
     if (hdfsUsers != null && !hdfsUsers.isEmpty()) {
 
       return false;
@@ -507,7 +513,7 @@ public class ProjectController {
             getIntermediateCaDir(),
             projectName);
   }
-  
+
   /**
    * Project default datasets Logs and Resources need to be created in a
    * separate transaction after the project creation
@@ -546,7 +552,6 @@ public class ProjectController {
         }
       }
 
-
       //Persist README.md to hdfs for Default Datasets
       datasetController.generateReadme(udfso, ds.getName(),
               ds.getDescription(), project.getName());
@@ -557,10 +562,11 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private void logDataSet(Project project, Settings.DefaultDataset ds) {
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, ds.getName());
+    Dataset dataset = datasetFacade.
+            findByNameAndProjectId(project, ds.getName());
     datasetController.logDataset(dataset, OperationType.Add);
   }
-  
+
   /**
    *
    * @param username
@@ -679,7 +685,8 @@ public class ProjectController {
   }
 
   //create project in HDFS
-  private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso) throws IOException{
+  private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso)
+          throws IOException {
 
     String rootDir = settings.DIR_ROOT;
 
@@ -716,8 +723,6 @@ public class ProjectController {
     return null;
   }
 
-  
-  
   /**
    * Remove a project and optionally all associated files.
    *
@@ -734,7 +739,7 @@ public class ProjectController {
    * @throws AppException if the project could not be found.
    */
   public void removeProject(String userMail, int projectId) throws AppException {
-    
+
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
@@ -746,17 +751,16 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
     }
-    
-    
+
     cleanup(project);
   }
-  
-  public void cleanup(Project project) throws AppException{
-    if(project==null){
+
+  public void cleanup(Project project) throws AppException {
+    if (project == null) {
       return;
     }
-    int nbTry=0;
-    while(nbTry<3){
+    int nbTry = 0;
+    while (nbTry < 3) {
       nbTry++;
       try {
         //remove from project_team so that nobody can see the project anymore
@@ -781,7 +785,7 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
 
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        
+
         removeProjectInt(project, usersToClean, groupsToClean);
 
       } catch (Exception ex) {
@@ -792,7 +796,7 @@ public class ProjectController {
             Logger.getLogger(ProjectController.class.getName()).
                     log(Level.SEVERE, null, ex1);
           }
-        }else{
+        } else {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                   getStatusCode(), "error while removing project");
         }
@@ -823,7 +827,7 @@ public class ProjectController {
       if (dfso.exists(dumy.toString())) {
         dfso.setOwner(dumy, "glassfish", "glassfish");
       }
-      
+
       //remove kafka topics
       removeKafkaTopics(project);
 
@@ -871,15 +875,15 @@ public class ProjectController {
 
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
-      
+
       //remove dumy Inode
       dfso.rm(dumy, true);
-      
+
       //remove anaconda repos
       removeAnacondaEnv(project);
 
       //remove anaconda repos
-      removeJupyter(project);
+      removeJupypter(project);
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
@@ -895,7 +899,7 @@ public class ProjectController {
           ProjectRoleTypes teamRole) {
     return projectTeamFacade.updateTeamRole(project, teamRole);
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private List<HdfsUsers> getUsersToClean(Project project) {
     return hdfsUsersBean.getAllProjectHdfsUsers(project.getName());
@@ -909,7 +913,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) throws InterruptedException, AppException {
+  private void removeKafkaTopics(Project project) throws InterruptedException,
+          AppException {
     kafkaFacade.removeAllTopicsFromProject(project);
   }
 
@@ -952,7 +957,7 @@ public class ProjectController {
     final Path location = new Path(path);
     dfso.rm(location, true);
   }
- 
+
   /**
    * Adds new team members to a project(project) - bulk persist if team role not
    * specified or not in (Data owner or Data
@@ -970,10 +975,10 @@ public class ProjectController {
   public List<String> addMembers(Project project, String email,
           List<ProjectTeam> projectTeams) throws AppException {
     List<String> failedList = new ArrayList<>();
-    if(projectTeams==null){
+    if (projectTeams == null) {
       return failedList;
     }
-    
+
     Users user = userBean.getUserByEmail(email);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
@@ -1009,19 +1014,20 @@ public class ProjectController {
                       getIntermediateCaDir(),
                       project.getName(), newMember.getUsername());
               userCertsFacade.putUserCerts(project.getName(), newMember.
-                    getUsername());
+                      getUsername());
             } catch (IOException ex) {
               projectTeamFacade.removeProjectTeam(project, newMember);
-              
+
               try {
-                hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
+                hdfsUsersBean.
+                        removeProjectMember(projectTeam.getUser(), project);
               } catch (IOException ex1) {
                 Logger.getLogger(ProjectController.class.getName()).
                         log(Level.SEVERE, null, ex1);
                 throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while creating a user");
+                        getStatusCode(), "error while creating a user");
               }
-              
+
               throw new EJBException("Could not creat certificates for user");
             }
 
@@ -1056,7 +1062,7 @@ public class ProjectController {
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 projectTeam.getProjectTeamPK().getTeamMember());
 
-      } 
+      }
     }
     return failedList;
   }
@@ -1190,7 +1196,7 @@ public class ProjectController {
     logger.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
   }
-  
+
   public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
           DistributedFileSystemOps dfso)
           throws IOException {
@@ -1418,47 +1424,49 @@ public class ProjectController {
               "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "something went wrong when adding the example jar to the project");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "something went wrong when adding the example jar to the project");
     }
-    
+
     if (TourProjectType.SPARK.equals(projectType)) {
       String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
-          + "/";
+              + "/";
       try {
         File dir = new File(exampleDir);
         File[] file = dir.listFiles((File dir1, String name)
-            -> name.matches("spark-examples(.*).jar"));
+                -> name.matches("spark-examples(.*).jar"));
         if (file.length == 0) {
           throw new IllegalStateException("No spark-examples*.jar was found in "
-              + dir.getAbsolutePath());
+                  + dir.getAbsolutePath());
         }
         if (file.length > 1) {
           logger.log(Level.WARNING,
-              "More than one spark-examples*.jar found in {0}.", dir.
+                  "More than one spark-examples*.jar found in {0}.", dir.
                   getAbsolutePath());
         }
         udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
-            File.separator + Settings.DIR_ROOT + File.separator + project.
+                File.separator + Settings.DIR_ROOT + File.separator + project.
                 getName() + "/TestJob/spark-examples.jar");
-    
+
       } catch (IOException ex) {
         logger.log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "something went wrong when adding the example jar to the project");
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "something went wrong when adding the example jar to the project");
       }
     } else if (TourProjectType.KAFKA.equals(projectType)) {
       // Get the JAR from /user/glassfish
-      String kafkaExampleSrc = "/user/glassfish/" + Settings
-          .HOPS_KAFKA_TOUR_JAR;
+      String kafkaExampleSrc = "/user/glassfish/" + Settings.HOPS_KAFKA_TOUR_JAR;
       String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-          + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
+              + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
       try {
         udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
       } catch (IOException ex) {
         logger.log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "something went wrong when adding the example jar to the project");
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "something went wrong when adding the example jar to the project");
       }
     }
   }
@@ -1486,7 +1494,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) throws AppException {
-      pythonDepsFacade.removeProject(project);
+    pythonDepsFacade.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -1644,7 +1652,7 @@ public class ProjectController {
     }
     return false;
   }
-  
+
   /**
    *
    * @param params

@@ -10,11 +10,11 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.exception.AppException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.persistence.EntityNotFoundException;
+import javax.ws.rs.core.Response;
 
 @Stateless
 public class JupyterFacade {
@@ -42,13 +43,8 @@ public class JupyterFacade {
 
   @EJB
   Settings settings;
-
-  @EJB
-  private CertsFacade userCerts;
-
   @EJB
   private ProjectFacade projectsFacade;
-
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
 
@@ -74,8 +70,8 @@ public class JupyterFacade {
     return notebooks;
   }
 
-  public JupyterProject findServer(String hdfsUser) {
-    HdfsUsers res=null;
+  public JupyterProject findByUser(String hdfsUser) {
+    HdfsUsers res = null;
     TypedQuery<HdfsUsers> query = em.createNamedQuery(
             "HdfsUsers.findByName", HdfsUsers.class);
     query.setParameter("name", hdfsUser);
@@ -84,11 +80,12 @@ public class JupyterFacade {
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
               e);
+      return null;
     }
-    JupyterProject res2=null;
+    JupyterProject res2 = null;
     TypedQuery<JupyterProject> query2 = em.createNamedQuery(
             "JupyterProject.findByHdfsUserId", JupyterProject.class);
-    query.setParameter("hdfsUserId", res.getHdfsUserId());
+    query.setParameter("hdfsUserId", res.getId());
     try {
       res2 = query2.getSingleResult();
     } catch (EntityNotFoundException e) {
@@ -134,7 +131,8 @@ public class JupyterFacade {
                 process.getInputStream(), Charset.forName("UTF8")));
         String token = "";
         String line;
-// [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
+// [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at: 
+// http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
         String pattern = "(.*)token=(.*)";
         Pattern r = Pattern.compile(pattern);
         boolean foundToken = false;
@@ -155,7 +153,17 @@ public class JupyterFacade {
 
   }
 
-  public void stopServer(HdfsUsers user) {
+  public void stopServer(String hdfsUser) throws AppException {
+
+    if (hdfsUser == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "Could not find a Jupyter Notebook server to delete.");
+    }
+
+    JupyterConfig.removeNotebookServer(hdfsUser);
+
+    JupyterProject jp = this.findByUser(hdfsUser);
+    remove(jp);
 
     // delete JupyterProject entity bean
   }

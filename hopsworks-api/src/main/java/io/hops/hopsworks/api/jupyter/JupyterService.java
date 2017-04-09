@@ -85,12 +85,18 @@ public class JupyterService {
     }
 
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
+
+    if (servers == null) {
+      throw new AppException(
+              Response.Status.NOT_FOUND.getStatusCode(),
+              "Could not find any Jupyter notebook servers for this project.");
+    }
+
     List<JupyterProject> listServers = new ArrayList<>();
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) {
-    };
+            = new GenericEntity<List<JupyterProject>>(listServers) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
   }
@@ -106,7 +112,14 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-
+    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
+    if (jp == null) {
+      throw new AppException(
+              Response.Status.NOT_FOUND.getStatusCode(),
+              "Could not find any Jupyter notebook server for this project.");
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            jp).build();
   }
 
   @GET
@@ -120,7 +133,14 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-
+    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
+    if (jp != null) {
+      throw new AppException(
+              Response.Status.FOUND.getStatusCode(),
+              "Already running a Jupyter notebook server for this project.");
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            jp).build();
   }
 
   @DELETE
@@ -129,8 +149,13 @@ public class JupyterService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response stopNotebookServer(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+    }
 
-    String hdfsUsername = getHdfsUser(sc);
+    jupyterFacade.stopServer(getHdfsUser(sc));
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   private String getHdfsUser(SecurityContext sc) throws AppException {

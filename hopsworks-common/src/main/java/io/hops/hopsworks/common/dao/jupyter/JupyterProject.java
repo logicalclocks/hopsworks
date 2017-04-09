@@ -1,12 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package io.hops.hopsworks.common.dao.jupyter;
 
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Date;
@@ -126,7 +119,6 @@ public class JupyterProject implements Serializable {
   public void setHdfsUserId(int hdfsUserId) {
     this.hdfsUserId = hdfsUserId;
   }
-  
 
   public Date getCreated() {
     return created;
@@ -182,8 +174,8 @@ public class JupyterProject implements Serializable {
       return false;
     }
     JupyterProject other = (JupyterProject) object;
-    if ((this.port == null && other.port != null) ||
-            (this.port != null && !this.port.equals(other.port))) {
+    if ((this.port == null && other.port != null) || (this.port != null
+            && !this.port.equals(other.port))) {
       return false;
     }
     return true;
@@ -191,8 +183,8 @@ public class JupyterProject implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.jupyter.JupyterProject[ port=" + port +
-            " ]";
+    return "io.hops.hopsworks.common.dao.jupyter.JupyterProject[ port=" + port
+            + " ]";
   }
 
 }
