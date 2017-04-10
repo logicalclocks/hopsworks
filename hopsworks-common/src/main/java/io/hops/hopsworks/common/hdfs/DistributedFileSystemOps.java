@@ -176,7 +176,7 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    logger.log(Level.INFO, "Deletenig {0} as {1}", new Object[]{location.
+    logger.log(Level.INFO, "Deleting {0} as {1}", new Object[]{location.
       toString(),
       dfs.toString()});
     if (dfs.exists(location)) {

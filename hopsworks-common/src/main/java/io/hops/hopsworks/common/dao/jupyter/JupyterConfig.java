@@ -1,15 +1,20 @@
 package io.hops.hopsworks.common.dao.jupyter;
 
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 
 public class JupyterConfig {
 
@@ -37,6 +42,9 @@ public class JupyterConfig {
 
   // <hdfs_username, process> pairs
   private static ConcurrentHashMap<String, Process> runningServers
+          = new ConcurrentHashMap<>();
+
+  private static ConcurrentHashMap<String, BufferedReader> consoleOutput
           = new ConcurrentHashMap<>();
 
   public JupyterConfig(String projectName, String owner, Settings settings) {
@@ -100,9 +108,19 @@ public class JupyterConfig {
    * @return
    */
   public synchronized static void addNotebookServer(String hdfsUsername,
-          Process process) {
+          Process process) throws AppException {
+    if (!process.isAlive()) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Jupyter server died unexpectadly");
+    }
     removeNotebookServer(hdfsUsername);
     runningServers.put(hdfsUsername, process);
+
+    BufferedReader br = new BufferedReader(new InputStreamReader(
+            process.getInputStream(), Charset.forName("UTF8")));
+
+    consoleOutput.put(hdfsUsername, br);
+
   }
 
   public synchronized static boolean removeNotebookServer(String hdfsUsername) {
@@ -113,8 +131,37 @@ public class JupyterConfig {
         return true;
       }
       runningServers.remove(hdfsUsername);
+      BufferedReader br = consoleOutput.get(hdfsUsername);
+      if (br != null) {
+        try {
+          br.close();
+        } catch (IOException ex) {
+          Logger.getLogger(JupyterConfig.class.getName()).
+                  log(Level.SEVERE, null, ex);
+        }
+        consoleOutput.remove(hdfsUsername);
+      }
     }
     return false;
+  }
+
+  /**
+   * No synchronization here, as one slow notebook server could kill all clients
+   * @param hdfsUsername
+   * @return
+   * @throws IOException 
+   */
+  public static StringBuilder getConsoleOutput(String hdfsUsername) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    BufferedReader br = consoleOutput.get(hdfsUsername);
+    if (br != null) {
+      // This could block if jupyter doesn't output a complete line, but blocks while
+      // waiting for the line terminating character
+      while (br.ready())  {
+        sb.append(br.readLine()).append("\n");
+      }
+    }
+    return sb;
   }
 
   /**
