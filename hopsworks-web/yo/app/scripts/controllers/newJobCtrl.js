@@ -624,11 +624,15 @@ angular.module('hopsWorksApp')
                   break;
                 case "LIBRARY":
                   //Push the new library into the localresources array
+                  var libType = 'file';
+                  if(path.endsWith(".zip") || path.endsWith(".tar") || path.endsWith(".gz")){
+                    libType = 'archive';
+                  } 
                   self.localResources.push({
                     'name': filename,
                     'path': path,
-                    'type': null,
-                    'visibility': null,
+                    'type': libType,
+                    'visibility': 'application',
                     'pattern': null
                   });
                   break;
@@ -774,7 +778,7 @@ angular.module('hopsWorksApp')
                   self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                   self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
                   //Load Kafka properties
-                  if (typeof self.runConfig.kafka !== "undefined") {
+                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.length > 0) {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
                     if (typeof self.runConfig.kafka.consumergroups !== "undefined") {

@@ -1,14 +1,18 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PreDestroy;
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
@@ -43,12 +47,28 @@ public class WebCommunication {
   private static String PROTOCOL = "https";
   private static int PORT = 8090;
   private static String NOT_AVAILABLE = "Not available.";
+  private final ConcurrentLinkedQueue<Client> inUseClientPool =
+      new ConcurrentLinkedQueue<>();
+  private final ConcurrentLinkedQueue<Client> availableClientPool =
+      new ConcurrentLinkedQueue<>();
   @EJB
   private Settings settings;
 
   public WebCommunication() {
   }
 
+  @PreDestroy
+  private void cleanUp() {
+    for (Client client : availableClientPool) {
+      client.close();
+      client = null;
+    }
+    for (Client client : inUseClientPool) {
+      client.close();
+      client = null;
+    }
+  }
+  
   public Response getWebResponse(String url, String agentPassword) {
     Response response;
     try {
@@ -226,10 +246,7 @@ public class WebCommunication {
           Map<String, String> args) throws
           Exception {
 
-    if (DISABLE_CERTIFICATE_VALIDATION) {
-      disableCertificateValidation();
-    }
-    Client client = ClientBuilder.newClient();
+    Client client = getClient();
     WebTarget webResource = client.target(url);
 
     webResource.queryParam("username", Settings.AGENT_EMAIL);
@@ -246,10 +263,63 @@ public class WebCommunication {
     Response response = webResource.request()
             .header("Accept-Encoding", "gzip,deflate")
             .get(Response.class);
+    discardClient(client);
     logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);
     return response;
   }
-
+  
+  private Client getClient() throws Exception {
+    Client client = availableClientPool.poll();
+    if (null == client) {
+      client = createClient();
+    }
+    
+    inUseClientPool.offer(client);
+    return client;
+  }
+  
+  private void discardClient(Client client) {
+    inUseClientPool.remove(client);
+    availableClientPool.offer(client);
+  }
+  
+  // This method should never be invoked but from the getClient() method
+  private Client createClient() throws NoSuchAlgorithmException,
+      KeyManagementException {
+    if (DISABLE_CERTIFICATE_VALIDATION) {
+      // Create a trust manager that does not validate certificate chains
+      TrustManager[] trustAllCerts = new TrustManager[]{
+          new X509TrustManager() {
+            public X509Certificate[] getAcceptedIssuers() {
+              return new X509Certificate[0];
+            }
+            
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            }
+            
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            }
+          }};
+      
+      // Ignore differences between given hostname and certificate hostname
+      HostnameVerifier hv = new HostnameVerifier() {
+        public boolean verify(String hostAddress, SSLSession session) {
+          return true;
+        }
+      };
+      
+      // Install the all-trusting trust manager
+      SSLContext sc = SSLContext.getInstance("TLSv1.2");
+      sc.init(null, trustAllCerts, new SecureRandom());
+      ClientBuilder clientBuilder = ClientBuilder.newBuilder()
+          .hostnameVerifier(hv)
+          .sslContext(sc);
+      return clientBuilder.build();
+    } else {
+      return ClientBuilder.newClient();
+    }
+  }
+  
   private Response postWebResource(String url, String agentPassword,
           String body) throws Exception {
     return postWebResource(url, agentPassword, "", "", body);
@@ -257,10 +327,7 @@ public class WebCommunication {
 
   private Response postWebResource(String url, String agentPassword,
           String channelUrl, String version, String body) throws Exception {
-    if (DISABLE_CERTIFICATE_VALIDATION) {
-      disableCertificateValidation();
-    }
-    Client client = ClientBuilder.newClient();
+    Client client = getClient();
     WebTarget webResource = client.target(url);
     webResource.queryParam("username", Settings.AGENT_EMAIL);
     webResource.queryParam("password", agentPassword);
@@ -268,40 +335,8 @@ public class WebCommunication {
     Response response = webResource.request()
             .header("Accept-Encoding", "gzip,deflate")
             .post(Entity.entity(body, MediaType.TEXT_PLAIN), Response.class);
+    discardClient(client);
     return response;
-  }
-
-  private static void disableCertificateValidation() {
-    // Create a trust manager that does not validate certificate chains
-    TrustManager[] trustAllCerts = new TrustManager[]{
-      new X509TrustManager() {
-        public X509Certificate[] getAcceptedIssuers() {
-          return new X509Certificate[0];
-        }
-
-        public void checkClientTrusted(X509Certificate[] certs, String authType) {
-        }
-
-        public void checkServerTrusted(X509Certificate[] certs, String authType) {
-        }
-      }};
-
-    // Ignore differences between given hostname and certificate hostname
-    HostnameVerifier hv = new HostnameVerifier() {
-      public boolean verify(String hostAddress, SSLSession session) {
-        return true;
-      }
-    };
-
-    // Install the all-trusting trust manager
-    try {
-      SSLContext sc = SSLContext.getInstance("SSL");
-      sc.init(null, trustAllCerts, new SecureRandom());
-      HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-      HttpsURLConnection.setDefaultHostnameVerifier(hv);
-    } catch (Exception e) {
-      // ??
-    }
   }
 
   public int anaconda(String hostAddress, String agentPassword, String op,
