@@ -21,20 +21,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.slf4j.LoggerFactory;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.util.Settings;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -52,18 +46,8 @@ public class ExecutionService {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private JobDescriptionFacade jobFacade;
-  @EJB
-  private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
   private ExecutionController executionController;
-  @EJB
-  private DistributedFsService dfs;
-  @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private Settings settings;
-
+  
   private JobDescription job;
 
   ExecutionService setJob(JobDescription job) {
@@ -135,43 +119,16 @@ public class ExecutionService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    job = jobFacade.findById(jobId);
-    String appid = yarnApplicationstateFacade.findByAppname(job.getName())
-        .get(0)
-        .getApplicationid();
 
-    //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
-    DistributedFileSystemOps udfso = null;
-    String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     try {
-      udfso = dfs.getDfsOps(username);
-      String marker = Settings.getJobMarkerFile(job, appid);
-      if (udfso.exists(marker)) {
-        udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("Job stopped").build();
-      }
+      executionController.kill(job, user);
     } catch (IOException ex) {
-      LOG.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appid, ex);
-    } finally {
-      if (udfso != null) {
-        udfso.close();
-      }
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          "An error occured while trying to start this job: " + ex.getLocalizedMessage());
     }
-
-    try {
-      //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
-      Runtime rt = Runtime.getRuntime();
-      Process pr = rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + appid);
-
-      //executionController.stop(job, user, appid);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity("Job stopped").build();
-    } catch (IOException | IllegalArgumentException | NullPointerException ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "An error occured while trying to start this job: " + ex.
-              getLocalizedMessage());
-    }
+    //executionController.stop(job, user, appid);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+        entity("Job stopped").build();
   }
 
   /**
