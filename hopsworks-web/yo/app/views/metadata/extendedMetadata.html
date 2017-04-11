@@ -1,0 +1,133 @@
+<div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px" ng-show="!datasetsCtrl.selected">
+  <div style="display: inline-block">
+    <div style="display: inline-block"><h4>No extended metadata.</h4></div>
+    <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
+      <i class="fa fa-exclamation-circle"></i>
+    </span>
+  </div>
+</div>
+<div ng-hide="metadataCtrl.noTemplates" ng-show="datasetsCtrl.selected">
+  <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'" style="padding-bottom:10px;">
+    <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;" >
+      <label style="font-size: 16px;">{{table.name| limitTo: 25}}</label>
+      <span type="button" class="btn btn-xs fa fa-minus-square-o pull-right" 
+            style="background-color:#D8D8D8;margin-right: 5px;"
+            data-toggle="collapse" 
+            data-target="#metadatadiv{{$index}}"> </span>
+    </div>
+    <div id="metadatadiv{{$index}}" class="collapse in">
+      <div ng-repeat="field in table.rest| unique:'tagName'" style="font-size:15px; padding-bottom: 2px; max-height: 100%;" class="fields-in-table panel-default">
+        <div style="padding-top: 2px">
+          <label>{{field.tagName| limitTo: 20}}</label>
+          <span class="field-info" tooltip-placement="right"
+                uib-tooltip="{{table.desc[field.tagName]}}" style="padding-top: 5px; padding-left:5px">
+            <i class="fa fa-exclamation-circle"></i>
+          </span>
+          <a style="color: green;"
+             ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, true)" 
+             ng-hide="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+            <i class="fa fa-plus-circle pull-right" style="padding-right: 10px; padding-top: 6px"></i>
+          </a>
+        </div>
+        <div ng-repeat="card in table.inputcontent| unique: 'title'" class="pull-left " style="width:80%; padding-bottom: 2px;">
+          <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" 
+               ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]"  class="input-group input-group-sm">
+            <input class="form-control" id="sizeFieldInput"
+                   tooltips title="{{card.description}}"
+                   ng-model="metadataCtrl.metaData[card.id]"
+                   ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus/>
+            <div class="input-group-btn">
+              <button class="btn btn-default fa fa-check " ng-click="metadataCtrl.createMetadata(table.id, card.id);" ></button>
+              <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"></button>
+            </div>
+          </div>
+
+          <div class="input-group input-group-sm"
+               ng-if="field.tagName === card.title && card.fieldtypeid === 2" 
+               ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+            <ui-select ng-model="metadataCtrl.metaData[card.id]">
+              <ui-select-match placeholder="Select a value...">{{$select.selected.value| cut: true:30}}</ui-select-match>
+              <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                {{item.value| cut: true:30}}
+              </ui-select-choices>              
+            </ui-select>
+            <div class="input-group-btn">
+              <button class="btn btn-default fa fa-check" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></button>
+              <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"></button>
+            </div>
+          </div>
+
+          <div class="input-group input-group-sm"
+               ng-if="field.tagName === card.title && card.fieldtypeid === 3" 
+               ng-show="metadataCtrl.visibilityInfo[table.id + '-' + field.tagName]">
+            <ui-select multiple ng-model="metadataCtrl.metaData[card.id]" 
+                       close-on-select="false" style="max-height: 60px;">
+              <ui-select-match placeholder="Select values..." >{{$item.value| cut: true:20}}</ui-select-match>
+              <ui-select-choices repeat="card in card.fieldtypeContent | filter:$select.search">
+                {{card.value| cut: true:30}}
+              </ui-select-choices>
+            </ui-select>
+            <div class="input-group-btn">
+              <button class="btn btn-default fa fa-check" ng-click="metadataCtrl.createMetadata(table.id, card.id);"></button>
+              <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(table.id + '-' + field.tagName, false);"></button>
+            </div>
+          </div>
+        </div>
+        <div ng-repeat="value in field.metadataView" style="padding-left: 15px;padding-top: 0px">
+          <div ng-hide="metadataCtrl.visibilityInfo[value.id]" ng-if="value.data !== ''" ng-init="metashow[value.id] = false" ng-mouseenter="metashow[value.id] = true" ng-mouseleave="metashow[value.id] = false">
+            <label style="font-weight: normal">{{value.data| cut:true:30}}</label>
+            <div style="display:inline-block;padding-left: 20px" ng-show="metashow[value.id]">
+              <button class="btn btn-info btn-xs" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id, true);" ><i class="fa fa-pencil"></i></button>
+              <button class="btn btn-danger btn-xs" ng-click="metadataCtrl.removeMetadata(value);" ><i class="fa fa-times"></i></button>
+            </div>
+          </div>
+          <div ng-repeat="card in table.inputcontent| unique: 'title'" class="pull-left " style="width:80%; padding-bottom: 2px;">
+            <div ng-if="field.tagName === card.title && card.fieldtypeid === 1" 
+                 ng-show="metadataCtrl.visibilityInfo[value.id]"  class="input-group input-group-sm">
+              <input class="form-control" id="sizeFieldInput"
+                     tooltips title="{{card.description}}"
+                     ng-model="metadataCtrl.metaDataDetail[value.id]"
+                     placeholder="{{value.data}}"
+                     ng-keypress="($event.which === 13)?metadataCtrl.createMetadata(table.id,card.id):0" autofocus />
+              <div class="input-group-btn">
+                <button class="btn btn-default fa fa-check " ng-click="metadataCtrl.updateMetadata(value);" ></button>
+                <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id + '-' + field.tagName, false);"></button>
+              </div>
+            </div>
+
+            <div class="input-group input-group-sm"
+                 ng-if="field.tagName === card.title && card.fieldtypeid === 2" 
+                 ng-show="metadataCtrl.visibilityInfo[value.id]">
+              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]">
+                <ui-select-match placeholder="Select a value...">{{$select.selected.value| cut: true:30}}</ui-select-match>
+                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                  {{item.value| cut: true:30}}
+                </ui-select-choices>              
+              </ui-select>
+              <div class="input-group-btn">
+                <button class="btn btn-default fa fa-check" ng-click="metadataCtrl.updateMetadata(value);"></button>
+                <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id + '-' + field.tagName, false);"></button>
+              </div>
+            </div>
+
+            <div class="input-group input-group-sm"
+                 ng-if="field.tagName === card.title && card.fieldtypeid === 3" 
+                 ng-show="metadataCtrl.visibilityInfo[value.id]">
+              <ui-select ng-model="metadataCtrl.metaDataDetail[value.id]">
+                <ui-select-match placeholder="Select a value...">{{$select.selected.value| cut: true:30}}</ui-select-match>
+                <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                  {{item.value| cut: true:30}}
+                </ui-select-choices>              
+              </ui-select>
+              <div class="input-group-btn">
+                <button class="btn btn-default fa fa-check" ng-click="metadataCtrl.updateMetadata(value);"></button>
+                <button class="btn btn-default fa fa-times" ng-click="metadataCtrl.setVisibilityAddMetadata(value.id + '-' + field.tagName, false);"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

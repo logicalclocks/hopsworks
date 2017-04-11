@@ -1,0 +1,105 @@
+<form ng-submit="modifyFieldCtrl.modifyField()" class="noMargin" name="modifyFieldForm">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="modifyFieldCtrl.cancel()">&times;</button>
+    <h4 class="modal-title">Modify field '{{modifyFieldCtrl.fieldName}}'</h4>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="form-group">
+      <label class="control-label" ng-show="modifyFieldCtrl.existingRawData">
+        <font color="red">This field contains actual data. You cannot modify its definition</font>
+      </label>
+      <p></p>
+
+      <label class="control-label" ng-disabled="modifyFieldCtrl.existingRawData === true" for="fieldName">Field name</label>
+      <div>
+        <input type="text" name="fieldName" ng-disabled="modifyFieldCtrl.existingRawData === true" 
+               placeholder="Name of the field" ng-model="modifyFieldCtrl.fieldName" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="modifyFieldCtrl.hitEnter($event)"/>
+
+        <div class="alert alert-danger fade in" ng-show="modifyFieldForm.fieldName.$error.required">
+          <a href="#" class="close" data-dismiss="alert">&times;</a>
+          <strong>A field name</strong> is required.
+        </div>
+      </div>
+
+      <label class="control-label" ng-disabled="modifyFieldCtrl.existingRawData === true" for="fieldDescription">Field description</label>
+      <div>
+        <input type="text" name="fieldDescription" ng-disabled="modifyFieldCtrl.existingRawData === true" 
+               placeholder="Description of the field" ng-model="modifyFieldCtrl.fieldDescription" 
+               required
+               focus-me class="cardInputs form-control" ng-keyup="modifyFieldCtrl.hitEnter($event)"/>
+        
+        <div class="alert alert-danger fade in" ng-show="modifyFieldForm.fieldDescription.$error.required">
+          <a href="#" class="close" data-dismiss="alert">&times;</a>
+          <strong>A field description</strong> is required.
+        </div>
+      </div>
+
+      <p></p>
+      <div>
+        <label ng-disabled="modifyFieldCtrl.existingRawData === true" class="control-label">Field type: </label>
+        <label ng-disabled="modifyFieldCtrl.existingRawData === true">This field is a {{modifyFieldCtrl.fieldType}}</label>
+        <br>
+        <label ng-disabled="modifyFieldCtrl.existingRawData === true">{{modifyFieldCtrl.fieldTypeValues}}</label>
+      </div>
+
+      <label class="control-label" ng-disabled="modifyFieldCtrl.existingRawData === true" for="newCardType">New field type</label>
+      <div>
+        <ui-select  ng-disabled="modifyFieldCtrl.existingRawData === true"
+                    ng-model="modifyFieldCtrl.selectedItem" theme="select2"
+                    on-select="modifyFieldCtrl.update()" style="min-width: 150px;">
+
+          <ui-select-match placeholder="Select a field type...">{{$select.selected.name}}</ui-select-match>
+
+          <ui-select-choices repeat="item in modifyFieldCtrl.items | filter: $select.search">
+            <small>
+              <span ng-bind-html="'' + item.name"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
+      </div>
+    </div>
+
+    <div style="width: 35%;">
+      <div class="alert alert-danger fade in" ng-show="modifyFieldCtrl.updating">
+        <a class="close" data-dismiss="alert">&times;</a>
+        <strong>This will replace all existing values.</strong>
+      </div>
+      <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.fieldSelectItems">
+        <ng-form name="innerForm">
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="text" ng-model="choice.value" name="choice" placeholder="Enter a single-select value" required>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default fa fa-plus"  ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(1)" ng-disabled='innerForm.choice.$error.required'></button>
+              <button type="button" class="btn btn-default fa fa-minus"  ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(1)"></button>
+            </div>
+          </div>
+        </ng-form>
+      </fieldset>
+
+      <fieldset ng-disabled="modifyFieldCtrl.existingRawData === true" data-ng-repeat="choice in modifyFieldCtrl.multiSelectItems">
+        <ng-form name="innerForm">
+          <div class="input-group input-group-sm">
+            <input class="form-control" type="text" ng-model="choice.value" name="choice" placeholder="Enter a multi-select value" required>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default fa fa-plus" ng-show="$last" ng-click="modifyFieldCtrl.addNewSelectChoice(2)" ng-disabled='innerForm.choice.$error.required'></button>
+              <button type="button" class="btn btn-default fa fa-minus" ng-show="$last" ng-click="modifyFieldCtrl.removeSelectChoice(2)"></button>
+            </div>
+          </div>
+        </ng-form>
+      </fieldset>
+      <div class="alert alert-danger fade in" ng-show="modifyFieldForm.innerForm.$error.required">
+        <a class="close" data-dismiss="alert">&times;</a>
+        <strong>A value is required</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer" style="padding-top: 15px;">
+    <button type="button" class="btn btn-default" ng-click="modifyFieldCtrl.cancel()">Close</button>
+    <button type="button" class="btn btn-primary" ng-disabled="existingRawData === true" ng-click="modifyFieldCtrl.modifyField()">Save changes</button>
+  </div>
+</form>
