@@ -778,7 +778,7 @@ angular.module('hopsWorksApp')
                   self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                   self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
                   //Load Kafka properties
-                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.length > 0) {
+                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
                     if (typeof self.runConfig.kafka.consumergroups !== "undefined") {

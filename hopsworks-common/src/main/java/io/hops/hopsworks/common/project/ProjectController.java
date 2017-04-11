@@ -1507,7 +1507,12 @@ public class ProjectController {
             + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
             + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
             + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
-            + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}}}");
+            + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}},\n" +
+            "\"_ttl\": {\n" +
+            "\"enabled\": true,\n" +
+            "\"default\": \""+Settings.getJobLogsExpiration()+"s\"\n" +
+            "}}}}");
+            
     JSONObject resp = sendElasticsearchReq(params);
     boolean templateCreated = false;
     if (resp.has("acknowledged")) {
