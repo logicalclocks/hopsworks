@@ -439,7 +439,7 @@ public class YarnRunner {
     //For all local resources with local path: copy and add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
         entrySet()) {
-      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.
+      logger.log(Level.FINE, "LocalResourceDTO to upload is :{0}", entry.
           toString());
       String key = entry.getKey();
       String source = entry.getValue().getPath();
@@ -465,7 +465,7 @@ public class YarnRunner {
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.
         entrySet()) {
-      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.
+      logger.log(Level.FINE, "LocalResourceDTO to upload is :{0}", entry.
           toString());
       String key = entry.getKey();
       String pathToResource = entry.getValue().getPath();

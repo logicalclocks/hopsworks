@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.io.Serializable;
@@ -32,6 +33,7 @@ public class Settings implements Serializable {
       = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
+  private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -207,6 +209,7 @@ public class Settings implements Serializable {
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
+      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -670,6 +673,18 @@ public class Settings implements Serializable {
   public static String getSparkDefaultClasspath(String sparkDir) {
     return sparkDefaultClasspath(sparkDir);
   }
+  
+  /**
+   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
+   * @param job
+   * @param appId
+   * @return 
+   */
+  public static String getJobMarkerFile(JobDescription job, String appId) {
+    return getHdfsRootPath(job.getProject().getName()) + "Resources/.marker-" + job.getJobType().getName().toLowerCase()
+        + "-" + job.getName()
+        + "-" + appId;
+  }
 
   public static String getHdfsRootPath(String projectname) {
     return "/" + DIR_ROOT + "/" + projectname + "/";
@@ -718,8 +733,29 @@ public class Settings implements Serializable {
     return ELASTIC_PORT;
   }
   
+  private int ELASTIC_REST_PORT = 9200;
+   
+  public synchronized int getElasticRESTPort() {
+    checkCache();
+    return ELASTIC_REST_PORT;
+  }
+  
   public synchronized String getElasticEndpoint() {
     return getElasticIp() + ":" + getElasticPort();
+  }
+  
+  public synchronized String getElasticRESTEndpoint() {
+    return getElasticIp() + ":" + getElasticRESTPort();
+  }
+  
+  private static int JOB_LOGS_EXPIRATION = 604800;
+  
+  /**
+   * TTL for job logs in elasticsearch, in seconds.
+   * @return 
+   */
+  public static int getJobLogsExpiration(){
+    return JOB_LOGS_EXPIRATION;
   }
   
   // Spark

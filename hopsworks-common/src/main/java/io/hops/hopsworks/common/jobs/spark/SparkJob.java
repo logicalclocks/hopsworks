@@ -19,10 +19,8 @@ import io.hops.hopsworks.common.util.Settings;
  */
 public class SparkJob extends YarnJob {
 
-  private static final Logger LOG = Logger.
-      getLogger(SparkJob.class.getName());
+  private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
 
-  private final SparkJobConfiguration jobconfig; //Just for convenience
   private final String sparkDir;
 
   private final String sparkUser; //must be glassfish
@@ -49,7 +47,6 @@ public class SparkJob extends YarnJob {
           "JobDescription must contain a SparkJobConfiguration object. Received: "
           + job.getJobConfig().getClass());
     }
-    this.jobconfig = (SparkJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
     this.sparkUser = sparkUser;
   }
@@ -57,7 +54,7 @@ public class SparkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
-
+    SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobDescription.getJobConfig();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
@@ -65,9 +62,7 @@ public class SparkJob extends YarnJob {
     //If runnerbuilder is not null, it has been instantiated by child class,
     //i.e. AdamJob
     if (runnerbuilder == null) {
-      runnerbuilder = new SparkYarnRunnerBuilder(
-          jobconfig.getAppPath(), jobconfig.getMainClass(),
-          jobconfig.getType());
+      runnerbuilder = new SparkYarnRunnerBuilder(jobDescription);
       runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
       if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {

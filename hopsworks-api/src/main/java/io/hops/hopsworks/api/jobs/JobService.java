@@ -12,8 +12,10 @@ import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -21,6 +23,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -120,7 +123,13 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-
+  @EJB
+  private ElasticController elasticController;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ExecutionController executionController;
+  
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
@@ -1011,7 +1020,12 @@ public class JobService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     LOGGER.log(Level.INFO, "Request to delete job");
-
+    String loggedinemail =sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "You are not authorized for this invocation.");
+    }
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
@@ -1026,7 +1040,9 @@ public class JobService {
       try {
         LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
+//        executionController.kill(job, user);
         jobFacade.removeJob(job);
+        elasticController.deleteJobLogs(project.getName(), "logs", job.getId());
         LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
         JsonResponse json = new JsonResponse();
