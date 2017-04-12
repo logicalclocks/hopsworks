@@ -3,6 +3,7 @@ package io.hops.hopsworks.api.exception.mapper;
 import io.hops.hopsworks.api.util.JsonResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.persistence.PersistenceException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -21,9 +22,9 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   public Response toResponse(Throwable ex) {
     log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getClass());
     JsonResponse json = new JsonResponse();
-    setHttpStatus(ex, json);
     json.setErrorMsg("Oops! something went wrong :(");
-    ex.printStackTrace();
+    setHttpStatus(ex, json);
+    //ex.printStackTrace();
     return Response.status(json.getStatusCode())
             .entity(json)
             .build();
@@ -33,8 +34,21 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
     if (ex instanceof WebApplicationException) {
       json.setStatusCode(((WebApplicationException) ex).getResponse().
               getStatus());
+    } else if (ex instanceof PersistenceException) {
+      Throwable e = ex;
+      //get to the bottom of this
+      while (e.getCause() != null) {
+        e = e.getCause();
+      }
+      if (e.getMessage().contains("Connection refused")) {
+        json.setErrorMsg("The database is temporarily unavailable. "
+                + "Please try again later.");
+      }
+      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode());
     } else {
-      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()); //defaults to internal server error 500
+      //defaults to internal server error 500
+      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
   }
 
