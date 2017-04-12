@@ -795,6 +795,7 @@ angular.module('hopsWorksApp')
                               }
                               if (typeof storedTopics !== "undefined") {
                                 self.runConfig.kafka.topics = storedTopics;
+                                self.guideKafkaTopics = storedTopics;
                                 //Set selected topics
                                 //wait to fetch topics firsts
                                 for (var i = 0; i < self.runConfig.kafka.topics.length; i++) {
@@ -807,6 +808,7 @@ angular.module('hopsWorksApp')
                                 }
                               }
                             }, function (error) {
+                              console.log("Error during job init:"+error.data.errorMsg);
                     });
                   }
                 }

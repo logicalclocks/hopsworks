@@ -246,6 +246,12 @@ angular.module('hopsWorksApp')
 //            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
 
 
+            self.goToHopsworksInstance = function(endpoint, serviceName) {
+              $scope.activeService = serviceName;
+              $location.path('http://' + endpoint + '/project/' + self.pId + '/' + serviceName);              
+            }
+
+
             self.goToUrl = function(serviceName) {
               $scope.activeService = serviceName;
               $location.path('project/' + self.pId + '/' + serviceName);              
@@ -274,6 +280,7 @@ angular.module('hopsWorksApp')
 
             self.goToJupyter = function () {
                self.goToUrl('jupyter');
+//               self.goToHopsworksInstance('jupyter');
             };
 
 
