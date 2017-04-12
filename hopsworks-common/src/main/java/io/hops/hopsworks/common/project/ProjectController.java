@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
@@ -57,6 +56,7 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -64,13 +64,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -129,8 +122,6 @@ public class ProjectController {
   @EJB
   private InodeFacade inodeFacade;
   @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private PythonDepsFacade pythonDepsFacade;
@@ -140,6 +131,8 @@ public class ProjectController {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private KafkaFacade kafkaFacade;
+  @EJB 
+  private ElasticController elasticController;
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -148,19 +141,17 @@ public class ProjectController {
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
    * project.
-   * <p>
+   * 
    * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
    * make sure a new transaction is created even
    * if this method is called from within a transaction.
-   * <p/>
-   * @param newProject
-   * @param email
-   * @param dfso
+   * 
+   * @param projectDTO
+   * @param owner
+   * @param failedMembers
    * @return
    * @throws IllegalArgumentException if the project name already exists.
    * @throws io.hops.hopsworks.common.exception.AppException
-   * @throws IOException if the DIR associated with the project could not be
-   * created. For whatever reason.
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
           List<String> failedMembers) throws AppException {
@@ -208,8 +199,8 @@ public class ProjectController {
                   getDescription(), dfso);
         } catch (EJBException ex) {
           logger.log(Level.WARNING, null, ex);
-          Path dumy = new Path("/tmp/" + project.getName());
-          dfso.rm(dumy, true);
+          Path dummy = new Path("/tmp/" + projectName);
+          dfso.rm(dummy, true);
           throw new AppException(Response.Status.CONFLICT.
                   getStatusCode(), "A project with this name already exist");
         }
@@ -510,11 +501,12 @@ public class ProjectController {
    * separate transaction after the project creation
    * is complete.
    * <p/>
-   * @param username
+   * @param user
    * @param project
    * @param dfso
    * @param udfso
-   * @throws ProjectInternalFoldersFailedException
+   * @throws io.hops.hopsworks.common.exception.AppException
+   * @throws java.io.IOException
    */
   public void createProjectLogResources(Users user, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
@@ -605,8 +597,7 @@ public class ProjectController {
    *
    * @param id the identifier for a Project
    * @return Project
-   * @throws se.kth.hopsworks.rest.AppException if the project could not be
-   * found.
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project findProjectById(Integer id) throws AppException {
 
@@ -718,16 +709,8 @@ public class ProjectController {
   /**
    * Remove a project and optionally all associated files.
    *
-   * @param projectID to be removed
-   * @param email
-   * @param deleteFilesOnRemove if the associated files should be deleted
-   * @param udfso
-   * @param dfso
-   * @return true if the project and the associated files are removed
-   * successfully, and false if the associated files
-   * could not be removed.
-   * @throws IOException if the hole operation failed. i.e the project is not
-   * removed.
+   * @param userMail
+   * @param projectId
    * @throws AppException if the project could not be found.
    */
   public void removeProject(String userMail, int projectId) throws AppException {
@@ -795,22 +778,21 @@ public class ProjectController {
         }
       }
     }
-    return;
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-          List<HdfsGroups> groupsToClean) throws IOException,
-          InterruptedException, AppException {
+      List<HdfsGroups> groupsToClean) throws IOException,
+      InterruptedException, AppException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
 
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
-
+           
       //change the owner and group of the project folder to glassfish
-      String path = File.separator + settings.DIR_ROOT + File.separator
-              + project.getName();
+      String path = File.separator + Settings.DIR_ROOT + File.separator
+          + project.getName();
       Path location = new Path(path);
       if (dfso.exists(path)) {
         dfso.setOwner(location, "glassfish", "glassfish");
@@ -820,15 +802,15 @@ public class ProjectController {
       if (dfso.exists(dumy.toString())) {
         dfso.setOwner(dumy, "glassfish", "glassfish");
       }
-      
+
       //remove kafka topics
       removeKafkaTopics(project);
 
       //remove user certificate from local node 
       //(they will be removed from db when the project folder is deleted)
       LocalhostServices.deleteProjectCertificates(settings.
-              getIntermediateCaDir(),
-              project.getName());
+          getIntermediateCaDir(),
+          project.getName());
 
       String logPath = getYarnAgregationLogPath();
 
@@ -842,12 +824,12 @@ public class ProjectController {
         for (Inode inode : inodes) {
           location = new Path(inodeFacade.getPath(inode));
           dfso.setOwner(location, UserGroupInformation.getLoginUser().
-                  getUserName(), "hadoop");
+              getUserName(), "hadoop");
         }
 
         //Clean up tmp certificates dir from hdfs
         String tmpCertsDir = Settings.TMP_CERT_STORE_REMOTE + File.separator
-                + hdfsUser.getName();
+            + hdfsUser.getName();
         if (dfso.exists(tmpCertsDir)) {
           dfso.rm(new Path(tmpCertsDir), true);
         }
@@ -868,7 +850,7 @@ public class ProjectController {
 
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
-      
+
       //remove dumy Inode
       dfso.rm(dumy, true);
 
@@ -877,7 +859,9 @@ public class ProjectController {
 
       logger.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
-      dfso.close();
+      if (dfso != null) {
+        dfso.close();
+      }
     }
   }
 
@@ -938,7 +922,7 @@ public class ProjectController {
 
   private void removeProjectFolder(String projectName,
           DistributedFileSystemOps dfso) throws IOException {
-    String path = File.separator + settings.DIR_ROOT + File.separator
+    String path = File.separator + Settings.DIR_ROOT + File.separator
             + projectName;
     final Path location = new Path(path);
     dfso.rm(location, true);
@@ -1052,41 +1036,20 @@ public class ProjectController {
     return failedList;
   }
 
-  // Create Account for user on localhost if the SSH service is enabled
-//  private void createUserAccount(Project project, ProjectTeam projectTeam,
-//          List<String> publicKeys, List<String> failedList) {
-//    for (ProjectServices ps : project.getProjectServicesCollection()) {
-//      if (ps.getProjectServicesPK().getService().compareTo(
-//              ProjectServiceEnum.SSH) == 0) {
-//        try {
-//          String email = projectTeam.getProjectTeamPK().getTeamMember();
-//          Users user = userBean.getUserByEmail(email);
-//          LocalhostServices.createUserAccount(user.getUsername(), project.
-//                  getName(), publicKeys);
-//        } catch (IOException e) {
-//          failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-//                  + "could not create the account on localhost. Try again later.");
-//          logger.log(Level.SEVERE,
-//                  "Create account on localhost for team member {0} failed",
-//                  projectTeam.getProjectTeamPK().getTeamMember());
-//        }
-//      }
-//    }
-//  }
   /**
    * Project info as data transfer object that can be sent to the user.
    * <p/>
    *
    * @param projectID of the project
    * @return project DTO that contains team members and services
-   * @throws se.kth.hopsworks.rest.AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public ProjectDTO getProjectByID(Integer projectID) throws AppException {
     Project project = projectFacade.find(projectID);
     String name = project.getName();
 
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(File.separator + settings.DIR_ROOT
+    Inode inode = inodes.getInodeAtPath(File.separator + Settings.DIR_ROOT
             + File.separator + name);
 
     if (project == null) {
@@ -1119,7 +1082,7 @@ public class ProjectController {
     Project project = projectFacade.findByName(name);
 
     //find the project as an inode from hops database
-    String path = File.separator + settings.DIR_ROOT + File.separator + name;
+    String path = File.separator + Settings.DIR_ROOT + File.separator + name;
     Inode inode = inodes.getInodeAtPath(path);
 
     if (project == null) {
@@ -1490,7 +1453,6 @@ public class ProjectController {
    * Handles Kibana related indices and templates for projects.
    *
    * @param project
-   * @param create creation or deletion stage of project
    * @return
    * @throws java.io.IOException
    */
@@ -1513,7 +1475,7 @@ public class ProjectController {
             "\"default\": \""+Settings.getJobLogsExpiration()+"s\"\n" +
             "}}}}");
             
-    JSONObject resp = sendElasticsearchReq(params);
+    JSONObject resp = elasticController.sendElasticsearchReq(params);
     boolean templateCreated = false;
     if (resp.has("acknowledged")) {
       templateCreated = (Boolean) resp.get("acknowledged");
@@ -1587,7 +1549,7 @@ public class ProjectController {
             + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
             + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values"
             + "\\\":false}]\"}");
-    resp = sendElasticsearchReq(params);
+    resp = elasticController.sendElasticsearchReq(params);
     boolean kibanaIndexCreated = false;
     if (resp.has("acknowledged")) {
       kibanaIndexCreated = (Boolean) resp.get("acknowledged");
@@ -1607,17 +1569,15 @@ public class ProjectController {
     params.put("project", project);
     params.put("op", "DELETE");
     params.put("resource", ".kibana/index-pattern");
-    JSONObject resp = sendElasticsearchReq(params);
+    JSONObject resp = elasticController.sendElasticsearchReq(params);
     boolean kibanaIndexDeleted = false;
     if (resp != null && resp.has("acknowledged")) {
       kibanaIndexDeleted = (Boolean) resp.get("acknowledged");
     }
-    params.clear();
+    
     //2. Delete Elasticsearch Index
-    params.put("project", project);
-    params.put("op", "DELETE");
     params.put("resource", "");
-    resp = sendElasticsearchReq(params);
+    resp = elasticController.sendElasticsearchReq(params);
     boolean elasticIndexDeleted = false;
     if (resp != null && resp.has("acknowledged")) {
       elasticIndexDeleted = (Boolean) resp.get("acknowledged");
@@ -1625,7 +1585,7 @@ public class ProjectController {
     //3. Delete Elasticsearch Template
     params.put("resource", "_template");
     boolean templateDeleted = false;
-    resp = sendElasticsearchReq(params);
+    resp = elasticController.sendElasticsearchReq(params);
     if (resp != null && resp.has("acknowledged")) {
       templateDeleted = (Boolean) resp.get("acknowledged");
     }
@@ -1634,62 +1594,6 @@ public class ProjectController {
       return true;
     }
     return false;
-  }
-  
-  /**
-   *
-   * @param params
-   * @return
-   * @throws MalformedURLException
-   * @throws IOException
-   */
-  private JSONObject sendElasticsearchReq(Map<String, String> params) throws
-          MalformedURLException, IOException {
-    String templateUrl;
-    if (!params.containsKey("url")) {
-      templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
-              + params.get("resource") + "/" + params.get("project");
-    } else {
-      templateUrl = params.get("url");
-    }
-    URL obj = new URL(templateUrl);
-    HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
-
-    conn.setDoOutput(true);
-    conn.setRequestMethod(params.get("op"));
-    if (params.get("op").equalsIgnoreCase("PUT")) {
-      String data = params.get("data");
-      try (OutputStreamWriter out
-              = new OutputStreamWriter(conn.getOutputStream())) {
-        out.write(data);
-      }
-    }
-    try {
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-              (conn.getInputStream())));
-
-      String output;
-      StringBuilder outputBuilder = new StringBuilder();
-      while ((output = br.readLine()) != null) {
-        outputBuilder.append(output);
-      }
-
-      conn.disconnect();
-      return new JSONObject(outputBuilder.toString());
-
-    } catch (FileNotFoundException ex) {
-      logger.log(Level.WARNING, "Elasticsearch resource " + params.get(
-              "resource") + " was not found");
-    } catch (IOException ex) {
-      if (ex.getMessage().contains("kibana")) {
-        logger.log(Level.WARNING, "error", ex);
-        logger.log(Level.WARNING, "Kibana index could not be deleted for "
-                + params.get("project"));
-      } else {
-        throw new IOException(ex);
-      }
-    }
-    return null;
   }
 
 }
