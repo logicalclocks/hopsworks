@@ -8,17 +8,21 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ListenableActionFuture;
@@ -28,10 +32,8 @@ import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRespon
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
@@ -46,10 +48,10 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 import org.elasticsearch.search.SearchHit;
+import org.json.JSONObject;
 
 /**
  *
@@ -223,42 +225,21 @@ public class ElasticController {
   }
 
   /**
-   * Deletes documents from the job index. Must be re-implemented to use delete-by-query when we move to 5.x Elastic.
+   * Deletes documents from the job index using delete-by-query. Must be re-implemented to client instead of REST-call
+   * when we move to 5.x Elastic.
    *
    * @param index
    * @param type
+   * @param field
    * @param jobId
-   * @throws AppException
    */
-  public void deleteJobLogs(String index, String type, Integer jobId) throws AppException {
-    Client client = getClient();
-    BulkRequestBuilder bulkRequest = client.prepareBulk();
+  public void deleteJobLogs(String index, String type, String field, Integer jobId) {
+    String url = "http://" + settings.getElasticRESTEndpoint() + "/" + index + "/" + type + "/_query?q=" + field + ":"
+        + jobId;
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "DELETE");
+    sendElasticsearchReq(url, params, true);
 
-    long deleteHits = -1;
-    while (deleteHits != 0) {
-      SearchResponse deletes = client.prepareSearch(index)
-          .setTypes(type)
-          .setSize(10000)
-          .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-          .setQuery(boolQuery().must(termQuery("jobid", jobId)))
-          .execute()
-          .actionGet();
-
-      deleteHits = deletes.getHits().getTotalHits();
-      if (deleteHits > 0) {
-        Arrays.asList(deletes.getHits().getHits()).stream().forEach(h -> bulkRequest.add(client.prepareDelete()
-            .setIndex(index)
-            .setType(type)
-            .setId(h.getId())));
-      }
-
-      bulkRequest.execute();
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException ex) {
-      }
-    }
-    this.clientShutdown(client);
   }
 
   private Client getClient() throws AppException {
@@ -567,5 +548,54 @@ public class ElasticController {
     }
 
     return addr;
+  }
+
+  /**
+   *
+   * @param params
+   * @return
+   * @throws IOException
+   */
+  public JSONObject sendElasticsearchReq(Map<String, String> params) throws IOException {
+    String templateUrl;
+    if (!params.containsKey("url")) {
+      templateUrl = "http://" + settings.getElasticRESTEndpoint() + "/" + params.get("resource") + "/" + params.get(
+          "project");
+    } else {
+      templateUrl = params.get("url");
+    }
+    return sendElasticsearchReq(templateUrl, params, false);
+  }
+
+  /**
+   *
+   * @param templateUrl
+   * @param params
+   * @param async
+   * @return
+   */
+  public JSONObject sendElasticsearchReq(String templateUrl, Map<String, String> params, boolean async) {
+    if (async) {
+      ClientBuilder.newClient()
+          .target(templateUrl)
+          .request()
+          .async()
+          .method(params.get("op"));
+      return null;
+    } else {
+      if (params.containsKey("data")) {
+        return new JSONObject(ClientBuilder.newClient()
+            .target(templateUrl)
+            .request()
+            .method(params.get("op"), Entity.json(params.get("data")))
+            .readEntity(String.class));
+      } else {
+        return new JSONObject(ClientBuilder.newClient()
+            .target(templateUrl)
+            .request()
+            .method(params.get("op"))
+            .readEntity(String.class));
+      }
+    }
   }
 }
