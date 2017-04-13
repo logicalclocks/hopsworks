@@ -115,10 +115,12 @@ public class JupyterFacade {
             settings);
 
     boolean failed = true;
+    int maxTries = 50;
 
-    while (failed) {
+    while (failed && maxTries > 0) {
       Integer id = 1;
       int port = ThreadLocalRandom.current().nextInt(40000, 59999);
+      
 //      String[] command = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), 
       String[] command = {"jupyter", "--no-browser"};
       ProcessBuilder pb = new ProcessBuilder(command);
@@ -145,10 +147,12 @@ public class JupyterFacade {
           }
         }
         saveServer(port, user.getId(), token, process);
+        failed = false;
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
                 toString());
       }
+      maxTries--;
     }
 
   }
@@ -174,7 +178,7 @@ public class JupyterFacade {
   }
 
   private void saveServer(int port, int userId, String token,
-          Process process) {
+          Process process) throws AppException {
 
     String ip;
     try {
@@ -185,6 +189,8 @@ public class JupyterFacade {
                       token, JupyterConfig.getPidOfProcess(process));
 
       persist(jp);
+      HdfsUsers user = hdfsUsersFacade.find(userId);
+      JupyterConfig.addNotebookServer(user.getUsername(), process);
     } catch (UnknownHostException ex) {
       Logger.getLogger(JupyterFacade.class.getName()).
               log(Level.SEVERE, null, ex);

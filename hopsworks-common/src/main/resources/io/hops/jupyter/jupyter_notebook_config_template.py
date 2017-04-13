@@ -11,7 +11,8 @@ c.NotebookApp.contents_manager_class = HdfsContentsManager
 #c.NotebookApp.token = ''
 #c.NotebookApp.password = u'%%hashed_password%%'
 
-c.NotebookApp.ip = '127.0.0.1'
+#c.NotebookApp.ip = '127.0.0.1'
+c.NotebookApp.ip = 'localhost'
 c.NotebookApp.open_browser = False
 
 # It is a good idea to set a known, fixed port for server access
