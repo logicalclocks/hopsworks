@@ -122,7 +122,8 @@ public class JupyterFacade {
       int port = ThreadLocalRandom.current().nextInt(40000, 59999);
       
 //      String[] command = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), 
-      String[] command = {"jupyter", "--no-browser"};
+      String[] command = {"jupyter", "--no-browser", " > " + jc.getLogDirPath()
+          + "/" + user.getUsername() + "-" + port + ".log"};
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
       env.put("JUPYTER_CONFIG_DIR", jc.getConfDirPath());

@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJob;
 import io.hops.hopsworks.common.jobs.spark.SparkYarnRunnerBuilder;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
@@ -23,6 +22,7 @@ public class AdamJob extends SparkJob {
   private static final Logger LOG = Logger.getLogger(AdamJob.class.getName());
 
   private final AdamJobConfiguration jobconfig;
+  private final JobDescription jobDescription;
   private final String sparkDir;
   private final String adamJarPath;
   private final String adamUser; //must be glassfish
@@ -50,6 +50,7 @@ public class AdamJob extends SparkJob {
           "JobDescription must contain a AdamJobConfiguration object. Received: "
           + job.getJobConfig().getClass());
     }
+    this.jobDescription = job;
     this.jobconfig = (AdamJobConfiguration) job.getJobConfig();
     this.sparkDir = sparkDir;
     this.adamJarPath = adamJarPath;
@@ -130,9 +131,11 @@ public class AdamJob extends SparkJob {
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled ADAM Job");
     }
-
-    runnerbuilder = new SparkYarnRunnerBuilder(adamJarPath,
-        Settings.ADAM_MAINCLASS, JobType.SPARK);
+    jobconfig.setMainClass(Settings.ADAM_MAINCLASS);
+    jobconfig.setAppPath(adamJarPath);
+    jobDescription.setJobConfig(jobconfig);
+    
+    runnerbuilder = new SparkYarnRunnerBuilder(jobDescription);
     super.setupJob(dfso);
     //Set some ADAM-specific property values   
     runnerbuilder.addSystemProperty("spark.serializer",

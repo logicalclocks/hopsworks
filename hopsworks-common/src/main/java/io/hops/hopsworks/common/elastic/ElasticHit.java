@@ -1,4 +1,4 @@
-package io.hops.hopsworks.api.elastic;
+package io.hops.hopsworks.common.elastic;
 
 import java.util.HashMap;
 import java.util.Map;

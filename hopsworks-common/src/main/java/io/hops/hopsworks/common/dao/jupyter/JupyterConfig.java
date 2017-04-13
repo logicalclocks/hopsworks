@@ -5,6 +5,7 @@ import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -41,12 +42,9 @@ public class JupyterConfig {
   private final String libDirPath;
 
   // <hdfs_username, process> pairs
-  private static ConcurrentHashMap<String, Process> runningServers
-          = new ConcurrentHashMap<>();
 
-  private static ConcurrentHashMap<String, BufferedReader> consoleOutput
-          = new ConcurrentHashMap<>();
-
+//  private static ConcurrentHashMap<String, BufferedReader> consoleOutput
+//          = new ConcurrentHashMap<>();
   public JupyterConfig(String projectName, String owner, Settings settings) {
     this.projectName = projectName;
     this.settings = settings;
@@ -100,68 +98,36 @@ public class JupyterConfig {
   }
 
   /**
-   * If an existing process is running for this username, kill it.
-   * Starts a new process with that username.
+   * No synchronization here, as one slow notebook server could kill all clients
    *
    * @param hdfsUsername
-   * @param process
+   * @param port
    * @return
+   * @throws IOException
    */
-  public synchronized static void addNotebookServer(String hdfsUsername,
-          Process process) throws AppException {
-    if (!process.isAlive()) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Jupyter server died unexpectadly");
-    }
-    removeNotebookServer(hdfsUsername);
-    runningServers.put(hdfsUsername, process);
+  public StringBuffer getConsoleOutput(String hdfsUsername, int port) throws
+          IOException {
 
+    String fname = this.getLogDirPath() + "/" + hdfsUsername + "-" + port
+            + ".log";
     BufferedReader br = new BufferedReader(new InputStreamReader(
-            process.getInputStream(), Charset.forName("UTF8")));
-
-    consoleOutput.put(hdfsUsername, br);
-
-  }
-
-  public synchronized static boolean removeNotebookServer(String hdfsUsername) {
-    if (runningServers.containsKey(hdfsUsername)) {
-      Process oldProcess = runningServers.get(hdfsUsername);
-      if (oldProcess != null) {
-        oldProcess.destroyForcibly();
-        return true;
-      }
-      runningServers.remove(hdfsUsername);
-      BufferedReader br = consoleOutput.get(hdfsUsername);
-      if (br != null) {
-        try {
-          br.close();
-        } catch (IOException ex) {
-          Logger.getLogger(JupyterConfig.class.getName()).
-                  log(Level.SEVERE, null, ex);
-        }
-        consoleOutput.remove(hdfsUsername);
-      }
-    }
-    return false;
-  }
-
-  /**
-   * No synchronization here, as one slow notebook server could kill all clients
-   * @param hdfsUsername
-   * @return
-   * @throws IOException 
-   */
-  public static StringBuilder getConsoleOutput(String hdfsUsername) throws IOException {
-    StringBuilder sb = new StringBuilder();
-    BufferedReader br = consoleOutput.get(hdfsUsername);
-    if (br != null) {
-      // This could block if jupyter doesn't output a complete line, but blocks while
-      // waiting for the line terminating character
-      while (br.ready())  {
-        sb.append(br.readLine()).append("\n");
-      }
+            new FileInputStream(fname), Charset.forName("UTF8")));
+    String line;
+    StringBuffer sb = new StringBuffer();
+    while (((line = br.readLine()) != null)) {
+      sb.append(line);
     }
     return sb;
+//    StringBuilder sb = new StringBuilder();
+//    BufferedReader br = consoleOutput.get(hdfsUsername);
+//    if (br != null) {
+//      // This could block if jupyter doesn't output a complete line, but blocks while
+//      // waiting for the line terminating character
+//      while (br.ready())  {
+//        sb.append(br.readLine()).append("\n");
+//      }
+//    }
+//    return sb;
   }
 
   /**
@@ -188,6 +154,11 @@ public class JupyterConfig {
     return pid;
   }
 
+  public void clean() {
+    cleanAndRemoveConfDirs();
+    
+  }
+  
   public String getProjectName() {
     return projectName;
   }

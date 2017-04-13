@@ -12,8 +12,10 @@ import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -21,6 +23,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -40,6 +43,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,7 +124,13 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-
+  @EJB
+  private ElasticController elasticController;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ExecutionController executionController;
+  
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 
@@ -272,7 +282,6 @@ public class JobService {
   /**
    * Get the projectName for the specified projectId
    * <p>
-   * @param jobId
    * @param sc
    * @param req
    * @return url
@@ -303,7 +312,6 @@ public class JobService {
    /**
    * Get the Job UI url for the specified job
    * <p>
-   * @param jobId
    * @param sc
    * @param req
    * @return url
@@ -358,7 +366,7 @@ public class JobService {
   /**
    * Get the Yarn UI url for the specified job
    * <p>
-   * @param jobId
+   * @param appId
    * @param sc
    * @param req
    * @return url
@@ -398,7 +406,7 @@ public class JobService {
   /**
    * Get application run info for the specified job
    * <p>
-   * @param jobId
+   * @param appId
    * @param sc
    * @param req
    * @return url
@@ -474,7 +482,7 @@ public class JobService {
    * Get the job ui for the specified job.
    * This act as a proxy to get the job ui from yarn
    * <p>
-   * @param jobId
+   * @param appId
    * @param param
    * @param sc
    * @param req
@@ -821,7 +829,7 @@ public class JobService {
           if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && dfso.
                   exists(hdfsLogPath)) {
             if (dfso.listStatus(new org.apache.hadoop.fs.Path(
-                    hdfsLogPath))[0].getLen() > 5000000l) {
+                    hdfsLogPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
               stdPath = e.getStdoutPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("log",
                       "Log is too big to display. Please retrieve it by clicking ");
@@ -852,7 +860,7 @@ public class JobService {
           if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
                   exists(hdfsErrPath)) {
             if (dfso.listStatus(new org.apache.hadoop.fs.Path(
-                    hdfsErrPath))[0].getLen() > 5000000l) {
+                    hdfsErrPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
               stdPath = e.getStderrPath().split(this.project.getName())[1];
               arrayObjectBuilder.add("err",
                       "Log is too big to display. Please retrieve it by clicking ");
@@ -1011,7 +1019,12 @@ public class JobService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     LOGGER.log(Level.INFO, "Request to delete job");
-
+    String loggedinemail =sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "You are not authorized for this invocation.");
+    }
     JobDescription job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
@@ -1025,7 +1038,15 @@ public class JobService {
     } else {
       try {
         LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
-                new Object[]{job.getName(), job.getId()});
+            new Object[]{job.getName(), job.getId()});
+        
+        for (Iterator<Execution> execsIter = job.getExecutionCollection().iterator(); execsIter.hasNext();) {
+          if (execsIter.next().getState() == JobState.RUNNING) {
+            throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+                "Job is still running, please stop it first by clicking the Stop button");
+          }
+        }
+        elasticController.deleteJobLogs(project.getName(), "logs", Settings.getJobLogsIdField(),job.getId());
         jobFacade.removeJob(job);
         LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
                 new Object[]{job.getName(), job.getId()});
@@ -1041,7 +1062,7 @@ public class JobService {
                 new Object[]{job.getName(), job.getId()});
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), ex.getMessage());
-      }
+      } 
     }
   }
 

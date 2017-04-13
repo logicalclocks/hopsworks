@@ -778,7 +778,7 @@ angular.module('hopsWorksApp')
                   self.sliderOptions.min = self.runConfig.selectedMinExecutors;
                   self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
                   //Load Kafka properties
-                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.length > 0) {
+                  if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
                     self.kafkaSelected = true;
                     self.showAdvanced = self.runConfig.kafka.advanced;
                     if (typeof self.runConfig.kafka.consumergroups !== "undefined") {
@@ -795,6 +795,7 @@ angular.module('hopsWorksApp')
                               }
                               if (typeof storedTopics !== "undefined") {
                                 self.runConfig.kafka.topics = storedTopics;
+                                self.guideKafkaTopics = storedTopics;
                                 //Set selected topics
                                 //wait to fetch topics firsts
                                 for (var i = 0; i < self.runConfig.kafka.topics.length; i++) {
@@ -807,6 +808,7 @@ angular.module('hopsWorksApp')
                                 }
                               }
                             }, function (error) {
+                              console.log("Error during job init:"+error.data.errorMsg);
                     });
                   }
                 }
