@@ -9,7 +9,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -21,6 +21,9 @@ import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,15 +47,15 @@ public class ExecutionController {
   @EJB
   private JobsHistoryFacade jobHistoryFac;
   @EJB
-  private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
+  @EJB
+  private ExecutionFacade execFacade;
 
-  final Logger logger = Logger.getLogger(ExecutionController.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
   public Execution start(JobDescription job, Users user) throws IOException {
     Execution exec = null;
@@ -120,23 +123,28 @@ public class ExecutionController {
   }
 
   public void kill(JobDescription job, Users user) throws IOException {
-
-    String appid = yarnApplicationstateFacade.findByAppname(job.getName())
-        .get(0)
-        .getApplicationid();
-
+    //Get the lastest appId for the job, a job cannot have to concurrent application running.
+    List<Execution> jobExecs = execFacade.findForJob(job);
+    //Sort descending based on jobId
+    Collections.sort(jobExecs, new Comparator<Execution>() {
+      @Override
+      public int compare(Execution lhs, Execution rhs) {
+        return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0;
+      }
+    });
+    String appId = jobExecs.get(0).getAppId();
     //Look for unique marker file which means it is a streaming job. Otherwise proceed with normal kill.
     DistributedFileSystemOps udfso = null;
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     try {
       udfso = dfs.getDfsOps(username);
-      String marker = Settings.getJobMarkerFile(job, appid);
+      String marker = Settings.getJobMarkerFile(job, appId);
       if (udfso.exists(marker)) {
         udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
 
       }
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appid, ex);
+      LOGGER.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appId, ex);
     } finally {
       if (udfso != null) {
         udfso.close();
@@ -145,8 +153,7 @@ public class ExecutionController {
 
     //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
     Runtime rt = Runtime.getRuntime();
-    Process pr = rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + appid);
-
+    rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + appId);
   }
   
   public void stop(JobDescription job, Users user, String appid) throws
