@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      >
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
+
+        <p:growl autoUpdate="true" showDetail="true"/>
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container">
+            <div align="left">
+              <h2>User Administration</h2>
+            </div>
+
+            <div class="content">
+              <h:form id="usermodifyForm" >
+                <p:growl id="growl" life="2000"/>
+
+                <p:dataTable id="userdataTable" var="muser" 
+                             value="#{peopleAdministration.allUsers}" 
+                             filteredValue="#{peopleAdministration.filteredUsers}" 
+                             widgetVar="usersTable"
+                             emptyMessage="No users found with given criteria"
+                             rowKey="#{muser.email}"
+                             style="table-layout: fixed" 
+                             scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,25,50,100,250">
+
+                  <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" >
+                    <h:outputText value="#{muser.fname}" />
+                  </p:column>
+
+                  <p:column id="lnameColumn" filterBy="#{muser.lname}" headerText="Last Name" >
+                    <h:outputText value="#{muser.lname}" />
+                  </p:column>
+
+                  <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" >
+                    <h:outputText value="#{muser.email}" />
+                  </p:column>
+
+                  <p:column id="unameCol"  filterBy="#{muser.mode}"  headerText="Type" >
+                    <h:outputText value="#{muser.mode eq '10'?' 10 (Mobile)':' 11 (Yubikey)'}" />
+                  </p:column>
+
+                  <p:column id="statCol"  filterBy="#{muser.status}" 
+                            headerText="Status" >
+                    <h:outputText value="#{peopleAdministration.getChanged_Status(muser)}"/>
+                  </p:column>
+
+                  <p:column id="onlineCol"  filterBy="#{muser.isonline}" 
+                            headerText="Online" >
+                    <h:outputText value="#{muser.isonline eq '1' ? 'True (1)' : 'False (0)' }"/>
+                  </p:column>
+
+
+                  <p:column id="roleNCol" headerText="Role">
+                    <h:outputText value="#{peopleAdministration.getUserRole(muser)}" />
+                  </p:column>
+
+
+                  <p:column id="actionUserColumn" headerText="Modify" >                                                 
+                    <p:commandLink  action="#{peopleAdministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
+                  </p:column>
+
+                </p:dataTable>                                            
+              </h:form>   
+
+            </div>
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
+</html>

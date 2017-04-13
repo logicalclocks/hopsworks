@@ -4,6 +4,24 @@
           "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 
 <module name="Checker">
+<!--
+  <module name="RegexpSingleline">
+     <property name="format" value="((//.*)|(\*.*))TODO[^(]" />
+     <property name="message" value='All TODOs should be named.  e.g. "TODO(Ermias): Remove hardcoded string."' />
+     <property name="severity" value="warning" />
+  </module>
+-->
+  <!--Until we have a proper header file -->
+  <module name="RegexpSingleline">
+    <property name="format" value="((//.*)|(\*.*))To change this license header," />
+    <property name="message" value='Remove default license header!' />
+    <property name="severity" value="error" />
+  </module>
+  <module name="RegexpSingleline">
+    <property name="format" value="((//.*)|(\*.*))@author " />
+    <property name="message" value='Remove author git will keep track of that.' />
+    <property name="severity" value="error" />
+  </module>
   <module name="TreeWalker">
     <property name="tabWidth" value="2"/>
     <module name="LineLength">
@@ -11,6 +29,7 @@
     </module>
     <module name="Indentation">
       <property name="lineWrappingIndentation" value="2"/>
+      <property name="braceAdjustment" value="0"/>
       <property name="basicOffset" value="2"/>
       <property name="caseIndent" value="2"/>
     </module>
@@ -20,9 +39,9 @@
       <property name="ignoreComments" value="true"/>
     </module>
     <module name="AvoidStarImport"/>
-    <module name="IllegalImport">
+    <!--module name="IllegalImport">
       <property name="illegalPkgs" value="java.util.logging"/>
-    </module>
+    </module-->
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
     <module name="Regexp">

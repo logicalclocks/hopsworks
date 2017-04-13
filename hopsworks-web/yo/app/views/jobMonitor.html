@@ -1,0 +1,91 @@
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-controller="ProjectCtrl as projectCtrl">
+    <div ng-include="'nav.html'"></div>
+
+
+    <div id="wrapper" class="toggled">
+      <div class="overlay"></div>
+
+      <div ng-include="'navProject.html'"></div>
+      <div class="job-content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
+      </div>
+      <div class="">
+
+        <section>
+          <!-- Page Content -->
+          <div class="content" style="height:100%; overflow: hidden; margin-left: 2px;" ng-class="{'hide-border': projectCtrl.isClosed, 'expanded-job-monitor': !projectCtrl.isClosed}">	
+            <div ng-if="jobUICtrl.loading" class="loadingwrap">
+              <div class="loading-content">
+                <div class="loader-in-wrap"></div>
+                {{jobUICtrl.loadingText}}
+              </div>  
+            </div> 
+
+            <!--<div class="row" resizable r-directions="['bottom']">-->
+            <div class="row" style="margin-left: 10px; height: 100% ">
+
+              <div style="padding-bottom: 10px">
+                <span class="field-info" uib-tooltip="Show Job Spark Dashboard" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.backToHome();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md fa fa-bolt"> Spark
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Show YARN App UI" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.yarnUI();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md fa fa-yahoo ">ARN
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Show Logs in Kibana" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.kibanaUI();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md fa fa-files-o"
+                          ng-if="!jobUICtrl.isLivy" > Logs
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.grafanaUI();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md fa fa-bar-chart"> Metrics
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.refresh();
+                                    $event.stopPropagation();"
+                          class="btn btn-success btn-md glyphicon glyphicon-refresh">
+                  </button>
+                </span>
+              </div>
+              <div ng-if="jobUICtrl.ui !== ''">
+                <iframe id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe> 
+              </div>
+              <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
+
+
+
+
+
+              <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
+                No Job selected. 
+              </h3>
+            </div>
+
+          </div>
+
+
+          <!--<div ng-include="'footer.html'"/>-->
+
+
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
