@@ -427,6 +427,11 @@ public class Settings implements Serializable {
 
   public synchronized String getIntermediateCaDir() {
     checkCache();
+    return getHopsworksDomainDir() + Settings.INTERMEDIATE_CA_DIR;
+  }
+  
+  public synchronized String getCaDir() {
+    checkCache();
     return getHopsworksDomainDir() + Settings.CA_DIR;
   }
 
@@ -1028,7 +1033,8 @@ public class Settings implements Serializable {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  private static final String CA_DIR = "/config/ca/intermediate";
+  private static final String CA_DIR = "/config/ca";
+  private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
