@@ -42,8 +42,6 @@ public class JupyterConfig {
   private final String libDirPath;
 
   // <hdfs_username, process> pairs
-  private static ConcurrentHashMap<String, Process> runningServers
-          = new ConcurrentHashMap<>();
 
 //  private static ConcurrentHashMap<String, BufferedReader> consoleOutput
 //          = new ConcurrentHashMap<>();
@@ -97,51 +95,6 @@ public class JupyterConfig {
     this.binDirPath = jConf.getBinDirPath();
     this.logDirPath = jConf.getLogDirPath();
     this.libDirPath = jConf.getLibDirPath();
-  }
-
-  /**
-   * If an existing process is running for this username, kill it.
-   * Starts a new process with that username.
-   *
-   * @param hdfsUsername
-   * @param process
-   * @return
-   */
-  public synchronized static void addNotebookServer(String hdfsUsername,
-          Process process) throws AppException {
-    if (!process.isAlive()) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Jupyter server died unexpectadly");
-    }
-    removeNotebookServer(hdfsUsername);
-    runningServers.put(hdfsUsername, process);
-
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            process.getInputStream(), Charset.forName("UTF8")));
-
-//    consoleOutput.put(hdfsUsername, br);
-  }
-
-  public synchronized static boolean removeNotebookServer(String hdfsUsername) {
-    if (runningServers.containsKey(hdfsUsername)) {
-      Process oldProcess = runningServers.get(hdfsUsername);
-      if (oldProcess != null) {
-        oldProcess.destroyForcibly();
-        return true;
-      }
-      runningServers.remove(hdfsUsername);
-//      BufferedReader br = consoleOutput.get(hdfsUsername);
-//      if (br != null) {
-//        try {
-//          br.close();
-//        } catch (IOException ex) {
-//          Logger.getLogger(JupyterConfig.class.getName()).
-//                  log(Level.SEVERE, null, ex);
-//        }
-//        consoleOutput.remove(hdfsUsername);
-//      }
-    }
-    return false;
   }
 
   /**
@@ -201,6 +154,11 @@ public class JupyterConfig {
     return pid;
   }
 
+  public void clean() {
+    cleanAndRemoveConfDirs();
+    
+  }
+  
   public String getProjectName() {
     return projectName;
   }
