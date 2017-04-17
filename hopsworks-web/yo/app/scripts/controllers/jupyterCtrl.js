@@ -9,7 +9,7 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
             $scope.tgState = true;
-            self.selectedInterpreter;
+            self.jupyterServer;
             
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];

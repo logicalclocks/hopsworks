@@ -15,5 +15,6 @@ echo "Deploying versions ${VERSION}${ext} of hopsworks war and ear files to http
 ssh glassfish@snurran.sics.se "cd /var/www/hops/hopsworks ; mkdir -p ${VERSION}"
 scp ../hopsworks-ear/target/hopsworks-ear.ear glassfish@snurran.sics.se:/var/www/hops/hopsworks/${VERSION}/hopsworks-ear${ext}.ear
 scp ../hopsworks-web/target/hopsworks-web.war glassfish@snurran.sics.se:/var/www/hops/hopsworks/${VERSION}/hopsworks${ext}.war
+scp ../hopsworks-ca/target/hopsworks-ca.war glassfish@snurran.sics.se:/var/www/hops/hopsworks/${VERSION}/hopsworks-ca${ext}.war
 
 echo "Successfully Copied: ${ext} to http://snurran.sics.se/hops/"

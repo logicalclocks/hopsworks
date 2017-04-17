@@ -30,7 +30,7 @@ import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.jupyter.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -134,7 +134,7 @@ public class ProjectController {
   @EJB
   private PythonDepsFacade pythonDepsFacade;
   @EJB
-  private JupyterFacade jupyterFacade;
+  private JupyterConfigFactory jupyterFactory;
   @EJB
   private JobDescriptionFacade jobFacade;
   @EJB
@@ -1469,7 +1469,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupypter(Project project) throws AppException {
-    jupyterFacade.removeProject(project);
+    jupyterFactory.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

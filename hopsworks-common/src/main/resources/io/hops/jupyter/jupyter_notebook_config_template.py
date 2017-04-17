@@ -15,8 +15,8 @@ c.NotebookApp.contents_manager_class = HdfsContentsManager
 c.NotebookApp.ip = 'localhost'
 c.NotebookApp.open_browser = False
 
-# It is a good idea to set a known, fixed port for server access
-c.NotebookApp.port = %%jupyter_port%%
+# We should set this at the command line when we launch it, so thtat we can check for busy ports.
+# c.NotebookApp.port = %%jupyter_port%%
 
 c.HdfsContentsManager.user_id = '%%hdfs_user%%'
 c.HdfsContentsManager.hadoop_home = '%%hadoop_home%%'

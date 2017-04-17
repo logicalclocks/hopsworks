@@ -1,6 +1,5 @@
-package io.hops.hopsworks.common.dao.jupyter;
+package io.hops.hopsworks.common.dao.jupyter.config;
 
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -11,11 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.Response;
 
 public class JupyterConfig {
 
@@ -27,13 +23,15 @@ public class JupyterConfig {
   private static final String JUPYTER_CUSTOM_JS = "/custom.js";
   private static final int DELETE_RETRY = 10;
 
+  public static JupyterConfig COMMON_CONF;
+
   /**
    * A configuration that is common for all projects.
    */
   private final Settings settings;
   private final String projectName;
-
-  private final String projectDirPath;
+  private final String hdfsUser;
+  private final String projectUserDirPath;
   private final String confDirPath;
   private final String notebookDirPath;
   private final String runDirPath;
@@ -41,38 +39,25 @@ public class JupyterConfig {
   private final String logDirPath;
   private final String libDirPath;
 
-  // <hdfs_username, process> pairs
-
-//  private static ConcurrentHashMap<String, BufferedReader> consoleOutput
-//          = new ConcurrentHashMap<>();
-  public JupyterConfig(String projectName, String owner, Settings settings) {
+  JupyterConfig(String projectName, String hdfsUser, Settings settings) {
     this.projectName = projectName;
-    this.settings = settings;
+    this.hdfsUser = hdfsUser;
     boolean newDir = false;
     boolean newFile = false;
-    projectDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName;
-    confDirPath = settings.getJupyterDir() + File.separator
+    this.settings = settings;
+    // settings.getJupyterProjectsDir()
+    projectUserDirPath = settings.getJupyterProjectsDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "conf";
-    notebookDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "notebooks";
-    runDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "run";
-    binDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "bin";
-    logDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "logs";
-    libDirPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "lib";
+            + File.separator + hdfsUser;
+    confDirPath = projectUserDirPath + File.separator + "conf";
+    notebookDirPath = projectUserDirPath + File.separator + "notebooks";
+    runDirPath = projectUserDirPath + File.separator + "run";
+    binDirPath = projectUserDirPath + File.separator + "bin";
+    logDirPath = projectUserDirPath + File.separator + "logs";
+    libDirPath = projectUserDirPath + File.separator + "lib";
     try {
       newDir = createJupyterDirs();//creates the necessary folders for the project in /srv/zeppelin
-      createSymLinks();//interpreter and lib
+      createConfigFiles();
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
@@ -86,15 +71,24 @@ public class JupyterConfig {
   }
 
   public JupyterConfig(JupyterConfig jConf) {
-    this.settings = jConf.getSettings();
     this.projectName = jConf.getProjectName();
-    this.projectDirPath = jConf.getProjectDirPath();
+    this.settings = jConf.getSettings();
+    this.hdfsUser = jConf.getHdfsUser();
+    this.projectUserDirPath = jConf.getProjectDirPath();
     this.confDirPath = jConf.getConfDirPath();
     this.notebookDirPath = jConf.getNotebookDirPath();
     this.runDirPath = jConf.getRunDirPath();
     this.binDirPath = jConf.getBinDirPath();
     this.logDirPath = jConf.getLogDirPath();
     this.libDirPath = jConf.getLibDirPath();
+  }
+
+  public String getHdfsUser() {
+    return hdfsUser;
+  }
+
+  public Settings getSettings() {
+    return settings;
   }
 
   /**
@@ -108,6 +102,7 @@ public class JupyterConfig {
   public StringBuffer getConsoleOutput(String hdfsUsername, int port) throws
           IOException {
 
+    // Read the whole log file and pass it as a StringBuffer. 
     String fname = this.getLogDirPath() + "/" + hdfsUsername + "-" + port
             + ".log";
     BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -118,6 +113,7 @@ public class JupyterConfig {
       sb.append(line);
     }
     return sb;
+
 //    StringBuilder sb = new StringBuilder();
 //    BufferedReader br = consoleOutput.get(hdfsUsername);
 //    if (br != null) {
@@ -156,19 +152,17 @@ public class JupyterConfig {
 
   public void clean() {
     cleanAndRemoveConfDirs();
-    
+
+    // TODO: jim
+    // kill all the processes
   }
-  
+
   public String getProjectName() {
     return projectName;
   }
 
   public String getProjectDirPath() {
-    return projectDirPath;
-  }
-
-  public Settings getSettings() {
-    return settings;
+    return projectUserDirPath;
   }
 
   public String getLibDirPath() {
@@ -197,7 +191,7 @@ public class JupyterConfig {
 
   //returns true if the project dir was created 
   private boolean createJupyterDirs() {
-    File projectDir = new File(projectDirPath);
+    File projectDir = new File(projectUserDirPath);
     boolean newProjectDir = projectDir.mkdirs();
     new File(confDirPath).mkdirs();
     new File(notebookDirPath).mkdirs();
@@ -207,34 +201,22 @@ public class JupyterConfig {
     return newProjectDir;
   }
 
-  //creates symlink to interpreters and libs
-  private void createSymLinks() throws IOException {
-    File target = new File(settings.getJupyterDir() + File.separator
-            + "interpreter");
-    target = new File(settings.getJupyterDir() + File.separator + "lib");
-    File newLink = new File(libDirPath);
-    if (!newLink.exists()) {
-      Files.createSymbolicLink(newLink.toPath(), target.toPath());
-    }
-  }
-
+//  //creates symlink to interpreters and libs
+//  private void createSymLinks() throws IOException {
+//    File target = new File(settings.getJupyterDir() + File.separator
+//            + "interpreter");
+//    target = new File(settings.getJupyterDir() + File.separator + "lib");
+//    File newLink = new File(libDirPath);
+//    if (!newLink.exists()) {
+//      Files.createSymbolicLink(newLink.toPath(), target.toPath());
+//    }
+//  }
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles() throws
           IOException {
     File jupyter_custom_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
-    File jupyter_notebook_config_file = new File(confDirPath
-            + JUPYTER_NOTEBOOK_CONFIG);
-    File log4j_file = new File(confDirPath + LOG4J_PROPS);
-    String home = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName;
-    String notebookDir = File.separator + Settings.DIR_ROOT + File.separator
-            + this.projectName;
-    String resourceDir = File.separator + Settings.DIR_ROOT + File.separator
-            + this.projectName + File.separator
-            + Settings.DefaultDataset.RESOURCES.getName();
     boolean createdSh = false;
     boolean createdXml = false;
-    String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
     if (!jupyter_custom_js_file.exists()) {
 
       String ldLibraryPath = "";
@@ -246,14 +228,16 @@ public class JupyterConfig {
         javaHome = System.getenv("JAVA_HOME");
       }
 
-//      StringBuilder jupyter_notebook_config = ConfigFileGenerator.instantiateFromTemplate(
-//              ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
-//              "hopsworks_ip", settings.getHopsworksIp(),
-//              "hashed_password", "blah"
-//      );
-//      createdSh = ConfigFileGenerator.createConfigFile(jupyter_custom_js_file,
-//              jupyter_notebook_config.
-//              toString());
+      StringBuilder jupyter_notebook_config = ConfigFileGenerator.
+              instantiateFromTemplate(
+                      ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
+                      "hopsworks_ip", settings.getHopsworksIp(),
+                      "hdfs_user", this.hdfsUser,
+                      "hdfs_home", this.settings.getHadoopDir()
+              );
+      createdSh = ConfigFileGenerator.createConfigFile(jupyter_custom_js_file,
+              jupyter_notebook_config.
+              toString());
     }
 
 //    if (!jupyter_notebook_config_file.exists()) {
@@ -328,7 +312,7 @@ public class JupyterConfig {
   }
 
   private boolean removeProjectDirRecursive() {
-    File projectDir = new File(projectDirPath);
+    File projectDir = new File(projectUserDirPath);
     if (!projectDir.exists()) {
       return true;
     }

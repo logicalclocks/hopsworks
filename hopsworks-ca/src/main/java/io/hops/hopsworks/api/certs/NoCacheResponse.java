@@ -1,4 +1,4 @@
-package io.hops.hopsworks.api.agent;
+package io.hops.hopsworks.api.certs;
 
 import javax.ejb.Stateless;
 import javax.ws.rs.core.CacheControl;

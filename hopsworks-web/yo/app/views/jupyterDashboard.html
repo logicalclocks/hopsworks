@@ -25,6 +25,29 @@
 
         </div> <!--content wrapper -->
 
+        <table class="table table-hover" style="width: 100%">
+          <tbody>
+            <tr>
+              <td class="text-muted">{{jupyterServer.statusMsg}}</td>
+              <td style="text-align: right">                                      
+                <button ng-if="jupyterServer.notRunning"
+                        ng-click="jupyterCtrl.start()"
+                        type="button" class="btn btn-info btn-sm" 
+                        ng-disabled="jupyterServer.notRunning">
+                  <span class="glyphicon glyphicon-eye-open" ></span>
+                </button>
+                <button ng-if="jupyterServer.notRunning === false"
+                        ng-click="jupyterCtrl.stop()"
+                        type="button" class="btn btn-danger btn-sm" 
+                        ng-disabled="jupyterServer.notRunning">
+                  <span class="glyphicon glyphicon-off" ></span>
+                </button>
+              </td>
+            </tr>
+
+          </tbody>                     
+        </table>        
+
       </section>
     </div>
   </div>

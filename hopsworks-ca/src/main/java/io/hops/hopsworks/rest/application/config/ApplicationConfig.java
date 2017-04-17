@@ -4,14 +4,14 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
 @Api
-@javax.ws.rs.ApplicationPath("api")
+@javax.ws.rs.ApplicationPath("ca")
 public class ApplicationConfig extends ResourceConfig {
 
   /**
    * adding manually all the restful services of the application.
    */
   public ApplicationConfig() {
-    register(io.hops.hopsworks.api.agent.AgentService.class);
+    register(io.hops.hopsworks.api.certs.CertSigningService.class);
     
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     

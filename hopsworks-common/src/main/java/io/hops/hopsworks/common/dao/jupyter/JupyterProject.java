@@ -60,6 +60,11 @@ public class JupyterProject implements Serializable {
   private Date created;
   @Basic(optional = false)
   @NotNull
+  @Column(name = "last_accessed")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date lastAccessed;
+  @Basic(optional = false)
+  @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "host_ip")
@@ -126,6 +131,14 @@ public class JupyterProject implements Serializable {
 
   public void setCreated(Date created) {
     this.created = created;
+  }
+
+  public Date getLastAccessed() {
+    return lastAccessed;
+  }
+
+  public void setLastAccessed(Date lastAccessed) {
+    this.lastAccessed = lastAccessed;
   }
 
   public String getHostIp() {

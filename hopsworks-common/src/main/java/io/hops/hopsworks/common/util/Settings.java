@@ -25,6 +25,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
@@ -210,6 +211,7 @@ public class Settings implements Serializable {
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
+      HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -412,6 +414,14 @@ public class Settings implements Serializable {
     checkCache();
     return HADOOP_DIR;
   }
+  
+  private String HOPSWORKS_IP = "127.0.0.1";
+
+  public synchronized String getHopsworksIp() {
+    checkCache();
+    return HOPSWORKS_IP;
+  }
+
 
   private static String HOPSWORKS_INSTALL_DIR = "/srv/hops";
 
@@ -799,7 +809,7 @@ public class Settings implements Serializable {
     return JHS_IP;
   }
 
-  // Livy Server
+  // Livy Server`
   private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";
 
@@ -876,7 +886,7 @@ public class Settings implements Serializable {
     return JUPYTER_DIR;
   }
 
-  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/Projects";
+  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/projects";
 
   public synchronized String getJupyterProjectsDir() {
     checkCache();

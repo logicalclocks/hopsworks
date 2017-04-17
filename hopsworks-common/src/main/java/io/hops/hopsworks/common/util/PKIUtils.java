@@ -14,17 +14,15 @@ public class PKIUtils {
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signWithServerCertificate(String csr,
-          String intermediateCaDir, String hopsMasterPassword,
-          boolean intermediate) throws
+  public static String signCertificate(String csr, String caDir,
+          String hopsMasterPassword, boolean isIntermediate) throws
           IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"),
             ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, intermediateCaDir, hopsMasterPassword,
-              intermediate);
+      return signCSR(csrFile, caDir, hopsMasterPassword, isIntermediate);
     }
     return null;
   }
@@ -91,9 +89,9 @@ public class PKIUtils {
     cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-extensions");
     if (intermediate) {
-        cmds.add("usr_cert");
+      cmds.add("usr_cert");
     } else {
-        cmds.add("v3_intermediate_ca");      
+      cmds.add("v3_intermediate_ca");
     }
     cmds.add("-days");
     cmds.add("3650");
@@ -124,7 +122,8 @@ public class PKIUtils {
       throw new RuntimeException("Failed to sign certificate. Exit value: "
               + exitValue);
     }
-    logger.info("Signed certificate.");
+    logger.info("Signed certificate. Verifying....");    
+    
     return FileUtils.readFileToString(generatedCertFile);
   }
 }

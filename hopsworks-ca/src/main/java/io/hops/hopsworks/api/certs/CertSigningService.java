@@ -1,6 +1,5 @@
-package io.hops.hopsworks.api.agent;
+package io.hops.hopsworks.api.certs;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import io.hops.hopsworks.common.dao.host.Host;
@@ -29,9 +28,9 @@ import io.hops.hopsworks.common.exception.AppException;
 @Path("/agentservice")
 @Stateless
 @RolesAllowed({"AGENT"})
-public class AgentService {
+public class CertSigningService {
 
-  final static Logger logger = Logger.getLogger(AgentService.class.getName());
+  final static Logger logger = Logger.getLogger(CertSigningService.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -52,12 +51,13 @@ public class AgentService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        pubAgentCert = PKIUtils.signWithServerCertificate(csr, settings.
-                getIntermediateCaDir(), settings.getHopsworksMasterPasswordSsl());
+        pubAgentCert = PKIUtils.signCertificate(csr, settings.
+                getIntermediateCaDir(), settings.getHopsworksMasterPasswordSsl(),
+                true);
         caPubCert = Files.toString(new File(settings.getIntermediateCaDir()
                 + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
-        Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null,
+        Logger.getLogger(CertSigningService.class.getName()).log(Level.SEVERE, null,
                 ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), ex.toString());
@@ -74,8 +74,37 @@ public class AgentService {
         host.setRegistered(true);
         hostEJB.storeHost(host, true);
       } catch (Exception ex) {
-        Logger.getLogger(AgentService.class.getName()).log(Level.SEVERE, null,
+        Logger.getLogger(CertSigningService.class.getName()).log(Level.SEVERE, null,
                 ex);
+      }
+    }
+
+    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dto).build();
+  }
+
+  @POST
+  @Path("/hopsworks")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response hopsworks(@Context HttpServletRequest req, String jsonString)
+          throws AppException {
+    JSONObject json = new JSONObject(jsonString);
+    String pubAgentCert = "no certificate";
+    String caPubCert = "no certificate";
+    if (json.has("csr")) {
+      String csr = json.getString("csr");
+      try {
+        pubAgentCert = PKIUtils.signCertificate(csr, settings.
+                getCaDir(), settings.getHopsworksMasterPasswordSsl(), false);
+        caPubCert = Files.toString(new File(settings.getCaDir()
+                + "/certs/ca.cert.pem"), Charsets.UTF_8);
+      } catch (IOException | InterruptedException ex) {
+        Logger.getLogger(CertSigningService.class.getName()).log(Level.SEVERE, null,
+                ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(), ex.toString());
       }
     }
 

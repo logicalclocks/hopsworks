@@ -14,8 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.dao.jupyter.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -46,7 +46,7 @@ public class JupyterService {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private JupyterFacade jupyterFacade;
+  private JupyterConfigFactory jupyterConfigFactory;
   @EJB
   private HdfsUsersController hdfsUsersController;
 
@@ -76,7 +76,7 @@ public class JupyterService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response getAllNotebookServers(@Context SecurityContext sc,
+  public Response getAllNotebookServersInProject(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     if (projectId == null) {
@@ -102,17 +102,17 @@ public class JupyterService {
   }
 
   @GET
-  @Path("/{user}/running")
+  @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getNotebookServer(@Context SecurityContext sc,
+  public Response isMyNotebookServerRunning(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     if (projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
+    JupyterProject jp = jupyterConfigFactory.findByUser(getHdfsUser(sc));
     if (jp == null) {
       throw new AppException(
               Response.Status.NOT_FOUND.getStatusCode(),
@@ -123,7 +123,7 @@ public class JupyterService {
   }
 
   @GET
-  @Path("/{user}/start")
+  @Path("/start")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response startNotebookServer(@Context SecurityContext sc,
@@ -133,7 +133,7 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
+    JupyterProject jp = jupyterConfigFactory.findByUser(getHdfsUser(sc));
     if (jp != null) {
       throw new AppException(
               Response.Status.FOUND.getStatusCode(),
@@ -144,7 +144,7 @@ public class JupyterService {
   }
 
   @DELETE
-  @Path("/{user}/stop")
+  @Path("/stop")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response stopNotebookServer(@Context SecurityContext sc,
@@ -154,7 +154,7 @@ public class JupyterService {
               "Incomplete request!");
     }
 
-    jupyterFacade.stopServer(getHdfsUser(sc));
+    jupyterConfigFactory.stopServer(getHdfsUser(sc));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
