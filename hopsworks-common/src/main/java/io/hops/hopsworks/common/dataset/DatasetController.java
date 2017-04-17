@@ -493,4 +493,32 @@ public class DatasetController {
     operationsLogFacade.persist(new OperationsLog(dataset, type));
   }
 
+  /**
+   * Create and Log dataset
+   * @param user
+   * @param project
+   * @param dataSetName
+   * @param datasetDescription
+   * @param templateId
+   * @param searchable
+   * @param defaultDataset
+   * @param dfso
+   * @param udfso
+   * @return
+   * @throws IOException
+   * @throws AppException 
+   */
+  public Dataset createAndLogDataset(Users user, Project project, String dataSetName,
+          String datasetDescription, int templateId, boolean searchable,
+          boolean defaultDataset, DistributedFileSystemOps dfso,
+          DistributedFileSystemOps udfso)
+          throws IOException, AppException {
+
+    createDataset(user, project, dataSetName, datasetDescription, templateId,
+            searchable, defaultDataset, dfso, udfso);
+    Dataset dataset = datasetFacade.findByNameAndProjectId(project, dataSetName);
+    logDataset(dataset, OperationType.Add);
+    return dataset;
+  }
+    
 }
