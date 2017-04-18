@@ -4,7 +4,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
 @Api
-@javax.ws.rs.ApplicationPath("ca")
+@javax.ws.rs.ApplicationPath("api")
 public class ApplicationConfig extends ResourceConfig {
 
   /**
