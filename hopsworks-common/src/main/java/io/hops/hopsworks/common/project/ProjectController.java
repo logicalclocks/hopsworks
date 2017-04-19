@@ -23,8 +23,8 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -64,6 +64,8 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -87,7 +89,7 @@ import org.json.JSONObject;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  private final static Logger logger = Logger.getLogger(ProjectController.class.
+  private final static Logger LOGGER = Logger.getLogger(ProjectController.class.
           getName());
   @EJB
   private ProjectFacade projectFacade;
@@ -128,11 +130,11 @@ public class ProjectController {
   @EJB
   private JobDescriptionFacade jobFacade;
   @EJB
-  private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
   private KafkaFacade kafkaFacade;
   @EJB 
   private ElasticController elasticController;
+  @EJB
+  private ExecutionFacade execFacade;
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -173,7 +175,7 @@ public class ProjectController {
           se.toString();
           projectServices.add(se);
         } catch (IllegalArgumentException iex) {
-          logger.log(Level.SEVERE,
+          LOGGER.log(Level.SEVERE,
               ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), s
               + ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
@@ -198,7 +200,7 @@ public class ProjectController {
           project = createProject(projectName, owner, projectDTO.
                   getDescription(), dfso);
         } catch (EJBException ex) {
-          logger.log(Level.WARNING, null, ex);
+          LOGGER.log(Level.WARNING, null, ex);
           Path dummy = new Path("/tmp/" + projectName);
           dfso.rm(dummy, true);
           throw new AppException(Response.Status.CONFLICT.
@@ -207,7 +209,7 @@ public class ProjectController {
       }catch (AppException ex) {
         throw ex;
       }catch (Exception ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -250,7 +252,7 @@ public class ProjectController {
         throw ex;
       } catch (IOException ex){
         cleanup(project);
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -337,7 +339,7 @@ public class ProjectController {
           || !noExistingGroup(project.getName())
           || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.getName())
           || !noExistingCertificates(project.getName())) {
-        logger.log(Level.WARNING,
+        LOGGER.log(Level.WARNING,
             "some elements of project {0} already exist in the system "
             + "Possible inconsistency!",
             project.getName());
@@ -357,12 +359,12 @@ public class ProjectController {
   private Project createProject(String projectName, Users user,
           String projectDescription, DistributedFileSystemOps dfso) throws AppException, IOException {
     if (projectFacade.numProjectsLimitReached(user)) {
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "You have reached the maximum number of allowed projects.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
     } else if (projectFacade.projectExists(projectName)) {
-      logger.log(Level.INFO, "Project with name {0} already exists!",
+      LOGGER.log(Level.INFO, "Project with name {0} already exists!",
              projectName);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_EXISTS);
@@ -386,7 +388,7 @@ public class ProjectController {
     dfso.touchz(dumy);
     Inode dumyInode = this.inodes.getInodeAtPath(dumy.toString());
     if (dumyInode == null) {
-      logger.log(Level.SEVERE, "Couldn't get the dumy Inode");
+      LOGGER.log(Level.SEVERE, "Couldn't get the dumy Inode");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Couldn't create project properly");
     }
@@ -403,7 +405,7 @@ public class ProjectController {
   private void setProjectInode(Project project, DistributedFileSystemOps dfso) throws AppException, IOException{
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
     if (projectInode == null) {
-      logger.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
+      LOGGER.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
               project.getName());
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Couldn't get Inode for the project: " +
@@ -480,7 +482,7 @@ public class ProjectController {
     File yarnConfFile = new File(settings.getHadoopConfDir(),
             Settings.DEFAULT_YARN_CONFFILE_NAME);
     if (!yarnConfFile.exists()) {
-      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+      LOGGER.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
@@ -740,21 +742,23 @@ public class ProjectController {
       nbTry++;
       try {
         //remove from project_team so that nobody can see the project anymore
-        List<ProjectTeam> projectTeam = updateProjectTeamRole(project,
-                ProjectRoleTypes.UNDER_REMOVAL);
+        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
 
         //kill jobs
         List<JobDescription> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
           Runtime rt = Runtime.getRuntime();
           for (JobDescription job : running) {
-            List<YarnApplicationstate> apps = yarnApplicationstateFacade.
-                    findByAppname(job.getName());
-            if (apps != null && !apps.isEmpty()) {
-              String appid = apps.get(0).getApplicationid();
-              rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill "
-                      + appid);
-            }
+            //Get the appId of the running app
+            List<Execution> jobExecs = execFacade.findForJob(job);
+            //Sort descending based on jobId
+            Collections.sort(jobExecs, new Comparator<Execution>() {
+              @Override
+              public int compare(Execution lhs, Execution rhs) {
+                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0;
+              }
+            });
+            rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + jobExecs.get(0).getAppId());
           }
         }
 
@@ -857,7 +861,7 @@ public class ProjectController {
       //remove folder
       removeProjectFolder(project.getName(), dfso);
 
-      logger.log(Level.INFO, "{0} - project removed.", project.getName());
+      LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -1000,7 +1004,7 @@ public class ProjectController {
               throw new EJBException("Could not creat certificates for user");
             }
 
-            logger.log(Level.FINE, "{0} - member added to project : {1}.",
+            LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
                     new Object[]{newMember.getEmail(),
                       project.getName()});
             List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
@@ -1028,7 +1032,7 @@ public class ProjectController {
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                 + "could not be added. Try again later.");
-        logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
+        LOGGER.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 projectTeam.getProjectTeamPK().getTeamMember());
 
       } 
@@ -1141,7 +1145,7 @@ public class ProjectController {
             ActivityFacade.FLAG_PROJECT, user, project);
     //update role information in project
     addProjectOwner(project.getId(), user.getEmail());
-    logger.log(Level.FINE, "{0} - project created successfully.", project.
+    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
   }
   
@@ -1371,7 +1375,7 @@ public class ProjectController {
       datasetController.createDataset(user, project, "TestJob",
               "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "something went wrong when adding the example jar to the project");
     }
@@ -1388,7 +1392,7 @@ public class ProjectController {
               + dir.getAbsolutePath());
         }
         if (file.length > 1) {
-          logger.log(Level.WARNING,
+          LOGGER.log(Level.WARNING,
               "More than one spark-examples*.jar found in {0}.", dir.
                   getAbsolutePath());
         }
@@ -1397,7 +1401,7 @@ public class ProjectController {
                 getName() + "/TestJob/spark-examples.jar");
     
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "something went wrong when adding the example jar to the project");
       }
@@ -1410,7 +1414,7 @@ public class ProjectController {
       try {
         udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "something went wrong when adding the example jar to the project");
       }
