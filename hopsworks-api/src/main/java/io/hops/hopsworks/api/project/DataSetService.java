@@ -645,13 +645,11 @@ public class DataSetService {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
-      datasetController.createDataset(user, project, dataSet.getName(),
+      datasetController.createAndLogDataset(user, project, dataSet.getName(),
               dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
               false, dfso, udfso);
 
-      dataset = datasetFacade.findByNameAndProjectId(project, dataSet.getName());
-      datasetController.logDataset(dataset, OperationType.Add);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs

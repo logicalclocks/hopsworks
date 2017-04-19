@@ -758,6 +758,18 @@ public class Settings implements Serializable {
     return JOB_LOGS_EXPIRATION;
   }
   
+  private static long JOB_LOGS_DISPLAY_SIZE = 1000000;
+
+  public static long getJobLogsDisplaySize() {
+    return JOB_LOGS_DISPLAY_SIZE;
+  }
+  
+  private static final String JOB_LOGS_ID_FIELD = "jobid";
+
+  public static String getJobLogsIdField() {
+    return JOB_LOGS_ID_FIELD;
+  }
+  
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
