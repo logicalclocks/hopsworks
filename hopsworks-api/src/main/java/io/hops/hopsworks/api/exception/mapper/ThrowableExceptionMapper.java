@@ -40,12 +40,19 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
       while (e.getCause() != null) {
         e = e.getCause();
       }
-      if (e.getMessage().contains("Connection refused")) {
+      if (e.getMessage().contains("Connection refused") || e.getMessage().
+              contains("Cluster Failure")) {
+        log.log(Level.SEVERE, "Database Exception: {0}", e.getMessage());
         json.setErrorMsg("The database is temporarily unavailable. "
                 + "Please try again later.");
+        json.setStatus("Database unavailable.");
+        json.setStatusCode(Response.Status.SERVICE_UNAVAILABLE.
+                getStatusCode());
+      } else {
+        json.setErrorMsg("Persistence Exception :(");
+        json.setStatus("Persistence Exception.");
+        json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
       }
-      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode());
     } else {
       //defaults to internal server error 500
       json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
