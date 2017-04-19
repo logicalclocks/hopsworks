@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">
+
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container" style="max-width: 1000px;">
+            <div align="left">
+              <h2>MySQL Cluster Backups</h2>
+            </div>
+
+            <div class="content">
+
+              <h:form id="backupsForm" >
+                <h3 style="margin-top:0" align="left">
+                  <p:commandLink id="startBackup"
+                                 styleClass="ui-button-allow fa fa-check" 
+                                 action="#{ndbBackupBean.startBackup()}"
+                                 style="padding-left: 15px; padding-right: 15px; padding-top: 5px; padding-bottom: 5px;"
+                                 update="@form"> Start Backup
+                    <p:confirm header="Start Backup" 
+                               message="Are you sure you want to start an online backup of MySQL Cluster?" 
+                               icon="ui-icon-alert" 
+                               />
+                  </p:commandLink>
+                </h3>
+                <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                  <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                  <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                </p:confirmDialog>
+
+                <p:separator />
+
+                <p:growl id="msgs" showDetail="true"/>
+
+                <p:dataTable id="backupsTable" var="backup"
+                             value="#{ndbBackupBean.allBackups}"
+                             emptyMessage="No backups found"
+                             rowKey="#{backup.backupId}"
+                             style="table-layout: fixed"
+                             sortMode="multiple"
+                             editable="false"
+                             scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="25,50,75,100,500">
+
+                  <p:column id="backupIdCol" headerText="Backup ID" style="text-align: left;"> 
+                    <h:outputText value="#{backup.backupId}" />
+                  </p:column>                  
+
+
+                  <p:column id="dateTaken"
+                            headerText="Time of Backup"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{backup.created}" style="text-align: left;"/>
+                  </p:column>
+
+                  <p:column id="removeColumn" headerText="Remove" style="text-align: left;">                                                 
+                    <p:commandButton style="padding-left: 5px; padding-right: 5px;" action="#{ndbBackupBean.remove(backup.backupId)}" 
+                                     update="@form" value="Remove Backup #{backup.backupId}" ajax ="true">
+                      <p:confirm header="Remove Backup " 
+                                 message="Do you want to delete this backup of the database?" 
+                                 icon="ui-icon-alert"  
+                                 />
+                    </p:commandButton>
+                  </p:column>
+                  <p:column id="restoreColumn" headerText="Restore Instructions" style="align: left;">                                                 
+                    <p:commandButton  update="@form" style="padding-left: 5px; padding-right: 5px;" value="Restore Backup #{backup.backupId} Help">
+                      <p:confirm header="You can only restore the DB from the command-line. (1) Install an empty/clean DB. (2) Restore using the backup-id: #{backup.backupId}" 
+                                 message="(1) $NDB_HOME/ndb/scripts/cluster-init.sh  (2) $NDB_HOME/ndb/scripts/ndb-restore #{backup.backupId}" 
+                                 icon="ui-icon-help" 
+                                 />
+                    </p:commandButton>
+                  </p:column>                     
+
+                </p:dataTable>
+
+                <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+
+                <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+                  <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
+                </p:dialog>           
+
+              </h:form>
+
+            </div>
+          </div>
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
+</html>

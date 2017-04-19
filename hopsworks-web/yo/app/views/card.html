@@ -1,0 +1,62 @@
+<div id="card-{{pageNo}}-{{cardIndex}}" class="card-item">
+  <div class="card-item-content 
+       {{content.type === 'ds'? 'red': ''}} 
+       {{content.type === 'proj'? 'blue': ''}}
+       {{content.type === 'nb'? 'green': ''}}">
+    <div class="header">
+      <label>{{content.type === 'ds'? 'dataset': ''}} 
+        {{content.type === 'proj'? 'project': ''}}
+        {{content.type === 'nb'? 'notebook': ''}}
+      </label>
+      <h3>{{content.name}}</h3>
+    </div>
+    <div class="card-body">
+      <div class="details">
+        <div class="desc">{{content.details.description| limitTo: limit}}
+          {{content.details.description.length > limit ? '...':''}}</div>
+        <div>
+          <label>owner</label>
+          <div class="value">{{content.details.user|| '--'}}</div>            
+        </div>
+        <div class="row">
+          <div class="col-sm-5 col-md-5">
+            <label>Date created</label>
+            <div class="value">{{content.details.createDate| date:'short'}}</div>        
+          </div>
+          <div class="col-sm-4 col-md-4">
+            <label ng-show="content.type === 'ds'">Size</label>
+            <div class="value" ng-show="content.type === 'ds'">{{cardCtrl.sizeOnDisk(content.details.size)}}</div> 
+          </div>
+        </div> 
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-footer-icons">
+        <!--span data-placement="bottom" data-toggle="tooltip" title="Reviews">
+          <i class="card-footer-icon fa fa-heart" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown"></i>
+        </span>      
+        <span data-placement="bottom" data-toggle="tooltip" title="Share">
+          <i class="card-footer-icon fa fa-share" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>  
+        </span-->
+        <span ng-if="content.localDataset === false"
+              data-placement="bottom" data-toggle="tooltip" title="Download">
+          <i class="card-footer-icon fa fa-download" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i> 
+        </span> 
+        <span data-placement="bottom" data-toggle="tooltip" title="Detail"
+              ng-click="detailsFn(content)">
+          <i class="card-footer-icon fa fa-bars" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
+        </span>
+      </div>
+      <div class="progress pull-left" ng-if="content.localDataset === false"
+           uib-tooltip="Download progress: 45%"
+           tooltip-placement="bottom">
+        <div class="progress-bar progress-bar-info progress-bar-striped" style="opacity: 0.7; width:45%;">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
