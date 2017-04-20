@@ -1220,6 +1220,11 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
 
+    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
+        project.getName(), userToBeRemoved.getUsername());
+    userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved
+        .getUsername());
+    
 //    try {
 //      LocalhostServices.deleteUserAccount(email, project.getName());
 //    } catch (IOException e) {

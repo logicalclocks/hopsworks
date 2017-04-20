@@ -142,17 +142,13 @@ public class LocalhostServices {
 
   public static String deleteUserCertificates(String intermediateCaDir,
           String projectName, String userName) throws IOException {
-    String sslCertFile = intermediateCaDir + "/certs/" + "__" + userName
-            + ".cert.pem";
-    String sslKeyFile = intermediateCaDir + "/private/" + projectName + "__"
-            + userName + ".key.pem";
 
     // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");
-    commands.add("sudo " + intermediateCaDir
+    commands.add("sudo " + intermediateCaDir + "/"
             + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " + LocalhostServices.
             getUsernameInProject(userName, projectName));
 
@@ -207,7 +203,7 @@ public class LocalhostServices {
       throw new IllegalArgumentException("Email sent in - should be username");
     }
 
-    return username + Settings.HOPS_USERNAME_SEPARATOR + projectName;
+    return projectName + Settings.HOPS_USERNAME_SEPARATOR + username;
   }
 
 }
