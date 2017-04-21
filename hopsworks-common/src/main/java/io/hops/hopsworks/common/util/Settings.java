@@ -423,7 +423,7 @@ public class Settings implements Serializable {
   }
 
 
-  private static String HOPSWORKS_INSTALL_DIR = "/srv/hops";
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {
     checkCache();
@@ -477,13 +477,6 @@ public class Settings implements Serializable {
   public synchronized String getZeppelinUser() {
     checkCache();
     return ZEPPELIN_USER;
-  }
-
-  private final String HIWAY_DIR = "/home/glassfish";
-
-  public synchronized String getHiwayDir() {
-    checkCache();
-    return HIWAY_DIR;
   }
 
   private String YARN_DEFAULT_QUOTA = "60000";
@@ -1224,13 +1217,6 @@ public class Settings implements Serializable {
     }
   }
 
-//  public void setIdValue(String id, String value) {
-//    Variables v = new Variables(id, value);
-//    try {
-//      em.persist(v)
-//    } catch (EntityExistsException ex) {
-//    }
-//  }
   public void detach(Variables variable) {
     em.detach(variable);
   }

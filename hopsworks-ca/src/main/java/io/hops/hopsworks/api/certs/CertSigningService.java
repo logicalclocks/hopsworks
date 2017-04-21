@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +26,7 @@ import io.hops.hopsworks.common.exception.AppException;
 
 @Path("/agentservice")
 @Stateless
-@RolesAllowed({"AGENT"})
+//@RolesAllowed({"AGENT"})
 public class CertSigningService {
 
   final static Logger logger = Logger.getLogger(CertSigningService.class.getName());

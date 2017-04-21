@@ -30,20 +30,6 @@
     <role-name>AGENT</role-name>
   </security-role>
   <security-constraint>
-    <display-name>Metadata SocketConstraint</display-name>
-    <web-resource-collection>
-      <web-resource-name>MetadataWebSocket</web-resource-name>
-      <description>Security constraint for  metadata designer websocket endpoint</description>
-      <url-pattern>/wspoint/*</url-pattern>
-      <http-method>GET</http-method>
-    </web-resource-collection>
-    <auth-constraint>
-      <description>definition of which roles  may access the quote endpoint</description>
-      <role-name>HOPS_ADMIN</role-name>
-      <role-name>HOPS_USER</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
     <web-resource-collection>
       <web-resource-name>Viewpoint Secure URLs</web-resource-name>
       <url-pattern>/*</url-pattern>
