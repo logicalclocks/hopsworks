@@ -1,6 +1,12 @@
 from hdfscontents import HdfsContentsManager
 c = get_config()
-c.NotebookApp.contents_manager_class = HdfsContentsManager
+c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
+c.HDFSContentsManager.hdfs_namenode_host='%%namenode_ip%%'
+c.HDFSContentsManager.hdfs_namenode_port=9000
+c.HDFSContentsManager.root_dir='/projects/%%project%%/Jupyter/%%hdfs_user%%'
+
+
+#c.NotebookApp.contents_manager_class = HdfsContentsManager
 
 # Set options for certfile, ip, password, and toggle off
 # browser auto-opening
@@ -14,6 +20,8 @@ c.NotebookApp.contents_manager_class = HdfsContentsManager
 #c.NotebookApp.ip = '127.0.0.1'
 c.NotebookApp.ip = 'localhost'
 c.NotebookApp.open_browser = False
+
+c.HDFSContentsManager.root_dir
 
 # We should set this at the command line when we launch it, so thtat we can check for busy ports.
 # c.NotebookApp.port = %%jupyter_port%%

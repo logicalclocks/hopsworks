@@ -1,3 +1,18 @@
+<style>
+    .slow .toggle-group {
+        transition: left 1.2s;
+        -webkit-transition: left 1.2s;
+    }
+     .fast .toggle-group {
+        transition: left 0.1s;
+        -webkit-transition: left 0.1s;
+    }
+     .quick .toggle-group {
+        transition: none;
+        -webkit-transition: none;
+    }
+</style>
+
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
   <div id="wrapper"
@@ -21,6 +36,11 @@
               <button class="btn btn-success" ng-click="jupyterCtrl.startServer()" type="button" id="newJupyter">
                 Start Jupyter Server
               </button>
+              
+            
+              <toggle ng-model="jupyterCtrl.toggleValue" ng-change="toggleJupyter()" onstyle="btn-success" style="slow"
+                      offstyle="btn-danger" size="btn-lg" on="<i class='fa fa-play'></i> Start" off="<i class='fa fa-stop'></i>Stop"></toggle>
+              
             </div>
 
         </div> <!--content wrapper -->

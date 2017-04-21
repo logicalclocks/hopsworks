@@ -39,7 +39,8 @@ public class JupyterConfig {
   private final String logDirPath;
   private final String libDirPath;
 
-  JupyterConfig(String projectName, String hdfsUser, Settings settings) {
+  JupyterConfig(String projectName, String hdfsUser, String nameNodeIp,
+          Settings settings) {
     this.projectName = projectName;
     this.hdfsUser = hdfsUser;
     boolean newDir = false;
@@ -57,7 +58,7 @@ public class JupyterConfig {
     libDirPath = projectUserDirPath + File.separator + "lib";
     try {
       newDir = createJupyterDirs();//creates the necessary folders for the project in /srv/zeppelin
-      createConfigFiles();
+      createConfigFiles(nameNodeIp);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
@@ -212,7 +213,7 @@ public class JupyterConfig {
 //    }
 //  }
   // returns true if one of the conf files were created anew 
-  private boolean createConfigFiles() throws
+  private boolean createConfigFiles(String nameNodeIp) throws
           IOException {
     File jupyter_custom_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
     boolean createdSh = false;
@@ -231,6 +232,8 @@ public class JupyterConfig {
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
+                      "project", this.projectName,
+                      "namenode_ip", nameNodeIp,
                       "hopsworks_ip", settings.getHopsworksIp(),
                       "hdfs_user", this.hdfsUser,
                       "hdfs_home", this.settings.getHadoopDir()

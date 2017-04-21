@@ -7,14 +7,17 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/jupyter/'+ getCookie('projectID'));
               },
               getByUser: function (hdfsUser) {
-                return $http.put('/api/jupyter/'+ getCookie('projectID') + '/' + hdfsUser + '/running' );
+                return $http.put('/api/jupyter/'+ getCookie('projectID') + '/running' );
               },
               deleteByUser: function (hdfsUser) {
-                return $http.delete('/api/jupyter/'+ getCookie('projectID') + '/' + hdfsUser + '/stop');
+                return $http.delete('/api/jupyter/'+ getCookie('projectID') + '/stop');
               },
               startServer: function (hdfsUser) {
-                return $http.get('/api/jupyter/'+ getCookie('projectID') + '/' + hdfsUser + '/start' );
-              }
+                return $http.get('/api/jupyter/'+ getCookie('projectID') + '/start' );
+              },
+              stopServer: function (hdfsUser) {
+                return $http.delete('/api/jupyter/'+ getCookie('projectID') + '/stop' );
+              }              
             };
           }]);
 

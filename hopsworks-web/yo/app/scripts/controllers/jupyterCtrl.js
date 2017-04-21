@@ -10,6 +10,7 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
             $scope.tgState = true;
             self.jupyterServer;
+            self.toggleValue;
             
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
@@ -17,6 +18,27 @@ angular.module('hopsWorksApp')
 
 
 
+            var toggleJupyter = function () {
+              if (self.toggleValue === false) {
+                JupyterService.start().then(
+                function(success) {
+                  growl.info("Jupyter Started successfully");
+                  self.toggleValue = true;
+                }, function(error) {
+                  growl.error("Could not start Jupyter.");
+                }
+                );                
+              } else {
+                JupyterService.stop().then(
+                function(success) {
+                  growl.info("Jupyter Stopped successfully");
+                  self.toggleValue = false;
+                }, function(error) {
+                  growl.error("Could not stop Jupyter.");
+                }
+              );                
+            };
+            
             var init = function () {
               startLoading("Connecting to zeppelin...");
               $scope.tgState = true;

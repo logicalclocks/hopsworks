@@ -1,6 +1,8 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
+import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -63,6 +65,8 @@ public class JupyterConfigFactory {
   private HdfsUsersController hdfsUsername;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private HdfsLeDescriptorsFacade hdfsLeFacade;
 
   private final ConcurrentMap<String, JupyterConfig> hdfsuserConfCache
           = new ConcurrentHashMap<>();
@@ -97,7 +101,10 @@ public class JupyterConfigFactory {
 
   public JupyterConfig init(String projectName, String owner) {
 
-    JupyterConfig conf = new JupyterConfig(projectName, owner, settings);
+    HdfsLeDescriptors hld = hdfsLeFacade.getActiveNN();
+    String nameNodeIp = hld.getHostname();
+    JupyterConfig conf = new JupyterConfig(projectName, owner, nameNodeIp,
+            settings);
     this.hdfsuserConfCache.put(owner, conf);
     return conf;
   }
@@ -257,7 +264,7 @@ public class JupyterConfigFactory {
 
   }
 
-  public void startServer(Project project, HdfsUsers user) throws AppException {
+  public void startServer(Project project, String hdfsUser) throws AppException {
 
     // Set to point to project directory
     // JUPYTER_DATA_DIR
@@ -275,7 +282,7 @@ public class JupyterConfigFactory {
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
 //    JupyterConfig jc = new JupyterConfig(project.getName(), user.getUsername(),
 //            settings);
-    JupyterConfig jc = hdfsuserConfCache.get(user.getUsername());
+    JupyterConfig jc = hdfsuserConfCache.get(hdfsUser);
     if (jc == null) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
@@ -293,8 +300,10 @@ public class JupyterConfigFactory {
 //      String[] command = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), 
       String[] command
               = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), "jupyter",
+                "--NotebookApp.contents_manager_class="
+                + "'hdfscontents.hdfsmanager.HDFSContentsManager'",
                 "--no-browser", " > " + jc.getLogDirPath() + "/"
-                  + user.getUsername() + "-" + port + ".log"};
+                + hdfsUser + "-" + port + ".log"};
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
       env.put("JUPYTER_CONFIG_DIR", jc.getConfDirPath());
@@ -318,7 +327,7 @@ public class JupyterConfigFactory {
             foundToken = true;
           }
         }
-        saveServer(port, user.getId(), token, process);
+        saveServer(port, hdfsUser, token, process);
         failed = false;
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.

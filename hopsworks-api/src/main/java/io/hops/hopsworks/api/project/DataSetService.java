@@ -179,7 +179,7 @@ public class DataSetService {
       inodeView.setSharedWith(sharedWith);
       kids.add(inodeView);
       if (inodeView.getName().
-              equals(Settings.DefaultDataset.NOTEBOOKS.getName())) {
+              equals(Settings.DefaultDataset.ZEPPELIN.getName())) {
         notebookDirExists = true;
       }
     }
@@ -189,14 +189,14 @@ public class DataSetService {
 
       Inode projectInode = inodes.getInodeAtPath(projPath);
       Inode ds = inodes.findByInodePK(projectInode,
-              Settings.DefaultDataset.NOTEBOOKS.getName(),
+              Settings.DefaultDataset.ZEPPELIN.getName(),
               HopsUtils.dataSetPartitionId(projectInode,
-                      Settings.DefaultDataset.NOTEBOOKS.getName()));
+                      Settings.DefaultDataset.ZEPPELIN.getName()));
       if (ds != null) {
         logger.log(Level.INFO, "Notebook dir not in datasets, adding.");
         Dataset newDS = new Dataset(ds, this.project);
         newDS.setSearchable(false);
-        newDS.setDescription(Settings.DefaultDataset.NOTEBOOKS.getDescription());
+        newDS.setDescription(Settings.DefaultDataset.ZEPPELIN.getDescription());
         datasetFacade.persistDataset(newDS);
 
         inodeView = new InodeView(projectInode, newDS, projPath + File.separator

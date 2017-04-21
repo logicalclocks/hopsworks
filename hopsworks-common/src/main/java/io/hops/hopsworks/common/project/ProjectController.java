@@ -535,9 +535,13 @@ public class ProjectController {
     for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
       boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
               || ds.equals(Settings.DefaultDataset.LOGS)
-              || ds.equals(Settings.DefaultDataset.NOTEBOOKS));
-      if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(
-              Settings.DefaultDataset.NOTEBOOKS)) {
+              || ds.equals(Settings.DefaultDataset.ZEPPELIN)
+              || ds.equals(Settings.DefaultDataset.JUPYTER)
+              );
+      if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(Settings.DefaultDataset.ZEPPELIN)) {
+        continue;
+      }
+      if (!services.contains(ProjectServiceEnum.JUPYTER) && ds.equals(Settings.DefaultDataset.JUPYTER)) {
         continue;
       }
 

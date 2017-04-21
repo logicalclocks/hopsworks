@@ -133,12 +133,19 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    JupyterProject jp = jupyterConfigFactory.findByUser(getHdfsUser(sc));
+    String hdfsUser = getHdfsUser(sc);
+    if (hdfsUser == null) {
+      throw new AppException(
+              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Could not find your username. Report a bug.");
+    }
+    JupyterProject jp = jupyterConfigFactory.findByUser(hdfsUser);
     if (jp != null) {
       throw new AppException(
               Response.Status.FOUND.getStatusCode(),
               "Already running a Jupyter notebook server for this project.");
     }
+    jupyterConfigFactory.startServer(project, hdfsUser);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jp).build();
   }

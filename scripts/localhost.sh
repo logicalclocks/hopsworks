@@ -1,7 +1,16 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export PORT=10122
-export WEBPORT=8080
+
+if [ !-d ../../karamel-chef ] ; then
+ echo "Error. You must first have 'karamel-chef' installed in the same base directory as this 'hopsworks' project"
+ echo ""
+ exit 1
+fi
+
+vagrant_port=`../../karamel-chef/run.sh ports | grep 22 | sed -e 's/22 -> //'`
+web_port=`../../karamel-chef/run.sh ports | grep 8080 | sed -e 's/8080 -> //'`
+export PORT=${vagrant_port}
+export WEBPORT=${web_port}
 export SERVER=localhost
 export key=private_key
 usr=${USER}

@@ -1180,7 +1180,8 @@ public class Settings implements Serializable {
         "Contains the logs for jobs that have been run through the Hopsworks platform."),
     RESOURCES("Resources",
         "Contains resources used by jobs, for example, jar files."),
-    NOTEBOOKS("notebook", "Contains zeppelin notebooks.");
+    ZEPPELIN("Zeppelin", "Contains Zeppelin notebooks."),
+    JUPYTER("Jupyter", "Contains Jupyter notebooks.");
     private final String name;
     private final String description;
 
