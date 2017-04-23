@@ -981,7 +981,7 @@ public class ProjectController {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
                 getEmail())) {
 
-          //if the role is not properly set set it to the default resercher.
+          //if the role is not properly set set it to the default role (Data Scientist).
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
                   equals(ProjectRoleTypes.DATA_SCIENTIST.getRole())
                   && !projectTeam.
@@ -1004,6 +1004,7 @@ public class ProjectController {
               projectTeamFacade.removeProjectTeam(project, newMember);
               throw new EJBException("Could not add member to HDFS.");
             }
+            // TODO: This should now be a REST call
             try {
               LocalhostServices.createUserCertificates(settings.
                       getIntermediateCaDir(),

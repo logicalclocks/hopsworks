@@ -266,7 +266,12 @@ public class JupyterConfigFactory {
 
   public void startServer(Project project, String hdfsUser) throws AppException {
 
-    // Set to point to project directory
+    HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
+    if (user == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "Could not find hdfs user. Not starting Jupyter.");
+    }
+// Set to point to project directory
     // JUPYTER_DATA_DIR
     // JUPYTER_CONFIG_DIR 
     // JUPYTER_RUNTIME_DIR
@@ -301,9 +306,9 @@ public class JupyterConfigFactory {
       String[] command
               = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), "jupyter",
                 "--NotebookApp.contents_manager_class="
-                + "'hdfscontents.hdfsmanager.HDFSContentsManager'",
+                  + "'hdfscontents.hdfsmanager.HDFSContentsManager'",
                 "--no-browser", " > " + jc.getLogDirPath() + "/"
-                + hdfsUser + "-" + port + ".log"};
+                  + hdfsUser + "-" + port + ".log"};
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
       env.put("JUPYTER_CONFIG_DIR", jc.getConfDirPath());
@@ -327,7 +332,7 @@ public class JupyterConfigFactory {
             foundToken = true;
           }
         }
-        saveServer(port, hdfsUser, token, process);
+        saveServer(port, user, token, process);
         failed = false;
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
@@ -357,7 +362,7 @@ public class JupyterConfigFactory {
     // delete JupyterProject entity bean
   }
 
-  private void saveServer(int port, int userId, String token,
+  private void saveServer(int port, HdfsUsers hdfsUser, String token,
           Process process) throws AppException {
 
     String ip;
@@ -365,11 +370,10 @@ public class JupyterConfigFactory {
       ip = InetAddress.getLocalHost().getHostAddress();
 
       JupyterProject jp
-              = new JupyterProject(port, userId, Date.from(Instant.now()), ip,
+              = new JupyterProject(port, hdfsUser.getId(), Date.from(Instant.now()), ip,
                       token, JupyterConfig.getPidOfProcess(process));
 
       persist(jp);
-      HdfsUsers user = hdfsUsersFacade.find(userId);
 //      JupyterConfig.addNotebookServer(user.getUsername(), process);
     } catch (UnknownHostException ex) {
       Logger.getLogger(JupyterConfigFactory.class.getName()).

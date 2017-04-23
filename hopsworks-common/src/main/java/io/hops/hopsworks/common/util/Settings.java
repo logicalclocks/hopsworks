@@ -100,6 +100,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
+  private static final String VARIABLE_CERTS_DIRS = "certs_dir";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -207,6 +208,7 @@ public class Settings implements Serializable {
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
           HOPSWORKS_INSTALL_DIR);
+      CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
@@ -423,6 +425,14 @@ public class Settings implements Serializable {
   }
 
 
+
+  private static String CERTS_DIR = "/srv/hops/certs-dir";
+
+  public synchronized String getCertsDir() {
+    checkCache();
+    return CERTS_DIR;
+  }
+
   private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {
@@ -437,12 +447,12 @@ public class Settings implements Serializable {
 
   public synchronized String getIntermediateCaDir() {
     checkCache();
-    return getHopsworksDomainDir() + Settings.INTERMEDIATE_CA_DIR;
+    return getCertsDir() + Settings.INTERMEDIATE_CA_DIR;
   }
   
   public synchronized String getCaDir() {
     checkCache();
-    return getHopsworksDomainDir() + Settings.CA_DIR;
+    return getCertsDir();
   }
 
   //User under which yarn is run
@@ -1036,7 +1046,7 @@ public class Settings implements Serializable {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  private static final String CA_DIR = "/config/ca";
+  private static final String CA_DIR = "";
   private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";

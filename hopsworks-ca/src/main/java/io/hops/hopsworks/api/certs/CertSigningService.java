@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.util.PKIUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.kafka.CsrDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.LocalhostServices;
 
 @Path("/agentservice")
 @Stateless
@@ -111,4 +112,33 @@ public class CertSigningService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dto).build();
   }
+  
+  
+  @POST
+  @Path("/addUserToProject")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response addUserToProject(@Context HttpServletRequest req, UserCert userCert)
+          throws AppException {
+    JSONObject json = new JSONObject(jsonString);
+    String pubAgentCert = "no certificate";
+    String caPubCert = "no certificate";
+    if (json.has("csr")) {
+      String csr = json.getString("csr");
+
+                  LocalhostServices.createUserCertificates(settings.
+                      getIntermediateCaDir(),
+                      this., newMember.getUsername());
+              userCertsFacade.putUserCerts(project.getName(), newMember.
+                      getUsername());
+
+    
+//    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            dto).build();
+  }
+  
+  
+  
+  
 }
