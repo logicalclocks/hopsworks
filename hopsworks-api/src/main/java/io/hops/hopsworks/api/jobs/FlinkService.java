@@ -40,6 +40,8 @@ import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 
 /**
  * Service offering functionality to run a Flink fatjar job.
@@ -50,7 +52,7 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 public class FlinkService {
 
   private static final Logger logger = Logger.getLogger(FlinkService.class.
-          getName());
+      getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -91,14 +93,14 @@ public class FlinkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findAllFlinkJobs(@Context SecurityContext sc,
-          @Context HttpServletRequest req)
-          throws AppException {
+      @Context HttpServletRequest req)
+      throws AppException {
     List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
-            JobType.FLINK);
+        JobType.FLINK);
     GenericEntity<List<JobDescription>> jobList
-            = new GenericEntity<List<JobDescription>>(jobs) {};
+        = new GenericEntity<List<JobDescription>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(jobList).build();
+        entity(jobList).build();
   }
 
   /**
@@ -117,8 +119,8 @@ public class FlinkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response inspectJar(@PathParam("path") String path,
-          @Context SecurityContext sc, @Context HttpServletRequest req) throws
-          AppException, AccessControlException {
+      @Context SecurityContext sc, @Context HttpServletRequest req) throws
+      AppException, AccessControlException {
     String email = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(email);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
@@ -126,21 +128,21 @@ public class FlinkService {
     try {
       udfso = dfs.getDfsOps(username);
       FlinkJobConfiguration config = flinkController.inspectJar(path,
-              username, udfso);
+          username, udfso);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(config).build();
+          entity(config).build();
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You do not have access to the jar file.");
+          "Permission denied: You do not have access to the jar file.");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to inspect jar.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error reading jar file: " + ex.
+          getStatusCode(), "Error reading jar file: " + ex.
               getLocalizedMessage());
     } catch (IllegalArgumentException e) {
       logger.log(Level.WARNING, "Got a non-jar file to inspect as Flink jar.");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error reading jar file: " + e.
+          getStatusCode(), "Error reading jar file: " + e.
               getLocalizedMessage());
     } finally {
       udfso.close();
@@ -161,11 +163,11 @@ public class FlinkService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response createJob(FlinkJobConfiguration config,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     if (config == null) {
       throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
-              "Cannot create job for a null argument.");
+          "Cannot create job for a null argument.");
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
@@ -174,22 +176,26 @@ public class FlinkService {
         path = "hdfs://" + path;
       }
       HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.
-              findEndpoint();
+          findEndpoint();
       path = path.replaceFirst("hdfs:/*Projects",
-              "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+          "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 
       if (user == null) {
         //Should not be possible, but, well...
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                "You are not authorized for this invocation.");
+            "You are not authorized for this invocation.");
       }
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Flink job");
+      } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
+        throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+            "Invalid charater(s) in job name, the following characters (including space) are now allowed:"
+            + Settings.FILENAME_DISALLOWED_CHARS);
       }
       JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(created).build();
+          entity(created).build();
     }
   }
 }

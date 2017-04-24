@@ -429,6 +429,7 @@ public class ProjectController {
   private boolean existingProjectFolder(Project project){
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
     if(projectInode!=null){
+      LOGGER.log(Level.WARNING, "project folder existing for project {0}", project.getName());
       return true;
     }
     return false;
@@ -438,7 +439,7 @@ public class ProjectController {
   private boolean noExistingUser(String projectName) {
     List<HdfsUsers> hdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
     if (hdfsUsers != null && !hdfsUsers.isEmpty()) {
-
+      LOGGER.log(Level.WARNING, "hdfs user existing for project {0}", projectName);
       return false;
     }
     return true;
@@ -449,7 +450,7 @@ public class ProjectController {
     List<HdfsGroups> hdfsGroups = hdfsUsersBean.
             getAllProjectHdfsGroups(projectName);
     if (hdfsGroups != null && !hdfsGroups.isEmpty()) {
-
+      LOGGER.log(Level.WARNING, "hdfs group existing for project {0}", projectName);
       return false;
     }
     return true;
@@ -460,6 +461,7 @@ public class ProjectController {
     YarnProjectsQuota projectsQuota = yarnProjectsQuotaFacade.findByProjectName(
             projectName);
     if (projectsQuota != null) {
+      LOGGER.log(Level.WARNING, "quota existing for project {0}", projectName);
       return false;
     }
     return true;
@@ -472,6 +474,7 @@ public class ProjectController {
     FileStatus[] logs = dfso.listStatus(logPath);
     for (FileStatus log : logs) {
       if (log.getPath().getName().startsWith(projectName + "__")) {
+        LOGGER.log(Level.WARNING, "logs existing for project {0}", projectName);
         return false;
       }
     }
@@ -493,9 +496,14 @@ public class ProjectController {
   }
 
   private boolean noExistingCertificates(String projectName) {
-    return !LocalhostServices.isPresentProjectCertificates(settings.
+    boolean result =  !LocalhostServices.isPresentProjectCertificates(settings.
             getIntermediateCaDir(),
             projectName);
+    
+    if(!result){
+      LOGGER.log(Level.WARNING, "certificates existing for project {0}", projectName);
+    }
+    return result;
   }
   
   /**
@@ -1220,6 +1228,13 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
 
+    String projectSpecificUsername = hdfsUsersBean.getHdfsUserName(project,
+        userToBeRemoved);
+    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
+        projectSpecificUsername);
+    userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved
+        .getUsername());
+    
 //    try {
 //      LocalhostServices.deleteUserAccount(email, project.getName());
 //    } catch (IOException e) {

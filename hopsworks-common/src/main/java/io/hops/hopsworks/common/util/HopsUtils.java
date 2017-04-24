@@ -340,5 +340,20 @@ public class HopsUtils {
       }
     }
   }
+  
+  /**
+   * 
+   * @param jobName
+   * @param dissalowedChars
+   * @return 
+   */
+  public static boolean jobNameValidator(String jobName, String dissalowedChars) {
+    for (char c : dissalowedChars.toCharArray()) {
+      if (jobName.contains("" + c)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
 }

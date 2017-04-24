@@ -590,7 +590,7 @@ public class Settings implements Serializable {
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
   //Zeppelin constants
-  public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
+  public static final String JAVA_HOME = "/usr/lib/jvm/java";
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
