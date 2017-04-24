@@ -349,48 +349,8 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/adam', {
-                      templateUrl: 'views/adam.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
                     .when('/project/:projectID/jobs', {
                       templateUrl: 'views/jobs.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$location', 'AuthService', '$cookies',
-                          function ($q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
-                    })
-                    .when('/project/:projectID/ssh', {
-                      templateUrl: 'views/ssh.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',
