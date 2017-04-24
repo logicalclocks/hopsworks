@@ -1220,6 +1220,13 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
 
+    String projectSpecificUsername = hdfsUsersBean.getHdfsUserName(project,
+        userToBeRemoved);
+    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
+        projectSpecificUsername);
+    userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved
+        .getUsername());
+    
 //    try {
 //      LocalhostServices.deleteUserAccount(email, project.getName());
 //    } catch (IOException e) {
