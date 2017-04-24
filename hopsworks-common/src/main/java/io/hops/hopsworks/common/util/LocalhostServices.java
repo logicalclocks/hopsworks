@@ -87,7 +87,7 @@ public class LocalhostServices {
     String[] certs = certFolder.list();
     if (certs != null && certs.length > 0) {
       for (String certFile : certs) {
-        if (certFile.startsWith(projectName)) {
+        if (certFile.startsWith(projectName + "__")) {
           return true;
         }
       }
