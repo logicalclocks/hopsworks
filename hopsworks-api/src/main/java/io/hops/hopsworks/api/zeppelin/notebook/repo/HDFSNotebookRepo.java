@@ -65,15 +65,32 @@ public class HDFSNotebookRepo implements NotebookRepo {
     }
     UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
     this.hdfsUser = ugi.getShortUserName();
-    DistributedFileSystem dfs = getDfs(ugi);
-    Path path = new Path(filesystemRoot.getPath());
-    if (!dfs.exists(path)) {
-      logger.info("Notebook dir doesn't exist, create.");
-      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-              FsAction.READ_EXECUTE, true);
-      dfs.mkdirs(path, fsPermission);
+    createRootDir();
+  }
+  
+  private void createRootDir() throws IOException{
+    UserGroupInformation superuser = UserGroupInformation.getLoginUser();
+    try (DistributedFileSystem dfs = getDfs(superuser)) {
+      String url = filesystemRoot.getPath();
+      Path path = new Path(url);
+      if (!dfs.exists(path)) {
+        logger.info("Notebook dir does not exist, creating.");
+        if (url.endsWith("/")) {
+          url = url.substring(0, url.length() - 1);
+        }
+        String fileName = url.substring(url.lastIndexOf("/") + 1, url.length());
+        url = url.substring(0, url.lastIndexOf("/" + fileName));
+        String project = url.substring(url.lastIndexOf("/") + 1, url.length());
+        FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
+                FsAction.NONE, true);
+        dfs.mkdirs(path, fsPermission);
+        dfs.setPermission(path, fsPermission);
+        // need to add project members to the group but can't get them here.
+        // So set group to project__Resources that already contain all members.
+        String datasetGroup = project + "__Resources";
+        dfs.setOwner(path, this.hdfsUser, datasetGroup);
+      }
     }
-    dfs.close();
   }
 
   private String getNotebookDirPath() {
@@ -147,7 +164,8 @@ public class HDFSNotebookRepo implements NotebookRepo {
   private Path getRootDir(DistributedFileSystem dfs) throws IOException {
     Path rootDir = new Path(getPath("/"));
     if (!dfs.exists(rootDir)) {
-      throw new IOException("Root path does not exists");
+      createRootDir();
+      //throw new IOException("Root path does not exists");
     }
 
     if (!dfs.isDirectory(rootDir)) {
