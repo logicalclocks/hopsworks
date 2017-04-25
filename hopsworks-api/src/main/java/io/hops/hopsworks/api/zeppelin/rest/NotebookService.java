@@ -75,7 +75,7 @@ public class NotebookService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");
     }
-
+    //try if we can list notebooks. Will throw exception if notebook dir is not there.
     if (zeppelinConf.getNotebook() == null) {
       zeppelinConf.getNotebookRepo().list(AuthenticationInfo.ANONYMOUS);
     }
