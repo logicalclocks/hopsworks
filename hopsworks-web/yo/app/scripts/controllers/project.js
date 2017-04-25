@@ -225,19 +225,25 @@ angular.module('hopsWorksApp')
               };
 
               ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
-                      .$promise.then(
-                              function (success) {
-                                self.working = false;
-                                growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
-                                if (success.errorMsg) {
-                                  growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
-                                }
-                                $route.reload();
-                              }, function (error) {
-                        self.working = false;
-                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                .$promise.then(
+                    function (success) {
+                      self.working = false;                      
+                      growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
+                      if (success.errorMsg) {
+                        ModalService.alert('sm', 'Warning!', success.errorMsg).then(
+                                function (success) {
+                                  $route.reload();
+                                }, function (error) {
+                                  $route.reload();
+                        });
+                      } else {
+                        $route.reload();
                       }
-                      );
+                    }, function (error) {
+                      self.working = false;
+                      growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    }
+                );
             };
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;

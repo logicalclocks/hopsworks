@@ -82,7 +82,9 @@ public class NotebookRestApi {
     this.notebook = zeppelinConf.getNotebook();
     this.notebookServer = zeppelinConf.getNotebookServer();
     this.noteSearchService = zeppelinConf.getNotebookIndex();
-    this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    if (this.notebook != null) {
+      this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    }
   }
 
   /**
@@ -362,7 +364,6 @@ public class NotebookRestApi {
    * @throws IOException
    */
   @POST
-  @Path("/")
   public Response createNote(String message) throws IOException {
     LOG.info("Create new note by JSON {}", message);
     NewNoteRequest request = gson.fromJson(message, NewNoteRequest.class);
@@ -1046,7 +1047,7 @@ public class NotebookRestApi {
       noteInfo = new NoteInfo(note);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not create notebook" + ex.getMessage());
+              "Could not create notebook. " + ex.getMessage());
     }
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());

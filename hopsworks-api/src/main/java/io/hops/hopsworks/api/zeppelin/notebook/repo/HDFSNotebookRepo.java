@@ -65,15 +65,15 @@ public class HDFSNotebookRepo implements NotebookRepo {
     }
     UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
     this.hdfsUser = ugi.getShortUserName();
-    DistributedFileSystem dfs = getDfs(ugi);
-    Path path = new Path(filesystemRoot.getPath());
-    if (!dfs.exists(path)) {
-      logger.info("Notebook dir doesn't exist, create.");
-      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-              FsAction.READ_EXECUTE, true);
-      dfs.mkdirs(path, fsPermission);
+    UserGroupInformation superuser = UserGroupInformation.getLoginUser();
+    try (DistributedFileSystem dfs = getDfs(superuser)) {
+      String url = filesystemRoot.getPath();
+      Path path = new Path(url);
+      if (!dfs.exists(path)) {
+        logger.info("Notebook dir does not exist.");
+        throw new IOException("Notebook dir does not exist.");
+      }
     }
-    dfs.close();
   }
 
   private String getNotebookDirPath() {
