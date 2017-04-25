@@ -10,11 +10,19 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToService('Jupyter')" ng-show="projectCtrl.showJupyter()">
+      <li uib-dropdown>
+        <a ng-click="projectCtrl.goToService('Jupyter')" uib-dropdown-toggle >Jupyter <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/></a>
+        <ul uib-dropdown-menu class="dropdown-menu">
+          <li ng-click="projectCtrl.goToService('Jupyter')" ><span>Stop Jupyter</span></li>
+        </ul>
+      </li>
+      <li>      
+
+<!--      <li ng-click="projectCtrl.goToService('Jupyter')" ng-show="projectCtrl.showJupyter()">
         <a>
           Jupyter <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/>
         </a>
-      </li>
+      </li>-->
 
       <li ng-click="projectCtrl.goToService('Zeppelin')" ng-show="projectCtrl.showZeppelin()">
         <a>
@@ -27,18 +35,18 @@
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
         </a>
       </li>
-<!--
-      <li ng-click="projectCtrl.goToHistory()" style="margin-top:40px;"  ng-show="projectCtrl.showJobs()">
-        <a>
-          Jobs History<span class="sub_icon fa fa-history fa-lg pull-right"></span>
-        </a>
-      </li>
--->
-<!--      <li ng-click="projectCtrl.goToSsh()" ng-show="projectCtrl.showSsh()">
-        <a>
-          Ssh <span class="sub_icon fa fa-terminal fa-lg pull-right"></span>
-        </a>
-      </li>-->
+      <!--
+            <li ng-click="projectCtrl.goToHistory()" style="margin-top:40px;"  ng-show="projectCtrl.showJobs()">
+              <a>
+                Jobs History<span class="sub_icon fa fa-history fa-lg pull-right"></span>
+              </a>
+            </li>
+      -->
+      <!--      <li ng-click="projectCtrl.goToSsh()" ng-show="projectCtrl.showSsh()">
+              <a>
+                Ssh <span class="sub_icon fa fa-terminal fa-lg pull-right"></span>
+              </a>
+            </li>-->
 
       <li ng-click="projectCtrl.goToBiobanking()" ng-show="projectCtrl.showBiobanking()">
         <a>
@@ -91,7 +99,7 @@
       <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'" ng-show="projectCtrl.cloak">
         <a>
           Metadata Designer<span
-          class="sub_icon fa fa-edit fa-lg pull-right"></span>
+            class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>
       <br>
@@ -101,12 +109,12 @@
         <small ng-show="clusterUtilCtrl.utilisation < 1" style="color: #ddd;"><em>Cluster Utilization is unknown</em></small>
         <div class="progress" style="height: 10px;"
              uib-tooltip="If this bar is orange (> 50%), consider allocating less resources for your application.
-                          If this bar is red (> 80%), consider running your jobs at a later time. "
+             If this bar is red (> 80%), consider running your jobs at a later time. "
              tooltip-placement="bottom">
           <div class="progress-bar" style="opacity: 0.7;"
                ng-class="clusterUtilCtrl.progressBarClass"
                role="progressbar"
-               ng-style="{'width' : clusterUtilCtrl.utilisation+'%'}">
+               ng-style="{'width' : clusterUtilCtrl.utilisation + '%'}">
           </div>
         </div>
       </div>
@@ -117,32 +125,32 @@
 <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourTwo"
       post-tour="closeTour()"
       ng-if="projectCtrl.showJobs() && projectCtrl.loadedView
-        && (projectCtrl.tourService.informAndTips
-            || projectCtrl.tourService.tipsOnly)">
-    <virtual-step
-        ng-if="projectCtrl.tourService.activeTour === 'spark'"
-        id="TourTwo"
-        class="ng-scope"
-        tourtip="Click Next, OR click on the Jobs tab to continue"
-        tourtip-step="0"
-        tourtip-element="#jobsTab"
-        tourtip-placement="right"
-        tourtip-next-label="Next"
-        on-proceed="projectCtrl.goToJobs()"
-        tourtip-offset-vertical="-18"
-        tourtip-offset-horizontal="-13"
-        ></virtual-step>
+                  && (projectCtrl.tourService.informAndTips
+                          || projectCtrl.tourService.tipsOnly)">
+  <virtual-step
+    ng-if="projectCtrl.tourService.activeTour === 'spark'"
+    id="TourTwo"
+    class="ng-scope"
+    tourtip="Click Next, OR click on the Jobs tab to continue"
+    tourtip-step="0"
+    tourtip-element="#jobsTab"
+    tourtip-placement="right"
+    tourtip-next-label="Next"
+    on-proceed="projectCtrl.goToJobs()"
+    tourtip-offset-vertical="-18"
+    tourtip-offset-horizontal="-13"
+    ></virtual-step>
 
   <virtual-step
-          ng-if="projectCtrl.tourService.activeTour === 'kafka'"
-          id="TourTwo"
-          class="ng-scope"
-          tourtip="Click Next, OR click on the Kafka tab to continue"
-          tourtip-step="0"
-          tourtip-element="#kafkaTab"
-          tourtip-placement="right"
-          tourtip-next-label="Next"
-          on-proceed="projectCtrl.goToKafka()"
-          tourtip-offset-vertical="-15"
-  ></virtual-step>
+    ng-if="projectCtrl.tourService.activeTour === 'kafka'"
+    id="TourTwo"
+    class="ng-scope"
+    tourtip="Click Next, OR click on the Kafka tab to continue"
+    tourtip-step="0"
+    tourtip-element="#kafkaTab"
+    tourtip-placement="right"
+    tourtip-next-label="Next"
+    on-proceed="projectCtrl.goToKafka()"
+    tourtip-offset-vertical="-15"
+    ></virtual-step>
 </tour>

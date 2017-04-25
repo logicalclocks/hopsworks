@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 
 public class JupyterConfig {
 
@@ -39,15 +41,15 @@ public class JupyterConfig {
   private final String logDirPath;
   private final String libDirPath;
 
-  JupyterConfig(String projectName, String hdfsUser, String nameNodeIp,
-          Settings settings) {
+  JupyterConfig(String projectName, String hdfsUser, String nameNodeHostname,
+          Settings settings) throws AppException {
     this.projectName = projectName;
     this.hdfsUser = hdfsUser;
     boolean newDir = false;
     boolean newFile = false;
     this.settings = settings;
     // settings.getJupyterProjectsDir()
-    projectUserDirPath = settings.getJupyterProjectsDir() + File.separator
+    projectUserDirPath = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + hdfsUser;
     confDirPath = projectUserDirPath + File.separator + "conf";
@@ -58,7 +60,7 @@ public class JupyterConfig {
     libDirPath = projectUserDirPath + File.separator + "lib";
     try {
       newDir = createJupyterDirs();//creates the necessary folders for the project in /srv/zeppelin
-      createConfigFiles(nameNodeIp);
+      createConfigFiles(nameNodeHostname);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
@@ -68,6 +70,10 @@ public class JupyterConfig {
       LOGGGER.log(Level.SEVERE,
               "Error in initializing JupyterConfig for project: {0}. {1}",
               new Object[]{this.projectName, e});
+      throw new AppException(
+              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Could not configure Jupyter. Report a bug.");
+
     }
   }
 
@@ -213,7 +219,7 @@ public class JupyterConfig {
 //    }
 //  }
   // returns true if one of the conf files were created anew 
-  private boolean createConfigFiles(String nameNodeIp) throws
+  private boolean createConfigFiles(String nameNodeHostname) throws
           IOException {
     File jupyter_custom_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
     boolean createdSh = false;
@@ -233,7 +239,7 @@ public class JupyterConfig {
               instantiateFromTemplate(
                       ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
                       "project", this.projectName,
-                      "namenode_ip", nameNodeIp,
+                      "namenode_ip", nameNodeHostname,
                       "hopsworks_ip", settings.getHopsworksIp(),
                       "hdfs_user", this.hdfsUser,
                       "hdfs_home", this.settings.getHadoopDir()
@@ -352,6 +358,10 @@ public class JupyterConfig {
       ret = zeppelin_site_xml_file.delete();
     }
     return ret;
+  }
+
+  public String getProjectUserDirPath() {
+    return projectUserDirPath;
   }
 
 }

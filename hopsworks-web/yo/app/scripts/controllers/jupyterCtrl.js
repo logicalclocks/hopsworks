@@ -17,7 +17,7 @@ angular.module('hopsWorksApp')
 
             var toggleJupyter = function () {
               if (self.toggleValue === false) {
-                JupyterService.start().then(
+                JupyterService.start(projectId).then(
                         function (success) {
                           growl.info("Jupyter Started successfully");
                           self.toggleValue = true;
@@ -26,7 +26,7 @@ angular.module('hopsWorksApp')
                 }
                 );
               } else {
-                JupyterService.stop().then(
+                JupyterService.stop(projectId).then(
                         function (success) {
                           growl.info("Jupyter Stopped successfully");
                           self.toggleValue = false;
@@ -38,9 +38,30 @@ angular.module('hopsWorksApp')
             };
 
             var init = function () {
-              startLoading("Connecting to zeppelin...");
+              startLoading("Connecting to Jupyter...");
               $scope.tgState = true;
+              JupyterService.start(projectId).then(
+                      function (success) {
+                        self.toggleValue = true;
+                        stopLoading();
+                      }, function (error) {
+                growl.error("Could not start Jupyter.");
+                stopLoading();
+              }
+              );
+              stopLoading();
             };
+
+
+            var startLoading = function (label) {
+              self.loading = true;
+              self.loadingText = label;
+            };
+            var stopLoading = function () {
+              self.loading = false;
+              self.loadingText = "";
+            };
+
             var load = function () {
               $scope.tgState = true;
             };

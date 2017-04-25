@@ -3,20 +3,20 @@
 angular.module('hopsWorksApp')
         .factory('JupyterService', ['$http', function ($http) {
             return {
-              getAll: function () {
-                return $http.get('/api/jupyter/'+ getCookie('projectID'));
+              getAll: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/jupyter');
               },
-              getByUser: function (hdfsUser) {
-                return $http.put('/api/jupyter/'+ getCookie('projectID') + '/running' );
+              get: function (projectId) {
+                return $http.put('/api/project/' + projectId + '/jupyter/running' );
               },
-              deleteByUser: function (hdfsUser) {
-                return $http.delete('/api/jupyter/'+ getCookie('projectID') + '/stop');
+              delete: function (projectId) {
+                return $http.delete('/api/project/' + projectId + '/jupyter/stop');
               },
-              startServer: function (hdfsUser) {
-                return $http.get('/api/jupyter/'+ getCookie('projectID') + '/start' );
+              start: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/jupyter/start' );
               },
-              stopServer: function (hdfsUser) {
-                return $http.delete('/api/jupyter/'+ getCookie('projectID') + '/stop' );
+              stop: function (projectId) {
+                return $http.delete('/api/project/' + projectId + '/jupyter/stop' );
               }              
             };
           }]);

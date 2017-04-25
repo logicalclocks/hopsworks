@@ -16,6 +16,7 @@ import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -47,6 +48,8 @@ public class JupyterService {
   private UserFacade userFacade;
   @EJB
   private JupyterConfigFactory jupyterConfigFactory;
+  @EJB
+  private JupyterFacade jupyterFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
 
@@ -112,7 +115,7 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    JupyterProject jp = jupyterConfigFactory.findByUser(getHdfsUser(sc));
+    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
     if (jp == null) {
       throw new AppException(
               Response.Status.NOT_FOUND.getStatusCode(),
@@ -139,7 +142,7 @@ public class JupyterService {
               Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
               "Could not find your username. Report a bug.");
     }
-    JupyterProject jp = jupyterConfigFactory.findByUser(hdfsUser);
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp != null) {
       throw new AppException(
               Response.Status.FOUND.getStatusCode(),

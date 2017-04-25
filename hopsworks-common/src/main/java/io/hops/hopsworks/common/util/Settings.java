@@ -45,8 +45,6 @@ public class Settings implements Serializable {
       = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
-  private static final String VARIABLE_JUPYTER_PROJECTS_DIR
-          = "jupyter_projects_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
@@ -200,8 +198,6 @@ public class Settings implements Serializable {
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
-      JUPYTER_PROJECTS_DIR = setDirVar(VARIABLE_JUPYTER_PROJECTS_DIR,
-              JUPYTER_PROJECTS_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
@@ -882,20 +878,12 @@ public class Settings implements Serializable {
   
   
   // Jupyter
-  private String JUPYTER_DIR = "/srv/jupyter";
+  private String JUPYTER_DIR = "/srv/hops/jupyter";
 
   public synchronized String getJupyterDir() {
     checkCache();
     return JUPYTER_DIR;
   }
-
-  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/projects";
-
-  public synchronized String getJupyterProjectsDir() {
-    checkCache();
-    return JUPYTER_PROJECTS_DIR;
-  }
-
 
   // Kafka
   private String KAFKA_IP = "10.0.2.15";

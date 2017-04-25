@@ -3,7 +3,8 @@ c = get_config()
 c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
 c.HDFSContentsManager.hdfs_namenode_host='%%namenode_ip%%'
 c.HDFSContentsManager.hdfs_namenode_port=9000
-c.HDFSContentsManager.root_dir='/projects/%%project%%/Jupyter/%%hdfs_user%%'
+c.HDFSContentsManager.root_dir='/Projects/%%project%%/
+# Jupyter/%%hdfs_user%%'
 
 
 #c.NotebookApp.contents_manager_class = HdfsContentsManager

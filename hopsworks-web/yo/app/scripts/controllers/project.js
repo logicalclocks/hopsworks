@@ -23,7 +23,8 @@ angular.module('hopsWorksApp')
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
-	      
+//            $scope.jupyterRunning = true;
+
             self.role = "";
 
             self.endpoint = '...';
@@ -31,7 +32,7 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -66,10 +67,10 @@ angular.module('hopsWorksApp')
 
             self.initTour = function () {
               if (angular.equals(self.currentProject.projectName.substr(0, 10),
-                self.tourService.sparkProjectPrefix)) {
+                      self.tourService.sparkProjectPrefix)) {
                 self.tourService.setActiveTour('spark');
               } else if (angular.equals(self.currentProject.projectName
-                .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
+                      .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
                 self.tourService.setActiveTour('kafka');
               }
 
@@ -87,7 +88,7 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.activeTensorflow = function() {
+            self.activeTensorflow = function () {
               if ($location.url().indexOf("") !== -1) {
               }
               return false;
@@ -129,7 +130,7 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
 
-                        $cookies.put("projectID",self.pId);
+                        $cookies.put("projectID", self.pId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
@@ -241,20 +242,20 @@ angular.module('hopsWorksApp')
             };
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;
-            
+
             // Show the searchbar if you are (1) within a project on datasets or (2) on the landing page
 //            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
 
 
-            self.goToHopsworksInstance = function(endpoint, serviceName) {
+            self.goToHopsworksInstance = function (endpoint, serviceName) {
               $scope.activeService = serviceName;
-              $location.path('http://' + endpoint + '/project/' + self.pId + '/' + serviceName);              
+              $location.path('http://' + endpoint + '/project/' + self.pId + '/' + serviceName);
             }
 
 
-            self.goToUrl = function(serviceName) {
+            self.goToUrl = function (serviceName) {
               $scope.activeService = serviceName;
-              $location.path('project/' + self.pId + '/' + serviceName);              
+              $location.path('project/' + self.pId + '/' + serviceName);
             }
 
             self.goToDatasets = function () {
@@ -263,12 +264,12 @@ angular.module('hopsWorksApp')
 
             self.goToJobs = function () {
               ProjectService.enableLogs({id: self.currentProject.projectId}).$promise.then(
-                        function (success) {
-                            
-                        }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
-                });
-              
+                      function (success) {
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
+              });
+
               self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
@@ -279,20 +280,21 @@ angular.module('hopsWorksApp')
             };
 
             self.goToJupyter = function () {
-               self.goToUrl('jupyter');
+              self.goToUrl('jupyter');
 //               self.goToHopsworksInstance('jupyter');
+              $scope.dropdown = true;
             };
 
 
             self.goToWorklows = function () {
-               self.goToUrl('workflows');
-            };
-            
-            self.goToTensorflow = function () {
-               self.goToUrl('tensorflow');
+              self.goToUrl('workflows');
             };
 
-	      
+            self.goToTensorflow = function () {
+              self.goToUrl('tensorflow');
+            };
+
+
             self.goToSsh = function () {
               self.goToUrl('ssh');
             };
@@ -327,9 +329,9 @@ angular.module('hopsWorksApp')
             self.goToMetadataDesigner = function () {
               self.goToUrl('metadata');
             };
-            
+
             self.goToHistory = function () {
-                $location.path('history/' + self.pId + '/history');
+              $location.path('history/' + self.pId + '/history');
             };
 
             /**
@@ -397,11 +399,11 @@ angular.module('hopsWorksApp')
             self.showKafka = function () {
               return showService("Kafka");
             };
-            
+
             self.showTensorflow = function () {
               return showService("Tensorflow");
             };
-	      
+
             self.showWorkflows = function () {
               return showService("Workflows");
             };

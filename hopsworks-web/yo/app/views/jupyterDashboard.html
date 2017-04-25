@@ -1,17 +1,17 @@
-<style>
-    .slow .toggle-group {
-        transition: left 1.2s;
-        -webkit-transition: left 1.2s;
-    }
-     .fast .toggle-group {
-        transition: left 0.1s;
-        -webkit-transition: left 0.1s;
-    }
-     .quick .toggle-group {
-        transition: none;
-        -webkit-transition: none;
-    }
-</style>
+<!--<style>
+  .slow .toggle-group {
+    transition: left 1.8s;
+    -webkit-transition: left 1.8s;
+  }
+  .fast .toggle-group {
+    transition: left 0.1s;
+    -webkit-transition: left 0.1s;
+  }
+  .quick .toggle-group {
+    transition: none;
+    -webkit-transition: none;
+  }
+</style>-->
 
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
@@ -31,44 +31,43 @@
         </div> 
         <div class="content-wrapper">                      
           <div growl reference="10" class="pull-right" ></div>
-          <h3>
-            <div class="col-sm-3 col-md-3 col-lg-3 " style="margin-top: -17px; margin-left: 13px;">
-              <button class="btn btn-success" ng-click="jupyterCtrl.startServer()" type="button" id="newJupyter">
-                Start Jupyter Server
-              </button>
-              
-            
-              <toggle ng-model="jupyterCtrl.toggleValue" ng-change="toggleJupyter()" onstyle="btn-success" style="slow"
-                      offstyle="btn-danger" size="btn-lg" on="<i class='fa fa-play'></i> Start" off="<i class='fa fa-stop'></i>Stop"></toggle>
-              
-            </div>
 
+<!--          <div class="col-sm-3 col-md-3 col-lg-3 ">
+
+            <toggle ng-model="jupyterCtrl.toggleValue" ng-change="toggleJupyter()" onstyle="btn-success" style="slow"
+                    offstyle="btn-danger" size="btn" on="<i class='fa fa-play'></i> On" 
+                    off="<i class='fa fa-stop'></i> Off"></toggle>
+
+          </div>-->
+
+
+
+<!--          <table class="table table-hover" style="width: 100%">
+            <tbody>
+              <tr>
+                <td class="text-muted">{{jupyterServer.statusMsg}}</td>
+                <td style="text-align: right">                                      
+                  <button ng-if="jupyterServer.notRunning"
+                          ng-click="jupyterCtrl.start()"
+                          type="button" class="btn btn-info btn-sm" 
+                          ng-disabled="jupyterServer.notRunning">
+                    <span class="glyphicon glyphicon-eye-open" ></span>
+                  </button>
+                  <button ng-if="jupyterServer.notRunning === false"
+                          ng-click="jupyterCtrl.stop()"
+                          type="button" class="btn btn-danger btn-sm" 
+                          ng-disabled="jupyterServer.notRunning">
+                    <span class="glyphicon glyphicon-off" ></span>
+                  </button>
+                </td>
+              </tr>
+
+            </tbody>                     
+          </table>        -->
         </div> <!--content wrapper -->
-
-        <table class="table table-hover" style="width: 100%">
-          <tbody>
-            <tr>
-              <td class="text-muted">{{jupyterServer.statusMsg}}</td>
-              <td style="text-align: right">                                      
-                <button ng-if="jupyterServer.notRunning"
-                        ng-click="jupyterCtrl.start()"
-                        type="button" class="btn btn-info btn-sm" 
-                        ng-disabled="jupyterServer.notRunning">
-                  <span class="glyphicon glyphicon-eye-open" ></span>
-                </button>
-                <button ng-if="jupyterServer.notRunning === false"
-                        ng-click="jupyterCtrl.stop()"
-                        type="button" class="btn btn-danger btn-sm" 
-                        ng-disabled="jupyterServer.notRunning">
-                  <span class="glyphicon glyphicon-off" ></span>
-                </button>
-              </td>
-            </tr>
-
-          </tbody>                     
-        </table>        
 
       </section>
     </div>
+
   </div>
 </div>

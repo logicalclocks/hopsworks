@@ -1,28 +1,18 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -37,10 +27,6 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 @Singleton
@@ -52,31 +38,31 @@ public class JupyterConfigFactory {
   private static final String JUPYTER_NOTEBOOK_CONFIG
           = "conf/jupyter_notebook_config.py";
 
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
-
+//  @PersistenceContext(unitName = "kthfsPU")
+//  private EntityManager em;
   @EJB
   private Settings settings;
-  @EJB
-  private ProjectFacade projectBean;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private HdfsUsersController hdfsUsername;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeFacade;
 
-  private final ConcurrentMap<String, JupyterConfig> hdfsuserConfCache
+//  @EJB
+//  private ProjectFacade projectBean;
+//  @EJB
+//  private UserFacade userFacade;
+//  @EJB
+//  private HdfsUsersController hdfsUsername;
+//  @EJB
+//  private JupyterFacade jupyterFacade;
+  private static final ConcurrentMap<String, JupyterConfig> hdfsuserConfCache
           = new ConcurrentHashMap<>();
-  private ConcurrentHashMap<String, Process> runningServers
+  private static final ConcurrentHashMap<String, Process> runningServers
           = new ConcurrentHashMap<>();
 
-  protected EntityManager getEntityManager() {
-    return em;
-  }
-
+//  protected EntityManager getEntityManager() {
+//    return em;
+//  }
 //  private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
   @PostConstruct
   public void init() {
@@ -86,20 +72,23 @@ public class JupyterConfigFactory {
 
   @PreDestroy
   public void preDestroy() {
-    for (Process p : runningServers.values()) {
-      this.killNotebookServer(p);
-    }
-    for (JupyterConfig conf : hdfsuserConfCache.values()) {
-      conf.clean();
-    }
-    hdfsuserConfCache.clear();
+//    for (Process p : runningServers.values()) {
+//      if (p != null) {
+//        this.killNotebookServer(p);
+//      }
+//    }
+//    for (JupyterConfig conf : hdfsuserConfCache.values()) {
+//      conf.clean();
+//    }
+//    hdfsuserConfCache.clear();
   }
 
   private void loadConfig() {
 
   }
 
-  public JupyterConfig init(String projectName, String owner) {
+  public JupyterConfig initialize(String projectName, String owner) throws
+          AppException {
 
     HdfsLeDescriptors hld = hdfsLeFacade.getActiveNN();
     String nameNodeIp = hld.getHostname();
@@ -139,21 +128,20 @@ public class JupyterConfigFactory {
     return false;
   }
 
-  public List<JupyterProject> findNotebooksByProject(Integer projectId) {
-    TypedQuery<JupyterProject> query = em.createNamedQuery(
-            "JupyterProject.findByProjectId",
-            JupyterProject.class);
-    query.setParameter("projectId", projectId);
-    List<JupyterProject> res = query.getResultList();
-    List<JupyterProject> notebooks = new ArrayList<>();
-    for (JupyterProject pt : res) {
-//      notebooks.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
-//              pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-//              pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
-    }
-    return notebooks;
-  }
-
+//  public List<JupyterProject> findNotebooksByProject(Integer projectId) {
+//    TypedQuery<JupyterProject> query = em.createNamedQuery(
+//            "JupyterProject.findByProjectId",
+//            JupyterProject.class);
+//    query.setParameter("projectId", projectId);
+//    List<JupyterProject> res = query.getResultList();
+//    List<JupyterProject> notebooks = new ArrayList<>();
+//    for (JupyterProject pt : res) {
+////      notebooks.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
+////              pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+////              pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
+//    }
+//    return notebooks;
+//  }
   public boolean removeNotebookServer(String hdfsUsername) {
     if (runningServers.containsKey(hdfsUsername)) {
       Process oldProcess = runningServers.get(hdfsUsername);
@@ -235,31 +223,30 @@ public class JupyterConfigFactory {
     return false;
   }
 
-  public JupyterProject findByUser(String hdfsUser) {
-    HdfsUsers res = null;
-    TypedQuery<HdfsUsers> query = em.createNamedQuery(
-            "HdfsUsers.findByName", HdfsUsers.class);
-    query.setParameter("name", hdfsUser);
-    try {
-      res = query.getSingleResult();
-    } catch (EntityNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
-      return null;
-    }
-    JupyterProject res2 = null;
-    TypedQuery<JupyterProject> query2 = em.createNamedQuery(
-            "JupyterProject.findByHdfsUserId", JupyterProject.class);
-    query.setParameter("hdfsUserId", res.getId());
-    try {
-      res2 = query2.getSingleResult();
-    } catch (EntityNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
-    }
-    return res2;
-  }
-
+//  public JupyterProject findByUser(String hdfsUser) {
+//    HdfsUsers res = null;
+//    TypedQuery<HdfsUsers> query = em.createNamedQuery(
+//            "HdfsUsers.findByName", HdfsUsers.class);
+//    query.setParameter("name", hdfsUser);
+//    try {
+//      res = query.getSingleResult();
+//    } catch (EntityNotFoundException e) {
+//      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
+//              e);
+//      return null;
+//    }
+//    JupyterProject res2 = null;
+//    TypedQuery<JupyterProject> query2 = em.createNamedQuery(
+//            "JupyterProject.findByHdfsUserId", JupyterProject.class);
+//    query.setParameter("hdfsUserId", res.getId());
+//    try {
+//      res2 = query2.getSingleResult();
+//    } catch (EntityNotFoundException e) {
+//      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
+//              e);
+//    }
+//    return res2;
+//  }
   public void initNotebook(Project project, HdfsUsers user) {
 
   }
@@ -289,10 +276,13 @@ public class JupyterConfigFactory {
 //            settings);
     JupyterConfig jc = hdfsuserConfCache.get(hdfsUser);
     if (jc == null) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not find a Jupyter Notebook server configuration .");
+//      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+//              getStatusCode(),
+//              "Could not find a Jupyter Notebook server configuration .");
 
+      jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
+              getActiveNN().getHostname(), settings);
+      hdfsuserConfCache.put(hdfsUser, jc);
     }
 
     boolean failed = true;
@@ -302,13 +292,16 @@ public class JupyterConfigFactory {
       Integer id = 1;
       int port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
+      StringBuilder sb = new StringBuilder();
+      sb.append("--NotebookApp.contents_manager_class=");
+      sb.append("'hdfscontents.hdfsmanager.HDFSContentsManager' --no-browser");
+      String c = "> " + jc.getLogDirPath() + "/" + hdfsUser + "-" + port
+              + ".log";
 //      String[] command = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), 
       String[] command
-              = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), "jupyter",
-                "--NotebookApp.contents_manager_class="
-                  + "'hdfscontents.hdfsmanager.HDFSContentsManager'",
-                "--no-browser", " > " + jc.getLogDirPath() + "/"
-                  + hdfsUser + "-" + port + ".log"};
+              = {"jupyter",
+                sb.toString(), c
+              };
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
       env.put("JUPYTER_CONFIG_DIR", jc.getConfDirPath());
@@ -332,7 +325,8 @@ public class JupyterConfigFactory {
             foundToken = true;
           }
         }
-        saveServer(port, user, token, process);
+//        jupyterFacade.saveServer
+//        saveServer(port, user, token, process);
         failed = false;
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
@@ -351,9 +345,8 @@ public class JupyterConfigFactory {
     }
 
 //    JupyterConfig.removeNotebookServer(hdfsUser);
-    JupyterProject jp = this.findByUser(hdfsUser);
-    remove(jp);
-
+//    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+//    jupyterFacade.remove(jp);
     // delete JupyterProject entity bean
   }
 
@@ -362,44 +355,42 @@ public class JupyterConfigFactory {
     // delete JupyterProject entity bean
   }
 
-  private void saveServer(int port, HdfsUsers hdfsUser, String token,
-          Process process) throws AppException {
-
-    String ip;
-    try {
-      ip = InetAddress.getLocalHost().getHostAddress();
-
-      JupyterProject jp
-              = new JupyterProject(port, hdfsUser.getId(), Date.from(Instant.now()), ip,
-                      token, JupyterConfig.getPidOfProcess(process));
-
-      persist(jp);
-//      JupyterConfig.addNotebookServer(user.getUsername(), process);
-    } catch (UnknownHostException ex) {
-      Logger.getLogger(JupyterConfigFactory.class.getName()).
-              log(Level.SEVERE, null, ex);
-    }
-
-  }
-
-  private void persist(JupyterProject jp) {
-    if (jp != null) {
-      em.persist(jp);
-    }
-  }
-
-  private void update(JupyterProject jp) {
-    if (jp != null) {
-      em.merge(jp);
-    }
-  }
-
-  private void remove(JupyterProject jp) {
-    if (jp != null) {
-      em.remove(jp);
-    }
-  }
-
+//  private void saveServer(int port, HdfsUsers hdfsUser, String token,
+//          Process process) throws AppException {
+//
+//    String ip;
+//    try {
+//      ip = InetAddress.getLocalHost().getHostAddress();
+//
+//      JupyterProject jp
+//              = new JupyterProject(port, hdfsUser.getId(), Date.from(Instant.now()), ip,
+//                      token, JupyterConfig.getPidOfProcess(process));
+//
+//      persist(jp);
+////      JupyterConfig.addNotebookServer(user.getUsername(), process);
+//    } catch (UnknownHostException ex) {
+//      Logger.getLogger(JupyterConfigFactory.class.getName()).
+//              log(Level.SEVERE, null, ex);
+//    }
+//
+//  }
+//  private void persist(JupyterProject jp) {
+//    if (jp != null) {
+//      em.persist(jp);
+//    }
+//  }
+//
+//  private void update(JupyterProject jp) {
+//    if (jp != null) {
+//      em.merge(jp);
+//    }
+//  }
+//
+//  private void remove(JupyterProject jp) {
+//    if (jp != null) {
+//      em.remove(jp);
+//    }
+//  }
   public void removeProject(Project project) {
     // Find any active jupyter servers
 
@@ -424,7 +415,7 @@ public class JupyterConfigFactory {
           //
           //          }
         }
-        remove(jp);
+//        remove(jp);
       }
     }
     // Kill any processes
