@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.swagger.annotations.Api;
+import java.io.IOException;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -20,6 +21,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import org.apache.zeppelin.user.AuthenticationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +52,7 @@ public class NotebookService {
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   public NotebookRestApi interpreter(@PathParam("projectID") String projectID,
           @Context HttpServletRequest httpReq) throws
-          AppException {
+          AppException, IOException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
@@ -73,6 +75,11 @@ public class NotebookService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");
     }
+
+    if (zeppelinConf.getNotebook() == null) {
+      zeppelinConf.getNotebookRepo().list(AuthenticationInfo.ANONYMOUS);
+    }
+
     notebookRestApi.setParms(project, userRole, hdfsController.getHdfsUserName(
             project, user), zeppelinConf);
     return notebookRestApi;

@@ -82,7 +82,9 @@ public class NotebookRestApi {
     this.notebook = zeppelinConf.getNotebook();
     this.notebookServer = zeppelinConf.getNotebookServer();
     this.noteSearchService = zeppelinConf.getNotebookIndex();
-    this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    if (this.notebook != null) {
+      this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    }
   }
 
   /**
