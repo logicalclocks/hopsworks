@@ -1,6 +1,7 @@
 package io.hops.hopsworks.api.exception.mapper;
 
 import io.hops.hopsworks.api.util.JsonResponse;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.PersistenceException;
@@ -21,6 +22,7 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   @Produces(MediaType.APPLICATION_JSON)
   public Response toResponse(Throwable ex) {
     log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getClass());
+    log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getMessage());
     JsonResponse json = new JsonResponse();
     json.setErrorMsg("Oops! something went wrong :(");
     setHttpStatus(ex, json);
@@ -51,6 +53,17 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
       } else {
         json.setErrorMsg("Persistence Exception :(");
         json.setStatus("Persistence Exception.");
+        json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+      }
+    } else if (ex instanceof IOException) {
+      if (ex.getMessage().contains(
+              "Requested storage index 0 isn't initialized, repository count is 0")) {
+        json.setErrorMsg(
+                "Zepplin notebook dir not found, or notebook storage isn't initialized.");
+        json.setStatusCode(Response.Status.SERVICE_UNAVAILABLE.
+                getStatusCode());
+      } else {
+        json.setErrorMsg(ex.getMessage());
         json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
       }
     } else {

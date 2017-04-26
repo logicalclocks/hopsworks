@@ -536,7 +536,7 @@ public class ProjectController {
 
       datasetController.createDataset(user, project, ds.getName(), ds.
               getDescription(), -1, false, globallyVisible, dfso,
-              udfso);
+              dfso);// both are dfso to create it as root user
       if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
         for (String sub : subResources) {
           datasetController.createSubDirectory(user, project, ds.getName(),
