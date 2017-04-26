@@ -75,23 +75,26 @@
                           <div class="col-md-5">
                             <label class="text-muted">Status</label>
                             <div class="row" style="margin-left:15px; margin-bottom:0px">
-                              <fieldset>
+                              <fieldset ng-if="projectCtrl.hdfsQuota()!=null">
                                 <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
                                   {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
                                 </span>          
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                              <fieldset>
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                              <fieldset ng-if="projectCtrl.hdfsNsCount()!=null">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() ===-1">
+                                  {{projectCtrl.hdfsNsCount()}} files 
+                                </span>  
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !==-1">
                                   {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
-                                </span>          
+                                </span>  
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
-                              <fieldset>
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                                  {{projectCtrl.yarnQuota()}} CPU 
+                              <fieldset ng-if="projectCtrl.yarnQuota()!=null">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
+                                  {{projectCtrl.yarnQuota()}} CPU hours
                                 </span>          
                               </fieldset>    
                             </div>

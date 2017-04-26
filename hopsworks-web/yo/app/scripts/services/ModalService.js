@@ -91,21 +91,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
-              projectSettings: function (size, projectId) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/projectSettingsModal.html',
-                  controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
-                  size: size, 
-                  resolve: {
-                    projectId: function () {
-                      return projectId;
-                    }
-                  }                  
-                  
-                });
-                return modalInstance.result;
-              },
               profile: function (size) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/profile.html',
