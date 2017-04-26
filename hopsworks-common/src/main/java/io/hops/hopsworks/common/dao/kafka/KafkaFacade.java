@@ -896,10 +896,6 @@ public class KafkaFacade {
         brokerAddress = brokerAddress.split("://")[1];
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
-        //props.put(ConsumerConfig.GROUP_ID_CONFIG, "DemoConsumer");
-        //props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
-        //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 "org.apache.kafka.common.serialization.IntegerDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
@@ -928,7 +924,7 @@ public class KafkaFacade {
 //                  = new ConsumerGroupCommand.ConsumerGroupCommandOptions(null);
 //          ConsumerGroupCommand.KafkaConsumerGroupService k
 //                  = new ConsumerGroupCommand.KafkaConsumerGroupService(opts);
-          List<PartitionInfo> partitions = consumer.listTopics().get(topicName);
+          List<PartitionInfo> partitions = consumer.partitionsFor(topicName);
           for (PartitionInfo partition : partitions) {
             int id = partition.partition();
             //list the leaders of each parition
