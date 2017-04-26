@@ -52,7 +52,6 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
@@ -1015,16 +1014,10 @@ public class ProjectController {
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
                     new Object[]{newMember.getEmail(),
                       project.getName()});
-            List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
-            List<String> publicKeys = new ArrayList<>();
-            for (SshKeys k : keys) {
-              publicKeys.add(k.getPublicKey());
-            }
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
                     getProjectTeamPK().getTeamMember(),
                     ActivityFacade.FLAG_PROJECT, user, project);
-//            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                     + " was not found in the system.");
@@ -1076,9 +1069,15 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, inode.getId(), services, projectTeam,
-            getYarnQuota(name));
-//    ,getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+    String yarnQuota = getYarnQuota(project.getName());
+    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(inode.getId());
+
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas);
   }
 
   /**
@@ -1185,7 +1184,26 @@ public class ProjectController {
 
     return res;
   }
+          
+  /**
+   * 
+   * @param id
+   * @return
+   * @throws AppException 
+   */       
+  public QuotasDTO getQuotas(Integer id) throws AppException {
+    ProjectDTO proj = getProjectByID(id);
+    String yarnQuota = getYarnQuota(proj.getProjectName());
+    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(proj.getInodeid());
 
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount);
+    return quotas;
+  }
+  
 //  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
 //    String path = settings.getProjectPath(name);
 //
