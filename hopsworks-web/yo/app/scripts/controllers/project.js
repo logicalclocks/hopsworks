@@ -230,7 +230,6 @@ angular.module('hopsWorksApp')
             self.goToJobs = function () {
               ProjectService.enableLogs({id: self.currentProject.projectId}).$promise.then(
                         function (success) {
-                            
                         }, function (error) {
                   growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
                 });
