@@ -17,18 +17,8 @@ public class AclDTO implements Serializable {
   public AclDTO() {
   }
 
-  AclDTO(Integer id, String username, String permissionType,
-          String operationType, String host, String role) {
-    this.id = id;
-    this.userEmail = username;
-    this.permissionType = permissionType;
-    this.operationType = operationType;
-    this.host = host;
-    this.role = role;
-  }
-
   public AclDTO(Integer id, String projectName, String userEmail,
-          String permissionType, String operationType, String host, String role) {
+      String permissionType, String operationType, String host, String role) {
     this.id = id;
     this.projectName = projectName;
     this.userEmail = userEmail;
