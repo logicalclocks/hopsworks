@@ -1,12 +1,12 @@
 {
 "kernel_python_credentials" : {
-"username": "%%hdfs_user%%",
+"username": "",
 "password": "",
 "url": "http://%%livy_ip%%:8998"
 },
 
 "kernel_scala_credentials" : {
-"username": "%%hdfs_user%%",
+"username": "",
 "password": "",
 "url": "http://%%livy_ip%%:8998"
 },
@@ -45,8 +45,11 @@
 "ignore_ssl_errors": false,
 
 "session_configs": {
-"driverMemory": "%%driver_memory%%",
-"executorCores": %%driver_cores%%
+  "driverCores": %%driver_cores%%,
+  "driverMemory": "%%driver_memory%%",
+  "executorCores": %%executor_cores%%,
+  "executorMemory": "%%executor_memory%%",
+  "proxyUser": "%%hdfs_user%%"
 },
 
 "use_auto_viz": true,

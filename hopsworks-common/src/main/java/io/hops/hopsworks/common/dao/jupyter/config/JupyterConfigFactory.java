@@ -328,7 +328,7 @@ public class JupyterConfigFactory {
       env.put("CLASSPATH", "$CLASSPATH:" + getHadoopClasspath());
       env.put("HADOOP_HOME", settings.getHadoopDir());
       env.put("JAVA_HOME", settings.getJavaHome());
-      env.put("PWD", System.getenv("HOME"));
+      env.put("SPARKMAGIC_CONF_DIR", jc.getConfDirPath());
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       try {
         // Send both stdout and stderr to the same stream
