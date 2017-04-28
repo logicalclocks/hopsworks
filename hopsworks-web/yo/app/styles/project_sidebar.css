@@ -156,7 +156,7 @@
 .sidebar-nav li.open span:hover,
 .sidebar-nav li.open span:active,
 .sidebar-nav li.open span:focus{
-  color: #f00;
+  color: #fff;
   text-decoration: none;
   background-color: transparent;
 }

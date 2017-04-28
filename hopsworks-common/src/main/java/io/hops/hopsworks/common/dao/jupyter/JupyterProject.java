@@ -2,6 +2,7 @@ package io.hops.hopsworks.common.dao.jupyter;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -95,15 +96,14 @@ public class JupyterProject implements Serializable {
   public JupyterProject() {
   }
 
-  public JupyterProject(Integer port) {
-    this.port = port;
-  }
 
-  public JupyterProject(Integer port, int hdfsUserId, Date created,
+  public JupyterProject(Project project, Integer port, int hdfsUserId, 
           String hostIp, String hashedPasswd, Long pid) {
+    this.projectId = project;
     this.port = port;
     this.hdfsUserId = hdfsUserId;
-    this.created = created;
+    this.created = Date.from(Instant.now());
+    this.lastAccessed = Date.from(Instant.now());
     this.hostIp = hostIp;
     this.hashedPasswd = hashedPasswd;
     this.pid = pid;

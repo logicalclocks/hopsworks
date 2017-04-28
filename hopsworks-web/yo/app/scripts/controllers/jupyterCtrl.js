@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-          'growl', 'ModalService', 'JupyterService', '$location',
-          function ($scope, $routeParams, $route, growl, ModalService, JupyterService, $location) {
+          'growl', 'ModalService', 'JupyterService', '$location', '$timeout', '$window', '$sce',
+          function ($scope, $routeParams, $route, growl, ModalService, JupyterService, $location, $timeout, $window, $sce) {
 
             var self = this;
             self.loading = false;
@@ -14,28 +14,32 @@ angular.module('hopsWorksApp')
             var projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             var loaded = false;
+            self.ui = "";
 
-            var toggleJupyter = function () {
-              if (self.toggleValue === false) {
-                JupyterService.start(projectId).then(
-                        function (success) {
-                          growl.info("Jupyter Started successfully");
-                          self.toggleValue = true;
-                        }, function (error) {
-                  growl.error("Could not start Jupyter.");
-                }
-                );
-              } else {
-                JupyterService.stop(projectId).then(
-                        function (success) {
-                          growl.info("Jupyter Stopped successfully");
-                          self.toggleValue = false;
-                        }, function (error) {
-                  growl.error("Could not stop Jupyter.");
-                }
-                );
-              }
-            };
+            self.token;
+            self.port;
+
+//            var toggleJupyter = function () {
+//              if (self.toggleValue === false) {
+//                JupyterService.start(projectId).then(
+//                        function (success) {
+//                          growl.info("Jupyter Started successfully");
+//                          self.toggleValue = true;
+//                        }, function (error) {
+//                  growl.error("Could not start Jupyter.");
+//                }
+//                );
+//              } else {
+//                JupyterService.stop(projectId).then(
+//                        function (success) {
+//                          growl.info("Jupyter Stopped successfully");
+//                          self.toggleValue = false;
+//                        }, function (error) {
+//                  growl.error("Could not stop Jupyter.");
+//                }
+//                );
+//              }
+//            };
 
             var init = function () {
               startLoading("Connecting to Jupyter...");
@@ -44,12 +48,22 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.toggleValue = true;
                         stopLoading();
+                        self.token = success.data.hashedPasswd;
+                        self.port = success.data.port;
+//                                self.ui = "http://" + $location.host() + ":" + self.port + "/?token=" + self.token;
+                        self.ui = "http://192.168.56.101:" + self.port + "/?token=" + self.token;
+                        var iframe = document.getElementById('ui_iframe');
+                        if (iframe) {
+                          iframe.src = $sce.trustAsResourceUrl(self.ui);
+                        }
+                        $window.open(self.ui, '_blank');
+                        $timeout(stopLoading(), 1000);
+
                       }, function (error) {
                 growl.error("Could not start Jupyter.");
                 stopLoading();
               }
               );
-              stopLoading();
             };
 
 

@@ -1,13 +1,11 @@
-from hdfscontents import HdfsContentsManager
+#from hdfscontents.hdfsmanager import HDFSContentsManager
 c = get_config()
-c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
 c.HDFSContentsManager.hdfs_namenode_host='%%namenode_ip%%'
-c.HDFSContentsManager.hdfs_namenode_port=9000
-c.HDFSContentsManager.root_dir='/Projects/%%project%%/
-# Jupyter/%%hdfs_user%%'
+c.HDFSContentsManager.hdfs_namenode_port=%%namenode_port%%
+c.HDFSContentsManager.root_dir='/Projects/%%project%%/' 
+c.HDFSContentsManager.hdfs_user = '%%hdfs_user%%'
 
-
-#c.NotebookApp.contents_manager_class = HdfsContentsManager
+c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
 
 # Set options for certfile, ip, password, and toggle off
 # browser auto-opening
@@ -19,16 +17,13 @@ c.HDFSContentsManager.root_dir='/Projects/%%project%%/
 #c.NotebookApp.password = u'%%hashed_password%%'
 
 #c.NotebookApp.ip = '127.0.0.1'
-c.NotebookApp.ip = 'localhost'
+
+
+c.NotebookApp.ip = '%%hopsworks_ip%%'
 c.NotebookApp.open_browser = False
 
-c.HDFSContentsManager.root_dir
-
-# We should set this at the command line when we launch it, so thtat we can check for busy ports.
-# c.NotebookApp.port = %%jupyter_port%%
-
-c.HdfsContentsManager.user_id = '%%hdfs_user%%'
-c.HdfsContentsManager.hadoop_home = '%%hadoop_home%%'
+c.NotebookApp.port_retries = 0
+c.NotebookApp.port = %%port%%
 
 
 c.NotebookApp.tornado_settings = {
@@ -36,3 +31,9 @@ c.NotebookApp.tornado_settings = {
         'Content-Security-Policy': "frame-ancestors 'https://%%hopsworks_ip%%' 'self' "
     }
 }
+
+#c.NotebookApp.tornado_settings = {
+#    'headers': {
+#        'Content-Security-Policy': "frame-ancestors 'ec2-url:9000'",
+#    }
+#}

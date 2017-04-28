@@ -47,6 +47,9 @@ public class ConfigFileGenerator {
   public static final String JUPYTER_CUSTOM_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "custom_template.js";
+  public static final String SPARKMAGIC_CONFIG_TEMPLATE
+          = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
+          + "config_template.json";  
   public static final String METRICS_TEMPLATE
           = TEMPLATE_ROOT + File.separator
           + "metrics_template.properties";

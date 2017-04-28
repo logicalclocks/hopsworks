@@ -25,6 +25,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_JAVA_HOME = "java_home";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
@@ -184,6 +185,7 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -471,6 +473,13 @@ public class Settings implements Serializable {
     return SPARK_USER;
   }
 
+  public static String JAVA_HOME = "/usr/lib/jvm/default-java";
+
+  public synchronized String getJavaHome() {
+    checkCache();
+    return JAVA_HOME;
+  }
+
   private String FLINK_USER = "glassfish";
 
   public synchronized String getFlinkUser() {
@@ -602,9 +611,6 @@ public class Settings implements Serializable {
   public static final String FLINK_AM_MAIN
       = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
-
-  //Zeppelin constants
-  public static final String JAVA_HOME = "/usr/lib/jvm/default-java";
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";

@@ -14,8 +14,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -24,9 +27,11 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericEntity;
@@ -52,6 +57,8 @@ public class JupyterService {
   private JupyterFacade jupyterFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
 
   private Integer projectId;
   private Project project;
@@ -143,12 +150,29 @@ public class JupyterService {
               "Could not find your username. Report a bug.");
     }
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp != null) {
-      throw new AppException(
-              Response.Status.FOUND.getStatusCode(),
-              "Already running a Jupyter notebook server for this project.");
+    if (jp == null) {
+      HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
+
+      JupyterDTO dto;
+      try {
+        dto = jupyterConfigFactory.startServer(project, hdfsUser);
+      } catch (InterruptedException | IOException ex) {
+        Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
+                ex);
+        throw new AppException(
+                Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                "Problem starting a Jupyter notebook server.");
+      }
+
+      if (dto == null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Incomplete request!");
+      }
+
+      jp = jupyterFacade.saveServer(project, dto.getPort(), user.getId(), dto.
+              getToken(), dto.getPid());
+
     }
-    jupyterConfigFactory.startServer(project, hdfsUser);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jp).build();
   }

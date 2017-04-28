@@ -14,17 +14,13 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
@@ -32,11 +28,11 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Stateless
 public class JupyterFacade {
 
-  private static final Logger logger = Logger.getLogger(JupyterFacade.class.getName());
+  private static final Logger logger = Logger.getLogger(JupyterFacade.class.
+          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -57,8 +53,6 @@ public class JupyterFacade {
   protected EntityManager getEntityManager() {
     return em;
   }
-
-
 
   public List<JupyterProject> findNotebooksByProject(Integer projectId) {
     TypedQuery<JupyterProject> query = em.createNamedQuery(
@@ -83,7 +77,6 @@ public class JupyterFacade {
 //    }
     return false;
   }
-
 
   /**
    * Deletes jupyter configuration dir for user.
@@ -138,7 +131,6 @@ public class JupyterFacade {
     return res2;
   }
 
-
   public void stopServer(String hdfsUser) throws AppException {
 
     if (hdfsUser == null) {
@@ -158,24 +150,22 @@ public class JupyterFacade {
     // delete JupyterProject entity bean
   }
 
-  private void saveServer(int port, HdfsUsers hdfsUser, String token,
-          Process process) throws AppException {
-
+  public JupyterProject saveServer(Project project, int port, int hdfsUserId, String token,
+          long pid)
+          throws AppException {
+    JupyterProject jp = null;
     String ip;
     try {
       ip = InetAddress.getLocalHost().getHostAddress();
 
-      JupyterProject jp
-              = new JupyterProject(port, hdfsUser.getId(), Date.from(Instant.now()), ip,
-                      token, JupyterConfig.getPidOfProcess(process));
+      jp = new JupyterProject(project, port, hdfsUserId, ip, token, pid);
 
       persist(jp);
-//      JupyterConfig.addNotebookServer(user.getUsername(), process);
     } catch (UnknownHostException ex) {
       Logger.getLogger(JupyterFacade.class.getName()).
               log(Level.SEVERE, null, ex);
     }
-
+    return jp;
   }
 
   private void persist(JupyterProject jp) {

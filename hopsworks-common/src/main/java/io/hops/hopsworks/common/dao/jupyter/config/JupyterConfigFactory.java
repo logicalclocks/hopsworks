@@ -1,6 +1,5 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -10,13 +9,17 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -47,6 +50,7 @@ public class JupyterConfigFactory {
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeFacade;
 
+  private String hadoopClasspath = null;
 //  @EJB
 //  private ProjectFacade projectBean;
 //  @EJB
@@ -87,17 +91,16 @@ public class JupyterConfigFactory {
 
   }
 
-  public JupyterConfig initialize(String projectName, String owner) throws
-          AppException {
-
-    HdfsLeDescriptors hld = hdfsLeFacade.getActiveNN();
-    String nameNodeIp = hld.getHostname();
-    JupyterConfig conf = new JupyterConfig(projectName, owner, nameNodeIp,
-            settings);
-    this.hdfsuserConfCache.put(owner, conf);
-    return conf;
-  }
-
+//  public JupyterConfig initialize(String projectName, String owner) throws
+//          AppException {
+//
+//    HdfsLeDescriptors hld = hdfsLeFacade.getActiveNN();
+//    String nameNodeIp = hld.getHostname();
+//    JupyterConfig conf = new JupyterConfig(projectName, owner, nameNodeIp,
+//            settings);
+//    this.hdfsuserConfCache.put(owner, conf);
+//    return conf;
+//  }
   /**
    * If an existing process is running for this username, kill it.
    * Starts a new process with that username.
@@ -251,8 +254,18 @@ public class JupyterConfigFactory {
 
   }
 
-  public void startServer(Project project, String hdfsUser) throws AppException {
+  /**
+   *
+   * @param project
+   * @param hdfsUser
+   * @return token for the Notebook server
+   * @throws AppException
+   */
+  public JupyterDTO startServer(Project project, String hdfsUser) throws
+          AppException, InterruptedException, IOException {
 
+    JupyterProject jp = null;
+    String token = null;
     HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -274,67 +287,123 @@ public class JupyterConfigFactory {
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
 //    JupyterConfig jc = new JupyterConfig(project.getName(), user.getUsername(),
 //            settings);
-    JupyterConfig jc = hdfsuserConfCache.get(hdfsUser);
-    if (jc == null) {
+//    JupyterConfig jc = hdfsuserConfCache.get(hdfsUser);
+//    if (jc == null) {
 //      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
 //              getStatusCode(),
 //              "Could not find a Jupyter Notebook server configuration .");
 
-      jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
-              getActiveNN().getHostname(), settings);
-      hdfsuserConfCache.put(hdfsUser, jc);
-    }
-
+//    }
     boolean failed = true;
     int maxTries = 50;
+    Process process = null;
+    int port = 0;
+    JupyterConfig jc = null;
 
     while (failed && maxTries > 0) {
-      Integer id = 1;
-      int port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-      StringBuilder sb = new StringBuilder();
-      sb.append("--NotebookApp.contents_manager_class=");
-      sb.append("'hdfscontents.hdfsmanager.HDFSContentsManager' --no-browser");
-      String c = "> " + jc.getLogDirPath() + "/" + hdfsUser + "-" + port
-              + ".log";
-//      String[] command = {"JUPYTER_CONFIG_DIR=" + jc.getConfDirPath(), 
-      String[] command
-              = {"jupyter",
-                sb.toString(), c
-              };
+      Integer id = 1;
+//      port = ThreadLocalRandom.current().nextInt(40000, 59999);
+      port = 5601;
+      jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
+              getActiveNN().getHostname(), settings, port);
+      hdfsuserConfCache.put(hdfsUser, jc);
+
+//      StringBuilder sb = new StringBuilder();
+//      sb.append("--NotebookApp.port=").append(port);
+//      sb.append(" --NotebookApp.contents_manager_class=");
+//      sb.append("'hdfscontents.hdfsmanager.HDFSContentsManager' --no-browser");
+//      sb.append(" notebook");
+//      String c = ;
+//, "--debug"
+      String[] command = {"jupyter", "notebook"};
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
+      env.put("JUPYTER_DATA_DIR", jc.getNotebookDirPath());
+      env.put("JUPYTER_PATH", jc.getNotebookDirPath());
       env.put("JUPYTER_CONFIG_DIR", jc.getConfDirPath());
+      env.put("JUPYTER_RUNTIME_DIR", jc.getRunDirPath());
+      env.put("LD_LIBRARY_PATH", "$LD_LIBRARY_PATH:" + settings.getHadoopDir()
+              + "/lib/native");
+      env.put("CLASSPATH", "$CLASSPATH:" + getHadoopClasspath());
+      env.put("HADOOP_HOME", settings.getHadoopDir());
+      env.put("JAVA_HOME", settings.getJavaHome());
+      env.put("PWD", System.getenv("HOME"));
+      String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       try {
-        Process process = pb.start();
+        // Send both stdout and stderr to the same stream
+        pb.redirectErrorStream(true);
+        pb.directory(new File(jc.getNotebookDirPath()));
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(
+        process = pb.start();
+
+        final BufferedReader br = new BufferedReader(new InputStreamReader(
                 process.getInputStream(), Charset.forName("UTF8")));
-        String token = "";
         String line;
 // [I 11:59:16.597 NotebookApp] The Jupyter Notebook is running at: 
 // http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
         String pattern = "(.*)token=(.*)";
         Pattern r = Pattern.compile(pattern);
         boolean foundToken = false;
-        while (((line = br.readLine()) != null) && !foundToken) {
-          logger.info(line);
-          Matcher m = r.matcher(line);
-          if (m.find()) {
-            token = m.group(2);
-            foundToken = true;
+
+        try (PrintWriter out = new PrintWriter(logfile)) {
+          while (((line = br.readLine()) != null) && !foundToken) {
+            logger.info(line);
+            out.println(line);
+            Matcher m = r.matcher(line);
+            if (m.find()) {
+              token = m.group(2);
+              foundToken = true;
+            }
           }
         }
-//        jupyterFacade.saveServer
-//        saveServer(port, user, token, process);
+
+        // We need to start a thread to write the log to a file, otherwise
+        // the process hangs. It's ok to create a thread in java ee, as long as 
+        // it doesn't access Java EE beans/facades/resources.
+        // http://stackoverflow.com/questions/34788234/how-to-create-threads-in-java-ee-environment
+        // The thread will exit when it can no longer read from stout/stderr
+        new Thread() {
+          public void run() {
+            String line = "";
+            try (PrintWriter out = new PrintWriter(logfile)) {
+              while (((line = br.readLine()) != null)) {
+                out.println(line);
+              }
+            } catch (FileNotFoundException ex) {
+              Logger.getLogger(JupyterConfigFactory.class.getName()).
+                      log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+              Logger.getLogger(JupyterConfigFactory.class.getName()).
+                      log(Level.SEVERE, null, ex);
+            }
+          }
+        }.start();
+
         failed = false;
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Problem starting a jupyter server: {0}", ex.
                 toString());
+        if (process != null) {
+          process.destroyForcibly();
+        }
       }
       maxTries--;
     }
 
+    if (failed || token == null) {
+      // cleanup
+      if (jc != null) {
+//        jc.cleanAndRemoveConfDirs();
+      }
+      hdfsuserConfCache.remove(hdfsUser);
+      return null;
+    } else {
+      jc.setPid(getPidOfProcess(process));
+      jc.setToken(token);
+    }
+
+    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid());
   }
 
   public void stopServer(String hdfsUser) throws AppException {
@@ -391,6 +460,51 @@ public class JupyterConfigFactory {
 //      em.remove(jp);
 //    }
 //  }
+  /**
+   * This only works on Linux systems. From Java 9, you can just call
+   * p.getPid();
+   * http://stackoverflow.com/questions/4750470/how-to-get-pid-of-process-ive-just-started-within-java-program
+   *
+   * @param p
+   * @return
+   */
+  public static synchronized long getPidOfProcess(Process p) {
+    long pid = -1;
+
+    try {
+      if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+        Field f = p.getClass().getDeclaredField("pid");
+        f.setAccessible(true);
+        pid = f.getLong(p);
+        f.setAccessible(false);
+      }
+    } catch (Exception e) {
+      pid = -1;
+    }
+    return pid;
+  }
+
+  public String getHadoopClasspath() throws IOException,
+          InterruptedException {
+    if (this.hadoopClasspath == null) {
+      ProcessBuilder ps = new ProcessBuilder(settings.getHadoopDir()
+              + "/bin/hadoop", "classpath", "--glob");
+      ps.redirectErrorStream(true);
+      Process pr = ps.start();
+      BufferedReader in = new BufferedReader(new InputStreamReader(pr.
+              getInputStream()));
+      StringBuilder sb = new StringBuilder();
+      String line;
+      while ((line = in.readLine()) != null) {
+        sb.append(line);
+      }
+      pr.waitFor();
+      in.close();
+      this.hadoopClasspath = sb.toString();
+    }
+    return this.hadoopClasspath;
+  }
+
   public void removeProject(Project project) {
     // Find any active jupyter servers
 
