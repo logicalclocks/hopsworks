@@ -134,7 +134,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String projectPath = settings.getProjectPath(this.project.getName());
+    String projectPath = Settings.getProjectPath(this.project.getName());
     this.path = projectPath + File.separator;
   }
 
@@ -651,8 +651,7 @@ public class DataSetService {
       datasetController.createAndLogDataset(user, project, dataSet.getName(),
               dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false, dfso, udfso);
-
+              false, dfso, dfso); // both are dfso to create it as root user
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -767,7 +766,7 @@ public class DataSetService {
   }
 
   @DELETE
-  @Path("/{fileName: .+}")
+  @Path("/{fileName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
@@ -801,6 +800,70 @@ public class DataSetService {
                 entity(json).build();
       }
     }
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();// do it as super user
+      success = datasetController.
+              deleteDataset(dataset, filePath, user, project, dfso);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not delete the file " + filePath);
+    } catch (IOException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not delete the file at " + filePath);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    if (!success) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not delete the file at " + filePath);
+    }
+    //remove the group associated with this dataset if the dataset is toplevel ds 
+    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
+      try {
+        hdfsUsersBean.deleteDatasetGroup(this.dataset);
+      } catch (IOException ex) {
+        //FIXME: take an action?
+        logger.log(Level.WARNING,
+                "Error while trying to delete a dataset group", ex);
+      }
+    }
+    json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  @DELETE
+  @Path("file/{fileName: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removefile(
+          @PathParam("fileName") String fileName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
+    boolean success = false;
+    JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    if (fileName == null || fileName.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NAME_EMPTY);
+    }
+    String filePath = getFullPath(fileName);
+    String[] pathArray = filePath.split(File.separator);
+    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
+      logger.log(Level.WARNING,
+              "Use DELETE /{datasetName} to delete top level dataset.");
+    }
+    //if the path does not contain this project name it is shared.
+    if (!pathArray[2].equals(this.project.getName())) { // /Projects/project/ds
+      if (pathArray.length > 4 && !this.dataset.isEditable()) {// a folder in the dataset
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You can not perform this action on a shared dataset.");
+      }
+    }
     DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
@@ -821,17 +884,6 @@ public class DataSetService {
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
-    }
-    //remove the group associated with this dataset if the dataset is toplevel ds 
-    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
-      try {
-        hdfsUsersBean.deleteDatasetGroup(this.dataset);
-      } catch (IOException ex) {
-        //FIXME: take an action?
-        logger.
-                log(Level.WARNING,
-                        "Error while trying to delete a dataset group", ex);
-      }
     }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

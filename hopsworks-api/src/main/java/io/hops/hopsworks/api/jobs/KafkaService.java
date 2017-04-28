@@ -358,23 +358,25 @@ public class KafkaService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-
+    boolean aclAdded = false;
     try {
-      kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
+      aclAdded = kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
     } catch (EntityExistsException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "This ACL definition already existes in database.");
     } catch (IllegalArgumentException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Wrong imput values");
-    } catch (Exception ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Problem adding ACL to topic.");
     }
 
-    json.setSuccessMessage("ACL has been added to the topic.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    if(aclAdded){
+      json.setSuccessMessage("ACL has been added to the topic.");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "ACL(s) already exist(s).");
+    }
+    
   }
 
   @DELETE
@@ -396,9 +398,6 @@ public class KafkaService {
     } catch (IllegalArgumentException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Wrong imput values");
-    } catch (Exception e) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "Topic acl not found in database");
     }
 
     json.setSuccessMessage("Topic acls has been removed.");

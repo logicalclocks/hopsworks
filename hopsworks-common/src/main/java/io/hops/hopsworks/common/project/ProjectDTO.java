@@ -11,9 +11,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 public class ProjectDTO {
 
   private Integer projectId;
-  private Long hdfsUsageInBytes;
-  private Long hdfsQuotaInBytes;
-  private String yarnQuotaInMins;
   private String projectName;
   private String owner;
   private String description;
@@ -25,6 +22,7 @@ public class ProjectDTO {
   private List<ProjectTeam> projectTeam;
   private List<InodeView> datasets;
   private Integer inodeid;
+  private QuotasDTO quotas;
 
   public ProjectDTO() {
   }
@@ -36,7 +34,7 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, String yarnQuotaInMins) {
+      List<ProjectTeam> projectTeam, QuotasDTO quotas) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -48,12 +46,12 @@ public class ProjectDTO {
     this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
-    this.yarnQuotaInMins = yarnQuotaInMins;
+    this.quotas = quotas;
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-          List<ProjectTeam> projectTeam, List<InodeView> datasets,
-          String yarnQuotaInMins) {
+      List<ProjectTeam> projectTeam, List<InodeView> datasets,
+      String yarnQuotaInMins) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -67,13 +65,12 @@ public class ProjectDTO {
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
-    this.yarnQuotaInMins = yarnQuotaInMins;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
-          Date retentionPeriod, Date created, String ethicalStatus,
-          boolean archived, String description,
-          List<String> services, List<ProjectTeam> projectTeam) {
+      Date retentionPeriod, Date created, String ethicalStatus,
+      boolean archived, String description,
+      List<String> services, List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.owner = owner;
@@ -182,37 +179,21 @@ public class ProjectDTO {
     this.datasets = datasets;
   }
 
-  public Long getHdfsQuotaInBytes() {
-    return hdfsQuotaInBytes;
+  public QuotasDTO getQuotas() {
+    return quotas;
   }
 
-  public String getYarnQuotaInMins() {
-    return yarnQuotaInMins;
-  }
-
-  public void setHdfsQuotaInBytes(Long hdfsQuotaInBytes) {
-    this.hdfsQuotaInBytes = hdfsQuotaInBytes;
-  }
-
-  public void setYarnQuotaInMins(String yarnQuotaInMins) {
-    this.yarnQuotaInMins = yarnQuotaInMins;
-  }
-
-  public Long getHdfsUsageInBytes() {
-    return hdfsUsageInBytes;
-  }
-
-  public void setHdfsUsageInBytes(Long hdfsUsageInBytes) {
-    this.hdfsUsageInBytes = hdfsUsageInBytes;
+  public void setQuotas(QuotasDTO quotas) {
+    this.quotas = quotas;
   }
 
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
-            + ", description=" + description + ", retentionPeriod="
-            + retentionPeriod + ", created=" + created + ", ethicalStatus="
-            + ethicalStatus + ", archived=" + archived + ", services="
-            + services + ", projectTeam=" + projectTeam + '}';
+        + ", description=" + description + ", retentionPeriod="
+        + retentionPeriod + ", created=" + created + ", ethicalStatus="
+        + ethicalStatus + ", archived=" + archived + ", services="
+        + services + ", projectTeam=" + projectTeam + '}';
   }
 
 }

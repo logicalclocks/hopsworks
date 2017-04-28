@@ -253,6 +253,8 @@ public class JupyterConfig {
                       ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
                       "livy_ip", settings.getLivyIp(),
                       "hdfs_user", this.hdfsUser,
+                      "driver_memory", "2000M",
+                      "driver_cpus", "2",
                       "jupyter_home", confDirPath,
                       "hadoop_home", this.settings.getHadoopDir()
               );

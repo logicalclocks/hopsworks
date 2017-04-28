@@ -4,10 +4,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$uibModalStack', '$location', '$routeParams', '$route', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService',
-          function ($scope, $rootScope, $uibModalStack, $location, $routeParams, $route, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $location, $routeParams, $route, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
 
             var self = this;
@@ -45,9 +45,7 @@ angular.module('hopsWorksApp')
               name: null,
               parentId: null,
               path: null,
-              hdfsUsageInBytes: null,
-              hdfsQuotaInBytes: null,
-              yarnQuotaInMins: null
+              quotas: null
             };
 
             $scope.$on('$viewContentLoaded', function () {
@@ -96,6 +94,8 @@ angular.module('hopsWorksApp')
 
             getEndpoint();
 
+
+
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.pId}).$promise.then(
                       function (success) {
@@ -106,7 +106,7 @@ angular.module('hopsWorksApp')
                         self.projectFile.path = "/Projects/" + self.currentProject.projectName;
                         self.projectFile.description = self.currentProject.description;
                         self.projectFile.retentionPeriod = self.currentProject.retentionPeriod;
-                        self.projectFile.yarnQuotaInMins = self.currentProject.yarnQuotaInMins;
+                        self.projectFile.quotas = self.currentProject.quotas;
                         if (angular.equals(self.currentProject.projectName.substr(0, 5), 'demo_')) {
                           self.initTour();
                         } else {
@@ -177,36 +177,6 @@ angular.module('hopsWorksApp')
               return self.projectTypes.length > 0;
             };
 
-
-            self.projectSettingModal = function () {
-              ModalService.projectSettings('md', self.pId).then(
-                      function (success) {
-                        getAllActivities();
-                        getCurrentProject();
-
-                        // Check if the service exists and otherwise add it or remove it depending on the previous choice
-                        self.exists = function (projectType) {
-                          var idx = self.selectionProjectTypes.indexOf(projectType);
-                          if (idx > -1) {
-                            self.selectionProjectTypes.splice(idx, 1);
-                          } else {
-                            self.selectionProjectTypes.push(projectType);
-                          }
-                        };
-
-                      });
-            };
-
-//        self.projectSettingModal = function () {
-//          ModalService.projectSettings('md').then(
-//              function (success) {
-//                getAllActivities();
-//                getCurrentProject();
-//              }, function (error) {
-//            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
-//          });
-//        };
-
             self.membersModal = function () {
               ModalService.projectMembers('lg', self.pId).then(
                       function (success) {
@@ -231,9 +201,15 @@ angular.module('hopsWorksApp')
                                 self.working = false;
                                 growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
                                 if (success.errorMsg) {
-                                  growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
+                                  ModalService.alert('sm', 'Warning!', success.errorMsg).then(
+                                          function (success) {
+                                            $route.reload();
+                                          }, function (error) {
+                                    $route.reload();
+                                  });
+                                } else {
+                                  $route.reload();
                                 }
-                                $route.reload();
                               }, function (error) {
                         self.working = false;
                         growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -270,7 +246,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
               });
 
-              self.goToUrl('jobs');
+            self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
               }
@@ -428,15 +404,42 @@ angular.module('hopsWorksApp')
             };
 
             self.hdfsUsage = function () {
-              return convertSize(self.projectFile.hdfsUsageInBytes);
+              if (self.projectFile.quotas !== null) {
+                return convertSize(self.projectFile.quotas.hdfsUsageInBytes);
+              }
+              return null;
             };
 
             self.hdfsQuota = function () {
-              return convertSize(self.projectFile.hdfsQuotaInBytes);
+              if (self.projectFile.quotas !== null) {
+                return convertSize(self.projectFile.quotas.hdfsQuotaInBytes);
+              }
+              return null;
             };
 
+            self.hdfsNsCount = function () {
+              if (self.projectFile.quotas !== null) {
+                return self.projectFile.quotas.hdfsNsCount;
+              }
+              return null;
+            };
+
+            self.hdfsNsQuota = function () {
+              if (self.projectFile.quotas !== null) {
+                return self.projectFile.quotas.hdfsNsQuota;
+              }
+              return null;
+            };
+
+            /**
+             * Converts and returns quota to hours.
+             * @returns {Window.projectFile.quotas.yarnQuotaInSecs|projectL#10.projectFile.quotas.yarnQuotaInSecs}
+             */
             self.yarnQuota = function () {
-              return self.projectFile.yarnQuotaInMins;
+              if (self.projectFile.quotas != null) {
+                return self.roundTo(self.projectFile.quotas.yarnQuotaInSecs / 60 / 60, 2);
+              }
+              return null;
             };
 
 
@@ -461,5 +464,20 @@ angular.module('hopsWorksApp')
               console.log(points, evt);
             };
 
+            /**
+             * http://stackoverflow.com/questions/10015027/javascript-tofixed-not-rounding/32605063#32605063
+             * @param {type} n
+             * @param {type} digits
+             * @returns {Number}
+             */
+            self.roundTo = function (n, digits) {
+              if (digits === undefined) {
+                digits = 0;
+              }
+
+              var multiplicator = Math.pow(10, digits);
+              n = parseFloat((n * multiplicator).toFixed(11));
+              return Math.round(n) / multiplicator;
+            };
 
           }]);

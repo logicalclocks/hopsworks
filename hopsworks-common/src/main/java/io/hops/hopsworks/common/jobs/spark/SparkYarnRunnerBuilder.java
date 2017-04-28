@@ -49,11 +49,10 @@ public class SparkYarnRunnerBuilder {
   private String hadoopDir;
   private ServiceProperties serviceProps;
 
-
   public SparkYarnRunnerBuilder(JobDescription jobDescription) {
     this.jobDescription = jobDescription;
     SparkJobConfiguration jobConfig = (SparkJobConfiguration) jobDescription.getJobConfig();
-    
+
     if (jobConfig.getAppPath() == null || jobConfig.getAppPath().isEmpty()) {
       throw new IllegalArgumentException(
           "Path to application executable cannot be empty!");
@@ -62,7 +61,7 @@ public class SparkYarnRunnerBuilder {
       throw new IllegalArgumentException(
           "Name of the main class cannot be empty!");
     }
-    
+
   }
 
   /**
@@ -85,7 +84,7 @@ public class SparkYarnRunnerBuilder {
 
     JobType jobType = ((SparkJobConfiguration) jobDescription.getJobConfig()).getType();
     String appPath = ((SparkJobConfiguration) jobDescription.getJobConfig()).getAppPath();
-    
+
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
     String metricsPath = Settings.getSparkMetricsPath(sparkUser);
@@ -97,10 +96,7 @@ public class SparkYarnRunnerBuilder {
 
     this.hadoopDir = hadoopDir;
 
-    String stagingPath = File.separator + "Projects" + File.separator + project
-        + File.separator
-        + Settings.PROJECT_STAGING_DIR + File.separator
-        + "hopsstaging";
+    String stagingPath = "/Projects/ " + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";
     builder.localResourcesBasePath(stagingPath);
 
     builder.addLocalResource(new LocalResourceDTO(
@@ -285,7 +281,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
     addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
-        + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER );
+        + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.HOPSUTIL_APPID_ENV_VAR, YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir + "/lib/native/");
 

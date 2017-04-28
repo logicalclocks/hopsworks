@@ -23,8 +23,8 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -53,7 +53,6 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
@@ -72,6 +71,8 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -91,11 +92,13 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.json.JSONObject;
 
+
+
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  private final static Logger logger = Logger.getLogger(ProjectController.class.
+  private final static Logger LOGGER = Logger.getLogger(ProjectController.class.
           getName());
   @EJB
   private ProjectFacade projectFacade;
@@ -138,12 +141,12 @@ public class ProjectController {
   @EJB
   private JobDescriptionFacade jobFacade;
   @EJB
-  private YarnApplicationstateFacade yarnApplicationstateFacade;
-  @EJB
   private KafkaFacade kafkaFacade;
-  @EJB 
+  @EJB
   private ElasticController elasticController;
-  
+  @EJB
+  private ExecutionFacade execFacade;
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -151,11 +154,11 @@ public class ProjectController {
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
    * project.
-   * 
+   * <p>
    * This needs to be an atomic operation (all or nothing) REQUIRES_NEW will
    * make sure a new transaction is created even
    * if this method is called from within a transaction.
-   * 
+   *
    * @param projectDTO
    * @param owner
    * @param failedMembers
@@ -183,7 +186,7 @@ public class ProjectController {
           se.toString();
           projectServices.add(se);
         } catch (IllegalArgumentException iex) {
-          logger.log(Level.SEVERE,
+          LOGGER.log(Level.SEVERE,
                   ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), s
                   + ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
@@ -208,7 +211,7 @@ public class ProjectController {
           project = createProject(projectName, owner, projectDTO.
                   getDescription(), dfso);
         } catch (EJBException ex) {
-          logger.log(Level.WARNING, null, ex);
+          LOGGER.log(Level.WARNING, null, ex);
           Path dummy = new Path("/tmp/" + projectName);
           dfso.rm(dummy, true);
           throw new AppException(Response.Status.CONFLICT.
@@ -217,7 +220,7 @@ public class ProjectController {
       } catch (AppException ex) {
         throw ex;
       } catch (Exception ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -260,7 +263,7 @@ public class ProjectController {
         throw ex;
       } catch (IOException ex) {
         cleanup(project);
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -349,7 +352,7 @@ public class ProjectController {
               || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.
               getName())
               || !noExistingCertificates(project.getName())) {
-        logger.log(Level.WARNING,
+        LOGGER.log(Level.WARNING,
                 "some elements of project {0} already exist in the system "
                 + "Possible inconsistency!",
                 project.getName());
@@ -370,12 +373,12 @@ public class ProjectController {
           String projectDescription, DistributedFileSystemOps dfso) throws
           AppException, IOException {
     if (projectFacade.numProjectsLimitReached(user)) {
-      logger.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "You have reached the maximum number of allowed projects.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
     } else if (projectFacade.projectExists(projectName)) {
-      logger.log(Level.INFO, "Project with name {0} already exists!",
+      LOGGER.log(Level.INFO, "Project with name {0} already exists!",
               projectName);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_EXISTS);
@@ -399,7 +402,7 @@ public class ProjectController {
     dfso.touchz(dumy);
     Inode dumyInode = this.inodes.getInodeAtPath(dumy.toString());
     if (dumyInode == null) {
-      logger.log(Level.SEVERE, "Couldn't get the dumy Inode");
+      LOGGER.log(Level.SEVERE, "Couldn't get the dumy Inode");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Couldn't create project properly");
     }
@@ -417,7 +420,7 @@ public class ProjectController {
           throws AppException, IOException {
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
     if (projectInode == null) {
-      logger.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
+      LOGGER.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
               project.getName());
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Couldn't get Inode for the project: " + project.
@@ -442,6 +445,8 @@ public class ProjectController {
   private boolean existingProjectFolder(Project project) {
     Inode projectInode = this.inodes.getProjectRoot(project.getName());
     if (projectInode != null) {
+      LOGGER.log(Level.WARNING, "project folder existing for project {0}",
+              project.getName());
       return true;
     }
     return false;
@@ -452,7 +457,8 @@ public class ProjectController {
     List<HdfsUsers> hdfsUsers = hdfsUsersBean.
             getAllProjectHdfsUsers(projectName);
     if (hdfsUsers != null && !hdfsUsers.isEmpty()) {
-
+      LOGGER.log(Level.WARNING, "hdfs user existing for project {0}",
+              projectName);
       return false;
     }
     return true;
@@ -463,7 +469,8 @@ public class ProjectController {
     List<HdfsGroups> hdfsGroups = hdfsUsersBean.
             getAllProjectHdfsGroups(projectName);
     if (hdfsGroups != null && !hdfsGroups.isEmpty()) {
-
+      LOGGER.log(Level.WARNING, "hdfs group existing for project {0}",
+              projectName);
       return false;
     }
     return true;
@@ -474,6 +481,7 @@ public class ProjectController {
     YarnProjectsQuota projectsQuota = yarnProjectsQuotaFacade.findByProjectName(
             projectName);
     if (projectsQuota != null) {
+      LOGGER.log(Level.WARNING, "quota existing for project {0}", projectName);
       return false;
     }
     return true;
@@ -486,6 +494,7 @@ public class ProjectController {
     FileStatus[] logs = dfso.listStatus(logPath);
     for (FileStatus log : logs) {
       if (log.getPath().getName().startsWith(projectName + "__")) {
+        LOGGER.log(Level.WARNING, "logs existing for project {0}", projectName);
         return false;
       }
     }
@@ -496,7 +505,7 @@ public class ProjectController {
     File yarnConfFile = new File(settings.getHadoopConfDir(),
             Settings.DEFAULT_YARN_CONFFILE_NAME);
     if (!yarnConfFile.exists()) {
-      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+      LOGGER.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
@@ -507,9 +516,15 @@ public class ProjectController {
   }
 
   private boolean noExistingCertificates(String projectName) {
-    return !LocalhostServices.isPresentProjectCertificates(settings.
+    boolean result = !LocalhostServices.isPresentProjectCertificates(settings.
             getIntermediateCaDir(),
             projectName);
+
+    if (!result) {
+      LOGGER.log(Level.WARNING, "certificates existing for project {0}",
+              projectName);
+    }
+    return result;
   }
 
   /**
@@ -536,18 +551,19 @@ public class ProjectController {
       boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
               || ds.equals(Settings.DefaultDataset.LOGS)
               || ds.equals(Settings.DefaultDataset.ZEPPELIN)
-              || ds.equals(Settings.DefaultDataset.JUPYTER)
-              );
-      if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(Settings.DefaultDataset.ZEPPELIN)) {
+              || ds.equals(Settings.DefaultDataset.JUPYTER));
+      if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(
+              Settings.DefaultDataset.ZEPPELIN)) {
         continue;
       }
-      if (!services.contains(ProjectServiceEnum.JUPYTER) && ds.equals(Settings.DefaultDataset.JUPYTER)) {
+      if (!services.contains(ProjectServiceEnum.JUPYTER) && ds.equals(
+              Settings.DefaultDataset.JUPYTER)) {
         continue;
       }
 
       datasetController.createDataset(user, project, ds.getName(), ds.
               getDescription(), -1, false, globallyVisible, dfso,
-              udfso);
+              dfso);// both are dfso to create it as root user
       if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
         for (String sub : subResources) {
           datasetController.createSubDirectory(user, project, ds.getName(),
@@ -758,21 +774,25 @@ public class ProjectController {
       nbTry++;
       try {
         //remove from project_team so that nobody can see the project anymore
-        List<ProjectTeam> projectTeam = updateProjectTeamRole(project,
-                ProjectRoleTypes.UNDER_REMOVAL);
+        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
 
         //kill jobs
         List<JobDescription> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
           Runtime rt = Runtime.getRuntime();
           for (JobDescription job : running) {
-            List<YarnApplicationstate> apps = yarnApplicationstateFacade.
-                    findByAppname(job.getName());
-            if (apps != null && !apps.isEmpty()) {
-              String appid = apps.get(0).getApplicationid();
-              rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill "
-                      + appid);
-            }
+            //Get the appId of the running app
+            List<Execution> jobExecs = execFacade.findForJob(job);
+            //Sort descending based on jobId
+            Collections.sort(jobExecs, new Comparator<Execution>() {
+              @Override
+              public int compare(Execution lhs, Execution rhs) {
+                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
+                        getId()) ? 1 : 0;
+              }
+            });
+            rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill "
+                    + jobExecs.get(0).getAppId());
           }
         }
 
@@ -799,18 +819,18 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-      List<HdfsGroups> groupsToClean) throws IOException,
-      InterruptedException, AppException {
+          List<HdfsGroups> groupsToClean) throws IOException,
+          InterruptedException, AppException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
 
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
-           
+
       //change the owner and group of the project folder to glassfish
       String path = File.separator + Settings.DIR_ROOT + File.separator
-          + project.getName();
+              + project.getName();
       Path location = new Path(path);
       if (dfso.exists(path)) {
         dfso.setOwner(location, "glassfish", "glassfish");
@@ -827,8 +847,8 @@ public class ProjectController {
       //remove user certificate from local node 
       //(they will be removed from db when the project folder is deleted)
       LocalhostServices.deleteProjectCertificates(settings.
-          getIntermediateCaDir(),
-          project.getName());
+              getIntermediateCaDir(),
+              project.getName());
 
       String logPath = getYarnAgregationLogPath();
 
@@ -842,12 +862,12 @@ public class ProjectController {
         for (Inode inode : inodes) {
           location = new Path(inodeFacade.getPath(inode));
           dfso.setOwner(location, UserGroupInformation.getLoginUser().
-              getUserName(), "hadoop");
+                  getUserName(), "hadoop");
         }
 
         //Clean up tmp certificates dir from hdfs
         String tmpCertsDir = Settings.TMP_CERT_STORE_REMOTE + File.separator
-            + hdfsUser.getName();
+                + hdfsUser.getName();
         if (dfso.exists(tmpCertsDir)) {
           dfso.rm(new Path(tmpCertsDir), true);
         }
@@ -881,7 +901,7 @@ public class ProjectController {
       //remove folder
       removeProjectFolder(project.getName(), dfso);
 
-      logger.log(Level.INFO, "{0} - project removed.", project.getName());
+      LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
       if (dfso != null) {
         dfso.close();
@@ -1027,19 +1047,13 @@ public class ProjectController {
               throw new EJBException("Could not creat certificates for user");
             }
 
-            logger.log(Level.FINE, "{0} - member added to project : {1}.",
+            LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
                     new Object[]{newMember.getEmail(),
                       project.getName()});
-            List<SshKeys> keys = sshKeysBean.findAllById(newMember.getUid());
-            List<String> publicKeys = new ArrayList<>();
-            for (SshKeys k : keys) {
-              publicKeys.add(k.getPublicKey());
-            }
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
                     getProjectTeamPK().getTeamMember(),
                     ActivityFacade.FLAG_PROJECT, user, project);
-//            createUserAccount(project, projectTeam, publicKeys, failedList);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                     + " was not found in the system.");
@@ -1055,7 +1069,7 @@ public class ProjectController {
       } catch (EJBException ejb) {
         failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                 + "could not be added. Try again later.");
-        logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
+        LOGGER.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 projectTeam.getProjectTeamPK().getTeamMember());
 
       }
@@ -1091,9 +1105,16 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(project, inode.getId(), services, projectTeam,
-            getYarnQuota(name));
-//    ,getHdfsSpaceQuotaInBytes(name), getHdfsSpaceUsageInBytes(name));
+    String yarnQuota = getYarnQuota(project.getName());
+    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(inode.getId());
+
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
+            hdfsNsQuota, hdfsNsCount);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas);
   }
 
   /**
@@ -1168,7 +1189,7 @@ public class ProjectController {
             ActivityFacade.FLAG_PROJECT, user, project);
     //update role information in project
     addProjectOwner(project.getId(), user.getEmail());
-    logger.log(Level.FINE, "{0} - project created successfully.", project.
+    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
             getName());
   }
 
@@ -1199,6 +1220,26 @@ public class ProjectController {
     }
 
     return res;
+  }
+
+  /**
+   *
+   * @param id
+   * @return
+   * @throws AppException
+   */
+  public QuotasDTO getQuotas(Integer id) throws AppException {
+    ProjectDTO proj = getProjectByID(id);
+    String yarnQuota = getYarnQuota(proj.getProjectName());
+    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(proj.getInodeid());
+
+    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
+    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
+            hdfsNsQuota, hdfsNsCount);
+    return quotas;
   }
 
 //  public Long getHdfsSpaceUsageInBytes(String name) throws AppException {
@@ -1242,6 +1283,13 @@ public class ProjectController {
     hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_PROJECT, user, project);
+
+    String projectSpecificUsername = hdfsUsersBean.getHdfsUserName(project,
+            userToBeRemoved);
+    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
+            projectSpecificUsername);
+    userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved
+            .getUsername());
 
 //    try {
 //      LocalhostServices.deleteUserAccount(email, project.getName());
@@ -1398,7 +1446,7 @@ public class ProjectController {
       datasetController.createDataset(user, project, "TestJob",
               "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "something went wrong when adding the example jar to the project");
@@ -1416,7 +1464,7 @@ public class ProjectController {
                   + dir.getAbsolutePath());
         }
         if (file.length > 1) {
-          logger.log(Level.WARNING,
+          LOGGER.log(Level.WARNING,
                   "More than one spark-examples*.jar found in {0}.", dir.
                   getAbsolutePath());
         }
@@ -1425,7 +1473,7 @@ public class ProjectController {
                 getName() + "/TestJob/spark-examples.jar");
 
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "something went wrong when adding the example jar to the project");
@@ -1438,7 +1486,6 @@ public class ProjectController {
       try {
         udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
       } catch (IOException ex) {
-        logger.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "something went wrong when adding the example jar to the project");
@@ -1503,12 +1550,10 @@ public class ProjectController {
             + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},\""
             + "jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
             + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
-            + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}},\n" +
-            "\"_ttl\": {\n" +
-            "\"enabled\": true,\n" +
-            "\"default\": \""+Settings.getJobLogsExpiration()+"s\"\n" +
-            "}}}}");
-            
+            + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}},\n"
+            + "\"_ttl\": {\n" + "\"enabled\": true,\n" + "\"default\": \""
+            + Settings.getJobLogsExpiration() + "s\"\n" + "}}}}");
+
     JSONObject resp = elasticController.sendElasticsearchReq(params);
     boolean templateCreated = false;
     if (resp.has("acknowledged")) {
@@ -1608,7 +1653,7 @@ public class ProjectController {
     if (resp != null && resp.has("acknowledged")) {
       kibanaIndexDeleted = (Boolean) resp.get("acknowledged");
     }
-    
+
     //2. Delete Elasticsearch Index
     params.put("resource", "");
     resp = elasticController.sendElasticsearchReq(params);
@@ -1672,12 +1717,12 @@ public class ProjectController {
       return new JSONObject(outputBuilder.toString());
 
     } catch (FileNotFoundException ex) {
-      logger.log(Level.WARNING, "Elasticsearch resource " + params.get(
+      LOGGER.log(Level.WARNING, "Elasticsearch resource " + params.get(
               "resource") + " was not found");
     } catch (IOException ex) {
       if (ex.getMessage().contains("kibana")) {
-        logger.log(Level.WARNING, "error", ex);
-        logger.log(Level.WARNING, "Kibana index could not be deleted for "
+        LOGGER.log(Level.WARNING, "error", ex);
+        LOGGER.log(Level.WARNING, "Kibana index could not be deleted for "
                 + params.get("project"));
       } else {
         throw new IOException(ex);

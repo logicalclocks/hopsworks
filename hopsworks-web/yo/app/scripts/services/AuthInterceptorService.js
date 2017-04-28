@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
                   }
 
                 } else if (responseRejection.status === 500) {
-                  growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000});
+                  growl.error(responseRejection.data.errorMsg, {title: 'Error', ttl: 5000}); 
                   console.log('Unhandled error: ', responseRejection);
                 }
                 return $q.reject(responseRejection);

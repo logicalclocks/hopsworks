@@ -84,7 +84,7 @@ public class LocalhostServices {
     String[] certs = certFolder.list();
     if (certs != null && certs.length > 0) {
       for (String certFile : certs) {
-        if (certFile.startsWith(projectName)) {
+        if (certFile.startsWith(projectName + "__")) {
           return true;
         }
       }
@@ -138,20 +138,15 @@ public class LocalhostServices {
   }
 
   public static String deleteUserCertificates(String intermediateCaDir,
-          String projectName, String userName) throws IOException {
-    String sslCertFile = intermediateCaDir + "/certs/" + "__" + userName
-            + ".cert.pem";
-    String sslKeyFile = intermediateCaDir + "/private/" + projectName + "__"
-            + userName + ".key.pem";
+          String projectSpecificUsername) throws IOException {
 
     // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");
-    commands.add("sudo " + intermediateCaDir
-            + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " + LocalhostServices.
-            getUsernameInProject(userName, projectName));
+    commands.add("sudo " + intermediateCaDir + "/"
+            + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " + projectSpecificUsername);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
@@ -198,13 +193,14 @@ public class LocalhostServices {
     return stdout;
   }
 
+  @Deprecated
   public static String getUsernameInProject(String username, String projectName) {
 
     if (username.contains("@")) {
       throw new IllegalArgumentException("Email sent in - should be username");
     }
 
-    return username + Settings.HOPS_USERNAME_SEPARATOR + projectName;
+    return projectName + Settings.HOPS_USERNAME_SEPARATOR + username;
   }
 
 }

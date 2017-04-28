@@ -278,7 +278,7 @@ angular.module('hopsWorksApp')
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                         getDirContents();
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
@@ -298,12 +298,24 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Delete the file with the given name under the current path. If called on a folder, will remove the folder 
+             * Delete the file with the given name under the current path. 
+             * If called on a folder, will remove the folder 
              * and all its contents recursively.
              * @param {type} fileName
              * @returns {undefined}
              */
             self.deleteFile = function (fileName) {
+              var removePathArray = self.pathArray.slice(0);
+              removePathArray.push(fileName);
+              removeInode('file/' + getPath(removePathArray));
+            };
+            
+            /**
+             * Delete the dataset with the given name under the current path. 
+             * @param {type} fileName
+             * @returns {undefined}
+             */
+            self.deleteDataset = function (fileName) {
               var removePathArray = self.pathArray.slice(0);
               removePathArray.push(fileName);
               removeInode(getPath(removePathArray));

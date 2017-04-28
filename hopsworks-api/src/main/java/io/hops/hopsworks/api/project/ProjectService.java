@@ -406,25 +406,41 @@ public class ProjectService {
       try {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
-
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
-        //   String owner = sc.getUserPrincipal().getName();
-        //   try {
-        //     projectController.createProjectConsentFolder(owner, project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
+        if (se.equals(ProjectServiceEnum.ZEPPELIN)) {
+          Users user = userManager.getUserByEmail(userEmail);
+          DistributedFileSystemOps udfso = null;
+          DistributedFileSystemOps dfso = null;
+          Settings.DefaultDataset ds = Settings.DefaultDataset.ZEPPELIN;
+          try {
+            String username = hdfsUsersBean.getHdfsUserName(project, user);
+            udfso = dfs.getDfsOps(username);
+            dfso = dfs.getDfsOps();
+            datasetController.createDataset(user, project, ds.getName(), ds.
+                    getDescription(), -1, false, true, dfso, dfso);
+            datasetController.generateReadme(udfso, ds.getName(),
+                    ds.getDescription(), project.getName());
+          } catch (IOException | AppException ex) {
+            logger.log(Level.SEVERE, "Could not create zeppelin notebook dir.",
+                    ex);
+            json.setErrorMsg(json.getErrorMsg() + "\n " 
+                    + "Failed to create zeppelin notebook dir. "
+                    + "Zeppelin will not work properly. "
+                    + "Try recreating "+ ds.getName() +" dir manualy.");
+          } finally {
+            if (udfso != null) {
+              udfso.close();
+            }
+            if (dfso != null) {
+              dfso.close();
+            }
+          }
+        }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
-            ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
+                ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
         json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
-            + json.getErrorMsg());
+                + json.getErrorMsg());
       }
     }
 
@@ -751,7 +767,8 @@ public class ProjectService {
 
   @POST
   @Path("{id}/logs/enable")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response enableLogs(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (!project.getLogs()) {
@@ -759,12 +776,12 @@ public class ProjectService {
       try {
         projectController.addElasticsearch(project.getName());
       } catch (IOException ex) {
-        Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage());
         return noCacheResponse.getNoCacheResponseBuilder(
             Response.Status.SERVICE_UNAVAILABLE).build();
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
   }
 
   @Path("{id}/kafka")

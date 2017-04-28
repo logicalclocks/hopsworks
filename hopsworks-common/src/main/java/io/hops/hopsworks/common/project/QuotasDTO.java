@@ -9,16 +9,15 @@ public class QuotasDTO {
   private Long hdfsQuotaInBytes;
   private Long hdfsNsCount;
   private Long hdfsNsQuota;
-  private String yarnQuotaInMins;
+  private String yarnQuotaInSecs;
 
   public QuotasDTO() {
   }
 
   public QuotasDTO(String yarnQuotaInMins,
-          Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
-          Long hdfsNsQuota, Long hdfsNsCount
-  ) {
-    this.yarnQuotaInMins = yarnQuotaInMins;
+      Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
+      Long hdfsNsQuota, Long hdfsNsCount) {
+    this.yarnQuotaInSecs = yarnQuotaInMins;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
     this.hdfsUsageInBytes = hdfsUsageInBytes;
     this.hdfsNsQuota = hdfsNsQuota;
@@ -29,16 +28,16 @@ public class QuotasDTO {
     return hdfsQuotaInBytes;
   }
 
-  public String getYarnQuotaInMins() {
-    return yarnQuotaInMins;
+  public String getYarnQuotaInSecs() {
+    return yarnQuotaInSecs;
   }
 
   public void setHdfsQuotaInBytes(Long hdfsQuotaInBytes) {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
   }
 
-  public void setYarnQuotaInMins(String yarnQuotaInMins) {
-    this.yarnQuotaInMins = yarnQuotaInMins;
+  public void setYarnQuotaInSecs(String yarnQuotaInSecs) {
+    this.yarnQuotaInSecs = yarnQuotaInSecs;
   }
 
   public Long getHdfsUsageInBytes() {
@@ -68,10 +67,10 @@ public class QuotasDTO {
   @Override
   public String toString() {
     return "QuotasDTO{"
-            + "hdfsUsage=" + hdfsUsageInBytes + ", hdfsQuota="
-            + hdfsQuotaInBytes
-            + "hdfsNsUsage=" + hdfsNsCount + ", hdfsNsQuota=" + hdfsNsQuota
-            + ", yarnQuota=" + yarnQuotaInMins + '}';
+        + "hdfsUsage=" + hdfsUsageInBytes + ", hdfsQuota="
+        + hdfsQuotaInBytes
+        + "hdfsNsUsage=" + hdfsNsCount + ", hdfsNsQuota=" + hdfsNsQuota
+        + ", yarnQuota=" + yarnQuotaInSecs + '}';
   }
 
 }

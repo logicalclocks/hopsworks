@@ -45,8 +45,8 @@
 "ignore_ssl_errors": false,
 
 "session_configs": {
-"driverMemory": "1000M",
-"executorCores": 2
+"driverMemory": "%%driver_memory%%",
+"executorCores": %%driver_cores%%
 },
 
 "use_auto_viz": true,

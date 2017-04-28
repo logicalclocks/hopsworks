@@ -10,31 +10,12 @@ angular.module('hopsWorksApp')
         '$mdSidenav', 'TourService', 'ProjectService',
           function ($routeParams, growl, KafkaService, $location,
           ModalService, $interval, $mdSidenav, TourService, ProjectService) {
-              
 
             var self = this;
             self.projectId = $routeParams.projectID;
             self.topics = [];
-//                    [{"name": "myTopic", 
-//                'acls': [{'id': '4563', 'userEmail': "bbb", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}, {'id': '999', 'userEmail': "hdhd", 'permission_type': "write", 'operation_type': "write", 'host': "*", 'role': "*", 'shared': "*"}],
-//                'shares': [{'proj_name': 'shareOne'},{'proj_name': 'shareTwo'}],
-//                'partitionDetails': [{ 'id' : "21212",
-//                                            'leader': "1.2.3.4:8484",
-//                                            'replicas' : ["4.2.3.5:8484", "2.2.3.5:5555", "1.2.3.4:8484"],
-//                                            'inSyncReplicas': ["4.2.3.5:8484", "1.2.3.4:8484"]}
-//                                    ]
-//                 },
-//              {"name": "emptyTopic", 'acls': [], 'shares': [], 'partitionDetails': []}
-//            ];
-            
             self.sharedTopics = [];
-//                    [{"name": "", 'acls': [], 'shares': [], 'partitionDetails': []}
-//            ];
-            
-            
             self.topicDetails = {};
-//            {"name": ""};
-                    
             self.maxNumTopics = 10;
             self.numTopicsUsed = 0;
 
@@ -58,13 +39,11 @@ angular.module('hopsWorksApp')
             self.showTopics = 1;
             self.showSchemas = -1;
             self.schemas = [];
-           // self.schemaVersion;
             self.schemaVersions = [];
            self.tourService = TourService;
 
             self.selectAcl = function (acl, topicName) {
-              if (self.activeId === acl.id) { //unselect the current selected ACL
-//                self.activeId = -1;
+              if (self.activeId === acl.id) { 
                 return;
               }
               self.projectName = acl.projectName;
@@ -231,7 +210,7 @@ angular.module('hopsWorksApp')
               ModalService.createTopic('lg', self.projectId, self.projectIsGuide)
               .then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New topic created successfully project.', ttl: 2000});
+                          growl.success(success.data.successMessage, {title: 'New topic created successfully.', ttl: 2000});
                           self.getAllTopics();
                           if (self.projectIsGuide) {
                             self.tourService.currentStep_TourThree = 4;
@@ -277,10 +256,10 @@ angular.module('hopsWorksApp')
                 
                 ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 2000});
+                          growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 5000});
                           self.getAclsForTopic(topicName);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'adding acl', ttl: 5000});
+                //The user changed their mind.
               });
             };
 
@@ -302,7 +281,7 @@ angular.module('hopsWorksApp')
                         KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
-                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 2000});
+                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 5000});
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
