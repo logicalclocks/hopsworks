@@ -883,6 +883,8 @@ public class Settings implements Serializable {
 
   
   
+  public static final int JUPYTER_PORT = 8888;
+  
   // Jupyter
   private String JUPYTER_DIR = "/srv/hops/jupyter";
 
@@ -1177,7 +1179,7 @@ public class Settings implements Serializable {
         "Contains the logs for jobs that have been run through the Hopsworks platform."),
     RESOURCES("Resources",
         "Contains resources used by jobs, for example, jar files."),
-    ZEPPELIN("Zeppelin", "Contains Zeppelin notebooks."),
+    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks.");
     private final String name;
     private final String description;

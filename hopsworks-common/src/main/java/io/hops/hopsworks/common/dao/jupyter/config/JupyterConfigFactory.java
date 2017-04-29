@@ -304,7 +304,7 @@ public class JupyterConfigFactory {
 
       Integer id = 1;
 //      port = ThreadLocalRandom.current().nextInt(40000, 59999);
-      port = 5601;
+      port = Settings.JUPYTER_PORT;
       jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
               getActiveNN().getHostname(), settings, port);
       hdfsuserConfCache.put(hdfsUser, jc);

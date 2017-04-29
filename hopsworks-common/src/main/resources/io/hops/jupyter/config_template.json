@@ -45,9 +45,9 @@
 "ignore_ssl_errors": false,
 
 "session_configs": {
-  "driverCores": %%driver_cores%%,
+  "driverCores": %%driver_cpus%%,
   "driverMemory": "%%driver_memory%%",
-  "executorCores": %%executor_cores%%,
+  "executorCores": %%executor_cpus%%,
   "executorMemory": "%%executor_memory%%",
   "proxyUser": "%%hdfs_user%%"
 },
