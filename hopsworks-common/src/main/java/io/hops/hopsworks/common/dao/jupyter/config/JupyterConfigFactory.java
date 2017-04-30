@@ -118,13 +118,15 @@ public class JupyterConfigFactory {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Jupyter server died unexpectadly");
     }
-    removeNotebookServer(hdfsUsername);
+//    removeNotebookServer(hdfsUsername);
     runningServers.put(hdfsUsername, process);
 
   }
 
   private boolean killNotebookServer(Process p) {
     if (p != null) {
+      // use destroy forcibly because ctrl-c causes the process to ask if you
+      // want to kill it - it doesn't kill the process
       p.destroyForcibly();
       return true;
     }
@@ -145,25 +147,24 @@ public class JupyterConfigFactory {
 //    }
 //    return notebooks;
 //  }
-  public boolean removeNotebookServer(String hdfsUsername) {
-    if (runningServers.containsKey(hdfsUsername)) {
-      Process oldProcess = runningServers.get(hdfsUsername);
-      killNotebookServer(oldProcess);
-      runningServers.remove(hdfsUsername);
-//      BufferedReader br = consoleOutput.get(hdfsUsername);
-//      if (br != null) {
-//        try {
-//          br.close();
-//        } catch (IOException ex) {
-//          Logger.getLogger(JupyterConfig.class.getName()).
-//                  log(Level.SEVERE, null, ex);
-//        }
-//        consoleOutput.remove(hdfsUsername);
-//      }
-    }
-    return false;
-  }
-
+//  public boolean removeNotebookServer(String hdfsUsername) {
+//    if (runningServers.containsKey(hdfsUsername)) {
+//      Process oldProcess = runningServers.get(hdfsUsername);
+//      killNotebookServer(oldProcess);
+//      runningServers.remove(hdfsUsername);
+////      BufferedReader br = consoleOutput.get(hdfsUsername);
+////      if (br != null) {
+////        try {
+////          br.close();
+////        } catch (IOException ex) {
+////          Logger.getLogger(JupyterConfig.class.getName()).
+////                  log(Level.SEVERE, null, ex);
+////        }
+////        consoleOutput.remove(hdfsUsername);
+////      }
+//    }
+//    return false;
+//  }
   /**
    * Returns a unique jupyter configuration for the project user.
    *
@@ -225,7 +226,6 @@ public class JupyterConfigFactory {
 //    }
     return false;
   }
-
 
   public void initNotebook(Project project, HdfsUsers user) {
 
@@ -354,17 +354,27 @@ public class JupyterConfigFactory {
     return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid());
   }
 
-  public void stopServer(String hdfsUser) throws AppException {
+  public boolean stopServer(String hdfsUser) throws AppException {
 
     if (hdfsUser == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find a Jupyter Notebook server to delete.");
     }
 
-//    JupyterConfig.removeNotebookServer(hdfsUser);
-//    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+    JupyterConfig config = getFromCache(hdfsUser);
+    Process p = runningServers.get(hdfsUser);
+    if (config == null || p == null) {
+//      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+//              "Could not find a Jupyter Notebook server for this user to delete.");
+      return false;
+    }
+    killNotebookServer(p);
+    removeFromCache(hdfsUser);
+    runningServers.remove(hdfsUser);
+
 //    jupyterFacade.remove(jp);
     // delete JupyterProject entity bean
+    return true;
   }
 
   public void stopServers(Project project) {

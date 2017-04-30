@@ -84,14 +84,14 @@ angular.module('hopsWorksApp')
             var stop = function () {
               startLoading("Stopping Jupyter...");
               JupyterService.stop(projectId).then(
-                      function (success) {
-
+               function (success) {
                         self.ui = ""
                         stopLoading();
-                      }, function (error) {
+               }, function (error) {
                 growl.error("Could not stop the Jupyter Notebook Server.");
                 stopLoading();
-              }
+               }
+              );
             };
 
             var load = function () {

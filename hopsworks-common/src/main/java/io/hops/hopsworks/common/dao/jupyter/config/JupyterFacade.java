@@ -70,12 +70,11 @@ public class JupyterFacade {
   }
 
   public boolean removeNotebookServer(String hdfsUsername) {
-//    if (runningServers.containsKey(hdfsUsername)) {
-//      Process oldProcess = runningServers.get(hdfsUsername);
-//      killNotebookServer(oldProcess);
-//      runningServers.remove(hdfsUsername);
-//    }
-    return false;
+    
+    JupyterProject jp = findByUser(hdfsUsername);
+    em.remove(jp);
+    em.flush();
+    return true;
   }
 
   /**

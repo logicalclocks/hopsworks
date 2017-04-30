@@ -188,7 +188,30 @@ public class JupyterService {
               "Incomplete request!");
     }
 
-    jupyterConfigFactory.stopServer(getHdfsUser(sc));
+    String hdfsUser = getHdfsUser(sc);
+    if (!jupyterConfigFactory.stopServer(hdfsUser)) {
+      try {
+        // The server may have been restarted and the caches are empty.
+        // We need to stop the jupyter notebook server with the PID
+        // If we can't stop the server, delete the Entity bean anyway
+        JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+        if (jp == null) {
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                  "No Jupyter Notebook server to stop");
+        }
+        Long pid = jp.getPid();
+        ProcessBuilder ps = new ProcessBuilder("kill", "-9", pid.toString());
+        Process pr = ps.start();
+        pr.waitFor();
+      } catch (IOException ex) {
+        Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
+                ex);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
+                ex);
+      }
+    }
+    jupyterFacade.removeNotebookServer(hdfsUser);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
