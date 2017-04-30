@@ -10,19 +10,20 @@
         </a>
       </li>
 
-      <li uib-dropdown>
-        <a ng-click="projectCtrl.goToService('Jupyter')" uib-dropdown-toggle >Jupyter Server <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/></a>
+<!--      <li uib-dropdown>
+        <a ng-click="projectCtrl.goToService('Jupyter'); projectCtrl.isClosed = !projectCtrl.isClosed" uib-dropdown-toggle >Jupyter Server <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/></a>
         <ul uib-dropdown-menu class="dropdown-menu">
           <li ng-click="projectCtrl.goToService('Jupyter')" ><span>Stop Jupyter</span></li>
         </ul>
       </li>
-      <li>      
+      <li>      -->
 
-<!--      <li ng-click="projectCtrl.goToService('Jupyter')" ng-show="projectCtrl.showJupyter()">
+      <li ng-click="projectCtrl.goToService('Jupyter')" ng-show="projectCtrl.showJupyter()">
+        <!--<span ng-if="" ng-click="">Stop</span>-->
         <a>
           Jupyter <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/>
         </a>
-      </li>-->
+      </li>
 
       <li ng-click="projectCtrl.goToService('Zeppelin')" ng-show="projectCtrl.showZeppelin()">
         <a>

@@ -41,6 +41,15 @@ angular.module('hopsWorksApp')
 //              }
 //            };
 
+            $window.uploadDone = function () {
+
+            }
+
+            $scope.trustSrc = function (src) {
+              return $sce.trustAsResourceUrl(self.ui);
+            };
+
+
             var init = function () {
               startLoading("Connecting to Jupyter...");
               $scope.tgState = true;
@@ -52,11 +61,7 @@ angular.module('hopsWorksApp')
                         self.port = success.data.port;
 //                                self.ui = "http://" + $location.host() + ":" + self.port + "/?token=" + self.token;
                         self.ui = "http://192.168.56.101:" + self.port + "/?token=" + self.token;
-                        var iframe = document.getElementById('ui_iframe');
-                        if (iframe) {
-                          iframe.src = $sce.trustAsResourceUrl(self.ui);
-                        }
-                        $window.open(self.ui, '_blank');
+//                        $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 1000);
 
                       }, function (error) {
@@ -74,6 +79,19 @@ angular.module('hopsWorksApp')
             var stopLoading = function () {
               self.loading = false;
               self.loadingText = "";
+            };
+
+            var stop = function () {
+              startLoading("Stopping Jupyter...");
+              JupyterService.stop(projectId).then(
+                      function (success) {
+
+                        self.ui = ""
+                        stopLoading();
+                      }, function (error) {
+                growl.error("Could not stop the Jupyter Notebook Server.");
+                stopLoading();
+              }
             };
 
             var load = function () {

@@ -31,12 +31,15 @@
         </div> 
         <div class="content-wrapper">                      
           <div growl reference="10" class="pull-right" ></div>
-
-
-          <div ng-if="jupyterCtrl.ui !== ''">
-            <iframe id="ui_iframe"  ng-src="{{jupyterCtrl.ui}}" width="98%" height="100%"></iframe> 
-            <!--<link rel="import" href="{{jupyterCtrl.ui}}">-->
+          <div class="col-md-2 pull-left" ng-if="jupyterCtrl.ui !== ''">
+            <button uib-tooltip="Shutdown Jupyter Notebook Server" ng-click="jupyterCtrl.stop()" type="button" class="btn btn-danger btn-sm" >
+              <span class="glyphicon glyphicon-off" ></span>
+            </button>  
           </div>
+          <div ng-if="jupyterCtrl.ui !== ''">
+            <iframe id="ui_iframe" allowfullscreen  ng-src="{{trustSrc(jupyterCtrl.ui)}}" align="middle" width="100%" height="100%" frameborder="0"></iframe> 
+          </div>
+          
           <div ng-if="jupyterCtrl.ui === ''">The Jupyter Notebook is not available.</div>
 
 

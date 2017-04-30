@@ -7,16 +7,10 @@ c.HDFSContentsManager.hdfs_user = '%%hdfs_user%%'
 
 c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
 
-# Set options for certfile, ip, password, and toggle off
-# browser auto-opening
 #c.NotebookApp.certfile = u'/absolute/path/to/your/certificate/fullchain.pem'
 #c.NotebookApp.keyfile = u'/absolute/path/to/your/certificate/privkey.pem'
-# Set ip to '*' to bind on all interfaces (ips) for the public server
-#c.NotebookApp.ip = '*'
 #c.NotebookApp.token = ''
 #c.NotebookApp.password = u'%%hashed_password%%'
-
-#c.NotebookApp.ip = '127.0.0.1'
 
 
 c.NotebookApp.ip = '%%hopsworks_ip%%'
@@ -26,14 +20,10 @@ c.NotebookApp.port_retries = 0
 c.NotebookApp.port = %%port%%
 
 
+c.NotebookApp.allow_origin = '*'
+
 c.NotebookApp.tornado_settings = {
     'headers': {
-        'Content-Security-Policy': "frame-ancestors 'https://%%hopsworks_ip%%' 'self' "
+        'Content-Security-Policy': "child-src * "
     }
 }
-
-#c.NotebookApp.tornado_settings = {
-#    'headers': {
-#        'Content-Security-Policy': "frame-ancestors 'ec2-url:9000'",
-#    }
-#}

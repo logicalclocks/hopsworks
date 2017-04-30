@@ -226,30 +226,7 @@ public class JupyterConfigFactory {
     return false;
   }
 
-//  public JupyterProject findByUser(String hdfsUser) {
-//    HdfsUsers res = null;
-//    TypedQuery<HdfsUsers> query = em.createNamedQuery(
-//            "HdfsUsers.findByName", HdfsUsers.class);
-//    query.setParameter("name", hdfsUser);
-//    try {
-//      res = query.getSingleResult();
-//    } catch (EntityNotFoundException e) {
-//      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-//              e);
-//      return null;
-//    }
-//    JupyterProject res2 = null;
-//    TypedQuery<JupyterProject> query2 = em.createNamedQuery(
-//            "JupyterProject.findByHdfsUserId", JupyterProject.class);
-//    query.setParameter("hdfsUserId", res.getId());
-//    try {
-//      res2 = query2.getSingleResult();
-//    } catch (EntityNotFoundException e) {
-//      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-//              e);
-//    }
-//    return res2;
-//  }
+
   public void initNotebook(Project project, HdfsUsers user) {
 
   }
@@ -271,29 +248,7 @@ public class JupyterConfigFactory {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find hdfs user. Not starting Jupyter.");
     }
-// Set to point to project directory
-    // JUPYTER_DATA_DIR
-    // JUPYTER_CONFIG_DIR 
-    // JUPYTER_RUNTIME_DIR
-    // Store the files:
-    // custom
-    // jupyter_notebook_config.py
-    // jupyter_nbconvert_config.py 
-    // jupyter_qtconsole_config.py
-    // jupyter_console_config.py
-    // 
-    // 
-    // jupyter --no-browser --certfile=mycert.pem --keyfile mykey.key
     // The Jupyter Notebook is running at: http://localhost:8888/?token=c8de56fa4deed24899803e93c227592aef6538f93025fe01
-//    JupyterConfig jc = new JupyterConfig(project.getName(), user.getUsername(),
-//            settings);
-//    JupyterConfig jc = hdfsuserConfCache.get(hdfsUser);
-//    if (jc == null) {
-//      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-//              getStatusCode(),
-//              "Could not find a Jupyter Notebook server configuration .");
-
-//    }
     boolean failed = true;
     int maxTries = 50;
     Process process = null;
@@ -309,13 +264,6 @@ public class JupyterConfigFactory {
               getActiveNN().getHostname(), settings, port);
       hdfsuserConfCache.put(hdfsUser, jc);
 
-//      StringBuilder sb = new StringBuilder();
-//      sb.append("--NotebookApp.port=").append(port);
-//      sb.append(" --NotebookApp.contents_manager_class=");
-//      sb.append("'hdfscontents.hdfsmanager.HDFSContentsManager' --no-browser");
-//      sb.append(" notebook");
-//      String c = ;
-//, "--debug"
       String[] command = {"jupyter", "notebook"};
       ProcessBuilder pb = new ProcessBuilder(command);
       Map<String, String> env = pb.environment();
