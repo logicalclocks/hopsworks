@@ -16,33 +16,11 @@ angular.module('hopsWorksApp')
             var loaded = false;
             self.ui = "";
 
-            self.token;
-            self.port;
+            self.config = {};
 
-//            var toggleJupyter = function () {
-//              if (self.toggleValue === false) {
-//                JupyterService.start(projectId).then(
-//                        function (success) {
-//                          growl.info("Jupyter Started successfully");
-//                          self.toggleValue = true;
-//                        }, function (error) {
-//                  growl.error("Could not start Jupyter.");
-//                }
-//                );
-//              } else {
-//                JupyterService.stop(projectId).then(
-//                        function (success) {
-//                          growl.info("Jupyter Stopped successfully");
-//                          self.toggleValue = false;
-//                        }, function (error) {
-//                  growl.error("Could not stop Jupyter.");
-//                }
-//                );
-//              }
-//            };
 
             $window.uploadDone = function () {
-
+              stopLoading();
             }
 
             $scope.trustSrc = function (src) {
@@ -51,24 +29,16 @@ angular.module('hopsWorksApp')
 
 
             var init = function () {
-              startLoading("Connecting to Jupyter...");
-              $scope.tgState = true;
-              JupyterService.start(projectId).then(
+              JupyterService.get(projectId).then(
                       function (success) {
                         self.toggleValue = true;
-                        stopLoading();
-                        self.token = success.data.hashedPasswd;
-                        self.port = success.data.port;
-//                                self.ui = "http://" + $location.host() + ":" + self.port + "/?token=" + self.token;
-                        self.ui = "http://192.168.56.101:" + self.port + "/?token=" + self.token;
-//                        $window.open(self.ui, '_blank');
-                        $timeout(stopLoading(), 1000);
-
+                        self.config = success.data;
+                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
                       }, function (error) {
-                growl.error("Could not start Jupyter.");
-                stopLoading();
+                configure();
               }
               );
+
             };
 
 
@@ -81,25 +51,27 @@ angular.module('hopsWorksApp')
               self.loadingText = "";
             };
 
-            var stop = function () {
+            self.stopJupyter = function () {
               startLoading("Stopping Jupyter...");
               JupyterService.stop(projectId).then(
-               function (success) {
+                      function (success) {
                         self.ui = ""
                         stopLoading();
-               }, function (error) {
+                      }, function (error) {
                 growl.error("Could not stop the Jupyter Notebook Server.");
                 stopLoading();
-               }
+              }
               );
             };
 
             var load = function () {
               $scope.tgState = true;
             };
+
             init();
+
             $scope.$on("$destroy", function () {
-//              JupyterService.wsDestroy();
+              stop();
               loaded = false;
             });
 
@@ -109,5 +81,66 @@ angular.module('hopsWorksApp')
                 refresh();
               }
             };
+
+
+            self.reconfigure = function () {
+
+              JupyterService.stop(projectId).then(
+                      function (success) {
+                        self.ui = ""
+                        configure();
+                      }, function (error) {
+                      growl.error("Could not stop the Jupyter Notebook Server for reconfiguration.");
+                      }
+              );
+            }
+
+            var start = function () {
+              startLoading("Connecting to Jupyter...");
+              $scope.tgState = true;
+
+              JupyterService.start(projectId, self.config).then(
+                      function (success) {
+                        self.toggleValue = true;
+                        stopLoading();
+                        self.config = success.data;
+//                        self.token = success.data.hashedPasswd;
+//                        self.port = success.data.port;
+//                                self.ui = "http://" + $location.host() + ":" + self.port + "/?token=" + self.token;
+                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
+//                        $window.open(self.ui, '_blank');
+//                        $timeout(stopLoading(), 1000);
+
+                      }, function (error) {
+                growl.error("Could not start Jupyter.");
+                stopLoading();
+              }
+              );
+
+            };
+
+
+            var configure = function () {
+              var val = {};
+              val.driverMemory="500M";
+              val.executorMemory="500M";
+              val.gpus=1;
+              val.driverCores=1;
+              val.executorCores=1;
+              val.archives="";
+              val.jars="";
+              val.files="";
+              val.pyFiles="";
+              ModalService.jupyterConfig('md', '', '', val).then(
+                      function (success) {
+                        self.config = success.val;
+                        start();
+                      },
+                      function (error) {
+                        growl.error("Could not activate Jupyter.");
+                      });
+
+            };
+
 
           }]);

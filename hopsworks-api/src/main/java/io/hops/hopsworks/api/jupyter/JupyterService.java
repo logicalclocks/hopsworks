@@ -32,7 +32,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.GenericEntity;
 
@@ -86,7 +88,8 @@ public class JupyterService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response getAllNotebookServersInProject(@Context SecurityContext sc,
+  public Response getAllNotebookServersInProject(
+          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     if (projectId == null) {
@@ -128,15 +131,18 @@ public class JupyterService {
               Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find any Jupyter notebook server for this project.");
     }
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jp).build();
   }
 
-  @GET
+  @POST
   @Path("/start")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response startNotebookServer(@Context SecurityContext sc,
+  public Response startNotebookServer(JupyterDTO jupyterConfig,
+          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     if (projectId == null) {
@@ -155,7 +161,13 @@ public class JupyterService {
 
       JupyterDTO dto;
       try {
-        dto = jupyterConfigFactory.startServer(project, hdfsUser);
+        dto = jupyterConfigFactory.startServer(project, hdfsUser,
+                jupyterConfig.getDriverCores(), jupyterConfig.getDriverMemory(),
+                jupyterConfig.getNumExecutors(),
+                jupyterConfig.getExecutorCores(), jupyterConfig.
+                getExecutorMemory(), jupyterConfig.getGpus(),
+                jupyterConfig.getArchives(), jupyterConfig.getJars(),
+                jupyterConfig.getFiles(), jupyterConfig.getPyFiles());
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
                 ex);
@@ -170,8 +182,15 @@ public class JupyterService {
       }
 
       jp = jupyterFacade.saveServer(project, dto.getPort(), user.getId(), dto.
-              getToken(), dto.getPid());
+              getToken(), dto.getPid(), dto.getDriverCores(), dto.
+              getDriverMemory(), dto.getNumExecutors(), dto.getExecutorCores(),
+              dto.getExecutorMemory(), dto.getGpus(), dto.getArchives(), dto.
+              getJars(), dto.getFiles(), dto.getPyFiles());
 
+      if (jp == null) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                "Could not save Jupyter Settings.");
+      }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jp).build();
@@ -200,7 +219,7 @@ public class JupyterService {
                   "No Jupyter Notebook server to stop");
         }
         Long pid = jp.getPid();
-        ProcessBuilder ps = new ProcessBuilder("kill", "-9", pid.toString());
+        ProcessBuilder ps = new ProcessBuilder("kill", pid.toString());
         Process pr = ps.start();
         pr.waitFor();
       } catch (IOException ex) {

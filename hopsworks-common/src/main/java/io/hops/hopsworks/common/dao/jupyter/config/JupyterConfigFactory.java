@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -51,14 +52,7 @@ public class JupyterConfigFactory {
   private HdfsLeDescriptorsFacade hdfsLeFacade;
 
   private String hadoopClasspath = null;
-//  @EJB
-//  private ProjectFacade projectBean;
-//  @EJB
-//  private UserFacade userFacade;
-//  @EJB
-//  private HdfsUsersController hdfsUsername;
-//  @EJB
-//  private JupyterFacade jupyterFacade;
+
   private static final ConcurrentMap<String, JupyterConfig> hdfsuserConfCache
           = new ConcurrentHashMap<>();
   private static final ConcurrentHashMap<String, Process> runningServers
@@ -91,16 +85,6 @@ public class JupyterConfigFactory {
 
   }
 
-//  public JupyterConfig initialize(String projectName, String owner) throws
-//          AppException {
-//
-//    HdfsLeDescriptors hld = hdfsLeFacade.getActiveNN();
-//    String nameNodeIp = hld.getHostname();
-//    JupyterConfig conf = new JupyterConfig(projectName, owner, nameNodeIp,
-//            settings);
-//    this.hdfsuserConfCache.put(owner, conf);
-//    return conf;
-//  }
   /**
    * If an existing process is running for this username, kill it.
    * Starts a new process with that username.
@@ -133,38 +117,6 @@ public class JupyterConfigFactory {
     return false;
   }
 
-//  public List<JupyterProject> findNotebooksByProject(Integer projectId) {
-//    TypedQuery<JupyterProject> query = em.createNamedQuery(
-//            "JupyterProject.findByProjectId",
-//            JupyterProject.class);
-//    query.setParameter("projectId", projectId);
-//    List<JupyterProject> res = query.getResultList();
-//    List<JupyterProject> notebooks = new ArrayList<>();
-//    for (JupyterProject pt : res) {
-////      notebooks.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
-////              pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-////              pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
-//    }
-//    return notebooks;
-//  }
-//  public boolean removeNotebookServer(String hdfsUsername) {
-//    if (runningServers.containsKey(hdfsUsername)) {
-//      Process oldProcess = runningServers.get(hdfsUsername);
-//      killNotebookServer(oldProcess);
-//      runningServers.remove(hdfsUsername);
-////      BufferedReader br = consoleOutput.get(hdfsUsername);
-////      if (br != null) {
-////        try {
-////          br.close();
-////        } catch (IOException ex) {
-////          Logger.getLogger(JupyterConfig.class.getName()).
-////                  log(Level.SEVERE, null, ex);
-////        }
-////        consoleOutput.remove(hdfsUsername);
-////      }
-//    }
-//    return false;
-//  }
   /**
    * Returns a unique jupyter configuration for the project user.
    *
@@ -235,10 +187,25 @@ public class JupyterConfigFactory {
    *
    * @param project
    * @param hdfsUser
+   * @param driverCores
+   * @param driverMemory
+   * @param numExecutors
+   * @param executorCores
+   * @param executorMemory
+   * @param gpus
+   * @param archives
+   * @param jars
+   * @param files
+   * @param pyFiles
    * @return token for the Notebook server
    * @throws AppException
+   * @throws java.lang.InterruptedException
+   * @throws java.io.IOException
    */
-  public JupyterDTO startServer(Project project, String hdfsUser) throws
+  public JupyterDTO startServer(Project project, String hdfsUser,
+          int driverCores, String driverMemory, int numExecutors,
+          int executorCores, String executorMemory, int gpus,
+          String archives, String jars, String files, String pyFiles) throws
           AppException, InterruptedException, IOException {
 
     JupyterProject jp = null;
@@ -257,11 +224,26 @@ public class JupyterConfigFactory {
 
     while (failed && maxTries > 0) {
 
-      Integer id = 1;
-//      port = ThreadLocalRandom.current().nextInt(40000, 59999);
-      port = Settings.JUPYTER_PORT;
+      if (settings.getVagrantEnabled()) {
+        port = 8888;
+      } else {
+        port = ThreadLocalRandom.current().nextInt(40000, 59999);
+      }
+      boolean alreadyAllocated = false;
+      for (JupyterConfig tmp : hdfsuserConfCache.values()) {
+        if (tmp.getPort() == port) {
+          alreadyAllocated = true;
+          break;
+        }
+      }
+      if (alreadyAllocated) {
+        continue;
+      }
+//      port = Settings.JUPYTER_PORT;
       jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
-              getActiveNN().getHostname(), settings, port);
+              getActiveNN().getHostname(), settings, port, driverCores,
+              driverMemory, numExecutors, executorCores, executorMemory, gpus,
+              archives, jars, files, pyFiles);
       hdfsuserConfCache.put(hdfsUser, jc);
 
       String[] command = {"jupyter", "notebook"};
@@ -351,7 +333,10 @@ public class JupyterConfigFactory {
       jc.setToken(token);
     }
 
-    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid());
+    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), jc.
+            getDriverCores(), jc.getDriverMemory(), jc.getNumExecutors(), jc.
+            getExecutorCores(), jc.getExecutorMemory(), jc.getGpus(), jc.
+            getArchives(), jc.getJars(), jc.getFiles(), jc.getPyFiles());
   }
 
   public boolean stopServer(String hdfsUser) throws AppException {
@@ -382,42 +367,6 @@ public class JupyterConfigFactory {
     // delete JupyterProject entity bean
   }
 
-//  private void saveServer(int port, HdfsUsers hdfsUser, String token,
-//          Process process) throws AppException {
-//
-//    String ip;
-//    try {
-//      ip = InetAddress.getLocalHost().getHostAddress();
-//
-//      JupyterProject jp
-//              = new JupyterProject(port, hdfsUser.getId(), Date.from(Instant.now()), ip,
-//                      token, JupyterConfig.getPidOfProcess(process));
-//
-//      persist(jp);
-////      JupyterConfig.addNotebookServer(user.getUsername(), process);
-//    } catch (UnknownHostException ex) {
-//      Logger.getLogger(JupyterConfigFactory.class.getName()).
-//              log(Level.SEVERE, null, ex);
-//    }
-//
-//  }
-//  private void persist(JupyterProject jp) {
-//    if (jp != null) {
-//      em.persist(jp);
-//    }
-//  }
-//
-//  private void update(JupyterProject jp) {
-//    if (jp != null) {
-//      em.merge(jp);
-//    }
-//  }
-//
-//  private void remove(JupyterProject jp) {
-//    if (jp != null) {
-//      em.remove(jp);
-//    }
-//  }
   /**
    * This only works on Linux systems. From Java 9, you can just call
    * p.getPid();
@@ -472,20 +421,6 @@ public class JupyterConfigFactory {
         HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
         if (hdfsUser != null) {
           String user = hdfsUser.getUsername();
-          //          if (!JupyterConfig.removeNotebookServer(user)) {
-          //            // try and kill any process with the PID
-          //            long pid = jp.getPid();
-          //            String[] command = {"kill", "-9", Long.toString(pid)};
-          //            ProcessBuilder pb = new ProcessBuilder(command);
-          //            try {
-          //              pb.start();
-          //              pb.wait(5000l);
-          //            } catch (IOException | InterruptedException ex) {
-          //              Logger.getLogger(JupyterFacade.class.getName()).
-          //                      log(Level.SEVERE, null, ex);
-          //            }
-          //
-          //          }
         }
 //        remove(jp);
       }

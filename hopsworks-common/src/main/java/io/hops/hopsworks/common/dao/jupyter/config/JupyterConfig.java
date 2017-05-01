@@ -43,15 +43,38 @@ public class JupyterConfig {
   private final int port;
   private long pid;
   private String token;
+  private String driverMemory;
+  private Integer driverCores;
+  private Integer numExecutors;
+  private String executorMemory;
+  private Integer executorCores;
+  private Integer gpus;
+  private String archives;
+  private String jars;
+  private String files;
+  private String pyFiles;
 
   JupyterConfig(String projectName, String hdfsUser, String nameNodeHostname,
-          Settings settings, int port) throws AppException {
+          Settings settings, int port, int driverCores, String driverMemory,
+          int numExecutors, int executorCores, String executorMemory, int gpus,
+          String archives, String jars, String files, String pyFiles)
+          throws AppException {
     this.projectName = projectName;
     this.hdfsUser = hdfsUser;
     boolean newDir = false;
     boolean newFile = false;
     this.settings = settings;
     this.port = port;
+    this.driverMemory = driverMemory;
+    this.driverCores = driverCores;
+    this.numExecutors = numExecutors;
+    this.executorCores = executorCores;
+    this.executorMemory = executorMemory;
+    this.gpus = gpus;
+    this.archives = archives;
+    this.jars = jars;
+    this.files = files;
+    this.pyFiles = pyFiles;
     projectUserDirPath = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + hdfsUser;
@@ -80,20 +103,107 @@ public class JupyterConfig {
     }
   }
 
-  public JupyterConfig(JupyterConfig jConf) {
-    this.projectName = jConf.getProjectName();
-    this.settings = jConf.getSettings();
-    this.hdfsUser = jConf.getHdfsUser();
-    this.projectUserDirPath = jConf.getProjectDirPath();
-    this.confDirPath = jConf.getConfDirPath();
-    this.notebookDirPath = jConf.getNotebookDirPath();
-    this.runDirPath = jConf.getRunDirPath();
-    this.binDirPath = jConf.getBinDirPath();
-    this.logDirPath = jConf.getLogDirPath();
-    this.libDirPath = jConf.getLibDirPath();
-    this.port = jConf.getPort();
-    this.pid = jConf.getPid();
-    this.token = jConf.getToken();
+//  public JupyterConfig(JupyterConfig jConf) {
+//    this.projectName = jConf.getProjectName();
+//    this.settings = jConf.getSettings();
+//    this.hdfsUser = jConf.getHdfsUser();
+//    this.projectUserDirPath = jConf.getProjectDirPath();
+//    this.confDirPath = jConf.getConfDirPath();
+//    this.notebookDirPath = jConf.getNotebookDirPath();
+//    this.runDirPath = jConf.getRunDirPath();
+//    this.binDirPath = jConf.getBinDirPath();
+//    this.logDirPath = jConf.getLogDirPath();
+//    this.libDirPath = jConf.getLibDirPath();
+//    this.port = jConf.getPort();
+//    this.pid = jConf.getPid();
+//    this.token = jConf.getToken();
+//    this.driverCores = jConf.getDriverCores();
+//    this.driverMemory = jConf.getDriverMemory();
+//    this.numExecutors = jConf.getNumExecutors();
+//    this.executorCores = jConf.getExecutorCores();
+//    this.executorMemory = jConf.getExecutorMemory();
+//    this.gpus = jConf.getGpus();
+//    this.arc = jConf.getGpus();
+//  }
+
+  public int getNumExecutors() {
+    return numExecutors;
+  }
+
+  public void setNumExecutors(int numExecutors) {
+    this.numExecutors = numExecutors;
+  }
+
+  public String getDriverMemory() {
+    return driverMemory;
+  }
+
+  public void setDriverMemory(String driverMemory) {
+    this.driverMemory = driverMemory;
+  }
+
+  public int getDriverCores() {
+    return driverCores;
+  }
+
+  public void setDriverCores(int driverCores) {
+    this.driverCores = driverCores;
+  }
+
+  public int getExecutorCores() {
+    return executorCores;
+  }
+
+  public void setExecutorCores(int executorCores) {
+    this.executorCores = executorCores;
+  }
+
+  public String getExecutorMemory() {
+    return executorMemory;
+  }
+
+  public void setExecutorMemory(String executorMemory) {
+    this.executorMemory = executorMemory;
+  }
+
+  public int getGpus() {
+    return gpus;
+  }
+
+  public void setGpus(int gpus) {
+    this.gpus = gpus;
+  }
+
+  public String getArchives() {
+    return archives;
+  }
+
+  public void setArchives(String archives) {
+    this.archives = archives;
+  }
+
+  public String getJars() {
+    return jars;
+  }
+
+  public void setJars(String jars) {
+    this.jars = jars;
+  }
+
+  public String getFiles() {
+    return files;
+  }
+
+  public void setFiles(String files) {
+    this.files = files;
+  }
+
+  public String getPyFiles() {
+    return pyFiles;
+  }
+
+  public void setPyFiles(String pyFiles) {
+    this.pyFiles = pyFiles;
   }
 
   public String getHdfsUser() {
@@ -147,23 +257,11 @@ public class JupyterConfig {
     }
     return sb;
 
-//    StringBuilder sb = new StringBuilder();
-//    BufferedReader br = consoleOutput.get(hdfsUsername);
-//    if (br != null) {
-//      // This could block if jupyter doesn't output a complete line, but blocks while
-//      // waiting for the line terminating character
-//      while (br.ready())  {
-//        sb.append(br.readLine()).append("\n");
-//      }
-//    }
-//    return sb;
   }
 
   public void clean() {
     cleanAndRemoveConfDirs();
 
-    // TODO: jim
-    // kill all the processes
   }
 
   public String getProjectName() {
@@ -253,11 +351,17 @@ public class JupyterConfig {
                       ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
                       "livy_ip", settings.getLivyIp(),
                       "hdfs_user", this.hdfsUser,
-                      "driver_cpus", "1",
-                      "driver_memory", "2000M",
-                      "executor_cpus", "1",
-                      "executor_memory", "1G",
-                      "jupyter_home", confDirPath,
+                      "driver_cores", this.driverCores.toString(),
+                      "driver_memory", this.driverMemory,
+                      "num_executors", this.numExecutors.toString(),
+                      "executor_cores", this.executorCores.toString(),
+                      "executor_memory", this.executorMemory,
+                      "archives", this.archives,
+                      "jars", this.jars,
+                      "files", this.files,
+                      "pyFiles", this.pyFiles,
+                      "yarn_queue", "default",
+                      "jupyter_home", this.confDirPath,
                       "hadoop_home", this.settings.getHadoopDir()
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(

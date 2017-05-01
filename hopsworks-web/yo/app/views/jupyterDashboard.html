@@ -31,13 +31,18 @@
         </div> 
         <div class="content-wrapper">                      
           <div growl reference="10" class="pull-right" ></div>
-          <div class="col-md-2 pull-left" ng-if="jupyterCtrl.ui !== ''">
-            <button uib-tooltip="Shutdown Jupyter Notebook Server" ng-click="jupyterCtrl.stop()" type="button" class="btn btn-danger btn-sm" >
+          <div class="col-md-11" ng-if="jupyterCtrl.ui !== ''" style="margin-left:-100px">
+            <iframe id="ui_iframe" allowfullscreen  ng-src="{{trustSrc(jupyterCtrl.ui)}}" align="left" width="100%" height="100%" frameborder="0"></iframe> 
+          </div>
+          <div class="col-md-1 pull-right" ng-if="jupyterCtrl.ui !== ''">
+            <button uib-tooltip="Shutdown Jupyter Notebook Server" ng-click="jupyterCtrl.stopJupyter()" 
+                    type="button" class="btn btn-danger btn-sm" >
               <span class="glyphicon glyphicon-off" ></span>
             </button>  
-          </div>
-          <div ng-if="jupyterCtrl.ui !== ''">
-            <iframe id="ui_iframe" allowfullscreen  ng-src="{{trustSrc(jupyterCtrl.ui)}}" align="middle" width="100%" height="100%" frameborder="0"></iframe> 
+            <button uib-tooltip="Configure Jupyter Notebook Kernel" ng-click="jupyterCtrl.reconfigure()" 
+                    type="button" class="btn btn-default btn-sm" >
+              <span class="glyphicon glyphicon-cog" ></span>
+            </button>  
           </div>
           
           <div ng-if="jupyterCtrl.ui === ''">The Jupyter Notebook is not available.</div>

@@ -10,24 +10,15 @@
         </a>
       </li>
 
-<!--      <li uib-dropdown>
-        <a ng-click="projectCtrl.goToService('Jupyter'); projectCtrl.isClosed = !projectCtrl.isClosed" uib-dropdown-toggle >Jupyter Server <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/></a>
-        <ul uib-dropdown-menu class="dropdown-menu">
-          <li ng-click="projectCtrl.goToService('Jupyter')" ><span>Stop Jupyter</span></li>
-        </ul>
-      </li>
-      <li>      -->
-
-      <li ng-click="projectCtrl.goToService('Jupyter')" ng-show="projectCtrl.showJupyter()">
-        <!--<span ng-if="" ng-click="">Stop</span>-->
+      <li ng-click="projectCtrl.goToJupyter()" ng-show="projectCtrl.showJupyter()">
         <a>
-          Jupyter <img class="pull-right" style="margin-left:10px" width="30" src="images/jupyter-200x200-bw.png"/>
+          Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"/>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToService('Zeppelin')" ng-show="projectCtrl.showZeppelin()">
         <a>
-          Zeppelin <img class="pull-right" style="margin-left:10px" width="30" src="images/zeppelin_logo.png"/>
+          Zeppelin <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
         </a>
       </li>
 
@@ -58,7 +49,7 @@
       <li ng-click="projectCtrl.goToKafka()"
           ng-show="projectCtrl.showKafka()">
         <a>
-          Kafka<img class="pull-right" style="margin-left:10px" height="25"
+          Kafka<img class="pull-right" style="margin-right:15px" height="25"
                     src="images/kafka_logo.png" id="kafkaTab"/>
         </a>
       </li>

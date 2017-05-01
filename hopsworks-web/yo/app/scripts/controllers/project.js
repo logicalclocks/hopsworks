@@ -23,14 +23,12 @@ angular.module('hopsWorksApp')
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
-//            $scope.jupyterRunning = true;
 
             self.role = "";
 
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
             self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
             $scope.activeService = "home";
@@ -256,9 +254,10 @@ angular.module('hopsWorksApp')
             };
 
             self.goToJupyter = function () {
+              // Check which instance of Hopsworks is running Jupyter
+              // If that instance is running, URL redirect to that instance
+              // If not running, start a new instance
               self.goToUrl('jupyter');
-//               self.goToHopsworksInstance('jupyter');
-              $scope.dropdown = true;
             };
 
 
@@ -268,19 +267,6 @@ angular.module('hopsWorksApp')
 
             self.goToTensorflow = function () {
               self.goToUrl('tensorflow');
-            };
-
-
-            self.goToSsh = function () {
-              self.goToUrl('ssh');
-            };
-
-            self.goToCharon = function () {
-              self.goToUrl('charon');
-            };
-
-            self.goToBiobanking = function () {
-              self.goToUrl('biobanking');
             };
 
             self.goToKafka = function () {

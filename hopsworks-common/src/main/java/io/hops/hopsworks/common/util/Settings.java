@@ -100,6 +100,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
+  private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -137,9 +138,9 @@ public class Settings implements Serializable {
   }
 
   private String setIpVar(String varName, String defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null && Ip.validIp(ip.getValue())) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null && Ip.validIp(var.getValue())) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return val;
       }
@@ -148,10 +149,10 @@ public class Settings implements Serializable {
   }
 
   private String setDbVar(String varName, String defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
       // TODO - check this is a valid DB name
-      String val = ip.getValue();
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return val;
       }
@@ -160,9 +161,9 @@ public class Settings implements Serializable {
   }
 
   private int setIntVar(String varName, int defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return Integer.parseInt(val);
       }
@@ -171,9 +172,9 @@ public class Settings implements Serializable {
   }
 
   private long setLongVar(String varName, long defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return Long.parseLong(val);
       }
@@ -261,6 +262,7 @@ public class Settings implements Serializable {
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
+      VAGRANT_ENABLED = setIntVar(VARIABLE_VAGRANT_ENABLED, VAGRANT_ENABLED);
       cached = true;
     }
   }
@@ -1172,6 +1174,7 @@ public class Settings implements Serializable {
     return INFLUXDB_PW;
   }
 
+  
   //Project creation: default datasets
   public static enum DefaultDataset {
 
@@ -1198,6 +1201,14 @@ public class Settings implements Serializable {
     }
 
   }
+  
+  public int VAGRANT_ENABLED = 0;
+  public synchronized boolean getVagrantEnabled() {
+    checkCache();
+    return VAGRANT_ENABLED == 1;
+  }
+    
+  
   
   public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
   

@@ -70,7 +70,7 @@ public class JupyterFacade {
   }
 
   public boolean removeNotebookServer(String hdfsUsername) {
-    
+
     JupyterProject jp = findByUser(hdfsUsername);
     em.remove(jp);
     em.flush();
@@ -149,15 +149,19 @@ public class JupyterFacade {
     // delete JupyterProject entity bean
   }
 
-  public JupyterProject saveServer(Project project, int port, int hdfsUserId, String token,
-          long pid)
+  public JupyterProject saveServer(Project project, int port, int hdfsUserId,
+          String token, long pid, int driverCores, String driverMemory,
+          int numExecutors, int executorCores, String executorMemory, int gpus,
+          String archives, String jars, String files, String pyFiles)
           throws AppException {
     JupyterProject jp = null;
     String ip;
     try {
       ip = InetAddress.getLocalHost().getHostAddress();
 
-      jp = new JupyterProject(project, port, hdfsUserId, ip, token, pid);
+      jp = new JupyterProject(project, port, hdfsUserId, ip, token, pid, 
+      driverCores, driverMemory, numExecutors, executorCores, executorMemory, gpus,
+      archives, jars, files, pyFiles);
 
       persist(jp);
     } catch (UnknownHostException ex) {
@@ -194,20 +198,6 @@ public class JupyterFacade {
         HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
         if (hdfsUser != null) {
           String user = hdfsUser.getUsername();
-          //          if (!JupyterConfig.removeNotebookServer(user)) {
-          //            // try and kill any process with the PID
-          //            long pid = jp.getPid();
-          //            String[] command = {"kill", "-9", Long.toString(pid)};
-          //            ProcessBuilder pb = new ProcessBuilder(command);
-          //            try {
-          //              pb.start();
-          //              pb.wait(5000l);
-          //            } catch (IOException | InterruptedException ex) {
-          //              Logger.getLogger(JupyterFacade.class.getName()).
-          //                      log(Level.SEVERE, null, ex);
-          //            }
-          //
-          //          }
         }
         remove(jp);
       }
