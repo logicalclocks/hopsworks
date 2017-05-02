@@ -10,6 +10,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
@@ -125,7 +131,6 @@ public class JupyterConfig {
 //    this.gpus = jConf.getGpus();
 //    this.arc = jConf.getGpus();
 //  }
-
   public int getNumExecutors() {
     return numExecutors;
   }
@@ -299,6 +304,30 @@ public class JupyterConfig {
   //returns true if the project dir was created 
   private boolean createJupyterDirs() {
     File projectDir = new File(projectUserDirPath);
+    if (projectDir.exists()) {
+      // http://stackoverflow.com/questions/779519/delete-directories-recursively-in-java/27917071#27917071
+      Path directory = Paths.get(projectUserDirPath);
+      try {
+        Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                  throws IOException {
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+          }
+          
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                  throws IOException {
+            Files.delete(dir);
+            return FileVisitResult.CONTINUE;
+          }
+        });
+      } catch (IOException ex) {
+        Logger.getLogger(JupyterConfig.class.getName()).log(Level.SEVERE, null,
+                ex);
+      }
+    }
     boolean newProjectDir = projectDir.mkdirs();
     new File(confDirPath + "/custom").mkdirs();
     new File(notebookDirPath).mkdirs();

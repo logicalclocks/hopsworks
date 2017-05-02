@@ -1,5 +1,9 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -19,6 +23,7 @@ public class JupyterDTO {
   private String jars="";
   private String files="";
   private String pyFiles="";
+  private String hostIp="";
 
   public JupyterDTO() {
   }
@@ -40,8 +45,21 @@ public class JupyterDTO {
     this.jars = jars;
     this.files = files;
     this.pyFiles = pyFiles;
+    try {
+      this.hostIp = InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException ex) {
+      Logger.getLogger(JupyterDTO.class.getName()).log(Level.SEVERE, null, ex);
+    }
   }
 
+  public String getHostIp() {
+    return hostIp;
+  }
+
+  public void setHostIp(String host) {
+    this.hostIp = host;
+  }
+  
   public long getPid() {
     return pid;
   }

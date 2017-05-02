@@ -33,7 +33,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.toggleValue = true;
                         self.config = success.data;
-                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
+                        self.ui = "http://" + self.config.hostIp + ":" + self.config.port + "/?token=" + self.config.token;
+//                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
                       }, function (error) {
                 configure();
               }
@@ -102,14 +103,10 @@ angular.module('hopsWorksApp')
               JupyterService.start(projectId, self.config).then(
                       function (success) {
                         self.toggleValue = true;
-                        stopLoading();
                         self.config = success.data;
-//                        self.token = success.data.hashedPasswd;
-//                        self.port = success.data.port;
-//                                self.ui = "http://" + $location.host() + ":" + self.port + "/?token=" + self.token;
-                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
+                        self.ui = "http://" + self.config.hostIp + ":" + self.config.port + "/?token=" + self.config.token;
 //                        $window.open(self.ui, '_blank');
-//                        $timeout(stopLoading(), 1000);
+                        $timeout(stopLoading(), 4000);
 
                       }, function (error) {
                 growl.error("Could not start Jupyter.");
