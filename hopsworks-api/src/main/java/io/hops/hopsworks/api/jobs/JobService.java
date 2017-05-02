@@ -811,108 +811,109 @@ public class JobService {
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+    List<Execution> executionHistory = exeFacade.
+            findbyProjectAndJobId(project, jobId);
+    JsonObjectBuilder arrayObjectBuilder;
+    if (executionHistory != null && !executionHistory.isEmpty()) {
+      for (Execution e : executionHistory) {
+        arrayObjectBuilder = Json.createObjectBuilder();
+        arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
+                getAppId());
+        arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
+        arrayBuilder.add(arrayObjectBuilder);
+      }
+    } else {
+      arrayObjectBuilder = Json.createObjectBuilder();
+      arrayObjectBuilder.add("appId", "");
+      arrayObjectBuilder.add("time", "No log available");
+      arrayObjectBuilder.add("log", "No log available");
+      arrayObjectBuilder.add("err", "No log available");
+      arrayBuilder.add(arrayObjectBuilder);
+    }
+    builder.add("logset", arrayBuilder);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(builder.build()).build();
+  }
+  
+  private void readLog(Execution e, String type, DistributedFileSystemOps dfso, JsonObjectBuilder arrayObjectBuilder)
+          throws IOException {
+    String message;
+    String stdPath;
+    String path = (type.equals("log") ? e.getStdoutPath() : e.getStderrPath());
+    String retry = (type.equals("log") ? "retriableOut" : "retriableErr");
+    boolean status = (type.equals("log") ? e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED) : true);
+    String hdfsPath = "hdfs://" + path;
+    if (path != null && !path.isEmpty() && dfso.exists(hdfsPath)) {
+      if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
+        stdPath = path.split(this.project.getName())[1];
+        arrayObjectBuilder.add(type, "Log is too big to display. Please retrieve it by clicking ");
+        arrayObjectBuilder.add(type + "Path", "/project/" + this.project.getId() + "/datasets" + stdPath);
+      } else {
+        try (InputStream input = dfso.open(hdfsPath)) {
+          message = IOUtils.toString(input, "UTF-8");
+        }
+        arrayObjectBuilder.add(type, message.isEmpty() ? "No information." : message);
+        if (message.isEmpty() && e.getState().isFinalState() && e.getAppId() != null && status) {
+          arrayObjectBuilder.add(retry, "true");
+        }
+      }
+    } else {
+      arrayObjectBuilder.add(type, "No log available");
+      if (e.getState().isFinalState() && e.getAppId() != null && status) {
+        arrayObjectBuilder.add(retry, "true");
+      }
+    }
+  }
+  
+  @GET
+  @Path("/getLog/{appId}/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getLog(@PathParam("appId") String appId,
+          @PathParam("type") String type) throws AppException {
+    if (appId == null || appId.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Can not get log. No ApplicationId.");
+    }
+    Execution execution = exeFacade.findByAppId(appId);
+    if (execution == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "No excution for appId " + appId);
+    }
+    if (!execution.getState().isFinalState()) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "Job still running.");
+    }
+    if (!execution.getJob().getProject().equals(this.project)) {
+      throw new AppException(Response.Status.BAD_REQUEST.
+              getStatusCode(), "No excution for appId " + appId
+              + ".");
+    }
+    
+    JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
-      List<Execution> executionHistory = exeFacade.
-              findbyProjectAndJobId(project, jobId);
-      JsonObjectBuilder arrayObjectBuilder;
-      if (executionHistory != null && !executionHistory.isEmpty()) {
-        String message;
-        String stdPath;
-        for (Execution e : executionHistory) {
-          arrayObjectBuilder = Json.createObjectBuilder();
-          arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
-                  getAppId());
-          arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
-          String hdfsLogPath = "hdfs://" + e.getStdoutPath();
-          if (e.getStdoutPath() != null && !e.getStdoutPath().isEmpty() && dfso.
-                  exists(hdfsLogPath)) {
-            if (dfso.listStatus(new org.apache.hadoop.fs.Path(
-                    hdfsLogPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
-              stdPath = e.getStdoutPath().split(this.project.getName())[1];
-              arrayObjectBuilder.add("log",
-                      "Log is too big to display. Please retrieve it by clicking ");
-              arrayObjectBuilder.add("logPath", "/project/" + this.project.
-                      getId() + "/datasets" + stdPath);
-            } else {
-              try (InputStream input = dfso.open(hdfsLogPath)) {
-                message = IOUtils.toString(input,
-                        "UTF-8");
-              }
-              arrayObjectBuilder.add("log", message.isEmpty()
-                      ? "No information." : message);
-              if (message.isEmpty() && e.getState().isFinalState() && e.
-                      getAppId() != null
-                      && e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED)) {
-                arrayObjectBuilder.add("retriableOut", "true");
-              }
-            }
-
-          } else {
-            arrayObjectBuilder.add("log", "No log available");
-            if (e.getState().isFinalState() && e.getFinalStatus().equals(
-                    JobFinalStatus.SUCCEEDED) && e.getAppId() != null) {
-              arrayObjectBuilder.add("retriableOut", "true");
-            }
-          }
-          String hdfsErrPath = "hdfs://" + e.getStderrPath();
-          if (e.getStderrPath() != null && !e.getStderrPath().isEmpty() && dfso.
-                  exists(hdfsErrPath)) {
-            if (dfso.listStatus(new org.apache.hadoop.fs.Path(
-                    hdfsErrPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
-              stdPath = e.getStderrPath().split(this.project.getName())[1];
-              arrayObjectBuilder.add("err",
-                      "Log is too big to display. Please retrieve it by clicking ");
-              arrayObjectBuilder.add("errPath", "/project/" + this.project.
-                      getId() + "/datasets" + stdPath);
-            } else {
-              try (InputStream input = dfso.open(hdfsErrPath)) {
-                message = IOUtils.toString(input,
-                        "UTF-8");
-              }
-              arrayObjectBuilder.add("err", message.isEmpty() ? "No error."
-                      : message);
-              if (message.isEmpty() && e.getState().isFinalState() && e.
-                      getAppId() != null) {
-                arrayObjectBuilder.add("retriableErr", "err");
-              }
-            }
-          } else {
-            arrayObjectBuilder.add("err", "No log available");
-            if (e.getState().isFinalState() && e.getAppId() != null) {
-              arrayObjectBuilder.add("retriableErr", "err");
-            }
-          }
-          arrayBuilder.add(arrayObjectBuilder);
-        }
-      } else {
-        arrayObjectBuilder = Json.createObjectBuilder();
-        arrayObjectBuilder.add("appId", "");
-        arrayObjectBuilder.add("time", "No log available");
-        arrayObjectBuilder.add("log", "No log available");
-        arrayObjectBuilder.add("err", "No log available");
-        arrayBuilder.add(arrayObjectBuilder);
-      }
-      builder.add("logset", arrayBuilder);
+      readLog(execution, type, dfso, arrayObjectBuilder);
     } catch (IOException ex) {
-      LOGGER.log(Level.WARNING, "Error when reading hdfs logs: {0}", ex.
-              getMessage());
+      Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
     } finally {
       if (dfso != null) {
         dfso.close();
       }
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(builder.build()).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            arrayObjectBuilder.build()).build();
   }
-
+  
+  
   @GET
   @Path("/retryLogAggregation/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response retryLogAggregation(@PathParam("appId") String appId,
+  public Response getLogAggregation(@PathParam("appId") String appId,
           @PathParam("type") String type,
           @Context HttpServletRequest req) throws AppException {
     if (appId == null || appId.isEmpty()) {
