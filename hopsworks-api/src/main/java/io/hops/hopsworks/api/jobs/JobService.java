@@ -913,7 +913,7 @@ public class JobService {
   @Path("/retryLogAggregation/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response getLogAggregation(@PathParam("appId") String appId,
+  public Response retryLogAggregation(@PathParam("appId") String appId,
           @PathParam("type") String type,
           @Context HttpServletRequest req) throws AppException {
     if (appId == null || appId.isEmpty()) {
