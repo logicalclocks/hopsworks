@@ -518,7 +518,7 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      projectController.addExampleJarToExampleProject(owner, project, dfso, udfso, demoType);
+      projectController.addExampleJarToExampleProject(owner, project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
     } catch (Exception ex) {
@@ -764,7 +764,8 @@ public class ProjectService {
 
   @POST
   @Path("{id}/logs/enable")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response enableLogs(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (!project.getLogs()) {
@@ -772,12 +773,12 @@ public class ProjectService {
       try {
         projectController.addElasticsearch(project.getName());
       } catch (IOException ex) {
-        Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage());
         return noCacheResponse.getNoCacheResponseBuilder(
             Response.Status.SERVICE_UNAVAILABLE).build();
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
   }
 
   @Path("{id}/kafka")
