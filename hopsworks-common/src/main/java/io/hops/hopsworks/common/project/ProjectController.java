@@ -801,17 +801,17 @@ public class ProjectController {
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
            
-      //change the owner and group of the project folder to glassfish
+      //change the owner and group of the project folder to hdfs super user
       String path = File.separator + Settings.DIR_ROOT + File.separator
           + project.getName();
       Path location = new Path(path);
       if (dfso.exists(path)) {
-        dfso.setOwner(location, "glassfish", "glassfish");
+        dfso.setOwner(location, settings.getHdfsSuperUser(), settings.getHdfsSuperUser());
       }
 
       Path dumy = new Path("/tmp/" + project.getName());
       if (dfso.exists(dumy.toString())) {
-        dfso.setOwner(dumy, "glassfish", "glassfish");
+        dfso.setOwner(dumy, settings.getHdfsSuperUser(), settings.getHdfsSuperUser());
       }
 
       //remove kafka topics
@@ -839,8 +839,7 @@ public class ProjectController {
         }
 
         //Clean up tmp certificates dir from hdfs
-        String tmpCertsDir = Settings.TMP_CERT_STORE_REMOTE + File.separator
-            + hdfsUser.getName();
+        String tmpCertsDir = settings.getHdfsTmpCertDir() + "/" + hdfsUser.getName();
         if (dfso.exists(tmpCertsDir)) {
           dfso.rm(new Path(tmpCertsDir), true);
         }
@@ -1439,9 +1438,8 @@ public class ProjectController {
           "something went wrong when adding the example jar to the project");
       }
     } else if (TourProjectType.KAFKA.equals(projectType)) {
-      // Get the JAR from /user/glassfish
-      String kafkaExampleSrc = "/user/glassfish/" + Settings
-          .HOPS_KAFKA_TOUR_JAR;
+      // Get the JAR from /user/<super user>
+      String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
       String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
           + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
       try {
