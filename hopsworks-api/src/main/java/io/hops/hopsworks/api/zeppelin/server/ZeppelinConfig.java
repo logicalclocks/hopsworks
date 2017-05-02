@@ -39,7 +39,7 @@ import org.sonatype.aether.RepositoryException;
 
 public class ZeppelinConfig {
 
-  private static final Logger LOGGGER = Logger.getLogger(ZeppelinConfig.class.
+  private static final Logger LOGGER = Logger.getLogger(ZeppelinConfig.class.
           getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
@@ -122,7 +122,7 @@ public class ZeppelinConfig {
       // create visualization bundle
       this.heliumVisualizationFactory.bundle(helium.
               getVisualizationPackagesToBundle());
-      LOGGGER.log(Level.INFO, "Using notebook Repo class {0}",
+      LOGGER.log(Level.INFO, "Using notebook Repo class {0}",
               conf.getString(
                       ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE));
       boolean notebookInHdfs = conf.getString(
@@ -143,7 +143,7 @@ public class ZeppelinConfig {
       } else if (newFile) { // if the conf files were newly created delete them
         removeProjectConfFiles();
       }
-      LOGGGER.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "Error in initializing ZeppelinConfig for project: {0}. {1}",
               new Object[]{this.projectName,
                 e});
@@ -184,12 +184,12 @@ public class ZeppelinConfig {
       nbRepo = ugi.doAs((PrivilegedExceptionAction<NotebookRepoSync>) ()
               -> new NotebookRepoSync(conf));
     } catch (IOException ex) {
-      LOGGGER.log(Level.SEVERE, "Could not create proxy user.", ex);
+      LOGGER.log(Level.SEVERE, "Could not create proxy user.", ex);
     } catch (InterruptedException ex) {
-      LOGGGER.log(Level.SEVERE, "Could not create notebook repo.", ex);
+      LOGGER.log(Level.SEVERE, "Could not create notebook repo.", ex);
     }
     if (nbRepo == null) {
-      LOGGGER.log(Level.SEVERE, "Could not create notebook repo.");
+      LOGGER.log(Level.SEVERE, "Could not create notebook repo.");
       throw new IllegalStateException("Could not create notebook repo.");
     }
     return nbRepo;
@@ -218,7 +218,7 @@ public class ZeppelinConfig {
               getNotebookInformationListener());
     } catch (InterpreterException | IOException | RepositoryException |
             SchedulerException ex) {
-      LOGGGER.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
     }
   }
 
@@ -374,7 +374,7 @@ public class ZeppelinConfig {
     File target = new File(settings.getZeppelinDir() + File.separator
             + "local-repo/vis");
     if (!target.exists()) {
-      LOGGGER.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "Node and npm not cached at {0}. Zeppelin will try to download "
               + "this for every project.",
               target.toURI());
@@ -410,7 +410,7 @@ public class ZeppelinConfig {
       createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
               toString());
     }
-    String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
+    String metricsPath = Settings.getSparkMetricsPath(settings.getHdfsSuperUser());
     String log4jPath = Settings.getProjectSparkLog4JPath(this.projectName);
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
             + File.separator + "bin"
@@ -511,14 +511,14 @@ public class ZeppelinConfig {
     File zeppelinConfig = new File(confDirPath + ZEPPELIN_SITE_XML);
     try {
       url = zeppelinConfig.toURI().toURL();
-      LOGGGER.log(Level.INFO, "Load configuration from {0}", url);
+      LOGGER.log(Level.INFO, "Load configuration from {0}", url);
       conf = new ZeppelinConfiguration(url);
     } catch (ConfigurationException e) {
-      LOGGGER.log(Level.INFO, "Failed to load configuration from " + url
+      LOGGER.log(Level.INFO, "Failed to load configuration from " + url
               + " proceeding with a default", e);
       conf = new ZeppelinConfiguration();
     } catch (MalformedURLException ex) {
-      LOGGGER.log(Level.INFO, "Malformed URL failed to load configuration from "
+      LOGGER.log(Level.INFO, "Malformed URL failed to load configuration from "
               + url
               + " proceeding with a default", ex);
       conf = new ZeppelinConfiguration();
@@ -560,7 +560,7 @@ public class ZeppelinConfig {
       }
       retry++;
       if (retry > DELETE_RETRY) {
-        LOGGGER.log(Level.SEVERE, "Could not delete zeppelin project folder.");
+        LOGGER.log(Level.SEVERE, "Could not delete zeppelin project folder.");
         return false;
       }
     }
@@ -597,7 +597,7 @@ public class ZeppelinConfig {
    * SchedulerFactory
    */
   public void clean() {
-    LOGGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
+    LOGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
             this.projectName);
     if (this.replFactory != null) {
       this.replFactory.close();

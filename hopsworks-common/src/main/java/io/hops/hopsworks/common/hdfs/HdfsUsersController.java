@@ -67,10 +67,8 @@ public class HdfsUsersController {
     String projectPath = File.separator + Settings.DIR_ROOT + File.separator
             + project.getName();
     Path location = new Path(projectPath);
-    //FsPermission(FsAction u, FsAction g, FsAction o) 775
-    //Gives owner and group all access and read, execute for others
-    //This means group is for data_owners and others for data_scientist
-    //This means every body can see the content of a project.
+    //FsPermission(FsAction u, FsAction g, FsAction o) 555
+    //We prohibit a user from creating top-level datasets bypassing Hopsworks UI (i.e. from as Spark app)
     FsPermission fsPermission = new FsPermission(FsAction.READ_EXECUTE,
             FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);// 555
     dfso.setOwner(location, owner, project.getName());

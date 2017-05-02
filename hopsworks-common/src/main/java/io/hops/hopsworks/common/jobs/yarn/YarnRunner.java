@@ -160,12 +160,12 @@ public class YarnRunner {
 
     HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
         services.getSettings().getHopsworksTmpCertDir(),
-        Settings.TMP_CERT_STORE_REMOTE, jobType,
+        services.getSettings().getHdfsTmpCertDir(), jobType,
         dfso, materialResources, systemProperties, nameNodeIpPort,
         applicationId);
 
-    String appDir = "hdfs://" + nameNodeIpPort + Settings.TMP_CERT_STORE_REMOTE
-        + File.separator + project.getName() + Settings.DOUBLE_UNDERSCORE
+    String appDir = "hdfs://" + nameNodeIpPort + services.getSettings().getHdfsTmpCertDir()
+        + "/" + project.getName() + Settings.DOUBLE_UNDERSCORE
         + username + File.separator + applicationId;
     filesToRemove.add(appDir);
 

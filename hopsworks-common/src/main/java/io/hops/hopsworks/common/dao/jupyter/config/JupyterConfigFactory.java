@@ -184,6 +184,9 @@ public class JupyterConfigFactory {
   }
 
   /**
+   * 
+   * This method will stop any running server for this hdfsUser, and start
+   * a new one.
    *
    * @param project
    * @param hdfsUser
@@ -221,6 +224,16 @@ public class JupyterConfigFactory {
     Process process = null;
     int port = 0;
     JupyterConfig jc = null;
+    
+    // kill any running servers for this user, clear cached entries
+    hdfsuserConfCache.remove(hdfsUser);
+    if (runningServers.containsKey(hdfsUser)) {
+      Process p = runningServers.get(hdfsUser);
+      if (p != null) {
+        p.destroyForcibly();
+      }
+      runningServers.remove(hdfsUser);
+    }
 
     while (failed && maxTries > 0) {
 
@@ -229,16 +242,17 @@ public class JupyterConfigFactory {
       } else {
         port = ThreadLocalRandom.current().nextInt(40000, 59999);
       }
-      boolean alreadyAllocated = false;
-      for (JupyterConfig tmp : hdfsuserConfCache.values()) {
-        if (tmp.getPort() == port) {
-          alreadyAllocated = true;
-          break;
-        }
-      }
-      if (alreadyAllocated) {
-        continue;
-      }
+//      boolean alreadyAllocated = false;
+//      for (JupyterConfig tmp : hdfsuserConfCache.values()) {
+//        if (tmp.getPort() == port) {
+//          alreadyAllocated = true;
+//          break;
+//        }
+//      }
+//      if (alreadyAllocated) {
+//        maxTries--;
+//        continue;
+//      }
 //      port = Settings.JUPYTER_PORT;
       jc = new JupyterConfig(project.getName(), hdfsUser, hdfsLeFacade.
               getActiveNN().getHostname(), settings, port, driverCores,

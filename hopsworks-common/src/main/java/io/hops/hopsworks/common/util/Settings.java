@@ -1078,10 +1078,6 @@ public class Settings implements Serializable {
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
 
-  public static final String TMP_CERT_STORE_REMOTE
-      = "/user/glassfish/kafkacerts";
-
-
   //Used to retrieve schema by HopsUtil
   public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
   public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
@@ -1117,6 +1113,10 @@ public class Settings implements Serializable {
 
   public String getHopsworksTmpCertDir() {
     return getHopsworksDomainDir() + File.separator + "kafkacerts";
+  }
+  
+  public String getHdfsTmpCertDir() {
+    return "/user/" + getHdfsSuperUser() + "/" + "kafkacerts";
   }
   
   public String getFlinkKafkaCertDir() {
