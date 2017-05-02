@@ -23,15 +23,14 @@ angular.module('hopsWorksApp')
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
-	      
+
             self.role = "";
 
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
+            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
             $scope.activeService = "home";
 
             self.alreadyChoosenServices = [];
@@ -64,10 +63,10 @@ angular.module('hopsWorksApp')
 
             self.initTour = function () {
               if (angular.equals(self.currentProject.projectName.substr(0, 10),
-                self.tourService.sparkProjectPrefix)) {
+                      self.tourService.sparkProjectPrefix)) {
                 self.tourService.setActiveTour('spark');
               } else if (angular.equals(self.currentProject.projectName
-                .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
+                      .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
                 self.tourService.setActiveTour('kafka');
               }
 
@@ -85,7 +84,7 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.activeTensorflow = function() {
+            self.activeTensorflow = function () {
               if ($location.url().indexOf("") !== -1) {
               }
               return false;
@@ -93,7 +92,7 @@ angular.module('hopsWorksApp')
 
             getEndpoint();
 
-            
+
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.pId}).$promise.then(
@@ -129,7 +128,7 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
 
-                        $cookies.put("projectID",self.pId);
+                        $cookies.put("projectID", self.pId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
@@ -159,8 +158,8 @@ angular.module('hopsWorksApp')
             }
 
             getCurrentProject();
-            
-           
+
+
             // Check if the service exists and otherwise add it or remove it depending on the previous choice
             self.exists = function (projectType) {
               var idx = self.selectionProjectTypes.indexOf(projectType);
@@ -195,32 +194,42 @@ angular.module('hopsWorksApp')
               };
 
               ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
-                .$promise.then(
-                    function (success) {
-                      self.working = false;                      
-                      growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
-                      if (success.errorMsg) {
-                        ModalService.alert('sm', 'Warning!', success.errorMsg).then(
-                                function (success) {
+                      .$promise.then(
+                              function (success) {
+                                self.working = false;
+                                growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
+                                if (success.errorMsg) {
+                                  ModalService.alert('sm', 'Warning!', success.errorMsg).then(
+                                          function (success) {
+                                            $route.reload();
+                                          }, function (error) {
+                                    $route.reload();
+                                  });
+                                } else {
                                   $route.reload();
-                                }, function (error) {
-                                  $route.reload();
-                        });
-                      } else {
-                        $route.reload();
+                                }
+                              }, function (error) {
+                        self.working = false;
+                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
-                    }, function (error) {
-                      self.working = false;
-                      growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
-                    }
-                );
+                      );
             };
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;
-            
-            self.goToUrl = function(serviceName) {
+
+            // Show the searchbar if you are (1) within a project on datasets or (2) on the landing page
+//            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
+
+
+            self.goToHopsworksInstance = function (endpoint, serviceName) {
               $scope.activeService = serviceName;
-              $location.path('project/' + self.pId + '/' + serviceName);              
+              $location.path('http://' + endpoint + '/project/' + self.pId + '/' + serviceName);
+            }
+
+
+            self.goToUrl = function (serviceName) {
+              $scope.activeService = serviceName;
+              $location.path('project/' + self.pId + '/' + serviceName);
             }
 
             self.goToDatasets = function () {
@@ -229,12 +238,13 @@ angular.module('hopsWorksApp')
 
             self.goToJobs = function () {
               ProjectService.enableLogs({id: self.currentProject.projectId}).$promise.then(
-                        function (success) {
-                        }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
-                });
-              
-              self.goToUrl('jobs');
+                      function (success) {
+
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
+              });
+
+            self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
               }
@@ -243,25 +253,20 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.goToJupyter = function () {
+              // Check which instance of Hopsworks is running Jupyter
+              // If that instance is running, URL redirect to that instance
+              // If not running, start a new instance
+              self.goToUrl('jupyter');
+            };
+
+
             self.goToWorklows = function () {
-               self.goToUrl('workflows');
+              self.goToUrl('workflows');
             };
-            
+
             self.goToTensorflow = function () {
-               self.goToUrl('tensorflow');
-            };
-
-	      
-            self.goToSsh = function () {
-              self.goToUrl('ssh');
-            };
-
-            self.goToCharon = function () {
-              self.goToUrl('charon');
-            };
-
-            self.goToBiobanking = function () {
-              self.goToUrl('biobanking');
+              self.goToUrl('tensorflow');
             };
 
             self.goToKafka = function () {
@@ -286,9 +291,9 @@ angular.module('hopsWorksApp')
             self.goToMetadataDesigner = function () {
               self.goToUrl('metadata');
             };
-            
+
             self.goToHistory = function () {
-                $location.path('history/' + self.pId + '/history');
+              $location.path('history/' + self.pId + '/history');
             };
 
             /**
@@ -329,6 +334,10 @@ angular.module('hopsWorksApp')
               return convertSize(fileSizeInBytes);
             };
 
+            self.showJupyter = function () {
+              return showService("Jupyter");
+            };
+
             self.showZeppelin = function () {
               return showService("Zeppelin");
             };
@@ -352,11 +361,11 @@ angular.module('hopsWorksApp')
             self.showKafka = function () {
               return showService("Kafka");
             };
-            
+
             self.showTensorflow = function () {
               return showService("Tensorflow");
             };
-	      
+
             self.showWorkflows = function () {
               return showService("Workflows");
             };
@@ -381,28 +390,28 @@ angular.module('hopsWorksApp')
             };
 
             self.hdfsUsage = function () {
-              if(self.projectFile.quotas !== null){
+              if (self.projectFile.quotas !== null) {
                 return convertSize(self.projectFile.quotas.hdfsUsageInBytes);
               }
               return null;
             };
 
             self.hdfsQuota = function () {
-              if(self.projectFile.quotas !== null){
+              if (self.projectFile.quotas !== null) {
                 return convertSize(self.projectFile.quotas.hdfsQuotaInBytes);
               }
               return null;
             };
-            
+
             self.hdfsNsCount = function () {
-              if(self.projectFile.quotas !== null){
+              if (self.projectFile.quotas !== null) {
                 return self.projectFile.quotas.hdfsNsCount;
               }
               return null;
             };
 
             self.hdfsNsQuota = function () {
-              if(self.projectFile.quotas !== null){
+              if (self.projectFile.quotas !== null) {
                 return self.projectFile.quotas.hdfsNsQuota;
               }
               return null;
@@ -413,8 +422,8 @@ angular.module('hopsWorksApp')
              * @returns {Window.projectFile.quotas.yarnQuotaInSecs|projectL#10.projectFile.quotas.yarnQuotaInSecs}
              */
             self.yarnQuota = function () {
-              if(self.projectFile.quotas != null){
-                return self.roundTo(self.projectFile.quotas.yarnQuotaInSecs/60/60, 2);
+              if (self.projectFile.quotas != null) {
+                return self.roundTo(self.projectFile.quotas.yarnQuotaInSecs / 60 / 60, 2);
               }
               return null;
             };
@@ -440,21 +449,21 @@ angular.module('hopsWorksApp')
             $scope.onClick = function (points, evt) {
               console.log(points, evt);
             };
-            
+
             /**
              * http://stackoverflow.com/questions/10015027/javascript-tofixed-not-rounding/32605063#32605063
              * @param {type} n
              * @param {type} digits
              * @returns {Number}
              */
-            self.roundTo = function(n, digits) {
-               if (digits === undefined) {
-                   digits = 0;
-               }
+            self.roundTo = function (n, digits) {
+              if (digits === undefined) {
+                digits = 0;
+              }
 
-               var multiplicator = Math.pow(10, digits);
-               n = parseFloat((n * multiplicator).toFixed(11));
-               return Math.round(n) / multiplicator;
-           };
+              var multiplicator = Math.pow(10, digits);
+              n = parseFloat((n * multiplicator).toFixed(11));
+              return Math.round(n) / multiplicator;
+            };
 
           }]);

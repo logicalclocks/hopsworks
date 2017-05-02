@@ -5,6 +5,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
+import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
@@ -83,6 +84,8 @@ public class ProjectService {
   private ProjectMembersService projectMembers;
   @Inject
   private KafkaService kafka;
+  @Inject
+  private JupyterService jupyter;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -407,7 +410,7 @@ public class ProjectService {
           Users user = userManager.getUserByEmail(userEmail);
           DistributedFileSystemOps udfso = null;
           DistributedFileSystemOps dfso = null;
-          Settings.DefaultDataset ds = Settings.DefaultDataset.NOTEBOOKS;
+          Settings.DefaultDataset ds = Settings.DefaultDataset.ZEPPELIN;
           try {
             String username = hdfsUsersBean.getHdfsUserName(project, user);
             udfso = dfs.getDfsOps(username);
@@ -793,6 +796,20 @@ public class ProjectService {
     this.kafka.setProjectId(id);
 
     return this.kafka;
+  }
+  
+  @Path("{id}/jupyter")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public JupyterService jupyter(
+      @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.jupyter.setProjectId(id);
+
+    return this.jupyter;
   }
 
   @Path("{id}/workflows")

@@ -21,6 +21,8 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
+import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import javax.persistence.TransactionRequiredException;
 
 @Stateless
 public class UserManager {
@@ -119,9 +121,13 @@ public class UserManager {
 
   }
 
-  public void updateStatus(Users id, int stat) {
+  public void updateStatus(Users id, int stat) throws ApplicationException {
     id.setStatus(stat);
-    em.merge(id);
+    try {
+      em.merge(id);
+    } catch (TransactionRequiredException ex) {
+      throw new ApplicationException("Need a transaction to update the user status");
+    }
   }
 
   public void updateSecret(int id, String sec) {

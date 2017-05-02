@@ -179,7 +179,7 @@ public class DataSetService {
       inodeView.setSharedWith(sharedWith);
       kids.add(inodeView);
       if (inodeView.getName().
-              equals(Settings.DefaultDataset.NOTEBOOKS.getName())) {
+              equals(Settings.DefaultDataset.ZEPPELIN.getName())) {
         notebookDirExists = true;
       }
     }
@@ -189,14 +189,14 @@ public class DataSetService {
 
       Inode projectInode = inodes.getInodeAtPath(projPath);
       Inode ds = inodes.findByInodePK(projectInode,
-              Settings.DefaultDataset.NOTEBOOKS.getName(),
+              Settings.DefaultDataset.ZEPPELIN.getName(),
               HopsUtils.dataSetPartitionId(projectInode,
-                      Settings.DefaultDataset.NOTEBOOKS.getName()));
+                      Settings.DefaultDataset.ZEPPELIN.getName()));
       if (ds != null) {
         logger.log(Level.INFO, "Notebook dir not in datasets, adding.");
         Dataset newDS = new Dataset(ds, this.project);
         newDS.setSearchable(false);
-        newDS.setDescription(Settings.DefaultDataset.NOTEBOOKS.getDescription());
+        newDS.setDescription(Settings.DefaultDataset.ZEPPELIN.getDescription());
         datasetFacade.persistDataset(newDS);
 
         inodeView = new InodeView(projectInode, newDS, projPath + File.separator
@@ -210,7 +210,7 @@ public class DataSetService {
       }
     }
     GenericEntity<List<InodeView>> inodViews
-            = new GenericEntity<List<InodeView>>(kids) {};
+            = new GenericEntity<List<InodeView>>(kids) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
   }
@@ -254,7 +254,7 @@ public class DataSetService {
       kids.add(inodeView);
     }
     GenericEntity<List<InodeView>> inodeViews
-            = new GenericEntity<List<InodeView>>(kids) {};
+            = new GenericEntity<List<InodeView>>(kids) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodeViews).build();
   }
@@ -264,19 +264,21 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getFile(@PathParam("path") String path,
-      @Context SecurityContext sc) throws
-      AppException, AccessControlException {
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
     String fullpath = getFullPath(path);
     Inode inode = inodes.getInodeAtPath(fullpath);
 
-    if(inode==null){
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),ResponseMessages.DATASET_NOT_FOUND);
+    if (inode == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     InodeView inodeView;
     Users user;
 
-    inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().getName());
+    inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().
+            getName());
     user = userfacade.findByUsername(inodeView.getOwner());
     if (user != null) {
       inodeView.setOwner(user.getFname() + " " + user.getLname());
@@ -284,11 +286,11 @@ public class DataSetService {
     }
 
     GenericEntity<InodeView> inodeViews
-        = new GenericEntity<InodeView>(inodeView) {};
+            = new GenericEntity<InodeView>(inodeView) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        inodeViews).build();
+            inodeViews).build();
   }
-  
+
   @POST
   @Path("/shareDataSet")
   @Produces(MediaType.APPLICATION_JSON)
@@ -451,7 +453,8 @@ public class DataSetService {
     List<Project> list = datasetFacade.findProjectSharedWith(project, dataSet.
             getName());
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
-            list) {};
+            list) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -1163,7 +1166,7 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-  
+
   @GET
   @Path("filePreview/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)

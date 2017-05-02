@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+  <servlet> 
+    <servlet-name>Jersey2Config</servlet-name>
+    <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+    <init-param>
+      <param-name>api.version</param-name>
+      <param-value>0.1.0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.title</param-name>
+      <param-value>Hopsworks CA api</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.basepath</param-name>
+      <param-value>/hopsworks-ca/api</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+      <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+  </security-constraint>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>cauthRealm</realm-name>
+  </login-config>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  
+  <session-config>
+    <session-timeout>600</session-timeout>
+    <cookie-config>
+      <name>SESSION</name>
+      <path>/</path>
+      <http-only>false</http-only>
+      <secure>false</secure>
+    </cookie-config>
+  </session-config>    
+</web-app>

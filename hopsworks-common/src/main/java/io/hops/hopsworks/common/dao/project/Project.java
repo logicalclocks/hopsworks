@@ -29,6 +29,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
@@ -160,6 +161,10 @@ public class Project implements Serializable {
   @ManyToMany
   private Collection<PythonDep> pythonDepCollection;
 
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "projectId")
+  private Collection<JupyterProject> jupyterProjectCollection;
+  
   public Project() {
   }
 
@@ -379,6 +384,18 @@ public class Project implements Serializable {
     this.pythonDepCollection = pythonDepCollection;
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<JupyterProject> getJupyterProjectCollection() {
+    return jupyterProjectCollection;
+  }
+
+  public void setJupyterProjectCollection(
+          Collection<JupyterProject> jupyterProjectCollection) {
+    this.jupyterProjectCollection = jupyterProjectCollection;
+  }
+  
+  
   @Override
   public String toString() {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
