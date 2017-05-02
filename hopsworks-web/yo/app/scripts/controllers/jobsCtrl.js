@@ -23,6 +23,7 @@ angular.module('hopsWorksApp')
             self.currentjob = null;
             self.currentToggledIndex = -1;
             self.fetchingLogs = 0;
+            self.loadingLog = 0;
             $scope.pageSize = 10;
             $scope.sortKey = 'creationTime';
             $scope.reverse = true;
@@ -320,6 +321,30 @@ angular.module('hopsWorksApp')
                   }, function (error) {
                     self.fetchingLogs = 0;
                     growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
+              });
+            };
+            
+            self.getLog = function (job, type) {
+              if (!(job[type] === undefined || job[type] === null)) {
+                return;
+              }
+              self.loadingLog = 1;
+              JobService.getLog(self.projectId, job.appId, type).then(
+                  function (success) {
+                    var logContent = success.data;
+                    if (logContent[type] !== undefined) {
+                      job[type] = logContent[type];
+                    } else if (logContent[type + 'Path'] !== undefined) {
+                      job[type + 'Path'] = logContent[type + 'Path'];
+                    } else if (logContent['retriableErr'] !== undefined) {
+                      job['retriableErr'] = logContent['retriableErr'];
+                    } else if (logContent['retriableOut'] !== undefined) {
+                      job['retriableOut'] = logContent['retriableOut'];
+                    }
+                    self.loadingLog = 0;
+                  }, function (error) {
+                    self.loadingLog = 0;
+                    growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
               });
             };
 
