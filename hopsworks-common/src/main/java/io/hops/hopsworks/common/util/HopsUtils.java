@@ -229,7 +229,7 @@ public class HopsUtils {
               Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
                   tCert);
             }
-          } else //If it is a Flink job, copy the certificates into the glassfish config dir
+          } else //If it is a Flink job, copy the certificates into the domain config dir
           {
             switch (jobType) {
               case FLINK:

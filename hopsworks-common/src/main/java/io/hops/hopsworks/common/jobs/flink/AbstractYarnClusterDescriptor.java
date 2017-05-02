@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 import org.apache.flink.client.CliFrontend;
 import org.apache.flink.client.deployment.ClusterDescriptor;
 import org.apache.flink.configuration.ConfigConstants;
@@ -527,7 +526,7 @@ public abstract class AbstractYarnClusterDescriptor implements
     // LocalResources are not used by Flink, so set it null
     HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
         services.getSettings().getHopsworksTmpCertDir(),
-        Settings.TMP_CERT_STORE_REMOTE, JobType.FLINK,
+        services.getSettings().getHdfsTmpCertDir(), JobType.FLINK,
         null, null, jobSystemProperties,
         null, services.getSettings().getFlinkKafkaCertDir(),
         appResponse.getApplicationId().toString());
