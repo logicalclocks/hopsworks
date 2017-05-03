@@ -141,7 +141,10 @@ public class ExecutionController {
       String marker = Settings.getJobMarkerFile(job, appId);
       if (udfso.exists(marker)) {
         udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
-
+      } else {
+        //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
+        Runtime rt = Runtime.getRuntime();
+        rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + appId);
       }
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appId, ex);
@@ -150,10 +153,6 @@ public class ExecutionController {
         udfso.close();
       }
     }
-
-    //WORKS FOR NOW BUT SHOULD EVENTUALLY GO THROUGH THE YARN CLIENT API
-    Runtime rt = Runtime.getRuntime();
-    rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + appId);
   }
   
   public void stop(JobDescription job, Users user, String appid) throws

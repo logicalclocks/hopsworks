@@ -426,8 +426,8 @@ public class ZeppelinConfig {
               toString());
     }
     //String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
-    String metricsPath = Settings.getSparkMetricsPath(settings.getHdfsSuperUser());
-    String log4jPath = Settings.getSparkLog4JPath(settings.getHdfsSuperUser());
+    String metricsPath = settings.getSparkMetricsPath();
+    String log4jPath = settings.getSparkLog4JPath();
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName) + File.separator + "bin"
         + File.separator + "python";
     if (!zeppelin_env_file.exists()) {

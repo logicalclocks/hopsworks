@@ -234,8 +234,8 @@ public class ElasticController {
    * @param jobId
    */
   public void deleteJobLogs(String index, String type, String field, Integer jobId) {
-    String url = "http://" + settings.getElasticRESTEndpoint() + "/" + index + "/" + type + "/_query?q=" + field + ":"
-        + jobId;
+    String url = "http://" + settings.getElasticRESTEndpoint() + "/" + index.toLowerCase() 
+        + "/" + type + "/_query?q=" + field + ":" + jobId;
     Map<String, String> params = new HashMap<>();
     params.put("op", "DELETE");
     sendElasticsearchReq(url, params, true);
