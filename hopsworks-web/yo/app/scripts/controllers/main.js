@@ -11,7 +11,7 @@ angular.module('hopsWorksApp')
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
-
+            
             if (!angular.isUndefined($routeParams.datasetName)) {
               self.searchType = "datasetCentric";
             } else if (!angular.isUndefined($routeParams.projectID)) {

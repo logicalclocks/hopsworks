@@ -16,6 +16,7 @@
     <module>hopsworks-admin</module>
     <module>hopsworks-api</module>
     <module>hopsworks-ear</module>
+    <module>hopsworks-ca</module>
   </modules>
 
   <profiles>

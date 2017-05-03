@@ -1,0 +1,90 @@
+<!--<style>
+  .slow .toggle-group {
+    transition: left 1.8s;
+    -webkit-transition: left 1.8s;
+  }
+  .fast .toggle-group {
+    transition: left 0.1s;
+    -webkit-transition: left 0.1s;
+  }
+  .quick .toggle-group {
+    transition: none;
+    -webkit-transition: none;
+  }
+</style>-->
+
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+  <div id="wrapper"
+       class="toggled"
+       ng-controller="JupyterCtrl as jupyterCtrl">
+    <div class="overlay"></div>
+    <div ng-include="'navProject.html'"></div>
+    <div>
+      <section>  
+
+        <div ng-if="jupyterCtrl.loading" class="loadingwrap">
+          <div class="loading-content">
+            <div class="loader-in-wrap"></div>
+            {{jupyterCtrl.loadingText}}
+          </div>
+        </div> 
+        <div class="content-wrapper">                      
+          <div growl reference="10" class="pull-right" ></div>
+          <div class="col-md-11" ng-if="jupyterCtrl.ui !== ''" style="margin-left:-100px">
+            <iframe id="ui_iframe" allowfullscreen  ng-src="{{trustSrc(jupyterCtrl.ui)}}" align="left" width="100%" height="100%" frameborder="0"></iframe> 
+          </div>
+          <div class="col-md-1 pull-right" ng-if="jupyterCtrl.ui !== ''">
+            <button uib-tooltip="Shutdown Jupyter Notebook Server" ng-click="jupyterCtrl.stopJupyter()" 
+                    type="button" class="btn btn-danger btn-sm" >
+              <span class="glyphicon glyphicon-off" ></span>
+            </button>  
+            <button uib-tooltip="Configure Jupyter Notebook Kernel" ng-click="jupyterCtrl.reconfigure()" 
+                    type="button" class="btn btn-default btn-sm" >
+              <span class="glyphicon glyphicon-cog" ></span>
+            </button>  
+          </div>
+          
+          <div ng-if="jupyterCtrl.ui === ''">The Jupyter Notebook is not available.</div>
+
+
+
+          <!--          <div class="col-sm-3 col-md-3 col-lg-3 ">
+          
+                      <toggle ng-model="jupyterCtrl.toggleValue" ng-change="toggleJupyter()" onstyle="btn-success" style="slow"
+                              offstyle="btn-danger" size="btn" on="<i class='fa fa-play'></i> On" 
+                              off="<i class='fa fa-stop'></i> Off"></toggle>
+          
+                    </div>-->
+
+
+
+          <!--          <table class="table table-hover" style="width: 100%">
+                      <tbody>
+                        <tr>
+                          <td class="text-muted">{{jupyterServer.statusMsg}}</td>
+                          <td style="text-align: right">                                      
+                            <button ng-if="jupyterServer.notRunning"
+                                    ng-click="jupyterCtrl.start()"
+                                    type="button" class="btn btn-info btn-sm" 
+                                    ng-disabled="jupyterServer.notRunning">
+                              <span class="glyphicon glyphicon-eye-open" ></span>
+                            </button>
+                            <button ng-if="jupyterServer.notRunning === false"
+                                    ng-click="jupyterCtrl.stop()"
+                                    type="button" class="btn btn-danger btn-sm" 
+                                    ng-disabled="jupyterServer.notRunning">
+                              <span class="glyphicon glyphicon-off" ></span>
+                            </button>
+                          </td>
+                        </tr>
+          
+                      </tbody>                     
+                    </table>        -->
+        </div> <!--content wrapper -->
+
+      </section>
+    </div>
+
+  </div>
+</div>

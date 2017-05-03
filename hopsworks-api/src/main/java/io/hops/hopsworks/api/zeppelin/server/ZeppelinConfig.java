@@ -89,30 +89,15 @@ public class ZeppelinConfig {
     boolean newBinDir = false;
     projectDirPath = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
-    confDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + COMMON_CONF.getConfDir();
-    notebookDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + COMMON_CONF.getNotebookDir();
-    runDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "run";
-    binDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "bin";
-    logDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "logs";
-    interpreterDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "interpreter";
-    libDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "lib";
-    repoDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + "local-repo";
+    confDirPath = projectDirPath + File.separator + COMMON_CONF.getConfDir();
+    notebookDirPath = projectDirPath + File.separator + COMMON_CONF.
+            getNotebookDir();
+    runDirPath = projectDirPath + File.separator + "run";
+    binDirPath = projectDirPath + File.separator + "bin";
+    logDirPath = projectDirPath + File.separator + "logs";
+    interpreterDirPath = projectDirPath + File.separator + "interpreter";
+    libDirPath = projectDirPath + File.separator + "lib";
+    repoDirPath = projectDirPath + File.separator + "local-repo";
     try {
       newDir = createZeppelinDirs();//creates the necessary folders for the project in /srv/zeppelin
       newBinDir = copyBinDir();
@@ -265,7 +250,7 @@ public class ZeppelinConfig {
   public HeliumVisualizationFactory getHeliumVisualizationFactory() {
     return heliumVisualizationFactory;
   }
-  
+
   public NotebookServer getNotebookServer() {
     return this.notebookServer;
   }
@@ -384,14 +369,14 @@ public class ZeppelinConfig {
       Files.createSymbolicLink(newLink.toPath(), target.toPath());
     }
   }
-  
+
   private void createVisCacheSymlink() throws IOException {
     File target = new File(settings.getZeppelinDir() + File.separator
             + "local-repo/vis");
     if (!target.exists()) {
       LOGGER.log(Level.SEVERE,
               "Node and npm not cached at {0}. Zeppelin will try to download "
-            + "this for every project.",
+              + "this for every project.",
               target.toURI());
       return;
     }
@@ -428,8 +413,9 @@ public class ZeppelinConfig {
     //String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
     String metricsPath = settings.getSparkMetricsPath();
     String log4jPath = settings.getSparkLog4JPath();
-    String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName) + File.separator + "bin"
-        + File.separator + "python";
+    String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
+            + File.separator + "bin"
+            + File.separator + "python";
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";
@@ -445,7 +431,8 @@ public class ZeppelinConfig {
               ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
               "spark_dir", settings.getSparkDir(),
               "hadoop_dir", settings.getHadoopDir(),
-              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/" + this.projectName,
+              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/"
+              + this.projectName,
               // TODO: This should be the project__username, not just the projectname
               "hadoop_username", this.projectName,
               "java_home", javaHome,
@@ -490,7 +477,8 @@ public class ZeppelinConfig {
     String jobName = this.projectName.toLowerCase() + "-zeppelin";
     String logstashID = "-D" + Settings.LOGSTASH_JOB_INFO + "="
             + this.projectName.toLowerCase() + "," + jobName + "," + jobName;
-    String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties " + logstashID;
+    String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties "
+            + logstashID;
     String hdfsResourceDir = "hdfs://" + resourceDir + File.separator;
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
@@ -502,9 +490,11 @@ public class ZeppelinConfig {
                       "metrics-properties_local_path", "./metrics.properties",
                       "metrics-properties_path", metricsPath + "," + log4jPath,
                       "extra_spark_java_options", extraSparkJavaOptions,
-                      "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "spark.sql.warehouse.dir", hdfsResourceDir
+                      + "spark-warehouse",
                       "spark.yarn.stagingDir", hdfsResourceDir,
-                      "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "livy.spark.sql.warehouse.dir", hdfsResourceDir
+                      + "spark-warehouse",
                       "livy.spark.yarn.stagingDir", hdfsResourceDir,
                       "zeppelin.python_conda_path", zeppelinPythonPath
               );

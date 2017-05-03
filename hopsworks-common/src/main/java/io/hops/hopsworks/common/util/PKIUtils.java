@@ -14,15 +14,15 @@ public class PKIUtils {
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signWithServerCertificate(String csr,
-          String intermediateCaDir, String hopsMasterPassword) throws
+  public static String signCertificate(String csr, String caDir,
+          String hopsMasterPassword, boolean isIntermediate) throws
           IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"),
             ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, intermediateCaDir, hopsMasterPassword);
+      return signCSR(csrFile, caDir, hopsMasterPassword, isIntermediate);
     }
     return null;
   }
@@ -65,8 +65,9 @@ public class PKIUtils {
     return false;
   }
 
-  private static String signCSR(File csr, String intermediateCaDir,
-          String hopsMasterPassword) throws IOException, InterruptedException {
+  private static String signCSR(File csr, String caDir,
+          String hopsMasterPassword, boolean intermediate) throws IOException,
+          InterruptedException {
 
     File generatedCertFile = File.createTempFile(System.getProperty(
             "java.io.tmpdir"), ".cert.pem");
@@ -79,13 +80,21 @@ public class PKIUtils {
 //    cmds.add("-policy policy_loose");
     cmds.add("-batch");
     cmds.add("-config");
-    cmds.add(intermediateCaDir + "/openssl-intermediate.cnf");
+    if (intermediate) {
+      cmds.add(caDir + "/openssl-intermediate.cnf");
+    } else {
+      cmds.add(caDir + "/openssl-ca.cnf");
+    }
     cmds.add("-passin");
     cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-extensions");
-    cmds.add("usr_cert");
+    if (intermediate) {
+      cmds.add("usr_cert");
+    } else {
+      cmds.add("v3_intermediate_ca");
+    }
     cmds.add("-days");
-    cmds.add("365");
+    cmds.add("3650");
     cmds.add("-notext");
     cmds.add("-md");
     cmds.add("sha256");
@@ -113,7 +122,8 @@ public class PKIUtils {
       throw new RuntimeException("Failed to sign certificate. Exit value: "
               + exitValue);
     }
-    logger.info("Signed certificate.");
+    logger.info("Signed certificate. Verifying....");    
+    
     return FileUtils.readFileToString(generatedCertFile);
   }
 }

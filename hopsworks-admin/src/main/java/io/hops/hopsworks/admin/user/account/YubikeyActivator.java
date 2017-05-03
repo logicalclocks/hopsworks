@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 
 @ManagedBean
 @ViewScoped
@@ -209,11 +210,11 @@ public class YubikeyActivator implements Serializable {
       // yRequests.remove(this.selectedYubikyUser);
     } catch (NotSupportedException | SystemException | RollbackException |
             HeuristicMixedException | HeuristicRollbackException |
+            ApplicationException |
             SecurityException | IllegalStateException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
     }
-
     return "print_address";
   }
 
