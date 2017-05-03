@@ -410,8 +410,9 @@ public class ZeppelinConfig {
       createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
               toString());
     }
-    String metricsPath = Settings.getSparkMetricsPath(settings.getHdfsSuperUser());
-    String log4jPath = Settings.getProjectSparkLog4JPath(this.projectName);
+    //String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
+    String metricsPath = settings.getSparkMetricsPath();
+    String log4jPath = settings.getSparkLog4JPath();
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
             + File.separator + "bin"
             + File.separator + "python";

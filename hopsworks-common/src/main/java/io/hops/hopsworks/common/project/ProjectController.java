@@ -599,11 +599,9 @@ public class ProjectController {
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
           ProjectInternalFoldersFailedException, AppException {
     try {
-      udfso.copyInHdfs(new Path(Settings.getSparkLog4JPath(settings.
-              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+      udfso.copyInHdfs(new Path(settings.getSparkLog4JPath()), new Path("/Projects/" + project.getName()
               + "/" + Settings.DefaultDataset.RESOURCES));
-      udfso.copyInHdfs(new Path(Settings.getSparkMetricsPath(settings.
-              getHdfsSuperUser())), new Path("/Projects/" + project.getName()
+      udfso.copyInHdfs(new Path(settings.getSparkMetricsPath()), new Path("/Projects/" + project.getName()
               + "/" + Settings.DefaultDataset.RESOURCES));
     } catch (IOException e) {
       throw new ProjectInternalFoldersFailedException(
