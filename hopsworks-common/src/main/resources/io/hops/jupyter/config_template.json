@@ -54,7 +54,7 @@
   "queue": "%%yarn_queue%%",
   "archives": [%%archives%%],
   "jars": [%%jars%%],
-  "pyfiles": [%%pyFiles%%]
+  "pyFiles": [%%pyFiles%%]
 },
 
 "use_auto_viz": true,
