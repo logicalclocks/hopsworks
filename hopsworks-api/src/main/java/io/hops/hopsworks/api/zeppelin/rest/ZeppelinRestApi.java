@@ -1,6 +1,7 @@
 package io.hops.hopsworks.api.zeppelin.rest;
 
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
+import io.swagger.annotations.Api;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.ws.rs.GET;
@@ -13,6 +14,8 @@ import org.apache.zeppelin.util.Util;
 @Path("/zeppelin/{projectID}")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Zeppelin",
+        description = "Zeppelin Api")
 public class ZeppelinRestApi {
 
   public ZeppelinRestApi() {

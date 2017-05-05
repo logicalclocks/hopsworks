@@ -73,9 +73,11 @@ import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 
 @Path("/metadata")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Metadata Service", description = "Metadata Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

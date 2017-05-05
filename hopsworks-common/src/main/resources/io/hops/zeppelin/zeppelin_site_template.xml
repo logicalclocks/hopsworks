@@ -121,6 +121,24 @@
     <value>%%zeppelin_home_dir%%/local-repo</value>
     <description>Local repository for interpreter's additional dependency loading</description>
   </property>
+  
+  <property>
+    <name>zeppelin.interpreter.dep.mvnRepo</name>
+    <value>http://repo1.maven.org/maven2/</value>
+    <description>Remote principal repository for interpreter's additional dependency loading</description>
+  </property>
+
+  <property>
+    <name>zeppelin.dep.localrepo</name>
+    <value>%%zeppelin_home_dir%%/local-repo</value>
+    <description>Local repository for dependency loader</description>
+  </property>
+
+  <property>
+    <name>zeppelin.helium.npm.registry</name>
+    <value>http://registry.npmjs.org/</value>
+    <description>Remote Npm registry for Helium dependency loader</description>
+  </property>
 
   <property>
     <name>zeppelin.interpreter.remoterunner</name>
@@ -144,6 +162,12 @@
     <name>zeppelin.interpreter.connect.timeout</name>
     <value>60000</value>
     <description>Interpreter process connect timeout in msec.</description>
+  </property>
+  
+  <property>
+    <name>zeppelin.interpreter.output.limit</name>
+    <value>102400</value>
+    <description>Output message from interpreter exceeding the limit will be truncated</description>
   </property>
 
 
@@ -214,6 +238,13 @@
     <value>1024000</value>
     <description>Size in characters of the maximum text message to be received by websocket. Defaults to 1024000</description>
   </property>
+  
+  <property>
+    <name>zeppelin.server.default.dir.allowed</name>
+    <value>false</value>
+    <description>Enable directory listings on server.</description>
+  </property>
+
   <property>
     <name>zeppelin.livy.url</name>
     <value>%%livy_url%%</value>

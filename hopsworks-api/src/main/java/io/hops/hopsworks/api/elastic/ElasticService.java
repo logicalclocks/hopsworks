@@ -21,9 +21,11 @@ import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 
 @Path("/elastic")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Elastic Service", description = "Elastic Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

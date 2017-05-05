@@ -221,7 +221,7 @@ public class ZeppelinConfigFactory {
                         "zeppelin_home", settings.getZeppelinDir(),
                         "livy_url", settings.getLivyUrl(),
                         "livy_master", settings.getLivyYarnMode(),
-                        "zeppelin_home_dir", "");
+                        "zeppelin_notebook_dir", "");
         ConfigFileGenerator.createConfigFile(zeppelinConfig, zeppelin_site_xml.
                 toString());
       }
