@@ -19,9 +19,6 @@ public class LocalhostServices {
     for (String key : sshKeys) {
       publicKeysAsString.append(key).append(System.lineSeparator());
     }
-
-    // Need to execute /srv/mkuser.sh as 'root' using sudo. Same goes for /usr/sbin/deluser
-    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
     List<String> commands = new ArrayList<>();
     commands.add("/bin/bash");
     commands.add("-c");

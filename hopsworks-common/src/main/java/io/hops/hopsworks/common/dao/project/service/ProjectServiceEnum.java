@@ -8,7 +8,7 @@ public enum ProjectServiceEnum {
   WORKFLOWS("Workflows"),
   TENSORFLOW("Tensorflow"),
   HISTORY("History"),
-  //  BIOBANKING("Biobanking"),
+  JUPYTER("Jupyter"),
   JOBS("Jobs");
 
   private final String readable;

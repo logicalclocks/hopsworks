@@ -430,7 +430,8 @@ public class ZeppelinConfig {
               ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
               "spark_dir", settings.getSparkDir(),
               "hadoop_dir", settings.getHadoopDir(),
-              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/" + this.projectName,
+              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/"
+              + this.projectName,
               // TODO: This should be the project__username, not just the projectname
               "hadoop_username", this.projectName,
               "java_home", javaHome,
@@ -475,7 +476,8 @@ public class ZeppelinConfig {
     String jobName = this.projectName.toLowerCase() + "-zeppelin";
     String logstashID = "-D" + Settings.LOGSTASH_JOB_INFO + "="
             + this.projectName.toLowerCase() + "," + jobName + "," + jobName;
-    String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties " + logstashID;
+    String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties "
+            + logstashID;
     String hdfsResourceDir = "hdfs://" + resourceDir + File.separator;
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
@@ -487,9 +489,11 @@ public class ZeppelinConfig {
                       "metrics-properties_local_path", "./metrics.properties",
                       "metrics-properties_path", metricsPath + "," + log4jPath,
                       "extra_spark_java_options", extraSparkJavaOptions,
-                      "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "spark.sql.warehouse.dir", hdfsResourceDir
+                      + "spark-warehouse",
                       "spark.yarn.stagingDir", hdfsResourceDir,
-                      "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+                      "livy.spark.sql.warehouse.dir", hdfsResourceDir
+                      + "spark-warehouse",
                       "livy.spark.yarn.stagingDir", hdfsResourceDir,
                       "zeppelin.python_conda_path", zeppelinPythonPath
               );

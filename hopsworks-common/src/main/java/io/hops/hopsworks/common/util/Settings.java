@@ -25,6 +25,8 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_JAVA_HOME = "java_home";
+  private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
@@ -44,8 +46,6 @@ public class Settings implements Serializable {
       = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
-  private static final String VARIABLE_JUPYTER_PROJECTS_DIR
-          = "jupyter_projects_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
@@ -99,6 +99,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_ENV = "anaconda_env";
   private static final String VARIABLE_GRAPHITE_PORT = "graphite_port";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
+  private static final String VARIABLE_CERTS_DIRS = "certs_dir";
+  private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -136,9 +138,9 @@ public class Settings implements Serializable {
   }
 
   private String setIpVar(String varName, String defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null && Ip.validIp(ip.getValue())) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null && Ip.validIp(var.getValue())) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return val;
       }
@@ -147,10 +149,10 @@ public class Settings implements Serializable {
   }
 
   private String setDbVar(String varName, String defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
       // TODO - check this is a valid DB name
-      String val = ip.getValue();
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return val;
       }
@@ -159,9 +161,9 @@ public class Settings implements Serializable {
   }
 
   private int setIntVar(String varName, int defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return Integer.parseInt(val);
       }
@@ -170,9 +172,9 @@ public class Settings implements Serializable {
   }
 
   private long setLongVar(String varName, long defaultValue) {
-    Variables ip = findById(varName);
-    if (ip != null && ip.getValue() != null) {
-      String val = ip.getValue();
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
       if (val != null && val.isEmpty() == false) {
         return Long.parseLong(val);
       }
@@ -184,6 +186,7 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
@@ -198,18 +201,18 @@ public class Settings implements Serializable {
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
-      JUPYTER_PROJECTS_DIR = setDirVar(VARIABLE_JUPYTER_PROJECTS_DIR,
-              JUPYTER_PROJECTS_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
           HOPSWORKS_INSTALL_DIR);
+      CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
       ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
+      HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -259,6 +262,7 @@ public class Settings implements Serializable {
       INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
+      VAGRANT_ENABLED = setIntVar(VARIABLE_VAGRANT_ENABLED, VAGRANT_ENABLED);
       cached = true;
     }
   }
@@ -412,8 +416,24 @@ public class Settings implements Serializable {
     checkCache();
     return HADOOP_DIR;
   }
+  
+  private String HOPSWORKS_IP = "127.0.0.1";
 
-  private static String HOPSWORKS_INSTALL_DIR = "/srv/hops";
+  public synchronized String getHopsworksIp() {
+    checkCache();
+    return HOPSWORKS_IP;
+  }
+
+
+
+  private static String CERTS_DIR = "/srv/hops/certs-dir";
+
+  public synchronized String getCertsDir() {
+    checkCache();
+    return CERTS_DIR;
+  }
+
+  private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {
     checkCache();
@@ -427,7 +447,12 @@ public class Settings implements Serializable {
 
   public synchronized String getIntermediateCaDir() {
     checkCache();
-    return getHopsworksDomainDir() + Settings.CA_DIR;
+    return getCertsDir() + Settings.INTERMEDIATE_CA_DIR;
+  }
+  
+  public synchronized String getCaDir() {
+    checkCache();
+    return getCertsDir();
   }
 
   //User under which yarn is run
@@ -450,6 +475,13 @@ public class Settings implements Serializable {
     return SPARK_USER;
   }
 
+  public static String JAVA_HOME = "/usr/lib/jvm/default-java";
+
+  public synchronized String getJavaHome() {
+    checkCache();
+    return JAVA_HOME;
+  }
+
   private String FLINK_USER = "glassfish";
 
   public synchronized String getFlinkUser() {
@@ -462,13 +494,6 @@ public class Settings implements Serializable {
   public synchronized String getZeppelinUser() {
     checkCache();
     return ZEPPELIN_USER;
-  }
-
-  private final String HIWAY_DIR = "/home/glassfish";
-
-  public synchronized String getHiwayDir() {
-    checkCache();
-    return HIWAY_DIR;
   }
 
   private String YARN_DEFAULT_QUOTA = "60000";
@@ -589,9 +614,6 @@ public class Settings implements Serializable {
       = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
-  //Zeppelin constants
-  public static final String JAVA_HOME = "/usr/lib/jvm/java";
-
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
   }
@@ -644,8 +666,19 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + sparkUser + "/log4j.properties";
   }
 
+  public synchronized String getSparkLog4JPath() {
+    checkCache();
+    return "hdfs:///user/" + HDFS_SUPERUSER + "/log4j.properties";
+  }
+
   public static String getSparkMetricsPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/metrics.properties";
+
+  }
+
+  public synchronized String getSparkMetricsPath() {
+    checkCache();
+    return "hdfs:///user/" + HDFS_SUPERUSER + "/metrics.properties";
   }
 
   //TODO put the spark metrics in each project and take it from there
@@ -794,7 +827,7 @@ public class Settings implements Serializable {
     return JHS_IP;
   }
 
-  // Livy Server
+  // Livy Server`
   private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";
 
@@ -863,21 +896,15 @@ public class Settings implements Serializable {
 
   
   
+  public static final int JUPYTER_PORT = 8888;
+  
   // Jupyter
-  private String JUPYTER_DIR = "/srv/jupyter";
+  private String JUPYTER_DIR = "/srv/hops/jupyter";
 
   public synchronized String getJupyterDir() {
     checkCache();
     return JUPYTER_DIR;
   }
-
-  private String JUPYTER_PROJECTS_DIR = "/srv/jupyter/Projects";
-
-  public synchronized String getJupyterProjectsDir() {
-    checkCache();
-    return JUPYTER_PROJECTS_DIR;
-  }
-
 
   // Kafka
   private String KAFKA_IP = "10.0.2.15";
@@ -1028,7 +1055,8 @@ public class Settings implements Serializable {
   public static final Charset ENCODING = StandardCharsets.UTF_8;
   public static final String HOPS_USERS_HOMEDIR = "/home/";
   public static final String HOPS_USERNAME_SEPARATOR = "__";
-  private static final String CA_DIR = "/config/ca/intermediate";
+  private static final String CA_DIR = "";
+  private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
@@ -1157,6 +1185,7 @@ public class Settings implements Serializable {
     return INFLUXDB_PW;
   }
 
+  
   //Project creation: default datasets
   public static enum DefaultDataset {
 
@@ -1164,7 +1193,8 @@ public class Settings implements Serializable {
         "Contains the logs for jobs that have been run through the Hopsworks platform."),
     RESOURCES("Resources",
         "Contains resources used by jobs, for example, jar files."),
-    NOTEBOOKS("notebook", "Contains zeppelin notebooks.");
+    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
+    JUPYTER("Jupyter", "Contains Jupyter notebooks.");
     private final String name;
     private final String description;
 
@@ -1182,6 +1212,14 @@ public class Settings implements Serializable {
     }
 
   }
+  
+  public int VAGRANT_ENABLED = 0;
+  public synchronized boolean getVagrantEnabled() {
+    checkCache();
+    return VAGRANT_ENABLED == 1;
+  }
+    
+  
   
   public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
   
@@ -1208,13 +1246,6 @@ public class Settings implements Serializable {
     }
   }
 
-//  public void setIdValue(String id, String value) {
-//    Variables v = new Variables(id, value);
-//    try {
-//      em.persist(v)
-//    } catch (EntityExistsException ex) {
-//    }
-//  }
   public void detach(Variables variable) {
     em.detach(variable);
   }
