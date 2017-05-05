@@ -840,14 +840,14 @@ public class Settings implements Serializable {
   }
 
   // Zeppelin
-  private String ZEPPELIN_DIR = "/srv/zeppelin";
+  private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
 
   public synchronized String getZeppelinDir() {
     checkCache();
     return ZEPPELIN_DIR;
   }
 
-  private String ZEPPELIN_PROJECTS_DIR = "/srv/zeppelin/Projects";
+  private String ZEPPELIN_PROJECTS_DIR = "/srv/hops/zeppelin/Projects";
 
   public synchronized String getZeppelinProjectsDir() {
     checkCache();

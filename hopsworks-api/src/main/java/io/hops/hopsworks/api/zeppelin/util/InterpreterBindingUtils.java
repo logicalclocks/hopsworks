@@ -28,20 +28,16 @@ import java.util.List;
  */
 public class InterpreterBindingUtils {
 
-  public static List<InterpreterSettingsList> getInterpreterBindings(
-          Notebook notebook,
+  public static List<InterpreterSettingsList> getInterpreterBindings(Notebook notebook,
           String noteId) {
     List<InterpreterSettingsList> settingList = new LinkedList<>();
-    List<InterpreterSetting> selectedSettings = notebook.
-            getBindedInterpreterSettings(noteId);
+    List<InterpreterSetting> selectedSettings = notebook.getBindedInterpreterSettings(noteId);
     for (InterpreterSetting setting : selectedSettings) {
-      settingList.add(new InterpreterSettingsList(setting.getId(), setting.
-              getName(),
+      settingList.add(new InterpreterSettingsList(setting.getId(), setting.getName(),
               setting.getInterpreterInfos(), true));
     }
 
-    List<InterpreterSetting> availableSettings = notebook.
-            getInterpreterFactory().get();
+    List<InterpreterSetting> availableSettings = notebook.getInterpreterSettingManager().get();
     for (InterpreterSetting setting : availableSettings) {
       boolean selected = false;
       for (InterpreterSetting selectedSetting : selectedSettings) {
@@ -52,8 +48,7 @@ public class InterpreterBindingUtils {
       }
 
       if (!selected) {
-        settingList.add(new InterpreterSettingsList(setting.getId(), setting.
-                getName(),
+        settingList.add(new InterpreterSettingsList(setting.getId(), setting.getName(),
                 setting.getInterpreterInfos(), false));
       }
     }
