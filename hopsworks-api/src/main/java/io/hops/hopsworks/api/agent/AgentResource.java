@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaOp;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.SecurityContext;
 @Path("/agentresource")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
+@Api(value = "Agent Service", description = "Agent Service")
 public class AgentResource {
 
   @EJB

@@ -39,6 +39,7 @@ import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,6 +70,7 @@ import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Project Service", description = "Project Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

@@ -3,6 +3,7 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/variables")
 @Stateless
+@Api(value = "Variables Service", description = "Variables Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class VariablesService {
 
