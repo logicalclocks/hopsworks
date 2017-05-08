@@ -489,7 +489,6 @@ public class AuditManager {
    * @param outcome
    * @param message
    * @param target
-   * @return
    */
   public void registerAccountChange(Users init, String action, String outcome,
           String message, Users target) {

@@ -72,6 +72,7 @@ module.exports = function (config) {
       'bower_components/angular-material/angular-material.js',
       'bower_components/angular-material-data-table/dist/md-data-table.js',
       'bower_components/angularjs-slider/dist/rzslider.js',
+      'bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

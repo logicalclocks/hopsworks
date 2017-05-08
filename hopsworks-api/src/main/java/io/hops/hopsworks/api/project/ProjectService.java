@@ -5,6 +5,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
+import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
@@ -69,10 +70,9 @@ import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Project Service", description = "Project Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
-@Api(value = "Project service",
-        description = "Project Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
@@ -86,6 +86,8 @@ public class ProjectService {
   private ProjectMembersService projectMembers;
   @Inject
   private KafkaService kafka;
+  @Inject
+  private JupyterService jupyter;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -406,25 +408,41 @@ public class ProjectService {
       try {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
-
-        // if (s.compareToIgnoreCase(ProjectServiceEnum.BIOBANKING.toString()) == 0) {
-        //   String owner = sc.getUserPrincipal().getName();
-        //   try {
-        //     projectController.createProjectConsentFolder(owner, project);
-        //   } catch (ProjectInternalFoldersFailedException ex) {
-        //     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-        //             null, ex);
-        //     json.setErrorMsg(s + ResponseMessages.PROJECT_FOLDER_NOT_CREATED
-        //             + " 'consents' \n "
-        //             + json.getErrorMsg());
-        //   }
-        // }
+        if (se.equals(ProjectServiceEnum.ZEPPELIN)) {
+          Users user = userManager.getUserByEmail(userEmail);
+          DistributedFileSystemOps udfso = null;
+          DistributedFileSystemOps dfso = null;
+          Settings.DefaultDataset ds = Settings.DefaultDataset.ZEPPELIN;
+          try {
+            String username = hdfsUsersBean.getHdfsUserName(project, user);
+            udfso = dfs.getDfsOps(username);
+            dfso = dfs.getDfsOps();
+            datasetController.createDataset(user, project, ds.getName(), ds.
+                    getDescription(), -1, false, true, dfso, dfso);
+            datasetController.generateReadme(udfso, ds.getName(),
+                    ds.getDescription(), project.getName());
+          } catch (IOException | AppException ex) {
+            logger.log(Level.SEVERE, "Could not create zeppelin notebook dir.",
+                    ex);
+            json.setErrorMsg(json.getErrorMsg() + "\n " 
+                    + "Failed to create zeppelin notebook dir. "
+                    + "Zeppelin will not work properly. "
+                    + "Try recreating "+ ds.getName() +" dir manualy.");
+          } finally {
+            if (udfso != null) {
+              udfso.close();
+            }
+            if (dfso != null) {
+              dfso.close();
+            }
+          }
+        }
         projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
-            ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
+                ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
         json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
-            + json.getErrorMsg());
+                + json.getErrorMsg());
       }
     }
 
@@ -505,7 +523,7 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      projectController.addExampleJarToExampleProject(owner, project, dfso, udfso, demoType);
+      projectController.addExampleJarToExampleProject(owner, project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
     } catch (Exception ex) {
@@ -751,7 +769,8 @@ public class ProjectService {
 
   @POST
   @Path("{id}/logs/enable")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response enableLogs(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (!project.getLogs()) {
@@ -759,12 +778,12 @@ public class ProjectService {
       try {
         projectController.addElasticsearch(project.getName());
       } catch (IOException ex) {
-        Logger.getLogger(JobService.class.getName()).log(Level.SEVERE, null, ex);
+        logger.log(Level.SEVERE, ex.getMessage());
         return noCacheResponse.getNoCacheResponseBuilder(
             Response.Status.SERVICE_UNAVAILABLE).build();
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
   }
 
   @Path("{id}/kafka")
@@ -779,6 +798,20 @@ public class ProjectService {
     this.kafka.setProjectId(id);
 
     return this.kafka;
+  }
+  
+  @Path("{id}/jupyter")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public JupyterService jupyter(
+      @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.jupyter.setProjectId(id);
+
+    return this.jupyter;
   }
 
   @Path("{id}/workflows")

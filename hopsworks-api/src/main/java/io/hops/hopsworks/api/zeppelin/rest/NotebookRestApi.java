@@ -82,7 +82,9 @@ public class NotebookRestApi {
     this.notebook = zeppelinConf.getNotebook();
     this.notebookServer = zeppelinConf.getNotebookServer();
     this.noteSearchService = zeppelinConf.getNotebookIndex();
-    this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    if (this.notebook != null) {
+      this.notebookAuthorization = this.notebook.getNotebookAuthorization();
+    }
   }
 
   /**
@@ -93,8 +95,7 @@ public class NotebookRestApi {
    */
   @GET
   @Path("{noteId}/permissions")
-  public Response getNotePermissions(@PathParam("noteId") String noteId) throws
-          IOException {
+  public Response getNotePermissions(@PathParam("noteId") String noteId) throws IOException {
 
     checkIfUserIsAnon(getBlockNotAuthenticatedUserErrorMsg());
     checkIfUserCanRead(noteId,
@@ -106,10 +107,8 @@ public class NotebookRestApi {
     return new JsonResponse<>(Status.OK, "", permissionsMap).build();
   }
 
-  private String ownerPermissionError(Set<String> current, Set<String> allowed)
-          throws IOException {
-    LOG.info(
-            "Cannot change permissions. Connection owners {}. Allowed owners {}",
+  private String ownerPermissionError(Set<String> current, Set<String> allowed) throws IOException {
+    LOG.info("Cannot change permissions. Connection owners {}. Allowed owners {}",
             current.toString(), allowed.toString());
     return "Insufficient privileges to change permissions.\n\n"
             + "Allowed owners: " + allowed.toString() + "\n\n"
@@ -121,12 +120,9 @@ public class NotebookRestApi {
   }
 
   /**
-   * Set of utils method to check if current user can perform action to the
-   * note.
-   * Since we only have security on notebook level, from now we keep this logic
-   * in this class.
-   * In the future we might want to generalize this for the rest of the api
-   * enmdpoints.
+   * Set of utils method to check if current user can perform action to the note.
+   * Since we only have security on notebook level, from now we keep this logic in this class.
+   * In the future we might want to generalize this for the rest of the api enmdpoints.
    */
   /**
    * Check if the current user is not authenticated(anonymous user) or not
@@ -164,8 +160,7 @@ public class NotebookRestApi {
   }
 
   /**
-   * Check if the current user can access (at least he have to be reader) the
-   * given note.
+   * Check if the current user can access (at least he have to be reader) the given note.
    */
   private void checkIfUserCanRead(String noteId, String errorMsg) {
     Set<String> userAndRoles = Sets.newHashSet();
@@ -193,8 +188,7 @@ public class NotebookRestApi {
    */
   @PUT
   @Path("{noteId}/permissions")
-  public Response putNotePermissions(@PathParam("noteId") String noteId,
-          String req)
+  public Response putNotePermissions(@PathParam("noteId") String noteId, String req)
           throws IOException {
     String principal = SecurityUtils.getPrincipal();
     HashSet<String> roles = SecurityUtils.getRoles();
@@ -204,15 +198,13 @@ public class NotebookRestApi {
 
     checkIfUserIsAnon(getBlockNotAuthenticatedUserErrorMsg());
     checkIfUserIsOwner(noteId,
-            ownerPermissionError(userAndRoles, notebookAuthorization.getOwners(
-                    noteId)));
+            ownerPermissionError(userAndRoles, notebookAuthorization.getOwners(noteId)));
 
     HashMap<String, HashSet<String>> permMap = gson.fromJson(req,
             new TypeToken<HashMap<String, HashSet<String>>>() {}.getType());
     Note note = notebook.getNote(noteId);
 
-    LOG.info("Set permissions {} {} {} {} {}", noteId, principal, permMap.get(
-            "owners"),
+    LOG.info("Set permissions {} {} {} {} {}", noteId, principal, permMap.get("owners"),
             permMap.get("readers"), permMap.get("writers"));
 
     HashSet<String> readers = permMap.get("readers");
@@ -237,12 +229,9 @@ public class NotebookRestApi {
     notebookAuthorization.setReaders(noteId, readers);
     notebookAuthorization.setWriters(noteId, writers);
     notebookAuthorization.setOwners(noteId, owners);
-    LOG.debug("After set permissions {} {} {}", notebookAuthorization.getOwners(
-            noteId),
-            notebookAuthorization.getReaders(noteId), notebookAuthorization.
-            getWriters(noteId));
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    LOG.debug("After set permissions {} {} {}", notebookAuthorization.getOwners(noteId),
+            notebookAuthorization.getReaders(noteId), notebookAuthorization.getWriters(noteId));
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     note.persist(subject);
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, userAndRoles);
@@ -259,10 +248,11 @@ public class NotebookRestApi {
    */
   @PUT
   @Path("interpreter/bind/{noteId}")
-  public Response bind(@PathParam("noteId") String noteId, String req) throws
-          IOException {
-    List<String> settingIdList = gson.fromJson(req,
-            new TypeToken<List<String>>() {}.getType());
+  public Response bind(@PathParam("noteId") String noteId, String req) throws IOException {
+    checkIfUserCanWrite(noteId,
+            "Insufficient privileges you cannot bind any interpreters to this note");
+
+    List<String> settingIdList = gson.fromJson(req, new TypeToken<List<String>>() {}.getType());
     notebook.bindInterpretersToNote(this.hdfsUserName, noteId, settingIdList);
     return new JsonResponse<>(Status.OK).build();
   }
@@ -276,8 +266,7 @@ public class NotebookRestApi {
   @GET
   @Path("interpreter/bind/{noteId}")
   public Response bind(@PathParam("noteId") String noteId) {
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get any interpreters settings");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get any interpreters settings");
 
     List<InterpreterSettingsList> settingList = InterpreterBindingUtils.
             getInterpreterBindings(notebook, noteId);
@@ -287,16 +276,14 @@ public class NotebookRestApi {
 
   @GET
   public Response getNoteList() throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     HashSet<String> userAndRoles = SecurityUtils.getRoles();
     userAndRoles.add(subject.getUser());
-    List<Map<String, String>> notesInfo = notebookServer.
-            generateNotesInfo(false, subject,
-                    userAndRoles);
+    List<Map<String, String>> notesInfo = notebookServer.generateNotesInfo(false, subject,
+            userAndRoles);
     return new JsonResponse<>(Status.OK, "", notesInfo).build();
   }
-  
+
   @GET
   @Path("/reloadedNotebookList")
   public Response getReloadedNoteList() throws IOException {
@@ -315,8 +302,7 @@ public class NotebookRestApi {
   public Response getNote(@PathParam("noteId") String noteId) throws IOException {
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get this note");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get this note");
 
     return new JsonResponse<>(Status.OK, "", note).build();
   }
@@ -330,10 +316,8 @@ public class NotebookRestApi {
    */
   @GET
   @Path("export/{noteId}")
-  public Response exportNote(@PathParam("noteId") String noteId) throws
-          IOException {
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot export this note");
+  public Response exportNote(@PathParam("noteId") String noteId) throws IOException {
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot export this note");
     String exportJson = notebook.exportNote(noteId);
     return new JsonResponse<>(Status.OK, "", exportJson).build();
   }
@@ -348,10 +332,9 @@ public class NotebookRestApi {
   @POST
   @Path("import")
   public Response importNote(String req) throws IOException {
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     Note newNote = notebook.importNote(req, null, subject);
-    return new JsonResponse<>(Status.CREATED, "", newNote.getId()).build();
+    return new JsonResponse<>(Status.OK, "", newNote.getId()).build();
   }
 
   /**
@@ -362,22 +345,20 @@ public class NotebookRestApi {
    * @throws IOException
    */
   @POST
-  @Path("/")
   public Response createNote(String message) throws IOException {
+    String user = SecurityUtils.getPrincipal();
     LOG.info("Create new note by JSON {}", message);
     NewNoteRequest request = gson.fromJson(message, NewNoteRequest.class);
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(user);
     Note note = notebook.createNote(subject);
     List<NewParagraphRequest> initialParagraphs = request.getParagraphs();
     if (initialParagraphs != null) {
       for (NewParagraphRequest paragraphRequest : initialParagraphs) {
-        Paragraph p = note.addParagraph(subject);
-        p.setTitle(paragraphRequest.getTitle());
-        p.setText(paragraphRequest.getText());
+        Paragraph p = note.addNewParagraph(subject);
+        initParagraph(p, paragraphRequest, user);
       }
     }
-    note.addParagraph(subject); // add one paragraph to the last
+    note.addNewParagraph(subject); // add one paragraph to the last
     String noteName = request.getName();
     if (noteName.isEmpty()) {
       noteName = "Note " + note.getId();
@@ -387,7 +368,7 @@ public class NotebookRestApi {
     note.persist(subject);
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());
-    return new JsonResponse<>(Status.CREATED, "", note.getId()).build();
+    return new JsonResponse<>(Status.OK, "", note.getId()).build();
   }
 
   /**
@@ -399,13 +380,10 @@ public class NotebookRestApi {
    */
   @DELETE
   @Path("{noteId}")
-  public Response deleteNote(@PathParam("noteId") String noteId) throws
-          IOException {
+  public Response deleteNote(@PathParam("noteId") String noteId) throws IOException {
     LOG.info("Delete note {} ", noteId);
-    checkIfUserIsOwner(noteId,
-            "Insufficient privileges you cannot delete this note");
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    checkIfUserIsOwner(noteId, "Insufficient privileges you cannot delete this note");
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     if (!(noteId.isEmpty())) {
       Note note = notebook.getNote(noteId);
       if (note != null) {
@@ -427,22 +405,19 @@ public class NotebookRestApi {
   @POST
   @Path("{noteId}")
   public Response cloneNote(@PathParam("noteId") String noteId, String message)
-          throws IOException, CloneNotSupportedException,
-          IllegalArgumentException {
+          throws IOException, CloneNotSupportedException, IllegalArgumentException {
     LOG.info("clone note by JSON {}", message);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot clone this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot clone this note");
     NewNoteRequest request = gson.fromJson(message, NewNoteRequest.class);
     String newNoteName = null;
     if (request != null) {
       newNoteName = request.getName();
     }
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     Note newNote = notebook.cloneNote(noteId, newNoteName, subject);
     notebookServer.broadcastNote(newNote);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());
-    return new JsonResponse<>(Status.CREATED, "", newNote.getId()).build();
+    return new JsonResponse<>(Status.OK, "", newNote.getId()).build();
   }
 
   /**
@@ -454,33 +429,28 @@ public class NotebookRestApi {
    */
   @POST
   @Path("{noteId}/paragraph")
-  public Response insertParagraph(@PathParam("noteId") String noteId,
-          String message)
+  public Response insertParagraph(@PathParam("noteId") String noteId, String message)
           throws IOException {
+    String user = SecurityUtils.getPrincipal();
     LOG.info("insert paragraph {} {}", noteId, message);
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot add paragraph to this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot add paragraph to this note");
 
-    NewParagraphRequest request = gson.fromJson(message,
-            NewParagraphRequest.class);
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    NewParagraphRequest request = gson.fromJson(message, NewParagraphRequest.class);
+    AuthenticationInfo subject = new AuthenticationInfo(user);
     Paragraph p;
     Double indexDouble = request.getIndex();
     if (indexDouble == null) {
-      p = note.addParagraph(subject);
+      p = note.addNewParagraph(subject);
     } else {
-      p = note.insertParagraph(indexDouble.intValue(), subject);
+      p = note.insertNewParagraph(indexDouble.intValue(), subject);
     }
-    p.setTitle(request.getTitle());
-    p.setText(request.getText());
-
+    initParagraph(p, request, user);
     note.persist(subject);
     notebookServer.broadcastNote(note);
-    return new JsonResponse<>(Status.CREATED, "", p.getId()).build();
+    return new JsonResponse<>(Status.OK, "", p.getId()).build();
   }
 
   /**
@@ -498,8 +468,7 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get this paragraph");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get this paragraph");
     Paragraph p = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(p);
 
@@ -509,31 +478,18 @@ public class NotebookRestApi {
   @PUT
   @Path("{noteId}/paragraph/{paragraphId}/config")
   public Response updateParagraphConfig(@PathParam("noteId") String noteId,
-          @PathParam("paragraphId") String paragraphId, String message) throws
-          IOException {
+          @PathParam("paragraphId") String paragraphId, String message) throws IOException {
     String user = SecurityUtils.getPrincipal();
     LOG.info("{} will update paragraph config {} {}", user, noteId, paragraphId);
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot update this paragraph config");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot update this paragraph config");
     Paragraph p = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(p);
 
     Map<String, Object> newConfig = gson.fromJson(message, HashMap.class);
-    if (newConfig == null || newConfig.isEmpty()) {
-      LOG.warn(
-              "{} is trying to update paragraph {} of note {} with empty config",
-              user, paragraphId, noteId);
-      throw new BadRequestException("paragraph config cannot be empty");
-    }
-    Map<String, Object> origConfig = p.getConfig();
-    for (String key : newConfig.keySet()) {
-      origConfig.put(key, newConfig.get(key));
-    }
-
-    p.setConfig(origConfig);
+    configureParagraph(p, newConfig, user);
     AuthenticationInfo subject = new AuthenticationInfo(user);
     note.persist(subject);
 
@@ -557,8 +513,7 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot move paragraph");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot move paragraph");
 
     Paragraph p = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(p);
@@ -566,15 +521,13 @@ public class NotebookRestApi {
     try {
       note.moveParagraph(paragraphId, Integer.parseInt(newIndex), true);
 
-      AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-              getPrincipal());
+      AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
       note.persist(subject);
       notebookServer.broadcastNote(note);
       return new JsonResponse(Status.OK, "").build();
     } catch (IndexOutOfBoundsException e) {
       LOG.error("Exception in NotebookRestApi while moveParagraph ", e);
-      return new JsonResponse(Status.BAD_REQUEST,
-              "paragraph's new index is out of bound").build();
+      return new JsonResponse(Status.BAD_REQUEST, "paragraph's new index is out of bound").build();
     }
   }
 
@@ -599,8 +552,7 @@ public class NotebookRestApi {
     Paragraph p = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(p);
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     note.removeParagraph(SecurityUtils.getPrincipal(), paragraphId);
     note.persist(subject);
     notebookServer.broadcastNote(note);
@@ -619,8 +571,7 @@ public class NotebookRestApi {
   public Response clearAllParagraphOutput(@PathParam("noteId") String noteId)
           throws IOException {
     LOG.info("clear all paragraph output of note {}", noteId);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot clear this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot clear this note");
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
@@ -643,16 +594,14 @@ public class NotebookRestApi {
     LOG.info("run note jobs {} ", noteId);
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot run job for this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot run job for this note");
 
     try {
       note.runAll();
     } catch (Exception ex) {
       LOG.error("Exception from run", ex);
       return new JsonResponse<>(Status.PRECONDITION_FAILED,
-              ex.getMessage() + "- Not selected or Invalid Interpreter bind").
-              build();
+              ex.getMessage() + "- Not selected or Invalid Interpreter bind").build();
     }
 
     return new JsonResponse<>(Status.OK).build();
@@ -672,8 +621,7 @@ public class NotebookRestApi {
     LOG.info("stop note jobs {} ", noteId);
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot stop this job for this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot stop this job for this note");
 
     for (Paragraph p : note.getParagraphs()) {
       if (!p.isTerminated()) {
@@ -697,11 +645,9 @@ public class NotebookRestApi {
     LOG.info("get note job status.");
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get job status");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get job status");
 
-    return new JsonResponse<>(Status.OK, null, note.generateParagraphsInfo()).
-            build();
+    return new JsonResponse<>(Status.OK, null, note.generateParagraphsInfo()).build();
   }
 
   /**
@@ -720,14 +666,12 @@ public class NotebookRestApi {
     LOG.info("get note paragraph job status.");
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get job status");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get job status");
 
     Paragraph paragraph = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(paragraph);
 
-    return new JsonResponse<>(Status.OK, null, note.generateSingleParagraphInfo(
-            paragraphId)).
+    return new JsonResponse<>(Status.OK, null, note.generateSingleParagraphInfo(paragraphId)).
             build();
   }
 
@@ -750,16 +694,14 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot run job for this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot run job for this note");
     Paragraph paragraph = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(paragraph);
 
     // handle params if presented
     handleParagraphParams(message, note, paragraph);
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
 
     paragraph.setAuthenticationInfo(subject);
     note.persist(subject);
@@ -773,8 +715,7 @@ public class NotebookRestApi {
    *
    * @param noteId - noteId
    * @param paragraphId - paragraphId
-   * @param message - JSON with params if user wants to update dynamic form's
-   * value
+   * @param message - JSON with params if user wants to update dynamic form's value
    * null, empty string, empty json if user doesn't want to update
    *
    * @return JSON with status.OK
@@ -791,8 +732,7 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot run paragraph");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot run paragraph");
     Paragraph paragraph = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(paragraph);
 
@@ -825,13 +765,11 @@ public class NotebookRestApi {
   @DELETE
   @Path("job/{noteId}/{paragraphId}")
   public Response stopParagraph(@PathParam("noteId") String noteId,
-          @PathParam("paragraphId") String paragraphId) throws IOException,
-          IllegalArgumentException {
+          @PathParam("paragraphId") String paragraphId) throws IOException, IllegalArgumentException {
     LOG.info("stop paragraph job {} ", noteId);
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot stop paragraph");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot stop paragraph");
     Paragraph p = note.getParagraph(paragraphId);
     checkIfParagraphIsNotNull(p);
     p.abort();
@@ -847,8 +785,7 @@ public class NotebookRestApi {
    */
   @POST
   @Path("cron/{noteId}")
-  public Response registerCronJob(@PathParam("noteId") String noteId,
-          String message)
+  public Response registerCronJob(@PathParam("noteId") String noteId, String message)
           throws IOException, IllegalArgumentException {
     LOG.info("Register cron job note={} request cron msg={}", noteId, message);
 
@@ -856,12 +793,10 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanWrite(noteId,
-            "Insufficient privileges you cannot set a cron job for this note");
+    checkIfUserCanWrite(noteId, "Insufficient privileges you cannot set a cron job for this note");
 
     if (!CronExpression.isValidExpression(request.getCronString())) {
-      return new JsonResponse<>(Status.BAD_REQUEST, "wrong cron expressions.").
-              build();
+      return new JsonResponse<>(Status.BAD_REQUEST, "wrong cron expressions.").build();
     }
 
     Map<String, Object> config = note.getConfig();
@@ -913,8 +848,7 @@ public class NotebookRestApi {
 
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
-    checkIfUserCanRead(noteId,
-            "Insufficient privileges you cannot get cron information");
+    checkIfUserCanRead(noteId, "Insufficient privileges you cannot get cron information");
 
     return new JsonResponse<>(Status.OK, note.getConfig().get("cron")).build();
   }
@@ -927,12 +861,10 @@ public class NotebookRestApi {
    */
   @GET
   @Path("jobmanager/")
-  public Response getJobListforNote() throws IOException,
-          IllegalArgumentException {
+  public Response getJobListforNote() throws IOException, IllegalArgumentException {
     LOG.info("Get note jobs for job manager");
 
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     List<Map<String, Object>> noteJobs = notebook
             .getJobListByUnixTime(false, 0, subject);
     Map<String, Object> response = new HashMap<>();
@@ -959,8 +891,7 @@ public class NotebookRestApi {
     LOG.info("Get updated note jobs lastUpdateTime {}", lastUpdateUnixTime);
 
     List<Map<String, Object>> noteJobs;
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     noteJobs = notebook.getJobListByUnixTime(false, lastUpdateUnixTime, subject);
     Map<String, Object> response = new HashMap<>();
 
@@ -986,8 +917,7 @@ public class NotebookRestApi {
     for (int i = 0; i < notesFound.size(); i++) {
       String[] Id = notesFound.get(i).get("id").split("/", 2);
       String noteId = Id[0];
-      if (!notebookAuthorization.isOwner(noteId, userAndRoles)
-              && !notebookAuthorization.isReader(noteId, userAndRoles)
+      if (!notebookAuthorization.isOwner(noteId, userAndRoles) && !notebookAuthorization.isReader(noteId, userAndRoles)
               && !notebookAuthorization.isWriter(noteId, userAndRoles)) {
         notesFound.remove(i);
         i--;
@@ -997,21 +927,46 @@ public class NotebookRestApi {
     return new JsonResponse<>(Status.OK, notesFound).build();
   }
 
-  private void handleParagraphParams(String message, Note note,
-          Paragraph paragraph)
+  private void handleParagraphParams(String message, Note note, Paragraph paragraph)
           throws IOException {
     // handle params if presented
     if (!StringUtils.isEmpty(message)) {
-      RunParagraphWithParametersRequest request = gson.fromJson(message,
-              RunParagraphWithParametersRequest.class);
+      RunParagraphWithParametersRequest request = gson.fromJson(message, RunParagraphWithParametersRequest.class);
       Map<String, Object> paramsForUpdating = request.getParams();
       if (paramsForUpdating != null) {
         paragraph.settings.getParams().putAll(paramsForUpdating);
-        AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-                getPrincipal());
+        AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
         note.persist(subject);
       }
     }
+  }
+
+  private void initParagraph(Paragraph p, NewParagraphRequest request, String user)
+          throws IOException {
+    LOG.info("Init Paragraph for user {}", user);
+    checkIfParagraphIsNotNull(p);
+    p.setTitle(request.getTitle());
+    p.setText(request.getText());
+    Map< String, Object> config = request.getConfig();
+    if (config != null && !config.isEmpty()) {
+      configureParagraph(p, config, user);
+    }
+  }
+
+  private void configureParagraph(Paragraph p, Map< String, Object> newConfig, String user)
+          throws IOException {
+    LOG.info("Configure Paragraph for user {}", user);
+    if (newConfig == null || newConfig.isEmpty()) {
+      LOG.warn("{} is trying to update paragraph {} of note {} with empty config",
+              user, p.getId(), p.getNote().getId());
+      throw new BadRequestException("paragraph config cannot be empty");
+    }
+    Map<String, Object> origConfig = p.getConfig();
+    for (final Map.Entry<String, Object> entry : newConfig.entrySet()) {
+      origConfig.put(entry.getKey(), entry.getValue());
+    }
+
+    p.setConfig(origConfig);
   }
 
   /**
@@ -1036,7 +991,7 @@ public class NotebookRestApi {
     AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     try {
       note = notebook.createNote(subject);
-      note.addParagraph(subject); // it's an empty note. so add one paragraph
+      note.addNewParagraph(subject); // it's an empty note. so add one paragraph
       String noteName = newNote.getName();
       if (noteName == null || noteName.isEmpty()) {
         noteName = "Note " + note.getId();
@@ -1046,7 +1001,7 @@ public class NotebookRestApi {
       noteInfo = new NoteInfo(note);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not create notebook" + ex.getMessage());
+              "Could not create notebook. " + ex.getMessage());
     }
     notebookServer.broadcastNote(note);
     notebookServer.broadcastNoteList(subject, SecurityUtils.getRoles());

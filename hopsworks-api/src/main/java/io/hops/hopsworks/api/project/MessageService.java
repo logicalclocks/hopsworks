@@ -36,8 +36,7 @@ import org.elasticsearch.common.Strings;
 @Path("/message")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Message service",
-        description = "Message Rest Api")
+@Api(value = "Message Service", description = "Message Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MessageService {
 

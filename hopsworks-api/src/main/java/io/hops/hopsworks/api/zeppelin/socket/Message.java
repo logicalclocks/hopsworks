@@ -20,10 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Zeppelin websocker massage template class.
+ * Zeppelin websocket massage template class.
  */
 public class Message {
-
   /**
    * Representation of event type.
    */
@@ -167,17 +166,21 @@ public class Message {
     GET_INTERPRETER_SETTINGS,     // [c-s] get interpreter settings
     INTERPRETER_SETTINGS,         // [s-c] interpreter settings
     ERROR_INFO,                   // [s-c] error information to be sent
+    SESSION_LOGOUT,               // [s-c] error information to be sent
     WATCHER,                      // [s-c] Change websocket to watcher mode.
     PARAGRAPH_ADDED,              // [s-c] paragraph is added
     PARAGRAPH_REMOVED,            // [s-c] paragraph deleted
     PARAGRAPH_MOVED,              // [s-c] paragraph moved
     NOTE_UPDATED,                 // [s-c] paragraph updated(name, config)
-    RUN_ALL_PARAGRAPHS,            // [c-s] run all paragraphs
-    // @param noteId
-    // @param checkpointName
+    RUN_ALL_PARAGRAPHS,           // [c-s] run all paragraphs
+    PARAGRAPH_EXECUTED_BY_SPELL,  // [c-s] paragraph was executed by spell
+    RUN_PARAGRAPH_USING_SPELL,    // [s-c] run paragraph using spell
+    PARAS_INFO,                   // [s-c] paragraph runtime infos
     CREATED_SOCKET
   }
 
+  public static final Message EMPTY = new Message(null);
+  
   public OP op;
   public Map<String, Object> data = new HashMap<>();
   public String ticket = "anonymous";

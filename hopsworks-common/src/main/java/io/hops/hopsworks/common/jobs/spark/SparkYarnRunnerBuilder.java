@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.jobs.spark;
 
+import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -26,7 +27,7 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 public class SparkYarnRunnerBuilder {
 
   //Necessary parameters
-  private final String appPath, mainClass;
+  private final JobDescription jobDescription;
 
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
@@ -48,21 +49,19 @@ public class SparkYarnRunnerBuilder {
   private String hadoopDir;
   private ServiceProperties serviceProps;
 
-  private JobType jobType;
+  public SparkYarnRunnerBuilder(JobDescription jobDescription) {
+    this.jobDescription = jobDescription;
+    SparkJobConfiguration jobConfig = (SparkJobConfiguration) jobDescription.getJobConfig();
 
-  public SparkYarnRunnerBuilder(String appPath, String mainClass,
-      JobType jobType) {
-    if (appPath == null || appPath.isEmpty()) {
+    if (jobConfig.getAppPath() == null || jobConfig.getAppPath().isEmpty()) {
       throw new IllegalArgumentException(
           "Path to application executable cannot be empty!");
     }
-    if (mainClass == null || mainClass.isEmpty()) {
+    if (jobConfig.getMainClass() == null || jobConfig.getMainClass().isEmpty()) {
       throw new IllegalArgumentException(
           "Name of the main class cannot be empty!");
     }
-    this.appPath = appPath;
-    this.mainClass = mainClass;
-    this.jobType = jobType;
+
   }
 
   /**
@@ -83,6 +82,9 @@ public class SparkYarnRunnerBuilder {
       final String nameNodeIpPort)
       throws IOException {
 
+    JobType jobType = ((SparkJobConfiguration) jobDescription.getJobConfig()).getType();
+    String appPath = ((SparkJobConfiguration) jobDescription.getJobConfig()).getAppPath();
+
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
     String metricsPath = Settings.getSparkMetricsPath(sparkUser);
@@ -94,10 +96,7 @@ public class SparkYarnRunnerBuilder {
 
     this.hadoopDir = hadoopDir;
 
-    String stagingPath = File.separator + "Projects" + File.separator + project
-        + File.separator
-        + Settings.PROJECT_STAGING_DIR + File.separator
-        + "hopsstaging";
+    String stagingPath = "/Projects/ " + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";
     builder.localResourcesBasePath(stagingPath);
 
     builder.addLocalResource(new LocalResourceDTO(
@@ -282,7 +281,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
     addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
-        + YarnRunner.APPID_PLACEHOLDER);
+        + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.HOPSUTIL_APPID_ENV_VAR, YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir + "/lib/native/");
 
@@ -292,7 +291,7 @@ public class SparkYarnRunnerBuilder {
         append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").append(Settings.SPARK_LOG4J_PROPERTIES).
         append(" ").
         append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(project.toLowerCase()).append(",").
-        append(jobName).append(",").append(YarnRunner.APPID_PLACEHOLDER).
+        append(jobName).append(",").append(jobDescription.getId()).append(",").append(YarnRunner.APPID_PLACEHOLDER).
         append(" ").
         append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").append(this.hadoopDir).append("/lib/native/").
         append(" ").
@@ -339,7 +338,7 @@ public class SparkYarnRunnerBuilder {
 
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
-    amargs.append(mainClass);
+    amargs.append(((SparkJobConfiguration) jobDescription.getJobConfig()).getMainClass());
     //TODO(set app file from path)
 
     if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {

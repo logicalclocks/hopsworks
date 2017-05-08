@@ -22,8 +22,7 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("/banner")
 @Stateless
-@Api(value = "Banner service",
-        description = "Banner Rest Api")
+@Api(value = "Banner Service", description = "Banner Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class BannerService {
 

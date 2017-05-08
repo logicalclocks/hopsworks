@@ -44,10 +44,9 @@ import io.swagger.annotations.Api;
 
 @Path("/request")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Request Service", description = "Request Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
-@Api(value = "Request service",
-        description = "Request Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RequestService {
 

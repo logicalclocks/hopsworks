@@ -78,7 +78,7 @@
                                   {{dataset.owner| cut:true:17:'...'}}
                                 </span>
                               </small>
-                              <span ng-if="dataset.publicDs === true" class="pull-right dataset-icon glyphicon glyphicon-globe"  data-toggle="tooltip"
+                              <span ng-if="dataset.publicDs === true" classdataset.publicDs !== true="pull-right dataset-icon glyphicon glyphicon-globe"  data-toggle="tooltip"
                                       title="Dataset is public (to the world)">
                               </span>
                               <span ng-if="dataset.publicDs !== true && dataset.shared === false" 
@@ -114,11 +114,21 @@
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
-                               ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                               ng-click="datasetsCtrl.deleteDataset(dataset.name)">
                               <span><i class="fa fa-trash"></i>
                                 Remove DataSet</span>
                             </a>
                           </li>
+                          <!-- If this is an imported public dataset, allow it to be removed as well -->
+                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="1"
+                               ng-click="datasetsCtrl.deleteFile(dataset.name);">
+                              <span><i class="fa fa-share-alt"></i>
+                                Remove Dataset</span>
+                            </a>
+                          </li>                          
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
                             <a class="pointer"
                                role="menuitem"

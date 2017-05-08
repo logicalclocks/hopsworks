@@ -160,12 +160,12 @@ public class YarnRunner {
 
     HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
         services.getSettings().getHopsworksTmpCertDir(),
-        Settings.TMP_CERT_STORE_REMOTE, jobType,
+        services.getSettings().getHdfsTmpCertDir(), jobType,
         dfso, materialResources, systemProperties, nameNodeIpPort,
         applicationId);
 
-    String appDir = "hdfs://" + nameNodeIpPort + Settings.TMP_CERT_STORE_REMOTE
-        + File.separator + project.getName() + Settings.DOUBLE_UNDERSCORE
+    String appDir = "hdfs://" + nameNodeIpPort + services.getSettings().getHdfsTmpCertDir()
+        + "/" + project.getName() + Settings.DOUBLE_UNDERSCORE
         + username + File.separator + applicationId;
     filesToRemove.add(appDir);
 
@@ -232,11 +232,18 @@ public class YarnRunner {
 
       //Copy files to HDFS that are expected to be there
       copyAllToHDFS();
+      
+      if (jobType == JobType.TFSPARK) {
+        String tensorboardFile = "hdfs://" + nameNodeIpPort + File.separator + Settings.DIR_ROOT
+            + File.separator + project.getName() + File.separator + Settings.PROJECT_STAGING_DIR + File.separator
+            + ".tensorboard." + appId.toString();
+        filesToRemove.add(tensorboardFile);
+      }
 
       //Set up environment
       Map<String, String> env = new HashMap<>();
       env.putAll(amEnvironment);
-      setUpClassPath(env);
+      setUpClassPath(env, services);
 
       //Set up commands
       List<String> amCommands = setUpCommands();
@@ -439,7 +446,7 @@ public class YarnRunner {
     //For all local resources with local path: copy and add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
         entrySet()) {
-      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.
+      logger.log(Level.FINE, "LocalResourceDTO to upload is :{0}", entry.
           toString());
       String key = entry.getKey();
       String source = entry.getValue().getPath();
@@ -465,7 +472,7 @@ public class YarnRunner {
     //For all local resources with hdfs path: add local resource
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesOnHDFS.
         entrySet()) {
-      logger.log(Level.INFO, "LocalResourceDTO to upload is :{0}", entry.
+      logger.log(Level.FINE, "LocalResourceDTO to upload is :{0}", entry.
           toString());
       String key = entry.getKey();
       String pathToResource = entry.getValue().getPath();
@@ -553,7 +560,7 @@ public class YarnRunner {
     }
   }
 
-  private void setUpClassPath(Map<String, String> env) {
+  private void setUpClassPath(Map<String, String> env, AsynchronousJobExecutor services) {
     // Add AppMaster.jar location to classpath
     StringBuilder classPathEnv = new StringBuilder();
     for (String c : conf.getStrings(
@@ -567,6 +574,8 @@ public class YarnRunner {
       classPathEnv.append(':');
       classPathEnv.append(System.getProperty("java.class.path"));
     }
+    classPathEnv.append(HopsUtils.getHadoopClasspathGlob(services.getSettings().
+                      getHadoopDir() + "/bin/hadoop", "classpath", "--glob"));
     //Check whether a classpath variable was already set, and if so: merge them
     //TODO(Theofilos): clean this up so no doubles are found in the classpath.
     if (env.containsKey(KEY_CLASSPATH)) {

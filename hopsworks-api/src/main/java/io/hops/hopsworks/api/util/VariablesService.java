@@ -17,8 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/variables")
 @Stateless
-@Api(value = "Variables service",
-        description = "Variables Rest Api")
+@Api(value = "Variables Service", description = "Variables Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class VariablesService {
 

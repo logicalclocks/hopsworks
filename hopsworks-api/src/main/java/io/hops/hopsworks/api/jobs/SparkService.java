@@ -38,6 +38,7 @@ import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -48,7 +49,7 @@ import io.hops.hopsworks.common.util.Settings;
 public class SparkService {
 
   private static final Logger logger = Logger.getLogger(SparkService.class.
-          getName());
+      getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -88,14 +89,14 @@ public class SparkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findAllSparkJobs(@Context SecurityContext sc,
-          @Context HttpServletRequest req)
-          throws AppException {
+      @Context HttpServletRequest req)
+      throws AppException {
     List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
-            JobType.SPARK);
+        JobType.SPARK);
     GenericEntity<List<JobDescription>> jobList
-            = new GenericEntity<List<JobDescription>>(jobs) {};
+        = new GenericEntity<List<JobDescription>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(jobList).build();
+        entity(jobList).build();
   }
 
   /**
@@ -114,8 +115,8 @@ public class SparkService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response inspectJar(@PathParam("path") String path,
-          @Context SecurityContext sc, @Context HttpServletRequest req) throws
-          AppException, AccessControlException {
+      @Context SecurityContext sc, @Context HttpServletRequest req) throws
+      AppException, AccessControlException {
     String email = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(email);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
@@ -123,23 +124,23 @@ public class SparkService {
     try {
       udfso = dfs.getDfsOps(username);
       SparkJobConfiguration config = sparkController.inspectProgram(path, username,
-              udfso);
+          udfso);
       //SparkJobConfiguration config = sparkController.inspectProgram(path, username, req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(config).build();
+          entity(config).build();
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You do not have access to the jar file.");
+          "Permission denied: You do not have access to the jar file.");
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to inspect jar.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error reading jar file: " + ex.
-                      getLocalizedMessage());
+          getStatusCode(), "Error reading jar file: " + ex.
+              getLocalizedMessage());
     } catch (IllegalArgumentException e) {
       logger.log(Level.WARNING, "Got a non-jar file to inspect as Spark jar.");
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error reading jar file: " + e.
-                      getLocalizedMessage());
+          getStatusCode(), "Error reading jar file: " + e.
+              getLocalizedMessage());
     } finally {
       if (udfso != null) {
         udfso.close();
@@ -161,11 +162,11 @@ public class SparkService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response createJob(SparkJobConfiguration config,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     if (config == null) {
       throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
-              "Cannot create job for a null argument.");
+          "Cannot create job for a null argument.");
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
@@ -173,19 +174,24 @@ public class SparkService {
       if (user == null) {
         //Should not be possible, but, well...
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                "You are not authorized for this invocation.");
+            "You are not authorized for this invocation.");
       }
+
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled Spark job");
+      } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
+        throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
+            "Invalid charater(s) in job name, the following characters (including space) are now allowed:"
+            + Settings.FILENAME_DISALLOWED_CHARS);
       }
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
       JobDescription created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
-              getName(), project, email);
+          getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(created).build();
+          entity(created).build();
     }
   }
 }

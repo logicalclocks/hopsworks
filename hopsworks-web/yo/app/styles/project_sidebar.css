@@ -129,7 +129,7 @@
   display: block;
   color: #ddd;
   text-decoration: none;
-  padding: 10px 15px 10px 30px;
+  padding: 10px 10px 10px 15px;
 }
 
 .sidebar-nav li a:hover,
@@ -143,6 +143,23 @@
   background-color: transparent;
 }
 
+.sidebar-nav li span {
+  display: block;
+  color: #ddd;
+  text-decoration: none;
+  padding: 5px 15px 10px 10px;
+}
+
+.sidebar-nav li span:hover,
+.sidebar-nav li span:active,
+.sidebar-nav li span:focus,
+.sidebar-nav li.open span:hover,
+.sidebar-nav li.open span:active,
+.sidebar-nav li.open span:focus{
+  color: #fff;
+  text-decoration: none;
+  background-color: transparent;
+}
 
 
 
@@ -352,5 +369,5 @@
   margin-top: 0; }
 
 .sidebar-nav-static {
-  padding: 10px 15px 10px 30px;
+  padding: 10px 15px 10px 15px;
 }

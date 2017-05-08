@@ -42,8 +42,7 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("/appservice")
 @Stateless
-@Api(value = "Application service",
-        description = "Application Rest Api")
+@Api(value = "Application Service", description = "Application Service")
 public class ApplicationService {
 
   final static Logger logger = Logger.getLogger(ApplicationService.class.

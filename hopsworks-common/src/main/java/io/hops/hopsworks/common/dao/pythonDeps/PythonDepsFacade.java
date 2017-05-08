@@ -183,7 +183,6 @@ public class PythonDepsFacade {
 //    for (PythonDep p : all) {
 //      em.persist(p);
 //    }
-
     projectFacade.enableConda(project);
     em.flush();
 
@@ -372,11 +371,13 @@ public class PythonDepsFacade {
 
   /**
    *
-   * @param project
+   * @param proj
    * @throws AppException
    */
   public void removeProject(Project proj) throws AppException {
-    condaEnvironmentOp(CondaOp.REMOVE, proj, "", getHosts());
+    if (proj.getConda()) {
+      condaEnvironmentOp(CondaOp.REMOVE, proj, "", getHosts());
+    }
   }
 
   /**

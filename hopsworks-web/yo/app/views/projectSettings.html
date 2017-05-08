@@ -75,23 +75,26 @@
                           <div class="col-md-5">
                             <label class="text-muted">Status</label>
                             <div class="row" style="margin-left:15px; margin-bottom:0px">
-                              <fieldset>
+                              <fieldset ng-if="projectCtrl.hdfsQuota()!=null">
                                 <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
                                   {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
                                 </span>          
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                              <fieldset>
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                              <fieldset ng-if="projectCtrl.hdfsNsCount()!=null">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() ===-1">
+                                  {{projectCtrl.hdfsNsCount()}} files 
+                                </span>  
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !==-1">
                                   {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
-                                </span>          
+                                </span>  
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
-                              <fieldset>
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                                  {{projectCtrl.yarnQuota()}} CPU 
+                              <fieldset ng-if="projectCtrl.yarnQuota()!=null">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
+                                  {{projectCtrl.yarnQuota()}} CPU hours
                                 </span>          
                               </fieldset>    
                             </div>
@@ -132,13 +135,7 @@
                       <p class="lead">Click on the button below to install Anaconda for this project.</p>
                       <p>You cannot change the version of python after you have selected enabled the anaconda environment for this project.</p>
                       <p class="lead">
-                      <div style="width: 300px;">
-                        <!--                        <button class="btn btn-success btn-lg btn-block btn-huge" type="submit" ng-click="pythonDepsCtrl.enable()"
-                                                        ng-disabled="pythonDepsCtrl.enabling">
-                                                  <i ng-if="pythonDepsCtrl.enabling" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
-                                                  Enable Anaconda
-                                                </button>-->
-
+                      <div>
                         <div class="btn-group" uib-dropdown is-open="pythonDepsCtrl.pythonVersionOpen">
                           <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button" 
                                   class="btn btn-success btn-lg" 

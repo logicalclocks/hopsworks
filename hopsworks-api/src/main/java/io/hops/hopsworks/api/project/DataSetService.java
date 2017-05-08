@@ -134,7 +134,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String projectPath = settings.getProjectPath(this.project.getName());
+    String projectPath = Settings.getProjectPath(this.project.getName());
     this.path = projectPath + File.separator;
   }
 
@@ -179,7 +179,7 @@ public class DataSetService {
       inodeView.setSharedWith(sharedWith);
       kids.add(inodeView);
       if (inodeView.getName().
-              equals(Settings.DefaultDataset.NOTEBOOKS.getName())) {
+              equals(Settings.DefaultDataset.ZEPPELIN.getName())) {
         notebookDirExists = true;
       }
     }
@@ -189,14 +189,14 @@ public class DataSetService {
 
       Inode projectInode = inodes.getInodeAtPath(projPath);
       Inode ds = inodes.findByInodePK(projectInode,
-              Settings.DefaultDataset.NOTEBOOKS.getName(),
+              Settings.DefaultDataset.ZEPPELIN.getName(),
               HopsUtils.dataSetPartitionId(projectInode,
-                      Settings.DefaultDataset.NOTEBOOKS.getName()));
+                      Settings.DefaultDataset.ZEPPELIN.getName()));
       if (ds != null) {
         logger.log(Level.INFO, "Notebook dir not in datasets, adding.");
         Dataset newDS = new Dataset(ds, this.project);
         newDS.setSearchable(false);
-        newDS.setDescription(Settings.DefaultDataset.NOTEBOOKS.getDescription());
+        newDS.setDescription(Settings.DefaultDataset.ZEPPELIN.getDescription());
         datasetFacade.persistDataset(newDS);
 
         inodeView = new InodeView(projectInode, newDS, projPath + File.separator
@@ -210,7 +210,7 @@ public class DataSetService {
       }
     }
     GenericEntity<List<InodeView>> inodViews
-            = new GenericEntity<List<InodeView>>(kids) {};
+            = new GenericEntity<List<InodeView>>(kids) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodViews).build();
   }
@@ -254,7 +254,7 @@ public class DataSetService {
       kids.add(inodeView);
     }
     GenericEntity<List<InodeView>> inodeViews
-            = new GenericEntity<List<InodeView>>(kids) {};
+            = new GenericEntity<List<InodeView>>(kids) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodeViews).build();
   }
@@ -264,19 +264,21 @@ public class DataSetService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getFile(@PathParam("path") String path,
-      @Context SecurityContext sc) throws
-      AppException, AccessControlException {
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
     String fullpath = getFullPath(path);
     Inode inode = inodes.getInodeAtPath(fullpath);
 
-    if(inode==null){
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),ResponseMessages.DATASET_NOT_FOUND);
+    if (inode == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.DATASET_NOT_FOUND);
     }
-    
+
     InodeView inodeView;
     Users user;
 
-    inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().getName());
+    inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().
+            getName());
     user = userfacade.findByUsername(inodeView.getOwner());
     if (user != null) {
       inodeView.setOwner(user.getFname() + " " + user.getLname());
@@ -284,11 +286,11 @@ public class DataSetService {
     }
 
     GenericEntity<InodeView> inodeViews
-        = new GenericEntity<InodeView>(inodeView) {};
+            = new GenericEntity<InodeView>(inodeView) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        inodeViews).build();
+            inodeViews).build();
   }
-  
+
   @POST
   @Path("/shareDataSet")
   @Produces(MediaType.APPLICATION_JSON)
@@ -451,7 +453,8 @@ public class DataSetService {
     List<Project> list = datasetFacade.findProjectSharedWith(project, dataSet.
             getName());
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
-            list) {};
+            list) {
+    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -645,13 +648,10 @@ public class DataSetService {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
-      datasetController.createDataset(user, project, dataSet.getName(),
+      datasetController.createAndLogDataset(user, project, dataSet.getName(),
               dataSet.
               getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-              false, dfso, udfso);
-
-      dataset = datasetFacade.findByNameAndProjectId(project, dataSet.getName());
-      datasetController.logDataset(dataset, OperationType.Add);
+              false, dfso, dfso); // both are dfso to create it as root user
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -766,7 +766,7 @@ public class DataSetService {
   }
 
   @DELETE
-  @Path("/{fileName: .+}")
+  @Path("/{fileName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
@@ -800,6 +800,70 @@ public class DataSetService {
                 entity(json).build();
       }
     }
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();// do it as super user
+      success = datasetController.
+              deleteDataset(dataset, filePath, user, project, dfso);
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+              "Permission denied: You can not delete the file " + filePath);
+    } catch (IOException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not delete the file at " + filePath);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    if (!success) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Could not delete the file at " + filePath);
+    }
+    //remove the group associated with this dataset if the dataset is toplevel ds 
+    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
+      try {
+        hdfsUsersBean.deleteDatasetGroup(this.dataset);
+      } catch (IOException ex) {
+        //FIXME: take an action?
+        logger.log(Level.WARNING,
+                "Error while trying to delete a dataset group", ex);
+      }
+    }
+    json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  @DELETE
+  @Path("file/{fileName: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removefile(
+          @PathParam("fileName") String fileName,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException,
+          AccessControlException {
+    boolean success = false;
+    JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    if (fileName == null || fileName.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.DATASET_NAME_EMPTY);
+    }
+    String filePath = getFullPath(fileName);
+    String[] pathArray = filePath.split(File.separator);
+    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
+      logger.log(Level.WARNING,
+              "Use DELETE /{datasetName} to delete top level dataset.");
+    }
+    //if the path does not contain this project name it is shared.
+    if (!pathArray[2].equals(this.project.getName())) { // /Projects/project/ds
+      if (pathArray.length > 4 && !this.dataset.isEditable()) {// a folder in the dataset
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "You can not perform this action on a shared dataset.");
+      }
+    }
     DistributedFileSystemOps udfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
@@ -820,17 +884,6 @@ public class DataSetService {
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
-    }
-    //remove the group associated with this dataset if the dataset is toplevel ds 
-    if (filePath.endsWith(this.dataset.getInode().getInodePK().getName())) {
-      try {
-        hdfsUsersBean.deleteDatasetGroup(this.dataset);
-      } catch (IOException ex) {
-        //FIXME: take an action?
-        logger.
-                log(Level.WARNING,
-                        "Error while trying to delete a dataset group", ex);
-      }
     }
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -1113,7 +1166,7 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-  
+
   @GET
   @Path("filePreview/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)

@@ -108,7 +108,12 @@
   padding: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+@supports (-webkit-appearance:none) {
+  .file .file-name {
+    white-space: nowrap;
+  }
 }
 
 .file .file-name .selected {

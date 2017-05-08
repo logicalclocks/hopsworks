@@ -52,8 +52,7 @@ import javax.ws.rs.core.SecurityContext;
 @Path("/agentresource")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
-@Api(value = "AgentResource service",
-        description = "AgentResource Rest Api")
+@Api(value = "Agent Service", description = "Agent Service")
 public class AgentResource {
 
   @EJB

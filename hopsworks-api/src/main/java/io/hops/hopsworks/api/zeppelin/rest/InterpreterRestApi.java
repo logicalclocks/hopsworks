@@ -32,10 +32,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
-import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.zeppelin.dep.Repository;
-import org.apache.zeppelin.interpreter.InterpreterFactory;
+import org.apache.zeppelin.interpreter.InterpreterException;
 import org.sonatype.aether.repository.RemoteRepository;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
@@ -81,17 +81,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 
 /**
  * Interpreter Rest API
- * <p>
  */
 @RequestScoped
 @Produces("application/json")
 public class InterpreterRestApi {
 
   Logger logger = LoggerFactory.getLogger(InterpreterRestApi.class);
-  private InterpreterFactory interpreterFactory;
+  private InterpreterSettingManager interpreterSettingManager;
   private Project project;
   private ZeppelinConfig zeppelinConf;
   private String roleInProject;
@@ -115,10 +115,9 @@ public class InterpreterRestApi {
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
-  
+
   Gson gson = new Gson();
-  private final EnumSet<YarnApplicationState> PREDICATE = EnumSet.of
-      (YarnApplicationState.RUNNING);
+  private final EnumSet<YarnApplicationState> PREDICATE = EnumSet.of(YarnApplicationState.RUNNING);
 
   public InterpreterRestApi() {
   }
@@ -129,19 +128,17 @@ public class InterpreterRestApi {
     this.user = user;
     this.zeppelinConf = zeppelinConf;
     this.roleInProject = userRole;
-    this.interpreterFactory = zeppelinConf.getReplFactory();
+    this.interpreterSettingManager = zeppelinConf.getInterpreterSettingManager();
 
   }
 
   /**
    * List all interpreter settings
-   * <p/>
-   * @return
    */
   @GET
   @Path("setting")
   public Response listSettings() {
-    return new JsonResponse<>(Status.OK, "", interpreterFactory.get()).build();
+    return new JsonResponse<>(Status.OK, "", interpreterSettingManager.get()).build();
   }
 
   /**
@@ -151,7 +148,7 @@ public class InterpreterRestApi {
   @Path("setting/{settingId}")
   public Response getSetting(@PathParam("settingId") String settingId) {
     try {
-      InterpreterSetting setting = interpreterFactory.get(settingId);
+      InterpreterSetting setting = this.interpreterSettingManager.get(settingId);
       if (setting == null) {
         return new JsonResponse<>(Status.NOT_FOUND).build();
       } else {
@@ -180,24 +177,16 @@ public class InterpreterRestApi {
       }
       Properties p = new Properties();
       p.putAll(request.getProperties());
-      InterpreterSetting interpreterSetting = interpreterFactory.
-              createNewSetting(request.getName(), request.getGroup(), request.
-                      getDependencies(), request.getOption(), p);
+      InterpreterSetting interpreterSetting = interpreterSettingManager
+              .createNewSetting(request.getName(), request.getGroup(), request.getDependencies(),
+                      request.getOption(), p);
       persistToDB();
       logger.info("new setting created with {}", interpreterSetting.getId());
-      return new JsonResponse<>(Status.CREATED, "", interpreterSetting).build();
-    } catch (InterpreterException e) {
+      return new JsonResponse<>(Status.OK, "", interpreterSetting).build();
+    } catch (InterpreterException | IOException e) {
       logger.error("Exception in InterpreterRestApi while creating ", e);
-      return new JsonResponse(
-              Status.NOT_FOUND,
-              e.getMessage(),
-              ExceptionUtils.getStackTrace(e)).build();
-    } catch (IOException e) {
-      logger.error("Exception in InterpreterRestApi while creating ", e);
-      return new JsonResponse(
-              Status.INTERNAL_SERVER_ERROR,
-              e.getMessage(),
-              ExceptionUtils.getStackTrace(e)).build();
+      return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e))
+              .build();
     }
   }
 
@@ -208,27 +197,22 @@ public class InterpreterRestApi {
     logger.info("Update interpreterSetting {}", settingId);
 
     try {
-      UpdateInterpreterSettingRequest request = gson.fromJson(message,
-              UpdateInterpreterSettingRequest.class);
-      interpreterFactory.setPropertyAndRestart(settingId,
-              request.getOption(),
-              request.getProperties(),
-              request.getDependencies());
+      UpdateInterpreterSettingRequest request = gson.fromJson(message, UpdateInterpreterSettingRequest.class);
+      interpreterSettingManager
+              .setPropertyAndRestart(settingId, request.getOption(), request.getProperties(),
+                      request.getDependencies());
     } catch (InterpreterException e) {
       logger.error("Exception in InterpreterRestApi while updateSetting ", e);
-      return new JsonResponse(
-              Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e)).
-              build();
+      return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e))
+              .build();
     } catch (IOException e) {
       logger.error("Exception in InterpreterRestApi while updateSetting ", e);
-      return new JsonResponse(
-              Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
-              getStackTrace(e)).build();
+      return new JsonResponse<>(Status.INTERNAL_SERVER_ERROR, e.getMessage(),
+              ExceptionUtils.getStackTrace(e)).build();
     }
-    InterpreterSetting setting = interpreterFactory.get(settingId);
+    InterpreterSetting setting = interpreterSettingManager.get(settingId);
     //Persist json to the database
     persistToDB();
-
     if (setting == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "", settingId).build();
     }
@@ -259,10 +243,9 @@ public class InterpreterRestApi {
    */
   @DELETE
   @Path("setting/{settingId}")
-  public Response removeSetting(@PathParam("settingId") String settingId) throws
-          IOException {
+  public Response removeSetting(@PathParam("settingId") String settingId) throws IOException {
     logger.info("Remove interpreterSetting {}", settingId);
-    interpreterFactory.remove(settingId);
+    interpreterSettingManager.remove(settingId);
     persistToDB();
     return new JsonResponse(Status.OK).build();
   }
@@ -275,21 +258,24 @@ public class InterpreterRestApi {
   public Response restartSetting(String message,
           @PathParam("settingId") String settingId) {
     logger.info("Restart interpreterSetting {}, msg={}", settingId, message);
+
+    InterpreterSetting setting = interpreterSettingManager.get(settingId);
     try {
-      RestartInterpreterRequest request = gson.fromJson(message,
-              RestartInterpreterRequest.class);
+      RestartInterpreterRequest request = gson.fromJson(message, RestartInterpreterRequest.class);
 
       String noteId = request == null ? null : request.getNoteId();
-      interpreterFactory.
-              restart(settingId, noteId, SecurityUtils.getPrincipal());
+      if (null == noteId) {
+        interpreterSettingManager.close(setting);
+      } else {
+        interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
+      }
+      zeppelinConf.getNotebookServer().clearParagraphRuntimeInfo(setting);
 
     } catch (InterpreterException e) {
       logger.error("Exception in InterpreterRestApi while restartSetting ", e);
-      return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(),
-              ExceptionUtils.getStackTrace(e))
+      return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e))
               .build();
     }
-    InterpreterSetting setting = interpreterFactory.get(settingId);
     if (setting == null) {
       return new JsonResponse<>(Status.NOT_FOUND, "", settingId).build();
     }
@@ -322,7 +308,7 @@ public class InterpreterRestApi {
   @GET
   @Path("/livy/sessions/appId/{sessionId}")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response getLivySessionAppId(@PathParam("sessionId") int sessionId) 
+  public Response getLivySessionAppId(@PathParam("sessionId") int sessionId)
           throws AppException {
     LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
     if (session == null) {
@@ -340,18 +326,17 @@ public class InterpreterRestApi {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
               "You are not authorized to stop this session.");
     }
-    
+
     List<YarnApplicationstate> appStates = appStateBean.findByAppname("livy-session-" + sessionId);
-    if(appStates==null || appStates.isEmpty()){
+    if (appStates == null || appStates.isEmpty()) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
               + "' not running.").build();
     }
-    
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(appStates.get(0).getApplicationid()).build();
-    
-  }
 
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(appStates.get(0).getApplicationid()).build();
+
+  }
 
   /**
    * Get spark interpreter Yarn AppId
@@ -364,20 +349,17 @@ public class InterpreterRestApi {
   @GET
   @Path("/spark/appId")
   @Produces(MediaType.TEXT_PLAIN)
-  public Response getSparkSessionAppId() 
+  public Response getSparkSessionAppId()
           throws AppException {
-    
-    
-    
     List<YarnApplicationstate> appStates = appStateBean.findByAppname(this.project.getName() + "-Zeppelin");
-    if(appStates==null || appStates.isEmpty()){
-      return new JsonResponse(Response.Status.NOT_FOUND, 
+    if (appStates == null || appStates.isEmpty()) {
+      return new JsonResponse(Response.Status.NOT_FOUND,
               "Zeppelin not running for project " + this.project.getName()).build();
     }
-    
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-                entity(appStates.get(0).getApplicationid()).build();
-    
+            entity(appStates.get(0).getApplicationid()).build();
+
   }
 
   /**
@@ -393,7 +375,7 @@ public class InterpreterRestApi {
   public Response stopSession(@PathParam("settingId") String settingId,
           @PathParam("sessionId") int sessionId) throws AppException {
     logger.info("Restart interpreterSetting {}", settingId);
-    InterpreterSetting setting = zeppelinConf.getReplFactory().get(settingId);
+    InterpreterSetting setting = interpreterSettingManager.get(settingId);
     LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
@@ -419,7 +401,7 @@ public class InterpreterRestApi {
     try {
       zeppelinResource.deleteLivySession(sessionId);
       if (this.user.getUsername().equals(username) && yarnAppStates.size() == 1) {
-        zeppelinConf.getReplFactory().restart(settingId);
+        interpreterSettingManager.restart(settingId);
       } else if (yarnAppStates.size() == 1) {
         Users u = userFacade.findByUsername(username);
         if (u == null) {
@@ -427,10 +409,9 @@ public class InterpreterRestApi {
                   "The owner of the session was not found.");
         }
         ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(
-                this.project.
-                getName(), u.getEmail());
+                this.project.getName(), u.getEmail());
         if (zConf.getReplFactory() != null) {
-          zConf.getReplFactory().restart(settingId);
+          zConf.getInterpreterSettingManager().restart(settingId);
         }
       }
     } catch (InterpreterException e) {
@@ -471,8 +452,7 @@ public class InterpreterRestApi {
    */
   @GET
   public Response listInterpreter(String message) {
-    Map<String, InterpreterSetting> m = interpreterFactory.
-            getAvailableInterpreterSettings();
+    Map<String, InterpreterSetting> m = interpreterSettingManager.getAvailableInterpreterSettings();
     return new JsonResponse<>(Status.OK, "", m).build();
   }
 
@@ -482,8 +462,7 @@ public class InterpreterRestApi {
   @GET
   @Path("repository")
   public Response listRepositories() {
-    List<RemoteRepository> interpreterRepositories = interpreterFactory.
-            getRepositories();
+    List<RemoteRepository> interpreterRepositories = interpreterSettingManager.getRepositories();
     return new JsonResponse<>(Status.OK, "", interpreterRepositories).build();
   }
 
@@ -497,19 +476,16 @@ public class InterpreterRestApi {
   public Response addRepository(String message) {
     try {
       Repository request = gson.fromJson(message, Repository.class);
-      interpreterFactory.addRepository(request.getId(), request.getUrl(),
-              request.isSnapshot(), request.getAuthentication(), request.
-              getProxy());
+      interpreterSettingManager.addRepository(request.getId(), request.getUrl(),
+              request.isSnapshot(), request.getAuthentication(), request.getProxy());
       persistToDB();
       logger.info("New repository {} added", request.getId());
     } catch (Exception e) {
-      logger.error("Exception in InterpreterRestApi while adding repository ",
-              e);
-      return new JsonResponse(
-              Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.
-              getStackTrace(e)).build();
+      logger.error("Exception in InterpreterRestApi while adding repository ", e);
+      return new JsonResponse<>(Status.INTERNAL_SERVER_ERROR, e.getMessage(),
+              ExceptionUtils.getStackTrace(e)).build();
     }
-    return new JsonResponse(Status.CREATED).build();
+    return new JsonResponse(Status.OK).build();
   }
 
   /**
@@ -524,7 +500,7 @@ public class InterpreterRestApi {
       return new JsonResponse<>(Status.BAD_REQUEST).build();
     }
     String propValue = null;
-    InterpreterSetting interpreterSetting = interpreterFactory.get(settingId);
+    InterpreterSetting interpreterSetting = interpreterSettingManager.get(settingId);
     Map<String, String> infos = interpreterSetting.getInfos();
     if (infos != null) {
       propValue = infos.get(propName);
@@ -532,9 +508,7 @@ public class InterpreterRestApi {
     Map<String, String> respMap = new HashMap<>();
     respMap.put(propName, propValue);
     logger.debug("Get meta info");
-    logger.debug(
-            "Interpretersetting Id: {}, property Name:{}, property value: {}",
-            settingId,
+    logger.debug("Interpretersetting Id: {}, property Name:{}, property value: {}", settingId,
             propName, propValue);
     return new JsonResponse<>(Status.OK, respMap).build();
   }
@@ -549,11 +523,10 @@ public class InterpreterRestApi {
   public Response removeRepository(@PathParam("repoId") String repoId) {
     logger.info("Remove repository {}", repoId);
     try {
-      interpreterFactory.removeRepository(repoId);
+      interpreterSettingManager.removeRepository(repoId);
       persistToDB();
     } catch (Exception e) {
-      logger.error("Exception in InterpreterRestApi while removing repository ",
-              e);
+      logger.error("Exception in InterpreterRestApi while removing repository ", e);
       return new JsonResponse<>(Status.INTERNAL_SERVER_ERROR, e.getMessage(),
               ExceptionUtils.getStackTrace(e)).build();
     }
@@ -578,7 +551,7 @@ public class InterpreterRestApi {
           AppException {
     Map<String, InterpreterDTO> interpreterDTOs = new HashMap<>();
     List<InterpreterSetting> interpreterSettings;
-    interpreterSettings = zeppelinConf.getReplFactory().get();
+    interpreterSettings = interpreterSettingManager.get();
     InterpreterDTO interpreterDTO;
     for (InterpreterSetting interpreter : interpreterSettings) {
       interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.
@@ -623,6 +596,7 @@ public class InterpreterRestApi {
   /**
    * Restarts zeppelin by cleaning the cache for the user
    * and project
+   *
    * @return
    * @throws AppException
    */

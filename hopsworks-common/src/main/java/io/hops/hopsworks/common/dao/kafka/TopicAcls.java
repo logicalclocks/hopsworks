@@ -20,29 +20,42 @@ import io.hops.hopsworks.common.dao.user.Users;
 
 @Entity
 @Table(name = "topic_acls",
-        catalog = "hopsworks",
-        schema = "")
+    catalog = "hopsworks",
+    schema = "")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "TopicAcls.findAll",
-          query = "SELECT t FROM TopicAcls t"),
+      query = "SELECT t FROM TopicAcls t")
+  ,
   @NamedQuery(name = "TopicAcls.findById",
-          query = "SELECT t FROM TopicAcls t WHERE t.id = :id"),
+      query = "SELECT t FROM TopicAcls t WHERE t.id = :id")
+  ,
   @NamedQuery(name = "TopicAcls.findByTopicName",
-          query
-          = "SELECT t FROM TopicAcls t WHERE t.projectTopics.projectTopicsPK.topicName = :topicName"),
+      query
+      = "SELECT t FROM TopicAcls t WHERE t.projectTopics.projectTopicsPK.topicName = :topicName")
+  ,
   @NamedQuery(name = "TopicAcls.findByPermissionType",
-          query
-          = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType"),
+      query
+      = "SELECT t FROM TopicAcls t WHERE t.permissionType = :permissionType")
+  ,
   @NamedQuery(name = "TopicAcls.findByOperationType",
-          query
-          = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType"),
+      query
+      = "SELECT t FROM TopicAcls t WHERE t.operationType = :operationType")
+  ,
   @NamedQuery(name = "TopicAcls.findByHost",
-          query = "SELECT t FROM TopicAcls t WHERE t.host = :host"),
+      query = "SELECT t FROM TopicAcls t WHERE t.host = :host")
+  ,
   @NamedQuery(name = "TopicAcls.findByRole",
-          query = "SELECT t FROM TopicAcls t WHERE t.role = :role"),
+      query = "SELECT t FROM TopicAcls t WHERE t.role = :role")
+  ,
   @NamedQuery(name = "TopicAcls.findByPrincipal",
-          query = "SELECT t FROM TopicAcls t WHERE t.principal = :principal")})
+      query = "SELECT t FROM TopicAcls t WHERE t.principal = :principal")
+  ,
+    @NamedQuery(name = "TopicAcls.findAcl",
+      query
+      = "SELECT t FROM TopicAcls t WHERE t.principal = :principal AND t.role = :role AND t.host = :host AND "
+          + "t.operationType = :operationType AND t.permissionType = :permissionType AND "
+          + "t.projectTopics.projectTopicsPK.topicName = :topicName")})
 public class TopicAcls implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -54,42 +67,43 @@ public class TopicAcls implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 255)
+      max = 255)
   @Column(name = "permission_type")
   private String permissionType;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 255)
+      max = 255)
   @Column(name = "operation_type")
   private String operationType;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 255)
+      max = 255)
   @Column(name = "host")
   private String host;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 255)
+      max = 255)
   @Column(name = "role")
   private String role;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 100)
+      max = 100)
   @Column(name = "principal")
   private String principal;
   @JoinColumns({
     @JoinColumn(name = "topic_name",
-            referencedColumnName = "topic_name"),
+        referencedColumnName = "topic_name")
+    ,
     @JoinColumn(name = "project_id",
-            referencedColumnName = "project_id")})
+        referencedColumnName = "project_id")})
   @ManyToOne(optional = false)
   private ProjectTopics projectTopics;
   @JoinColumn(name = "username",
-          referencedColumnName = "email")
+      referencedColumnName = "email")
   @ManyToOne(optional = false)
   private Users user;
 
@@ -101,7 +115,7 @@ public class TopicAcls implements Serializable {
   }
 
   public TopicAcls(ProjectTopics pt, Users user, String permissionType,
-          String operationType, String host, String role, String principal) {
+      String operationType, String host, String role, String principal) {
     this.projectTopics = pt;
     this.user = user;
     this.permissionType = permissionType;
@@ -190,7 +204,7 @@ public class TopicAcls implements Serializable {
     }
     TopicAcls other = (TopicAcls) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+        equals(other.id))) {
       return false;
     }
     return true;

@@ -46,8 +46,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @Path("/auth")
 @Stateless
-@Api(value = "Auth",
-        description = "Authentication service")
+@Api(value = "Auth", description = "Authentication service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 
@@ -198,13 +197,14 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@Context HttpServletRequest req) throws AppException {
 
-    Users user = userBean.findByEmail(req.getRemoteUser());
+    Users user = null;
     JsonResponse json = new JsonResponse();
 
     try {
       req.getSession().invalidate();
       req.logout();
       json.setStatus("SUCCESS");
+      user = userBean.findByEmail(req.getRemoteUser());
       if (user != null) {
         userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
         am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),

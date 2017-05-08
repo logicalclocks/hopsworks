@@ -91,21 +91,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
-              projectSettings: function (size, projectId) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/projectSettingsModal.html',
-                  controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
-                  size: size, 
-                  resolve: {
-                    projectId: function () {
-                      return projectId;
-                    }
-                  }                  
-                  
-                });
-                return modalInstance.result;
-              },
               profile: function (size) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/profile.html',
@@ -943,6 +928,36 @@ angular.module('hopsWorksApp')
               noteName: function (size, title, msg, val ) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/noteNameModal.html',
+                  controller: 'InputModalCtrl as ctrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },
+                    val: function () {
+                      return val;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              jupyterConfig: function (size, title, msg, val ) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/jupyterConfigModal.html',
                   controller: 'InputModalCtrl as ctrl',
                   size: size,
                   resolve: {

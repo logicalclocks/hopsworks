@@ -77,10 +77,9 @@ import io.swagger.annotations.Api;
 
 @Path("/metadata")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Metadata Service", description = "Metadata Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
-@Api(value = "Metadata service",
-        description = "Metadata Rest Api")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MetadataService {
 
