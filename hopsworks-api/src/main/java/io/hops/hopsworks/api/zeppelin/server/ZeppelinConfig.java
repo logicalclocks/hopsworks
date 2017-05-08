@@ -92,10 +92,10 @@ public class ZeppelinConfig {
     this.binDirPath = this.projectDirPath + File.separator + "bin";
     this.logDirPath = this.projectDirPath + File.separator + "logs";
     this.libDirPath = this.projectDirPath + File.separator + "lib";
-    this.confDirPath = this.projectDirPath + File.separator + COMMON_CONF.getConfDir();
+    this.confDirPath = this.projectDirPath + File.separator + "conf";
+    this.interpreterDirPath = this.projectDirPath + File.separator + "interpreter";
     this.notebookDirPath = this.projectDirPath + File.separator + COMMON_CONF.getNotebookDir();
     this.repoDirPath = this.projectDirPath + File.separator + COMMON_CONF.getInterpreterLocalRepoPath();
-    this.interpreterDirPath = this.projectDirPath + File.separator + COMMON_CONF.getInterpreterDir();
 
     boolean newDir = false;
     boolean newFile = false;
