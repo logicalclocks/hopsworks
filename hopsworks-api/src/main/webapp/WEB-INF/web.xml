@@ -51,6 +51,27 @@
     <servlet-name>GrafanaProxyServlet</servlet-name>
     <url-pattern>/grafana</url-pattern>
   </servlet-mapping>
+  <!-- tensorboard proxy servlet -->
+  <servlet>
+    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorboardProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:80/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <url-pattern>/tensorboard/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>TensorboardProxyServlet</servlet-name>
+    <url-pattern>/tensorboard</url-pattern>
+  </servlet-mapping>
   <servlet> 
     <servlet-name>Jersey2Config</servlet-name>
     <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>

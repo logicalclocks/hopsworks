@@ -203,6 +203,21 @@ angular.module('hopsWorksApp')
               });
             }
             
+            self.tfUI = function() {
+              startLoading("Loading Tensorboard...");
+              getAppId(tensorboardInt);
+            }
+            
+            var tensorboardInt = function() {
+              self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/";
+              self.current = "tensorboard";
+              var iframe = document.getElementById('ui_iframe');
+              iframe.onload = function(){stopLoading();};
+              if (iframe !== null) {
+                iframe.src = $sce.trustAsResourceUrl(self.ui);
+              }
+            }
+            
             self.backToHome = function () {
               if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
