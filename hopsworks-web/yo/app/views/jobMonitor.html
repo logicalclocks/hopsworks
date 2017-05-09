@@ -28,7 +28,7 @@
               <div style="padding-bottom: 10px">
                 <span class="field-info" uib-tooltip="Show Job Spark Dashboard" style="padding-top: 5px;padding-left:3px">
                   <button style=""
-                          ng-click="jobUICtrl.backToHome();
+                          ng-click="jobUICtrl.jobUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-bolt"> Spark
                   </button>
@@ -69,6 +69,16 @@
                                     $event.stopPropagation();"
                           class="btn btn-success btn-md glyphicon glyphicon-refresh">
                   </button>
+                </span>
+                <span>
+                  <ui-select name="appId" theme="select2" ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
+
+                    <ui-select-match placeholder="Select an appId">{{$select.selected.id}}</ui-select-match>
+
+                    <ui-select-choices repeat="id.id as id in jobUICtrl.appIds">
+                      <div ng-bind-html="id.id | highlight: $select.search"></div>
+                    </ui-select-choices>
+                  </ui-select>
                 </span>
               </div>
               <div ng-if="jobUICtrl.ui !== ''">
