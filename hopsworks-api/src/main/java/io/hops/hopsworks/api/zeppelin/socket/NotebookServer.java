@@ -547,7 +547,7 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      LOG.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.FINE, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         try {
           if (conn.isOpen()) {
@@ -567,7 +567,7 @@ public class NotebookServer implements
       if (socketLists == null || socketLists.isEmpty()) {
         return;
       }
-      LOG.log(Level.INFO, "SEND >> {0}", m.op);
+      LOG.log(Level.FINE, "SEND >> {0}", m.op);
       for (Session conn : socketLists) {
         if (exclude.equals(conn)) {
           continue;
