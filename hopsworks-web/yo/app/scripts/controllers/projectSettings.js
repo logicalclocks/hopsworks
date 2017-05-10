@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectSettingsCtrl', ['$scope', 'ProjectService', '$routeParams', 'growl', 
-          function ($scope, ProjectService,  $routeParams, growl) {
+        .controller('ProjectSettingsCtrl', ['ProjectService', '$routeParams', 'growl', 
+          function (ProjectService,  $routeParams, growl) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
@@ -50,8 +50,5 @@ angular.module('hopsWorksApp')
               return convertSeconds(parseInt(quotaInt));
             };
 
-            self.ok = function () {
-              $uibModalInstance.close();
-            };
 
           }]);

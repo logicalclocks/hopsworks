@@ -2,7 +2,7 @@
 
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-          'growl', 'ModalService', 'JupyterService', '$location', '$timeout', '$window', '$sce',
+          'growl', 'ModalService', 'JupyterService', '$location', '$timeout', '$window', '$sce', 
           function ($scope, $routeParams, $route, growl, ModalService, JupyterService, $location, $timeout, $window, $sce) {
 
             var self = this;
@@ -27,16 +27,19 @@ angular.module('hopsWorksApp')
               return $sce.trustAsResourceUrl(self.ui);
             };
 
+            self.restart = function () {
+              $location.path('/#!/project/' + self.projectId + '/jupyter' );
+            }
+
+
 
             var init = function () {
               JupyterService.get(projectId).then(
                       function (success) {
                         self.toggleValue = true;
                         self.config = success.data;
-
 //                        self.ui = "http://" + $location.host() + ":" + self.config.port + "/?token=" + self.config.token;
                         self.ui = "http://" + self.config.hostIp + ":" + self.config.port + "/?token=" + self.config.token;
-//                        self.ui = "http://192.168.56.101:" + self.config.port + "/?token=" + self.config.token;
                       }, function (error) {
                 configure();
               }
@@ -54,9 +57,38 @@ angular.module('hopsWorksApp')
               self.loadingText = "";
             };
 
-            self.stopJupyter = function () {
+            self.stop = function () {
               startLoading("Stopping Jupyter...");
+            
               JupyterService.stop(projectId).then(
+                      function (success) {
+                        self.ui = ""
+                        stopLoading();
+                      }, function (error) {
+                growl.error("Could not stop the Jupyter Notebook Server.");
+                stopLoading();
+              }
+              );
+     
+            
+            
+            };
+
+            self.stopDataOwner = function (hdfsUsername) {
+              startLoading("Stopping Jupyter...");
+              JupyterService.stopDataOwner(projectId,hdfsUsername).then(
+                      function (success) {
+                        self.ui = ""
+                        stopLoading();
+                      }, function (error) {
+                growl.error("Could not stop the Jupyter Notebook Server.");
+                stopLoading();
+              }
+              );
+            };
+            self.stopAdmin = function (hdfsUsername) {
+              startLoading("Stopping Jupyter...");
+              JupyterService.stopAdmin(projectId, hdfsUsername).then(
                       function (success) {
                         self.ui = ""
                         stopLoading();
@@ -84,19 +116,7 @@ angular.module('hopsWorksApp')
                 refresh();
               }
             };
-
-
-            self.reconfigure = function () {
-
-              JupyterService.stop(projectId).then(
-                      function (success) {
-                        self.ui = ""
-                        configure();
-                      }, function (error) {
-                      growl.error("Could not stop the Jupyter Notebook Server for reconfiguration.");
-                      }
-              );
-            }
+            
 
             var start = function () {
               startLoading("Connecting to Jupyter...");
@@ -116,7 +136,7 @@ angular.module('hopsWorksApp')
                 growl.error("Could not start Jupyter.");
                 stopLoading();
               }
-              );
+              );    
 
             };
 

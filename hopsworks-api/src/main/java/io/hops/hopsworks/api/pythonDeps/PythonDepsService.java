@@ -66,7 +66,6 @@ public class PythonDepsService {
   @EJB
   private HostEJB hostsFacade;
 
-  private Integer projectId;
   private Project project;
 
   public void setProject(Project project) {

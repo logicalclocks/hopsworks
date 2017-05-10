@@ -54,8 +54,15 @@
   "queue": "%%yarn_queue%%",
   "archives": [%%archives%%],
   "jars": [%%jars%%],
-  "pyFiles": [%%pyFiles%%]
-},
+  "pyFiles": [%%pyFiles%%],
+  "conf" : { "spark.yarn.stagingDir": "hdfs://%%nn_endpoint%%/Projects/%%project%%/Resources",
+            "spark.blockManager.port" : "38000",
+            "spark.yarn.appMasterEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
+            "spark.yarn.appMasterEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
+            "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
+           "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%"
+   }
+  },
 
 "use_auto_viz": true,
 "max_results_sql": 2500,

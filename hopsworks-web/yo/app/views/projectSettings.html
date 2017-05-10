@@ -16,9 +16,9 @@
           <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
 
 
-          <div ng-controller="PythonDepsCtrl as pythonDepsCtrl">
+          <div ng-controller="PythonDepsCtrl as pythonDepsCtrl"  ng-init="indextab = 1">
 
-            <uib-tabset active="activeForm" >
+            <uib-tabset active="indextab">
               <uib-tab index="0" heading="Project Settings">
 
 
@@ -132,7 +132,7 @@
                   <div class="jumbotron" style="margin-top: 30px;">
                     <div class="col-md-offset-1">
                       <h1 class="display-3">Anaconda</h1>
-                      <p class="lead">Click on the button below to install Anaconda for this project.</p>
+                      <p class="lead">Jupyter requries an Anaconda installation. Click on the button below to install Anaconda for this project.</p>
                       <p>You cannot change the version of python after you have selected enabled the anaconda environment for this project.</p>
                       <p class="lead">
                       <div>
