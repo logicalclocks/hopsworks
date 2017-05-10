@@ -249,17 +249,17 @@ public class WebCommunication {
     Client client = getClient();
     WebTarget webResource = client.target(url);
 
-    webResource.queryParam("username", Settings.AGENT_EMAIL);
-    webResource.queryParam("password", agentPassword);
+    webResource = webResource.queryParam("username", Settings.AGENT_EMAIL);
+    webResource = webResource.queryParam("password", agentPassword);
     if (args != null) {
       for (String key : args.keySet()) {
-        webResource.queryParam(key, args.get(key));
+        webResource = webResource.queryParam(key, args.get(key));
       }
     }
     logger.log(Level.INFO,
             "WebCommunication: Requesting url: {0} with password {1}",
             new Object[]{url, agentPassword});
-
+    
     Response response = webResource.request()
             .header("Accept-Encoding", "gzip,deflate")
             .get(Response.class);
