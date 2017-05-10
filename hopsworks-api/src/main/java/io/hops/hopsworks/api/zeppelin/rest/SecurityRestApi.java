@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.zeppelin.rest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
+import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.slf4j.Logger;
@@ -46,6 +47,8 @@ import javax.ws.rs.core.Context;
 @Stateless
 @Produces("application/json")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Zeppelin Security",
+        description = "Zeppelin Security")
 public class SecurityRestApi {
 
   private static final Logger LOG = LoggerFactory.getLogger(

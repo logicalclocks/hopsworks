@@ -1,39 +1,7 @@
 {
   "interpreterSettings": {
-    "2CAACVDPP": {
-      "id": "2CAACVDPP",
-      "name": "psql",
-      "group": "psql",
-      "properties": {
-        "postgresql.password": "",
-        "postgresql.driver.name": "org.postgresql.Driver",
-        "postgresql.max.result": "1000",
-        "postgresql.url": "jdbc:postgresql://localhost:5432/",
-        "postgresql.user": "gpadmin"
-      },
-      "status": "READY",
-      "interpreterGroup": [
-        {
-          "name": "sql",
-          "class": "org.apache.zeppelin.postgresql.PostgreSqlInterpreter",
-          "defaultInterpreter": false,
-          "editor": {}
-        }
-      ],
-      "dependencies": [],
-      "option": {
-        "remote": true,
-        "port": -1,
-        "perNote": "shared",
-        "perUser": "shared",
-        "isExistingProcess": false,
-        "setPermission": false,
-        "users": [],
-        "isUserImpersonate": false
-      }
-    },
-    "2C9XX2RW5": {
-      "id": "2C9XX2RW5",
+    "2CF9AMQ9Q": {
+      "id": "2CF9AMQ9Q",
       "name": "flink",
       "group": "flink",
       "properties": {
@@ -64,8 +32,8 @@
         "isUserImpersonate": false
       }
     },
-    "2CARXUWN3": {
-      "id": "2CARXUWN3",
+    "2CFZ6Q3A2": {
+      "id": "2CFZ6Q3A2",
       "name": "spark",
       "group": "spark",
       "properties": {
@@ -77,6 +45,7 @@
         "zeppelin.spark.sql.stacktrace": "false",
         "zeppelin.spark.importImplicit": "true",
         "zeppelin.spark.concurrentSQL": "false",
+        "zeppelin.spark.unSupportedVersionCheck": "true",
         "zeppelin.spark.useHiveContext": "true",
         "zeppelin.pyspark.python": "%%zeppelin.python_conda_path%%",
         "zeppelin.dep.localrepo": "local-repo",
@@ -147,9 +116,9 @@
         "users": [],
         "isUserImpersonate": false
       }
-    },    
-    "2CA2KCTVM": {
-      "id": "2CA2KCTVM",
+    },
+    "2CGD8H8TP": {
+      "id": "2CGD8H8TP",
       "name": "md",
       "group": "md",
       "properties": {
@@ -179,8 +148,8 @@
         "isUserImpersonate": false
       }
     },
-    "2CARZNDYE": {
-      "id": "2CARZNDYE",
+    "2CEZ1XY26": {
+      "id": "2CEZ1XY26",
       "name": "angular",
       "group": "angular",
       "properties": {},
@@ -207,8 +176,8 @@
         "isUserImpersonate": false
       }
     },
-    "2C8VFUPBR": {
-      "id": "2C8VFUPBR",
+    "2CHMTCH4F": {
+      "id": "2CHMTCH4F",
       "name": "python",
       "group": "python",
       "properties": {
@@ -266,21 +235,22 @@
         "isUserImpersonate": false
       }
     },
-    "2CAHWWUTF": {
-      "id": "2CAHWWUTF",
+    "2CHUQQW33": {
+      "id": "2CHUQQW33",
       "name": "livy",
       "group": "livy",
       "properties": {
         "zeppelin.livy.pull_status.interval.millis": "1000",
+        "livy.spark.executor.memory": "",
         "zeppelin.livy.session.create_timeout": "120",
         "zeppelin.livy.principal": "",
         "zeppelin.livy.spark.sql.maxResult": "1000",
         "zeppelin.livy.keytab": "",
         "zeppelin.livy.concurrentSQL": "false",
+        "zeppelin.livy.spark.sql.field.truncate": "true",
+        "livy.spark.executor.cores": "",
         "zeppelin.livy.displayAppInfo": "false",
         "zeppelin.livy.url": "%%livy_url%%",
-        "livy.spark.executor.memory": "",
-        "livy.spark.executor.cores": "",
         "livy.spark.dynamicAllocation.minExecutors": "",
         "livy.spark.driver.cores": "",
         "livy.spark.jars.packages": "",
@@ -296,7 +266,7 @@
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%"
       },
       "status": "READY",
-      "interpreterGroup": [
+            "interpreterGroup": [
         {
           "name": "spark",
           "class": "org.apache.zeppelin.livy.LivySparkInterpreter",

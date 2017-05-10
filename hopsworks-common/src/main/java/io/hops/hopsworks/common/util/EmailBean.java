@@ -1,6 +1,8 @@
 package io.hops.hopsworks.common.util;
 
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
@@ -15,6 +17,8 @@ import javax.mail.internet.MimeMessage;
 @Stateless
 public class EmailBean {
 
+  private static final Logger LOG = Logger.getLogger(EmailBean.class.getName());
+  
   @Resource(lookup = "mail/BBCMail")
   private Session mailSession;
 
@@ -34,6 +38,10 @@ public class EmailBean {
     message.setSentDate(new Date());
 
     message.setText(body);
-    Transport.send(message);
+    try{
+      Transport.send(message);
+    }catch(MessagingException ex){
+      LOG.log(Level.SEVERE, ex.getMessage(), ex);
+    }
   }
 }

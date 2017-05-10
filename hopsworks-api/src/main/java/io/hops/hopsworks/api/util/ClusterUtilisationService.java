@@ -3,6 +3,7 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.util.ClusterUtil;
+import io.swagger.annotations.Api;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -18,6 +19,7 @@ import javax.ws.rs.core.Response;
 @Stateless
 @Path("/clusterUtilisation")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "Cluster Utilisation Service", description = "Cluster Utilisation Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ClusterUtilisationService {
 

@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.swagger.annotations.Api;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.KeyStore;
@@ -41,6 +42,7 @@ import javax.ws.rs.core.SecurityContext;
 
 @Path("/appservice")
 @Stateless
+@Api(value = "Application Service", description = "Application Service")
 public class ApplicationService {
 
   final static Logger logger = Logger.getLogger(ApplicationService.class.

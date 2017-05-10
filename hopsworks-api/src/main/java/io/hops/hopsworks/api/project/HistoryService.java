@@ -54,9 +54,11 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsComparator;
 import io.hops.hopsworks.common.jobs.jobhistory.JobHeuristicDetailsDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobProposedConfigurationDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 
 @Path("history")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+@Api(value = "History Service", description = "History Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HistoryService {
 

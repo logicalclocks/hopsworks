@@ -129,7 +129,7 @@
   display: block;
   color: #ddd;
   text-decoration: none;
-  padding: 10px 15px 10px 30px;
+  padding: 10px 10px 10px 15px;
 }
 
 .sidebar-nav li a:hover,
@@ -147,7 +147,7 @@
   display: block;
   color: #ddd;
   text-decoration: none;
-  padding: 10px 15px 10px 30px;
+  padding: 5px 15px 10px 10px;
 }
 
 .sidebar-nav li span:hover,
@@ -369,5 +369,5 @@
   margin-top: 0; }
 
 .sidebar-nav-static {
-  padding: 10px 15px 10px 30px;
+  padding: 10px 15px 10px 15px;
 }
