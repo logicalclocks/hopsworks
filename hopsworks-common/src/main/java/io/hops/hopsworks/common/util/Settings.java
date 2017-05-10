@@ -666,19 +666,16 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + sparkUser + "/log4j.properties";
   }
 
-  public synchronized String getSparkLog4JPath() {
-    checkCache();
-    return "hdfs:///user/" + HDFS_SUPERUSER + "/log4j.properties";
+  public String getSparkLog4JPath() {
+    return "hdfs:///user/" + getHdfsSuperUser() + "/log4j.properties";
   }
 
   public static String getSparkMetricsPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser + "/metrics.properties";
-
   }
 
-  public synchronized String getSparkMetricsPath() {
-    checkCache();
-    return "hdfs:///user/" + HDFS_SUPERUSER + "/metrics.properties";
+  public String getSparkMetricsPath() {
+    return "hdfs:///user/" + getHdfsSuperUser() + "/metrics.properties";
   }
 
   //TODO put the spark metrics in each project and take it from there
