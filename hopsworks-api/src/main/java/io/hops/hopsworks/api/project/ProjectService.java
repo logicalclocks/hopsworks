@@ -561,14 +561,14 @@ public class ProjectService {
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
     }
     
-    List<String> failedMembers = new ArrayList<>();
+    List<String> failedMembers = null;
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
     JsonResponse json = new JsonResponse();
     json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
-    if (!failedMembers.isEmpty()) {
+    if (failedMembers != null && !failedMembers.isEmpty()) {
       json.setFieldErrors(failedMembers);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
