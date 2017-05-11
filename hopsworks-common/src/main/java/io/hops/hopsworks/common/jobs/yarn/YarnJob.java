@@ -182,15 +182,11 @@ public abstract class YarnJob extends HopsJob {
             && jobDescription.getJobConfig().getKafka() != null) {
           serviceProps.initKafka();
           //Set Kafka specific properties to serviceProps
-          serviceProps.getKafka().setBrokerAddresses(services.getSettings().
-              getKafkaConnectStr());
-          serviceProps.getKafka().setRestEndpoint(services.getSettings().
-              getRestEndpoint());
-          serviceProps.getKafka().setTopics(jobDescription.getJobConfig().
-              getKafka().getTopics());
-          serviceProps.getKafka().setProjectConsumerGroups(jobDescription.
-              getProject().getName(), jobDescription.
-                  getJobConfig().getKafka().getConsumergroups());
+          serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaConnectStr());
+          serviceProps.getKafka().setRestEndpoint(services.getSettings().getRestEndpoint());
+          serviceProps.getKafka().setTopics(jobDescription.getJobConfig().getKafka().getTopics());
+          serviceProps.getKafka().setProjectConsumerGroups(jobDescription.getProject().getName(), 
+              jobDescription.getJobConfig().getKafka().getConsumergroups());
           return true;
         }
       }

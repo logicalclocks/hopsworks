@@ -618,17 +618,17 @@ public class InterpreterRestApi {
     InterpreterDTO interpreterDTO;
     for (String key : interpreterDTOMap.keySet()) {
       interpreterDTO = interpreterDTOMap.get(key);
-      if (interpreterDTO.isNotRunning()) {
-        continue;
-      }
-      if (interpreterDTO.getGroup().contains("livy")) {
-        for (LivyMsg.Session session : interpreterDTO.getSessions()) {
-          stopSession(interpreterDTO.getId(), session.getId());
+      if (!interpreterDTO.isNotRunning()) {
+        if (interpreterDTO.getName().equalsIgnoreCase("livy")) {
+          for (LivyMsg.Session session : interpreterDTO.getSessions()) {
+            stopSession(interpreterDTO.getId(), session.getId());
+          }
+        } else if (interpreterDTO.getName().equalsIgnoreCase("spark")) {
+          restartSetting(null, interpreterDTO.getId());
         }
-      } else {
-        restartSetting(null, interpreterDTO.getId());
       }
     }
+
     zeppelinConfFactory.removeFromCache(this.project.getName());
     List<ProjectTeam> projectTeam;
     projectTeam = teambean.findMembersByProject(this.project);
