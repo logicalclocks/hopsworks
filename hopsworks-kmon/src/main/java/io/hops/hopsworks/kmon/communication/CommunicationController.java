@@ -13,6 +13,10 @@ import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.util.NodesTableItem;
+import io.hops.hopsworks.kmon.service.ServiceInstancesController;
+import io.hops.hopsworks.kmon.struct.InstanceInfo;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
@@ -26,7 +30,10 @@ public class CommunicationController {
   private RoleEJB roleEjb;
   @EJB
   private WebCommunication web;
-
+  
+  @ManagedProperty(value="#{serviceInstancesController}")
+  private ServiceInstancesController serviceInstancesController;
+  
   @ManagedProperty("#{param.hostid}")
   private String hostId;
   @ManagedProperty("#{param.role}")
@@ -36,6 +43,8 @@ public class CommunicationController {
   @ManagedProperty("#{param.cluster}")
   private String cluster;
 
+  private List<InstanceInfo> instances;
+  
   private static final Logger logger = Logger.getLogger(
           CommunicationController.class.getName());
 
@@ -77,6 +86,10 @@ public class CommunicationController {
 
   public void setHostId(String hostId) {
     this.hostId = hostId;
+  }
+
+  public void setServiceInstancesController(ServiceInstancesController serviceInstancesController) {
+    this.serviceInstancesController = serviceInstancesController;
   }
 
   private Host findHostById(String hostId) throws Exception {
@@ -144,14 +157,53 @@ public class CommunicationController {
 
   }
 
+  public void roleStartAll() {
+    uiMsg(roleOperationAll("startRole"));
+  }
+  
   public void roleRestart() {
     uiMsg(roleOperation("restartRole"));
   }
 
+  public void roleRestartAll() {
+    uiMsg(roleOperationAll("restartRole"));
+  }
+  
   public void roleStop() {
     uiMsg(roleOperation("stopRole"));
   }
 
+  public void roleStopAll() {
+    logger.log(Level.SEVERE, "roleStopAll 1");
+    uiMsg(roleOperationAll("stopRole"));
+  }
+  
+  private String roleOperationAll(String operation) {
+    instances = serviceInstancesController.getInstances();
+    List<Future<String>> results = new ArrayList<>();
+    String result = "";
+    for (InstanceInfo instance : instances) {
+      if (instance.getRole().equals(role)) {
+        try {
+          Host h = findHostById(instance.getHost());
+          String ip = h.getPublicOrPrivateIp();
+          String agentPassword = h.getAgentPassword();
+          results.add(web.asyncRoleOp(operation, ip, agentPassword, cluster, service, role));
+        } catch (Exception ex) {
+          result = result + ex.getMessage() + "\n";
+        }
+      }
+    }
+    for(Future<String> r: results){
+      try {
+        result = result + r.get() + "\n";
+      } catch (Exception ex) {
+        result = result + ex.getMessage() + "\n";
+      }
+    }
+    return result;
+  }
+  
   private String roleOperation(String operation) {
     try {
       Host h = findHostById(hostId);

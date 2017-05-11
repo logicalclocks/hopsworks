@@ -146,4 +146,28 @@ public class ServiceInstancesController {
     }
     return instances;
   }
+  
+  public boolean disableStart() {
+    List<InstanceInfo> instances = getInstances();
+    if (!instances.isEmpty()) {
+      for (InstanceInfo instance : instances) {
+        if (instance.getStatus() == Status.Stopped) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  public boolean disableStop() {
+    List<InstanceInfo> instances = getInstances();
+    if (!instances.isEmpty()) {
+      for (InstanceInfo instance : instances) {
+        if (instance.getStatus() == Status.Started) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 }
