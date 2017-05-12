@@ -775,7 +775,10 @@ public class ProjectController {
             .cookie("JSESSIONIDSSO", sessionId)
             .method("GET");
         LOGGER.log(Level.INFO, "Zeppelin resp:"+resp.getStatus()+", with session:"+sessionId);
-      
+        if (resp.getStatus() != 200) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Error while closing zeppelin interpreters, please close them manually");
+        }
         //remove from project_team so that nobody can see the project anymore
         updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
 
