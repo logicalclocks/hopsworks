@@ -53,7 +53,6 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
@@ -83,6 +82,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
+import javax.ws.rs.client.ClientBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -120,8 +120,6 @@ public class ProjectController {
   private DatasetController datasetController;
   @EJB
   private DatasetFacade datasetFacade;
-  @EJB
-  private SshkeysFacade sshKeysBean;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -162,12 +160,13 @@ public class ProjectController {
    * @param projectDTO
    * @param owner
    * @param failedMembers
+   * @param jsessionidsso
    * @return
    * @throws IllegalArgumentException if the project name already exists.
    * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
-          List<String> failedMembers) throws AppException {
+          List<String> failedMembers, String jsessionidsso) throws AppException {
 
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
@@ -225,17 +224,17 @@ public class ProjectController {
                 getStatusCode(), "An error occurend when creating the project");
       }
 
-      verifyProject(project, dfso);
+      verifyProject(project, dfso, jsessionidsso);
 
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "wrong user name");
       }
       udfso = dfs.getDfsOps(username);
       if (udfso == null) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "error geting access to the file system");
       }
@@ -246,12 +245,12 @@ public class ProjectController {
       try {
         projectPath = mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "problem creating project folder");
       }
       if (projectPath == null) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "problem creating project folder");
       }
@@ -259,11 +258,11 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (AppException | EJBException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw ex;
       } catch (IOException ex) {
-        cleanup(project);
-        LOGGER.log(Level.SEVERE, null, ex);
+        cleanup(project, jsessionidsso);
+        LOGGER.log(Level.SEVERE, "An error occurend when creating the project: "+ex.getMessage(), ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -275,7 +274,7 @@ public class ProjectController {
                 dfso, owner);
 
       } catch (IOException | EJBException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "could not set folder quota");
       }
@@ -284,12 +283,10 @@ public class ProjectController {
         //create certificate for this user
         createCertificates(project, owner);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null,
-                ex);
-        cleanup(project);
+        LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.getMessage(), ex);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while creating certificats");
+                getStatusCode(), "Error while creating certificates");
       }
 
       //add the services for the project
@@ -299,13 +296,12 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso, udfso);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null, ex);
-        cleanup(project);
+        LOGGER.log(Level.SEVERE, "Error while creating project sub folders: "+ex.getMessage(), ex);
+        cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while creating project sub folders");
+                getStatusCode(), "Error while creating project sub folders");
       } catch (AppException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw ex;
       }
 
@@ -314,7 +310,7 @@ public class ProjectController {
         failedMembers = addMembers(project, owner.getEmail(), projectDTO.
                 getProjectTeam());
       } catch (AppException | EJBException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
         throw ex;
       }
 
@@ -322,7 +318,7 @@ public class ProjectController {
       try {
         addElasticsearch(project.getName());
       } catch (IOException ex) {
-        cleanup(project);
+        cleanup(project, jsessionidsso);
       }
       return project;
 
@@ -338,7 +334,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void verifyProject(Project project, DistributedFileSystemOps dfso)
+  private void verifyProject(Project project, DistributedFileSystemOps dfso, String sessionId)
           throws AppException {
     //proceed to all the verrifications and set up local variable    
     //  verify that the project folder does not exist
@@ -356,13 +352,13 @@ public class ProjectController {
                 "some elements of project {0} already exist in the system "
                 + "Possible inconsistency!",
                 project.getName());
-        cleanup(project);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "some elements of project already exist in the system");
       }
     } catch (IOException | EJBException ex) {
-      cleanup(project);
+      cleanup(project, sessionId);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "error while running verifications");
     }
@@ -746,7 +742,7 @@ public class ProjectController {
    * @param projectId
    * @throws AppException if the project could not be found.
    */
-  public void removeProject(String userMail, int projectId) throws AppException {
+  public void removeProject(String userMail, int projectId, String sessionId) throws AppException {
 
     Project project = projectFacade.find(projectId);
     if (project == null) {
@@ -760,10 +756,10 @@ public class ProjectController {
               ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
     }
 
-    cleanup(project);
+    cleanup(project, sessionId);
   }
 
-  public void cleanup(Project project) throws AppException {
+  public void cleanup(Project project, String sessionId) throws AppException {
     if (project == null) {
       return;
     }
@@ -771,6 +767,15 @@ public class ProjectController {
     while (nbTry < 3) {
       nbTry++;
       try {
+        //Restart zeppelin so interpreters shut down
+        Response resp = ClientBuilder.newClient()
+            .target(settings.getRestEndpoint() + "/hopsworks-api/api/zeppelin/" + project.getId()
+                + "/interpreter/restart")
+            .request()
+            .cookie("JSESSIONIDSSO", sessionId)
+            .method("GET");
+        LOGGER.log(Level.INFO, "Zeppelin resp:"+resp.getStatus()+", with session:"+sessionId);
+      
         //remove from project_team so that nobody can see the project anymore
         updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
 
@@ -781,36 +786,30 @@ public class ProjectController {
           for (JobDescription job : running) {
             //Get the appId of the running app
             List<Execution> jobExecs = execFacade.findForJob(job);
-            //Sort descending based on jobId
+            //Sort descending based on jobId because therie might be two jobs with the same name and we want the latest
             Collections.sort(jobExecs, new Comparator<Execution>() {
               @Override
               public int compare(Execution lhs, Execution rhs) {
-                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                        getId()) ? 1 : 0;
+                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.getId()) ? 1 : 0;
               }
             });
-            rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill "
-                    + jobExecs.get(0).getAppId());
+            rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill " + jobExecs.get(0).getAppId());
           }
         }
-
+        
         List<HdfsUsers> usersToClean = getUsersToClean(project);
-
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-
         removeProjectInt(project, usersToClean, groupsToClean);
-
+        return;
       } catch (Exception ex) {
         if (nbTry < 3) {
           try {
             Thread.sleep(nbTry * 1000);
           } catch (InterruptedException ex1) {
-            Logger.getLogger(ProjectController.class.getName()).
-                    log(Level.SEVERE, null, ex1);
+            LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                  getStatusCode(), "error while removing project");
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "error while removing project");
         }
       }
     }
@@ -838,6 +837,9 @@ public class ProjectController {
         dfso.setOwner(dumy, settings.getHdfsSuperUser(), settings.getHdfsSuperUser());
       }
 
+      
+      
+      
       //remove kafka topics
       removeKafkaTopics(project);
 
@@ -1034,8 +1036,7 @@ public class ProjectController {
                 hdfsUsersBean.
                         removeProjectMember(projectTeam.getUser(), project);
               } catch (IOException ex1) {
-                Logger.getLogger(ProjectController.class.getName()).
-                        log(Level.SEVERE, null, ex1);
+                LOGGER.log(Level.SEVERE, null, ex1);
                 throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                         getStatusCode(), "error while creating a user");
               }

@@ -78,6 +78,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_GVOD_REST_ENDPOINT = "gvod_rest_endpoint";
   private static final String VARIABLE_PUBLIC_SEARCH_ENDPOINT
       = "public_search_endpoint";
+  private static final String VARIABLE_HOPSWORKS_REST_ENDPOINT = "hopsworks_endpoint";
   private static final String VARIABLE_REST_PORT = "rest_port";
 
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
@@ -252,6 +253,8 @@ public class Settings implements Serializable {
           GVOD_REST_ENDPOINT);
       PUBLIC_SEARCH_ENDPOINT = setStrVar(VARIABLE_PUBLIC_SEARCH_ENDPOINT,
           PUBLIC_SEARCH_ENDPOINT);
+      HOPSWORKS_REST_ENDPOINT = setStrVar(VARIABLE_HOPSWORKS_REST_ENDPOINT,
+          HOPSWORKS_REST_ENDPOINT);
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
@@ -986,17 +989,16 @@ public class Settings implements Serializable {
     return REST_PORT;
   }
 
+  private String HOPSWORKS_REST_ENDPOINT = "http://192.168.56.101:8080";
+  
   /**
    * Generates the Endpoint for kafka.
    *
    * @return
    */
-  public String getRestEndpoint() {
-    String gvod_endpoint = getGVodRestEndpoint();
-    String ip = getGVodRestEndpoint().substring(0, gvod_endpoint.
-        lastIndexOf(":"));
-    int port = getRestPort();
-    return ip + ":" + port;
+  public synchronized String getRestEndpoint() {
+    checkCache();
+    return "http://"+HOPSWORKS_REST_ENDPOINT;
   }
 
   private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
