@@ -262,7 +262,7 @@ public class ProjectController {
         throw ex;
       } catch (IOException ex) {
         cleanup(project, jsessionidsso);
-        LOGGER.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, "An error occurend when creating the project: "+ex.getMessage(), ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "An error occurend when creating the project");
       }
@@ -283,12 +283,10 @@ public class ProjectController {
         //create certificate for this user
         createCertificates(project, owner);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null,
-                ex);
+        LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.getMessage(), ex);
         cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while creating certificats");
+                getStatusCode(), "Error while creating certificates");
       }
 
       //add the services for the project
@@ -298,11 +296,10 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso, udfso);
       } catch (IOException | EJBException ex) {
-        Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE,
-                null, ex);
+        LOGGER.log(Level.SEVERE, "Error while creating project sub folders: "+ex.getMessage(), ex);
         cleanup(project, jsessionidsso);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "error while creating project sub folders");
+                getStatusCode(), "Error while creating project sub folders");
       } catch (AppException ex) {
         cleanup(project, jsessionidsso);
         throw ex;
@@ -809,7 +806,7 @@ public class ProjectController {
           try {
             Thread.sleep(nbTry * 1000);
           } catch (InterruptedException ex1) {
-            Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex1);
+            LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "error while removing project");
@@ -1039,8 +1036,7 @@ public class ProjectController {
                 hdfsUsersBean.
                         removeProjectMember(projectTeam.getUser(), project);
               } catch (IOException ex1) {
-                Logger.getLogger(ProjectController.class.getName()).
-                        log(Level.SEVERE, null, ex1);
+                LOGGER.log(Level.SEVERE, null, ex1);
                 throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                         getStatusCode(), "error while creating a user");
               }
