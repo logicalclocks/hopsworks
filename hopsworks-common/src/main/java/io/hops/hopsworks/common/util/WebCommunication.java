@@ -24,6 +24,9 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.json.Json;
@@ -96,6 +99,13 @@ public class WebCommunication {
     return fetchContent(url, agentPassword);
   }
 
+  @Asynchronous
+  public Future<String> asyncRoleOp(String operation, String hostAddress,
+          String agentPassword, String cluster, String service, String role) {
+    String url = createUrl(operation, hostAddress, cluster, service, role);
+    return new AsyncResult<String>(fetchContent(url, agentPassword));
+  }
+  
   public String getConfig(String hostAddress, String agentPassword,
           String cluster, String service, String role) {
     String url = createUrl("config", hostAddress, cluster, service, role);
@@ -249,17 +259,17 @@ public class WebCommunication {
     Client client = getClient();
     WebTarget webResource = client.target(url);
 
-    webResource.queryParam("username", Settings.AGENT_EMAIL);
-    webResource.queryParam("password", agentPassword);
+    webResource = webResource.queryParam("username", Settings.AGENT_EMAIL);
+    webResource = webResource.queryParam("password", agentPassword);
     if (args != null) {
       for (String key : args.keySet()) {
-        webResource.queryParam(key, args.get(key));
+        webResource = webResource.queryParam(key, args.get(key));
       }
     }
     logger.log(Level.INFO,
             "WebCommunication: Requesting url: {0} with password {1}",
             new Object[]{url, agentPassword});
-
+    
     Response response = webResource.request()
             .header("Accept-Encoding", "gzip,deflate")
             .get(Response.class);

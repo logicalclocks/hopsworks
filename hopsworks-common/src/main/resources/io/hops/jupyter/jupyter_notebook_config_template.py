@@ -20,6 +20,16 @@ c.NotebookApp.port_retries = 0
 c.NotebookApp.port = %%port%%
 
 
+#
+# Disable the default Python2 kernel
+# https://github.com/jupyter/jupyter_client/issues/144
+#
+#c.KernelSpecManager.whitelist = set(['PySpark', 'ir'])
+#c.KernelSpecManager.whitelist = set(['PySpark3', 'ir'])
+#c.KernelSpecManager.whitelist = set(['Spark', 'ir'])
+#c.KernelSpecManager.whitelist = set(['SparkR', 'ir'])
+#c.MultiKernelManager.default_kernel_name='PySpark'
+
 c.NotebookApp.allow_origin = '*'
 
 c.NotebookApp.tornado_settings = {

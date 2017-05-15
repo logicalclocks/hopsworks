@@ -334,11 +334,14 @@ angular.module('hopsWorksApp')
                     var logContent = success.data;
                     if (logContent[type] !== undefined) {
                       job[type] = logContent[type];
-                    } else if (logContent[type + 'Path'] !== undefined) {
+                    }
+                    if (logContent[type + 'Path'] !== undefined) {
                       job[type + 'Path'] = logContent[type + 'Path'];
-                    } else if (logContent['retriableErr'] !== undefined) {
+                    }
+                    if (logContent['retriableErr'] !== undefined) {
                       job['retriableErr'] = logContent['retriableErr'];
-                    } else if (logContent['retriableOut'] !== undefined) {
+                    }
+                    if (logContent['retriableOut'] !== undefined) {
                       job['retriableOut'] = logContent['retriableOut'];
                     }
                     self.loadingLog = 0;

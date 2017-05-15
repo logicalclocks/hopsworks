@@ -72,6 +72,9 @@ public class JupyterFacade {
   public boolean removeNotebookServer(String hdfsUsername) {
 
     JupyterProject jp = findByUser(hdfsUsername);
+    if (jp == null) {
+      return false;
+    }
     em.remove(jp);
     em.flush();
     return true;
@@ -149,7 +152,8 @@ public class JupyterFacade {
     // delete JupyterProject entity bean
   }
 
-  public JupyterProject saveServer(Project project, int port, int hdfsUserId,
+  public JupyterProject saveServer(Project project, String secret, int port,
+          int hdfsUserId,
           String token, long pid, int driverCores, String driverMemory,
           int numExecutors, int executorCores, String executorMemory, int gpus,
           String archives, String jars, String files, String pyFiles)
@@ -159,9 +163,10 @@ public class JupyterFacade {
     try {
       ip = InetAddress.getLocalHost().getHostAddress();
 
-      jp = new JupyterProject(project, port, hdfsUserId, ip, token, pid, 
-      driverCores, driverMemory, numExecutors, executorCores, executorMemory, gpus,
-      archives, jars, files, pyFiles);
+      jp = new JupyterProject(project, secret, port, hdfsUserId, ip, token, pid,
+              driverCores, driverMemory, numExecutors, executorCores,
+              executorMemory, gpus,
+              archives, jars, files, pyFiles);
 
       persist(jp);
     } catch (UnknownHostException ex) {

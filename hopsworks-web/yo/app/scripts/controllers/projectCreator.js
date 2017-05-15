@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
                         if (success.errorMsg) {
                           growl.warning(success.errorMsg, {title: 'Error', ttl: 10000});
                         }
-                        if (success.fieldErrors.length > 0) {
+                        if (typeof success.fieldError !== 'undefined' && success.fieldErrors.length > 0) {
                           success.fieldErrors.forEach(function (entry) {
                             growl.warning(entry + ' could not be added', {title: 'Error', ttl: 10000});
                           });

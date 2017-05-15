@@ -66,12 +66,20 @@ public class JupyterProject implements Serializable {
   private Date lastAccessed;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 255)
+  @Size(min = 1,
+          max = 255)
   @Column(name = "host_ip")
   private String hostIp;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 255)
+  @Size(min = 20,
+          max = 64)
+  @Column(name = "secret")
+  private String secret;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
   @Column(name = "token")
   private String token;
   @Basic(optional = false)
@@ -103,12 +111,14 @@ public class JupyterProject implements Serializable {
   private Integer executorCores;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 2, max = 32)
+  @Size(min = 2,
+          max = 32)
   @Column(name = "driver_memory")
   private String driverMemory;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 2, max = 32)
+  @Size(min = 2,
+          max = 32)
   @Column(name = "executor_memory")
   private String executorMemory;
   @Basic(optional = true)
@@ -117,37 +127,43 @@ public class JupyterProject implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 0, max = 3000)
+  @Size(min = 0,
+          max = 3000)
   @Column(name = "archives")
   private String archives;
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 0, max = 3000)
+  @Size(min = 0,
+          max = 3000)
   @Column(name = "jars")
   private String jars;
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 0, max = 3000)
+  @Size(min = 0,
+          max = 3000)
   @Column(name = "files")
   private String files;
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 0, max = 3000)
+  @Size(min = 0,
+          max = 3000)
   @Column(name = "pyFiles")
   private String pyFiles;
 
   public JupyterProject() {
   }
 
-  public JupyterProject(Project project, Integer port, int hdfsUserId,
-          String hostIp, String token, Long pid, int driverCores,
+  public JupyterProject(Project project, String secret, Integer port,
+          int hdfsUserId, String hostIp, String token, Long pid, int driverCores,
           String driverMemory, int numExecutors, int executorCores,
           String executorMemory, int gpus, String archives, String jars,
-          String files, String pyFiles) {
+          String files, String pyFiles
+  ) {
     this.projectId = project;
+    this.secret = secret;
     this.port = port;
     this.hdfsUserId = hdfsUserId;
     this.created = Date.from(Instant.now());
@@ -167,6 +183,14 @@ public class JupyterProject implements Serializable {
     this.pyFiles = pyFiles;
   }
 
+  public String getSecret() {
+    return secret;
+  }
+
+  public void setSecret(String secret) {
+    this.secret = secret;
+  }
+  
   public Integer getPort() {
     return port;
   }
@@ -295,7 +319,6 @@ public class JupyterProject implements Serializable {
     this.jars = jars;
   }
 
-  
   public String getFiles() {
     return files;
   }
@@ -312,7 +335,6 @@ public class JupyterProject implements Serializable {
     this.pyFiles = pyFiles;
   }
 
-  
   @Override
   public int hashCode() {
     int hash = 0;

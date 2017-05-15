@@ -53,6 +53,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -519,7 +520,7 @@ public class ProjectService {
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {
-      project = projectController.createProject(projectDTO, user, failedMembers);
+      project = projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
@@ -527,7 +528,7 @@ public class ProjectService {
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
     } catch (Exception ex) {
-      projectController.cleanup(project);
+      projectController.cleanup(project, req.getSession().getId());
       throw ex;
     } finally {
       if (dfso != null) {
@@ -560,14 +561,14 @@ public class ProjectService {
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
     }
     
-    List<String> failedMembers = new ArrayList<>();
-    projectController.createProject(projectDTO, user, failedMembers);
+    List<String> failedMembers = null;
+    projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
     JsonResponse json = new JsonResponse();
     json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
-    if (failedMembers != null) {
+    if (failedMembers != null && !failedMembers.isEmpty()) {
       json.setFieldErrors(failedMembers);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
@@ -588,12 +589,20 @@ public class ProjectService {
     JsonResponse json = new JsonResponse();
 
     try {
-      projectController.removeProject(userMail, id);
+      String jsessionId = "";
+      if (req.getCookies() != null && req.getCookies().length > 0) {
+        for (Cookie cookie : req.getCookies()) {
+          if (cookie.getName().equalsIgnoreCase("JSESSIONIDSSO")) {
+            jsessionId = cookie.getValue();
+          }
+        }
+      }
+      projectController.removeProject(userMail, id, jsessionId);
     } catch (AppException ex) {
       json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(
-              Response.Status.BAD_REQUEST).entity(
-                      json).build();
+          Response.Status.BAD_REQUEST).entity(
+              json).build();
     }
 
     json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);

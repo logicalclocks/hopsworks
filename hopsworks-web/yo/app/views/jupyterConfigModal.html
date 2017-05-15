@@ -1,62 +1,101 @@
-        <div class="modal-header">
-          <button type="button" class="close" ng-click="ctrl.cancel()" data-dismiss="modal">&times;</button>
-          <h4 class="modal-title">Configure and Restart Jupyter Spark Kernel</h4>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="driverCores">Number of Driver Cores (CPUs)</label> <input
-              type="text" class="form-control" id="driverCores" 
-              ng-model="ctrl.val.driverCores" ng-init="ctrl.val.driverCores=1">
-          </div>
-          <div class="form-group">
-            <label for="driverMemory">Driver Memory </label> <input
-               ng-init="ctrl.val.driverMemory='1500M'" type="text" class="form-control"
-              id="driverMemory" ng-model="ctrl.val.driverMemory">
-          </div>
-          <div class="form-group">
-            <label for="numExecutors">Number of Executors</label> <input
-              ng-init="ctrl.val.numExecutors=1" type="text" class="form-control"
-              id="numExecutors" ng-model="ctrl.val.numExecutors">
-          </div>
-          <div class="form-group">
-            <label for="executorCores">Number of Cores per Executor</label> <input
-              ng-init="ctrl.val.executorCores=1" type="text" class="form-control"
-              id="executorCores" ng-model="ctrl.val.executorCores">
-          </div>
-          <div class="form-group">
-            <label for="executorMemory">Amount of Memory per Executor</label> <input
-              ng-init="ctrl.val.executorMemory='1G'" type="text" class="form-control"
-              id="executorMemory" ng-model="ctrl.val.executorMemory">
-          </div>
-          <div class="form-group">
-            <label for="gpus">Number of GPUs</label> <input
-              ng-init="ctrl.val.gpus=0" type="text" class="form-control"
-              id="gpus" ng-model="ctrl.val.gpus">
-          </div>
-          <div class="form-group">
-            <label for="archives">Archives (comma-separated quoted strings)</label> <input
-              ng-init="ctrl.val.archives=''" type="text" class="form-control"
-              id="archives" ng-model="ctrl.val.archives">
-          </div>
-          <div class="form-group">
-            <label for="jars">Jars (comma-separated quoted strings)</label> <input
-              ng-init="ctrl.val.jars=''" type="text" class="form-control"
-              id="jars" ng-model="ctrl.val.jars">
-          </div>
-          <div class="form-group">
-            <label for="files">Files (comma-separated quoted strings)</label> <input
-              ng-init="ctrl.val.files=''" type="text" class="form-control"
-              id="files" ng-model="ctrl.val.files">
-          </div>
-          <div class="form-group">
-            <label for="pyFiles">PyFiles (comma-separated quoted strings)</label> <input
-              ng-init="ctrl.val.pyFiles=''" type="text" class="form-control"
-              id="pyFiles" ng-model="ctrl.val.pyFiles">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-default" ng-click="ctrl.cancel()">Cancel</button>
-          <button type="button" id="updateSparkButton"
-            class="btn btn-default"
-            data-dismiss="modal" ng-click="ctrl.ok()">Update Spark Settings</button>
-        </div>
+<div class="modal-header">
+  <button type="button" class="close" ng-click="ctrl.cancel()" data-dismiss="modal">&times;</button>
+  <h4 class="modal-title">Jupyter Spark Settings</h4>
+</div>
+<div class="modal-body">
+  <div class="col-md-5">
+    <div class="form-group">
+      <label for="driverCores">Number of Driver Cores <input
+          type="text" class="form-control" id="driverCores" 
+          ng-model="ctrl.val.driverCores" ng-init="ctrl.val.driverCores = 1">
+      </label>
+    </div>
+    <div class="form-group">
+      <label for="driverMemory">Driver Memory <input
+          ng-init="ctrl.val.driverMemory = '1500M'" type="text" class="form-control"
+          id="driverMemory" ng-model="ctrl.val.driverMemory">
+      </label>
+    </div>
+    <div class="form-group">
+      <label for="gpus">Number of GPUs <input
+          ng-init="ctrl.val.gpus = 0" type="text" class="form-control"
+          id="gpus" ng-model="ctrl.val.gpus">
+      </label>
+    </div>
+  </div>
+  <div class="col-md-1"></div>
+  <div class="col-md-5">
+    <div class="form-group">
+      <label for="numExecutors">Number of Executors <input
+          ng-init="ctrl.val.numExecutors = 1" type="text" class="form-control"
+          id="numExecutors" ng-model="ctrl.val.numExecutors">
+      </label>
+    </div>
+    <div class="form-group">
+      <label for="executorCores">Number of Cores per Executor <input
+          ng-init="ctrl.val.executorCores = 1" type="text" class="form-control"
+          id="executorCores" ng-model="ctrl.val.executorCores">
+      </label>
+    </div>
+    <div class="form-group">
+      <label for="executorMemory">Executor Memory <input
+          ng-init="ctrl.val.executorMemory = '1G'" type="text" class="form-control"
+          id="executorMemory" ng-model="ctrl.val.executorMemory">
+      </label>
+    </div>
+  </div>
+
+
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" ng-model="advanced">
+      Advanced
+    </label>
+  </div>          
+  <div ng-show="advanced" id="advanced">
+    <div class="form-group">
+      <label for="archives">
+        <button uib-tooltip='Select a .zip file' id="selectFileButton" class="btn btn-default" ng-click="ctrl.selectFile('.zip')">
+          <span>Select Archives...</span>
+        </button>  
+      </label>
+      <input uib-tooltip="comma-separated quoted list of .zip or .tgz files" ng-init="ctrl.val.archives = ''" type="text" class="form-control"
+             id="archives" ng-model="ctrl.val.archives">
+    </div>
+    <div class="form-group">
+      <label for="jars">
+        <button uib-tooltip='Select a .jar file' id="selectFileButton" class="btn btn-default" ng-click="ctrl.selectFile('.jar')">
+          <span>Select Jars...</span>
+        </button>
+      </label>
+      <input ng-init="ctrl.val.jars = ''" type="text" uib-tooltip="comma-separated quoted  list of .jar files" class="form-control"
+             id="jars" ng-model="ctrl.val.jars">
+    </div>
+    <div class="form-group">
+      <label for="files">
+        <button uib-tooltip='Select a file' id="selectFileButton" class="btn btn-default" ng-click="ctrl.selectFile('*')">
+          <span>Select Files...</span>
+        </button> 
+      </label>
+      <input uib-tooltip="comma-separated quoted list of files"
+                                              ng-init="ctrl.val.files = ''" type="text" class="form-control"
+                                              id="files" ng-model="ctrl.val.files">
+    </div>
+    <div class="form-group">
+      <label for="pyFiles">
+        <button uib-tooltip='Select a .py file' id="selectFileButton" class="btn btn-default" ng-click="ctrl.selectFile('.py')">
+          <span>Select PyFiles...</span>
+        </button>
+      </label>
+      <input uib-tooltip="comma-separated quoted list of python files. E.g.: 'my.py', 'your.py'"
+                                                  ng-init="ctrl.val.pyFiles = ''" type="text" class="form-control"
+                                                  id="pyFiles" ng-model="ctrl.val.pyFiles">
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="ctrl.cancel()">Cancel</button>
+  <button type="button" id="updateSparkButton"
+          class="btn btn-default"
+          data-dismiss="modal" ng-click="ctrl.ok()">Start Jupyter</button>
+</div>

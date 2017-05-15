@@ -4,11 +4,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-          'UserService', 'TourService',
-          function ($scope, $rootScope, $location, $routeParams, $route, UtilsService, growl, ProjectService,
-                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService) {
+          'UserService', 'TourService', 'PythonDepsService',
+          function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
+                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService) {
 
             var self = this;
             self.loadedView = false;
@@ -35,7 +35,7 @@ angular.module('hopsWorksApp')
 
             self.alreadyChoosenServices = [];
             self.selectionProjectTypes = [];
-            self.pId = $routeParams.projectID;
+            self.projectId = $routeParams.projectID;
 
             self.projectFile = {
               description: null,
@@ -70,13 +70,13 @@ angular.module('hopsWorksApp')
                 self.tourService.setActiveTour('kafka');
               }
 
-              if ($location.url() === "/project/" + self.pId) {
+              if ($location.url() === "/project/" + self.projectId) {
                 self.tourService.currentStep_TourTwo = 0;
-              } else if ($location.url() === "/project/" + self.pId + "/" + "jobs") {
+              } else if ($location.url() === "/project/" + self.projectId + "/" + "jobs") {
                 if (self.tourService.currentStep_TourThree === -1) {
                   self.tourService.currentStep_TourThree = 0;
                 }
-              } else if ($location.url() === "/project/" + self.pId + "/" + "newjob") {
+              } else if ($location.url() === "/project/" + self.projectId + "/" + "newjob") {
                 self.tourService.currentStep_TourFour = 0;
               }
 
@@ -95,7 +95,7 @@ angular.module('hopsWorksApp')
 
 
             var getCurrentProject = function () {
-              ProjectService.get({}, {'id': self.pId}).$promise.then(
+              ProjectService.get({}, {'id': self.projectId}).$promise.then(
                       function (success) {
                         self.currentProject = success;
                         self.projectFile.id = self.currentProject.inodeid;
@@ -128,7 +128,7 @@ angular.module('hopsWorksApp')
                           self.projectTypes.splice(index, 1);
                         });
 
-                        $cookies.put("projectID", self.pId);
+                        $cookies.put("projectID", self.projectId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
@@ -141,19 +141,19 @@ angular.module('hopsWorksApp')
 
 
             var getAllActivities = function () {
-              ActivityService.getByProjectId(self.pId).then(function (success) {
+              ActivityService.getByProjectId(self.projectId).then(function (success) {
                 self.activities = success.data;
                 self.pageSize = 8;
                 self.totalPages = Math.floor(self.activities.length / self.pageSize);
                 self.totalItems = self.activities.length;
               }, function (error) {
-                growl.info("Error" + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error("Error" + error.data.errorMsg, {title: 'Error', ttl: 5000});
               });
             };
 
             //we only need to load the activities if the path is project (endswith pId).
             var locationPath = $location.path();
-            if (locationPath.substring(locationPath.length - self.pId.length, locationPath.length) === self.pId) {
+            if (locationPath.substring(locationPath.length - self.projectId.length, locationPath.length) === self.projectId) {
               getAllActivities();
             }
 
@@ -176,7 +176,7 @@ angular.module('hopsWorksApp')
             };
 
             self.membersModal = function () {
-              ModalService.projectMembers('lg', self.pId).then(
+              ModalService.projectMembers('lg', self.projectId).then(
                       function (success) {
                       }, function (error) {
               });
@@ -223,13 +223,13 @@ angular.module('hopsWorksApp')
 
             self.goToHopsworksInstance = function (endpoint, serviceName) {
               $scope.activeService = serviceName;
-              $location.path('http://' + endpoint + '/project/' + self.pId + '/' + serviceName);
+              $location.path('http://' + endpoint + '/project/' + self.projectId + '/' + serviceName);
             }
 
 
             self.goToUrl = function (serviceName) {
               $scope.activeService = serviceName;
-              $location.path('project/' + self.pId + '/' + serviceName);
+              $location.path('project/' + self.projectId + '/' + serviceName);
             }
 
             self.goToDatasets = function () {
@@ -244,7 +244,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Could not enable logging services', ttl: 5000});
               });
 
-            self.goToUrl('jobs');
+              self.goToUrl('jobs');
               if (self.tourService.currentStep_TourTwo > -1) {
                 self.tourService.resetTours();
               }
@@ -257,7 +257,23 @@ angular.module('hopsWorksApp')
               // Check which instance of Hopsworks is running Jupyter
               // If that instance is running, URL redirect to that instance
               // If not running, start a new instance
-              self.goToUrl('jupyter');
+
+//              http://localhost:8080/hopsworks/#!/project/1/settings
+
+
+              self.enabling = true;
+              PythonDepsService.enabled(self.projectId).then(
+                      function (success) {
+                        self.goToUrl('jupyter');
+                      }, function (error) {
+                      growl.info("Enable anaconda before running Jupyter.", 
+                      {title: 'Enable Anaconda First', ttl: 2000});
+                        $timeout(function () {
+                          self.goToUrl('settings')
+                        }, 2000); 
+              });
+
+
             };
 
 
@@ -293,7 +309,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToHistory = function () {
-              $location.path('history/' + self.pId + '/history');
+              $location.path('history/' + self.projectId + '/history');
             };
 
             /**
@@ -308,7 +324,7 @@ angular.module('hopsWorksApp')
               } else {
                 ModalService.confirmShare('sm', 'Accept Shared Dataset?', 'Do you want to accept this dataset and add it to this project?')
                         .then(function (success) {
-                          DataSetService(self.pId).acceptDataset(dataset.id).then(
+                          DataSetService(self.projectId).acceptDataset(dataset.id).then(
                                   function (success) {
                                     $location.path($location.path() + '/' + dataset.name + '/');
                                   }, function (error) {
@@ -316,7 +332,7 @@ angular.module('hopsWorksApp')
                           });
                         }, function (error) {
                           if (error === 'reject') {
-                            DataSetService(self.pId).rejectDataset(dataset.id).then(
+                            DataSetService(self.projectId).rejectDataset(dataset.id).then(
                                     function (success) {
                                       $location.path($location.path() + '/');
                                       growl.success("Success: " + success.data.successMessage, {title: 'Success', ttl: 5000});
@@ -371,7 +387,7 @@ angular.module('hopsWorksApp')
             };
 
             self.getRole = function () {
-              UserService.getRole(self.pId).then(
+              UserService.getRole(self.projectId).then(
                       function (success) {
                         self.role = success.data.role;
                       }, function (error) {

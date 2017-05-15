@@ -8,6 +8,7 @@ import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.jobs.description.AppIdDTO;
 import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
@@ -40,6 +41,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -278,7 +280,60 @@ public class JobService {
               getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
-  
+
+  /**
+   * Get all the appIds for the specified job
+   * <p>
+   * @param jobId
+   * @param sc
+   * @param req
+   * @return url
+   * @throws AppException
+   */
+  @GET
+  @Path("/{jobId}/appIds")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getAppIds(@PathParam("jobId") int jobId,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+    JobDescription job = jobFacade.findById(jobId);
+    if (job == null) {
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } else if (!job.getProject().equals(project)) {
+      //In this case, a user is trying to access a job outside its project!!!
+      LOGGER.log(Level.SEVERE,
+          "A user is trying to access a job outside their project!");
+      return Response.status(Response.Status.FORBIDDEN).build();
+    } else {
+      List<Execution> executions = exeFacade.findForJob(job);
+      if (executions == null || executions.isEmpty()) {
+        LOGGER.log(Level.SEVERE, "No job execution found for job {}", job.
+            getName());
+        return Response.status(Response.Status.NOT_FOUND).build();
+      }
+
+      try {
+        List<AppIdDTO> appIdStrings = new ArrayList<>();
+        for (Execution ex : executions) {
+          appIdStrings.add(new AppIdDTO(ex.getAppId()));
+        }
+
+        GenericEntity<List<AppIdDTO>> appIds
+            = new GenericEntity<List<AppIdDTO>>(appIdStrings) {};
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(appIds).build();
+
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
+            getLocalizedMessage(), e);
+      }
+      return noCacheResponse.
+          getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    }
+  }
+
   /**
    * Get the projectName for the specified projectId
    * <p>

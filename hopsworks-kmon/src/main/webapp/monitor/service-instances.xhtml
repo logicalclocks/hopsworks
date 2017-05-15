@@ -103,10 +103,48 @@
                 <p:menuitem value="Stop..." url="???" /> 
               </p:menuButton>  
             </p:toolbarGroup>  
+            
+            <p:toolbarGroup align="center">  
+                <p:menuButton value="Start/Stop">  
+                  <p:menuitem id="restartall_role" value="Restart All" action="#{communicationController.roleRestartAll()}" process="@this"                            
+                              disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                    <f:param name="role" value="#{serviceInstancesController.role}"/>
+                    <f:param name="r" value="#{serviceInstancesController.role}"/>
+                  </p:menuitem>
+                  <p:menuitem id="startall_role" value="Start All" action="#{communicationController.roleStartAll()}" process="@this"
+                              icon="ui-icon-play" disabled="#{serviceInstancesController.disableStart()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                    <f:param name="role" value="#{serviceInstancesController.role}"/>
+                    <f:param name="r" value="#{serviceInstancesController.role}"/>
+                  </p:menuitem>
+                  <p:menuitem id="stopall_role" value="Stop All" action="#{communicationController.roleStopAll()}" process="@this"
+                              disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                    <f:param name="role" value="#{serviceInstancesController.role}"/>
+                    <f:param name="r" value="#{serviceInstancesController.role}"/>
+                  </p:menuitem>
+                </p:menuButton> 
+                <p:tooltip for="startall_role" rendered="#{serviceInstancesController.disableStart()}" 
+                           value="#{settingsController.tooltipDisabledAction('start')}"/>                     
+                <p:tooltip for="stopall_role" rendered="#{serviceInstancesController.disableStop()}" 
+                           value="#{settingsController.tooltipDisabledAction('stop')}"/>
+              </p:toolbarGroup>  
 
           </p:toolbar>  
         </h:form>
 
+        <!-- Progress Dialog -->
+        <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+
+        <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+          <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
+        </p:dialog>           
+
+        <!-- Progress Dialog - End -->
 
         <p:spacer width="1" height="10" />       
 

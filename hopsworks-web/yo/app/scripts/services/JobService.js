@@ -110,13 +110,22 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/executions/' + executionId);
               },
               /**
-               * Get the app Id of the given job.
+               * Get the latest app Id of the given job.
                * @param {type} projectId
                * @param {type} jobId
                * @returns {unresolved} The address of the job ui.
                */
               getAppId: function (projectId, jobId) {
                 return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/appId');
+              },
+              /**
+               * Get the app Ids of the given job.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @returns {unresolved} The address of the job ui.
+               */
+              getAppIds: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/' + jobId + '/appIds');
               },
               /**
                * Get the project name of the given project.
