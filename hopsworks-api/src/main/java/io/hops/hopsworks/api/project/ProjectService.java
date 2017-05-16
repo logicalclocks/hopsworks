@@ -53,7 +53,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -589,17 +588,17 @@ public class ProjectService {
     JsonResponse json = new JsonResponse();
 
     try {
-      String jsessionId = "";
-      if (req.getCookies() != null && req.getCookies().length > 0) {
-        for (Cookie cookie : req.getCookies()) {
-          if (cookie.getName().equalsIgnoreCase("JSESSIONIDSSO")) {
-            jsessionId = cookie.getValue();
-          }
-        }
-      }
-      projectController.removeProject(userMail, id, jsessionId);
+//      String jsessionId = "";
+//      if (req.getCookies() != null && req.getCookies().length > 0) {
+//        for (Cookie cookie : req.getCookies()) {
+//          if (cookie.getName().equalsIgnoreCase("JSESSIONIDSSO")) {
+//            jsessionId = cookie.getValue();
+//          }
+//        }
+//      } 
+      projectController.removeProject(userMail, id, req.getSession().getId());
     } catch (AppException ex) {
-      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+      json.setErrorMsg(ex.getMessage());
       return noCacheResponse.getNoCacheResponseBuilder(
           Response.Status.BAD_REQUEST).entity(
               json).build();
