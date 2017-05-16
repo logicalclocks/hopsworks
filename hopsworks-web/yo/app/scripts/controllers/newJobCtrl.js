@@ -514,13 +514,12 @@ angular.module('hopsWorksApp')
             };
 
             self.populateKafkaJobParameters = function () {
-              self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StreamingExample';
+              self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StructuredStreamingKafka';
               var jobState = self.tourService.kafkaJobCreationState;
               if (angular.equals('producer', jobState)) {
                 self.runConfig.args = 'producer';
               } else if (angular.equals('consumer', jobState)) {
-                self.runConfig.args = "consumer /Projects/" +
-                  self.projectName +"/Resources/Data";
+                self.runConfig.args = "consumer";
               } else {
                 self.runConfig.args = "Internal error, something went wrong. Select manually!"
               }
