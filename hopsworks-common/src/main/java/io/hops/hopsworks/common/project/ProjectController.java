@@ -160,13 +160,13 @@ public class ProjectController {
    * @param projectDTO
    * @param owner
    * @param failedMembers
-   * @param jsessionidsso
+   * @param sessionId
    * @return
    * @throws IllegalArgumentException if the project name already exists.
    * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
-          List<String> failedMembers, String jsessionidsso) throws AppException {
+          List<String> failedMembers, String sessionId) throws AppException {
 
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
@@ -221,20 +221,20 @@ public class ProjectController {
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "An error occurend when creating the project");
+                getStatusCode(), "An error occured when creating the project");
       }
 
-      verifyProject(project, dfso, jsessionidsso);
+      verifyProject(project, dfso, sessionId);
 
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "wrong user name");
       }
       udfso = dfs.getDfsOps(username);
       if (udfso == null) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "error geting access to the file system");
       }
@@ -245,12 +245,12 @@ public class ProjectController {
       try {
         projectPath = mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "problem creating project folder");
       }
       if (projectPath == null) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "problem creating project folder");
       }
@@ -258,13 +258,13 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (AppException | EJBException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw ex;
       } catch (IOException ex) {
-        cleanup(project, jsessionidsso);
-        LOGGER.log(Level.SEVERE, "An error occurend when creating the project: "+ex.getMessage(), ex);
+        cleanup(project, sessionId);
+        LOGGER.log(Level.SEVERE, "An error occured when creating the project: "+ex.getMessage(), ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(), "An error occurend when creating the project");
+                getStatusCode(), "An error occured when creating the project");
       }
 
       //set payment and quotas
@@ -274,7 +274,7 @@ public class ProjectController {
                 dfso, owner);
 
       } catch (IOException | EJBException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "could not set folder quota");
       }
@@ -284,7 +284,7 @@ public class ProjectController {
         createCertificates(project, owner);
       } catch (IOException | EJBException ex) {
         LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.getMessage(), ex);
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Error while creating certificates");
       }
@@ -297,11 +297,11 @@ public class ProjectController {
         createProjectLogResources(owner, project, dfso, udfso);
       } catch (IOException | EJBException ex) {
         LOGGER.log(Level.SEVERE, "Error while creating project sub folders: "+ex.getMessage(), ex);
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Error while creating project sub folders");
       } catch (AppException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw ex;
       }
 
@@ -310,7 +310,7 @@ public class ProjectController {
         failedMembers = addMembers(project, owner.getEmail(), projectDTO.
                 getProjectTeam());
       } catch (AppException | EJBException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
         throw ex;
       }
 
@@ -318,7 +318,7 @@ public class ProjectController {
       try {
         addElasticsearch(project.getName());
       } catch (IOException ex) {
-        cleanup(project, jsessionidsso);
+        cleanup(project, sessionId);
       }
       return project;
 
@@ -772,7 +772,7 @@ public class ProjectController {
             .target(settings.getRestEndpoint() + "/hopsworks-api/api/zeppelin/" + project.getId()
                 + "/interpreter/restart")
             .request()
-            .cookie("JSESSIONIDSSO", sessionId)
+            .cookie("SESSION", sessionId)
             .method("GET");
         LOGGER.log(Level.INFO, "Zeppelin resp:"+resp.getStatus()+", with session:"+sessionId);
         if (resp.getStatus() != 200) {
@@ -812,7 +812,7 @@ public class ProjectController {
             LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "error while removing project");
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.getMessage());
         }
       }
     }
