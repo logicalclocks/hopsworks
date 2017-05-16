@@ -80,6 +80,36 @@ public class InterpreterService {
     interpreterRestApi.setParms(project, user, userRole, zeppelinConf);
     return interpreterRestApi;
   }
+  
+  @GET
+  @Path("/check")
+  @Produces("application/json")
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
+  public Response interpreterCheck(@PathParam("projectID") String projectID,
+      @Context HttpServletRequest httpReq) throws AppException {
+    Project project = zeppelinResource.getProject(projectID);
+    if (project == null) {
+      logger.error("Could not find project in cookies.");
+      return new JsonResponse(Response.Status.NOT_FOUND, "").build();
+    }
+    Users user = userBean.findByEmail(httpReq.getRemoteUser());
+    if (user == null) {
+      logger.error("Could not find remote user in request.");
+      return new JsonResponse(Response.Status.NOT_FOUND, "").build();
+    }
+    String userRole = projectTeamBean.findCurrentRole(project, user);
+    if (userRole == null) {
+      logger.error("User with no role in this project.");
+      return new JsonResponse(Response.Status.NOT_FOUND, "").build();
+    }
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
+        getName(), user.getEmail());
+    if (zeppelinConf == null) {
+      logger.error("Zeppelin  not connect to web socket.");
+      return new JsonResponse(Response.Status.NOT_FOUND, "").build();
+    }
+    return new JsonResponse(Response.Status.OK, "").build();
+  }
 
   @GET
   @Path("/livy/sessions")
