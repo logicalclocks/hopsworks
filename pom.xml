@@ -40,8 +40,8 @@
     <glassfish.hostname>bbc3.sics.se</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
     <glassfish.passwd>adminpw</glassfish.passwd>           
-    <glassfish.port>25100</glassfish.port>
-    <glassfish.admin_port>27100</glassfish.admin_port>
+    <glassfish.port>26997</glassfish.port>
+    <glassfish.admin_port>42449</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
   </properties>
 

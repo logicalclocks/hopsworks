@@ -1,20 +1,30 @@
 module SessionHelper
   def with_valid_session
     unless @cookies
-      user = create_user
-      post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-      if !headers["set_cookie"][1].nil?
-        cookie = headers["set_cookie"][1].split(';')[0].split('=')
-        @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
-        @user = user
-      else 
-        @cookies = {"SESSIONID"=> json_body[:sessionID]}
-        @user = user
-      end
+      reset_and_create_session
     end
+    get "#{ENV['HOPSWORKS_API']}/auth/session"
+    if json_body[:status] != "SUCCESS"
+      reset_and_create_session
+    end
+  end
+  
+  def reset_and_create_session()
+    reset_session
+    user = create_user
+    post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
+    expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
+    expect_json(status: "SUCCESS")
+    if !headers["set_cookie"][1].nil?
+      cookie = headers["set_cookie"][1].split(';')[0].split('=')
+      @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
+    else 
+      @cookies = {"SESSIONID"=> json_body[:sessionID]}
+    end
+    @user = user
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
-    end
+    end    
   end
   
   def register_user(params={})

@@ -30,15 +30,15 @@ describe 'projects' do
         expect_status(201)
         get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
         project_id = json_body[:projectId]
-        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
         expect_status(200)
         logs = json_body.detect { |e| e[:name] == "Logs" }
         resources = json_body.detect { |e| e[:name] == "Resources" }
         expect(logs[:description]).to eq ("Contains the logs for jobs that have been run through the Hopsworks platform.")
-        expect(logs[:permission]).to eq ("rwxrwxr-t")
+        expect(logs[:permission]).to eq ("rwxrwx--T")
         expect(logs[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
-        expect(resources[:permission]).to eq ("rwxrwxr-t")
+        expect(resources[:permission]).to eq ("rwxrwx--T")
         expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
       it 'should fail to create a project with an existing name' do
@@ -58,9 +58,9 @@ describe 'projects' do
         project = create_project_by_name(projectname)
         create_dataset_by_name(project, dsname)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}"        
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"        
         expect_status(200)
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
@@ -110,9 +110,9 @@ describe 'projects' do
         reset_session
       end
       it "should fail to delete project with insufficient privilege" do
-        project = get_project
         member = create_user
         add_member(member[:email], "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
         expect_status(403)
@@ -125,8 +125,9 @@ describe 'projects' do
       end
       it "should delete project" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
-        expect_status(200)
+        expect_json(errorMsg: "")
         expect_json(successMessage: "The project and all related files were removed successfully.")
+        expect_status(200)
       end
     end
   end
@@ -149,21 +150,21 @@ describe 'projects' do
         reset_session
       end
       it "should fail to add member" do
-        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
       it "should fail to remove a team member" do
-        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
         delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
@@ -173,11 +174,11 @@ describe 'projects' do
         expect(memb).to be_present
       end
       it "should fail to change member role" do
-        project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data owner")
+        project = get_project
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")

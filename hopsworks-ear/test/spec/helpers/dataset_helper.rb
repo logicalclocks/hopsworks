@@ -1,6 +1,9 @@
 module DatasetHelper
   def with_valid_dataset
     @dataset ||= create_dataset
+    if @dataset[:projectId] != @project[:id]
+      @dataset = create_dataset
+    end
   end
   
   def create_dataset
@@ -22,12 +25,12 @@ module DatasetHelper
   end
   
   def get_datasets_in(project, dsname)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"
     json_body
   end
   
   def get_all_datasets(project)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
     json_body
   end
   

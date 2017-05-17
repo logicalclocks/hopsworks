@@ -105,6 +105,7 @@ hopsworks-web/yo/node_modules
 ## Test Files
 hopsworks-ear/test/Gemfile.lock
 hopsworks-ear/test/.env
+hopsworks-ear/test/.byebug_history
 hopsworks-ear/test/vendor
 
 ###########glassfish##############
