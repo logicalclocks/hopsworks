@@ -698,10 +698,10 @@ public class ProjectController {
   private String mkProjectDIR(String projectName, DistributedFileSystemOps dfso)
       throws IOException {
 
-    String rootDir = settings.DIR_ROOT;
+    String rootDir = Settings.DIR_ROOT;
 
-    boolean rootDirCreated = false;
-    boolean projectDirCreated = false;
+    boolean rootDirCreated;
+    boolean projectDirCreated;
 
     if (!dfso.isDir(File.separator + rootDir)) {
       /*
@@ -738,6 +738,7 @@ public class ProjectController {
    *
    * @param userMail
    * @param projectId
+   * @param sessionId
    * @throws AppException if the project could not be found.
    */
   public void removeProject(String userMail, int projectId, String sessionId) throws AppException {
@@ -989,6 +990,7 @@ public class ProjectController {
    * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @TransactionAttribute(
       TransactionAttributeType.NEVER)
