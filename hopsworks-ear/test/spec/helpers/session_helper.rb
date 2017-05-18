@@ -1,14 +1,30 @@
 module SessionHelper
   def with_valid_session
     unless @cookies
-      user = create_user
-      post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-      @cookies = {"SESSIONID"=> json_body[:sessionID]}
-      @user = user
+      reset_and_create_session
     end
+    get "#{ENV['HOPSWORKS_API']}/auth/session"
+    if json_body[:status] != "SUCCESS"
+      reset_and_create_session
+    end
+  end
+  
+  def reset_and_create_session()
+    reset_session
+    user = create_user
+    post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: user.email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
+    expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
+    expect_json(status: "SUCCESS")
+    if !headers["set_cookie"][1].nil?
+      cookie = headers["set_cookie"][1].split(';')[0].split('=')
+      @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
+    else 
+      @cookies = {"SESSIONID"=> json_body[:sessionID]}
+    end
+    @user = user
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
-    end
+    end    
   end
   
   def register_user(params={})
@@ -23,6 +39,7 @@ module SessionHelper
     user[:ToS]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
+    user[:testUser]         = true
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
   end
@@ -32,7 +49,7 @@ module SessionHelper
     register_user(params)
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
-    get "/hopsworks/security/validate_account.xhtml", {params: {key: key}}
+    get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
   end
   
   def set_two_factor(value)
@@ -50,6 +67,9 @@ module SessionHelper
   end
 
   def reset_session
+    get "#{ENV['HOPSWORKS_API']}/auth/logout"
+    @cookies = nil
+    @user = nil
     Airborne.configure do |config|
       config.headers = {:cookies => {}, content_type: 'application/json' }
     end
@@ -58,7 +78,12 @@ module SessionHelper
   def create_session(email, password)
     reset_session
     post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
-    cookies = {"SESSIONID"=> json_body[:sessionID]}
+    if !headers["set_cookie"][1].nil?
+      cookie = headers["set_cookie"][1].split(';')[0].split('=')
+      cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
+    else 
+      cookies = {"SESSIONID"=> json_body[:sessionID]}
+    end
     Airborne.configure do |config|
       config.headers = {:cookies => cookies, content_type: 'application/json' }
     end
@@ -115,7 +140,7 @@ module SessionHelper
   
   def create_deactivated_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
-     create_validated_user(params)
+    create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
     user.status = 5
@@ -125,7 +150,7 @@ module SessionHelper
   
   def create_lostdevice_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
-     create_validated_user(params)
+    create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
     user.status = 7

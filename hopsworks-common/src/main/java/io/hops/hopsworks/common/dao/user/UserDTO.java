@@ -26,6 +26,7 @@ public class UserDTO {
   private String postCode;
   private String country;
   private int maxNumProjects;
+  private boolean testUser;
 
   public UserDTO() {
   }
@@ -213,6 +214,14 @@ public class UserDTO {
 
   public void setMaxNumProjects(int maxNumProjects) {
     this.maxNumProjects = maxNumProjects;
+  }
+
+  public boolean isTestUser() {
+    return testUser;
+  }
+
+  public void setTestUser(boolean testUser) {
+    this.testUser = testUser;
   }
 
   @Override

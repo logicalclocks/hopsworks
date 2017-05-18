@@ -16,6 +16,9 @@ describe 'projects' do
       before :all do
         with_valid_session
       end
+      before :each do
+        check_project_limit
+      end
       it 'should work with valid params' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
@@ -30,16 +33,35 @@ describe 'projects' do
         expect_status(201)
         get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
         project_id = json_body[:projectId]
-        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
         expect_status(200)
         logs = json_body.detect { |e| e[:name] == "Logs" }
         resources = json_body.detect { |e| e[:name] == "Resources" }
         expect(logs[:description]).to eq ("Contains the logs for jobs that have been run through the Hopsworks platform.")
-        expect(logs[:permission]).to eq ("rwxrwxr-t")
+        expect(logs[:permission]).to eq ("rwxrwx--T")
         expect(logs[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
-        expect(resources[:permission]).to eq ("rwxrwxr-t")
+        expect(resources[:permission]).to eq ("rwxrwx--T")
         expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+      end
+      it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
+        projectname = "project_#{Time.now.to_i}"
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
+        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+        expect_json(successMessage: "Project created successfully.")
+        expect_status(201)
+        get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
+        project_id = json_body[:projectId]
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
+        expect_status(200)
+        jupyter = json_body.detect { |e| e[:name] == "Jupyter" }
+        notebook = json_body.detect { |e| e[:name] == "notebook" }
+        expect(jupyter[:description]).to eq ("Contains Jupyter notebooks.")
+        expect(jupyter[:permission]).to eq ("rwxrwx--T")
+        expect(jupyter[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+        expect(notebook[:description]).to eq ("Contains Zeppelin notebooks.")
+        expect(notebook[:permission]).to eq ("rwxrwx--T")
+        expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
       it 'should fail to create a project with an existing name' do
         with_valid_project
@@ -58,15 +80,24 @@ describe 'projects' do
         project = create_project_by_name(projectname)
         create_dataset_by_name(project, dsname)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}"        
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"        
         expect_status(200)
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset"
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
-      it 'should fail with invalid params' do
+      
+      it 'should create a project given only name' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-        expect_status(500)
+        expect_json(errorMsg: "")
+        expect_status(201)
+      end
+      
+      it 'Should not let a user create more than the maximum number of allowed projects.' do
+        create_max_num_projects
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
+        expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
+        expect_status(400)
       end
     end
   end
@@ -110,13 +141,13 @@ describe 'projects' do
         reset_session
       end
       it "should fail to delete project with insufficient privilege" do
-        project = get_project
         member = create_user
         add_member(member[:email], "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
-        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
+        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
       end
     end
     context 'with authentication and sufficient privilege' do
@@ -125,6 +156,7 @@ describe 'projects' do
       end
       it "should delete project" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delete"
+        expect_json(errorMsg: "")
         expect_json(successMessage: "The project and all related files were removed successfully.")
         expect_status(200)
       end
@@ -149,12 +181,12 @@ describe 'projects' do
         reset_session
       end
       it "should fail to add member" do
-        #project = get_project
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
@@ -163,8 +195,9 @@ describe 'projects' do
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data scientist")
+        project = get_project
         create_session(member[:email],"Pass123")
-        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}"
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}"
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
@@ -176,8 +209,9 @@ describe 'projects' do
         new_member = create_user[:email]
         add_member(member[:email], "Data scientist")
         add_member(new_member, "Data owner")
+        project = get_project
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{new_member}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
@@ -262,7 +296,7 @@ describe 'projects' do
       end
       it "should fail to change the role of the project owner" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{@project[:username]}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_json(errorMsg: "Can not change the role of a project owner.")
+        expect_json(errorMsg: "Chaning the role of the project owner is not allowed.")
         expect_status(400)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
         memb = json_body.detect { |e| e[:user][:email] == @project[:username] }
@@ -315,16 +349,15 @@ describe 'projects' do
         field_errors = json_body[:fieldErrors]
         expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
       end
-      
       it "should allow a new member with sufficient privilege (Data owner) to add a member" do
         member = create_user
         new_member = create_user[:email]
         add_member(member[:email], "Data owner")
         create_session(member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member},teamRole: "Data scientist"}]}
+        expect_status(200)
         expect_json(successMessage: "One member added successfully")
         expect_json(errorMsg: "")
-        expect_status(200)
       end
     end
   end

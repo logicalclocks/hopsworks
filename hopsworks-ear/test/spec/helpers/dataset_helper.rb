@@ -1,27 +1,36 @@
 module DatasetHelper
   def with_valid_dataset
     @dataset ||= create_dataset
+    if @dataset[:projectId] != @project[:id]
+      @dataset = create_dataset
+    end
   end
   
   def create_dataset
     with_valid_project
     dsname = "dataset_#{short_random_id}"
     post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
+    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+    expect_json(successMessage: "The Dataset was created successfully.")
+    expect_status(200)
     get_dataset_by_name(dsname) 
   end
   
   def create_dataset_by_name(project, dsname)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
+    expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+    expect_json(successMessage: "The Dataset was created successfully.")
+    expect_status(200)
     get_dataset(project, dsname) 
   end
   
   def get_datasets_in(project, dsname)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"
     json_body
   end
   
   def get_all_datasets(project)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
     json_body
   end
   
