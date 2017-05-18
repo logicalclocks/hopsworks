@@ -1,5 +1,5 @@
 require 'airborne'
-require 'byebug'
+#require 'byebug'
 require 'active_record'
 require 'launchy'
 
@@ -35,7 +35,8 @@ RSpec.configure do |config|
   config.include ProjectHelper
   config.include FactoryHelper
   config.include DatasetHelper
-  #config.before(:suite) { clean_test_data }
+  # uncomment next line if you need to clean hdfs and hopsworks db before test.
+#  config.before(:suite) { clean_test_data } 
   config.after(:suite) { 
     clean_test_data
     if ENV['LAUNCH_BROWSER'] && ENV['LAUNCH_BROWSER']=="true"

@@ -16,6 +16,9 @@ describe 'projects' do
       before :all do
         with_valid_session
       end
+      before :each do
+        check_project_limit
+      end
       it 'should work with valid params' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
@@ -41,6 +44,25 @@ describe 'projects' do
         expect(resources[:permission]).to eq ("rwxrwx--T")
         expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
+      it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
+        projectname = "project_#{Time.now.to_i}"
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
+        expect_json(errorMsg: ->(value){ expect(value).to be_empty})
+        expect_json(successMessage: "Project created successfully.")
+        expect_status(201)
+        get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
+        project_id = json_body[:projectId]
+        get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
+        expect_status(200)
+        jupyter = json_body.detect { |e| e[:name] == "Jupyter" }
+        notebook = json_body.detect { |e| e[:name] == "notebook" }
+        expect(jupyter[:description]).to eq ("Contains Jupyter notebooks.")
+        expect(jupyter[:permission]).to eq ("rwxrwx--T")
+        expect(jupyter[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+        expect(notebook[:description]).to eq ("Contains Zeppelin notebooks.")
+        expect(notebook[:permission]).to eq ("rwxrwx--T")
+        expect(notebook[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+      end
       it 'should fail to create a project with an existing name' do
         with_valid_project
         projectname = "#{@project[:projectname]}"
@@ -64,9 +86,18 @@ describe 'projects' do
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
+      
       it 'should create a project given only name' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
+        expect_json(errorMsg: "")
         expect_status(201)
+      end
+      
+      it 'Should not let a user create more than the maximum number of allowed projects.' do
+        create_max_num_projects
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
+        expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
+        expect_status(400)
       end
     end
   end

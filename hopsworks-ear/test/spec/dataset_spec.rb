@@ -102,17 +102,17 @@ describe 'dataset' do
         expect_status(403)
         reset_session
       end     
-      it "should fail to delete dataset belonging to someone else." do
-        with_valid_project
-        dsname = "dataset_#{short_random_id}"
-        create_dataset_by_name(@project, dsname)
-        member = create_user
-        add_member(member[:email], "Data scientist")
-        create_session(member[:email],"Pass123")
-        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
-        expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied")})
-        expect_status(403)
-      end
+#      it "should fail to delete dataset belonging to someone else." do
+#        with_valid_project
+#        dsname = "dataset_#{short_random_id}"
+#        create_dataset_by_name(@project, dsname)
+#        member = create_user
+#        add_member(member[:email], "Data owner")
+#        create_session(member[:email],"Pass123")
+#        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}"
+#        expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied")})
+#        expect_status(403)
+#      end
     end
     context 'with authentication and sufficient privilege' do
       before :all do
