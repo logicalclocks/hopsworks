@@ -97,6 +97,9 @@
                                     </p:column>-->
           </p:dataTable>  
 
+          <p:panel>
+            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=HDFS,YARN" width="98%" height="1500px" align="middle"></iframe> 
+          </p:panel>
         </h:form> 
       </p:panel>
       <p:spacer width="1" height="8" />

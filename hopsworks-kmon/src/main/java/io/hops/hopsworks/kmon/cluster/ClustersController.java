@@ -1,5 +1,6 @@
 package io.hops.hopsworks.kmon.cluster;
 
+import io.hops.hopsworks.common.dao.role.Role;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -44,5 +45,17 @@ public class ClustersController {
       clusterInfo.addRoles(roleEjb.findRoleHost(cluster));
       clusters.add(clusterInfo);
     }
+  }
+ 
+  public String getNameNodesString() {
+    String hosts = "";
+    List<Role> roles = roleEjb.findRoles("namenode");
+    if (roles != null && !roles.isEmpty()) {
+      hosts = hosts + roles.get(0).getHostId();
+      for (int i = 1; i < roles.size(); i++) {
+        hosts = hosts + "," + roles.get(i).getHostId();
+      }
+    }
+    return hosts;
   }
 }

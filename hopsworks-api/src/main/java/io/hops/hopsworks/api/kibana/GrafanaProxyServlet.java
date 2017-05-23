@@ -13,11 +13,13 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+@Stateless
 public class GrafanaProxyServlet extends ProxyServlet {
 
   @EJB
@@ -33,9 +35,14 @@ public class GrafanaProxyServlet extends ProxyServlet {
   protected void service(HttpServletRequest servletRequest,
           HttpServletResponse servletResponse)
           throws ServletException, IOException {
+    if (servletRequest.getUserPrincipal() == null) {
+      servletResponse.sendError(403, "User is not logged in");
+      return;
+    }
     if (servletRequest.getRequestURI().contains("query")) {
       String email = servletRequest.getUserPrincipal().getName();
       Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
+      Users user = userManager.getUserByEmail(email);
       Matcher matcher = pattern.matcher(servletRequest.getQueryString());
       if (matcher.find()) {
         String appId = matcher.group(1);
@@ -54,7 +61,6 @@ public class GrafanaProxyServlet extends ProxyServlet {
           throw new ServletException(ex);
         }
         
-        Users user = userManager.getUserByEmail(email);
         
         boolean inTeam = false;
         for(ProjectTeam pt: project.getProjectTeam()){
@@ -69,9 +75,12 @@ public class GrafanaProxyServlet extends ProxyServlet {
           return;
         }
       } else {
-        servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                "You don't have the access right for this application");
-        return;
+        boolean userRole = servletRequest.isUserInRole("HOPS_ADMIN");
+        if (!userRole) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You don't have the access right for this application");
+          return;
+        }
       }
     }
     super.service(servletRequest, servletResponse);

@@ -32,6 +32,9 @@ import io.hops.hopsworks.common.dao.host.Status;
           query
           = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service "
           + "AND r.role = :role"),
+  @NamedQuery(name = "Role.findBy-Role",
+          query
+          = "SELECT r FROM Role r WHERE r.role = :role"),
   @NamedQuery(name = "Role.Count",
           query
           = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service "

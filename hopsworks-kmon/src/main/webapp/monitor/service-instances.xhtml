@@ -193,7 +193,7 @@
         </h:form>
 
         <p:panel>
-          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/" width="98%" height ="89%"></iframe> 
+          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe>
         </p:panel>
 
       </p:outputPanel>           
