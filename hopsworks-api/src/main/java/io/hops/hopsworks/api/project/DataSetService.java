@@ -1166,6 +1166,15 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
+  
+  @GET
+  @Path("checkFileForDownload/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response checkFileForDownload(@PathParam("path") String path, @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+    return checkFileExists(path, sc);
+  }
 
   @GET
   @Path("filePreview/{path: .+}")

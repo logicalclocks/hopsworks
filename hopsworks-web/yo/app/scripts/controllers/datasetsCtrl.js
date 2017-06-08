@@ -725,17 +725,17 @@ This will make all its files unavailable to other projects unless you share it e
                 getDirContents(newPathArray);
               } else if (!file.underConstruction) {
                 ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
-                        function (success) {
-                          var downloadPathArray = self.pathArray.slice(0);
-                          downloadPathArray.push(file.name);
-                          var filePath = getPath(downloadPathArray);
-                          dataSetService.checkFileExist(filePath).then(
-                                  function (success) {
-                                    dataSetService.fileDownload(filePath);
-                                            }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                                    });
-                        }
+                  function (success) {
+                    var downloadPathArray = self.pathArray.slice(0);
+                    downloadPathArray.push(file.name);
+                    var filePath = getPath(downloadPathArray);
+                    dataSetService.checkFileForDownload(filePath).then(
+                      function (success) {
+                        dataSetService.fileDownload(filePath);
+                      }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
+                  }
                 );
               } else {
                 growl.info("File under construction.", {title: 'Info', ttl: 5000});

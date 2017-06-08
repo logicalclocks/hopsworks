@@ -31,6 +31,10 @@ angular.module('hopsWorksApp')
                 checkFileExist: function (fileName) {
                   return $http.get('/api/project/' + id + '/dataset/fileExists/' + fileName);
                 },
+                
+                checkFileForDownload: function (fileName) {
+                  return $http.get('/api/project/' + id + '/dataset/checkFileForDownload/' + fileName);
+                },
                 /**
                  * Get file or folder to which the path points. 
                  * The parameter is a path relative to the project root folder.
