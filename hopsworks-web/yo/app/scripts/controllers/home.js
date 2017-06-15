@@ -359,6 +359,7 @@ angular.module('hopsWorksApp')
 
             self.EnterExampleProject = function (id) {
               $location.path('/project/' + id);
+              $location.replace();
               self.tourService.resetTours();
             };
           }]);
