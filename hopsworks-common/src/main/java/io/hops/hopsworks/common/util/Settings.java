@@ -595,6 +595,8 @@ public class Settings implements Serializable {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
   public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark-0.1.jar";
+  public static final String HOPS_TOUR_DATASET = "TestJob";
+  
   
   // Distribution-defined classpath to add to processes
   public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
