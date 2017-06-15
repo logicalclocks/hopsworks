@@ -1449,7 +1449,7 @@ public class ProjectController {
 
     Users user = userBean.getUserByEmail(username);
     try {
-      datasetController.createDataset(user, project, "TestJob",
+      datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
           "jar files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
@@ -1474,9 +1474,14 @@ public class ProjectController {
               "More than one spark-examples*.jar found in {0}.", dir.
                   getAbsolutePath());
         }
-        udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(),
-            File.separator + Settings.DIR_ROOT + File.separator + project.
-                getName() + "/TestJob/spark-examples.jar");
+        String hdfsJarPath = "/" + Settings.DIR_ROOT + "/" + project.getName() +  "/"+  Settings.HOPS_TOUR_DATASET + 
+            "/spark-examples.jar";
+        udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
+        String datsetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+        String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+        udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
+        udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() +  "/"+ 
+            Settings.HOPS_TOUR_DATASET + "/spark-examples.jar"), userHdfsName, datsetGroup);
 
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
@@ -1488,9 +1493,14 @@ public class ProjectController {
       // Get the JAR from /user/<super user>
       String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
       String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-          + "/TestJob/" + Settings.HOPS_KAFKA_TOUR_JAR;
+          + "/" + Settings.HOPS_TOUR_DATASET + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
       try {
         udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
+        String datsetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+        String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+        udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));     
+        udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datsetGroup);
+        
       } catch (IOException ex) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(),
