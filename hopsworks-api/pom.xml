@@ -19,7 +19,7 @@
   <dependencies>
     
     <dependency>
-      <groupId>org.membrane-soa</groupId>
+      <groupId>io.hops</groupId>
       <artifactId>service-proxy-core</artifactId>
       <version>4.4.3-SNAPSHOT</version>
     </dependency>
