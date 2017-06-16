@@ -70,13 +70,13 @@ angular.module('hopsWorksApp')
                 self.tourService.setActiveTour('kafka');
               }
 
-              if ($location.url() === "/project/" + self.projectId) {
+              if ($location.url().includes("/project/" + self.projectId)) {
                 self.tourService.currentStep_TourTwo = 0;
-              } else if ($location.url() === "/project/" + self.projectId + "/" + "jobs") {
+              } else if ($location.url().includes("/project/" + self.projectId + "/" + "jobs")) {
                 if (self.tourService.currentStep_TourThree === -1) {
                   self.tourService.currentStep_TourThree = 0;
                 }
-              } else if ($location.url() === "/project/" + self.projectId + "/" + "newjob") {
+              } else if ($location.url().includes("/project/" + self.projectId + "/" + "newjob")) {
                 self.tourService.currentStep_TourFour = 0;
               }
 
