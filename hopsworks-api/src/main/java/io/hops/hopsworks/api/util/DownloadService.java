@@ -26,8 +26,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DownloadService {
 
-  private static final Logger LOG
-          = Logger.getLogger(DownloadService.class.getName());
+  private static final Logger LOG = Logger.getLogger(DownloadService.class.getName());
 
   @EJB
   private DistributedFsService dfs;
@@ -48,7 +47,7 @@ public class DownloadService {
 
   @GET
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException, AccessControlException {
     FSDataInputStream stream;
     DistributedFileSystemOps udfso = null;

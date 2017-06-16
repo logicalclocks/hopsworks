@@ -440,9 +440,12 @@ public class PeopleAdministration implements Serializable {
   }
 
   public void activateUser(Users user1) {
-    if (user1 == null || this.role == null || this.role.isEmpty()) {
-      MessagesController.addSecurityErrorMessage("No role set.");
+    if (user1 == null) {
+      MessagesController.addSecurityErrorMessage("User is null.");
       return;
+    }
+    if (this.role == null || this.role.isEmpty()) {
+      this.role = "HOPS_USER";
     }
 
     try {
@@ -494,6 +497,7 @@ public class PeopleAdministration implements Serializable {
               UserAuditActions.FAILED.name(), "", user1);
       return;
     }
+
     try {
       //send confirmation email
       emailBean.sendEmail(user1.getEmail(), RecipientType.TO,
@@ -507,6 +511,7 @@ public class PeopleAdministration implements Serializable {
               "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
                 e});
     }
+
     requests.remove(user1);
   }
 
@@ -547,6 +552,8 @@ public class PeopleAdministration implements Serializable {
     Userlogins login = auditManager.getLastUserLogin(user1.getUid());
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser_logins", login);
+
+    MessagesController.addInfoMessage("User successfully modified for " + user1.getEmail());
 
     return "admin_profile";
   }

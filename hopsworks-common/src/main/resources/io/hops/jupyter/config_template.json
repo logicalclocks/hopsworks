@@ -60,7 +60,9 @@
             "spark.yarn.appMasterEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
             "spark.yarn.appMasterEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
             "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
-           "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%"
+           "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
+           "spark.pyspark.python" : "%%pyspark_bin%%",
+           "spark.pyspark.driver.python" : "%%pyspark_bin%%"           
    }
   },
 

@@ -323,7 +323,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         $scope.creating[tourName] = false;
                         self.tourService.setActiveTour(tourName);
-                        growl.success("Created Example Project", {title: 'Success', ttl: 10000});
+                        growl.success("Created Example Project", {title: 'Success', ttl: 5000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
                         // To make sure the new project is refreshed
@@ -344,14 +344,14 @@ angular.module('hopsWorksApp')
               self.working[projectId] = true;
               ProjectService.delete({id: projectId}).$promise.then(
                       function (success) {
-                        growl.success(success.successMessage, {title: 'Success', ttl: 15000});
+                        growl.success(success.successMessage, {title: 'Success', ttl: 5000});
                         updateUIAfterChange(false);
                         if (self.tourService.currentStep_TourOne > -1) {
                           self.tourService.resetTours();
                         }
                         self.working[projectId] = false;
                       },function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                         self.working[projectId] = false;
                       }
               );
@@ -359,6 +359,7 @@ angular.module('hopsWorksApp')
 
             self.EnterExampleProject = function (id) {
               $location.path('/project/' + id);
+              $location.replace();
               self.tourService.resetTours();
             };
           }]);

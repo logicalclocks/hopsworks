@@ -21,11 +21,13 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 
 @Stateless
@@ -50,6 +52,8 @@ public class HdfsUsersController {
   private DatasetFacade datasetFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private JupyterConfigFactory jupyterConfigFactory;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -251,6 +255,14 @@ public class HdfsUsersController {
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(userName);
     dfsService.removeDfsOps(userName);
     removeHdfsUser(hdfsUser);
+        
+    try {
+      // stop any jupyter notebooks running for this user, if any
+      jupyterConfigFactory.stopServerJupyterUser(userName);
+    } catch (AppException ex) {
+      Logger.getLogger(HdfsUsersController.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
   }
 
   /**

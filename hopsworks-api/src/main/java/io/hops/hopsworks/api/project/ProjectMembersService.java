@@ -175,7 +175,7 @@ public class ProjectMembersService {
               ResponseMessages.PROJECT_OWNER_NOT_ALLOWED);
     }
     try {
-      projectController.deleteMemberFromTeam(project, owner, email);
+      projectController.removeMemberFromTeam(project, owner, email);      
     } catch (IOException ex) {
       //FIXME: take an action?
       logger.log(Level.WARNING,

@@ -152,7 +152,8 @@ public class JupyterProject implements Serializable {
           max = 3000)
   @Column(name = "pyFiles")
   private String pyFiles;
-
+  
+  
   public JupyterProject() {
   }
 

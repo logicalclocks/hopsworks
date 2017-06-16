@@ -111,8 +111,8 @@ public class UsersController {
     a.setAddress1("-");
     a.setAddress2("-");
     a.setAddress3("-");
-    a.setCity("-");
-    a.setCountry("-");
+    a.setCity("Stockholm");
+    a.setCountry("SE");
     a.setPostalcode("-");
     a.setState("-");
     user.setAddress(a);

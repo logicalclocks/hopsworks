@@ -1,0 +1,84 @@
+<spring:beans xmlns="http://membrane-soa.org/proxies/1/"
+	xmlns:spring="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:web="http://membrane-soa.org/war/1/"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+					    http://membrane-soa.org/proxies/1/ http://membrane-soa.org/schemas/proxies-1.xsd
+					    http://membrane-soa.org/war/1/ http://membrane-soa.org/schemas/war-1.xsd">
+
+  
+  
+	<limitedMemoryExchangeStore id="memoryExchangeStore" />
+
+<!--	<router hotDeploy="false" exchangeStore="memoryExchangeStore">
+
+		<web:servletTransport id="transport">
+			<headerFilter>
+				<exclude>Connection</exclude>
+				<exclude>Content-Encoding</exclude>
+				<exclude>Content-Length</exclude>
+				<exclude>Content-MD5</exclude>
+				<exclude>Server</exclude>
+				<exclude>Transfer-Encoding</exclude>
+				<exclude>X-Powered-By</exclude>
+			</headerFilter>
+			<ruleMatching />
+			<exchangeStore name="memoryExchangeStore" />
+			<dispatching />
+			<reverseProxying />
+			<userFeature />
+			<httpClient />
+		</web:servletTransport>
+
+  </router>  -->
+  <limitedMemoryExchangeStore id="memoryExchangeStore"/>
+  
+  <!--hotDeploy="false" exchangeStore="memoryExchangeStore"-->
+  <router>
+    <!--<web:servletTransport id="transport">-->
+    <!--</web:servletTransport>-->
+    
+    <!-- Sets up the Administration Web Interface below "/admin". -->
+    <serviceProxy>
+<!--    <servletTransport>
+      <headerFilter>
+        <exclude>Connection</exclude>
+        <exclude>Content-Encoding</exclude>
+        <exclude>Content-Length</exclude>
+        <exclude>Content-MD5</exclude>
+        <exclude>Server</exclude>
+        <exclude>Transfer-Encoding</exclude>
+        <exclude>X-Powered-By</exclude>
+      </headerFilter>
+      <ruleMatching />
+      <exchangeStore name="memoryExchangeStore" />
+      <dispatching />
+      <reverseProxying />
+      <userFeature />
+      <httpClient />
+    </servletTransport>-->
+<!--      <path isRegExp="true">^/admin.*</path>
+      <basicAuthentication>
+        <user name="admin" password="membrane" />
+      </basicAuthentication>	
+      <adminConsole />-->
+      <target host="localhost" port="8888" />
+    </serviceProxy>
+	      	
+    <!-- Forwards all other requests to www.predic8.com. --> 
+    <!--    <serviceProxy>
+      <target host="www.predic8.com" />
+    </serviceProxy>-->
+    
+    <!--			<groovy>
+      if(exc.getRequest() != null)
+        exc.getRequest().getHeader().removeFields("Sec-WebSocket-Extensions");
+      if(exc.getResponse() != null)
+        exc.getResponse().getHeader().removeFields("Sec-WebSocket-Extensions");
+    </groovy>-->
+
+
+    <!--<target port="8888" host="localhost"/>-->
+  </router>
+
+</spring:beans>

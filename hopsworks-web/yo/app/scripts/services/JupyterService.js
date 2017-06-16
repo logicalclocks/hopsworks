@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
               getAll: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter');
               },
-              get: function (projectId) {
+              running: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter/running' );
               },
               start: function (projectId, sparkConfig) {

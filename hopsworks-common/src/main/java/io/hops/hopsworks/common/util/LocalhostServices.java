@@ -91,18 +91,20 @@ public class LocalhostServices {
     }
     return false;
   }
-  
+
   //Make this asynchronous and call back UserCertsFacade.putUSer()
   public static String createUserCertificates(String intermediateCaDir,
-          String projectName, String userName) throws IOException {
+          String projectName, String userName, String countryCode, String city,
+          String org, String email, String orcid) throws IOException {
 
     return createServiceCertificates(intermediateCaDir, projectName + "__"
-            + userName);
+            + userName, countryCode, city, org, email, orcid);
   }
 
   //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createServiceCertificates(String intermediateCaDir,
-          String service) throws IOException {
+  private static String createServiceCertificates(String intermediateCaDir,
+          String service, String countryCode, String city, String org,
+          String email, String orcid) throws IOException {
     String sslCertFile = intermediateCaDir + "/certs/" + service + ".cert.pem";
     String sslKeyFile = intermediateCaDir + "/private/" + service + ".key.pem";
 
@@ -115,10 +117,14 @@ public class LocalhostServices {
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
     // TODO: Hopswork-chef needs to put script in glassfish directory!
     List<String> commands = new ArrayList<>();
-    commands.add("/bin/bash");
-    commands.add("-c");
-    commands.add("sudo " + intermediateCaDir + "/"
-            + Settings.SSL_CREATE_CERT_SCRIPTNAME + " " + service);
+    commands.add("/usr/bin/sudo");
+    commands.add(intermediateCaDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME );
+    commands.add(service);
+    commands.add(countryCode);
+    commands.add(city);
+    commands.add(org);
+    commands.add(email);
+    commands.add(orcid);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
@@ -146,7 +152,8 @@ public class LocalhostServices {
     commands.add("/bin/bash");
     commands.add("-c");
     commands.add("sudo " + intermediateCaDir + "/"
-            + Settings.SSL_DELETE_CERT_SCRIPTNAME + " " + projectSpecificUsername);
+            + Settings.SSL_DELETE_CERT_SCRIPTNAME + " "
+            + projectSpecificUsername);
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
