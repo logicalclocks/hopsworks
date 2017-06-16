@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +48,8 @@ public class JupyterService {
 
   private final static Logger LOGGER = Logger.getLogger(JupyterService.class.
           getName());
+  private static final Logger logger = Logger.getLogger(
+          JupyterService.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -64,6 +67,8 @@ public class JupyterService {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private Settings settings;
 
   private Integer projectId;
   private Project project;
@@ -112,7 +117,7 @@ public class JupyterService {
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) {};
+            = new GenericEntity<List<JupyterProject>>(listServers) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
   }
@@ -128,11 +133,24 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    JupyterProject jp = jupyterFacade.findByUser(getHdfsUser(sc));
+    String hdfsUser = getHdfsUser(sc);
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
       throw new AppException(
               Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find any Jupyter notebook server for this project.");
+    }
+    if (jp != null) {
+      // Check to make sure the jupyter notebook server is running
+      boolean running = jupyterConfigFactory.pingServerJupyterUser(jp.getPid());
+      // if the notebook is not running but we have a database entry for it,
+      // we should remove the DB entry (and restart the notebook server).
+      if (!running) {
+        jupyterFacade.removeNotebookServer(hdfsUser);
+        throw new AppException(
+                Response.Status.NOT_FOUND.getStatusCode(),
+                "Found Jupyter notebook server for you, but it wasn't running.");
+      }
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -166,6 +184,7 @@ public class JupyterService {
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+
     if (jp == null) {
       HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
 
@@ -215,13 +234,13 @@ public class JupyterService {
   }
 
   @GET
-  @Path("/stopAdmin")
+  @Path("/stopAll")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response stopAdmin(@PathParam("hdfsUsername") String hdfsUsername,
-          @Context SecurityContext sc,
+  public Response stopAll(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    stop(hdfsUsername);
+
+    jupyterConfigFactory.stopProject(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -252,23 +271,22 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    // The server may have been restarted and the caches are empty.
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     if (jp == null) {
-      jupyterConfigFactory.cleanup(hdfsUser);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "No Jupyter Notebook server to stop");
+              "Could not find Jupyter entry for user: " + hdfsUser);
     }
     String projectPath = jupyterConfigFactory.getJupyterHome(hdfsUser, jp);
-    jupyterConfigFactory.stopServerJupyterUser(projectPath, jp.getPid(), jp.
+
+    // stop the server, remove the user in this project's local dirs
+    jupyterConfigFactory.killServerJupyterUser(projectPath, jp.getPid(), jp.
             getPort());
+    // remove the reference to th e server in the DB.
     jupyterFacade.removeNotebookServer(hdfsUser);
   }
 
-  
-  
   private String getHdfsUser(SecurityContext sc) throws AppException {
     if (projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

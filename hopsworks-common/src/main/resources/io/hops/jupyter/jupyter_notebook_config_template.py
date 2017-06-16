@@ -13,21 +13,25 @@ c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManag
 #c.NotebookApp.password = u'%%hashed_password%%'
 
 
-c.NotebookApp.ip = '%%hopsworks_ip%%'
+#c.NotebookApp.ip = '%%hopsworks_ip%%'
+c.NotebookApp.ip = '127.0.0.1'
 c.NotebookApp.open_browser = False
 
 c.NotebookApp.port_retries = 0
 c.NotebookApp.port = %%port%%
 
+c.NotebookApp.base_url='/hopsworks-api/jupyter/%%port%%/'
 
 #
 # Disable the default Python2 kernel
 # https://github.com/jupyter/jupyter_client/issues/144
 #
+#c.KernelSpecManager.whitelist = set(['Python 2', 'ir'])
 #c.KernelSpecManager.whitelist = set(['PySpark', 'ir'])
 #c.KernelSpecManager.whitelist = set(['PySpark3', 'ir'])
 #c.KernelSpecManager.whitelist = set(['Spark', 'ir'])
 #c.KernelSpecManager.whitelist = set(['SparkR', 'ir'])
+#c.KernelSpecManager.whitelist = set(['pythonwithpixiedustspark21', 'ir'])
 #c.MultiKernelManager.default_kernel_name='PySpark'
 
 c.NotebookApp.allow_origin = '*'
@@ -35,5 +39,6 @@ c.NotebookApp.allow_origin = '*'
 c.NotebookApp.tornado_settings = {
     'headers': {
         'Content-Security-Policy': "child-src * "
+#'Content-Security-Policy': "frame-ancestors 'https://%%hopsworks_endpoint%%' 'self' "
     }
 }

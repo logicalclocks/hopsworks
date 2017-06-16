@@ -17,6 +17,47 @@
   <name>hopsworks-api</name>
     
   <dependencies>
+    
+    <dependency>
+      <groupId>org.membrane-soa</groupId>
+      <artifactId>service-proxy-core</artifactId>
+      <version>4.4.3-SNAPSHOT</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <version>2.7.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+    </dependency>
+<!--    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+      <version>4.3.8.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>4.3.8.RELEASE</version>
+    </dependency>-->
+    
+    
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-webcontent2-content-rewriter</artifactId>
+      <version>2.1-SNAPSHOT</version>
+    </dependency>    
+    
+    <dependency>
+      <groupId>org.apache.portals.applications</groupId>
+      <artifactId>apa-webcontent2-reverse-proxy</artifactId>
+      <version>2.1-SNAPSHOT</version>
+    </dependency>    
+    
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
@@ -120,6 +161,19 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+<!--          <annotationProcessors>
+            <annotationProcessor>com.predic8.membrane.annot.SpringConfigurationXSDGeneratingAnnotationProcessor</annotationProcessor>
+          </annotationProcessors>-->
+        </configuration>
+      </plugin>
+      
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
@@ -128,4 +182,5 @@
       </plugin>
     </plugins>
   </build>
+  
 </project>

@@ -10,12 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
 import java.util.Set;
@@ -101,7 +97,7 @@ public class JupyterConfig {
     logDirPath = projectUserDirPath + File.separator + "logs";
     libDirPath = projectUserDirPath + File.separator + "lib";
     try {
-      newDir = createJupyterDirs();//creates the necessary folders for the project in /srv/zeppelin
+      newDir = createJupyterDirs();
       createConfigFiles(nameNodeEndpoint, port);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
@@ -303,41 +299,17 @@ public class JupyterConfig {
   //returns true if the project dir was created 
   private boolean createJupyterDirs() throws IOException {
     File projectDir = new File(projectPath);
-    if (projectDir.exists()) {       // delete all existing project dirs
-      // http://stackoverflow.com/questions/779519/delete-directories-recursively-in-java/27917071#27917071
-      Path directory = Paths.get(projectPath);
-      try {
-        Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-          @Override
-          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                  throws IOException {
-            Files.delete(file);
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                  throws IOException {
-            Files.delete(dir);
-            return FileVisitResult.CONTINUE;
-          }
-        });
-      } catch (IOException ex) {
-        Logger.getLogger(JupyterConfig.class.getName()).log(Level.SEVERE, null,
-                ex);
-      }
-    }
-    boolean newProjectDir = projectDir.mkdirs();
+    projectDir.mkdirs();
     File baseDir = new File(projectUserDirPath);
     baseDir.mkdirs();
     // Set owner persmissions
     Set<PosixFilePermission> perms = new HashSet<>();
     //add owners permission
-//    perms.add(PosixFilePermission.OWNER_READ);
+    perms.add(PosixFilePermission.OWNER_READ);
     perms.add(PosixFilePermission.OWNER_WRITE);
     perms.add(PosixFilePermission.OWNER_EXECUTE);
     //add group permissions
-//        perms.add(PosixFilePermission.GROUP_READ);
+    perms.add(PosixFilePermission.GROUP_READ);
     perms.add(PosixFilePermission.GROUP_WRITE);
     perms.add(PosixFilePermission.GROUP_EXECUTE);
     //add others permissions
@@ -345,6 +317,7 @@ public class JupyterConfig {
 //        perms.add(PosixFilePermission.OTHERS_WRITE);
 //        perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
+    Files.setPosixFilePermissions(Paths.get(projectUserDirPath), perms);
     Files.setPosixFilePermissions(Paths.get(projectPath), perms);
 
     new File(confDirPath + "/custom").mkdirs();
@@ -352,7 +325,7 @@ public class JupyterConfig {
     new File(runDirPath).mkdirs();
 //    new File(binDirPath).mkdirs();
     new File(logDirPath).mkdirs();
-    return newProjectDir;
+    return true;
   }
 
   // returns true if one of the conf files were created anew 

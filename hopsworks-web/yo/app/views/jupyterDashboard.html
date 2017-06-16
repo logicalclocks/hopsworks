@@ -39,17 +39,22 @@
                     type="button" class="btn btn-danger btn-sm" >
               <span class="glyphicon glyphicon-off" ></span>
             </button>  
-<!--            <button uib-tooltip="Configure Jupyter Notebook Kernel" ng-click="jupyterCtrl.reconfigure()" 
-                    type="button" class="btn btn-default btn-sm" >
-              <span class="glyphicon glyphicon-cog" ></span>
-            </button>  -->
-          </div>
-          
-          <div ng-if="jupyterCtrl.ui === ''">The Jupyter Notebook is not available. 
-            <!--<a ng-click="jupyterCtrl.restart()">Restart Jupyter.</a>-->
+            <!--            <button uib-tooltip="Configure Jupyter Notebook Kernel" ng-click="jupyterCtrl.reconfigure()" 
+                                type="button" class="btn btn-default btn-sm" >
+                          <span class="glyphicon glyphicon-cog" ></span>
+                        </button>  -->
           </div>
 
-
+          <div ng-if="jupyterCtrl.ui === '' && jupyterCtrl.toggleValue == true">
+            <div class="row">The Jupyter Notebook is not available.</div> 
+            <div class="col-md-1 ">
+              <a ng-click="jupyterCtrl.goBack()">Go Back.</a>
+<!--              <button uib-tooltip="Leave Jupyter Notebook Server" ng-click="jupyterCtrl.goBack()" 
+                      type="button" class="btn btn-success btn-small" >
+                <span class="glyphicon glyphicon-on" ></span>Back
+              </button>  -->
+            </div>
+          </div>
 
           <!--          <div class="col-sm-3 col-md-3 col-lg-3 ">
           

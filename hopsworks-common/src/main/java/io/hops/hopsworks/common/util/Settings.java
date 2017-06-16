@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
@@ -17,6 +18,9 @@ import javax.persistence.PersistenceContext;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings implements Serializable {
 
+  private static final Logger logger = Logger.getLogger(Settings.class.
+          getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -27,12 +31,13 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_JAVA_HOME = "java_home";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
+  private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
-      = "spark_history_server_ip";
+          = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
@@ -41,9 +46,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
-      = "zeppelin_projects_dir";
+          = "zeppelin_projects_dir";
   private static final String VARIABLE_ZEPPELIN_SYNC_INTERVAL
-      = "zeppelin_sync_interval";
+          = "zeppelin_sync_interval";
   private static final String VARIABLE_ZEPPELIN_USER = "zeppelin_user";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
@@ -56,7 +61,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
-      = "max_num_proj_per_user";
+          = "max_num_proj_per_user";
   private static final String VARIABLE_ADAM_USER = "adam_user";
   private static final String VARIABLE_ADAM_DIR = "adam_dir";
   private static final String VARIABLE_TWOFACTOR_AUTH = "twofactor_auth";
@@ -72,22 +77,23 @@ public class Settings implements Serializable {
   private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
-      = "file_preview_image_size";
+          = "file_preview_image_size";
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE
-      = "file_preview_txt_size";
+          = "file_preview_txt_size";
   private static final String VARIABLE_GVOD_REST_ENDPOINT = "gvod_rest_endpoint";
   private static final String VARIABLE_PUBLIC_SEARCH_ENDPOINT
-      = "public_search_endpoint";
-  private static final String VARIABLE_HOPSWORKS_REST_ENDPOINT = "hopsworks_endpoint";
+          = "public_search_endpoint";
+  private static final String VARIABLE_HOPSWORKS_REST_ENDPOINT
+          = "hopsworks_endpoint";
   private static final String VARIABLE_REST_PORT = "rest_port";
 
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS
-      = "kafka_num_partitions";
+          = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD
-      = "hopsworks_master_password";
+          = "hopsworks_master_password";
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
@@ -106,7 +112,7 @@ public class Settings implements Serializable {
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
-        isEmpty() == false)) {
+            isEmpty() == false)) {
       String user = userName.getValue();
       if (user != null && user.isEmpty() == false) {
         return user;
@@ -129,7 +135,7 @@ public class Settings implements Serializable {
   private String setDirVar(String varName, String defaultValue) {
     Variables dirName = findById(varName);
     if (dirName != null && dirName.getValue() != null && (new File(dirName.
-        getValue()).isDirectory())) {
+            getValue()).isDirectory())) {
       String val = dirName.getValue();
       if (val != null && val.isEmpty() == false) {
         return val;
@@ -161,25 +167,36 @@ public class Settings implements Serializable {
     return defaultValue;
   }
 
-  private int setIntVar(String varName, int defaultValue) {
+  private Integer setIntVar(String varName, Integer defaultValue) {
     Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      String val = var.getValue();
-      if (val != null && val.isEmpty() == false) {
-        return Integer.parseInt(val);
+    try {
+      if (var != null && var.getValue() != null) {
+        String val = var.getValue();
+        if (val != null && val.isEmpty() == false) {
+          return Integer.parseInt(val);
+        }
       }
+    } catch (NumberFormatException ex) {
+      logger.info("Error - not an integer! " + varName
+              + " should be an integer. Value was " + defaultValue);
     }
     return defaultValue;
   }
 
-  private long setLongVar(String varName, long defaultValue) {
+  private long setLongVar(String varName, Long defaultValue) {
     Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      String val = var.getValue();
-      if (val != null && val.isEmpty() == false) {
-        return Long.parseLong(val);
+    try {
+      if (var != null && var.getValue() != null) {
+        String val = var.getValue();
+        if (val != null && val.isEmpty() == false) {
+          return Long.parseLong(val);
+        }
       }
+    } catch (NumberFormatException ex) {
+      logger.info("Error - not a long! " + varName
+              + " should be an integer. Value was " + defaultValue);
     }
+
     return defaultValue;
   }
 
@@ -198,7 +215,7 @@ public class Settings implements Serializable {
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
       ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
-          ZEPPELIN_PROJECTS_DIR);
+              ZEPPELIN_PROJECTS_DIR);
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
@@ -207,18 +224,20 @@ public class Settings implements Serializable {
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
-          HOPSWORKS_INSTALL_DIR);
+              HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
-      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
+      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT,
+              ELASTIC_REST_PORT);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
+      HOPSWORKS_PORT = setIntVar(VARIABLE_HOPSWORKS_PORT, HOPSWORKS_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP,
-          SPARK_HISTORY_SERVER_IP);
+              SPARK_HISTORY_SERVER_IP);
       ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
@@ -230,31 +249,31 @@ public class Settings implements Serializable {
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS,
-          KAFKA_DEFAULT_NUM_PARTITIONS);
+              KAFKA_DEFAULT_NUM_PARTITIONS);
       KAFKA_DEFAULT_NUM_REPLICAS = setDirVar(VARIABLE_KAFKA_NUM_REPLICAS,
-          KAFKA_DEFAULT_NUM_REPLICAS);
+              KAFKA_DEFAULT_NUM_REPLICAS);
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA,
-          YARN_DEFAULT_QUOTA);
+              YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
-          HDFS_DEFAULT_QUOTA_MBs);
+              HDFS_DEFAULT_QUOTA_MBs);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER,
-          MAX_NUM_PROJ_PER_USER);
+              MAX_NUM_PROJ_PER_USER);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(
-          VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
-          HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
+              VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
+              HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       GLASSFISH_CERT_GENERATED = setVar(VARIABLE_GLASSFISH_CERT_CENERATED,
-          GLASSFISH_CERT_GENERATED);
+              GLASSFISH_CERT_GENERATED);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE,
-          10000000);
+              10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
       GVOD_REST_ENDPOINT = setStrVar(VARIABLE_GVOD_REST_ENDPOINT,
-          GVOD_REST_ENDPOINT);
+              GVOD_REST_ENDPOINT);
       PUBLIC_SEARCH_ENDPOINT = setStrVar(VARIABLE_PUBLIC_SEARCH_ENDPOINT,
-          PUBLIC_SEARCH_ENDPOINT);
+              PUBLIC_SEARCH_ENDPOINT);
       HOPSWORKS_REST_ENDPOINT = setStrVar(VARIABLE_HOPSWORKS_REST_ENDPOINT,
-          HOPSWORKS_REST_ENDPOINT);
+              HOPSWORKS_REST_ENDPOINT);
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
@@ -297,37 +316,39 @@ public class Settings implements Serializable {
   public static final String HOPS_VERSION = "2.4.0";
 
   public static final String SPARK_HISTORY_SERVER_ENV
-      = "spark.yarn.historyServer.address";
+          = "spark.yarn.historyServer.address";
   public static final String SPARK_NUMBER_EXECUTORS_ENV
-      = "spark.executor.instances";
+          = "spark.executor.instances";
   public static final String SPARK_DYNAMIC_ALLOC_ENV
-      = "spark.dynamicAllocation.enabled";
+          = "spark.dynamicAllocation.enabled";
   public static final String SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV
-      = "spark.dynamicAllocation.minExecutors";
+          = "spark.dynamicAllocation.minExecutors";
   public static final String SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV
-      = "spark.dynamicAllocation.maxExecutors";
+          = "spark.dynamicAllocation.maxExecutors";
   public static final String SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV
-      = "spark.dynamicAllocation.initialExecutors";
+          = "spark.dynamicAllocation.initialExecutors";
   public static final String SPARK_SHUFFLE_SERVICE
-      = "spark.shuffle.service.enabled";
+          = "spark.shuffle.service.enabled";
   public static final String SPARK_DRIVER_MEMORY_ENV = "spark.driver.memory";
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH
-      = "spark.executor.extraClassPath";
+          = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV
-      = "spark.yarn.stagingDir";
+          = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
   public static final String SPARK_METRICS_ENV = "spark.metrics.conf";
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
-  public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_EXECUTORENV_PYTHONPATH
+          = "spark.executorEnv.PYTHONPATH";
+  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH
+          = "spark.executorEnv.LD_LIBRARY_PATH";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
-  
+
   //Spark log4j and metrics properties
   public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
   public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
@@ -336,20 +357,22 @@ public class Settings implements Serializable {
   public static final String SPARK_METRICS_PROPERTIES = "metrics.properties";
 
   public static final String SPARK_CACHE_FILENAMES
-      = "spark.yarn.cache.filenames";
+          = "spark.yarn.cache.filenames";
   public static final String SPARK_CACHE_SIZES = "spark.yarn.cache.sizes";
   public static final String SPARK_CACHE_TIMESTAMPS
-      = "spark.yarn.cache.timestamps";
+          = "spark.yarn.cache.timestamps";
   public static final String SPARK_CACHE_VISIBILITIES
-      = "spark.yarn.cache.visibilities";
+          = "spark.yarn.cache.visibilities";
   public static final String SPARK_CACHE_TYPES = "spark.yarn.cache.types";
   //PYSPARK constants
-  public static final String SPARK_PY_MAINCLASS = "org.apache.spark.deploy.PythonRunner";
+  public static final String SPARK_PY_MAINCLASS
+          = "org.apache.spark.deploy.PythonRunner";
   public static final String PYSPARK_ZIP = "pyspark.zip";
   public static final String PYSPARK_PY4J = "py4j-0.10.4-src.zip";
   public static final String TFSPARK_PYTHON_ZIP = "Python.zip";
   public static final String TFSPARK_PYTHON_NAME = "Python";
   public static final String TFSPARK_ZIP = "tfspark.zip";
+
   public synchronized String getSparkDir() {
     checkCache();
     return SPARK_DIR;
@@ -419,7 +442,7 @@ public class Settings implements Serializable {
     checkCache();
     return HADOOP_DIR;
   }
-  
+
   private String HOPSWORKS_IP = "127.0.0.1";
 
   public synchronized String getHopsworksIp() {
@@ -427,7 +450,12 @@ public class Settings implements Serializable {
     return HOPSWORKS_IP;
   }
 
+  private Integer HOPSWORKS_PORT = 8080;
 
+  public synchronized Integer getHopsworksPort() {
+    checkCache();
+    return HOPSWORKS_PORT;
+  }
 
   private static String CERTS_DIR = "/srv/hops/certs-dir";
 
@@ -452,7 +480,7 @@ public class Settings implements Serializable {
     checkCache();
     return getCertsDir() + Settings.INTERMEDIATE_CA_DIR;
   }
-  
+
   public synchronized String getCaDir() {
     checkCache();
     return getCertsDir();
@@ -595,13 +623,12 @@ public class Settings implements Serializable {
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
   public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
   public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark-0.1.jar";
+
   public static final String HOPS_TOUR_DATASET = "TestJob";
-  
-  
   // Distribution-defined classpath to add to processes
   public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN
-      = "org.apache.spark.deploy.yarn.ApplicationMaster";
+          = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
   public static final int SPARK_MIN_EXECS = 1;
@@ -616,7 +643,7 @@ public class Settings implements Serializable {
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
   public static final String FLINK_LOCRSC_APP_JAR = "app.jar";
   public static final String FLINK_AM_MAIN
-      = "org.apache.flink.yarn.ApplicationMaster";
+          = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
   public synchronized String getLocalFlinkJarPath() {
@@ -662,7 +689,7 @@ public class Settings implements Serializable {
   public static String getHdfsSparkJarPath(String sparkUser) {
     return hdfsSparkJarPath(sparkUser);
   }
-  
+
   public static String getPySparkLibsPath(String sparkUser) {
     return "hdfs:///user/" + sparkUser;
   }
@@ -708,17 +735,20 @@ public class Settings implements Serializable {
   public static String getSparkDefaultClasspath(String sparkDir) {
     return sparkDefaultClasspath(sparkDir);
   }
-  
+
   /**
-   * Constructs the path to the marker file of a streaming job that uses HopsUtil.
+   * Constructs the path to the marker file of a streaming job that uses
+   * HopsUtil.
+   *
    * @param job
    * @param appId
-   * @return 
+   * @return
    */
   public static String getJobMarkerFile(JobDescription job, String appId) {
-    return getHdfsRootPath(job.getProject().getName()) + "Resources/.marker-" + job.getJobType().getName().toLowerCase()
-        + "-" + job.getName()
-        + "-" + appId;
+    return getHdfsRootPath(job.getProject().getName()) + "Resources/.marker-"
+            + job.getJobType().getName().toLowerCase()
+            + "-" + job.getName()
+            + "-" + appId;
   }
 
   public static String getHdfsRootPath(String projectname) {
@@ -767,44 +797,45 @@ public class Settings implements Serializable {
     checkCache();
     return ELASTIC_PORT;
   }
-  
+
   private int ELASTIC_REST_PORT = 9200;
-   
+
   public synchronized int getElasticRESTPort() {
     checkCache();
     return ELASTIC_REST_PORT;
   }
-  
+
   public synchronized String getElasticEndpoint() {
     return getElasticIp() + ":" + getElasticPort();
   }
-  
+
   public synchronized String getElasticRESTEndpoint() {
     return getElasticIp() + ":" + getElasticRESTPort();
   }
-  
+
   private static int JOB_LOGS_EXPIRATION = 604800;
-  
+
   /**
    * TTL for job logs in elasticsearch, in seconds.
-   * @return 
+   *
+   * @return
    */
-  public static int getJobLogsExpiration(){
+  public static int getJobLogsExpiration() {
     return JOB_LOGS_EXPIRATION;
   }
-  
+
   private static long JOB_LOGS_DISPLAY_SIZE = 1000000;
 
   public static long getJobLogsDisplaySize() {
     return JOB_LOGS_DISPLAY_SIZE;
   }
-  
+
   private static final String JOB_LOGS_ID_FIELD = "jobid";
 
   public static String getJobLogsIdField() {
     return JOB_LOGS_ID_FIELD;
   }
-  
+
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
@@ -896,10 +927,6 @@ public class Settings implements Serializable {
     return ZEPPELIN_SYNC_INTERVAL;
   }
 
-  
-  
-  public static final int JUPYTER_PORT = 8888;
-  
   // Jupyter
   private String JUPYTER_DIR = "/srv/hops/jupyter";
 
@@ -937,14 +964,16 @@ public class Settings implements Serializable {
     checkCache();
     return ANACONDA_DIR;
   }
-  
+
   /**
    * Constructs the path to the project environment in Anaconda
+   *
    * @param projectName
-   * @return 
+   * @return
    */
-  public String getAnacondaProjectDir(String projectName){
-    return getAnacondaDir() + File.separator + "envs" + File.separator + projectName;
+  public String getAnacondaProjectDir(String projectName) {
+    return getAnacondaDir() + File.separator + "envs" + File.separator
+            + projectName;
   }
 
   private String ANACONDA_ENV = "kagent";
@@ -992,7 +1021,7 @@ public class Settings implements Serializable {
   }
 
   private String HOPSWORKS_REST_ENDPOINT = "http://192.168.56.101:8080";
-  
+
   /**
    * Generates the Endpoint for kafka.
    *
@@ -1000,7 +1029,7 @@ public class Settings implements Serializable {
    */
   public synchronized String getRestEndpoint() {
     checkCache();
-    return "http://"+HOPSWORKS_REST_ENDPOINT;
+    return "http://" + HOPSWORKS_REST_ENDPOINT;
   }
 
   private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
@@ -1061,7 +1090,7 @@ public class Settings implements Serializable {
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
-      = "deleteprojectcerts.sh";
+          = "deleteprojectcerts.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
@@ -1079,9 +1108,9 @@ public class Settings implements Serializable {
 
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS
-      = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
+          = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
-      = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
+          = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
 
@@ -1098,39 +1127,40 @@ public class Settings implements Serializable {
   public static final String HOPSUTIL_JOBTYPE_ENV_VAR = "hopsworks.job.type";
   public static final String HOPSUTIL_APPID_ENV_VAR = "hopsworks.job.appid";
   public static final String KAFKA_BROKERADDR_ENV_VAR
-      = "hopsworks.kafka.brokeraddress";
+          = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR
-      = "hopsworks.kafka.job.topics";
+          = "hopsworks.kafka.job.topics";
   public static final String KEYSTORE_PASSWORD_ENV_VAR
-      = "hopsworks.keystore.password";
+          = "hopsworks.keystore.password";
   public static final String TRUSTSTORE_PASSWORD_ENV_VAR
-      = "hopsworks.truststore.password";
+          = "hopsworks.truststore.password";
   public static final String KAFKA_CONSUMER_GROUPS
           = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_ENV_VAR
           = "hopsworks.restendpoint";
-  
-  public static final String ELASTIC_ENDPOINT_ENV_VAR = "hopsworks.elastic.endpoint";
+
+  public static final String ELASTIC_ENDPOINT_ENV_VAR
+          = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   public static int FILE_PREVIEW_TXT_SIZE = 100;
   public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024 * 128;
   public static int FILE_PREVIEW_TXT_SIZE_BYTES_README = 1024 * 512;
   public static String README_TEMPLATE = "*This is an auto-generated README.md"
-      + " file for your Dataset!*\n"
-      + "To replace it, go into your DataSet and edit the README.md file.\n"
-      + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
-      + "## %s";
+          + " file for your Dataset!*\n"
+          + "To replace it, go into your DataSet and edit the README.md file.\n"
+          + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
+          + "## %s";
 
   public String getHopsworksTmpCertDir() {
     return getHopsworksDomainDir() + File.separator + "kafkacerts";
   }
-  
+
   public String getHdfsTmpCertDir() {
     return "/user/" + getHdfsSuperUser() + "/" + "kafkacerts";
   }
-  
+
   public String getFlinkKafkaCertDir() {
     return getHopsworksDomainDir() + File.separator + "config";
   }
@@ -1186,14 +1216,13 @@ public class Settings implements Serializable {
     return INFLUXDB_PW;
   }
 
-  
   //Project creation: default datasets
   public static enum DefaultDataset {
 
     LOGS("Logs",
-        "Contains the logs for jobs that have been run through the Hopsworks platform."),
+            "Contains the logs for jobs that have been run through the Hopsworks platform."),
     RESOURCES("Resources",
-        "Contains resources used by jobs, for example, jar files."),
+            "Contains resources used by jobs, for example, jar files."),
     ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks.");
     private final String name;
@@ -1213,22 +1242,21 @@ public class Settings implements Serializable {
     }
 
   }
-  
+
   public int VAGRANT_ENABLED = 0;
+
   public synchronized boolean getVagrantEnabled() {
     checkCache();
     return VAGRANT_ENABLED == 1;
   }
-    
-  
-  
+
   public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
-  
+
   public synchronized String getResourceDirs() {
     checkCache();
     return RESOURCE_DIRS;
   }
-  
+
   public Settings() {
   }
 

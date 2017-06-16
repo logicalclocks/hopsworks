@@ -90,10 +90,10 @@ public class CondaCommands implements Serializable {
   private String arg="";
   @Size(max = 255)
   @Column(name = "lib")
-  private String lib;
+  private String lib = "";
   @Size(max = 52)
   @Column(name = "version")
-  private String version;
+  private String version = "";
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -108,7 +108,6 @@ public class CondaCommands implements Serializable {
   @Column(name = "status")
   @Enumerated(EnumType.STRING)
   private PythonDepsFacade.CondaStatus status;
-
 
   @Basic(optional = false)
   @NotNull
@@ -125,10 +124,6 @@ public class CondaCommands implements Serializable {
   private Host hostId;
 
   public CondaCommands() {
-  }
-
-  public CondaCommands(Integer id) {
-    this.id = id;
   }
 
   public CondaCommands(Host h, String user, PythonDepsFacade.CondaOp op,
@@ -246,6 +241,7 @@ public class CondaCommands implements Serializable {
   public void setStatus(PythonDepsFacade.CondaStatus status) {
     this.status = status;
   }
+
   
   @Override
   public int hashCode() {

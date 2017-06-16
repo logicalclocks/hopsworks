@@ -60,7 +60,9 @@
         "spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
         "spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
         "spark.sql.warehouse.dir": "%%spark.sql.warehouse.dir%%",
-        "spark.yarn.stagingDir": "%%spark.yarn.stagingDir%%"
+        "spark.yarn.stagingDir": "%%spark.yarn.stagingDir%%",
+        "spark.pyspark.driver.python": "%%anaconda_env_dir%%/bin/python",
+        "spark.pyspark.python": "%%anaconda_env_dir%%/bin/python"
       },
       "status": "READY",
       "interpreterGroup": [
@@ -247,7 +249,7 @@
         "zeppelin.livy.spark.sql.maxResult": "1000",
         "zeppelin.livy.keytab": "",
         "zeppelin.livy.concurrentSQL": "false",
-        "zeppelin.livy.spark.sql.field.truncate": "true",
+        "zeppelin.livy.spark.sql.field.truncate": "true", 
         "livy.spark.executor.cores": "",
         "zeppelin.livy.displayAppInfo": "false",
         "zeppelin.livy.url": "%%livy_url%%",
@@ -263,7 +265,9 @@
         "livy.spark.metrics.conf": "%%metrics-properties_local_path%%",
         "livy.spark.files": "%%metrics-properties_path%%",
         "livy.spark.sql.warehouse.dir": "%%livy.spark.sql.warehouse.dir%%",
-        "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%"
+        "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",
+        "livy.spark.pyspark.driver.python": "%%anaconda_env_dir%%/bin/python",
+        "livy.spark.pyspark.python": "%%anaconda_env_dir%%/bin/python"
       },
       "status": "READY",
             "interpreterGroup": [

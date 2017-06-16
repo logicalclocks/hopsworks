@@ -214,6 +214,7 @@ public class ProxyServlet extends HttpServlet {
   /**
    * The http client used.
    *
+   * @return 
    * @see #createHttpClient(HttpParams)
    */
   protected HttpClient getProxyClient() {
@@ -224,6 +225,9 @@ public class ProxyServlet extends HttpServlet {
    * Reads a servlet config parameter by the name {@code hcParamName} of type
    * {@code type}, and
    * set it in {@code hcParams}.
+   * @param hcParams
+   * @param hcParamName
+   * @param type
    */
   protected void readConfigParam(HttpParams hcParams, String hcParamName,
           Class type) {
@@ -428,7 +432,7 @@ public class ProxyServlet extends HttpServlet {
    * I use an HttpClient HeaderGroup class instead of Set<String> because this
    * approach does case insensitive lookup faster.
    */
-  protected static final HeaderGroup hopByHopHeaders;
+  protected static HeaderGroup hopByHopHeaders;
 
   static {
     hopByHopHeaders = new HeaderGroup();
@@ -442,6 +446,8 @@ public class ProxyServlet extends HttpServlet {
 
   /**
    * Copy request headers from the servlet client to the proxy request.
+   * @param servletRequest
+   * @param proxyRequest
    */
   protected void copyRequestHeaders(HttpServletRequest servletRequest,
           HttpRequest proxyRequest) {

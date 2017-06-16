@@ -129,7 +129,8 @@ public class AgentResource {
   public Response heartbeat(@Context SecurityContext sc,
           @Context HttpServletRequest req,
           @Context HttpHeaders httpHeaders, String jsonHb) {
-    // Commads to send as a response to the kagent to execute
+    // Commands are sent back to the kagent as a response to this heartbeat.
+    // Kagent then executes the commands received in order.
     List<CondaCommands> commands = new ArrayList<>();
 
     try {
@@ -292,7 +293,7 @@ public class AgentResource {
 
           Collection<CondaCommands> allCcs = project.
                   getCondaCommandsCollection();
-          logger.info("AnacondaReport: " + project.getName());
+          logger.log(Level.INFO, "AnacondaReport: {0}", project.getName());
 
           if ((!mapReports.containsKey(project.getName()))
                   && (project.getName().compareToIgnoreCase(settings.
@@ -364,7 +365,8 @@ public class AgentResource {
                   == 0) {
             continue;
           }
-          CondaCommands cc = new CondaCommands(-1);
+          CondaCommands cc = new CondaCommands();
+          cc.setId(-1);
           cc.setHostId(host);
           cc.setUser(settings.getSparkUser());
           cc.setProj(br.getProject());
@@ -376,7 +378,7 @@ public class AgentResource {
       Collection<CondaCommands> allCommands = host.
               getCondaCommandsCollection();
 
-      List<CondaCommands> commandsToExec = new ArrayList<>();
+      Collection<CondaCommands> commandsToExec = new ArrayList<>();
       for (CondaCommands cc : allCommands) {
         if (cc.getStatus() != PythonDepsFacade.CondaStatus.FAILED) {
           commandsToExec.add(cc);
@@ -390,8 +392,8 @@ public class AgentResource {
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    GenericEntity<Collection<CondaCommands>> commandsForKagent
-            = new GenericEntity<Collection<CondaCommands>>(commands) {    };
+    GenericEntity<List<CondaCommands>> commandsForKagent
+            = new GenericEntity<List<CondaCommands>>(commands) {    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             commandsForKagent).build();

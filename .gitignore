@@ -16,6 +16,7 @@ yo/app/karma.conf.js
 
 glassfish-resources.xml
 
+*~
 ### NetBeans ###
 */nbproject/
 */build/
