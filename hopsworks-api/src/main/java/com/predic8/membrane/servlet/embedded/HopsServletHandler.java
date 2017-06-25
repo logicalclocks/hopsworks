@@ -37,6 +37,7 @@ import com.predic8.membrane.core.transport.http.AbortException;
 import com.predic8.membrane.core.transport.http.AbstractHttpHandler;
 import com.predic8.membrane.core.transport.http.EOFWhileReadingFirstLineException;
 import com.predic8.membrane.core.util.EndOfStreamException;
+import io.hops.hopsworks.common.util.Ip;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
@@ -53,7 +54,6 @@ class HopsServletHandler extends AbstractHttpHandler {
 
   private final HttpServletRequest request;
   private final HttpServletResponse response;
-//  private URI srcUriObj = null;
   private URI targetUriObj = null;
   private HttpHost targetHost = null;
 
@@ -63,7 +63,6 @@ class HopsServletHandler extends AbstractHttpHandler {
     super(transport);
     this.request = request;
     this.response = response;
-//    this.srcUriObj = srcUri;
     this.targetUriObj = targetUriObj;
     this.targetHost = URIUtils.extractHost(targetUriObj);
 
@@ -79,16 +78,10 @@ class HopsServletHandler extends AbstractHttpHandler {
       exchange.received();
 
       try {
-//        DNSCache dnsCache = getTransport().getRouter().getDnsCache();
-//        String ip = dnsCache.getHostAddress(remoteAddr);
-        exchange.setRemoteAddrIp("127.0.0.1");
-        exchange.setRemoteAddr(this.targetHost.getHostName());
-//        exchange.setRemoteAddr(this.targetUriObj.toString());
-//        exchange.setRemoteAddr(getTransport().isReverseDNS() ? dnsCache.
-//                getHostName(remoteAddr) : ip);
-
+        exchange.setRemoteAddrIp(Ip.getHost(request.getRequestURL().toString()));
+        exchange.setRemoteAddr(Ip.getHost(request.getRequestURL().toString()));
         exchange.setRequest(srcReq);
-        exchange.setOriginalRequestUri(srcReq.getUri());
+        exchange.setOriginalRequestUri(request.getRequestURL().toString());
 
         invokeHandlers();
       } catch (AbortException e) {
@@ -142,7 +135,6 @@ class HopsServletHandler extends AbstractHttpHandler {
     if (request.getQueryString() != null) {
       pathQuery += "?" + request.getQueryString();
     }
-//    String pathQuery = this.targetUriObj.toString();
 
     if (getTransport().isRemoveContextRoot()) {
       String contextPath = request.getContextPath();
@@ -190,8 +182,8 @@ class HopsServletHandler extends AbstractHttpHandler {
   @Override
   public InetAddress getLocalAddress() {
     try {
-      //    return localAddr;
-      return InetAddress.getLocalHost();
+      String externalIp = Ip.getHost(request.getRequestURL().toString());
+      return InetAddress.getByName(externalIp);
     } catch (UnknownHostException ex) {
       Logger.getLogger(HopsServletHandler.class.getName()).
               log(Level.SEVERE, null, ex);
@@ -202,7 +194,6 @@ class HopsServletHandler extends AbstractHttpHandler {
   @Override
   public int getLocalPort() {
     return request.getLocalPort();
-//    return -1;
   }
 
   @Override

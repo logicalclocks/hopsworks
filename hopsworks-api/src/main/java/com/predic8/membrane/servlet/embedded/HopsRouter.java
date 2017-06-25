@@ -40,8 +40,6 @@ public class HopsRouter extends Router {
   public HopsRouter(URI targetUri) throws Exception {
     this.exchangeStore = new LimitedMemoryExchangeStore();
     transport = createTransport(targetUri);
-//    ProxyConfiguration proxyConfiguration=null;
-//    resolverMap.getHTTPSchemaResolver().getHttpClientConfig().setProxy(proxyConfiguration);
   }
 
   /**

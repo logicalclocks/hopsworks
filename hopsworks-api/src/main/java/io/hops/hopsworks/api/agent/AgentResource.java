@@ -382,6 +382,7 @@ public class AgentResource {
       for (CondaCommands cc : allCommands) {
         if (cc.getStatus() != PythonDepsFacade.CondaStatus.FAILED) {
           commandsToExec.add(cc);
+          cc.setHostId(host);
         }
       }
       commands.addAll(commandsToExec);
@@ -392,8 +393,10 @@ public class AgentResource {
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    GenericEntity<List<CondaCommands>> commandsForKagent
-            = new GenericEntity<List<CondaCommands>>(commands) {    };
+
+
+    GenericEntity<Collection<CondaCommands>> commandsForKagent
+            = new GenericEntity<Collection<CondaCommands>>(commands) {    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             commandsForKagent).build();

@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class JupyterService {
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) { };
+            = new GenericEntity<List<JupyterProject>>(listServers) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
   }
@@ -126,7 +127,7 @@ public class JupyterService {
   @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response isMyNotebookServerRunning(@Context SecurityContext sc,
+  public Response isRunning(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     if (projectId == null) {
@@ -150,6 +151,15 @@ public class JupyterService {
         throw new AppException(
                 Response.Status.NOT_FOUND.getStatusCode(),
                 "Found Jupyter notebook server for you, but it wasn't running.");
+      }
+      String externalIp = Ip.getHost(req.getRequestURL().toString());
+      settings.setHopsworksExternalIp(externalIp);
+      Integer port = req.getLocalPort();
+      String endpoint = externalIp + ":" + port;
+      if (endpoint.compareToIgnoreCase(jp.getHostIp()) != 0) {
+        // update the host_ip to whatever the client saw as the remote host:port
+        jp.setHostIp(endpoint);
+        jupyterFacade.update(jp);
       }
     }
 
@@ -214,14 +224,15 @@ public class JupyterService {
                 "Incomplete request!");
       }
 
+      String externalIp = Ip.getHost(req.getRequestURL().toString());
+
       jp = jupyterFacade.
-              saveServer(project, secret, dto.getPort(), user.getId(), dto.
-                      getToken(), dto.getPid(), dto.getDriverCores(), dto.
-                      getDriverMemory(), dto.getNumExecutors(), dto.
-                      getExecutorCores(),
+              saveServer(externalIp, project, secret, dto.getPort(), user.
+                      getId(), dto.getToken(), dto.getPid(),
+                      dto.getDriverCores(), dto.getDriverMemory(),
+                      dto.getNumExecutors(), dto.getExecutorCores(),
                       dto.getExecutorMemory(), dto.getGpus(), dto.getArchives(),
-                      dto.
-                      getJars(), dto.getFiles(), dto.getPyFiles());
+                      dto.getJars(), dto.getFiles(), dto.getPyFiles());
 
       if (jp == null) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
