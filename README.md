@@ -68,17 +68,17 @@ You can also build Hopsworks without the frontend (for Java EE development and t
 mvn install -P-web
 ```
 
-## Front-end Development Tips
+## Front-end Development 
 
 The javascript produced by building maven is obsfuscated. For debugging javascript, we recommend that you use the following script
 to deploy changes to HTML or javascript to your vagrant machine:
 
 ```
 cd scripts
-./dev-deploy-frontend.sh
+./js.sh
 ```
 
-You should also add the chef recipe to the end of your Vagrantfile:
+You should also add the chef recipe to the end of your Vagrantfile (or Karamel cluster definition):
 ```
  hopsworks::dev
 ```
@@ -93,9 +93,17 @@ You can build hopsworks without running grunt/bower using:
 mvn install -P-dist
 ```
 
-Then run your script to upload your javascript to bbc1:
+Then run your script to upload your javascript to snurran.sics.se:
 
 ```
 cd scripts
-./jim-bbc1-scp.sh
+./deploy.sh [yourName]
 ```
+
+## Building a Virtualbox image
+
+You should also add the chef recipe to the end of your Vagrantfile (or Karamel cluster definition):
+```
+ hopsworks::image
+```
+
