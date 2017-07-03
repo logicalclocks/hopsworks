@@ -495,17 +495,18 @@ public class JobService {
                 getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
                 getInfluxDBPW());
 
-        Query query = new Query("SELECT * FROM /" + appId
-                + ".*.executor.threadpool.activeTasks/ limit 1", "graphite");
+        Query query = new Query("SHOW TAG VALUES from spark WITH KEY = service where \"appid\" =~ /" + appId
+            + "/ and \"service\" =~ /[0-9]+/", "graphite");
+
         QueryResult queryResult = influxDB.query(query);
 
         influxDB.close();
 
         int nbExecutors = 0;
-        if (queryResult != null && queryResult.getResults() != null
-                && queryResult.getResults().get(0) != null && queryResult.
-                getResults().get(0).getSeries() != null) {
-          nbExecutors = queryResult.getResults().get(0).getSeries().size();
+        if (queryResult != null && queryResult.getResults() != null && queryResult.getResults().get(0) != null
+            && queryResult.getResults().get(0).getSeries() != null && queryResult.getResults().get(0).getSeries().get(0)
+            != null && queryResult.getResults().get(0).getSeries().get(0).getValues() != null) {
+          nbExecutors = queryResult.getResults().get(0).getSeries().get(0).getValues().size();
         }
 
         AppInfoDTO appInfo = new AppInfoDTO(appId, startTime,
