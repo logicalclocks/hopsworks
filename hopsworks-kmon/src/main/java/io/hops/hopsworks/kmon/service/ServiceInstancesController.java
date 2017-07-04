@@ -37,6 +37,9 @@ public class ServiceInstancesController {
   private List<InstanceInfo> filteredInstances;
   private static final Logger logger = Logger.getLogger(
           ServiceInstancesController.class.getName());
+  private enum servicesWithMetrics {
+    HDFS, YARN
+  };
 //   private CookieTools cookie = new CookieTools();
 
   static {
@@ -64,6 +67,15 @@ public class ServiceInstancesController {
     this.service = service;
   }
 
+  public boolean getServiceWithMetrics() {
+    try{
+      servicesWithMetrics.valueOf(service);
+      return true;
+    }catch(IllegalArgumentException ex){
+      return false;
+    }
+  }
+  
   public void setCluster(String cluster) {
     this.cluster = cluster;
   }
