@@ -344,24 +344,55 @@ public class ProjectController {
     //  verify that There is no logs folders corresponding to this project name
     //  verify that There is no certificates corresponding to this project name in the certificate generator
     try {
-      if (existingProjectFolder(project) || !noExistingUser(project.getName())
-              || !noExistingGroup(project.getName())
-              || !verifyQuota(project.getName()) || !verifyLogs(dfso, project.
-              getName())
-              || !noExistingCertificates(project.getName())) {
+      if (existingProjectFolder(project)) {
         LOGGER.log(Level.WARNING,
-                "some elements of project {0} already exist in the system "
-                + "Possible inconsistency!",
-                project.getName());
+            "a folder with name corresponding to project {0} already exists in the system "
+            + "Possible inconsistency!", project.getName());
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "a Project folder with name corresponding to this project already exists in the system "
+            + "Possible inconsistency! Please contact the admin");
+      } else if (!noExistingUser(project.getName())) {
+        LOGGER.log(Level.WARNING,
+            "a user with name corresponding to this project already exists in the system "
+            + "Possible inconsistency!", project.getName());
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "a user with name corresponding to this project already exists in the system "
+            + "Possible inconsistency! Please contact the admin");
+      } else if (!noExistingGroup(project.getName())) {
+        LOGGER.log(Level.WARNING,
+            "a group with name corresponding to project {0} already exists in the system "
+            + "Possible inconsistency! Please contact the admin", project.getName());
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "a group with name corresponding to this project already exists in the system "
+            + "Possible inconsistency! Please contact the admin");
+      } else if (!noExistingCertificates(project.getName())) {
+        LOGGER.log(Level.WARNING,
+            "Certificates corresponding to project {0} already exist in the system "
+            + "Possible inconsistency!", project.getName());
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "Certificates corresponding to this project already exist in the system "
+            + "Possible inconsistency! Please contact the admin");
+      } else if (!verifyQuota(project.getName())) {
+        LOGGER.log(Level.WARNING,
+            "Quotas corresponding to this project already exist in the system "
+            + "Possible inconsistency! Retry.", project.getName());
         cleanup(project, sessionId);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "some elements of project already exist in the system");
+            getStatusCode(), "Quotas corresponding to this project already exist in the system "
+            + "Possible inconsistency!");
+      } else if (!verifyLogs(dfso, project.getName())) {
+        LOGGER.log(Level.WARNING,
+            "Logs corresponding to this project already exist in the system "
+            + "Possible inconsistency!", project.getName());
+        cleanup(project, sessionId);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "Logs corresponding to this project already exist in the system "
+            + "Possible inconsistency! Retry");
       }
     } catch (IOException | EJBException ex) {
       cleanup(project, sessionId);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "error while running verifications");
+          getStatusCode(), "error while running verifications");
     }
   }
 
