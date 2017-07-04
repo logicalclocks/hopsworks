@@ -5,7 +5,8 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
   <ui:composition template="layout.xhtml">
 
@@ -238,9 +239,11 @@
             </ui:repeat>                      
           </h:form>
         </p:outputPanel>  
-        <p:outputPanel>
-          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
-        </p:outputPanel>
+        <c:if test="#{serviceInstancesController.serviceWithMetrics}">
+          <p:outputPanel>
+            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
+          </p:outputPanel>
+        </c:if>
       </p:outputPanel> 
 
     </ui:define>
