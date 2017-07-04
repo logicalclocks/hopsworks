@@ -400,6 +400,9 @@ public class JupyterConfig {
                       "hadoop_home", this.settings.getHadoopDir(),
                       "pyspark_bin", this.settings.getAnacondaProjectDir(
                               projectName) + "/bin/python",
+                      "anaconda_dir", this.settings.getAnacondaDir(),
+                      "anaconda_env", this.settings.getAnacondaProjectDir(
+                              projectName) + "/bin",
                       "sparkhistoryserver_ip", this.settings.
                       getSparkHistoryServerIp()
               );

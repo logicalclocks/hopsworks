@@ -443,6 +443,18 @@ public class Settings implements Serializable {
     return HADOOP_DIR;
   }
 
+  
+  private String HOPSWORKS_EXTERNAL_IP = "127.0.0.1";
+
+  public synchronized String getHopsworksExternalIp() {
+    checkCache();
+    return HOPSWORKS_EXTERNAL_IP;
+  }
+  
+  public synchronized void setHopsworksExternalIp(String ip) {
+    HOPSWORKS_EXTERNAL_IP = ip;
+  }
+  
   private String HOPSWORKS_IP = "127.0.0.1";
 
   public synchronized String getHopsworksIp() {
@@ -1089,6 +1101,7 @@ public class Settings implements Serializable {
   private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
+  public static final String UNZIP_FILES_SCRIPTNAME = "unzip-hdfs-files.sh";
   public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
           = "deleteprojectcerts.sh";
   public static final int USERNAME_LEN = 8;

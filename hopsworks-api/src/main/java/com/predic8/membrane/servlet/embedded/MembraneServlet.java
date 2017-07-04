@@ -32,14 +32,13 @@ import com.predic8.membrane.core.rules.ProxyRule;
 import com.predic8.membrane.core.rules.ProxyRuleKey;
 import com.predic8.membrane.core.rules.ServiceProxy;
 import com.predic8.membrane.core.rules.ServiceProxyKey;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.Ip;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
@@ -52,10 +51,9 @@ public class MembraneServlet extends HttpServlet {
   private static final long serialVersionUID = 1L;
   private static final Log logger = LogFactory.getLog(MembraneServlet.class);
 
-  @EJB
-  private Settings settings;
-  
-  
+//  @EJB
+//  private Settings settings;
+
   @Override
   public void init(ServletConfig config) throws ServletException {
   }
@@ -71,28 +69,16 @@ public class MembraneServlet extends HttpServlet {
             getQueryString();
 
     Router router;
-//    int hash = queryString.indexOf('#');
-//    if (hash >= 0) {
-//      queryString = queryString.substring(0, hash);
-//    }
-
 
 // For websockets, the following paths are used by JupyterHub:
 //  /(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)/?
 // forward to ws(s)://servername:port_number
-
 //<LocationMatch "/mypath/(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)(.*)">
 //    ProxyPassMatch ws://localhost:8999/mypath/$1/$2$3
 //    ProxyPassReverse ws://localhost:8999 # this may be superfluous
 //</LocationMatch>
-
-
-
 //        ProxyPass /api/kernels/ ws://192.168.254.23:8888/api/kernels/
 //        ProxyPassReverse /api/kernels/ http://192.168.254.23:8888/api/kernels/
-
-
-
     List<NameValuePair> pairs;
     try {
       //note: HttpClient 4.2 lets you parse the string without building the URI
@@ -106,17 +92,16 @@ public class MembraneServlet extends HttpServlet {
       params.put(pair.getName(), pair.getValue());
     }
 
-    StringBuffer urlBuf = new StringBuffer("http://127.0.0.1:");//note: StringBuilder isn't supported by Matcher
+    String externalIp = Ip.getHost(req.getRequestURL().toString());
+
+    StringBuffer urlBuf
+            = new StringBuffer("http://"
+                                        + "localhost"
+                    + ":"
+            );
+
     String ctxPath = req.getRequestURI();
-    
-    boolean websocket = false;
-//    if (ctxPath.contains("/api/kernels/")) {
-//      urlBuf = new StringBuffer("ws://127.0.0.1:");
-//      websocket = true;
-//    }
-    
-    
-    
+
     int x = ctxPath.indexOf("/jupyter");
     int firstSlash = ctxPath.indexOf('/', x + 1);
     int secondSlash = ctxPath.indexOf('/', firstSlash + 1);
@@ -144,10 +129,15 @@ public class MembraneServlet extends HttpServlet {
               + newTargetUri, e);
     }
     ServiceProxy sp = new ServiceProxy(
-            new ServiceProxyKey("localhost", "*", "*", -1), "localhost", targetPort);
+            new ServiceProxyKey(
+                    externalIp, "*", "*", -1),
+            "localhost", targetPort);
     sp.setTargetURL(newQueryBuf.toString());
+    // only set external hostname in case admin console is used
     try {
       router = new HopsRouter(targetUriObj);
+      router.add(sp);
+      router.init();
       ProxyRule proxy = new ProxyRule(new ProxyRuleKey(-1));
       router.getRuleManager().addProxy(proxy,
               RuleManager.RuleDefinitionSource.MANUAL);

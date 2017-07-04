@@ -56,7 +56,7 @@
   <session-config>
     <session-timeout>600</session-timeout>
     <cookie-config>
-      <name>SESSION</name>
+      <name>SESSION-KMON</name>
       <path>/</path>
       <http-only>false</http-only>
       <secure>false</secure>

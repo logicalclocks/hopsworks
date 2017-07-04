@@ -118,7 +118,7 @@ public class LocalhostServices {
     // TODO: Hopswork-chef needs to put script in glassfish directory!
     List<String> commands = new ArrayList<>();
     commands.add("/usr/bin/sudo");
-    commands.add(intermediateCaDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME );
+    commands.add(intermediateCaDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME);
     commands.add(service);
     commands.add(countryCode);
     commands.add(city);
@@ -208,6 +208,32 @@ public class LocalhostServices {
     }
 
     return projectName + Settings.HOPS_USERNAME_SEPARATOR + username;
+  }
+
+  public static String unzipHdfsFile(String hdfsFile, String localFolder,
+          String domainsDir) throws IOException {
+
+    List<String> commands = new ArrayList<>();
+    commands.add(domainsDir + "/bin/" + Settings.UNZIP_FILES_SCRIPTNAME);
+    commands.add(hdfsFile);
+    commands.add(localFolder);
+
+    AsyncSystemCommandExecutor commandExecutor = new AsyncSystemCommandExecutor(
+            commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException(stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not generate the certificates: "
+              + stderr);
+    }
+    return stdout;
   }
 
 }

@@ -151,7 +151,8 @@ public class JupyterFacade {
     // delete JupyterProject entity bean
   }
 
-  public JupyterProject saveServer(Project project, String secret, int port,
+  public JupyterProject saveServer(String host,
+          Project project, String secret, int port,
           int hdfsUserId,
           String token, long pid, int driverCores, String driverMemory,
           int numExecutors, int executorCores, String executorMemory, int gpus,
@@ -160,8 +161,7 @@ public class JupyterFacade {
     JupyterProject jp = null;
     String ip;
 //    ip = settings.getHopsworksIp() + ":" + settings.getHopsworksPort();
-    ip = "localhost:" + settings.getHopsworksPort();
-//              InetAddress.getLocalHost().getHostAddress();
+    ip = host + ":" + settings.getHopsworksPort();
 
     jp = new JupyterProject(project, secret, port, hdfsUserId, ip, token, pid,
             driverCores, driverMemory, numExecutors, executorCores,
@@ -178,7 +178,7 @@ public class JupyterFacade {
     }
   }
 
-  private void update(JupyterProject jp) {
+  public void update(JupyterProject jp) {
     if (jp != null) {
       em.merge(jp);
     }
