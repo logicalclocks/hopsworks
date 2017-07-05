@@ -4,7 +4,7 @@
  */
 angular.module('hopsWorksApp')
 
-        .factory('TensorflowService', ['$http', function ($http) {
+        .factory('TensorFlowService', ['$http', function ($http) {
             var service = {
               /**
                * Get all the tf resources in the syste
@@ -232,7 +232,14 @@ angular.module('hopsWorksApp')
               getServingLogs: function (projectId, servingId, numLines) {
                 return $http.get('/api/project/' + projectId + '/tensorflow/serving/' + servingId  
                         + '/readLogLines/' + numLines);
-              },                            
+              },    
+              /**
+               * Inspect the python at the given path.
+               * @param {int} projectId
+               */
+              inspectProgram: function (projectId, path) {
+                return $http.get('/api/project/' + projectId + '/jobs/tensorflow/inspect/' + path);
+              }
             };
             return service;
           }]);

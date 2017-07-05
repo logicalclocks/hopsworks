@@ -5,8 +5,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('TensorflowCtrl', ['$scope', '$routeParams', 'growl', 'TensorflowService', '$location', 'ModalService', '$interval', '$mdSidenav',
-          function ($scope, $routeParams, growl, TensorflowService, $location, ModalService, $interval, $mdSidenav) {
+        .controller('TensorflowCtrl', ['$scope', '$routeParams', 'growl', 'TensorFlowService', '$location', 'ModalService', '$interval', '$mdSidenav',
+          function ($scope, $routeParams, growl, TensorFlowService, $location, ModalService, $interval, $mdSidenav) {
               
 
             var self = this;
@@ -61,7 +61,7 @@ angular.module('hopsWorksApp')
             self.logs = [];
             
             self.getResources = function () {
-              TensorflowService.getResources(self.projectId).then(
+              TensorFlowService.getResources(self.projectId).then(
                       function (success) {
                         self.resources = success.data;
                       }, function (error) {
@@ -70,7 +70,7 @@ angular.module('hopsWorksApp')
             };
             
             self.getClusters = function () {
-              TensorflowService.getClusters(self.projectId).then(
+              TensorFlowService.getClusters(self.projectId).then(
                       function (success) {
                         self.clusters = success.data;
                       }, function (error) {
@@ -79,7 +79,7 @@ angular.module('hopsWorksApp')
             };
 
             self.getClusterDetails = function (clusterName) {
-                TensorflowService.getClusterDetails(self.projectId, clusterName).then(
+                TensorFlowService.getClusterDetails(self.projectId, clusterName).then(
                         function (success) {
                             for(var i =0;i<self.clusters.length;i++){
                               if(self.clusters[i].name === clusterName){
@@ -95,7 +95,7 @@ angular.module('hopsWorksApp')
            
             self.getServing = function () {
                 
-                TensorflowService.getServing(self.projectId).then(
+                TensorFlowService.getServing(self.projectId).then(
                  function (success) {
                  self.serving = success.data;
                  var size = self.logs.length;
@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
                  ModalService.confirm("sm", "Delete Logs (" + cluster + ")",
                       "Do you really want to delete this Log File? This action cannot be undone.")
                       .then(function (success) {
-                          TensorflowService.deleteLogs(self.projectId, logName, self.logVersions[index]).then(
+                          TensorFlowService.deleteLogs(self.projectId, logName, self.logVersions[index]).then(
                  function (success) {
                      self.listServing();
                  }, function (error) {
@@ -179,7 +179,7 @@ angular.module('hopsWorksApp')
               ModalService.confirm("sm", "Delete Cluster (" + clusterName + ")",
                       "Do you really want to delete this topic? This action cannot be undone.")
                       .then(function (success) {
-                        TensorflowService.removeCluster(self.projectId, clusterName).then(
+                        TensorFlowService.removeCluster(self.projectId, clusterName).then(
                                 function (success) {
                                   self.getClusters();
                                 }, function (error) {

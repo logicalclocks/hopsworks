@@ -35,6 +35,7 @@
                                 id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
+               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="5" ng-change="newJobCtrl.jobTypeChosen()">TensorFlowOnSpark</label>
 
               <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
@@ -47,8 +48,8 @@
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}"
                                is-open="newJobCtrl.accordion3.isOpen"
                                ng-show="newJobCtrl.accordion3.visible">
-            <!-- Adam, Spark and Flink  -->
-            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 4 || newJobCtrl.jobtype == 5">
+            <!-- Adam, Spark, Flink, TensorFlow  -->
+            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 4 || newJobCtrl.jobtype == 5 || newJobCtrl.jobtype == 6">
               <span>Select...</span>
             </button>
             <!-- ADAM -->
@@ -70,9 +71,9 @@
                                is-open="newJobCtrl.accordion4.isOpen"
                                ng-show="newJobCtrl.accordion4.visible"
                                id="chooseParametersAndArguments">
-            <!-- Spark, Flink-->
-            <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 5">
-              <div class="row" ng-show="newJobCtrl.jobtype !== 4 && newJobCtrl.jobtype !== 5">
+            <!-- Spark, Flink, TensorFlow-->
+            <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 5 || newJobCtrl.jobtype === 6">
+              <div class="row" ng-show="newJobCtrl.jobtype !== 4 && newJobCtrl.jobtype !== 5 && newJobCtrl.jobtype !== 6">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text"
                                              ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
@@ -279,7 +280,29 @@
                 </select>
               </div>
             </div>
-
+            <!-- TensorFlow -->
+            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of Workers <i class="fa fa-info-circle" uib-tooltip="The number of Workers that should be requested." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfWorkers" class="form-control"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of Parameter Servers<i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.numOfPs" class="form-control"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per container." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfGPUs" class="form-control"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Worker memory <i class="fa fa-info-circle" uib-tooltip="The memory that should be requested for each Worker." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.workerMemory" class="form-control"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of VCores <i class="fa fa-info-circle" uib-tooltip="The number of VCores that should be requested for each Worker." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.workerVCores" class="form-control"></div>
+            </div>
+            
+            <!-- Services -->
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
               <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
@@ -327,7 +350,7 @@
                 <button ng-click="newJobCtrl.selectFile('LIBRARY')" class="btn btn-info btn-link">
                   Add...
                 </button>
-                <i class="fa fa-info-circle" uib-tooltip="Select jar files that should be added to the classpath for this job." style="margin-left: 10px"></i>
+                <i class="fa fa-info-circle" uib-tooltip="Select files that should be added to the classpath for this job." style="margin-left: 10px"></i>
               </h3>
               <table class="table table-hover" ng-show="newJobCtrl.localResources.length > 0">
                 <thead>

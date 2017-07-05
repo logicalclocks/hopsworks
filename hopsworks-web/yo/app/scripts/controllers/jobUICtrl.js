@@ -72,7 +72,11 @@ angular.module('hopsWorksApp')
                 console.log("Job object found was: ");
                 console.log(self.job);
                 getAppIds();
-                getAppId(getJobUIInt);
+                if(self.job.jobType === "TENSORFLOW" || self.job.jobType === "FLINK"){
+                  getAppId(yarnUIInt);
+                } else {
+                  getAppId(getJobUIInt);
+                }
               }
             };
 
@@ -97,7 +101,6 @@ angular.module('hopsWorksApp')
                 });
             }
             
-            getJobUI();
 
             self.jobUI = function () {
               if (self.job == undefined || self.job == false) {
@@ -247,7 +250,7 @@ angular.module('hopsWorksApp')
             }
             
             var tensorboardInt = function() {
-              self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/";
+              self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/?jobType="+self.job.jobType;
               self.current = "tensorboard";
               var iframe = document.getElementById('ui_iframe');
               iframe.onload = function(){stopLoading();};
@@ -255,6 +258,9 @@ angular.module('hopsWorksApp')
                 iframe.src = $sce.trustAsResourceUrl(self.ui);
               }
             }
+            
+            getJobUI();
+
 
             self.backToHome = function () {
               if (self.jobName != undefined && self.jobName != false && self.jobName != "") {

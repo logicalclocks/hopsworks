@@ -20,10 +20,8 @@ import io.hops.hopsworks.common.util.Settings;
 public class SparkJob extends YarnJob {
 
   private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
-
   private final String sparkDir;
-
-  private final String sparkUser; //must be glassfish
+  private final String sparkUser;
   protected SparkYarnRunnerBuilder runnerbuilder;
 
   /**

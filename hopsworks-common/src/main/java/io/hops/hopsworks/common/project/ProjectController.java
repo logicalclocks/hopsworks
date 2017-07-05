@@ -392,7 +392,7 @@ public class ProjectController {
     } catch (IOException | EJBException ex) {
       cleanup(project, sessionId);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "error while running verifications");
+              getStatusCode(), "error while running verifications");
     }
   }
 

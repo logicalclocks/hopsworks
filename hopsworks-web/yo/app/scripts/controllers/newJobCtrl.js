@@ -12,12 +12,12 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService', 'HistoryService',
-          'KafkaService', 'ProjectService', '$timeout',
+          'AdamService', 'FlinkService', 'TensorFlowService', 'TourService', 
+          'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  AdamService, FlinkService, TourService, HistoryService,
-                  KafkaService, ProjectService, $timeout) {
+                  AdamService, FlinkService, TensorFlowService, TourService, 
+                  HistoryService, KafkaService, ProjectService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -104,12 +104,14 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
+              "TENSORFLOW": /.py\b/,
               "LIBRARY": /.jar\b/,
               "ADAM": /[^]*/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
+              "TENSORFLOW": "Please select a Python file.",
               "LIBRARY": "Please select a JAR file.",
               "ADAM-FILE": "Please select a file.",
               "ADAM-FOLDER": "Please select a folder."
@@ -170,6 +172,9 @@ angular.module('hopsWorksApp')
             self.flinkState = {//Will hold flink-specific state
               "selectedJar": null //The path to the selected jar
             };
+            self.tensorflowState = {//Will hold flink-specific state
+              "selectedJar": null //The path to the selected jar
+            };
             self.adamState = {//Will hold ADAM-specific state
               "processparameter": null, //The parameter currently being processed
               "commandList": null, //The ADAM command list.
@@ -223,6 +228,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
+                "tensorflowState" : self.tensorflowState,
                 "adamState": self.adamState,
                 "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6],
               };
@@ -237,6 +243,9 @@ angular.module('hopsWorksApp')
                 "selectedJar": null //The path to the selected jar
               };
               self.flinkState = {
+                "selectedJar": null //The path to the selected jar
+              };
+              self.tensorflowState = {
                 "selectedJar": null //The path to the selected jar
               };
               self.adamState = {//Will hold ADAM-specific state
@@ -293,6 +302,7 @@ angular.module('hopsWorksApp')
                 self.runConfig = self.undoneState.runConfig;
                 self.sparkState = self.undoneState.sparkState;
                 self.flinkState = self.undoneState.flinkState;
+                self.tensorflowState = self.undoneState.tensorflowState;
                 self.adamState = self.undoneState.adamState;
                 self.accordion1 = self.undoneState.accordions[0];
                 self.accordion2 = self.undoneState.accordions[1];
@@ -451,6 +461,11 @@ angular.module('hopsWorksApp')
                   self.accordion4.title = "Job details";
                   selectedType = "Flink";
                   break;
+                case 6:
+                  self.accordion3.title = "Python file";
+                  self.accordion4.title = "Job details";
+                  selectedType = "TensorFlow";
+                  break;
               }
               self.accordion1.isOpen = false; //Close job name panel
               self.accordion1.value = " - " + self.jobname; //Set job name panel title
@@ -484,6 +499,8 @@ angular.module('hopsWorksApp')
                   return "PYSPARK";
                 case 5:
                   return "TFSPARK";
+                case 6:
+                  return "TENSORFLOW";
                 default:
                   return null;
               }
@@ -656,6 +673,16 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                   });
                   break;
+                case "TENSORFLOW":
+                  self.tensorflowState.selectedJar = filename;
+                  TensorFlowService.inspectProgram(self.projectId, path).then(
+                          function (success) {
+                            self.runConfig = success.data;
+                            self.mainFileSelected(filename);
+                          }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+                  break;
               }
             };
 
@@ -747,6 +774,7 @@ angular.module('hopsWorksApp')
                 "sparkState": self.sparkState,
                 "adamState": self.adamState,
                 "flinkState": self.flinkState,
+                "tensorflowState" : self.tensorflowState,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,
@@ -817,6 +845,8 @@ angular.module('hopsWorksApp')
                   self.adamState = stored.adamState;
                 } else if (self.jobtype === 3) {
                   self.flinkState = stored.flinkState;
+                } else if (self.jobtype === 6) {
+                  self.tensorflowState = stored.tensorflowState;
                 }
                 //GUI state
                 self.accordion1 = stored.accordion1;

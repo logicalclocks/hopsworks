@@ -32,7 +32,7 @@ public class SparkYarnRunnerBuilder {
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
-  private List<LocalResourceDTO> extraFiles = new ArrayList<>();
+  private final List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
   private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
   private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
@@ -66,7 +66,7 @@ public class SparkYarnRunnerBuilder {
 
   /**
    * Get a YarnRunner instance that will launch a Spark job.
-   * <p/>
+   * 
    * @param project name of the project
    * @param sparkUser
    * @param jobUser
@@ -106,7 +106,7 @@ public class SparkYarnRunnerBuilder {
     //Add log4j
     builder.addLocalResource(new LocalResourceDTO(
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
-        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
     //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
@@ -421,14 +421,6 @@ public class SparkYarnRunnerBuilder {
 
   public SparkYarnRunnerBuilder addJobArg(String jobArg) {
     jobArgs.add(jobArg);
-    return this;
-  }
-
-  public SparkYarnRunnerBuilder setExtraFiles(List<LocalResourceDTO> extraFiles) {
-    if (extraFiles == null) {
-      throw new IllegalArgumentException("Map of extra files cannot be null.");
-    }
-    this.extraFiles = extraFiles;
     return this;
   }
 

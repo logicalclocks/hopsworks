@@ -657,7 +657,19 @@ public class Settings implements Serializable {
   public static final String FLINK_AM_MAIN
           = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
-
+  
+  //TensorFlow constants
+  public static final String TENSORFLOW_DEFAULT_OUTPUT_PATH = "Logs/TensorFlow/";
+  public static final String TENSORFLOW_JAR = "hops-tensorflow-0.0.1.jar";
+  //Used to pass the project user to yarn containers for tensorflow
+  public static final String HADOOP_USER_NAME = "HADOOP_USER_NAME";
+  public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
+  public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
+  
+  public static String getTensorFlowJarPath(String tfUser) {
+    return "hdfs:///user/" + tfUser+"/"+TENSORFLOW_JAR;
+  }
+  
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
   }
@@ -764,7 +776,7 @@ public class Settings implements Serializable {
   }
 
   public static String getHdfsRootPath(String projectname) {
-    return "/" + DIR_ROOT + "/" + projectname + "/";
+    return "/" + DIR_ROOT + "/" + projectname;
   }
 
   /**

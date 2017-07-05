@@ -76,6 +76,9 @@ angular.module('hopsWorksApp')
               } else if (self.job.runConfig.type === "flinkJobConfiguration") {
                 self.jobtype = "Flink";
                 self.execFile = getFileName(job.runConfig.jarPath);
+              } else if (self.job.runConfig.type === "tensorFlowJobConfiguration") {
+                self.jobtype = "TensorFlow";
+                self.execFile = getFileName(job.runConfig.appPath);
               }
             };
             

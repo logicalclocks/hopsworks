@@ -99,8 +99,10 @@ angular.module('hopsWorksApp')
                   break;
                 case "TFSPARK":
                   jobType = 5;
+                case "TENSORFLOW":
+                  jobType = 6;  
               }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState;
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState, tensorflowState;
               if (jobType === 1 || jobType === 4 || jobType === 5 ) {
                 
                 sparkState = {
@@ -125,6 +127,13 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
                 jobDetailsTxt = "Job details";
+              } else if (jobType === 6) {
+                tensorflowState = {
+                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
+                };
+                mainFileTxt = "Python file";
+                mainFileVal = tensorflowState.selectedJar;
+                jobDetailsTxt = "Job details";
               }
               var state = {
                 "jobtype": jobType,
@@ -135,6 +144,7 @@ angular.module('hopsWorksApp')
                 "sparkState": sparkState,
                 "adamState": adamState,
                 "flinkState": flinkState,
+                "tensorflowState": tensorflowState,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,

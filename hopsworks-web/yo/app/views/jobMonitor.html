@@ -30,7 +30,8 @@
                   <button style=""
                           ng-click="jobUICtrl.jobUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-bolt"> Spark
+                          class="btn btn-primary btn-md fa fa-bolt"
+                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW' && jobUICtrl.job.jobType !== 'FLINK'" > Spark
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show YARN App UI" style="padding-top: 5px;padding-left:3px">
@@ -45,21 +46,23 @@
                           ng-click="jobUICtrl.kibanaUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-files-o"
-                          ng-if="!jobUICtrl.isLivy" > Logs
+                          ng-if="!jobUICtrl.isLivy && jobUICtrl.job.jobType !== 'TENSORFLOW'" > Logs
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.grafanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-bar-chart"> Metrics
+                          class="btn btn-primary btn-md fa fa-bar-chart"
+                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW'"> Metrics
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show Vizops" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.vizopsUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-eye"> Vizops
+                          class="btn btn-primary btn-md fa fa-eye"
+                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW' && jobUICtrl.job.jobType !== 'FLINK'"> Vizops
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show tensorboard" style="padding-top: 5px;padding-left:3px">
@@ -67,7 +70,7 @@
                           ng-click="jobUICtrl.tfUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-cubes"
-                          ng-if="jobUICtrl.job.jobType === 'TFSPARK'" > Tensorborad
+                          ng-if="jobUICtrl.job.jobType === 'TFSPARK' || jobUICtrl.job.jobType === 'TENSORFLOW'"> Tensorboard
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Refresh" style="padding-top: 5px;padding-left:3px">
