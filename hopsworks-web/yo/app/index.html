@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
     <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
     <link rel="stylesheet" href="bower_components/angularjs-slider/dist/rzslider.css" />
+    <link rel="stylesheet" href="bower_components/nvd3/build/nv.d3.css" />
     <link rel="stylesheet" href="bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.css" />
     <!-- endbower -->
     <!-- endbuild -->
@@ -120,6 +121,9 @@
     <script src="bower_components/angular-material/angular-material.js"></script>
     <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
     <script src="bower_components/angularjs-slider/dist/rzslider.js"></script>
+    <script src="bower_components/d3/d3.js"></script>
+    <script src="bower_components/nvd3/build/nv.d3.js"></script>
+    <script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
     <script src="bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
@@ -133,6 +137,7 @@
     <script src="scripts/js/hamburger.js"></script>
     <script src="scripts/js/ace/ace.js"></script>
     <script src="scripts/js/ace/mode-json.js"></script>
+    <script src="scripts/js/graph-settings.js"></script>
 
     <script src="scripts/directives/switch.js"></script>
     <script src="scripts/directives/modal.js"></script>
@@ -174,6 +179,12 @@
     <script src="scripts/controllers/metadataCtrl.js"></script>
     <script src="scripts/controllers/importTemplateCtrl.js"></script>
     <script src="scripts/controllers/zeppelinCtrl.js"></script>
+    <script src="scripts/controllers/vizopsCtrl.js"></script>
+    <script src="scripts/controllers/vizopsOverviewCtrl.js"></script>
+    <script src="scripts/controllers/vizopsDriverCtrl.js"></script>
+    <script src="scripts/controllers/vizopsExecutorCtrl.js"></script>
+    <script src="scripts/controllers/vizopsWorkerCtrl.js"></script>
+    <script src="scripts/controllers/vizopsStreamingCtrl.js"></script>
     <script src="scripts/controllers/messageCtrl.js"></script>
     <script src="scripts/controllers/sshKeysCtrl.js"></script>
     <script src="scripts/controllers/biobankingCtrl.js"></script>    
@@ -223,6 +234,7 @@
     <script src="scripts/services/FlinkService.js"></script>
     <script src="scripts/services/HistoryService.js"></script>
     <script src="scripts/services/JobService.js"></script>
+    <script src="scripts/services/VizopsService.js"></script>
     <script src="scripts/services/RequestService.js"></script>
     <script src="scripts/services/MetadataRestService.js"></script>
     <script src="scripts/services/MetadataHelperService.js"></script>

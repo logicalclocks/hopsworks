@@ -1,6 +1,8 @@
 package io.hops.hopsworks.common.dao.jobs.description;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
+import java.util.List;
 
 @XmlRootElement
 public class AppInfoDTO {
@@ -10,17 +12,19 @@ public class AppInfoDTO {
   boolean now;
   long endTime;
   int nbExecutors;
+  HashMap<Integer, List<String>> executorInfo;
 
   public AppInfoDTO() {
   }
 
   public AppInfoDTO(String appId, long startTime, boolean now, long endTime,
-          int nbExecutors) {
+                    int nbExecutors, HashMap<Integer, List<String>> executorInfo) {
     this.appId = appId;
     this.startTime = startTime;
     this.endTime = endTime;
     this.now = now;
     this.nbExecutors = nbExecutors;
+    this.executorInfo = executorInfo;
   }
 
   public void setAppId(String appId) {
@@ -63,10 +67,14 @@ public class AppInfoDTO {
     return nbExecutors;
   }
 
+  public HashMap<Integer, List<String>> getExecutorInfo() { return executorInfo; }
+
+  public void setExecutorInfo(HashMap<Integer, List<String>> executorInfo) { this.executorInfo = executorInfo; }
+
   @Override
   public String toString() {
     return "AppInfoDTO{" + "appId=" + appId + ", startTime=" + startTime
             + ", now=" + now + ", endTime=" + endTime + ", nbExecutors="
-            + nbExecutors + '}';
+            + nbExecutors + "executorInfo=" + executorInfo + '}';
   }
 }

@@ -265,8 +265,7 @@ public class NotebookServer implements
         }
       }
 
-      AuthenticationInfo subject = new AuthenticationInfo(messagereceived.principal,
-              messagereceived.ticket);
+      AuthenticationInfo subject = new AuthenticationInfo(messagereceived.principal, messagereceived.ticket);
       /**
        * Lets be elegant here
        */

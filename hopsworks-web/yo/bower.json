@@ -45,6 +45,7 @@
     "angular-material": "^1.1.1",
     "angular-material-data-table": "^0.10.9",
     "angularjs-slider": "^5.5.1",
+    "angular-nvd3": "^1.0.9",
     "angular-bootstrap-toggle": "^0.1.2"
   },
   "overrides": {

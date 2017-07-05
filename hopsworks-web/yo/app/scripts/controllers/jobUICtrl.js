@@ -4,9 +4,9 @@
  */
 angular.module('hopsWorksApp')
         .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'JobService', '$interval', 'StorageService',
-          '$routeParams', '$route', '$location', 'KibanaService', '$sce',
+          '$routeParams', '$route', '$location', 'KibanaService', 'VizopsService', '$sce',
           function ($scope, $timeout, growl, JobService, $interval, StorageService,
-                  $routeParams, $route, $location, KibanaService, $sce) {
+                  $routeParams, $route, $location, KibanaService, VizopsService, $sce) {
 
             var self = this;
             self.job;
@@ -189,7 +189,6 @@ angular.module('hopsWorksApp')
 
             }
 
-
             self.grafanaUI = function () {
               startLoading("Loading Grafana UI...");
               getAppId(grafanaUIInt);
@@ -228,6 +227,19 @@ angular.module('hopsWorksApp')
                 stopLoading();
               });
             }
+
+            self.vizopsUI = function () {
+              startLoading("Loading Vizops...");
+              getAppId(vizopsInt);
+            };
+
+            var vizopsInt = function () {
+                self.ui = "vizz";
+                self.current = "vizopsUI";
+                VizopsService.init(self.projectId, self.appId);
+                // The rest of the logic is handled by vizopsCtrl.js
+                stopLoading();
+            };
             
             self.tfUI = function() {
               startLoading("Loading Tensorboard...");
@@ -243,7 +255,7 @@ angular.module('hopsWorksApp')
                 iframe.src = $sce.trustAsResourceUrl(self.ui);
               }
             }
-            
+
             self.backToHome = function () {
               if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
@@ -255,6 +267,8 @@ angular.module('hopsWorksApp')
               var ifram = document.getElementById('ui_iframe');
               if (self.current === "grafanaUI") {
                 self.grafanaUI();
+              } else if (self.current === "vizopsUI") {
+                self.vizopsUI();
               }else if(self.current==="jobUI") {
                 self.jobUI();
               }else if(self.current==="yarnUI") {
