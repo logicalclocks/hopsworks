@@ -30,6 +30,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.http.client.utils.URIUtils;
 
 public class TensorboardProxyServlet extends ProxyServlet {
@@ -92,7 +93,8 @@ public class TensorboardProxyServlet extends ProxyServlet {
             "You don't have the access right for this application");
         return;
       }
-      if (appState.getAppsmstate() != null && appState.getAppsmstate().equals("FINISHED")) {
+      if (appState.getAppsmstate() != null && (appState.getAppsmstate().equals(YarnApplicationState.FINISHED.toString())
+          || appState.getAppsmstate().equals(YarnApplicationState.KILLED.toString()))) {
         sendErrorResponse(servletResponse, "This tensorboard has finished running");
         return;
       }

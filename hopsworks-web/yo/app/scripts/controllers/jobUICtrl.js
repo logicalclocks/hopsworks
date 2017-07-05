@@ -72,7 +72,7 @@ angular.module('hopsWorksApp')
                 console.log("Job object found was: ");
                 console.log(self.job);
                 getAppIds();
-                if(self.job.jobType === "TENSORFLOW" || self.job.jobType === "FLINK"){
+                if(self.job != undefined && (self.job.jobType === "TENSORFLOW" || self.job.jobType === "FLINK")){
                   getAppId(yarnUIInt);
                 } else {
                   getAppId(getJobUIInt);
