@@ -47,7 +47,6 @@
         "zeppelin.spark.concurrentSQL": "false",
         "zeppelin.spark.unSupportedVersionCheck": "true",
         "zeppelin.spark.useHiveContext": "true",
-        "zeppelin.pyspark.python": "%%zeppelin.python_conda_path%%",
         "zeppelin.dep.localrepo": "local-repo",
         "zeppelin.R.knitr": "true",
         "zeppelin.spark.maxResult": "1000",
@@ -61,8 +60,8 @@
         "spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
         "spark.sql.warehouse.dir": "%%spark.sql.warehouse.dir%%",
         "spark.yarn.stagingDir": "%%spark.yarn.stagingDir%%",
-        "spark.pyspark.driver.python": "%%anaconda_env_dir%%/bin/python",
-        "spark.pyspark.python": "%%anaconda_env_dir%%/bin/python"
+        "spark.pyspark.driver.python": "%%zeppelin.python_conda_path%%",
+        "spark.pyspark.python": "%%zeppelin.python_conda_path%%"
       },
       "status": "READY",
       "interpreterGroup": [
@@ -266,8 +265,9 @@
         "livy.spark.files": "%%metrics-properties_path%%",
         "livy.spark.sql.warehouse.dir": "%%livy.spark.sql.warehouse.dir%%",
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",
-        "livy.spark.pyspark.driver.python": "%%anaconda_env_dir%%/bin/python",
-        "livy.spark.pyspark.python": "%%anaconda_env_dir%%/bin/python"
+        "livy.spark.submit.deployMode": "cluster",
+        "livy.spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%"
       },
       "status": "READY",
             "interpreterGroup": [
