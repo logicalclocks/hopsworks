@@ -198,7 +198,7 @@ public class NotebookServer implements
     this.project = getProject(projectId);
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      LOG.log(Level.INFO, "User not authorized for Zeepelin Access: {0}",
+      LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}",
               this.sender);
       return;
     }

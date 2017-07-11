@@ -29,7 +29,6 @@ angular.module('hopsWorksApp')
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-//              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
             self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
             $scope.activeService = "home";
 
@@ -62,12 +61,18 @@ angular.module('hopsWorksApp')
             };
 
             self.initTour = function () {
-              if (angular.equals(self.currentProject.projectName.substr(0, 10),
+              if (angular.equals(self.currentProject.projectName.substr(0,
+                      self.tourService.sparkProjectPrefix.length),
                       self.tourService.sparkProjectPrefix)) {
                 self.tourService.setActiveTour('spark');
               } else if (angular.equals(self.currentProject.projectName
-                      .substr(0, 10), self.tourService.kafkaProjectPrefix)) {
+                      .substr(0, self.tourService.kafkaProjectPrefix.length),
+                      self.tourService.kafkaProjectPrefix)) {
                 self.tourService.setActiveTour('kafka');
+              } else if (angular.equals(self.currentProject.projectName
+                      .substr(0, self.tourService.tensorflowProjectPrefix.length),
+                      self.tourService.tensorflowProjectPrefix)) {
+                self.tourService.setActiveTour('tensorflow');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo

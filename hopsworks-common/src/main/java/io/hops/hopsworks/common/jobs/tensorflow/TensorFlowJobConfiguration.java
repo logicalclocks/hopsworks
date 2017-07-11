@@ -17,7 +17,7 @@ public class TensorFlowJobConfiguration extends YarnJobConfiguration {
   private String args;
   private int numOfGPUs = 0;
   private int numOfPs = 0;
-  private int numOfWorkers = 1;
+  private int numOfWorkers = 2;
   private int workerMemory = 1024;
   private int workerVCores = 1;
 

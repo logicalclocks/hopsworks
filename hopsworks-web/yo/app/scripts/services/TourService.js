@@ -10,7 +10,8 @@ angular.module('hopsWorksApp')
                 tourService.kafkaTopicName = "DemoKafkaTopic";
                 tourService.kafkaProjectPrefix = "demo_kafka";
                 tourService.sparkProjectPrefix = "demo_spark";
-
+                tourService.tensorflowProjectPrefix = "demo_tensorflow";
+                tourService.tensorflowRunTip = "";
                 tourService.informAndTips = true;
                 tourService.tipsOnly = false;
                 tourService.informOnly = false;
@@ -30,6 +31,13 @@ angular.module('hopsWorksApp')
                 tourService.kafkaJobCreationState = "producer";
                 tourService.counter = 0;
 
+                tourService.getTensorFlowJobTip = function(){
+                  if(tourService.activeTour === "tensorflow"){
+                    tourService.tensorflowRunTip = "An inference job was created for you! Go on and run it after the model is finished.";
+                  }
+                  return tourService.tensorflowRunTip;
+                };
+
                 tourService.setActiveTour = function (tourName) {
                     tourService.activeTour = tourName;
                 };
@@ -39,35 +47,35 @@ angular.module('hopsWorksApp')
                   tourService.tipsOnly = false;
                   tourService.informOnly = false;
                   tourService.showNothing = false;
-                }
+                };
 
                 tourService.setTipsOnlyState = function () {
                   tourService.informAndTips = false;
                   tourService.tipsOnly = true;
                   tourService.informOnly = false;
                   tourService.showNothing = false;
-                }
+                };
 
                 tourService.setInformOnly = function () {
                   tourService.informAndTips = false;
                   tourService.tipsOnly = false;
                   tourService.informOnly = true;
                   tourService.showNothing = false;
-                }
+                };
 
                 tourService.setShowNothingState = function () {
                   tourService.informAndTips = false;
                   tourService.tipsOnly = false;
                   tourService.informOnly = false;
                   tourService.showNothing = true;
-                }
+                };
                 
                 tourService.setDefaultTourState = function () {
                   tourService.informAndTips = true;
                   tourService.tipsOnly = false;
                   tourService.informOnly = false;
                   tourService.showNothing = false;
-                }
+                };
 
                 tourService.printDebug = function () {
                   console.log("Counter: " + tourService.counter);
