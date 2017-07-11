@@ -468,7 +468,7 @@
               tourtip-element="#selectFileButton"
               tourtip-placement="right"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
+              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.currentProject.projectName))"
               ng-if="newJobCtrl.accordion3.visible"
       ></virtual-step>
       <virtual-step
@@ -553,7 +553,7 @@
         tourtip-element="#selectFileButton"
         tourtip-placement="bottom"
         tourtip-next-label="Next"
-        on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
+        on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs:///Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
         tourtip-offset-vertical="-14"
         tourtip-offset-horizontal="-5"
         ng-if="newJobCtrl.accordion3.visible"
@@ -637,7 +637,7 @@
         tourtip-element="#selectFileButton"
         tourtip-placement="bottom"
         tourtip-next-label="Next"
-        on-proceed="newJobCtrl.onFileSelected('TENSORFLOW','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/mnist.py')"
+        on-proceed="newJobCtrl.onFileSelected('TENSORFLOW','hdfs:///Projects/' + projectCtrl.currentProject.projectName + '/TestJob/mnist.py')"
         tourtip-offset-vertical="-14"
         tourtip-offset-horizontal="-5"
         ng-if="newJobCtrl.accordion3.visible"

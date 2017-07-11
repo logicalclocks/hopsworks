@@ -32,16 +32,15 @@ public class SparkJob extends YarnJob {
    * @param services
    * @param hadoopDir
    * @param sparkDir
-   * @param nameNodeIpPort
    * @param sparkUser
    * @param jobUser
    * @param jobsMonitor
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
-      final String sparkDir, final String nameNodeIpPort, String sparkUser,
+      final String sparkDir, String sparkUser,
       String jobUser, YarnJobsMonitor jobsMonitor) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, jobsMonitor);
+    super(job, services, user, jobUser, hadoopDir, jobsMonitor);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "

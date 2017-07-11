@@ -181,7 +181,7 @@ public class HopsUtils {
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties, 
+      Map<String, String> jobSystemProperties,
       String flinkCertsDir, String applicationId) {
     //Pull the certificate of the client
     UserCerts userCert = userCerts.findUserCert(project.getName(),
@@ -315,7 +315,7 @@ public class HopsUtils {
 
                   projectLocalResources.add(new LocalResourceDTO(
                       entry.getKey(),
-                      "hdfs:///" +  remoteProjAppDir + File.separator + entry.getValue().getName(),
+                      "hdfs://" + remoteProjAppDir + File.separator + entry.getValue().getName(),
                       LocalResourceVisibility.APPLICATION.toString(),
                       LocalResourceType.FILE.toString(), null));
                 }
