@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -34,7 +35,8 @@ public class SparkController {
 
   private static final Logger LOG = Logger.getLogger(SparkController.class.
       getName());
-
+  @EJB
+  private YarnJobsMonitor jobsMonitor;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
@@ -85,7 +87,7 @@ public class SparkController {
               getHadoopDir(), settings.getSparkDir(),
               hdfsLeDescriptorsFacade.getSingleEndpoint(),
               settings.getSparkUser(), job.getProject().getName() + "__"
-              + user.getUsername());
+              + user.getUsername(), jobsMonitor);
         }
       });
     } catch (InterruptedException ex) {
@@ -124,7 +126,7 @@ public class SparkController {
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
         getHadoopDir(), settings.getSparkDir(),
         hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()));
+        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor);
 
     submitter.stopExecution(sparkjob, appid);
 

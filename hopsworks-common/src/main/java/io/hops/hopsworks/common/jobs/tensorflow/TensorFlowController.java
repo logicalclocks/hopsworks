@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -41,6 +42,8 @@ public class TensorFlowController {
   private Settings settings;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  @EJB
+  private YarnJobsMonitor jobsMonitor;
 
   public Execution startJob(final JobDescription job, final Users user) throws
       IllegalStateException,
@@ -65,8 +68,8 @@ public class TensorFlowController {
           return new TensorFlowJob(job, submitter, user,
               settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
               settings.getHdfsSuperUser(),
-              hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator())
-          );
+              hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
+              jobsMonitor);
         }
       });
     } catch (InterruptedException ex) {
@@ -104,8 +107,7 @@ public class TensorFlowController {
     TensorFlowJob tfJob = new TensorFlowJob(job, submitter, user,
         settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
         settings.getHdfsSuperUser(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator())
-    );
+        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),jobsMonitor);
 
     submitter.stopExecution(tfJob, appid);
 

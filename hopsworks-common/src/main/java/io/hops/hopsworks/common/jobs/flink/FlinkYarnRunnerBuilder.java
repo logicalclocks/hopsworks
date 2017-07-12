@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.jobs.flink;
 
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -308,13 +309,14 @@ public class FlinkYarnRunnerBuilder {
    * @param flinkConfFile
    * @param nameNodeIpPort
    * @param certsDir
+   * @param services
    * @return
    * @throws java.io.IOException
    */
   protected YarnRunner getYarnRunner(String project, final String flinkUser,
           String jobUser, String hadoopDir, final String flinkDir,
           final String flinkConfDir, final String flinkConfFile,
-          final String nameNodeIpPort, final String certsDir) throws IOException {
+          final String nameNodeIpPort, final String certsDir, AsynchronousJobExecutor services) throws IOException {
 
     //Create the YarnRunner builder for Flink, proceed with setting values
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
@@ -433,7 +435,7 @@ public class FlinkYarnRunnerBuilder {
     if (!amargs.toString().equals("")) {
       builder.amArgs(amargs.toString());
     }
-    return builder.build(hadoopDir, flinkDir, nameNodeIpPort, JobType.FLINK);
+    return builder.build(flinkDir, JobType.FLINK,services);
   }
 
   public static class YarnDeploymentException extends RuntimeException {
