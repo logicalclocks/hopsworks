@@ -35,11 +35,11 @@
                                 id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-               <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
+              <label id="tensorflowJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="5" ng-change="newJobCtrl.jobTypeChosen()">TensorFlowOnSpark</label>
 
               <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
-              <label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
+              <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
           </div>
 
@@ -452,7 +452,7 @@
               tourtip-element="#sparkJobType"
               tourtip-placement="right"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.jobTypeSpark()"
+              on-proceed="newJobCtrl.setTourJobType(1)"
               ng-if="newJobCtrl.accordion2.visible"
       ></virtual-step>
       <virtual-step
@@ -514,82 +514,164 @@
                 || projectCtrl.tourService.tipsOnly)">
       <virtual-step
         class="ng-scope"
-            <virtual-step
-            class="ng-scope"
-            tourtip="Click Next OR name the job yourself by typing in the field below"
-            tourtip-step="0"
-            tourtip-element="#inputJobName"
-            tourtip-placement="bottom"
-            tourtip-next-label="Next"
-            on-proceed="newJobCtrl.nameFilledIn()"
-            tourtip-offset-vertical="5"
-            ></virtual-step>
-            <virtual-step
-            ng-hide="true"
-            class="ng-scope"
-            tourtip="invisible"
-            tourtip-step="1"
-            ></virtual-step>
-            <virtual-step
-            class="ng-scope"
-            tourtip="Click Next OR SPARK"
-            tourtip-step="2"
-            tourtip-element="#sparkJobType"
-            tourtip-placement="bottom"
-            tourtip-next-label="Next"
-            on-proceed="newJobCtrl.jobTypeSpark()"
-            tourtip-offset-vertical="-15"
-            tourtip-offset-horizontal="-6"
-            ng-if="newJobCtrl.accordion2.visible"
-            ></virtual-step>
-            <virtual-step
-            ng-hide="true"
-            class="ng-scope"
-            tourtip="invisible"
-            tourtip-step="3"
-            ></virtual-step>
-            <virtual-step
-            class="ng-scope"
-            tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
-            tourtip-step="4"
-            tourtip-element="#selectFileButton"
-            tourtip-placement="bottom"
-            tourtip-next-label="Next"
-            on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
-            tourtip-offset-vertical="-14"
-            tourtip-offset-horizontal="-5"
-            ng-if="newJobCtrl.accordion3.visible"
-            ></virtual-step>
-            <virtual-step
-            ng-hide="true"
-            class="ng-scope"
-            tourtip="invisible"
-            tourtip-step="5"
-            ></virtual-step>
-            <virtual-step
-            class="ng-scope"
-            tourtip="Choose parameters on you own or click Next and let us choose for you"
-            tourtip-step="6"
-            tourtip-element="#chooseParametersAndArguments"
-            tourtip-placement="top"
-            tourtip-next-label="Next"
-            on-proceed="newJobCtrl.chooseParameters()"
-            tourtip-offset-vertical="70"
-            tourtip-offset-horizontal="750"
-            ng-if="newJobCtrl.accordion4.visible"
-            ></virtual-step>
-            <virtual-step
-            class="ng-scope"
-            tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
-            tourtip-step="7"
-            tourtip-element="#moreConfigs"
-            tourtip-placement="bottom"
-            tourtip-next-label="Create Job"
-            on-proceed="newJobCtrl.createJob()"
-            tourtip-offset-vertical="-15"
-            tourtip-offset-horizontal="10"
-            ng-if="newJobCtrl.accordion5.visible"
-            ></virtual-step>
+        tourtip="Click Next OR name the job yourself by typing in the field below"
+        tourtip-step="0"
+        tourtip-element="#inputJobName"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.nameFilledIn()"
+        tourtip-offset-vertical="5"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="1"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Click Next OR SPARK"
+        tourtip-step="2"
+        tourtip-element="#sparkJobType"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.setTourJobType(1)"
+        tourtip-offset-vertical="-15"
+        tourtip-offset-horizontal="-6"
+        ng-if="newJobCtrl.accordion2.visible"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="3"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
+        tourtip-step="4"
+        tourtip-element="#selectFileButton"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
+        tourtip-offset-vertical="-14"
+        tourtip-offset-horizontal="-5"
+        ng-if="newJobCtrl.accordion3.visible"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="5"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Choose parameters on you own or click Next and let us choose for you"
+        tourtip-step="6"
+        tourtip-element="#chooseParametersAndArguments"
+        tourtip-placement="top"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.chooseParameters()"
+        tourtip-offset-vertical="70"
+        tourtip-offset-horizontal="750"
+        ng-if="newJobCtrl.accordion4.visible"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+        tourtip-step="7"
+        tourtip-element="#moreConfigs"
+        tourtip-placement="bottom"
+        tourtip-next-label="Create Job"
+        on-proceed="newJobCtrl.createJob()"
+        tourtip-offset-vertical="-15"
+        tourtip-offset-horizontal="10"
+        ng-if="newJobCtrl.accordion5.visible"
+        ></virtual-step>
+    </tour>
+    
+    <tour class="ng-scope"
+          step="projectCtrl.tourService.currentStep_TourFour"
+          post-tour="closeTour()"
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow'
+            && (projectCtrl.tourService.informAndTips
+                || projectCtrl.tourService.tipsOnly)">
+      <virtual-step
+        class="ng-scope"
+        tourtip="Click Next OR name the job yourself by typing in the field below"
+        tourtip-step="0"
+        tourtip-element="#inputJobName"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.nameFilledIn()"
+        tourtip-offset-vertical="5"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="1"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Click Next OR TENSORFLOW"
+        tourtip-step="2"
+        tourtip-element="#tensorflowJobType"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.setTourJobType(6)"
+        tourtip-offset-vertical="-15"
+        tourtip-offset-horizontal="-6"
+        ng-if="newJobCtrl.accordion2.visible"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="3"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Browse(select your own .py) or let us choose one for you (Next)"
+        tourtip-step="4"
+        tourtip-element="#selectFileButton"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.onFileSelected('TENSORFLOW','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/mnist.py')"
+        tourtip-offset-vertical="-14"
+        tourtip-offset-horizontal="-5"
+        ng-if="newJobCtrl.accordion3.visible"
+        ></virtual-step>
+      <virtual-step
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="5"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Choose parameters on you own or click Next and let us choose for you"
+        tourtip-step="6"
+        tourtip-element="#chooseParametersAndArguments"
+        tourtip-placement="top"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.chooseParameters()"
+        tourtip-offset-vertical="70"
+        tourtip-offset-horizontal="750"
+        ng-if="newJobCtrl.accordion4.visible"
+        ></virtual-step>
+      <virtual-step
+        class="ng-scope"
+        tourtip="Click the 'Pre-Configuration' link for configuration suggestions or the 'Configure and create' link for further configuration, otherwise click Create Job"
+        tourtip-step="7"
+        tourtip-element="#moreConfigs"
+        tourtip-placement="bottom"
+        tourtip-next-label="Create Job"
+        on-proceed="newJobCtrl.createJob()"
+        tourtip-offset-vertical="-15"
+        tourtip-offset-horizontal="10"
+        ng-if="newJobCtrl.accordion5.visible"
+        ></virtual-step>
     </tour>
   </div>
   <!-- /#wrapper -->
