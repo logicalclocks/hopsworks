@@ -99,8 +99,10 @@ angular.module('hopsWorksApp')
                   break;
                 case "TFSPARK":
                   jobType = 5;
+                  break;
                 case "TENSORFLOW":
-                  jobType = 6;  
+                  jobType = 6;
+                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState, tensorflowState;
               if (jobType === 1 || jobType === 4 || jobType === 5 ) {
