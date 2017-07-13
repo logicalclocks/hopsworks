@@ -485,6 +485,8 @@ angular.module('hopsWorksApp')
                   self.accordion4.title = "Job details";
                   selectedType = "TensorFlow";
                   break;
+                default:
+                  break;
               }
               self.accordion1.isOpen = false; //Close job name panel
               self.accordion1.value = " - " + self.jobname; //Set job name panel title
@@ -709,6 +711,8 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                   });
                   break;
+                default:
+                  break;
               }
             };
 
@@ -819,6 +823,9 @@ angular.module('hopsWorksApp')
               if (stored) {
                 //Job information
                 self.jobtype = stored.jobtype;
+                if(self.getJobType() === "TFSPARK"){
+                  self.tfOnSpark = true;
+                }
                 self.jobname = stored.jobname;
                 self.localResources = stored.runConfig.localResources;
                 self.phase = stored.phase;
