@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.jobhistory;
 
+import io.hops.hopsworks.common.dao.jobs.FilesToRemove;
 import io.hops.hopsworks.common.dao.jobs.JobInputFile;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
@@ -29,6 +30,8 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.user.Users;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An Execution is an instance of execution of a specific JobDescription.
@@ -49,9 +52,9 @@ import io.hops.hopsworks.common.dao.user.Users;
   @NamedQuery(name = "Execution.findByState",
           query
           = "SELECT e FROM Execution e WHERE e.state = :state"),
-  @NamedQuery(name = "Execution.findByExecutionDuration",
+  @NamedQuery(name = "Execution.findByStates",
           query
-          = "SELECT e FROM Execution e WHERE e.executionDuration = :executionDuration"),
+          = "SELECT e FROM Execution e WHERE e.state in :states"),
   @NamedQuery(name = "Execution.findByStdoutPath",
           query
           = "SELECT e FROM Execution e WHERE e.stdoutPath = :stdoutPath"),
@@ -98,9 +101,12 @@ public class Execution implements Serializable {
   @Enumerated(EnumType.STRING)
   private JobState state;
 
-  @Column(name = "execution_duration")
-  private long executionDuration;
+  @Column(name = "execution_start")
+  private long executionStart;
 
+  @Column(name = "execution_stop")
+  private long executionStop;
+  
   @Size(max = 255)
   @Column(name = "stdout_path")
   private String stdoutPath;
@@ -113,6 +119,10 @@ public class Execution implements Serializable {
   @Column(name = "app_id")
   private String appId;
 
+  @Size(max = 255)
+  @Column(name = "hdfs_user")
+  private String hdfsUser;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "finalStatus")
@@ -141,73 +151,82 @@ public class Execution implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "execution")
   private Collection<JobInputFile> jobInputFileCollection;
+  
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "execution")
+  private Collection<FilesToRemove> filesToRemove;
 
   public Execution() {
   }
 
-  public Execution(JobState state, JobDescription job, Users user) {
-    this(state, job, user, new Date());
+  public Execution(JobState state, JobDescription job, Users user, String hdfsUser) {
+    this(state, job, user, new Date(), hdfsUser);
   }
 
   public Execution(JobState state, JobDescription job, Users user,
-          Date submissionTime) {
-    this(state, job, user, submissionTime, null, null);
+          Date submissionTime, String hdfsUser) {
+    this(state, job, user, submissionTime, null, null, hdfsUser);
   }
 
   public Execution(JobState state, JobDescription job, Users user,
           String stdoutPath,
-          String stderrPath) {
-    this(state, job, user, new Date(), stdoutPath, stderrPath);
+          String stderrPath, String hdfsUser) {
+    this(state, job, user, new Date(), stdoutPath, stderrPath, hdfsUser);
   }
 
   public Execution(JobState state, JobDescription job, Users user,
           Date submissionTime,
-          String stdoutPath, String stderrPath) {
-    this(state, job, user, submissionTime, stdoutPath, stderrPath, null);
+          String stdoutPath, String stderrPath, String hdfsUser) {
+    this(state, job, user, submissionTime, stdoutPath, stderrPath, null,hdfsUser);
   }
 
   public Execution(JobState state, JobDescription job, Users user,
           String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress) {
+          JobFinalStatus finalStatus, float progress, String hdfsUser) {
     this(state, job, user, new Date(), stdoutPath, stderrPath, input,
-            finalStatus, progress);
+            finalStatus, progress, hdfsUser);
   }
 
   public Execution(Execution t) {
     this(t.state, t.job, t.user, t.submissionTime, t.stdoutPath, t.stderrPath,
-            t.jobInputFileCollection);
+            t.jobInputFileCollection, t.hdfsUser);
     this.id = t.id;
     this.appId = t.appId;
     this.jobOutputFileCollection = t.jobOutputFileCollection;
-    this.executionDuration = t.executionDuration;
+    this.executionStart = t.executionStart;
+    this.executionStop = t.executionStop;
+    this.filesToRemove = t.filesToRemove;
   }
 
   public Execution(JobState state, JobDescription job, Users user,
           Date submissionTime,
-          String stdoutPath, String stderrPath, Collection<JobInputFile> input) {
+          String stdoutPath, String stderrPath, Collection<JobInputFile> input, String hdfsUser) {
     this.submissionTime = submissionTime;
     this.state = state;
     this.stdoutPath = stdoutPath;
     this.stderrPath = stderrPath;
     this.job = job;
     this.user = user;
+    this.hdfsUser = hdfsUser;
     this.jobInputFileCollection = input;
+    this.executionStart = -1;
   }
 
   public Execution(JobState state, JobDescription job, Users user,
           Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress) {
+          JobFinalStatus finalStatus, float progress, String hdfsUser) {
     this.submissionTime = submissionTime;
     this.state = state;
     this.stdoutPath = stdoutPath;
     this.stderrPath = stderrPath;
     this.job = job;
     this.user = user;
+    this.hdfsUser = hdfsUser;
     this.jobInputFileCollection = input;
     this.finalStatus = finalStatus;
     this.progress = progress;
+    this.executionStart = -1;
   }
 
   public Integer getId() {
@@ -251,13 +270,25 @@ public class Execution implements Serializable {
   }
 
   public long getExecutionDuration() {
-    return executionDuration;
+    if (executionStart == -1) {
+      return 0;
+    }
+    if (executionStop > executionStart) {
+      return executionStop - executionStart;
+    } else {
+      return System.currentTimeMillis() - executionStart;
+    }
   }
 
-  public void setExecutionDuration(long executionDuration) {
-    this.executionDuration = executionDuration;
+  public void setExecutionStart(long executionStart) {
+    this.executionStart = executionStart;
+    this.executionStop = executionStart;
   }
 
+  public void setExecutionStop(long executionStop) {
+    this.executionStop = executionStop;
+  }
+  
   public String getStdoutPath() {
     return stdoutPath;
   }
@@ -323,7 +354,31 @@ public class Execution implements Serializable {
   public void setUser(Users user) {
     this.user = user;
   }
+  
+  public String getHdfsUser() {
+    return hdfsUser;
+  }
+  
+  public void setHdfsUser(String hdfsUser){
+    this.hdfsUser = hdfsUser;
+  }
 
+  public void setFilesToRemove(List<String> filesToRemove){
+    List<FilesToRemove> toRemove = new ArrayList<>();
+    for(String fileToRemove: filesToRemove){
+      toRemove.add(new FilesToRemove(id, fileToRemove));
+    }
+    this.filesToRemove = toRemove;
+  }
+  
+  public List<String> getFilesToRemove(){
+    List<String> toRemove = new ArrayList<>();
+    for(FilesToRemove fileToRemove : filesToRemove){
+      toRemove.add(fileToRemove.getPath());
+    }
+    return toRemove;
+  }
+  
   public Collection<JobOutputFile> getJobOutputFileCollection() {
     return jobOutputFileCollection;
   }

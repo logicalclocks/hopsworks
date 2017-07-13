@@ -12,6 +12,7 @@ import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFileFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import java.io.IOException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -41,6 +42,8 @@ public class AsynchronousJobExecutor {
   private CertsFacade userCerts;
   @EJB
   private Settings settings;
+  @EJB
+  private YarnExecutionFinalizer yarnExecutionFinalizer;
 
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -56,6 +59,10 @@ public class AsynchronousJobExecutor {
     return executionFacade;
   }
 
+  public YarnExecutionFinalizer getYarnExecutionFinalizer(){
+    return yarnExecutionFinalizer;
+  }
+  
   public JobOutputFileFacade getJobOutputFileFacade() {
     return jobOutputFileFacade;
   }

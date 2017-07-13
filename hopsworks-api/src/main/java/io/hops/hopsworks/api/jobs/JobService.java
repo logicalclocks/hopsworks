@@ -1051,8 +1051,7 @@ public class JobService {
     DistributedFileSystemOps udfso = null;
     Users user = execution.getUser();
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-    String aggregatedLogPath = jobController.getAggregatedLogPath(hdfsUser,
-        appId);
+    String aggregatedLogPath = settings.getAggregatedLogPath(hdfsUser, appId);   
     if (aggregatedLogPath == null) {
       throw new AppException(Response.Status.NOT_FOUND.
           getStatusCode(),

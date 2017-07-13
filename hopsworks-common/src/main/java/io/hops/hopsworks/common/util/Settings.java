@@ -4,6 +4,9 @@ import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
@@ -13,6 +16,9 @@ import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -108,7 +114,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
-
+  private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
+  
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
@@ -285,6 +292,7 @@ public class Settings implements Serializable {
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       VAGRANT_ENABLED = setIntVar(VARIABLE_VAGRANT_ENABLED, VAGRANT_ENABLED);
+      MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY, MAX_STATUS_POLL_RETRY);
       cached = true;
     }
   }
@@ -770,7 +778,7 @@ public class Settings implements Serializable {
    * @return
    */
   public static String getJobMarkerFile(JobDescription job, String appId) {
-    return getHdfsRootPath(job.getProject().getName()) + "Resources/.marker-"
+    return getHdfsRootPath(job.getProject().getName()) + "/Resources/.marker-"
             + job.getJobType().getName().toLowerCase()
             + "-" + job.getName()
             + "-" + appId;
@@ -1309,4 +1317,108 @@ public class Settings implements Serializable {
     return File.separator + DIR_ROOT + File.separator + projectname;
   }
 
+  Configuration conf;
+
+  public Configuration getConfiguration() throws IllegalStateException {
+    if (conf == null) {
+      String hadoopDir = getHadoopDir();
+      //Get the path to the Yarn configuration file from environment variables
+      String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
+      //If not found in environment variables: warn and use default,
+      if (yarnConfDir == null) {
+        yarnConfDir = getYarnConfDir(hadoopDir);
+      }
+
+      Path confPath = new Path(yarnConfDir);
+      File confFile = new File(confPath + File.separator + Settings.DEFAULT_YARN_CONFFILE_NAME);
+      if (!confFile.exists()) {
+        throw new IllegalStateException("No Yarn conf file");
+      }
+
+      //Also add the hadoop config
+      String hadoopConfDir = System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR);
+      //If not found in environment variables: warn and use default
+      if (hadoopConfDir == null) {
+        hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
+      }
+      confPath = new Path(hadoopConfDir);
+      File hadoopConf = new File(confPath + "/" + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
+      if (!hadoopConf.exists()) {
+        throw new IllegalStateException("No Hadoop conf file");
+      }
+
+      File hdfsConf = new File(confPath + "/" + Settings.DEFAULT_HDFS_CONFFILE_NAME);
+      if (!hdfsConf.exists()) {
+        throw new IllegalStateException("No HDFS conf file");
+      }
+
+      //Set the Configuration object for the returned YarnClient
+      conf = new Configuration();
+      conf.addResource(new Path(confFile.getAbsolutePath()));
+      conf.addResource(new Path(hadoopConf.getAbsolutePath()));
+      conf.addResource(new Path(hdfsConf.getAbsolutePath()));
+
+      addPathToConfig(conf, confFile);
+      addPathToConfig(conf, hadoopConf);
+      setDefaultConfValues(conf);
+    }
+    return conf;
+  }
+
+  private static void addPathToConfig(Configuration conf, File path) {
+    // chain-in a new classloader
+    URL fileUrl = null;
+    try {
+      fileUrl = path.toURL();
+    } catch (MalformedURLException e) {
+      throw new RuntimeException("Erroneous config file path", e);
+    }
+    URL[] urls = {fileUrl};
+    ClassLoader cl = new URLClassLoader(urls, conf.getClassLoader());
+    conf.setClassLoader(cl);
+  }
+
+  private static void setDefaultConfValues(Configuration conf) {
+    if (conf.get("fs.hdfs.impl", null) == null) {
+      conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+    }
+    if (conf.get("fs.file.impl", null) == null) {
+      conf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+    }
+  }
+
+  public int MAX_STATUS_POLL_RETRY = 5;
+
+  public synchronized int getMaxStatusPollRetry() {
+    checkCache();
+    return MAX_STATUS_POLL_RETRY;
+  }
+
+  /**
+   * Returns aggregated log dir path for an application with the the given
+   * appId.
+   *
+   * @param hdfsUser
+   * @param appId
+   * @return
+   */
+  public String getAggregatedLogPath(String hdfsUser, String appId) {
+    boolean logPathsAreAggregated = conf.getBoolean(
+        YarnConfiguration.LOG_AGGREGATION_ENABLED,
+        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
+    String aggregatedLogPath = null;
+    if (logPathsAreAggregated) {
+      String[] nmRemoteLogDirs = conf.getStrings(
+          YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
+
+      String[] nmRemoteLogDirSuffix = conf.getStrings(
+          YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX,
+          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
+      aggregatedLogPath = nmRemoteLogDirs[0] + File.separator + hdfsUser
+          + File.separator + nmRemoteLogDirSuffix[0] + File.separator
+          + appId;
+    }
+    return aggregatedLogPath;
+  }
 }

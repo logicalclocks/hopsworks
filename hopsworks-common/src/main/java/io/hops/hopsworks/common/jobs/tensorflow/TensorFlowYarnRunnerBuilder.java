@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.jobs.tensorflow;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -48,7 +49,8 @@ public class TensorFlowYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner(String project, String tfUser,
-      String jobUser, final String hadoopDir, final String nameNodeIpPort) throws IOException, Exception {
+      String jobUser, final String hadoopDir, final String nameNodeIpPort, AsynchronousJobExecutor services) throws
+      IOException, Exception {
 
 //    if (!serviceProps.isAnacondaEnabled()) {
 //      //Throw error in Hopswors UI to notify user to enable Anaconda
@@ -95,7 +97,7 @@ public class TensorFlowYarnRunnerBuilder {
     client.setAllocationTimeout(15000);
     client.setProjectDir("hdfs://" + Settings.getHdfsRootPath(project));
     builder.setTfClient(client);
-    return builder.build(hadoopDir, null, nameNodeIpPort, JobType.TENSORFLOW);
+    return builder.build(null, JobType.TENSORFLOW, services);
   }
 
   public TensorFlowYarnRunnerBuilder addAllJobArgs(List<String> jobArgs) {

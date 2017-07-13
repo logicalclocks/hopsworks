@@ -75,6 +75,7 @@ import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJob;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -122,7 +123,9 @@ public class DataSetService {
   private DownloadService downloader;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-
+  @EJB
+  private YarnJobsMonitor jobsMonitor;
+  
   private Integer projectId;
   private Project project;
   private String path;
@@ -1445,7 +1448,7 @@ public class DataSetService {
             ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint());
+            settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(), jobsMonitor);
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     if (exec != null) {
