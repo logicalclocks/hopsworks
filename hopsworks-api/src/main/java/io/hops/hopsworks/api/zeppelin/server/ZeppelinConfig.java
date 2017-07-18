@@ -515,7 +515,6 @@ public class ZeppelinConfig {
                       "spark.yarn.stagingDir", hdfsResourceDir,
                       "livy.spark.sql.warehouse.dir", hdfsResourceDir
                       + "spark-warehouse",
-                      "anaconda_env_dir", settings.getAnacondaDir() + "/envs/",
                       "livy.spark.yarn.stagingDir", hdfsResourceDir,
                       "zeppelin.python_conda_path", zeppelinPythonPath
               );

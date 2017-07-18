@@ -2,7 +2,6 @@ package io.hops.hopsworks.api.app;
 
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.project.ProjectService;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 import java.util.logging.Level;
@@ -82,7 +81,7 @@ public class ApplicationService {
     try {
       email.sendEmail(dest, Message.RecipientType.TO, subject, message);
     } catch (MessagingException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, null,
+      Logger.getLogger(ApplicationService.class.getName()).log(Level.SEVERE, null,
           ex);
       return noCacheResponse.getNoCacheResponseBuilder(
           Response.Status.SERVICE_UNAVAILABLE).build();

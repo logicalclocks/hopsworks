@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -36,6 +37,8 @@ public class FlinkController {
   private static final Logger LOG = Logger.getLogger(FlinkController.class.
           getName());
 
+  @EJB
+  YarnJobsMonitor jobsMonitor;
   @EJB
   private DistributedFsService fops;
   @EJB
@@ -93,7 +96,7 @@ public class FlinkController {
                   settings.getFlinkUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(),
                           job.getCreator()),
-                  settings.getHopsworksDomainDir()
+                  settings.getHopsworksDomainDir(), jobsMonitor
           );
         }
       });
@@ -137,7 +140,7 @@ public class FlinkController {
             hdfsLeDescriptorsFacade.getSingleEndpoint(),
             settings.getFlinkUser(),
             job.getProject().getName() + "__" + user.getUsername(),
-            settings.getHopsworksDomainDir()
+            settings.getHopsworksDomainDir(), jobsMonitor
     );
 
     submitter.stopExecution(flinkJob, appid);

@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -32,7 +33,7 @@ public class SparkYarnRunnerBuilder {
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
-  private List<LocalResourceDTO> extraFiles = new ArrayList<>();
+  private final List<LocalResourceDTO> extraFiles = new ArrayList<>();
   private int numberOfExecutors = 1;
   private int numberOfExecutorsMin = Settings.SPARK_MIN_EXECS;
   private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
@@ -46,7 +47,6 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
-  private String hadoopDir;
   private ServiceProperties serviceProps;
 
   public SparkYarnRunnerBuilder(JobDescription jobDescription) {
@@ -66,20 +66,17 @@ public class SparkYarnRunnerBuilder {
 
   /**
    * Get a YarnRunner instance that will launch a Spark job.
-   * <p/>
+   * 
    * @param project name of the project
    * @param sparkUser
    * @param jobUser
-   * @param hadoopDir
    * @param sparkDir
-   * @param nameNodeIpPort
+   * @param services
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project, String sparkUser,
-      String jobUser,
-      final String hadoopDir, final String sparkDir,
-      final String nameNodeIpPort)
+      String jobUser, final String sparkDir, AsynchronousJobExecutor services)
       throws IOException {
 
     JobType jobType = ((SparkJobConfiguration) jobDescription.getJobConfig()).getType();
@@ -94,8 +91,6 @@ public class SparkYarnRunnerBuilder {
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
 
-    this.hadoopDir = hadoopDir;
-
     String stagingPath = "/Projects/ " + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";
     builder.localResourcesBasePath(stagingPath);
 
@@ -106,7 +101,7 @@ public class SparkYarnRunnerBuilder {
     //Add log4j
     builder.addLocalResource(new LocalResourceDTO(
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
-        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
     //Add metrics
     builder.addLocalResource(new LocalResourceDTO(
@@ -283,7 +278,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
         + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.HOPSUTIL_APPID_ENV_VAR, YarnRunner.APPID_PLACEHOLDER);
-    addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, this.hadoopDir + "/lib/native/");
+    addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopDir() + "/lib/native/");
 
     //Set executor extraJavaOptions to make parameters available to executors
     StringBuilder extraJavaOptions = new StringBuilder();
@@ -293,7 +288,8 @@ public class SparkYarnRunnerBuilder {
         append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(project.toLowerCase()).append(",").
         append(jobName).append(",").append(jobDescription.getId()).append(",").append(YarnRunner.APPID_PLACEHOLDER).
         append(" ").
-        append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").append(this.hadoopDir).append("/lib/native/").
+        append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").append(services.getSettings().getHadoopDir()).
+        append("/lib/native/").
         append(" ").
         append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").append(YarnRunner.APPID_PLACEHOLDER);
 
@@ -401,7 +397,7 @@ public class SparkYarnRunnerBuilder {
     //Set app name
     builder.appName(jobName);
 
-    return builder.build(hadoopDir, sparkDir, nameNodeIpPort, JobType.SPARK);
+    return builder.build(sparkDir, JobType.SPARK, services);
   }
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {
@@ -421,14 +417,6 @@ public class SparkYarnRunnerBuilder {
 
   public SparkYarnRunnerBuilder addJobArg(String jobArg) {
     jobArgs.add(jobArg);
-    return this;
-  }
-
-  public SparkYarnRunnerBuilder setExtraFiles(List<LocalResourceDTO> extraFiles) {
-    if (extraFiles == null) {
-      throw new IllegalArgumentException("Map of extra files cannot be null.");
-    }
-    this.extraFiles = extraFiles;
     return this;
   }
 

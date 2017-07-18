@@ -75,7 +75,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.administration.JobAdministration;
-import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.Settings;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
@@ -674,7 +673,7 @@ public class InterpreterRestApi {
     JobAdministration jobAdmin = new JobAdministration();
     List<JobAdministration.YarnApplicationReport> reports = new ArrayList<>();
     YarnClient client = YarnClient.createYarnClient();
-    Configuration conf = setConfiguration(settings.getHadoopDir());
+    Configuration conf = settings.getConfiguration();
     client.init(conf);
     client.start();
     try {
@@ -700,7 +699,7 @@ public class InterpreterRestApi {
     JobAdministration jobAdmin = new JobAdministration();
     List<JobAdministration.YarnApplicationReport> reports = new ArrayList<>();
     YarnClient client = YarnClient.createYarnClient();
-    Configuration conf = setConfiguration(settings.getHadoopDir());
+    Configuration conf = settings.getConfiguration();
     client.init(conf);
     client.start();
     try {
@@ -721,58 +720,6 @@ public class InterpreterRestApi {
       logger.error("", ex);
     }
     return reports;
-  }
-
-  private Configuration setConfiguration(String hadoopDir)
-          throws IllegalStateException {
-    //Get the path to the Yarn configuration file from environment variables
-    String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
-//      If not found in environment variables: warn and use default,
-    if (yarnConfDir == null) {
-      yarnConfDir = Settings.getYarnConfDir(hadoopDir);
-
-    }
-
-    org.apache.hadoop.fs.Path confPath = new org.apache.hadoop.fs.Path(
-            yarnConfDir);
-    File confFile = new File(confPath + File.separator
-            + Settings.DEFAULT_YARN_CONFFILE_NAME);
-    if (!confFile.exists()) {
-      throw new IllegalStateException("No Yarn conf file");
-    }
-
-    //Also add the hadoop config
-    String hadoopConfDir = System.getenv(Settings.ENV_KEY_HADOOP_CONF_DIR);
-    //If not found in environment variables: warn and use default
-    if (hadoopConfDir == null) {
-      hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
-    }
-    confPath = new org.apache.hadoop.fs.Path(hadoopConfDir);
-    File hadoopConf = new File(confPath + "/"
-            + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
-    if (!hadoopConf.exists()) {
-      throw new IllegalStateException("No Hadoop conf file");
-    }
-
-    //And the hdfs config
-    File hdfsConf = new File(confPath + "/"
-            + Settings.DEFAULT_HDFS_CONFFILE_NAME);
-    if (!hdfsConf.exists()) {
-      throw new IllegalStateException("No HDFS conf file");
-    }
-
-    //Set the Configuration object for the returned YarnClient
-    Configuration conf = new Configuration();
-    conf.addResource(new org.apache.hadoop.fs.Path(confFile.getAbsolutePath()));
-    conf.
-            addResource(new org.apache.hadoop.fs.Path(hadoopConf.
-                    getAbsolutePath()));
-    conf.addResource(new org.apache.hadoop.fs.Path(hdfsConf.getAbsolutePath()));
-
-    YarnRunner.Builder.addPathToConfig(conf, confFile);
-    YarnRunner.Builder.addPathToConfig(conf, hadoopConf);
-    YarnRunner.Builder.setDefaultConfValues(conf);
-    return conf;
   }
 
 }

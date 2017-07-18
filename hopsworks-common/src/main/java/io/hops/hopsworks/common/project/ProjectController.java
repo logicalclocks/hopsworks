@@ -392,7 +392,7 @@ public class ProjectController {
     } catch (IOException | EJBException ex) {
       cleanup(project, sessionId);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "error while running verifications");
+              getStatusCode(), "error while running verifications");
     }
   }
 
@@ -1509,22 +1509,7 @@ public class ProjectController {
     activityFacade.persistActivity(activity);
   }
 
-  /**
-   * Extracts the project name out of the given path. The project name is the
-   * second part of this path.
-   * <p/>
-   * @param path
-   * @return
-   */
-  private String extractProjectName(String path) {
-
-    int startIndex = path.indexOf('/', 1);
-    int endIndex = path.indexOf('/', startIndex + 1);
-
-    return path.substring(startIndex + 1, endIndex);
-  }
-
-  public void addExampleJarToExampleProject(String username, Project project,
+  public void addTourFilesToProject(String username, Project project,
           DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
           TourProjectType projectType) throws
           AppException {
@@ -1532,62 +1517,96 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-          "jar files for guide projects", -1, false, true, dfso, udfso);
+          "files for guide projects", -1, false, true, dfso, udfso);
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
-              "something went wrong when adding the example jar to the project");
+              "Something went wrong when adding the tour files to the project");
     }
 
-    if (TourProjectType.SPARK.equals(projectType)) {
-      String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
+    if (null != projectType) {
+      switch (projectType) {
+        case SPARK:
+          String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR
               + "/";
-      try {
-        File dir = new File(exampleDir);
-        File[] file = dir.listFiles((File dir1, String name)
+          try {
+            File dir = new File(exampleDir);
+            File[] file = dir.listFiles((File dir1, String name)
                 -> name.matches("spark-examples(.*).jar"));
-        if (file.length == 0) {
-          throw new IllegalStateException("No spark-examples*.jar was found in "
+            if (file.length == 0) {
+              throw new IllegalStateException("No spark-examples*.jar was found in "
                   + dir.getAbsolutePath());
-        }
-        if (file.length > 1) {
-          LOGGER.log(Level.WARNING,
+            }
+            if (file.length > 1) {
+              LOGGER.log(Level.WARNING,
                   "More than one spark-examples*.jar found in {0}.", dir.
-                  getAbsolutePath());
-        }
-        String hdfsJarPath = "/" + Settings.DIR_ROOT + "/" + project.getName() +  "/"+  Settings.HOPS_TOUR_DATASET + 
-            "/spark-examples.jar";
-        udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
-        String datsetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
-        String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
-        udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
-        udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() +  "/"+ 
-            Settings.HOPS_TOUR_DATASET + "/spark-examples.jar"), userHdfsName, datsetGroup);
+                      getAbsolutePath());
+            }
+            String hdfsJarPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
+                + "/spark-examples.jar";
+            udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
+            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
+            udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
+                + "/spark-examples.jar"), userHdfsName, datasetGroup);
 
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
-                "something went wrong when adding the example jar to the project");
-      }
-    } else if (TourProjectType.KAFKA.equals(projectType)) {
-      // Get the JAR from /user/<super user>
-      String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/"
+                "Something went wrong when adding the tour files to the project");
+          }
+          break;
+        case KAFKA: {
+          // Get the JAR from /user/<super user>
+          String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/"
               + Settings.HOPS_KAFKA_TOUR_JAR;
-      String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-          + "/" + Settings.HOPS_TOUR_DATASET + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
-      try {
-        udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
-        String datsetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
-        String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
-        udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));     
-        udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datsetGroup);
-        
-      } catch (IOException ex) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
+              + "/" + Settings.HOPS_TOUR_DATASET + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
+          try {
+            udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
+            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
+            udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
+
+          } catch (IOException ex) {
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
-                "something went wrong when adding the example jar to the project");
+                "Something went wrong when adding the tour files to the project");
+          }
+          break;
+        }
+        case TENSORFLOW: {
+          // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
+          String tensorflowDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_TENSORFLOW_TOUR_DATA
+              + "/*";
+          String tensorflowDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+              + Settings.HOPS_TOUR_DATASET;
+          try {
+            udfso.copyInHdfs(new Path(tensorflowDataSrc), new Path(tensorflowDataDst));
+            String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
+            Inode parent = inodes.getInodeAtPath(tensorflowDataDst);
+            List<Inode> children = new ArrayList<>();
+            inodes.getAllChildren(parent, children);
+            for (Inode child : children) {
+              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getYarnSuperUser())) {
+                Path path = new Path(inodes.getPath(child));
+                udfso.setPermission(path, udfso.getParentPermission(path));
+                udfso.setOwner(path, userHdfsName, datasetGroup);
+              }
+            }
+          } catch (IOException ex) {
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(), "Something went wrong when adding the tour files to the project");
+          }
+          break;
+        }
+        default:
+          break;
       }
     }
   }

@@ -528,7 +528,7 @@ public abstract class AbstractYarnClusterDescriptor implements
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), JobType.FLINK,
         null, null, jobSystemProperties,
-        null, services.getSettings().getFlinkKafkaCertDir(),
+        services.getSettings().getFlinkKafkaCertDir(),
         appResponse.getApplicationId().toString());
   
     StringBuilder tmpBuilder = new StringBuilder();

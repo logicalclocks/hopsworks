@@ -11,7 +11,6 @@ import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.api.workflow.WorkflowService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -118,10 +117,6 @@ public class ProjectService {
   private UsersController usersController;
   @EJB
   private UserManager userManager;
-  @EJB
-  private CertsFacade certificateBean;
-  @EJB
-  private Settings settings;
   @EJB
   private DistributedFsService dfs;
 
@@ -498,18 +493,24 @@ public class ProjectService {
 
     TourProjectType demoType = null;
     String readMeMessage = null;
-    if (TourProjectType.SPARK.getTourName().equals(type.toLowerCase())) {
+    if (TourProjectType.SPARK.getTourName().equalsIgnoreCase(type)) {
       // It's a Spark guide
       demoType = TourProjectType.SPARK;
       projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.SPARK);
       readMeMessage = "jar file to demonstrate the creation of a spark batch job";
-    } else if (TourProjectType.KAFKA.getTourName().equals(type.toLowerCase())) {
+    } else if (TourProjectType.KAFKA.getTourName().equalsIgnoreCase(type)) {
       // It's a Kafka guide
       demoType = TourProjectType.KAFKA;
       projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.KAFKA);
       readMeMessage = "jar file to demonstrate Kafka streaming";
+    } else if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)) {
+      // It's a TensorFlow guide
+      demoType = TourProjectType.TENSORFLOW;
+      projectDTO.setProjectName("demo_" + TourProjectType.TENSORFLOW.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.TENSORFLOW);
+      readMeMessage = "Mnist data and python files to demonstrate the creation of a TensorFlow job";
     } else {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
@@ -523,7 +524,7 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      projectController.addExampleJarToExampleProject(owner, project, dfso, dfso, demoType);
+      projectController.addTourFilesToProject(owner, project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
     } catch (Exception ex) {

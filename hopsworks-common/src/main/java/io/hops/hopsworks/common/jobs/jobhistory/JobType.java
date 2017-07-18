@@ -7,6 +7,7 @@ public enum JobType {
   SPARK("Spark"),
   PYSPARK("PySpark"),
   TFSPARK("TensorFlowOnSpark"),
+  TENSORFLOW("TensorFlow"),
   ADAM("ADAM"),
   ERASURE_CODING("ERASURE_CODING");
 

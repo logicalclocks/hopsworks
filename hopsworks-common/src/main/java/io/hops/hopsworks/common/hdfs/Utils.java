@@ -43,7 +43,7 @@ public final class Utils {
     return path.substring(0, startName);
   }
 
-  public static String getHdfsRootPath(String hadoopDir, String projectname) {
+  public static String getHdfsRootPath(String projectname) {
     return "/Projects/" + projectname + "/";
   }
 

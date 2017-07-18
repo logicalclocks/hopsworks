@@ -1,6 +1,8 @@
 package io.hops.hopsworks.api.tensorflow;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -9,11 +11,17 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,12 +31,15 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.http.client.utils.URIUtils;
 
 public class TensorboardProxyServlet extends ProxyServlet {
 
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
+  @EJB
+  private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
   @EJB
   private UserManager userManager;
   @EJB
@@ -38,20 +49,24 @@ public class TensorboardProxyServlet extends ProxyServlet {
   @EJB
   private TensorflowFacade tensorflowFacade;
 
-  private final static Logger LOGGER = Logger.getLogger(TensorboardProxyServlet.class.
-      getName());
+  private String jobType; //TFSPARK or TENSORFLOW
+  private final static Logger LOGGER = Logger.getLogger(TensorboardProxyServlet.class.getName());
 
   @Override
   protected void service(HttpServletRequest servletRequest,
       HttpServletResponse servletResponse)
       throws ServletException, IOException {
     String email = servletRequest.getUserPrincipal().getName();
+    if (servletRequest.getParameterMap().containsKey("jobType")) {
+      jobType = servletRequest.getParameterMap().get("jobType")[0];
+    }
+    String trackingUrl;
     Pattern pattern = Pattern.compile("(application_.*?_\\d*)");
     Matcher matcher = pattern.matcher(servletRequest.getRequestURI());
     if (matcher.find()) {
       String appId = matcher.group(1);
-      YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(
-          appId);
+      YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
+      trackingUrl = yarnApplicationAttemptStateFacade.findTrackingUrlByAppId(appId);
       if (appState == null) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
             "You don't have the access right for this application");
@@ -79,13 +94,31 @@ public class TensorboardProxyServlet extends ProxyServlet {
             "You don't have the access right for this application");
         return;
       }
-      if (appState.getAppsmstate() != null && appState.getAppsmstate().equals("FINISHED")) {
+      if (appState.getAppsmstate() != null && (appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.FINISHED.
+          toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
         sendErrorResponse(servletResponse, "This tensorboard has finished running");
         return;
       }
       //get tensorboard address from hdfs file
-      String uri = tensorflowFacade.getTensorboardURI(appId, projectName);
-      if (uri == null || uri.equals("null")) {
+      String uri = null;
+      if (!Strings.isNullOrEmpty(jobType) && jobType.equalsIgnoreCase(JobType.TENSORFLOW.toString())) {
+        //Get amTrackingUri of distributed tensorflow
+        try {
+          uri = getHTML(trackingUrl + "/tensorboard");
+        } catch (Exception ex) {
+          LOGGER.log(Level.SEVERE, "Could not get TensorBoard URL", ex);
+        }
+        //TensorFlow ApplicationMaster returns a list of tensorboards, so we must parse it
+        //Currently it returns a single tensorboard
+        if (Strings.isNullOrEmpty(uri)) {
+          sendErrorResponse(servletResponse, "This tensorboard is not running right now");
+          return;
+        }
+        uri = "http://" + uri.replace("\"", "").replace("[", "").replace("]", "");
+      } else {
+        uri = tensorflowFacade.getTensorboardURI(appId, projectName);
+      }
+      if (uri == null) {
         sendErrorResponse(servletResponse, "This tensorboard is not running right now");
         return;
       }
@@ -169,4 +202,20 @@ public class TensorboardProxyServlet extends ProxyServlet {
     }
     return uri.toString();
   }
+
+  public static String getHTML(String urlToRead) throws Exception {
+    StringBuilder result = new StringBuilder();
+    URL url = new URL(urlToRead);
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("GET");
+    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    String line;
+    while ((line = rd.readLine()) != null) {
+      result.append(line);
+    }
+    rd.close();
+    conn.disconnect();
+    return result.toString();
+  }
+
 }

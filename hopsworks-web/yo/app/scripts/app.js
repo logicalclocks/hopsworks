@@ -34,6 +34,7 @@ angular.module('hopsWorksApp', [
   'md.data.table',
   'rzModule',
   'isteven-multi-select',
+  'nvd3',
   'ui.toggle'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',

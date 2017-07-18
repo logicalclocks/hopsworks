@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.Path;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -51,13 +52,14 @@ public class FlinkJob extends YarnJob {
    * @param flinkUser
    * @param jobUser
    * @param glassfishDomainsDir
+   * @param jobsMonitor
    */
   public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String flinkDir, final String flinkConfDir,
       final String flinkConfFile, final String nameNodeIpPort,
-      String flinkUser, String jobUser, final String glassfishDomainsDir) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
+      String flinkUser, String jobUser, final String glassfishDomainsDir, YarnJobsMonitor jobsMonitor) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, jobsMonitor);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -122,24 +124,14 @@ public class FlinkJob extends YarnJob {
     if (jobSystemProperties != null && !jobSystemProperties.isEmpty()) {
       for (Map.Entry<String, String> jobSystemProperty : jobSystemProperties.
           entrySet()) {
-//        //If the properties are the Kafka certificates, append glassfish path
-//        if (jobSystemProperty.getKey().equals(Settings.KAFKA_K_CERTIFICATE)
-//                || jobSystemProperty.getKey().equals(
-//                        Settings.KAFKA_T_CERTIFICATE)) {
-//          flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
-//                  "/srv/glassfish/domain1/config/" + jobSystemProperty.
-//                          getValue());
-//        } else {
-        flinkBuilder.addSystemProperty(jobSystemProperty.getKey(),
-            jobSystemProperty.getValue());
-//        }
+        flinkBuilder.addSystemProperty(jobSystemProperty.getKey(), jobSystemProperty.getValue());
       }
     }
     try {
       runner = flinkBuilder.
           getYarnRunner(jobDescription.getProject().getName(),
               flinkUser, jobUser, hadoopDir, flinkDir, flinkConfDir,
-              flinkConfFile, nameNodeIpPort, glassfishDomainDir + "/domain1/config/");
+              flinkConfFile, nameNodeIpPort, glassfishDomainDir + "/domain1/config/", services);
 
     } catch (IOException e) {
       LOG.log(Level.SEVERE,
@@ -152,12 +144,12 @@ public class FlinkJob extends YarnJob {
       return false;
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+    String stdOutFinalDestination = Utils.getHdfsRootPath(
         jobDescription.
             getProject().
             getName())
         + Settings.FLINK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
+    String stdErrFinalDestination = Utils.getHdfsRootPath(
         jobDescription.
             getProject().
             getName())

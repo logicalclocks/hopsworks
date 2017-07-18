@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 
 /**
@@ -20,10 +21,8 @@ import io.hops.hopsworks.common.util.Settings;
 public class SparkJob extends YarnJob {
 
   private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
-
   private final String sparkDir;
-
-  private final String sparkUser; //must be glassfish
+  private final String sparkUser;
   protected SparkYarnRunnerBuilder runnerbuilder;
 
   /**
@@ -36,12 +35,13 @@ public class SparkJob extends YarnJob {
    * @param nameNodeIpPort
    * @param sparkUser
    * @param jobUser
+   * @param jobsMonitor
    */
   public SparkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String sparkDir, final String nameNodeIpPort, String sparkUser,
-      String jobUser) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort);
+      String jobUser, YarnJobsMonitor jobsMonitor) {
+    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, jobsMonitor);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -100,15 +100,9 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-        jobDescription.
-            getProject().
-            getName())
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(hadoopDir,
-        jobDescription.
-            getProject().
-            getName())
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
@@ -116,7 +110,7 @@ public class SparkJob extends YarnJob {
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),
-              sparkUser, jobUser, hadoopDir, sparkDir, nameNodeIpPort);
+              sparkUser, jobUser, sparkDir, services);
 
     } catch (IOException e) {
       LOG.log(Level.WARNING,

@@ -387,60 +387,62 @@
     </div>
     <!-- /#wrapper -->
   </div>
-<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
-      post-tour="closeTour()" ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'
-        && (projectCtrl.tourService.informAndTips
-            || projectCtrl.tourService.tipsOnly)">
-  <virtual-step
-    class="ng-scope"
-    tourtip="Click Next OR click on the 'New job' button to continue spark"
-    tourtip-step="0"
-    tourtip-element="#buttonCreateJob"
-    tourtip-placement="bottom"
-    tourtip-next-label="Next"
-    on-proceed="jobsCtrl.newJob()"
-    tourtip-offset-vertical="-15"
-    tourtip-offset-horizontal="35"
-    ></virtual-step>
-  <virtual-step
-    class="ng-scope"
-    tourtip="invisible"
-    tourtip-step="1"
-    ng-hide="true"
-    ></virtual-step>
-  <virtual-step
-    class="ng-scope"
-    tourtip="Click Run to run your job !"
-    tourtip-step="2"
-    tourtip-element="#true"
-    tourtip-placement="bottom"
-    tourtip-next-label="Done"
-    on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
-    tourtip-offset-vertical="-15"
-    ></virtual-step>
-</tour>
-    <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
-          post-tour="closeTour()"
-          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
-            && (projectCtrl.tourService.informAndTips
-                || projectCtrl.tourService.tipsOnly)">
-        <virtual-step
-                class="ng-scope"
-                tourtip="Click Next OR click on the 'New job' button to continue kafka"
-                tourtip-step="0"
-                tourtip-element="#buttonCreateJob"
-                tourtip-placement="bottom"
-                tourtip-next-label="Next"
-                on-proceed="jobsCtrl.newJob();
-                    projectCtrl.tourService.currentStep_TourFour=-1;"
-        ></virtual-step>
-        <virtual-step
-                class="ng-scope"
-                tourtip="Click Run to run your jobs !"
-                tourtip-step="1"
-                tourtip-element="#true"
-                tourtip-placement="bottom"
-                tourtip-next-label="Done"
-                on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
-        ></virtual-step>
-    </tour>
+  <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
+        post-tour="closeTour()" 
+        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' || 
+                  projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow')
+          && (projectCtrl.tourService.informAndTips
+              || projectCtrl.tourService.tipsOnly)">
+    <virtual-step
+      class="ng-scope"
+      tourtip="Click Next OR click on the 'New job' button to continue creating your {{projectCtrl.tourService.activeTour}} job!"
+      tourtip-step="0"
+      tourtip-element="#buttonCreateJob"
+      tourtip-placement="bottom"
+      tourtip-next-label="Next"
+      on-proceed="jobsCtrl.newJob()"
+      tourtip-offset-vertical="-15"
+      tourtip-offset-horizontal="35"
+      ></virtual-step>
+    <virtual-step
+      class="ng-scope"
+      tourtip="invisible"
+      tourtip-step="1"
+      ng-hide="true"
+      ></virtual-step>
+    <virtual-step
+      class="ng-scope"
+      tourtip="Click Run to run your job! {{projectCtrl.tourService.getTensorFlowJobTip()}}"
+      tourtip-step="2"
+      tourtip-element="#true"
+      tourtip-placement="bottom"
+      tourtip-next-label="Done"
+      on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+      tourtip-offset-vertical="-15"
+      ></virtual-step>
+  </tour>
+  <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
+        post-tour="closeTour()"
+        ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
+          && (projectCtrl.tourService.informAndTips
+              || projectCtrl.tourService.tipsOnly)">
+    <virtual-step
+      class="ng-scope"
+      tourtip="Click Next OR click on the 'New job' button to start creating your Kafka streaming job!"
+      tourtip-step="0"
+      tourtip-element="#buttonCreateJob"
+      tourtip-placement="bottom"
+      tourtip-next-label="Next"
+      on-proceed="jobsCtrl.newJob();
+      projectCtrl.tourService.currentStep_TourFour=-1;"
+      ></virtual-step>
+    <virtual-step
+      class="ng-scope"
+      tourtip="Click Run to run your job!"
+      tourtip-step="1"
+      tourtip-element="#true"
+      tourtip-placement="bottom"
+      tourtip-next-label="Done"
+      on-proceed="closeTour(); projectCtrl.tourService.resetTours();"
+      ></virtual-step>
+  </tour>

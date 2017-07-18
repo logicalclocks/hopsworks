@@ -11,6 +11,7 @@ import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jobs.tensorflow.TensorFlowJobConfiguration;
 
 /**
  * Represents the persistable configuration of a runnable job. To be persisted
@@ -156,6 +157,9 @@ public abstract class JobConfiguration implements JsonReduceable {
           break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
+          break;
+        case TENSORFLOW:
+          conf = new TensorFlowJobConfiguration();
           break;
         default:
           throw new UnsupportedOperationException(

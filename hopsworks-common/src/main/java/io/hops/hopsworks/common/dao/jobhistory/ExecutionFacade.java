@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import java.util.Arrays;
 
 /**
  * Facade for management of persistent Execution objects.
@@ -98,6 +99,22 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
 
   /**
+   * Get all executions that are not in a final state.
+   * <p/>
+   * @return
+   */
+  public List<Execution> findAllNotFinished() {
+    try {
+      return em.createNamedQuery("Execution.findByStates",
+          Execution.class).setParameter("states", Arrays.asList(JobState.RUNNING, JobState.ACCEPTED,
+              JobState.AGGREGATING_LOGS, JobState.INITIALIZING, JobState.NEW, JobState.NEW_SAVING,
+              JobState.STARTING_APP_MASTER, JobState.SUBMITTED)).getResultList();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
+  /**
    * Find the execution with given id.
    * <p/>
    * @param id
@@ -109,15 +126,15 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
 
   public Execution create(JobDescription job, Users user, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress) {
+          JobFinalStatus finalStatus, float progress, String hdfsUser) {
     return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath,
-            input, finalStatus, progress);
+            input, finalStatus, progress, hdfsUser);
   }
 
   public Execution create(JobDescription job, Users user, JobState state,
           String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress) {
+          JobFinalStatus finalStatus, float progress, String hdfsUser) {
     //Check if state is ok
     if (state == null) {
       state = JobState.INITIALIZING;
@@ -127,7 +144,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     }
     //Create new object
     Execution exec = new Execution(state, job, user, stdoutPath, stderrPath,
-            input, finalStatus, progress);
+            input, finalStatus, progress, hdfsUser);
     //And persist it
     em.persist(exec);
     em.flush();
@@ -135,61 +152,77 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
 
   public Execution updateState(Execution exec, JobState newState) {
-    return update(exec, newState, -1, null, null, null, null,
-            null, null, 0);
+    exec = getExecution(exec);
+    exec.setState(newState);
+    merge(exec);
+    return exec;
   }
 
   public Execution updateFinalStatus(Execution exec, JobFinalStatus finalStatus) {
-    return update(exec, null, -1, null, null, null, null,
-            null, finalStatus, 0);
+    exec = getExecution(exec);
+    exec.setFinalStatus(finalStatus);
+    merge(exec);
+    return exec;
   }
 
   public Execution updateProgress(Execution exec, float progress) {
-    return update(exec, null, -1, null, null, null, null,
-            null, null, progress);
+    exec = getExecution(exec);
+    exec.setProgress(progress);
+    merge(exec);
+    return exec;
   }
 
-  public Execution updateExecutionTime(Execution exec, long executionTime) {
-    return update(exec, null, executionTime, null, null, null, null, null, null,
-            0);
+  public Execution updateExecutionStart(Execution exec, long executionStart) {
+    exec = getExecution(exec);
+    exec.setExecutionStart(executionStart);
+    merge(exec);
+    return exec;
   }
 
+  public Execution updateExecutionStop(Execution exec, long executionStop) {
+    exec = getExecution(exec);
+    exec.setExecutionStop(executionStop);
+    merge(exec);
+    return exec;
+  }
+  
   public Execution updateOutput(Execution exec,
           Collection<JobOutputFile> outputFiles) {
-    return update(exec, null, -1, null, null, null, outputFiles, null, null, 0);
+    exec = getExecution(exec);
+    exec.setJobOutputFileCollection(outputFiles);
+    merge(exec);
+    return exec;
   }
 
   public Execution updateStdOutPath(Execution exec, String stdOutPath) {
-    return update(exec, null, -1, stdOutPath, null, null, null, null, null, 0);
+    exec = getExecution(exec);
+    exec.setStdoutPath(stdOutPath);
+    merge(exec);
+    return exec;
   }
 
   public Execution updateStdErrPath(Execution exec, String stdErrPath) {
-    return update(exec, null, -1, null, stdErrPath, null, null, null, null, 0);
+    exec = getExecution(exec);
+    exec.setStderrPath(stdErrPath);
+    merge(exec);
+    return exec;
   }
 
   public Execution updateAppId(Execution exec, String appId) {
-    return update(exec, null, -1, null, null, appId, null, null, null, 0);
+    exec = getExecution(exec);
+    exec.setAppId(appId);
+    merge(exec);
+    return exec;
   }
 
-  /**
-   * Updates all given fields of <i>exec</i> to the given value, unless that
-   * value is null for entities, or -1 for integers.
-   * <p/>
-   * @param exec
-   * @param state
-   * @param executionDuration
-   * @param stdoutPath
-   * @param stderrPath
-   * @param appId
-   * @param output
-   * @param input
-   * @param finalStatus
-   */
-  private Execution update(
-          Execution exec, JobState state, long executionDuration,
-          String stdoutPath, String stderrPath, String appId,
-          Collection<JobOutputFile> output, Collection<JobInputFile> input,
-          JobFinalStatus finalStatus, float progress) {
+  public Execution updateFilesToRemove(Execution exec, List<String> filesToRemove) {
+    exec = getExecution(exec);
+    exec.setFilesToRemove(filesToRemove);
+    merge(exec);
+    return exec;
+  }
+  
+  private Execution getExecution(Execution exec){
     //Find the updated execution object
     Execution obj = em.find(Execution.class, exec.getId());
     int count = 0;
@@ -206,39 +239,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     if (obj == null) {
       throw new IllegalArgumentException(
               "Unable to find Execution object with id " + exec.getId());
-    } else {
-      exec = obj;
     }
-    if (state != null) {
-      exec.setState(state);
-    }
-    if (executionDuration != -1) {
-      exec.setExecutionDuration(executionDuration);
-    }
-    if (stdoutPath != null) {
-      exec.setStdoutPath(stdoutPath);
-    }
-    if (stderrPath != null) {
-      exec.setStderrPath(stderrPath);
-    }
-    if (appId != null) {
-      exec.setAppId(appId);
-    }
-    if (input != null) {
-      exec.setJobInputFileCollection(input);
-    }
-    if (output != null) {
-      exec.setJobOutputFileCollection(output);
-    }
-    if (finalStatus != null) {
-      exec.setFinalStatus(finalStatus);
-    }
-    if (progress != 0) {
-      exec.setProgress(progress);
-    }
+    return obj;
+  }
+  
+  private void merge(Execution exec){
     em.merge(exec);
     executions.put(exec.getJob().getId(), exec);
-    return exec;
   }
 
   public Execution getExecution(int id) {

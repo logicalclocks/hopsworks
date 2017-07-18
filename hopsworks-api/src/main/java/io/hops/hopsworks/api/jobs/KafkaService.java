@@ -54,8 +54,6 @@ public class KafkaService {
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
-  private KafkaFacade kafka;
-  @EJB
   private UserManager userManager;
 
   private Integer projectId;
@@ -93,7 +91,7 @@ public class KafkaService {
               "Incomplete request!");
     }
 
-    List<TopicDTO> listTopics = kafka.findTopicsByProject(projectId);
+    List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -112,7 +110,7 @@ public class KafkaService {
               "Incomplete request!");
     }
 
-    List<TopicDTO> listTopics = kafka.findSharedTopicsByProject(projectId);
+    List<TopicDTO> listTopics = kafkaFacade.findSharedTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -130,9 +128,9 @@ public class KafkaService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    List<TopicDTO> allTopics = kafka.findTopicsByProject(projectId);
+    List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(projectId);
 
-    allTopics.addAll(kafka.findSharedTopicsByProject(projectId));
+    allTopics.addAll(kafkaFacade.findSharedTopicsByProject(projectId));
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -203,7 +201,7 @@ public class KafkaService {
 
     List<PartitionDetailsDTO> topic;
     try {
-      topic = kafka.getTopicDetails(project, user, topicName);
+      topic = kafkaFacade.getTopicDetails(project, user, topicName);
     } catch (Exception ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
@@ -552,7 +550,7 @@ public class KafkaService {
               "Incomplete request!");
     }
 
-    List<SchemaDTO> schemaDtos = kafka.listSchemasForTopics();
+    List<SchemaDTO> schemaDtos = kafkaFacade.listSchemasForTopics();
     GenericEntity<List<SchemaDTO>> schemas
             = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -575,7 +573,7 @@ public class KafkaService {
               "Incomplete request!");
     }
 
-    SchemaDTO schemaDtos = kafka.getSchemaContent(schemaName, schemaVersion);
+    SchemaDTO schemaDtos = kafkaFacade.getSchemaContent(schemaName, schemaVersion);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             schemaDtos).build();
   }
@@ -596,7 +594,7 @@ public class KafkaService {
               "Incomplete request!");
     }
 
-    kafka.deleteSchema(schemaName, version);
+    kafkaFacade.deleteSchema(schemaName, version);
     json.setSuccessMessage("Schema version for topic removed successfuly");
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

@@ -26,7 +26,7 @@
     "cytoscape-qtip": "^2.3.0",
     "ng-prettyjson": "^0.2.0",
     "ng-showdown": "^1.1.0",
-    "angular-animate": "^1.6.3",
+    "angular-animate": "1.6.3",
     "angular-cookies": "^1.6.3",
     "ng-sortable": "^1.3.6",
     "angular-bootstrap": "^2.1.3",
@@ -45,6 +45,7 @@
     "angular-material": "^1.1.1",
     "angular-material-data-table": "^0.10.9",
     "angularjs-slider": "^5.5.1",
+    "angular-nvd3": "^1.0.9",
     "angular-bootstrap-toggle": "^0.1.2"
   },
   "overrides": {
@@ -64,7 +65,7 @@
   "resolutions": {
     "angular": "1.6.3",
     "showdown": "1.x",
-    "angular-animate": "^1.6.3",
+    "angular-animate": "1.6.3",
     "angular-cookies": "^1.6.3",
     "ng-sortable": "^1.3.6",
     "angular-bootstrap": "^2.1.3",

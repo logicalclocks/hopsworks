@@ -15,6 +15,7 @@
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate</class>
     <class>io.hops.hopsworks.common.dao.jobs.JobInputFile</class>
     <class>io.hops.hopsworks.common.dao.jobs.JobOutputFile</class>
+    <class>io.hops.hopsworks.common.dao.jobs.FilesToRemove</class>
     <class>io.hops.hopsworks.common.dao.jobs.JobsHistory</class>
     <class>io.hops.hopsworks.common.dao.jobs.description.JobDescription</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator</class>

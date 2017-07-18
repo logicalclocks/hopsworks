@@ -40,13 +40,12 @@ import org.apache.hadoop.security.AccessControlException;
 
 /**
  * Contains business logic pertaining DataSet management.
- * <p>
+ * 
  */
 @Stateless
 public class DatasetController {
 
-  private static final Logger logger = Logger.getLogger(DatasetController.class.
-          getName());
+  private static final Logger LOGGER = Logger.getLogger(DatasetController.class.getName());
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -67,7 +66,7 @@ public class DatasetController {
   /**
    * Create a new DataSet. This is, a folder right under the project home
    * folder.
-   * <p/>
+   * 
    * @param user The creating Users. Cannot be null.
    * @param project The project under which to create the DataSet. Cannot be
    * null.
@@ -174,7 +173,7 @@ public class DatasetController {
   /**
    * Create a directory under an existing DataSet. With the same permission as
    * the parent.
-   * <p/>
+   * 
    * @param user creating the folder
    * @param project The project under which the directory is being created.
    * Cannot be null.
@@ -410,31 +409,29 @@ public class DatasetController {
    * @param project
    */
   public void generateReadme(DistributedFileSystemOps udfso, String dsName,
-          String description, String project) {
+      String description, String project) {
     if (udfso != null) {
       String readmeFile, readMeFilePath;
       //Generate README.md for the Default Datasets
-      readmeFile = String.format(Settings.README_TEMPLATE, dsName,
-              description);
-      readMeFilePath = "/Projects/" + project + "/"
-              + dsName + "/README.md";
+      readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
+      readMeFilePath = "/Projects/" + project + "/" + dsName + "/README.md";
 
       try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
         fsOut.writeBytes(readmeFile);
         fsOut.flush();
         udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath),
-                new FsPermission(FsAction.ALL,
-                        FsAction.READ_EXECUTE,
-                        FsAction.NONE));
+            new FsPermission(FsAction.ALL,
+                FsAction.READ_EXECUTE,
+                FsAction.NONE));
       } catch (IOException ex) {
-        logger.log(Level.WARNING, "README.md could not be generated for project"
-                + " {0} and dataset {1}.", new Object[]{project, dsName});
+        LOGGER.log(Level.WARNING, "README.md could not be generated for project"
+            + " {0} and dataset {1}.", new Object[]{project, dsName});
       }
     } else {
-      logger.log(Level.WARNING, "README.md could not be generated for project"
-              + " {0} and dataset {1}. DFS client was null", new Object[]{
-                project,
-                dsName});
+      LOGGER.log(Level.WARNING, "README.md could not be generated for project"
+          + " {0} and dataset {1}. DFS client was null", new Object[]{
+            project,
+            dsName});
     }
   }
 

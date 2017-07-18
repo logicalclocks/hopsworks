@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.jobs.adam.AdamController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jobs.tensorflow.TensorFlowController;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,6 +41,8 @@ public class ExecutionController {
   private AdamController adamController;
   @EJB
   private FlinkController flinkController;
+  @EJB
+  private TensorFlowController tensorflowController;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -113,6 +116,8 @@ public class ExecutionController {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }
         break;
+      case TENSORFLOW:
+        return tensorflowController.startJob(job, user);
       default:
         throw new IllegalArgumentException(
                 "Unsupported job type: " + job.
