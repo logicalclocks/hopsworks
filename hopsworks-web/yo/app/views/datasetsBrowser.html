@@ -76,7 +76,7 @@
                         <div class="col-md-6 pull-right" ng-show="datasetsCtrl.isSelectedFiles() === 1">
                           <div class=" input-group">
                             <input id="fileRef" type="text" class="form-control" 
-                                   value="{{datasetsCtrl.getSelectedPath(projectCtrl.endpoint, datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
+                                   value="{{datasetsCtrl.getSelectedPath(datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
                             <span class="input-group-btn">
                               <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
                                       ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"

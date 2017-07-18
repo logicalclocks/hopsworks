@@ -35,7 +35,7 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
  */
 public abstract class HopsJob {
 
-  protected YarnJobsMonitor jobsMonitor;  
+  protected YarnJobsMonitor jobsMonitor;
   private static final Logger logger = Logger.getLogger(HopsJob.class.getName());
   protected Execution execution;
   private boolean initialized = false;
@@ -46,7 +46,6 @@ public abstract class HopsJob {
   protected final JobDescription jobDescription;
   protected final Users user;
   protected final String hadoopDir;
-  protected final String nameNodeIpPort;
   protected final UserGroupInformation hdfsUser;
 
   /**
@@ -57,13 +56,12 @@ public abstract class HopsJob {
    * services.
    * @param user The user executing this job.
    * @param hadoopDir base Hadoop installation directory
-   * @param nameNodeIpPort
    * @param jobsMonitor
    * @throws NullPointerException If either of the given arguments is null.
    */
   protected HopsJob(JobDescription jobDescription,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
-          String nameNodeIpPort, YarnJobsMonitor jobsMonitor) throws
+          YarnJobsMonitor jobsMonitor) throws
           NullPointerException {
     //Check validity
     if (jobDescription == null) {
@@ -78,7 +76,6 @@ public abstract class HopsJob {
     this.services = services;
     this.user = user;
     this.hadoopDir = hadoopDir;
-    this.nameNodeIpPort = nameNodeIpPort;
     this.jobsMonitor = jobsMonitor;
     try {
       //if HopsJob is created in a doAs UserGroupInformation.getCurrentUser()

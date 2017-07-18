@@ -54,14 +54,13 @@ public abstract class YarnJob extends HopsJob {
    * @param services
    * @param jobUser
    * @param hadoopDir
-   * @param nameNodeIpPort
    * @param jobsMonitor
    * @throws IllegalArgumentException If the JobDescription does not contain a
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
-      Users user, String jobUser, String hadoopDir, String nameNodeIpPort, YarnJobsMonitor jobsMonitor) {
-    super(job, services, user, hadoopDir, nameNodeIpPort, jobsMonitor);
+      Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor) {
+    super(job, services, user, hadoopDir, jobsMonitor);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must be a YarnJobConfiguration object. Received class: "
@@ -115,7 +114,7 @@ public abstract class YarnJob extends HopsJob {
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     } catch (YarnException | IOException | URISyntaxException e) {
-      LOG.log(Level.SEVERE, "Failed to start application master for execution " + execution + 
+      LOG.log(Level.SEVERE, "Failed to start application master for execution " + execution +
           ". Aborting execution", e);
       writeLog("Failed to start application master for execution " + execution + ". Aborting execution", e, udfso);
       try {

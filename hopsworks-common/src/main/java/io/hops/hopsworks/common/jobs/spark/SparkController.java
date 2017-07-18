@@ -1,7 +1,5 @@
 package io.hops.hopsworks.common.jobs.spark;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import java.io.IOException;
@@ -47,8 +45,6 @@ public class SparkController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   /**
    * Start the Spark job as the given user.
@@ -85,7 +81,6 @@ public class SparkController {
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.
               getHadoopDir(), settings.getSparkDir(),
-              hdfsLeDescriptorsFacade.getSingleEndpoint(),
               settings.getSparkUser(), job.getProject().getName() + "__"
               + user.getUsername(), jobsMonitor);
         }
@@ -125,7 +120,7 @@ public class SparkController {
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.
         getHadoopDir(), settings.getSparkDir(),
-        hdfsLeDescriptorsFacade.getSingleEndpoint(), settings.getSparkUser(),
+        settings.getSparkUser(),
         hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor);
 
     submitter.stopExecution(sparkjob, appid);
@@ -153,10 +148,6 @@ public class SparkController {
     if (!path.endsWith(".jar") && !path.endsWith(".py")) {
       throw new IllegalArgumentException("Path does not point to a jar or .py file.");
     }
-    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-    // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
-    path = path.replaceFirst("hdfs:/*Projects",
-        "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
     LOG.log(Level.INFO, "Really executing Spark job by {0} at path: {1}",
         new Object[]{username, path});
     SparkJobConfiguration config = new SparkJobConfiguration();

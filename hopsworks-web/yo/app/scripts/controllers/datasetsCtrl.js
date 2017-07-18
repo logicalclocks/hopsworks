@@ -909,11 +909,11 @@ This will make all its files unavailable to other projects unless you share it e
               return debounceFn;
             };
             
-            self.getSelectedPath = function (endpiont, selectedFile) {
+            self.getSelectedPath = function (selectedFile) {
               if (self.isSelectedFiles() !== 1) {
                 return "";
               }
-              return "hdfs://"+endpiont+selectedFile.path;               
+              return "hdfs://" + selectedFile.path;
             };
             
           }]);

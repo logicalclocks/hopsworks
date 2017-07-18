@@ -18,10 +18,9 @@ public class ErasureCodeJob extends HopsJob {
   private ErasureCodeJobConfiguration jobConfig;
 
   public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services,
-          Users user,
-          String hadoopDir, String nameNodeIpPort, YarnJobsMonitor jobsMonitor) {
+          Users user, String hadoopDir, YarnJobsMonitor jobsMonitor) {
 
-    super(job, services, user, hadoopDir, nameNodeIpPort, jobsMonitor);
+    super(job, services, user, hadoopDir, jobsMonitor);
 
     if (!(job.getJobConfig() instanceof ErasureCodeJobConfiguration)) {
       throw new IllegalArgumentException(

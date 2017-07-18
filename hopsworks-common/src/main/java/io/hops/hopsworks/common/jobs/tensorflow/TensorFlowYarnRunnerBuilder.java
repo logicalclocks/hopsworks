@@ -49,7 +49,7 @@ public class TensorFlowYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner(String project, String tfUser,
-      String jobUser, final String hadoopDir, final String nameNodeIpPort, AsynchronousJobExecutor services) throws
+      String jobUser, final String hadoopDir, AsynchronousJobExecutor services) throws
       IOException, Exception {
 
 //    if (!serviceProps.isAnacondaEnabled()) {
@@ -65,8 +65,10 @@ public class TensorFlowYarnRunnerBuilder {
     for (LocalResourceDTO dto : extraFiles) {
       if (!dto.getName().equals(Settings.K_CERTIFICATE) && !dto.getName().equals(Settings.T_CERTIFICATE)) {
         String pathToResource = dto.getPath();
-        pathToResource = pathToResource.replaceFirst("hdfs:/*Projects", "hdfs://" + nameNodeIpPort + "/Projects");
-        pathToResource = pathToResource.replaceFirst("hdfs:/*user", "hdfs://" + nameNodeIpPort + "/user");
+        pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
+            "hdfs:///Projects");
+        pathToResource = pathToResource.replaceFirst("hdfs:/*user",
+            "hdfs:///user");
         client.addFile(pathToResource);
         client.getFilesInfo().put(pathToResource, new LocalResourceInfo(dto.getName(), pathToResource, dto.
             getVisibility(), dto.getType(), dto.getPattern()));
@@ -86,10 +88,12 @@ public class TensorFlowYarnRunnerBuilder {
     client.addEnvironmentVariable(Settings.HADOOP_USER_NAME, jobUser);
     client.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
         + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
-    client.addEnvironmentVariable(Settings.YARNTF_HOME_DIR, "hdfs://" + nameNodeIpPort + "/Projects/" + project
+    client.addEnvironmentVariable(Settings.YARNTF_HOME_DIR,
+        "hdfs:///Projects/" + project
         + "/" + Settings.PROJECT_STAGING_DIR + "/" + Settings.YARNTF_STAGING_DIR);
     String appPath = ((TensorFlowJobConfiguration) jobDescription.getJobConfig()).getAppPath();
-    appPath = appPath.replaceFirst("hdfs:/*Projects", "hdfs://" + nameNodeIpPort + "/Projects");
+    appPath = appPath.replaceFirst("hdfs:/*Projects",
+        "hdfs:///Projects");
     client.setMain(appPath);
     client.setArguments(jobArgs.stream().toArray(String[]::new));
     client.setAmJar(Settings.getTensorFlowJarPath(tfUser));
