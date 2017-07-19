@@ -392,7 +392,8 @@
         ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' || 
                   projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow')
           && (projectCtrl.tourService.informAndTips
-              || projectCtrl.tourService.tipsOnly)">
+              || projectCtrl.tourService.tipsOnly)
+          ">
     <virtual-step
       class="ng-scope"
       tourtip="Click Next OR click on the 'New job' button to continue creating your {{projectCtrl.tourService.activeTour}} job!"

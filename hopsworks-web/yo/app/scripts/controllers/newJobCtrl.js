@@ -376,7 +376,7 @@ angular.module('hopsWorksApp')
               }
               JobService.createNewJob(self.projectId, self.getJobType(), self.runConfig).then(
                       function (success) {
-                        if (self.projectIsGuide && self.getJobType() === "TENSORFLOW") {
+                        if (self.projectIsGuide && self.getJobType() === "TENSORFLOW" && !StorageService.contains(self.projectId+"-tftour-finished")) {
                           var inferenceJob = self.runConfig;
                           inferenceJob.args = '--base_path hdfs://default/Projects/' + self.projectName + '/TestJob --images tfr/test --format tfr --mode inference --model mnist_model --output mnist_predictions';
                           inferenceJob.appName = "Mnist-inference-QueueRunners";
@@ -385,6 +385,8 @@ angular.module('hopsWorksApp')
                                     $location.path('project/' + self.projectId + '/jobs');
                                     StorageService.remove(self.newJobName);
                                     self.removed = true;
+                                    //Remember that the initial jobs were created to avoid creating them the next time
+                                    StorageService.store(self.projectId+"-tftour-finished", "true");
                                   }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                           });
