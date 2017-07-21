@@ -118,6 +118,10 @@
           <div class="text-right col-md-4">Executor memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.executorMemory}}</div>
         </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.properties !== undefined && jobDetailCtrl.job.runConfig.properties!== ''">
+          <div class="text-right col-md-4">Properties <i class="fa fa-info-circle" uib-tooltip="Job properties." style="margin-left: 10px"></i></div>
+          <div class="col-md-1">{{jobDetailCtrl.job.runConfig.properties}}</div>
+        </div>
       </div>
       <!-- Flink configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type === 'flinkJobConfiguration'">

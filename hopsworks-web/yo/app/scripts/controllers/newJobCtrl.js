@@ -32,6 +32,7 @@ angular.module('hopsWorksApp')
             //Kafka topics for this project
             self.topics = [];
             self.kafkaSelected = false;
+            self.settingsSelected = false;
             self.consumerGroups = [{id: 'group1', "name": "default"}];
             self.groupsSelected = false;
             self.showAdvanced = false;
@@ -83,6 +84,9 @@ angular.module('hopsWorksApp')
 
             self.toggleKafka = function () {
               self.kafkaSelected = !self.kafkaSelected;
+            };
+            self.toggleSettings = function () {
+              self.settingsSelected = !self.settingsSelected;
             };
 
             self.toggleAdvanced = function () {

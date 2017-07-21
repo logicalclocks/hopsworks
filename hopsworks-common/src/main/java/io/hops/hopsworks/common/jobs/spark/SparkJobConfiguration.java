@@ -19,7 +19,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String args;
   private String historyServerIp;
   private String anacondaDir;
-
+  private String properties;
+  
   //Kafka properties
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -37,6 +38,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
   protected static final String KEY_ARGS = "ARGS";
+  protected static final String KEY_PROPERTIES = "PROPERTIES";
   protected static final String KEY_NUMEXECS = "NUMEXECS";
   //Dynamic executors properties
   protected static final String KEY_DYNEXECS = "DYNEXECS";
@@ -98,6 +100,22 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
    */
   public void setArgs(String args) {
     this.args = args;
+  }
+
+  /**
+   * 
+   * @return 
+   */
+  public String getProperties() {
+    return properties;
+  }
+
+  /**
+   * 
+   * @param properties 
+   */
+  public void setProperties(String properties) {
+    this.properties = properties;
   }
 
   public int getNumberOfExecutors() {
@@ -255,6 +273,9 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     if (!Strings.isNullOrEmpty(appPath)) {
       obj.set(KEY_JARPATH, appPath);
     }
+    if (!Strings.isNullOrEmpty(properties)) {
+      obj.set(KEY_PROPERTIES, properties);
+    }
     //Then: fields that can never be null or emtpy.
     obj.set(KEY_EXECCORES, "" + executorCores);
     obj.set(KEY_EXECMEM, "" + executorMemory);
@@ -280,7 +301,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonExecmem,
-        jsonExeccors;
+        jsonExeccors, jsonProperties;
     String jsonNumexecsMin = "";
     String jsonNumexecsMax = "";
     String jsonNumexecsMinSelected = "";
@@ -296,6 +317,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       }
       //First: fields that can be null or empty
       jsonArgs = json.getString(KEY_ARGS, null);
+      jsonProperties = json.getString(KEY_PROPERTIES, null);
       jsonJarpath = json.getString(KEY_JARPATH, null);
       jsonMainclass = json.getString(KEY_MAINCLASS, null);
       //Then: fields that cannot be null or emtpy.
@@ -330,7 +352,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.appPath = jsonJarpath;
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
-
+    this.properties = jsonProperties;
+    
     if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
       this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
       this.minExecutors = Integer.parseInt(jsonNumexecsMin);

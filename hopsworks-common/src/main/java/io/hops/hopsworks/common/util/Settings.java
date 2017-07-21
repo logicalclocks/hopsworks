@@ -651,6 +651,7 @@ public class Settings implements Serializable {
           = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
+  public static final String SPARK_BLACKLISTED_PROPS = "conf/spark-blacklisted-properties.txt";
   public static final int SPARK_MIN_EXECS = 1;
   public static final int SPARK_MAX_EXECS = 300;
   public static final int SPARK_INIT_EXECS = 1;

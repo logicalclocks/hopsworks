@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -14,9 +15,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 
@@ -26,6 +31,8 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
  * <p>
  */
 public class SparkYarnRunnerBuilder {
+
+  private static final Logger LOG = Logger.getLogger(SparkYarnRunnerBuilder.class.getName());
 
   //Necessary parameters
   private final JobDescription jobDescription;
@@ -39,6 +46,7 @@ public class SparkYarnRunnerBuilder {
   private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
+  private String properties;
   private boolean dynamicExecutors;
   private String executorMemory = "512m";
   private int driverMemory = 1024; // in MB
@@ -48,6 +56,8 @@ public class SparkYarnRunnerBuilder {
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
   private ServiceProperties serviceProps;
+
+  final private Set<String> blacklistedProps = new HashSet<>();
 
   public SparkYarnRunnerBuilder(JobDescription jobDescription) {
     this.jobDescription = jobDescription;
@@ -66,7 +76,7 @@ public class SparkYarnRunnerBuilder {
 
   /**
    * Get a YarnRunner instance that will launch a Spark job.
-   * 
+   *
    * @param project name of the project
    * @param sparkUser
    * @param jobUser
@@ -78,6 +88,15 @@ public class SparkYarnRunnerBuilder {
   public YarnRunner getYarnRunner(String project, String sparkUser,
       String jobUser, final String sparkDir, AsynchronousJobExecutor services)
       throws IOException {
+
+    //Read blacklisted properties from local spark dir
+    File blacklist = new File(sparkDir + "/" + Settings.SPARK_BLACKLISTED_PROPS);
+    try (InputStream is = new FileInputStream(blacklist)) {
+      byte[] data = new byte[(int) blacklist.length()];
+      is.read(data);
+      String content = new String(data, "UTF-8");
+      blacklistedProps.addAll(Arrays.asList(content.split("\n")));
+    }
 
     JobType jobType = ((SparkJobConfiguration) jobDescription.getJobConfig()).getType();
     String appPath = ((SparkJobConfiguration) jobDescription.getJobConfig()).getAppPath();
@@ -293,6 +312,28 @@ public class SparkYarnRunnerBuilder {
         append(" ").
         append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").append(YarnRunner.APPID_PLACEHOLDER);
 
+    try {
+      //Parse user provided properties (if any) and add them to the job
+      if (!Strings.isNullOrEmpty(properties)) {
+        List<String> propsList = Arrays.asList(properties.split(":"));
+        for (String pair : propsList) {
+          //Split the pair
+          String key = pair.split("=")[0];
+          String val = pair.split("=")[1];
+          if (blacklistedProps.contains(key)) {
+            throw new IOException("This user-provided Spark property is not allowed:" + key);
+          }
+          addSystemProperty(key, val);
+          extraJavaOptions.append(" -D").append(key).append("=").append(val);
+        }
+      }
+    } catch (Exception ex) {
+      LOG.log(Level.WARNING, "There was an error while setting user-provided Spark properties:{0}", ex.getMessage());
+      throw new IOException(
+          "There was an error while setting user-provided Spark properties. Please check that the values conform to"
+          + " the format K1=V1:K2=V2 or that the property is allowed:" + ex.getMessage());
+    }
+
     if (serviceProps != null) {
       addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
       addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.getKeystorePwd());
@@ -327,10 +368,9 @@ public class SparkYarnRunnerBuilder {
             append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
             append(serviceProps.getKafka().getTopics());
       }
-
-      extraJavaOptions.append("'");
-      builder.addJavaOption(extraJavaOptions.toString());
     }
+    extraJavaOptions.append("'");
+    builder.addJavaOption(extraJavaOptions.toString());
 
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
@@ -361,11 +401,10 @@ public class SparkYarnRunnerBuilder {
       //For every property that is in the spark configuration file but is not
       //already set, create a java system property.
       for (String property : sparkProperties.stringPropertyNames()) {
-        if (!jobSpecificProperties.contains(property) && sparkProperties.
-            getProperty(property) != null && !sparkProperties.getProperty(
-            property).isEmpty()) {
-          addSystemProperty(property,
-              sparkProperties.getProperty(property).trim());
+        if (!jobSpecificProperties.contains(property) && sparkProperties.getProperty(property) != null
+            && !sparkProperties.getProperty(
+                property).isEmpty()) {
+          addSystemProperty(property, sparkProperties.getProperty(property).trim());
         }
       }
     }
@@ -457,6 +496,15 @@ public class SparkYarnRunnerBuilder {
     }
     this.executorCores = executorCores;
     return this;
+  }
+
+  /**
+   * Parse and set user provided Spark properties.
+   *
+   * @param properties
+   */
+  public void setProperties(String properties) {
+    this.properties = properties;
   }
 
   public boolean isDynamicExecutors() {

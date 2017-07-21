@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
+import org.elasticsearch.common.Strings;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.
@@ -70,6 +71,9 @@ public class SparkJob extends YarnJob {
       }
     }
 
+    if(!Strings.isNullOrEmpty(jobconfig.getProperties())){
+      runnerbuilder.setProperties(jobconfig.getProperties());
+    }
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
