@@ -80,8 +80,8 @@
                           class="btn btn-success btn-md glyphicon glyphicon-refresh">
                   </button>
                 </span>
-                <span>
-                  <ui-select name="appId" theme="select2" ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
+                <span ng-if="jobUICtrl.job !== undefined"> 
+                  <ui-select name="appId" theme="select2"  ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
 
                     <ui-select-match placeholder="Select an appId">{{$select.selected.id}}</ui-select-match>
 
