@@ -69,7 +69,7 @@ public class TensorFlowController {
               settings.getHadoopDir(),
               settings.getHdfsSuperUser(),
               hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-              jobsMonitor);
+              jobsMonitor, settings);
         }
       });
     } catch (InterruptedException ex) {
@@ -107,7 +107,8 @@ public class TensorFlowController {
     TensorFlowJob tfJob = new TensorFlowJob(job, submitter, user,
         settings.getHadoopDir(),
         settings.getHdfsSuperUser(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),jobsMonitor);
+        hdfsUsersBean.getHdfsUserName(job.getProject(), 
+                job.getCreator()), jobsMonitor, settings);
 
     submitter.stopExecution(tfJob, appid);
 

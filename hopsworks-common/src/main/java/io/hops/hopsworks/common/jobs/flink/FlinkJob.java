@@ -57,8 +57,9 @@ public class FlinkJob extends YarnJob {
       Users user, final String hadoopDir,
       final String flinkDir, final String flinkConfDir,
       final String flinkConfFile, String flinkUser,
-      String jobUser, final String glassfishDomainsDir, YarnJobsMonitor jobsMonitor) {
-    super(job, services, user, jobUser, hadoopDir, jobsMonitor);
+      String jobUser, final String glassfishDomainsDir, YarnJobsMonitor jobsMonitor,
+      Settings settings) {
+    super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a FlinkJobConfiguration object. Received: "

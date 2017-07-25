@@ -3,12 +3,17 @@ package io.hops.hopsworks.common.util;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -16,6 +21,7 @@ import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -50,6 +56,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
+  private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
           = "zeppelin_projects_dir";
@@ -105,6 +112,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_enabled";
 
+  private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
+
   private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
   private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
   private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
@@ -114,8 +123,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
-  private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
-  
+
+  private static final String VARIABLE_MAX_STATUS_POLL_RETRY
+          = "max_status_poll_retry";
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
@@ -219,6 +230,8 @@ public class Settings implements Serializable {
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
+      String stagingDir = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
+      HOPSUTIL_VERSION = setVar(VARIABLE_HOPSUTIL_VERSION, HOPSUTIL_VERSION);
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
       ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
@@ -292,7 +305,8 @@ public class Settings implements Serializable {
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       VAGRANT_ENABLED = setIntVar(VARIABLE_VAGRANT_ENABLED, VAGRANT_ENABLED);
-      MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY, MAX_STATUS_POLL_RETRY);
+      MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY,
+              MAX_STATUS_POLL_RETRY);
       cached = true;
     }
   }
@@ -407,13 +421,21 @@ public class Settings implements Serializable {
     return ADAM_USER;
   }
 
+  // "/tmp" by default
+  private String STAGING_DIR = "/srv/hops/domains/domain1/staging";
+
+  public synchronized String getStagingDir() {
+    checkCache();
+    return STAGING_DIR;
+  }
+
+  private final String FLINK_CONF_DIR = "conf";
   private String FLINK_DIR = "/srv/hops/flink";
 
   public synchronized String getFlinkDir() {
     checkCache();
     return FLINK_DIR;
   }
-  private final String FLINK_CONF_DIR = "conf";
 
   public String getFlinkConfDir() {
     String flinkDir = getFlinkDir();
@@ -451,18 +473,17 @@ public class Settings implements Serializable {
     return HADOOP_DIR;
   }
 
-  
   private String HOPSWORKS_EXTERNAL_IP = "127.0.0.1";
 
   public synchronized String getHopsworksExternalIp() {
     checkCache();
     return HOPSWORKS_EXTERNAL_IP;
   }
-  
+
   public synchronized void setHopsworksExternalIp(String ip) {
     HOPSWORKS_EXTERNAL_IP = ip;
   }
-  
+
   private String HOPSWORKS_IP = "127.0.0.1";
 
   public synchronized String getHopsworksIp() {
@@ -641,8 +662,6 @@ public class Settings implements Serializable {
   public static final String SPARK_LOCALIZED_CONF_DIR = "__spark_conf__";
   public static final String SPARK_LOCALIZED_PYTHON_DIR = "__pyfiles__";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
-  public static final String HOPSUTIL_JAR = "hops-util-0.1.jar";
-  public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark-0.1.jar";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
   // Distribution-defined classpath to add to processes
@@ -651,7 +670,8 @@ public class Settings implements Serializable {
           = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
-  public static final String SPARK_BLACKLISTED_PROPS = "conf/spark-blacklisted-properties.txt";
+  public static final String SPARK_BLACKLISTED_PROPS
+          = "conf/spark-blacklisted-properties.txt";
   public static final int SPARK_MIN_EXECS = 1;
   public static final int SPARK_MAX_EXECS = 300;
   public static final int SPARK_INIT_EXECS = 1;
@@ -666,7 +686,7 @@ public class Settings implements Serializable {
   public static final String FLINK_AM_MAIN
           = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
-  
+
   //TensorFlow constants
   public static final String TENSORFLOW_DEFAULT_OUTPUT_PATH = "Logs/TensorFlow/";
   public static final String TENSORFLOW_JAR = "hops-tensorflow-0.0.1.jar";
@@ -675,11 +695,11 @@ public class Settings implements Serializable {
   public static final String YARNTF_HOME_DIR = "YARNTF_HOME_DIR";
   public static final String YARNTF_STAGING_DIR = ".yarntfStaging";
   public static final String HOPS_TENSORFLOW_TOUR_DATA = "tensorflow_demo";
-  
+
   public static String getTensorFlowJarPath(String tfUser) {
-    return "hdfs:///user/" + tfUser+"/"+TENSORFLOW_JAR;
+    return "hdfs:///user/" + tfUser + "/" + TENSORFLOW_JAR;
   }
-  
+
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";
   }
@@ -751,10 +771,6 @@ public class Settings implements Serializable {
 
   public static String getProjectSparkLog4JPath(String sparkUser) {
     return "hdfs:///user/glassfish/log4j.properties";
-  }
-
-  public static String getHopsutilPath(String sparkUser) {
-    return "hdfs:///user/" + sparkUser + "/" + HOPSUTIL_JAR;
   }
 
   public synchronized String getSparkDefaultClasspath() {
@@ -1331,7 +1347,8 @@ public class Settings implements Serializable {
       }
 
       Path confPath = new Path(yarnConfDir);
-      File confFile = new File(confPath + File.separator + Settings.DEFAULT_YARN_CONFFILE_NAME);
+      File confFile = new File(confPath + File.separator
+              + Settings.DEFAULT_YARN_CONFFILE_NAME);
       if (!confFile.exists()) {
         throw new IllegalStateException("No Yarn conf file");
       }
@@ -1343,12 +1360,14 @@ public class Settings implements Serializable {
         hadoopConfDir = hadoopDir + "/" + Settings.HADOOP_CONF_RELATIVE_DIR;
       }
       confPath = new Path(hadoopConfDir);
-      File hadoopConf = new File(confPath + "/" + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
+      File hadoopConf = new File(confPath + "/"
+              + Settings.DEFAULT_HADOOP_CONFFILE_NAME);
       if (!hadoopConf.exists()) {
         throw new IllegalStateException("No Hadoop conf file");
       }
 
-      File hdfsConf = new File(confPath + "/" + Settings.DEFAULT_HDFS_CONFFILE_NAME);
+      File hdfsConf = new File(confPath + "/"
+              + Settings.DEFAULT_HDFS_CONFFILE_NAME);
       if (!hdfsConf.exists()) {
         throw new IllegalStateException("No HDFS conf file");
       }
@@ -1405,21 +1424,82 @@ public class Settings implements Serializable {
    */
   public String getAggregatedLogPath(String hdfsUser, String appId) {
     boolean logPathsAreAggregated = conf.getBoolean(
-        YarnConfiguration.LOG_AGGREGATION_ENABLED,
-        YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
+            YarnConfiguration.LOG_AGGREGATION_ENABLED,
+            YarnConfiguration.DEFAULT_LOG_AGGREGATION_ENABLED);
     String aggregatedLogPath = null;
     if (logPathsAreAggregated) {
       String[] nmRemoteLogDirs = conf.getStrings(
-          YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
-          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
+              YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+              YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR);
 
       String[] nmRemoteLogDirSuffix = conf.getStrings(
-          YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX,
-          YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
+              YarnConfiguration.NM_REMOTE_APP_LOG_DIR_SUFFIX,
+              YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR_SUFFIX);
       aggregatedLogPath = nmRemoteLogDirs[0] + File.separator + hdfsUser
-          + File.separator + nmRemoteLogDirSuffix[0] + File.separator
-          + appId;
+              + File.separator + nmRemoteLogDirSuffix[0] + File.separator
+              + appId;
     }
     return aggregatedLogPath;
   }
+
+  // For performance reasons, we have an in-memory cache of files being unzipped
+  // Lazily remove them from the cache, when we check the FS and they aren't there.
+  Set<String> unzippingFiles = new HashSet<>();
+
+  public synchronized void addUnzippingState(String hdfsPath) {
+    unzippingFiles.add(hdfsPath);
+  }
+
+  public synchronized String getUnzippingState(String hdfsPath) {
+
+    if (!unzippingFiles.contains(hdfsPath)) {
+      return "NONE";
+    }
+    String hashedPath = DigestUtils.sha256Hex(hdfsPath);
+    String fsmPath = getStagingDir() + "/fsm-" + hashedPath + ".txt";
+    String state = "NOT_FOUND";
+    try {
+      state = new String(java.nio.file.Files.readAllBytes(Paths.get(fsmPath)));
+      state = state.trim();
+    } catch (IOException ex) {
+      state = "NONE";
+      // lazily remove the file, probably because it has finished unzipping
+      unzippingFiles.remove(hdfsPath);
+    }
+    // If a terminal state has been reached, removed the entry and the file.
+    if (state == null || state.isEmpty() || state.compareTo("FAILED") == 0
+            || state.compareTo("SUCCESS") == 0) {
+      try {
+        unzippingFiles.remove(hdfsPath);
+        java.nio.file.Files.deleteIfExists(Paths.get(fsmPath));
+      } catch (IOException ex) {
+        Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+    if (state == null || state.isEmpty()) {
+      state = "NOT_FOUND";
+    }
+
+    return state;
+  }
+
+  private static String HOPSUTIL_VERSION = "0.1.1";
+
+  public synchronized String getHopsUtilHdfsPath(String sparkUser) {
+    return "hdfs:///user/" + sparkUser + "/" + getHopsUtilFilename();
+  }
+
+  public synchronized String getHopsUtilFilename() {
+    checkCache();
+//    return "hops-util-" + HOPSUTIL_VERSION + ".jar";
+    return "hops-util.jar";
+  }
+
+  public synchronized String getKafkaTourFilename() {
+    checkCache();
+//    return "hops-spark-" + HOPSUTIL_VERSION + ".jar";
+    return "hops-spark.jar";
+
+  }
+
 }

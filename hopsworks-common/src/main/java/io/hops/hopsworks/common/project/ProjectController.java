@@ -1562,9 +1562,9 @@ public class ProjectController {
         case KAFKA: {
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/"
-              + Settings.HOPS_KAFKA_TOUR_JAR;
+              + settings.getKafkaTourFilename();
           String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-              + "/" + Settings.HOPS_TOUR_DATASET + "/" + Settings.HOPS_KAFKA_TOUR_JAR;
+              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getKafkaTourFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
             String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);

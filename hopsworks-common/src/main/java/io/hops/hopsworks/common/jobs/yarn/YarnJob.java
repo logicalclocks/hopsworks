@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.util.Settings;
 
 public abstract class YarnJob extends HopsJob {
   
@@ -45,6 +46,8 @@ public abstract class YarnJob extends HopsJob {
   protected Map<String, String> jobSystemProperties;
 
   protected final String jobUser;
+  
+  protected final Settings settings;
 
   /**
    * Constructor for job interacting with the Kafka service.
@@ -59,7 +62,8 @@ public abstract class YarnJob extends HopsJob {
    * YarnJobConfiguration object.
    */
   public YarnJob(JobDescription job, AsynchronousJobExecutor services,
-      Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor) {
+      Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor,
+      Settings settings) {
     super(job, services, user, hadoopDir, jobsMonitor);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -70,6 +74,7 @@ public abstract class YarnJob extends HopsJob {
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();
     this.jobUser = jobUser;
+    this.settings = settings;
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {

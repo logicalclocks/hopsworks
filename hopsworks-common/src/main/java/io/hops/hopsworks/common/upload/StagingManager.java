@@ -1,10 +1,13 @@
 package io.hops.hopsworks.common.upload;
 
-import com.google.common.io.Files;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.flink.shaded.com.google.common.io.Files;
 
 /**
  * Basically provides a temporary folder in which to stage uploaded files.
@@ -14,9 +17,14 @@ public class StagingManager {
 
   private File stagingFolder;
 
+  @EJB
+  private Settings settings;
+
   @PostConstruct
   public void init() {
-    stagingFolder = Files.createTempDir();
+    String path = RandomStringUtils.randomAlphanumeric(8);
+    stagingFolder = new File(settings.getStagingDir() + "/" + path);
+    stagingFolder.mkdirs();
   }
 
   public String getStagingPath() {

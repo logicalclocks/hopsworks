@@ -82,7 +82,7 @@ public class AdamController {
                   settings.getSparkDir(), settings.getAdamUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
-                  settings.getAdamJarHdfsPath(), jobsMonitor);
+                  settings.getAdamJarHdfsPath(), jobsMonitor, settings);
         }
       });
     } catch (InterruptedException ex) {
@@ -123,7 +123,7 @@ public class AdamController {
             getSparkDir(), settings.getAdamUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                     getCreator()),
-            settings.getAdamJarHdfsPath(), jobsMonitor);
+            settings.getAdamJarHdfsPath(), jobsMonitor, settings);
 
     submitter.stopExecution(adamJob, appid);
 

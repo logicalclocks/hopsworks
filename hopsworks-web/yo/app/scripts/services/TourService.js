@@ -91,7 +91,7 @@ angular.module('hopsWorksApp')
 
                 tourService.getKafkaGuideJarPath = function (projectName) {
                   return "hdfs:///Projects/" + projectName +
-                   "/TestJob/hops-spark-0.1.jar";
+                   "/TestJob/hops-spark.jar";
                 };
 
                 tourService.resetTours = function () {

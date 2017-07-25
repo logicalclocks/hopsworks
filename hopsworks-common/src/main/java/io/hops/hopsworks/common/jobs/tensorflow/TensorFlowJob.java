@@ -24,8 +24,8 @@ public class TensorFlowJob extends YarnJob {
   protected TensorFlowYarnRunnerBuilder runnerbuilder;
 
   public TensorFlowJob(JobDescription job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
-      String tfUser, String jobUser, YarnJobsMonitor jobsMonitor) {
-    super(job, services, user, jobUser, hadoopDir, jobsMonitor);
+      String tfUser, String jobUser, YarnJobsMonitor jobsMonitor, Settings settings) {
+    super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof TensorFlowJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a TensorFlowJobConfiguration object. Received: " + 

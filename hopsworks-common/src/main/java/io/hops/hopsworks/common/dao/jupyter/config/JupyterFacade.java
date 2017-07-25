@@ -12,6 +12,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -207,4 +208,12 @@ public class JupyterFacade {
 
   }
 
+  
+  
+  public String getProjectPath(JupyterProject jp, String projectName, String
+          hdfsUser) {
+    return settings.getJupyterDir() + File.separator
+            + Settings.DIR_ROOT + File.separator + projectName
+            + File.separator + hdfsUser + File.separator + jp.getSecret();
+  }
 }

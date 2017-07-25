@@ -91,7 +91,7 @@ public class FlinkController {
                   settings.getFlinkUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(),
                           job.getCreator()),
-                  settings.getHopsworksDomainDir(), jobsMonitor
+                  settings.getHopsworksDomainDir(), jobsMonitor, settings
           );
         }
       });
@@ -134,7 +134,7 @@ public class FlinkController {
             settings.getFlinkConfDir(), settings.getFlinkConfFile(),
             settings.getFlinkUser(),
             job.getProject().getName() + "__" + user.getUsername(),
-            settings.getHopsworksDomainDir(), jobsMonitor
+            settings.getHopsworksDomainDir(), jobsMonitor, settings
     );
 
     submitter.stopExecution(flinkJob, appid);
