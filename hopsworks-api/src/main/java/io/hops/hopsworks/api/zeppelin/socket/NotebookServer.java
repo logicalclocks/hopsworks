@@ -101,14 +101,14 @@ import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import io.hops.hopsworks.api.zeppelin.json.NotebookTypeAdapterFactory;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import org.apache.zeppelin.display.Input;
 import org.apache.zeppelin.interpreter.Interpreter;
-import org.apache.zeppelin.notebook.ParagraphRuntimeInfo;
+import org.apache.zeppelin.notebook.NotebookImportDeserializer;
 
 /**
  * Zeppelin websocket service.
@@ -136,24 +136,12 @@ public class NotebookServer implements
     }
   }
 
-  private static final Logger LOG = Logger.getLogger(NotebookServer.class.
-          getName());
-
-  Gson gson = new GsonBuilder()
-          .registerTypeAdapterFactory(new NotebookTypeAdapterFactory<Paragraph>(Paragraph.class) {
-            @Override
-            protected void beforeWrite(Paragraph source, JsonElement toSerialize) {
-              Map<String, ParagraphRuntimeInfo> runtimeInfos = source.getRuntimeInfos();
-              if (runtimeInfos != null) {
-                JsonElement jsonTree = gson.toJsonTree(runtimeInfos);
-                if (toSerialize instanceof JsonObject) {
-                  JsonObject jsonObj = (JsonObject) toSerialize;
-                  jsonObj.add("runtimeInfos", jsonTree);
-                }
-              }
-            }
-          }).setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-          .registerTypeAdapterFactory(Input.TypeAdapterFactory).create();
+  private static final Logger LOG = Logger.getLogger(NotebookServer.class.getName());
+  private static Gson gson = new GsonBuilder()
+      .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+      .registerTypeAdapter(Date.class, new NotebookImportDeserializer())
+      .setPrettyPrinting()
+      .registerTypeAdapterFactory(Input.TypeAdapterFactory).create();
   private static final Map<String, List<Session>> noteSocketMap = new HashMap<>();
   private static final Queue<Session> connectedSockets = new ConcurrentLinkedQueue<>();
   private static final Map<String, Queue<Session>> userConnectedSockets = new ConcurrentHashMap<>();
@@ -265,7 +253,8 @@ public class NotebookServer implements
         }
       }
 
-      AuthenticationInfo subject = new AuthenticationInfo(messagereceived.principal, messagereceived.ticket);
+      AuthenticationInfo subject = new AuthenticationInfo(messagereceived.principal, messagereceived.roles,
+              messagereceived.ticket);
       /**
        * Lets be elegant here
        */
@@ -891,8 +880,7 @@ public class NotebookServer implements
 
   private void sendHomeNote(Session conn, HashSet<String> userAndRoles, Notebook notebook,
           Message fromMessage) throws IOException {
-    String noteId = notebook.getConf().getString(
-            ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
+    String noteId = notebook.getConf().getString(ConfVars.ZEPPELIN_NOTEBOOK_HOMESCREEN);
     String user = this.hdfsUsername;
     Note note = null;
     if (noteId != null) {
@@ -949,8 +937,7 @@ public class NotebookServer implements
   }
 
   private void updatePersonalizedMode(Session conn, HashSet<String> userAndRoles,
-          Notebook notebook, Message fromMessage) throws SchedulerException,
-          IOException {
+          Notebook notebook, Message fromMessage) throws SchedulerException, IOException {
     String noteId = (String) fromMessage.get("id");
     String personalized = (String) fromMessage.get("personalized");
     boolean isPersonalized = personalized.equals("true") ? true : false;
@@ -1646,8 +1633,15 @@ public class NotebookServer implements
             userAndRoles, fromMessage.principal, "write")) {
       return null;
     }
+    Map<String, Object> config;
+    if (fromMessage.get("config") != null) {
+      config = (Map<String, Object>) fromMessage.get("config");
+    } else {
+      config = new HashMap<>();
+    }
 
     Paragraph newPara = note.insertNewParagraph(index, subject);
+    newPara.setConfig(config);
     note.persist(subject);
     broadcastNewParagraph(note, newPara);
 
@@ -1748,6 +1742,23 @@ public class NotebookServer implements
     p.setErrorMessage((String) fromMessage.get("errorMessage"));
     p.setStatusWithoutNotification(status);
 
+    // Spell uses ISO 8601 formatted string generated from moment
+    String dateStarted = (String) fromMessage.get("dateStarted");
+    String dateFinished = (String) fromMessage.get("dateFinished");
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+
+    try {
+      p.setDateStarted(df.parse(dateStarted));
+    } catch (ParseException e) {
+      LOG.log(Level.SEVERE,"Failed parse dateStarted: {0}", e);
+    }
+
+    try {
+      p.setDateFinished(df.parse(dateFinished));
+    } catch (ParseException e) {
+      LOG.log(Level.SEVERE,"Failed parse dateFinished: {0}", e);
+    }
+
     addNewParagraphIfLastParagraphIsExecuted(note, p);
     if (!persistNoteWithAuthInfo(conn, note, p)) {
       return;
@@ -1845,7 +1856,7 @@ public class NotebookServer implements
     Paragraph p = note.getParagraph(paragraphId);
     p.setText(text);
     p.setTitle(title);
-    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal, fromMessage.ticket);
+    AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal, fromMessage.roles, fromMessage.ticket);
     p.setAuthenticationInfo(subject);
     p.settings.setParams(params);
     p.setConfig(config);
@@ -1868,12 +1879,12 @@ public class NotebookServer implements
 
     Map<String, String> configurations = conf.dumpConfigurations(conf,
             new ZeppelinConfiguration.ConfigurationKeyPredicate() {
-          @Override
-          public boolean apply(String key) {
-            return !key.contains("password") && !key.equals(
-                    ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
-                    getVarName());
-          }
+        @Override
+        public boolean apply(String key) {
+          return !key.contains("password") && !key.equals(
+                  ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING.
+                  getVarName());
+        }
       });
 
     conn.getBasicRemote().sendText(serializeMessage(
@@ -1935,7 +1946,7 @@ public class NotebookServer implements
     }
 
     conn.getBasicRemote().sendText(serializeMessage(new Message(OP.SET_NOTE_REVISION)
-            .put("status", setRevisionStatus)));
+                         .put("status", setRevisionStatus)));
 
     if (setRevisionStatus) {
       Note reloadedNote = notebook.getNote(headNote.getId());
@@ -2458,9 +2469,7 @@ public class NotebookServer implements
       for (Session watcher : watcherSockets) {
         try {
           watcher.getBasicRemote().sendText(
-                  WatcherMessage.builder(noteId).subject(subject).message(
-                  serializeMessage(message))
-                  .build().serialize());
+                  WatcherMessage.builder(noteId).subject(subject).message(serializeMessage(message)).build().toJson());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Cannot broadcast message to watcher", e);
         }

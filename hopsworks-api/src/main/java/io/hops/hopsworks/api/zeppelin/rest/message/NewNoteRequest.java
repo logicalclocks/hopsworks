@@ -14,20 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.hops.hopsworks.api.zeppelin.rest.message;
 
 import java.util.List;
 
+import com.google.gson.Gson;
+import org.apache.zeppelin.common.JsonSerializable;
+
 /**
- *  NewNoteRequest rest api request message
- *
+ * NewNoteRequest rest api request message
+ * <p>
  */
-public class NewNoteRequest {
+public class NewNoteRequest implements JsonSerializable {
+
+  private static final Gson gson = new Gson();
+
   String name;
   List<NewParagraphRequest> paragraphs;
 
-  public NewNoteRequest (){
+  public NewNoteRequest() {
 
   }
 
@@ -37,5 +42,13 @@ public class NewNoteRequest {
 
   public List<NewParagraphRequest> getParagraphs() {
     return paragraphs;
+  }
+
+  public String toJson() {
+    return gson.toJson(this);
+  }
+
+  public static NewNoteRequest fromJson(String json) {
+    return gson.fromJson(json, NewNoteRequest.class);
   }
 }

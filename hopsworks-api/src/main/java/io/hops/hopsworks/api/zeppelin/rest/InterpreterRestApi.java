@@ -21,7 +21,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.DELETE;
@@ -80,6 +79,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import org.apache.zeppelin.interpreter.InterpreterPropertyType;
 import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 
 /**
@@ -169,16 +169,15 @@ public class InterpreterRestApi {
   @Path("setting")
   public Response newSettings(String message) {
     try {
-      NewInterpreterSettingRequest request = gson.fromJson(message,
-              NewInterpreterSettingRequest.class);
+      NewInterpreterSettingRequest request =
+          NewInterpreterSettingRequest.fromJson(message);
       if (request == null) {
         return new JsonResponse<>(Status.BAD_REQUEST).build();
       }
-      Properties p = new Properties();
-      p.putAll(request.getProperties());
+
       InterpreterSetting interpreterSetting = interpreterSettingManager
-              .createNewSetting(request.getName(), request.getGroup(), request.getDependencies(),
-                      request.getOption(), p);
+              .createNewSetting(request.getName(), request.getGroup(), request.getDependencies(), 
+                      request.getOption(), request.getProperties());
       persistToDB();
       logger.info("new setting created with {}", interpreterSetting.getId());
       return new JsonResponse<>(Status.OK, "", interpreterSetting).build();
@@ -191,12 +190,12 @@ public class InterpreterRestApi {
 
   @PUT
   @Path("setting/{settingId}")
-  public Response updateSetting(String message,
-          @PathParam("settingId") String settingId) {
+  public Response updateSetting(String message, @PathParam("settingId") String settingId) {
     logger.info("Update interpreterSetting {}", settingId);
 
     try {
-      UpdateInterpreterSettingRequest request = gson.fromJson(message, UpdateInterpreterSettingRequest.class);
+      UpdateInterpreterSettingRequest request =
+          UpdateInterpreterSettingRequest.fromJson(message);
       interpreterSettingManager
               .setPropertyAndRestart(settingId, request.getOption(), request.getProperties(),
                       request.getDependencies());
@@ -254,13 +253,12 @@ public class InterpreterRestApi {
    */
   @PUT
   @Path("setting/restart/{settingId}")
-  public Response restartSetting(String message,
-          @PathParam("settingId") String settingId) {
+  public Response restartSetting(String message, @PathParam("settingId") String settingId) {
     logger.info("Restart interpreterSetting {}, msg={}", settingId, message);
 
     InterpreterSetting setting = interpreterSettingManager.get(settingId);
     try {
-      RestartInterpreterRequest request = gson.fromJson(message, RestartInterpreterRequest.class);
+      RestartInterpreterRequest request = RestartInterpreterRequest.fromJson(message);
 
       String noteId = request == null ? null : request.getNoteId();
       if (null == noteId) {
@@ -474,7 +472,7 @@ public class InterpreterRestApi {
   @Path("repository")
   public Response addRepository(String message) {
     try {
-      Repository request = gson.fromJson(message, Repository.class);
+      Repository request = Repository.fromJson(message);
       interpreterSettingManager.addRepository(request.getId(), request.getUrl(),
               request.isSnapshot(), request.getAuthentication(), request.getProxy());
       persistToDB();
@@ -488,28 +486,18 @@ public class InterpreterRestApi {
   }
 
   /**
-   * get the metainfo property value
+   * get metadata values
    */
   @GET
-  @Path("getmetainfos/{settingId}")
+  @Path("metadata/{settingId}")
   public Response getMetaInfo(@Context HttpServletRequest req,
           @PathParam("settingId") String settingId) {
-    String propName = req.getParameter("propName");
-    if (propName == null) {
-      return new JsonResponse<>(Status.BAD_REQUEST).build();
-    }
-    String propValue = null;
     InterpreterSetting interpreterSetting = interpreterSettingManager.get(settingId);
-    Map<String, String> infos = interpreterSetting.getInfos();
-    if (infos != null) {
-      propValue = infos.get(propName);
+    if (interpreterSetting == null) {
+      return new JsonResponse<>(Status.NOT_FOUND).build();
     }
-    Map<String, String> respMap = new HashMap<>();
-    respMap.put(propName, propValue);
-    logger.debug("Get meta info");
-    logger.debug("Interpretersetting Id: {}, property Name:{}, property value: {}", settingId,
-            propName, propValue);
-    return new JsonResponse<>(Status.OK, respMap).build();
+    Map<String, String> infos = interpreterSetting.getInfos();
+    return new JsonResponse<>(Status.OK, "metadata", infos).build();
   }
 
   /**
@@ -530,6 +518,15 @@ public class InterpreterRestApi {
               ExceptionUtils.getStackTrace(e)).build();
     }
     return new JsonResponse(Status.OK).build();
+  }
+  
+    /**
+   * Get available types for property
+   */
+  @GET
+  @Path("property/types")
+  public Response listInterpreterPropertyTypes() {
+    return new JsonResponse<>(Status.OK, InterpreterPropertyType.getTypes()).build();
   }
 
   /**
