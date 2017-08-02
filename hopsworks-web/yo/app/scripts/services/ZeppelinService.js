@@ -55,14 +55,14 @@ angular.module('hopsWorksApp')
               deleteNotebook: function (noteId) {
                 return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/notebook/' + noteId);
               },
-              createNotebook: function (noteName) {
+              createNotebook: function (note) {
                 var regReq = {
                   method: 'POST',
                   url: '/api/zeppelin/'+ getCookie('projectID') + '/notebook/new',
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: noteName
+                  data: note
                 };
                 return $http(regReq);
               },

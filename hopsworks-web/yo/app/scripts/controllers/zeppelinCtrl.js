@@ -211,21 +211,19 @@ angular.module('hopsWorksApp')
             };
 
             self.createNewNote = function () {
-              var noteName;
-              ModalService.noteName('md', '', '', '').then(
+              var note;
+              ModalService.noteCreate('md', '', '', self.interpreters).then(
                       function (success) {
-                        noteName = success.val;
-                        ZeppelinService.createNotebook(noteName).then(function (success) {
+                        note = success.val;
+                        console.log("Note: ", note);
+                        ZeppelinService.createNotebook(note).then(function (success) {
                           self.notes.push(success.data.body);
                           growl.success("Notebook created successfully.", 
                           {title: 'Success', ttl: 5000, referenceId: 10});
                         }, function (error) {
-                          growl.error(error.data.errorMsg, 
-                          {title: 'Error', ttl: 5000, referenceId: 10});
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                         });
-                      },
-                      function (error) {
-                      });
+                      }, function (error) { });
 
             };
             

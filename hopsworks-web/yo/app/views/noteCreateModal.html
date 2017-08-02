@@ -1,0 +1,37 @@
+<div class="modal-header">
+  <button type="button" class="close" ng-click="noteCreateCtrl.cancel()" data-dismiss="modal">&times;</button>
+  <h4 class="modal-title">Create new note</h4>
+</div>
+<div class="modal-body">
+  <div class="form-group">
+    <div>
+      <label for="noteName">Note Name</label> 
+      <input placeholder="Insert Note Name" type="text" class="form-control"
+             id="noteName" ng-model="noteCreateCtrl.note.name"
+             ng-enter="noteCreateCtrl.handleNameEnter()">
+    </div>
+    <br>
+    <div class="interpreters-group">
+      <label for="defaultInterpreter">Default Interpreter</label>
+      <select id="defaultInterpreter"
+              name="defaultInterpreter"
+              class="form-control"
+              ng-model="noteCreateCtrl.note.defaultInterpreter"
+              ng-options="option.name for option in noteCreateCtrl.interpreterSettings">
+      </select>
+    </div>
+  </div>
+  <br>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      Use '/' to create folders. Example: /NoteDirA/Note1
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="noteCreateCtrl.cancel()">Cancel</button>
+  <button type="button" id="createNoteButton"
+          class="btn btn-default"
+          data-dismiss="modal" ng-click="noteCreateCtrl.ok()">Create
+    Note</button>
+</div>

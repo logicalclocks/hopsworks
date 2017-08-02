@@ -41,9 +41,9 @@ import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
 import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
 import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
+import java.util.LinkedList;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.Notebook;
@@ -976,17 +976,26 @@ public class NotebookRestApi {
   @Path("/new")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response createNew(NewNotebookRequest newNote) throws
-          AppException {
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  public Response createNew(NewNotebookRequest newNote) throws AppException {
     Note note;
     NoteInfo noteInfo;
     AuthenticationInfo subject = new AuthenticationInfo(this.hdfsUserName);
     try {
-      note = notebook.createNote(subject);
+      String defaultInterpreterId = newNote.getDefaultInterpreterId();
+      if (defaultInterpreterId != null && !defaultInterpreterId.isEmpty()) {
+        List<String> interpreterSettingIds = new LinkedList<>();
+        interpreterSettingIds.add(defaultInterpreterId);
+        for (String interpreterSettingId : notebook.getInterpreterSettingManager().
+                getDefaultInterpreterSettingList()) {
+          if (!interpreterSettingId.equals(defaultInterpreterId)) {
+            interpreterSettingIds.add(interpreterSettingId);
+          }
+        }
+        note = notebook.createNote(interpreterSettingIds, subject);
+      } else {
+        note = notebook.createNote(subject);
+      }
+
       note.addNewParagraph(subject); // it's an empty note. so add one paragraph
       String noteName = newNote.getName();
       if (noteName == null || noteName.isEmpty()) {
