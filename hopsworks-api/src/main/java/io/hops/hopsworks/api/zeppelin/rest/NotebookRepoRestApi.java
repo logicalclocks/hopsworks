@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import io.hops.hopsworks.api.zeppelin.rest.message.NotebookRepoSettingsRequest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
@@ -58,15 +57,13 @@ public class NotebookRepoRestApi {
   private static final Logger LOG = LoggerFactory.getLogger(
           NotebookRepoRestApi.class);
 
-  private Gson gson = new Gson();
   private NotebookRepoSync noteRepos;
   private NotebookServer notebookWsServer;
 
   public NotebookRepoRestApi() {
   }
 
-  public NotebookRepoRestApi(NotebookRepoSync noteRepos,
-          NotebookServer notebookWsServer) {
+  public NotebookRepoRestApi(NotebookRepoSync noteRepos, NotebookServer notebookWsServer) {
     this.noteRepos = noteRepos;
     this.notebookWsServer = notebookWsServer;
   }
@@ -77,34 +74,41 @@ public class NotebookRepoRestApi {
   @GET
   @ZeppelinApi
   public Response listRepoSettings() {
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
-    LOG.info("Getting list of NoteRepo with Settings for user {}", subject.
-            getUser());
-    List<NotebookRepoWithSettings> settings = noteRepos.
-            getNotebookRepos(subject);
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
+    LOG.info("Getting list of NoteRepo with Settings for user {}", subject.getUser());
+    List<NotebookRepoWithSettings> settings = noteRepos.getNotebookRepos(subject);
     return new JsonResponse<>(Status.OK, "", settings).build();
+  }
+
+  /**
+   * Reload notebook repository
+   */
+  @GET
+  @Path("reload")
+  @ZeppelinApi
+  public Response refreshRepo(){
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
+    LOG.info("Reloading notebook repository for user {}", subject.getUser());
+    notebookWsServer.broadcastReloadedNoteList(subject, null);
+    return new JsonResponse<>(Status.OK, "", null).build();
   }
 
   /**
    * Update a specific note repo.
    *
-   * @param message
-   * @param settingId
+   * @param payload
    * @return
    */
   @PUT
   @ZeppelinApi
   public Response updateRepoSetting(String payload) {
     if (StringUtils.isBlank(payload)) {
-      return new JsonResponse<>(Status.NOT_FOUND, "", Collections.emptyMap()).
-              build();
+      return new JsonResponse<>(Status.NOT_FOUND, "", Collections.emptyMap()).build();
     }
-    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.
-            getPrincipal());
+    AuthenticationInfo subject = new AuthenticationInfo(SecurityUtils.getPrincipal());
     NotebookRepoSettingsRequest newSettings = NotebookRepoSettingsRequest.EMPTY;
     try {
-      newSettings = gson.fromJson(payload, NotebookRepoSettingsRequest.class);
+      newSettings = NotebookRepoSettingsRequest.fromJson(payload);
     } catch (JsonSyntaxException e) {
       LOG.error("Cannot update notebook repo settings", e);
       return new JsonResponse<>(Status.NOT_ACCEPTABLE, "",
@@ -117,8 +121,8 @@ public class NotebookRepoRestApi {
               ImmutableMap.of("error", "Invalid payload")).build();
     }
     LOG.info("User {} is going to change repo setting", subject.getUser());
-    NotebookRepoWithSettings updatedSettings = noteRepos.updateNotebookRepo(
-            newSettings.name, newSettings.settings, subject);
+    NotebookRepoWithSettings updatedSettings =
+        noteRepos.updateNotebookRepo(newSettings.name, newSettings.settings, subject);
     if (!updatedSettings.isEmpty()) {
       LOG.info("Broadcasting note list to user {}", subject.getUser());
       notebookWsServer.broadcastReloadedNoteList(subject, null);

@@ -40,6 +40,30 @@ angular.module('hopsWorksApp')
                 }
                 return websocketCalls;
               },
+              moveNoteToTrash: function (noteId) {
+                websocketCalls.sendNewEvent({op: 'MOVE_NOTE_TO_TRASH', data: {id: noteId}});
+              },
+              moveFolderToTrash: function (folderId) {
+                websocketCalls.sendNewEvent({op: 'MOVE_FOLDER_TO_TRASH', data: {id: folderId}});
+              },
+              restoreNote: function (noteId) {
+                websocketCalls.sendNewEvent({op: 'RESTORE_NOTE', data: {id: noteId}});
+              },
+              restoreFolder: function (folderId) {
+                websocketCalls.sendNewEvent({op: 'RESTORE_FOLDER', data: {id: folderId}});
+              },
+              restoreAll: function () {
+                websocketCalls.sendNewEvent({op: 'RESTORE_ALL'});
+              },
+              deleteNote: function (noteId) {
+                websocketCalls.sendNewEvent({op: 'DEL_NOTE', data: {id: noteId}});
+              },
+              removeFolder: function (folderId) {
+                websocketCalls.sendNewEvent({op: 'REMOVE_FOLDER', data: {id: folderId}});
+              },
+              emptyTrash: function () {
+                websocketCalls.sendNewEvent({op: 'EMPTY_TRASH'});
+              },
               settings: function () {
                 return $http.get('/api/zeppelin/'+ getCookie('projectID') + '/interpreter/setting');
               },
@@ -55,14 +79,14 @@ angular.module('hopsWorksApp')
               deleteNotebook: function (noteId) {
                 return $http.delete('/api/zeppelin/'+ getCookie('projectID') + '/notebook/' + noteId);
               },
-              createNotebook: function (noteName) {
+              createNotebook: function (note) {
                 var regReq = {
                   method: 'POST',
                   url: '/api/zeppelin/'+ getCookie('projectID') + '/notebook/new',
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: noteName
+                  data: note
                 };
                 return $http(regReq);
               },

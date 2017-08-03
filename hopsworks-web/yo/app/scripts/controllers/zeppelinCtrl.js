@@ -1,16 +1,21 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ZeppelinCtrl', ['$scope', '$routeParams','$route',
-          'growl', 'ModalService', 'ZeppelinService','$location',
+        .controller('ZeppelinCtrl', ['$scope', '$routeParams', '$route',
+          'growl', 'ModalService', 'ZeppelinService', '$location',
           function ($scope, $routeParams, $route, growl, ModalService, ZeppelinService, $location) {
 
             var self = this;
+            self.TRASH_FOLDER_ID = '~Trash';
             self.interpretersRefreshing = false;
             self.notesRefreshing = false;
             self.interpreters = [];
             self.tutorialNotes = [];
             self.notes = [];
+            self.noteTree = null;
+            self.flatFolderMap = {};
+            self.currentFolder = null;
+            self.pathArray = [];
             self.transition = false;
             self.collapse = false;
             self.loading = false;
@@ -26,12 +31,12 @@ angular.module('hopsWorksApp')
               refresh();
               getNotesInProject(null, false);
             };
-            
+
             var startLoading = function (label) {
               self.loading = true;
               self.loadingText = label;
             };
-            
+
             var stopLoading = function () {
               self.loading = false;
               self.loadingText = "";
@@ -46,14 +51,14 @@ angular.module('hopsWorksApp')
               ZeppelinService.interpreters().then(function (success) {
                 console.log('Receive interpreters<< %o', success);
                 for (var k in success.data.body) {
-                  interpreter = {interpreter: success.data.body[k], 
+                  interpreter = {interpreter: success.data.body[k],
                     statusMsg: statusMsgs[(success.data.body[k].notRunning ? 0 : 1)]};
                   self.interpreters.push(interpreter);
                 }
                 stopLoading();
               }, function (error) {
-                growl.warning(error.data.errorMsg + " Try reloading the page.", 
-                {title: 'Error', ttl: 5000, referenceId: 10});
+                growl.warning(error.data.errorMsg + " Try reloading the page.",
+                        {title: 'Error', ttl: 5000, referenceId: 10});
                 stopLoading();
               });
             };
@@ -61,17 +66,18 @@ angular.module('hopsWorksApp')
             var getNotesInProject = function (loading, reload) {
               self.notesRefreshing = true;
               if (loading) {
-                 startLoading(loading);
+                startLoading(loading);
               }
               if (reload) {
                 ZeppelinService.reloadedNotebooks().then(function (success) {
                   self.notes = success.data.body;
+                  setNotes(self.notes);
                   self.notesRefreshing = false;
                   stopLoading();
                 }, function (error) {
                   self.notesRefreshing = false;
-                  if (error.data.errorMsg && 
-                      error.data.errorMsg.includes('Zepplin notebook dir not found')) {
+                  if (error.data.errorMsg &&
+                          error.data.errorMsg.includes('Zepplin notebook dir not found')) {
                     growl.warning(error.data.errorMsg + " Try creating it, then restart zepplin.",
                             {title: 'Error', referenceId: 10});
                   } else {
@@ -83,6 +89,7 @@ angular.module('hopsWorksApp')
               } else {
                 ZeppelinService.notebooks().then(function (success) {
                   self.notes = success.data.body;
+                  setNotes(self.notes);
                   self.notesRefreshing = false;
                   stopLoading();
                 }, function (error) {
@@ -103,9 +110,9 @@ angular.module('hopsWorksApp')
                 return true;
               if (group.indexOf("angular") > -1)
                 return true;
-              if (group.indexOf("livy") > -1) 
+              if (group.indexOf("livy") > -1)
                 return true;
-              if (group.indexOf("md") > -1) 
+              if (group.indexOf("md") > -1)
                 return true;
               return false;
             };
@@ -133,14 +140,14 @@ angular.module('hopsWorksApp')
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               $scope.tgState = true;
             };
-            
+
             var load = function () {
               self.connectedStatus = ZeppelinService.websocket().isConnected();
               getInterpreterStatus("Loading interpreters...");
               getNotesInProject("Loading notebooks...", true);
               $scope.tgState = true;
             };
-            
+
             init();
 
             self.stopInterpreter = function (interpreter) {
@@ -159,20 +166,20 @@ angular.module('hopsWorksApp')
                         });
               }
             };
-            
+
             self.stopLivySession = function (interpreter, sessionId) {
-                self.transition = true;
-                interpreter.statusMsg = statusMsgs[2];
-                ZeppelinService.stopLivySession(interpreter.interpreter.id, sessionId)
-                        .then(function (success) {
-                          interpreter.interpreter = success.data.body;
-                          interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
-                          self.transition = false;
-                        }, function (error) {
-                          getInterpreterStatus();
-                          self.transition = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
-                        });
+              self.transition = true;
+              interpreter.statusMsg = statusMsgs[2];
+              ZeppelinService.stopLivySession(interpreter.interpreter.id, sessionId)
+                      .then(function (success) {
+                        interpreter.interpreter = success.data.body;
+                        interpreter.statusMsg = statusMsgs[(success.data.body.notRunning ? 0 : 1)];
+                        self.transition = false;
+                      }, function (error) {
+                        getInterpreterStatus();
+                        self.transition = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                      });
             };
 
             self.showLivyUI = function (sessionId) {
@@ -184,17 +191,17 @@ angular.module('hopsWorksApp')
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                       });
             };
-            
+
             self.showSparkUI = function (sessionId) {
               ZeppelinService.getSparkAppId()
                       .then(function (success) {
                         var appId = success.data;
-                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId +"/" );
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/");
                       }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                       });
             };
-            
+
             self.refreshInterpreters = function () {
               refresh();
             };
@@ -202,8 +209,86 @@ angular.module('hopsWorksApp')
             self.refreshDashboard = function () {
               getNotesInProject(null, false);
             };
+            
+            self.breadcrumbLen = function () {
+              if (self.pathArray === undefined || self.pathArray === null) {
+                return 0;
+              }
+              var displayPathLen = 10;
+              if (self.pathArray.length <= displayPathLen) {
+                return self.pathArray.length - 1;
+              }
+              return displayPathLen;
+            };
+            
+            self.goToFolderIndex = function (index) {
+              var newPathArray = self.pathArray.slice(0);
+              newPathArray.splice(index, newPathArray.length - index);
+              self.goToFolder(newPathArray);
+            };
+            
+            self.goToFolder = function (path) {
+              self.pathArray = path.slice(0);
+              if (self.pathArray.length === 0) {
+                self.home();
+                return;
+              }
+              var id = path.join('/');
+              self.currentFolder = self.flatFolderMap[id];
+              if (self.currentFolder == null) {
+                self.home();
+              }
+            };
+
             self.openNote = function (note) {
-              window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
+              if (note.children != null) { // must be !=
+                self.currentFolder = note;
+                self.pathArray.push(note.name);
+              } else {
+                 window.open(getLocationBase() + "/zeppelin/#/notebook/" + note.id);
+              }
+            };
+            
+            self.home = function () {
+              self.pathArray = [];
+              self.currentFolder = self.noteTree;
+            };
+            
+            self.back = function () {
+              self.pathArray.pop();
+              self.goToFolder(self.pathArray);
+            };
+            
+            self.moveToTrash = function (note) {
+              if (note.children == null) {
+                ZeppelinService.moveNoteToTrash(note.id);
+              } else {
+                ZeppelinService.moveFolderToTrash(note.id);
+              }
+            };
+            
+            self.deleteNote = function (note) {
+              if (note.children == null) {
+                ZeppelinService.deleteNote(note.id);
+              } else {
+                ZeppelinService.removeFolder(note.id);
+              }
+            };
+            
+            self.restore = function (note) {
+              if (note.children == null) {
+                ZeppelinService.restoreNote(note.id);
+              } else {
+                ZeppelinService.restoreFolder(note.id);
+              }
+            };
+            
+            self.restoreAll = function () {
+              ZeppelinService.restoreAll();
+            };
+            
+            self.emptyTrash = function () {
+              ZeppelinService.emptyTrash();
             };
 
             self.openZeppelin = function () {
@@ -211,48 +296,31 @@ angular.module('hopsWorksApp')
             };
 
             self.createNewNote = function () {
-              var noteName;
-              ModalService.noteName('md', '', '', '').then(
-                      function (success) {
-                        noteName = success.val;
-                        ZeppelinService.createNotebook(noteName).then(function (success) {
-                          self.notes.push(success.data.body);
-                          growl.success("Notebook created successfully.", 
-                          {title: 'Success', ttl: 5000, referenceId: 10});
-                        }, function (error) {
-                          growl.error(error.data.errorMsg, 
-                          {title: 'Error', ttl: 5000, referenceId: 10});
-                        });
-                      },
-                      function (error) {
-                      });
+              var note;
+              ModalService.noteCreate('md', '', '', self.interpreters).then(
+                function (success) {
+                  note = success.val;
+                  ZeppelinService.createNotebook(note).then(function (success) {
+                    growl.success("Notebook created successfully.", {title: 'Success', ttl: 5000, referenceId: 10});
+                  }, function (error) {
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+                  });
+                }, function (error) { });
+            };
 
-            };
-            
-            self.deleteNote = function (note) {
-              ZeppelinService.deleteNotebook(note.id).then(function (success) {                
-                growl.success("Notebook deleted.",
-                        {title: 'Success', ttl: 5000, referenceId: 10});
-              }, function (error) {
-                growl.error(error.data.message,
-                        {title: 'Error', ttl: 5000, referenceId: 10});
-              });
-            };
-            
             self.clearCache = function () {
               startLoading("Restarting zeppelin...");
-              ZeppelinService.restart().then( function (success) {
-                  //stopLoading();
-                  $route.reload();
-                }, function (error) {
-                  stopLoading();
-                  growl.info(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});                  
-                });
+              ZeppelinService.restart().then(function (success) {
+                //stopLoading();
+                $route.reload();
+              }, function (error) {
+                stopLoading();
+                growl.info(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
+              });
             };
-            
-            self.selectInterpreter = function(interpreter) {
+
+            self.selectInterpreter = function (interpreter) {
               self.selectedInterpreter = interpreter;
-              console.log(interpreter);
             };
 
             ZeppelinService.websocket().ws.onMessage(function (event) {
@@ -267,10 +335,11 @@ angular.module('hopsWorksApp')
                 load();
                 loaded = true;
               } else if (loaded && op === 'NOTES_INFO') {
-                getNotesInProject(null, true);
-              } 
+                self.notes = payload.data.notes;
+                setNotes(self.notes);
+              }
             });
-            
+
             ZeppelinService.websocket().ws.onOpen(function () {
               console.log('Websocket created');
             });
@@ -282,7 +351,7 @@ angular.module('hopsWorksApp')
 
             ZeppelinService.websocket().ws.onClose(function (event) {
               self.connectedStatus = false;
-              console.log('close message: ', event);              
+              console.log('close message: ', event);
               //close code should be 1012 (service restart) but chrome shows 
               //closed abnormally (1006) this might cause problem when the socket 
               //is closed but not restarted 
@@ -290,18 +359,71 @@ angular.module('hopsWorksApp')
                 startLoading("Restarting zeppelin...");
                 $route.reload();
               }
-            }); 
-            
+            });
+
             $scope.$on("$destroy", function () {
               console.log('closeing ws');
               ZeppelinService.wsDestroy();
               loaded = false;
             });
-            
+
             //refresh interpreter status when we return to zeppelin dashbord. 
             window.onfocus = function () {
               if (loaded) {
-                refresh();                
+                refresh();
               }
             };
+            
+            // mostly taken from org/apache/zeppelin/zeppelin-web/src/components/note-list/note-list.factory.js
+            var setNotes = function (notesList) {
+              self.noteTree = {children: []};
+              self.flatFolderMap = {};
+              var deferred = _.reduce(notesList, function (root, note) {
+                var noteName = note.name || note.id;
+                var nodes = noteName.match(/([^\/][^\/]*)/g);
+
+                // recursively add nodes
+                addNode(root, nodes, note.id);
+
+                return root;
+              }, self.noteTree);
+              $.when(deferred).done(function () {
+                self.goToFolder(self.pathArray);
+              });
+            };
+
+            var addNode = function (curDir, nodes, noteId) {
+              if (nodes.length === 1) {
+                curDir.children.push({
+                  name: nodes[0],
+                  id: noteId,
+                  path: curDir.id ? curDir.id + '/' + nodes[0] : nodes[0],
+                  isTrash: curDir.id ? curDir.id.split('/')[0] === self.TRASH_FOLDER_ID : false
+                });
+              } else {
+                var node = nodes.shift();
+                var dir = _.find(curDir.children, function (c) {
+                  return c.name === node && c.children !== undefined;
+                });
+                if (dir !== undefined) { // found an existing dir
+                  addNode(dir, nodes, noteId);
+                } else {
+                  var newDir = {
+                    id: curDir.id ? curDir.id + '/' + node : node,
+                    name: node,
+                    hidden: true,
+                    children: [],
+                    isTrash: curDir.id ? curDir.id.split('/')[0] === self.TRASH_FOLDER_ID : false
+                  };        
+                  
+                  // add the folder to flat folder map
+                  self.flatFolderMap[newDir.id] = newDir;
+                  
+                  curDir.children.push(newDir);
+                  addNode(newDir, nodes, noteId);
+                }
+              }
+            };
+
+
           }]);
