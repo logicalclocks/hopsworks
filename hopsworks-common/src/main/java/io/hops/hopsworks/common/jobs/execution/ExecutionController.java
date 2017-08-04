@@ -60,7 +60,7 @@ public class ExecutionController {
 
   private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
-  public Execution start(JobDescription job, Users user) throws IOException {
+  public Execution start(JobDescription job, Users user, String sessionId) throws IOException {
     Execution exec = null;
 
     switch (job.getJobType()) {
@@ -83,9 +83,9 @@ public class ExecutionController {
 //        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         break;
       case FLINK:
-        return flinkController.startJob(job, user);
+        return flinkController.startJob(job, user, sessionId);
       case SPARK:
-        exec = sparkController.startJob(job, user);
+        exec = sparkController.startJob(job, user, sessionId);
         if (exec == null) {
           throw new IllegalArgumentException(
                   "Problem getting execution object for: " + job.
@@ -111,7 +111,7 @@ public class ExecutionController {
         break;
       case PYSPARK:
       case TFSPARK:
-        exec = sparkController.startJob(job, user);
+        exec = sparkController.startJob(job, user, sessionId);
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }
@@ -170,7 +170,7 @@ public class ExecutionController {
         sparkController.stopJob(job, user, appid);
         break;
       case FLINK:
-        flinkController.stopJob(job, user, appid);
+        flinkController.stopJob(job, user, appid, null);
         break;
       default:
         throw new IllegalArgumentException("Unsupported job type: " + job.

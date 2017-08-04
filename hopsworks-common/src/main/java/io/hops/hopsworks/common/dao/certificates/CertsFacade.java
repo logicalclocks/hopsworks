@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.certificates;
 
 import com.google.common.io.ByteStreams;
+import io.hops.hopsworks.common.hdfs.Utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,7 +31,7 @@ public class CertsFacade {
 
   public UserCerts findUserCert(String projectName, String username) {
     TypedQuery<UserCerts> query = em.createNamedQuery(
-            "UserCerts.findUserProjectCert", UserCerts.class);
+        "UserCerts.findUserProjectCert", UserCerts.class);
     query.setParameter("projectname", projectName);
     query.setParameter("username", username);
     try {
@@ -38,48 +39,48 @@ public class CertsFacade {
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new UserCerts();
   }
 
   public List<UserCerts> findAllUserCerts() {
     TypedQuery<UserCerts> query = em.createNamedQuery(
-            "UserCerts.findAll", UserCerts.class);
+        "UserCerts.findAll", UserCerts.class);
     try {
       List<UserCerts> res = query.getResultList();
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new ArrayList<>();
   }
 
   public List<UserCerts> findUserCertsByProjectId(String projectname) {
     TypedQuery<UserCerts> query = em.createNamedQuery(
-            "UserCerts.findByProjectname", UserCerts.class);
+        "UserCerts.findByProjectname", UserCerts.class);
     query.setParameter("projectname", projectname);
     try {
       List<UserCerts> res = query.getResultList();
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new ArrayList<>();
   }
 
   public List<UserCerts> findUserCertsByUid(String username) {
     TypedQuery<UserCerts> query = em.createNamedQuery(
-            "UserCerts.findByUsername", UserCerts.class);
+        "UserCerts.findByUsername", UserCerts.class);
     query.setParameter("username", username);
     try {
       List<UserCerts> res = query.getResultList();
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new ArrayList<>();
   }
@@ -90,20 +91,20 @@ public class CertsFacade {
 
   public List<ServiceCerts> findAllServiceCerts() {
     TypedQuery<ServiceCerts> query = em.createNamedQuery(
-            "ServiceCerts.findAll", ServiceCerts.class);
+        "ServiceCerts.findAll", ServiceCerts.class);
     try {
       List<ServiceCerts> res = query.getResultList();
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new ArrayList<>();
   }
 
   public List<ServiceCerts> findServiceCertsByName(String service) {
     TypedQuery<ServiceCerts> query = em.createNamedQuery(
-            "ServiceCerts.findByServiceName", ServiceCerts.class);
+        "ServiceCerts.findByServiceName", ServiceCerts.class);
     query.setParameter("serviceName", service);
 
     try {
@@ -111,16 +112,17 @@ public class CertsFacade {
       return res;
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     }
     return new ArrayList<>();
   }
 
-  public void putUserCerts(String projectname, String username) throws IOException {
-    FileInputStream kfin = new FileInputStream(new File("/tmp/"
-            + projectname + "__" + username + "__kstore.jks"));
-    FileInputStream tfin = new FileInputStream(new File("/tmp/"
-            + projectname + "__" + username + "__tstore.jks"));
+  public void putUserCerts(String projectname, String username, String userKeyPwd) throws
+      IOException {
+    FileInputStream kfin = new FileInputStream(new File("/tmp/" + Utils.getProjectUsername(projectname, username)
+        + "__kstore.jks"));
+    FileInputStream tfin = new FileInputStream(new File("/tmp/" + Utils.getProjectUsername(projectname, username)
+        + "__tstore.jks"));
 
     byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
     byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
@@ -128,6 +130,7 @@ public class CertsFacade {
     UserCerts uc = new UserCerts(projectname, username);
     uc.setUserKey(kStoreBlob);
     uc.setUserCert(tStoreBlob);
+    uc.setUserKeyPwd(userKeyPwd);
     em.persist(uc);
     em.flush();
 
@@ -135,9 +138,9 @@ public class CertsFacade {
 
   public void putServiceCerts(String service) {
     try (FileInputStream kfin = new FileInputStream(new File("/tmp/"
-            + service + "__kstore.jks"));
-            FileInputStream tfin = new FileInputStream(new File("/tmp/"
-                    + service + "__tstore.jks"))) {
+        + service + "__kstore.jks"));
+        FileInputStream tfin = new FileInputStream(new File("/tmp/"
+            + service + "__tstore.jks"))) {
 
       byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
       byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
@@ -151,13 +154,13 @@ public class CertsFacade {
       // TODO - DO NOT SWALLOW EXCEPTIONS!!!
     } catch (FileNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              e);
+          e);
     } catch (IOException ex) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
+          ex);
     } catch (Throwable ex) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-              ex);
+          ex);
     }
   }
 

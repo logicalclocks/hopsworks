@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.hdfs.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -95,16 +96,16 @@ public class LocalhostServices {
   //Make this asynchronous and call back UserCertsFacade.putUSer()
   public static String createUserCertificates(String intermediateCaDir,
           String projectName, String userName, String countryCode, String city,
-          String org, String email, String orcid) throws IOException {
+          String org, String email, String orcid, String userKeyPwd) throws IOException {
 
-    return createServiceCertificates(intermediateCaDir, projectName + "__"
-            + userName, countryCode, city, org, email, orcid);
+    return createServiceCertificates(intermediateCaDir, Utils.getProjectUsername(projectName, userName), countryCode,
+        city, org, email, orcid, userKeyPwd);
   }
 
   //Make this asynchronous and call back UserCertsFacade.putUSer()
   private static String createServiceCertificates(String intermediateCaDir,
           String service, String countryCode, String city, String org,
-          String email, String orcid) throws IOException {
+          String email, String orcid, String userKeyPwd) throws IOException {
     String sslCertFile = intermediateCaDir + "/certs/" + service + ".cert.pem";
     String sslKeyFile = intermediateCaDir + "/private/" + service + ".key.pem";
 
@@ -115,17 +116,17 @@ public class LocalhostServices {
 
     // Need to execute CreatingUserCerts.sh as 'root' using sudo. 
     // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
-    // TODO: Hopswork-chef needs to put script in glassfish directory!
     List<String> commands = new ArrayList<>();
     commands.add("/usr/bin/sudo");
-    commands.add(intermediateCaDir + "/" + Settings.SSL_CREATE_CERT_SCRIPTNAME);
+    commands.add(intermediateCaDir + File.separator + Settings.SSL_CREATE_CERT_SCRIPTNAME);
     commands.add(service);
     commands.add(countryCode);
     commands.add(city);
     commands.add(org);
     commands.add(email);
     commands.add(orcid);
-
+    commands.add(userKeyPwd);
+    
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
     String stdout = "", stderr = "";
     try {

@@ -10,8 +10,6 @@ public class ServiceProperties {
   private AnacondaProperties anaconda;
   private ElasticProperties elastic;
 
-  private String keystorePwd;
-  private String truststorePwd;
   private Integer projectId;
   private String projectName;
   private String restEndpoint;
@@ -20,31 +18,13 @@ public class ServiceProperties {
   public ServiceProperties() {
   }
 
-  public ServiceProperties(String keystorePwd, String truststorePwd, Integer projectId, String projectName,
-      String restEndPoint, String jobName, ElasticProperties elastic) {
-    this.keystorePwd = keystorePwd;
-    this.truststorePwd = truststorePwd;
+  public ServiceProperties(Integer projectId, String projectName, String restEndPoint, String jobName,
+      ElasticProperties elastic) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.restEndpoint = restEndPoint;
     this.jobName = jobName;
     this.elastic = elastic;
-  }
-
-  public String getKeystorePwd() {
-    return keystorePwd;
-  }
-
-  public void setKeystorePwd(String keystorePwd) {
-    this.keystorePwd = keystorePwd;
-  }
-
-  public String getTruststorePwd() {
-    return truststorePwd;
-  }
-
-  public void setTruststorePwd(String truststorePwd) {
-    this.truststorePwd = truststorePwd;
   }
 
   public KafkaProperties getKafka() {

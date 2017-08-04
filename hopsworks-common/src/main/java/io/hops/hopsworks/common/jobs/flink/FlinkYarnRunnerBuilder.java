@@ -377,8 +377,6 @@ public class FlinkYarnRunnerBuilder {
       }
     }
     addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
-    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.getKeystorePwd());
-    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.getTruststorePwd());
     if (serviceProps.getKafka() != null) {
       
       addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());

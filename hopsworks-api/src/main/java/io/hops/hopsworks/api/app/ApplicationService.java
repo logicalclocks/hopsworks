@@ -68,7 +68,6 @@ public class ApplicationService {
   public Response sendEmail(@Context SecurityContext sc,
       @Context HttpServletRequest req, EmailJsonDTO mailInfo) throws
       AppException {
-
     String projectUser = checkAndGetProjectUser(mailInfo.
         getKeyStoreBytes(), mailInfo.getKeyStorePwd().toCharArray());
 
@@ -91,8 +90,8 @@ public class ApplicationService {
 
   }
 
-  //when do we need this api? It's used when the KafKa clients want to access
-  // the schema for a give topic which a message is published to and consumerd from
+  //when do we need this endpoint? It's used when the Kafka clients want to access
+  // the schema for a given topic which a message is being published to and consumed from
   @POST
   @Path("schema")
   @Produces(MediaType.APPLICATION_JSON)
@@ -100,7 +99,6 @@ public class ApplicationService {
   public Response getSchemaForTopics(@Context SecurityContext sc,
       @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws
       AppException {
-
     String projectUser = checkAndGetProjectUser(topicInfo.getKeyStoreBytes(),
         topicInfo.getKeyStorePwd().toCharArray());
 
