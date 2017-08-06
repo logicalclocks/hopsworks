@@ -36,8 +36,8 @@ angular.module('hopsWorksApp')
               JupyterService.running(projectId).then(
                       function (success) {
                         self.config = success.data;
-                        self.ui = "http://" + self.config.hostIp
-                                + "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                        self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                        $window.open(self.ui, '_blank');			  
                         self.toggleValue = true;
                       }, function (error) {
                 configure();
@@ -119,9 +119,8 @@ angular.module('hopsWorksApp')
                         self.toggleValue = true;
                         self.config = success.data;
 
-                        self.ui = "http://" + self.config.hostIp
-                                + "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
-//                        $window.open(self.ui, '_blank');
+                        self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
+                        $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
 
                       }, function (error) {
