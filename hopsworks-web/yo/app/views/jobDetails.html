@@ -221,14 +221,6 @@
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numOfWorkers}}</div>
         </div>
         <div class="row">
-          <div class="text-right col-md-4">Number of Parameter Servers <i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numOfPs}}</div>
-        </div>
-        <div class="row">
-          <div class="text-right col-md-4">Number of GPUs<i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per container." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numOfGPUs}}</div>
-        </div>
-        <div class="row">
           <div class="text-right col-md-4">Worker Memory (MB) <i class="fa fa-info-circle" uib-tooltip="The memory that should be requested for each Worker." style="margin-left: 10px"></i></div>
           <div class="col-md-1">{{jobDetailCtrl.job.runConfig.workerMemory}}</div>
         </div>
@@ -237,6 +229,15 @@
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.workerVCores}}</div>
         </div>
       </div>
+      <!-- Common TFSPARK and TENSORFLOW -->
+      <div class="row" ng-show="jobDetailCtrl.job.runConfig.type === 'tensorFlowJobConfiguration' || (jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration' && jobDetailCtrl.job.runConfig.tfOnSpark)">
+          <div class="text-right col-md-4">Number of Parameter Servers<i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numOfPs}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.type === 'tensorFlowJobConfiguration' || (jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration' && jobDetailCtrl.job.runConfig.tfOnSpark)">
+          <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per executor." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.numOfGPUs}}</div>
+        </div>
       <!-- Adam configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type === 'adamJobConfiguration'">
         <div class="row">

@@ -280,17 +280,17 @@
                 </select>
               </div>
             </div>
-            <!-- TensorFlow -->
+            <!-- TensorFlow and TFSPARK (partially) -->
             <div class="row" ng-show="newJobCtrl.jobtype === 6">
               <div class="text-right col-md-4">Number of Workers <i class="fa fa-info-circle" uib-tooltip="The number of Workers that should be requested." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfWorkers" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+            <div class="row" ng-show="newJobCtrl.jobtype === 5 ||  newJobCtrl.jobtype === 6">
               <div class="text-right col-md-4">Number of Parameter Servers<i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.numOfPs" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 6">
-              <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per container." style="margin-left: 10px"></i></div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 5 || newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per executor." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfGPUs" class="form-control"></div>
             </div>
             <div class="row" ng-show="newJobCtrl.jobtype === 6">

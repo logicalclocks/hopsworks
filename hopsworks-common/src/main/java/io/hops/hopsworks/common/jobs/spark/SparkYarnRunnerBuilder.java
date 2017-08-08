@@ -53,6 +53,8 @@ public class SparkYarnRunnerBuilder {
   private int driverMemory = 1024; // in MB
   private int driverCores = 1;
   private String driverQueue;
+  private int numOfGPUs = 0;
+  private int numOfPs = 0;
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
@@ -301,7 +303,7 @@ public class SparkYarnRunnerBuilder {
     jobSpecificProperties.add(Settings.SPARK_EXECUTOR_MEMORY_ENV);
     jobSpecificProperties.add(Settings.SPARK_EXECUTOR_CORES_ENV);
 
-    //These properties are set sot that spark history server picks them up
+    //These properties are set so that spark history server picks them up
     addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(
         driverMemory) + "m");
     addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(
@@ -431,8 +433,10 @@ public class SparkYarnRunnerBuilder {
       amargs.append(" --primary-py-file ").append(appExecName);
       //Check if anaconda is enabled
       if (jobType == JobType.TFSPARK) {
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON,
-            Settings.TFSPARK_PYTHON_NAME + "/bin/python");
+        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, "python");
+        addSystemProperty(Settings.SPARK_TF_ENV, "true");
+        addSystemProperty(Settings.SPARK_TF_GPUS_ENV, Integer.toString(numOfGPUs));
+        addSystemProperty(Settings.SPARK_TF_PS_ENV, Integer.toString(numOfPs));
       } else if (serviceProps.isAnacondaEnabled()) {
         //Add libs to PYTHONPATH
         builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON,
@@ -442,10 +446,8 @@ public class SparkYarnRunnerBuilder {
         throw new IOException(
             "Pyspark job needs to have Python Anaconda environment enabled");
       }
-      builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.
-          toString());
-      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPathExecs.
-          toString());
+      builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
+      addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPathExecs.toString());
     }
 
     Properties sparkProperties = new Properties();
@@ -671,6 +673,14 @@ public class SparkYarnRunnerBuilder {
 
   public void setDriverQueue(String driverQueue) {
     this.driverQueue = driverQueue;
+  }
+
+  public void setNumOfGPUs(int numOfGPUs) {
+    this.numOfGPUs = numOfGPUs;
+  }
+
+  public void setNumOfPs(int numOfPs) {
+    this.numOfPs = numOfPs;
   }
 
   public void setServiceProps(ServiceProperties serviceProps) {
