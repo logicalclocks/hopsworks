@@ -20,7 +20,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String historyServerIp;
   private String anacondaDir;
   private String properties;
-  
+
   //Kafka properties
   private int numberOfExecutors = 1;
   private int executorCores = 1;
@@ -36,7 +36,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private boolean tfOnSpark;
   private int numOfGPUs = 0;
   private int numOfPs = 0;
-  
+
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
   protected static final String KEY_ARGS = "ARGS";
@@ -107,16 +107,16 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   }
 
   /**
-   * 
-   * @return 
+   *
+   * @return
    */
   public String getProperties() {
     return properties;
   }
 
   /**
-   * 
-   * @param properties 
+   *
+   * @param properties
    */
   public void setProperties(String properties) {
     this.properties = properties;
@@ -157,8 +157,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public void setNumOfPs(int numOfPs) {
     this.numOfPs = numOfPs;
   }
-  
-  
+
   /**
    * Set the number of executors to be requested for this job. This should be
    * greater than or equal to 1.
@@ -312,8 +311,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_HISTORYSERVER, getHistoryServerIp());
     obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
     obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
-    
-    if(tfOnSpark){
+
+    if (tfOnSpark) {
       obj.set(KEY_IS_TFONSPARK, Boolean.toString(tfOnSpark));
       obj.set(KEY_GPUS, "" + numOfGPUs);
       obj.set(KEY_NUM_PS, "" + numOfPs);
@@ -361,11 +360,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
         jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
       }
       if (json.containsKey(KEY_IS_TFONSPARK)) {
+        //This is to fix backwards compatibility with old jobs
         jsonTfOnSpark = json.getString(KEY_IS_TFONSPARK);
-        jsonNumOfGPUs = json.getString(KEY_GPUS);
-        jsonNumOfPs = json.getString(KEY_NUM_PS);
+        if (jsonTfOnSpark.equalsIgnoreCase("true")) {
+          jsonNumOfGPUs = json.getString(KEY_GPUS);
+          jsonNumOfPs = json.getString(KEY_NUM_PS);
+        }
       }
-      
 
       hs = json.getString(KEY_HISTORYSERVER);
     } catch (Exception e) {
@@ -384,7 +385,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.mainClass = jsonMainclass;
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
     this.properties = jsonProperties;
-    
+
     if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
       this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
       this.minExecutors = Integer.parseInt(jsonNumexecsMin);
