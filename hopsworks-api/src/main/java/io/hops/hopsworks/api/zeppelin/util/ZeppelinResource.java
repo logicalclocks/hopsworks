@@ -5,7 +5,6 @@ import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfFacade;
-import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -18,11 +17,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -39,8 +33,6 @@ public class ZeppelinResource {
   private ProjectFacade projectBean;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
-  @EJB
-  private Settings settings;
   @EJB
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
 
@@ -78,11 +70,6 @@ public class ZeppelinResource {
       }
     }
     return running;
-  }
-
-  public boolean isLivySessionAlive(int sessionId) {
-    LivyMsg.Session session = getLivySession(sessionId);
-    return session != null;
   }
 
   public void forceKillInterpreter(InterpreterSetting interpreter,
@@ -244,49 +231,6 @@ public class ZeppelinResource {
       return null;
     }
     return s;
-  }
-
-  public int deleteLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
-    Response res;
-    try {
-      res = target.request().delete();
-    } catch (NotFoundException e) {
-      return Response.Status.NOT_FOUND.getStatusCode();
-    } finally {
-      client.close();
-    }
-    return res.getStatus();
-  }
-
-  public LivyMsg.Session getLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
-    LivyMsg.Session session = null;
-    try {
-      session = target.request().get(LivyMsg.Session.class);
-    } catch (NotFoundException e) {
-      return null;
-    } finally {
-      client.close();
-    }
-    return session;
-  }
-
-  public LivyMsg getLivySessions() {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions");
-    LivyMsg livySession = null;
-    try {
-      livySession = target.request().get(LivyMsg.class);
-    } finally {
-      client.close();
-    }
-    return livySession;
   }
   
   public void persistToDB(Project project) {

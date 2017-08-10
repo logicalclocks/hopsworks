@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import java.util.ArrayList;
 import org.apache.zeppelin.dep.Repository;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.sonatype.aether.repository.RemoteRepository;
@@ -46,6 +45,7 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.RestartInterpreterRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingRequest;
@@ -98,6 +98,8 @@ public class InterpreterRestApi {
   private UserFacade userFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private LivyService livyService;
 
   Gson gson = new Gson();
 
@@ -259,7 +261,7 @@ public class InterpreterRestApi {
   @Path("/livy/sessions/appId/{sessionId}")
   @Produces(MediaType.TEXT_PLAIN)
   public Response getLivySessionAppId(@PathParam("sessionId") int sessionId) throws AppException {
-    LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+    LivyMsg.Session session = livyService.getLivySession(sessionId);
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
@@ -316,7 +318,7 @@ public class InterpreterRestApi {
           AppException {
     logger.info("Restart interpreterSetting {}", settingId);
     InterpreterSetting setting = interpreterSettingManager.get(settingId);
-    LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+    LivyMsg.Session session = livyService.getLivySession(sessionId);
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
@@ -329,9 +331,9 @@ public class InterpreterRestApi {
             AllowedRoles.DATA_SCIENTIST)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You are not authorized to stop this session.");
     }
-    List<LivyMsg.Session> sessions = getLivySessionsForProjectUser(this.project, this.user);
+    List<LivyMsg.Session> sessions = livyService.getZeppelinLivySessionsForProjectUser(this.project, this.user);
     try {
-      zeppelinResource.deleteLivySession(sessionId);
+      livyService.deleteLivySession(sessionId);
       if (this.user.getUsername().equals(username) && sessions.size() == 1) {
         interpreterSettingManager.restart(settingId);
       } else if (sessions.size() == 1) {
@@ -353,19 +355,19 @@ public class InterpreterRestApi {
     int timeout = zeppelinConf.getConf().getInt(ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
     long startTime = System.currentTimeMillis();
     long endTime;
-    while (zeppelinResource.isLivySessionAlive(sessionId)) {
+    while (livyService.isLivySessionAlive(sessionId)) {
       endTime = System.currentTimeMillis();
       if ((endTime - startTime) > (timeout * 2)) {
         break;
       }
     }
-    int res = zeppelinResource.deleteLivySession(sessionId);
+    int res = livyService.deleteLivySession(sessionId);
     if (res != Response.Status.NOT_FOUND.getStatusCode() && res != Response.Status.OK.getStatusCode()) {
       return new JsonResponse(Status.EXPECTATION_FAILED, "Could not stop session '" + sessionId + "'").build();
     }
 
     InterpreterDTO interpreter = new InterpreterDTO(setting, !zeppelinResource.isInterpreterRunning(setting, project),
-            getLivySessions(project));
+            livyService.getZeppelinLivySessions(this.project));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
@@ -474,7 +476,7 @@ public class InterpreterRestApi {
       interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.isInterpreterRunning(interpreter, project));
       interpreterDTOs.put(interpreter.getName(), interpreterDTO);
       if (interpreter.getName().contains("livy")) {
-        interpreterDTO.setSessions(getLivySessions(project));
+        interpreterDTO.setSessions(livyService.getZeppelinLivySessions(project));
       }
     }
     return interpreterDTOs;
@@ -523,54 +525,6 @@ public class InterpreterRestApi {
     }
 
     return new JsonResponse(Status.OK, "Cache cleared.").build();
-  }
-
-  private List<LivyMsg.Session> getLivySessions(Project project) {
-    List<LivyMsg.Session> sessions = new ArrayList<>();
-    LivyMsg sessionList = zeppelinResource.getLivySessions();
-    if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
-      return sessions;
-    }
-    List<ProjectTeam> projectTeam;
-    projectTeam = teambean.findMembersByProject(project);
-    String hdfsUsername;
-    YarnApplicationstate appStates;
-    for (ProjectTeam member : projectTeam) {
-      hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
-      for (LivyMsg.Session s : sessionList.getSessions()) {
-        if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
-          appStates = appStateBean.findByAppId(s.getAppId());
-          if (appStates == null || appStates.getAppname().equals("remotesparkmagics-jupyter")) {
-            continue;
-          }
-          s.setOwner(member.getUser().getEmail());
-          sessions.add(s);
-        }
-      }
-    }
-
-    return sessions;
-  }
-
-  private List<LivyMsg.Session> getLivySessionsForProjectUser(Project project, Users user) {
-    List<LivyMsg.Session> sessions = new ArrayList<>();
-    LivyMsg sessionList = zeppelinResource.getLivySessions();
-    if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
-      return sessions;
-    }
-    YarnApplicationstate appStates;
-    String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
-    for (LivyMsg.Session s : sessionList.getSessions()) {
-      if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
-        appStates = appStateBean.findByAppId(s.getAppId());
-        if (appStates == null || appStates.getAppname().equals("remotesparkmagics-jupyter")) {
-          continue;
-        }
-        s.setOwner(user.getEmail());
-        sessions.add(s);
-      }
-    }
-    return sessions;
   }
 
 }
