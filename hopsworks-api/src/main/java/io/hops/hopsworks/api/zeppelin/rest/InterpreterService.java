@@ -80,13 +80,13 @@ public class InterpreterService {
     interpreterRestApi.setParms(project, user, userRole, zeppelinConf);
     return interpreterRestApi;
   }
-  
+
   @GET
   @Path("/check")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   public Response interpreterCheck(@PathParam("projectID") String projectID,
-      @Context HttpServletRequest httpReq) throws AppException {
+          @Context HttpServletRequest httpReq) throws AppException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       logger.error("Could not find project in cookies.");
@@ -103,7 +103,7 @@ public class InterpreterService {
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();
     }
     ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-        getName(), user.getEmail());
+            getName(), user.getEmail());
     if (zeppelinConf == null) {
       logger.error("Zeppelin  not connect to web socket.");
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();
