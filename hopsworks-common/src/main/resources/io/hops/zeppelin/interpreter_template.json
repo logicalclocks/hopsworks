@@ -267,7 +267,11 @@
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",
         "livy.spark.submit.deployMode": "cluster",
         "livy.spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
-        "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%"
+        "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.driverEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.driverEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.executorEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.executorEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%"
       },
       "status": "READY",
             "interpreterGroup": [

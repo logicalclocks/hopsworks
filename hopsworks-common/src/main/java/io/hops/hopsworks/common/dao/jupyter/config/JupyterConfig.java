@@ -401,8 +401,9 @@ public class JupyterConfig {
                       "pyspark_bin", this.settings.getAnacondaProjectDir(
                               projectName) + "/bin/python",
                       "anaconda_dir", this.settings.getAnacondaDir(),
+                      "cuda_dir", this.settings.getCudaDir(),
                       "anaconda_env", this.settings.getAnacondaProjectDir(
-                              projectName) + "/bin",
+                              projectName),
                       "sparkhistoryserver_ip", this.settings.
                       getSparkHistoryServerIp()
               );
