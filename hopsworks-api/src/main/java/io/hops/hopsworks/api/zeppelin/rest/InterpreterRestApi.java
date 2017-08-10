@@ -534,10 +534,15 @@ public class InterpreterRestApi {
     List<ProjectTeam> projectTeam;
     projectTeam = teambean.findMembersByProject(project);
     String hdfsUsername;
+    YarnApplicationstate appStates;
     for (ProjectTeam member : projectTeam) {
       hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
       for (LivyMsg.Session s : sessionList.getSessions()) {
         if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
+          appStates = appStateBean.findByAppId(s.getAppId());
+          if (appStates == null || appStates.getAppname().equals("remotesparkmagics-jupyter")) {
+            continue;
+          }
           s.setOwner(member.getUser().getEmail());
           sessions.add(s);
         }
@@ -553,9 +558,14 @@ public class InterpreterRestApi {
     if (sessionList == null || sessionList.getSessions() == null || sessionList.getSessions().length == 0) {
       return sessions;
     }
+    YarnApplicationstate appStates;
     String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
     for (LivyMsg.Session s : sessionList.getSessions()) {
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
+        appStates = appStateBean.findByAppId(s.getAppId());
+        if (appStates == null || appStates.getAppname().equals("remotesparkmagics-jupyter")) {
+          continue;
+        }
         s.setOwner(user.getEmail());
         sessions.add(s);
       }
