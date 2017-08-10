@@ -41,9 +41,11 @@ import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
 import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
 import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
+import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import java.util.LinkedList;
+import javax.ejb.EJB;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.Notebook;
@@ -58,8 +60,11 @@ import org.quartz.CronExpression;
 @RequestScoped
 public class NotebookRestApi {
 
-  private static final Logger LOG = LoggerFactory.getLogger(
-          NotebookRestApi.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotebookRestApi.class);
+  
+  @EJB
+  private ZeppelinResource zeppelinResource;
+  
   Gson gson = new Gson();
   private Notebook notebook;
   private NotebookServer notebookServer;
@@ -1004,6 +1009,7 @@ public class NotebookRestApi {
       note.setName(noteName);
       note.persist(subject);
       noteInfo = new NoteInfo(note);
+      zeppelinResource.persistToDB(this.project);
     } catch (IOException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not create notebook. " + ex.getMessage());

@@ -108,7 +108,7 @@
                     </div>
                   </div>  
 
-                  <div uib-dropdown class="position-fixed" id="menu-{{$index}}">
+                  <div ng-if="note.id !== zeppelinCtrl.TRASH_FOLDER_ID" uib-dropdown class="position-fixed" id="menu-{{$index}}">
                     <ul uib-dropdown-menu class="dropdown-amore" role="menu">
                       <li ng-if="projectCtrl.role === 'Data owner'">
                         <a ng-if="!note.isTrash" class="pointer" role="menuitem" tabindex="1" ng-click="zeppelinCtrl.moveToTrash(note)">

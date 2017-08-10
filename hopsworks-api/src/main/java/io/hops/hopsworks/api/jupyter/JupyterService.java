@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -47,10 +48,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterService {
 
-  private final static Logger LOGGER = Logger.getLogger(JupyterService.class.
-          getName());
-  private static final Logger logger = Logger.getLogger(
-          JupyterService.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -70,6 +68,8 @@ public class JupyterService {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private LivyService livyService;
 
   private Integer projectId;
   private Project project;
@@ -289,6 +289,7 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not find Jupyter entry for user: " + hdfsUser);
     }
+    livyService.deleteAllJupyterLivySessions(hdfsUser);
     String projectPath = jupyterConfigFactory.getJupyterHome(hdfsUser, jp);
 
     // stop the server, remove the user in this project's local dirs

@@ -1,25 +1,22 @@
 package io.hops.hopsworks.api.zeppelin.util;
 
+import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfFacade;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -30,15 +27,14 @@ import org.apache.zeppelin.interpreter.InterpreterSetting;
 @Stateless
 public class ZeppelinResource {
 
-  private static final Logger logger
-          = Logger.getLogger(ZeppelinResource.class.getName());
+  private static final Logger logger = Logger.getLogger(ZeppelinResource.class.getName());
 
   @EJB
   private ProjectFacade projectBean;
   @EJB
   private ZeppelinConfigFactory zeppelinConfFactory;
   @EJB
-  private Settings settings;
+  private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
 
   public ZeppelinResource() {
   }
@@ -74,11 +70,6 @@ public class ZeppelinResource {
       }
     }
     return running;
-  }
-
-  public boolean isLivySessionAlive(int sessionId) {
-    LivyMsg.Session session = getLivySession(sessionId);
-    return session != null;
   }
 
   public void forceKillInterpreter(InterpreterSetting interpreter,
@@ -241,47 +232,30 @@ public class ZeppelinResource {
     }
     return s;
   }
-
-  public int deleteLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
-    Response res;
-    try {
-      res = target.request().delete();
-    } catch (NotFoundException e) {
-      return Response.Status.NOT_FOUND.getStatusCode();
-    } finally {
-      client.close();
+  
+  public void persistToDB(Project project) {
+    if (project == null) {
+      logger.log(Level.SEVERE, "Can not persist interpreter json for null project.");
+      return;
     }
-    return res.getStatus();
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getprojectConf(project.getName());
+    if (zeppelinConf == null) {
+      logger.log(Level.SEVERE, "Can not persist interpreter json for project.");
+      return;
+    }
+    try {
+      String s = readConfigFile(new File(zeppelinConf.getConfDirPath() + ZeppelinConfig.INTERPRETER_JSON));
+      zeppelinInterpreterConfFacade.create(project.getName(), s);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, ex.getMessage());
+    }
   }
 
-  public LivyMsg.Session getLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
-    LivyMsg.Session session = null;
-    try {
-      session = target.request().get(LivyMsg.Session.class);
-    } catch (NotFoundException e) {
-      return null;
-    } finally {
-      client.close();
+  private String readConfigFile(File path) throws IOException {
+    // write contents to file as text, not binary data
+    if (!path.exists()) {
+      throw new IOException("Problem creating file: " + path);
     }
-    return session;
-  }
-
-  public LivyMsg getLivySessions() {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions");
-    LivyMsg livySession = null;
-    try {
-      livySession = target.request().get(LivyMsg.class);
-    } finally {
-      client.close();
-    }
-    return livySession;
+    return new String(Files.readAllBytes(path.toPath()));
   }
 }

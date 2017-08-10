@@ -1,5 +1,6 @@
 package io.hops.hopsworks.api.zeppelin.rest;
 
+import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
@@ -46,11 +47,12 @@ public class InterpreterService {
   private ProjectTeamFacade projectTeamBean;
   @Inject
   private InterpreterRestApi interpreterRestApi;
+  @EJB
+  private LivyService livyService;
 
   @Path("/")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public InterpreterRestApi interpreter(@PathParam("projectID") String projectID,
-          @Context HttpServletRequest httpReq)
+  public InterpreterRestApi interpreter(@PathParam("projectID") String projectID, @Context HttpServletRequest httpReq)
           throws AppException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
@@ -61,32 +63,28 @@ public class InterpreterService {
     Users user = userBean.findByEmail(httpReq.getRemoteUser());
     if (user == null) {
       logger.error("Could not find remote user in request.");
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Could not find remote user.");
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Could not find remote user.");
     }
     String userRole = projectTeamBean.findCurrentRole(project, user);
     if (userRole == null) {
       logger.error("User with no role in this project.");
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "You curently have no role in this project!");
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "You curently have no role in this project!");
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName(), user.getEmail());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName(), user.getEmail());
     if (zeppelinConf == null) {
       logger.error("Could not connect to web socket.");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not connect to web socket.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Could not connect to web socket.");
     }
     interpreterRestApi.setParms(project, user, userRole, zeppelinConf);
     return interpreterRestApi;
   }
-  
+
   @GET
   @Path("/check")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  public Response interpreterCheck(@PathParam("projectID") String projectID,
-      @Context HttpServletRequest httpReq) throws AppException {
+  public Response interpreterCheck(@PathParam("projectID") String projectID, @Context HttpServletRequest httpReq) throws
+          AppException {
     Project project = zeppelinResource.getProject(projectID);
     if (project == null) {
       logger.error("Could not find project in cookies.");
@@ -102,8 +100,7 @@ public class InterpreterService {
       logger.error("User with no role in this project.");
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-        getName(), user.getEmail());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName(), user.getEmail());
     if (zeppelinConf == null) {
       logger.error("Zeppelin  not connect to web socket.");
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();
@@ -116,7 +113,7 @@ public class InterpreterService {
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
   public Response getSessions(@PathParam("projectID") String projectID) {
-    LivyMsg sessions = zeppelinResource.getLivySessions();
+    LivyMsg sessions = livyService.getLivySessions();
     return new JsonResponse(Response.Status.OK, "", sessions).build();
   }
 
@@ -124,12 +121,10 @@ public class InterpreterService {
   @Path("/livy/sessions/{sessionId}")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response getSession(@PathParam("projectID") String projectID,
-          @PathParam("sessionId") int sessionId) {
-    LivyMsg.Session session = zeppelinResource.getLivySession(sessionId);
+  public Response getSession(@PathParam("projectID") String projectID, @PathParam("sessionId") int sessionId) {
+    LivyMsg.Session session = livyService.getLivySession(sessionId);
     if (session == null) {
-      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
-              + "' not found.").build();
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
     return new JsonResponse(Response.Status.OK, "", session).build();
   }
@@ -138,12 +133,10 @@ public class InterpreterService {
   @Path("/livy/sessions/delete/{sessionId}")
   @Produces("application/json")
   @RolesAllowed({"HOPS_ADMIN"})
-  public Response deleteSession(@PathParam("projectID") String projectID,
-          @PathParam("sessionId") int sessionId) {
-    int res = zeppelinResource.deleteLivySession(sessionId);
+  public Response deleteSession(@PathParam("projectID") String projectID, @PathParam("sessionId") int sessionId) {
+    int res = livyService.deleteLivySession(sessionId);
     if (res == Response.Status.NOT_FOUND.getStatusCode()) {
-      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId
-              + "' not found.").build();
+      return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
     return new JsonResponse(Response.Status.OK, "").build();
   }

@@ -106,8 +106,6 @@ angular.module('hopsWorksApp')
                 return true;
               if (group.indexOf("flink") > -1)
                 return true;
-              if (group.indexOf("python") > -1)
-                return true;
               if (group.indexOf("angular") > -1)
                 return true;
               if (group.indexOf("livy") > -1)
