@@ -1184,29 +1184,29 @@ public class Settings implements Serializable {
   public static final String T_CERTIFICATE = "t_certificate";
 
   //Used to retrieve schema by HopsUtil
-  public static final String KAFKA_SESSIONID_ENV_VAR = "hopsworks.sessionid";
-  public static final String KAFKA_PROJECTID_ENV_VAR = "hopsworks.projectid";
-  public static final String KAFKA_PROJECTNAME_ENV_VAR = "hopsworks.projectname";
-  public static final String HOPSUTIL_JOBNAME_ENV_VAR = "hopsworks.job.name";
-  public static final String HOPSUTIL_JOBTYPE_ENV_VAR = "hopsworks.job.type";
-  public static final String HOPSUTIL_APPID_ENV_VAR = "hopsworks.job.appid";
+  public static final String HOPSWORKS_PROJECTID_PROPERTY = "hopsworks.projectid";
+  public static final String HOPSWORKS_PROJECTNAME_PROPERTY = "hopsworks.projectname";
+  public static final String HOPSWORKS_PROJECTUSER_PROPERTY = "hopsworks.projectuser";
+  public static final String HOPSWORKS_JOBNAME_PROPERTY = "hopsworks.job.name";
+  public static final String HOPSWORKS_JOBTYPE_PROPERTY = "hopsworks.job.type";
+  public static final String HOPSWORKS_APPID_PROPERTY = "hopsworks.job.appid";
   public static final String KAFKA_BROKERADDR_ENV_VAR
           = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR
           = "hopsworks.kafka.job.topics";
-  public static final String SESSIONID_ENV_VAR = "hopsworks.sessionid";
-  public static final String KEYSTORE_PASSWORD_ENV_VAR = "hopsworks.keystore";
+  public static final String HOPSWORKS_SESSIONID_PROPERTY = "hopsworks.sessionid";
+  public static final String HOPSWORKS_KEYSTORE_PROPERTY = "hopsworks.keystore";
   public static final String KEYSTORE_VAL_ENV_VAR = "keyPw";
-  public static final String TRUSTSTORE_PASSWORD_ENV_VAR = "hopsworks.truststore";
+  public static final String HOPSWORKS_TRUSTSTORE_PROPERTY = "hopsworks.truststore";
   public static final String TRUSTSTORE_VAL_ENV_VAR = "trustPw";
   
   public static final String KAFKA_CONSUMER_GROUPS
           = "hopsworks.kafka.consumergroups";
-  public static final String HOPSWORKS_REST_ENDPOINT_ENV_VAR
+  public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY
           = "hopsworks.restendpoint";
 
-  public static final String ELASTIC_ENDPOINT_ENV_VAR
+  public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY
           = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;

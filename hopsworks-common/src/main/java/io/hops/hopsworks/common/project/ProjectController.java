@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
@@ -36,6 +37,7 @@ import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentAction;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
@@ -64,14 +66,21 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -83,6 +92,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -1789,4 +1799,54 @@ public class ProjectController {
     return null;
   }
 
+  public CertPwDTO getCertPw(Users user, String projectName, String keyStore) throws Exception {
+    //Compare the sent certificate with the one in the database
+    String keypw = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(), userCertsFacade.
+        findUserCert(projectName, user.getUsername()).getUserKeyPwd());
+    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray());
+
+    CertPwDTO respDTO = new CertPwDTO();
+    respDTO.setKeyPw(keypw);
+    respDTO.setTrustPw(settings.getHopsworksMasterPasswordSsl());
+    return respDTO;
+  }
+
+  /**
+   * Returns the project user from the keystore and verifies it.
+   *
+   * @param keyStore
+   * @param keyStorePwd
+   * @return
+   * @throws AppException
+   */
+  public void validateCert(byte[] keyStore, char[] keyStorePwd)
+      throws AppException {
+    try {
+      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+      ByteArrayInputStream stream = new ByteArrayInputStream(keyStore);
+
+      ks.load(stream, keyStorePwd);
+
+      String projectUser = "";
+      Enumeration<String> aliases = ks.aliases();
+      while (aliases.hasMoreElements()) {
+        String alias = aliases.nextElement();
+        if (!alias.equals("caroot")) {
+          projectUser = alias;
+          break;
+        }
+      }
+
+      UserCerts userCert = userCertsFacade.findUserCert(hdfsUsersBean.
+          getProjectName(projectUser), hdfsUsersBean.getUserName(projectUser));
+
+      if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+            "Certificate error!");
+      }
+    } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Certificate error!");
+    }
+  }
 }

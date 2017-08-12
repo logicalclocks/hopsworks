@@ -221,6 +221,14 @@ public class SparkYarnRunnerBuilder {
       extraClassPathFiles.append(settings.getHopsUtilFilename()).append(
           File.pathSeparator);
     }
+    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
+        "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
+        + Settings.SPARK_LOCALIZED_CONF_DIR
+        + File.pathSeparator + Settings.SPARK_LOCALIZED_LIB_DIR + "/*"
+        + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
+        + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
+        + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
+    );
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
@@ -243,19 +251,12 @@ public class SparkYarnRunnerBuilder {
             secondaryJars.append(dto.getName()).append(",");
           }
         }
+        builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, dto.getName());
         extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
       }
       builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
     }
 
-    builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
-        "$PWD/" + Settings.SPARK_LOCALIZED_CONF_DIR + File.pathSeparator
-        + Settings.SPARK_LOCALIZED_CONF_DIR
-        + File.pathSeparator + Settings.SPARK_LOCALIZED_LIB_DIR + "/*"
-        + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
-        + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
-        + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
-    );
     //Set Spark specific environment variables
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
@@ -319,7 +320,7 @@ public class SparkYarnRunnerBuilder {
     addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + ","
         + jobName + ","
         + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
-    addSystemProperty(Settings.HOPSUTIL_APPID_ENV_VAR,
+    addSystemProperty(Settings.HOPSWORKS_APPID_PROPERTY,
         YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().
         getHadoopDir() + "/lib/native/");
@@ -339,7 +340,7 @@ public class SparkYarnRunnerBuilder {
         append(services.getSettings().getHadoopDir()).
         append("/lib/native/").
         append(" ").
-        append("-D").append(Settings.HOPSUTIL_APPID_ENV_VAR).append("=").
+        append("-D").append(Settings.HOPSWORKS_APPID_PROPERTY).append("=").
         append(YarnRunner.APPID_PLACEHOLDER);
 
     try {
@@ -370,43 +371,45 @@ public class SparkYarnRunnerBuilder {
 
     if (serviceProps != null) {
 
-      addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.
+      addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.
           getRestEndpoint());
-      addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, Settings.KEYSTORE_VAL_ENV_VAR);
-      addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, Settings.TRUSTSTORE_VAL_ENV_VAR);
-      addSystemProperty(Settings.ELASTIC_ENDPOINT_ENV_VAR, serviceProps.
+      addSystemProperty(Settings.HOPSWORKS_KEYSTORE_PROPERTY, Settings.KEYSTORE_VAL_ENV_VAR);
+      addSystemProperty(Settings.HOPSWORKS_TRUSTSTORE_PROPERTY, Settings.TRUSTSTORE_VAL_ENV_VAR);
+      addSystemProperty(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, serviceProps.
           getElastic().getRestEndpoint());
-      addSystemProperty(Settings.HOPSUTIL_JOBNAME_ENV_VAR, serviceProps.
+      addSystemProperty(Settings.HOPSWORKS_JOBNAME_PROPERTY, serviceProps.
           getJobName());
-      addSystemProperty(Settings.HOPSUTIL_JOBTYPE_ENV_VAR, jobType.getName());
-
-      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR
+      addSystemProperty(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobType.getName());
+      addSystemProperty(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, jobUser);
+      
+      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY
           + "=").
           append(serviceProps.getRestEndpoint()).
-          append(" -D" + Settings.KEYSTORE_PASSWORD_ENV_VAR + "=").append(Settings.KEYSTORE_VAL_ENV_VAR).
-          append(" -D" + Settings.TRUSTSTORE_PASSWORD_ENV_VAR + "=").append(Settings.TRUSTSTORE_VAL_ENV_VAR).
-          append(" -D" + Settings.ELASTIC_ENDPOINT_ENV_VAR + "=").append(
+          append(" -D" + Settings.HOPSWORKS_KEYSTORE_PROPERTY + "=").append(Settings.KEYSTORE_VAL_ENV_VAR).
+          append(" -D" + Settings.HOPSWORKS_TRUSTSTORE_PROPERTY + "=").append(Settings.TRUSTSTORE_VAL_ENV_VAR).
+          append(" -D" + Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY + "=").append(
           serviceProps.getElastic().getRestEndpoint()).
-          append(" -D" + Settings.KAFKA_PROJECTID_ENV_VAR + "=").append(
+          append(" -D" + Settings.HOPSWORKS_PROJECTID_PROPERTY + "=").append(
           serviceProps.getProjectId()).
-          append(" -D" + Settings.KAFKA_PROJECTNAME_ENV_VAR + "=").append(
+          append(" -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=").append(
           serviceProps.getProjectName()).
-          append(" -D" + Settings.HOPSUTIL_JOBNAME_ENV_VAR + "=").append(
+          append(" -D" + Settings.HOPSWORKS_JOBNAME_PROPERTY + "=").append(
           serviceProps.getJobName()).
-          append(" -D" + Settings.HOPSUTIL_JOBTYPE_ENV_VAR + "=").append(
+          append(" -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=").append(
           jobType.getName()).
-          append(" -D" + Settings.SESSIONID_ENV_VAR + "=").append(sessionId);
+          append(" -D" + Settings.HOPSWORKS_SESSIONID_PROPERTY + "=").append(sessionId).
+          append(" -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=").append(jobUser);
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
         addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.
             getKafka().getBrokerAddresses());
         addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.
             getKafka().getTopics());
-        addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(
+        addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(
             serviceProps.getProjectId()));
-        addSystemProperty(Settings.KAFKA_PROJECTNAME_ENV_VAR, serviceProps.
+        addSystemProperty(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, serviceProps.
             getProjectName());
-        addSystemProperty(Settings.SESSIONID_ENV_VAR, sessionId);
+        addSystemProperty(Settings.HOPSWORKS_SESSIONID_PROPERTY, sessionId);
 
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.
             getKafka().getConsumerGroups());
@@ -470,9 +473,8 @@ public class SparkYarnRunnerBuilder {
       //Exclude "hopsworks.yarn.appid" property because we do not want to 
       //escape it now
       String option;
-      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(
-          Settings.HOPSUTIL_APPID_ENV_VAR) || s.equals(
-              Settings.SPARK_EXECUTORENV_PYTHONPATH) || s.equals(
+      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSWORKS_APPID_PROPERTY) || s.equals(
+          Settings.SPARK_EXECUTORENV_PYTHONPATH) || s.equals(
               Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {

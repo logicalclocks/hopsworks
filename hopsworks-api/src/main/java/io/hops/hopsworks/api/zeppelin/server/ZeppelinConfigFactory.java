@@ -139,7 +139,7 @@ public class ZeppelinConfigFactory {
     if (interpreterConf != null) {
       conf = interpreterConf.getIntrepeterConf();
     }
-    config = new ZeppelinConfig(projectName, hdfsUser, settings, conf);
+    config = new ZeppelinConfig(projectName, project.getId(), hdfsUser, settings, conf);
     projectConfCache.put(projectName, config);
     return projectConfCache.get(projectName);
   }
@@ -202,7 +202,7 @@ public class ZeppelinConfigFactory {
     File projectDir = new File(projectDirPath);
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
     if (projectDir.exists()) {
-      conf = new ZeppelinConfig(project.getName(), hdfsUser, settings, null);
+      conf = new ZeppelinConfig(project.getName(), project.getId(), hdfsUser, settings, null);
       return conf.cleanAndRemoveConfDirs();
     }
     return false;

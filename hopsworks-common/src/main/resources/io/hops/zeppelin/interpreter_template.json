@@ -212,7 +212,9 @@
         "livy.spark.yarn.driverEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
         "livy.spark.yarn.driverEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
         "livy.spark.yarn.executorEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
-        "livy.spark.yarn.executorEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%"
+        "livy.spark.yarn.executorEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
+        "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%"
       },
       "status": "READY",
             "interpreterGroup": [
