@@ -48,7 +48,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterService {
 
-  private final static Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(JupyterService.class.
+          getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -118,7 +119,7 @@ public class JupyterService {
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) {};
+            = new GenericEntity<List<JupyterProject>>(listServers) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
   }
@@ -210,7 +211,9 @@ public class JupyterService {
                 jupyterConfig.getExecutorCores(), jupyterConfig.
                 getExecutorMemory(), jupyterConfig.getGpus(),
                 jupyterConfig.getArchives(), jupyterConfig.getJars(),
-                jupyterConfig.getFiles(), jupyterConfig.getPyFiles());
+                jupyterConfig.getFiles(), jupyterConfig.getPyFiles(),
+                jupyterConfig.getNumParamServers(),
+                jupyterConfig.isTensorflow());
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
                 ex);

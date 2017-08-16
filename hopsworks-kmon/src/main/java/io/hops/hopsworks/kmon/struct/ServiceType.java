@@ -3,8 +3,20 @@ package io.hops.hopsworks.kmon.struct;
 public enum ServiceType {
 
   HDFS,
-  NDB,
   YARN,
-  MapReduce,
+  MAP_REDUCE,
+  zookeeper,
+  NDB,
+  influxdb,
+  epipe,
+  logstash,
+  livy,
+  historyserver,
+  sparkhistoryserver,
+  telegraf,
+  elasticsearch,
+  grafana,
+  kafka,
+  kibana,
   SSH
 }

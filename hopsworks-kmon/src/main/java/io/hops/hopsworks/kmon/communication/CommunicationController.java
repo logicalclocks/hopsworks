@@ -107,16 +107,6 @@ public class CommunicationController {
     return findHostById(id);
   }
 
-  public String serviceLog(int lines) {
-    try {
-      Host h = findHostByRole(cluster, service, "mgmserver");
-      String ip = h.getPublicOrPrivateIp();
-      String agentPassword = h.getAgentPassword();
-      return web.getServiceLog(ip, agentPassword, cluster, service, lines);
-    } catch (Exception ex) {
-      return ex.getMessage();
-    }
-  }
 
   public String mySqlClusterConfig() throws Exception {
     // Finds hostId of mgmserver

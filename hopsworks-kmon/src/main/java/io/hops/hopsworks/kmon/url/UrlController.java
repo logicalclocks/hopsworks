@@ -82,10 +82,18 @@ public class UrlController {
     return "host?faces-redirect=true&hostid=" + hostId;
   }
 
-  public String clusterStatus(String cluster) {
+  public String clustersStatus(){
+    return "clusters?faces-redirect=true";
+  }
+  
+  public String clusterStatus() {
     return "cluster-status?faces-redirect=true&cluster=" + cluster;
   }
 
+  public String clusterStatus(String cluster) {
+    return "cluster-status?faces-redirect=true&cluster=" + cluster;
+  }
+  
   public String serviceInstance() {
     return "services-instances-status?faces-redirect=true&hostid="
             + hostId + "&cluster=" + cluster + "&role=" + role;

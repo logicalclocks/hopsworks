@@ -5,7 +5,8 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
 
   <ui:composition template="layout.xhtml">
 
@@ -35,6 +36,7 @@
               <h:outputText value=" &raquo; "/>
               <p:commandLink action="#{urlController.clusterStatus(serviceInstancesController.cluster)}" ajax="false">  
                 <h:outputText value="#{serviceInstancesController.cluster}" />
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
               </p:commandLink> 
               <h:outputText value=" &raquo; "/>
               <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
@@ -46,7 +48,8 @@
               <p:commandLink action="#{urlController.serviceStatus}" ajax="false" rendered="#{not empty serviceInstancesController.role}">  
                 <h:outputText value="#{serviceInstancesController.role}" />
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>                          
+                <f:param name="service" value="#{serviceInstancesController.service}"/>
+                <f:param name="role" value="#{serviceInstancesController.role}"/>
               </p:commandLink>                     
             </p:column>
           </p:row>
@@ -67,12 +70,7 @@
         <h:form>  
           <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
             <p:toolbarGroup align="left">  
-              <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
-                <h:outputText value="#{serviceInstancesController.service}"/>
-                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>                      
-              </p:commandLink>
-
+              
               <p:commandButton value="Status" icon="ui-icon-home" 
                                action="#{urlController.serviceStatus}" ajax="false">
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
@@ -83,26 +81,9 @@
                                action="#{urlController.serviceInstances}">
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
                 <f:param name="service" value="#{serviceInstancesController.service}"/>
-              </p:commandButton>  
-              <p:commandButton value="Actions History" icon="ui-icon-circle-triangle-e" 
-                               action="#{urlController.serviceActionHistory}">
-                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>                      
-              </p:commandButton>  
-              <p:commandButton value="Terminal" icon="ui-icon-carat-1-e" 
-                               rendered="#{serviceStatusController.renderTerminalLink()}"
-                               action="#{urlController.serviceTerminal}">
-                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                <f:param name="service" value="#{serviceStatusController.service}"/>                      
-              </p:commandButton>                        
+              </p:commandButton>                    
             </p:toolbarGroup>  
 
-            <p:toolbarGroup align="right">  
-              <p:menuButton value="Actions" disabled="true">  
-                <p:menuitem value="Start..." url="???" /> 
-                <p:menuitem value="Stop..." url="???" /> 
-              </p:menuButton>  
-            </p:toolbarGroup>  
             
             <p:toolbarGroup align="center">  
                 <p:menuButton value="Start/Stop">  
@@ -150,13 +131,10 @@
 
         <h:form styleClass="styleInfoPanel" id="formInstances">
 
-          <p:panel id="panelInstances" header="Role Instances">
 
-            <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}"
-                         filteredValue="#{serviceInstancesController.filteredInstances}" >
+            <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}">
 
-              <p:column id="Name" headerText="Role" filterBy="#{instance.name}" filterMatchMode="contains" 
-                        filterOptions="#{serviceInstancesController.roleOptions}" filterPosition="top">
+              <p:column id="Name" headerText="Role">
 
                 <p:commandLink action="#{urlController.roleStatus}" ajax="false">
                   <h:outputText value="#{instance.name}"/>
@@ -164,36 +142,39 @@
                   <f:param name="cluster" value="#{instance.cluster}"/>
                   <f:param name="role" value="#{instance.role}"/>
                   <f:param name="service" value="#{instance.service}"/>
-                </p:commandLink>                     
+                </p:commandLink>                    
 
               </p:column>
 
-              <p:column headerText="Host" filterBy="#{instance.host}" filterMatchMode="contains" filterPosition="top">
-                <p:commandLink action="#{urlController.host()}" ajax="false">
+              <p:column id="Host" headerText="Host">
+                <p:commandLink action="#{urlController.host}" ajax="false">
                   <h:outputText value="#{instance.host}"/>
                   <f:param name="hostid" value="#{instance.host}"/>
+                  <f:param name="cluster" value="#{instance.cluster}"/>
+                  <f:param name="role" value="#{instance.role}"/>
+                  <f:param name="service" value="#{instance.service}"/>
                 </p:commandLink> 
               </p:column>
 
-              <p:column id="Status1" styleClass="Status-#{instance.status}" headerText="Status" filterBy="#{instance.status}" 
-                        filterMatchMode="exact" filterOptions="#{serviceInstancesController.statusOptions}" filterPosition="top">
+              <p:column id="Status1" styleClass="Status-#{instance.status}" headerText="Status">
                 <h:outputText id="status" value="#{instance.status}"/>
                 <p:tooltip for="status" value="#{settingsController.tooltip(instance.status)}"/>
               </p:column>
 
-              <p:column id="Health" headerText="Health" filterBy="#{instance.health}"  
-                        filterMatchMode="exact" filterOptions="#{serviceInstancesController.healthOptions}" filterPosition="top">
+              <p:column id="Health" headerText="Health">
                 <div class="Health-#{instance.health}">
                   <h:outputText value="#{instance.health}"/>
                 </div>
               </p:column>
 
             </p:dataTable> 
-          </p:panel>                    
+          <!--</p:panel>-->                    
         </h:form>
 
         <p:panel>
-          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe>
+          <c:if test="#{serviceInstancesController.serviceWithMetrics}">
+            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe>
+          </c:if>
         </p:panel>
 
       </p:outputPanel>           

@@ -20,13 +20,19 @@ public class PythonDepJson {
    * @param version 
    */
   public PythonDepJson(String channelUrl, String lib, String version, String 
-          preinstalled) {
+          preinstalled, String status) {
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
     this.preinstalled = preinstalled;
+    this.status = status;
   }
-
+  
+  public PythonDepJson(String channelUrl, String lib, String version, String 
+          preinstalled) {
+    this(channelUrl, lib, version, preinstalled, "Not Installed");
+  }
+  
   public PythonDepJson(PythonDep pd) {
     this.channelUrl = pd.getRepoUrl().getUrl();
     this.lib = pd.getDependency();

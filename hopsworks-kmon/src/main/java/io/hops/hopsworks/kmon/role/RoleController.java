@@ -124,6 +124,7 @@ public class RoleController {
   }
 
   public List<InstanceFullInfo> getInstanceFullInfo() {
+    loadRoles();
     return instanceInfoList;
   }
 

@@ -9,6 +9,7 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
             $scope.tgState = true;
+            $scope.mode = "";
             self.jupyterServer;
             self.toggleValue = false;
             var projectId = $routeParams.projectID;
@@ -25,6 +26,13 @@ angular.module('hopsWorksApp')
             $scope.trustSrc = function (src) {
               return $sce.trustAsResourceUrl(self.ui);
             };
+
+            self.tensorflow = function () {
+              $scope.mode = "tensorflow"
+            }
+            self.spark = function () {
+              $scope.mode = "spark"
+            }
 
             self.restart = function () {
               $location.path('/#!/project/' + self.projectId + '/jupyter');
