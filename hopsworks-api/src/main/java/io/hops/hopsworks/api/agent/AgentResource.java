@@ -174,7 +174,14 @@ public class AgentResource {
         String roleName = s.getString("role");
         String service = s.getString("service");
 
-        Role role = roleFacade.find(hostId, cluster, service, roleName);
+        Role role = null;
+        try {
+          roleFacade.find(hostId, cluster, service, roleName);
+        } catch (Exception ex) {
+          logger.warning("Problem finding a role, transaction timing out? "
+                  + ex.toString());
+        }
+
         if (role == null) {
           role = new Role();
           role.setHostId(hostId);
@@ -199,26 +206,20 @@ public class AgentResource {
         } else {
           role.setStatus(Status.None);
         }
-        String startTime = null;
-        if (s.containsKey("start-time")) {
-          startTime = s.getString("start-time");
+
+        Long startTime = role.getStartTime();
+        Status status = Status.valueOf(s.getString("status"));
+        if (status.equals(Status.Started)) {
+          role.setStopTime(agentTime);
         }
-        String stopTime = null;
-        if (s.containsKey("stop-time")) {
-          stopTime = s.getString("stop-time");
+        Long stopTime = role.getStopTime();
+
+        if (startTime != null && stopTime != null) {
+          role.setUptime(stopTime - startTime);
+        } else {
+          role.setUptime(0);
         }
-        try {
-          if (stopTime != null) {
-            role.setUptime(Long.parseLong(stopTime) - Long.parseLong(startTime));
-          } else if (startTime != null) {
-            role.setUptime(agentTime - Long.parseLong(startTime));
-          }
-        } catch (NumberFormatException ex) {
-          logger.log(Level.WARNING,
-                  "Invalid startTime or stopTime - not a valid number for: {0}",
-                  role);
-          continue;
-        }
+
         roleFacade.store(role);
       }
 
@@ -393,10 +394,15 @@ public class AgentResource {
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
+<<<<<<< Updated upstream
 
 
     GenericEntity<Collection<CondaCommands>> commandsForKagent
             = new GenericEntity<Collection<CondaCommands>>(commands) {    };
+=======
+    GenericEntity<Collection<CondaCommands>> commandsForKagent
+            = new GenericEntity<Collection<CondaCommands>>(commands) { };
+>>>>>>> Stashed changes
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             commandsForKagent).build();
