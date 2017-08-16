@@ -45,9 +45,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version")})
 public class PythonDep implements Serializable {
-  
-  
-  
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -71,7 +68,6 @@ public class PythonDep implements Serializable {
   @Column(name = "preinstalled")
   private boolean preinstalled;
 
-
   @ManyToMany(mappedBy = "pythonDepCollection")
   private Collection<Project> projectCollection;
   @JoinColumn(name = "repo_id",
@@ -80,7 +76,8 @@ public class PythonDep implements Serializable {
   private AnacondaRepo repoUrl;
 
   @Enumerated(EnumType.ORDINAL)
-  private PythonDepsFacade.CondaStatus status = PythonDepsFacade.CondaStatus.ONGOING;
+  private PythonDepsFacade.CondaStatus status
+          = PythonDepsFacade.CondaStatus.ONGOING;
 
   public PythonDep() {
   }
@@ -94,11 +91,19 @@ public class PythonDep implements Serializable {
     this.dependency = dependency;
     this.version = version;
   }
-  
+
   public PythonDep(AnacondaRepo repoUrl, String dependency, String version) {
     this.dependency = dependency;
     this.version = version;
     this.repoUrl = repoUrl;
+  }
+
+  public PythonDep(AnacondaRepo repoUrl, String dependency, String version,
+          boolean preinstalled) {
+    this.dependency = dependency;
+    this.version = version;
+    this.repoUrl = repoUrl;
+    this.preinstalled = preinstalled;
   }
 
   public Integer getId() {
@@ -158,9 +163,7 @@ public class PythonDep implements Serializable {
   public void setPreinstalled(boolean preinstalled) {
     this.preinstalled = preinstalled;
   }
-  
 
-  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -175,8 +178,8 @@ public class PythonDep implements Serializable {
       return false;
     }
     PythonDep other = (PythonDep) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -186,6 +189,5 @@ public class PythonDep implements Serializable {
   public String toString() {
     return "io.hops.hopsworks.common.dao.pythonDeps.PythonDep[ id=" + id + " ]";
   }
-
 
 }

@@ -140,7 +140,8 @@ public class JupyterConfigFactory {
           String hdfsUser,
           int driverCores, String driverMemory, int numExecutors,
           int executorCores, String executorMemory, int gpus,
-          String archives, String jars, String files, String pyFiles) throws
+          String archives, String jars, String files, String pyFiles,
+          int numParameterServers, boolean tensorflow) throws
           AppException, IOException, InterruptedException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
@@ -170,7 +171,7 @@ public class JupyterConfigFactory {
       jc = new JupyterConfig(project.getName(), secret, hdfsUser, hdfsLeFacade.
               getSingleEndpoint(), settings, port, driverCores,
               driverMemory, numExecutors, executorCores, executorMemory, gpus,
-              archives, jars, files, pyFiles);
+              archives, jars, files, pyFiles, numParameterServers, tensorflow);
 
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
@@ -249,7 +250,8 @@ public class JupyterConfigFactory {
     return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), jc.
             getDriverCores(), jc.getDriverMemory(), jc.getNumExecutors(), jc.
             getExecutorCores(), jc.getExecutorMemory(), jc.getGpus(), jc.
-            getArchives(), jc.getJars(), jc.getFiles(), jc.getPyFiles());
+            getArchives(), jc.getJars(), jc.getFiles(), jc.getPyFiles(),
+    jc.getNumParamServers(), jc.isTensorflow());
 
   }
 

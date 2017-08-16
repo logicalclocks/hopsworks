@@ -455,7 +455,7 @@ public class ZeppelinConfig {
       if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
         ldLibraryPath = System.getenv("LD_LIBRARY_PATH");
       }
-      String javaHome = Settings.JAVA_HOME;
+      String javaHome = settings.getJavaHome();
       if (System.getenv().containsKey("JAVA_HOME")) {
         javaHome = System.getenv("JAVA_HOME");
       }

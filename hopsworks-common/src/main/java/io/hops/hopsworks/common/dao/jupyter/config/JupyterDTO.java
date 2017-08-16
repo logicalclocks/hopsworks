@@ -19,6 +19,8 @@ public class JupyterDTO {
   private int executorCores=1;
   private String executorMemory="500M";
   private int gpus=0;
+  private int numParamServers=0;
+  private boolean tensorflow=false;
   private String archives="";
   private String jars="";
   private String files="";
@@ -30,7 +32,8 @@ public class JupyterDTO {
 
   public JupyterDTO(int port, String token, long pid, int driverCores,
           String driverMemory, int numExecutors, int executorCores, String executorMemory,
-          int gpus, String archives, String jars, String files, String pyFiles) {
+          int gpus, String archives, String jars, String files, String pyFiles,
+          int numParameterServers, boolean tensorflow) {
     this.port = port;
     this.token = token;
     this.pid = pid;
@@ -50,6 +53,8 @@ public class JupyterDTO {
     } catch (UnknownHostException ex) {
       Logger.getLogger(JupyterDTO.class.getName()).log(Level.SEVERE, null, ex);
     }
+    this.numParamServers = numParameterServers;
+    this.tensorflow = tensorflow;
   }
 
   public String getHostIp() {
@@ -166,5 +171,20 @@ public class JupyterDTO {
     this.pyFiles = pyFiles;
   }
 
-    
+  public int getNumParamServers() {
+    return numParamServers;
+  }
+
+  public void setNumParamServers(int numParamServers) {
+    this.numParamServers = numParamServers;
+  }
+
+  public boolean isTensorflow() {
+    return tensorflow;
+  }
+
+  public void setTensorflow(boolean tensorflow) {
+    this.tensorflow = tensorflow;
+  }
+
 }

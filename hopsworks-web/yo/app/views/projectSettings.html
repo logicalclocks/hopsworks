@@ -315,18 +315,18 @@
                       </td>
                       <td class="col-sm-2" ng-if="row.preinstalled === 'false'">
                         <div class="button-group">
-                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'INSTALLED'"
+                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'INSTALLED' || row.preinstalled === 'true'"
                                   ng-click="pythonDepsCtrl.upgrade(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.upgrading[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Upgrade</button>
-                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'INSTALLED'"
+                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'INSTALLED' || row.preinstalled === 'true'"
                                   ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Uninstall</button>
                         </div>
                       </td>
                       <td class="col-sm-2" ng-if="row.preinstalled === 'true'">
-                        Pre-installed Library
+                        Pre-installed
                       </td>
                     </tr>
                 </table>
