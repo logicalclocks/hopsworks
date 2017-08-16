@@ -181,6 +181,7 @@ public class AgentResource {
           role.setCluster(cluster);
           role.setService(service);
           role.setRole(roleName);
+          role.setStartTime(agentTime);
         }
 
         String webPort = s.containsKey("web-port") ? s.getString("web-port")
@@ -195,30 +196,25 @@ public class AgentResource {
           continue;
         }
         if (s.containsKey("status")) {
+          if(!role.getStatus().equals(Status.Started) &&
+              Status.valueOf(s.getString("status")).equals(Status.Started)){
+            role.setStartTime(agentTime);
+          }
           role.setStatus(Status.valueOf(s.getString("status")));
         } else {
           role.setStatus(Status.None);
         }
-        String startTime = null;
-        if (s.containsKey("start-time")) {
-          startTime = s.getString("start-time");
+        
+        long startTime = role.getStartTime();
+        Status status = Status.valueOf(s.getString("status"));
+        if (status.equals(Status.Started)) {
+          role.setStopTime(agentTime);
         }
-        String stopTime = null;
-        if (s.containsKey("stop-time")) {
-          stopTime = s.getString("stop-time");
-        }
-        try {
-          if (stopTime != null) {
-            role.setUptime(Long.parseLong(stopTime) - Long.parseLong(startTime));
-          } else if (startTime != null) {
-            role.setUptime(agentTime - Long.parseLong(startTime));
-          }
-        } catch (NumberFormatException ex) {
-          logger.log(Level.WARNING,
-                  "Invalid startTime or stopTime - not a valid number for: {0}",
-                  role);
-          continue;
-        }
+        long stopTime = role.getStopTime();
+
+        role.setUptime(stopTime - startTime);
+
+
         roleFacade.store(role);
       }
 

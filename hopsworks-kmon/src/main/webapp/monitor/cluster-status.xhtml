@@ -27,6 +27,7 @@
               <h:outputText value=" &raquo; "/>
               <p:commandLink action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false">  
                 <h:outputText value="#{commandController.cluster}" />  
+                <f:param name="cluster" value="#{commandController.cluster}"/>
               </p:commandLink>                   
             </p:column>
           </p:row>
@@ -51,9 +52,6 @@
                 <h:outputText value="#{clusterStatusController.cluster}"/>
               </p:commandLink>
 
-              <p:commandButton value="Action History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterActionHistory}">
-                <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
-              </p:commandButton>  
             </p:toolbarGroup>  
 
             <p:toolbarGroup align="right">  
