@@ -925,10 +925,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              noteName: function (size, title, msg, val ) {
+              noteCreate: function (size, title, msg, val ) {
                 var modalInstance = $uibModal.open({
-                  templateUrl: 'views/noteNameModal.html',
-                  controller: 'InputModalCtrl as ctrl',
+                  templateUrl: 'views/noteCreateModal.html',
+                  controller: 'NoteCreateCtrl as noteCreateCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',

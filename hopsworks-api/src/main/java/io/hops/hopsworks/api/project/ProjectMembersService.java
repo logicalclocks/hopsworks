@@ -156,7 +156,7 @@ public class ProjectMembersService {
   public Response removeMembersByID(
           @PathParam("email") String email,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, Exception {
 
     Project project = projectController.findProjectById(this.projectId);
     JsonResponse json = new JsonResponse();

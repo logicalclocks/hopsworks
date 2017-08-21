@@ -1,6 +1,5 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -12,6 +11,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -51,8 +51,7 @@ public class JupyterFacade {
   protected EntityManager getEntityManager() {
     return em;
   }
-  
-  
+
   public List<JupyterProject> findNotebooksByProject(Integer projectId) {
     TypedQuery<JupyterProject> query = em.createNamedQuery(
             "JupyterProject.findByProjectId",
@@ -115,7 +114,7 @@ public class JupyterFacade {
     try {
       res = query.getSingleResult();
     } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.INFO, null,
+      Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
               e);
       return null;
     }
@@ -126,7 +125,7 @@ public class JupyterFacade {
     try {
       res2 = query2.getSingleResult();
     } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.INFO, null,
+      Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
               e);
     }
     return res2;
@@ -207,4 +206,10 @@ public class JupyterFacade {
 
   }
 
+  public String getProjectPath(JupyterProject jp, String projectName,
+          String hdfsUser) {
+    return settings.getJupyterDir() + File.separator
+            + Settings.DIR_ROOT + File.separator + projectName
+            + File.separator + hdfsUser + File.separator + jp.getSecret();
+  }
 }

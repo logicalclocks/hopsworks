@@ -76,8 +76,15 @@ public class PythonDepsService {
     return project;
   }
 
-  public PythonDepsService() {
+  Collection<PythonDepJson> preInstalledPythonDeps = new ArrayList<>();
 
+  public PythonDepsService() {
+    preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
+            "pydoop", "0.4", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
+            "TensorflowOnSpark", "0.1.0", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
+            "hopsutil", "0.1.0", "true", "Installed"));
   }
 
   @GET
@@ -90,6 +97,10 @@ public class PythonDepsService {
     List<PythonDepJson> jsonDeps = new ArrayList<>();
     for (PythonDep pd : pythonDeps) {
       jsonDeps.add(new PythonDepJson(pd));
+    }
+
+    for (PythonDepJson pdj : preInstalledPythonDeps) {
+      jsonDeps.add(pdj);
     }
 
     GenericEntity<Collection<PythonDepJson>> deps
@@ -197,7 +208,7 @@ public class PythonDepsService {
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
 
     GenericEntity<Collection<OpStatus>> opsFound
-            = new GenericEntity<Collection<OpStatus>>(response) {};
+            = new GenericEntity<Collection<OpStatus>>(response) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             opsFound).build();
@@ -294,7 +305,7 @@ public class PythonDepsService {
     }
 
     GenericEntity<Collection<LibVersions>> libsFound
-            = new GenericEntity<Collection<LibVersions>>(response) {};
+            = new GenericEntity<Collection<LibVersions>>(response) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             libsFound).build();

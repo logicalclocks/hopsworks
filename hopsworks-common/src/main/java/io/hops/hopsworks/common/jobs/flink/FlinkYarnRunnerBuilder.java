@@ -307,7 +307,6 @@ public class FlinkYarnRunnerBuilder {
    * @param flinkDir
    * @param flinkConfDir
    * @param flinkConfFile
-   * @param nameNodeIpPort
    * @param certsDir
    * @param services
    * @return
@@ -316,7 +315,7 @@ public class FlinkYarnRunnerBuilder {
   protected YarnRunner getYarnRunner(String project, final String flinkUser,
           String jobUser, String hadoopDir, final String flinkDir,
           final String flinkConfDir, final String flinkConfFile,
-          final String nameNodeIpPort, final String certsDir, AsynchronousJobExecutor services) throws IOException {
+          final String certsDir, AsynchronousJobExecutor services) throws IOException {
 
     //Create the YarnRunner builder for Flink, proceed with setting values
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
@@ -349,7 +348,7 @@ public class FlinkYarnRunnerBuilder {
       Configuration conf = new Configuration();
       FileSystem fs = null;
       try {
-        fs = FileSystem.get(new URI("hdfs://" + nameNodeIpPort), conf);
+        fs = FileSystem.get(new URI("hdfs://"), conf);
         //Set the Configuration object for the returned YarnClient
       } catch (URISyntaxException ex) {
         Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
@@ -361,9 +360,9 @@ public class FlinkYarnRunnerBuilder {
       for (LocalResourceDTO dto : extraFiles) {
         String pathToResource = dto.getPath();
         pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
-                "hdfs://" + nameNodeIpPort + "/Projects");
+                "hdfs:///Projects");
         pathToResource = pathToResource.replaceFirst("hdfs:/*user",
-                "hdfs://" + nameNodeIpPort + "/user");
+                "hdfs:///user");
         Path src = new Path(pathToResource);
         FileStatus scFileStat = fs.getFileStatus(src);
         LocalResource resource = LocalResource.newInstance(ConverterUtils.
@@ -377,14 +376,12 @@ public class FlinkYarnRunnerBuilder {
         cluster.addHopsworksResource(dto.getName(), resource);
       }
     }
-    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_ENV_VAR, serviceProps.getRestEndpoint());
-    addSystemProperty(Settings.KEYSTORE_PASSWORD_ENV_VAR, serviceProps.getKeystorePwd());
-    addSystemProperty(Settings.TRUSTSTORE_PASSWORD_ENV_VAR, serviceProps.getTruststorePwd());
+    addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.getRestEndpoint());
     if (serviceProps.getKafka() != null) {
       
       addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());
       addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.getKafka().getTopics());
-      addSystemProperty(Settings.KAFKA_PROJECTID_ENV_VAR, Integer.toString(serviceProps.getProjectId()));
+      addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
       if (serviceProps.getKafka().getConsumerGroups() != null) {
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS,serviceProps.getKafka().getConsumerGroups());
       }

@@ -56,6 +56,8 @@ public class JupyterConfig {
   private String executorMemory;
   private Integer executorCores;
   private Integer gpus;
+  private Integer numParamServers;
+  private boolean tensorflow;
   private String archives;
   private String jars;
   private String files;
@@ -66,7 +68,8 @@ public class JupyterConfig {
           String nameNodeEndpoint,
           Settings settings, int port, int driverCores, String driverMemory,
           int numExecutors, int executorCores, String executorMemory, int gpus,
-          String archives, String jars, String files, String pyFiles)
+          String archives, String jars, String files, String pyFiles,
+          int parameterServers, boolean tensorflow)
           throws AppException {
     this.projectName = projectName;
     this.hdfsUser = hdfsUser;
@@ -86,6 +89,8 @@ public class JupyterConfig {
     this.jars = jars;
     this.files = files;
     this.pyFiles = pyFiles;
+    this.numParamServers = parameterServers;
+    this.tensorflow = tensorflow;
     projectPath = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + hdfsUser;
@@ -374,8 +379,7 @@ public class JupyterConfig {
 //             "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%",
 //             "spark.yarn.historyServer.address" : "%%sparkhistoryserver_ip%%",
       StringBuilder sparkmagic_sb = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
+              instantiateFromTemplate(ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
                       "livy_ip", settings.getLivyIp(),
                       "hdfs_user", this.hdfsUser,
                       "driver_cores", this.driverCores.toString(),
@@ -383,7 +387,8 @@ public class JupyterConfig {
                       "num_executors", this.numExecutors.toString(),
                       "executor_cores", this.executorCores.toString(),
                       "executor_memory", this.executorMemory,
-                      "dynamic_executors", "true",
+                      "dynamic_executors", new Boolean(this.tensorflow).
+                      toString(),
                       "min_executors", new Integer(1).toString(),
                       "initial_executors", new Integer(1).toString(),
                       "max_executors", new Integer(50).toString(),
@@ -397,14 +402,19 @@ public class JupyterConfig {
                       "project", this.projectName,
                       "nn_endpoint", this.nameNodeEndpoint,
                       "spark_user", this.settings.getSparkUser(),
+                      "java_home", this.settings.getJavaHome(),
                       "hadoop_home", this.settings.getHadoopDir(),
                       "pyspark_bin", this.settings.getAnacondaProjectDir(
                               projectName) + "/bin/python",
                       "anaconda_dir", this.settings.getAnacondaDir(),
+                      "cuda_dir", this.settings.getCudaDir(),
                       "anaconda_env", this.settings.getAnacondaProjectDir(
-                              projectName) + "/bin",
+                              projectName),
                       "sparkhistoryserver_ip", this.settings.
-                      getSparkHistoryServerIp()
+                      getSparkHistoryServerIp(),
+                      "num_ps", this.numParamServers.toString(),
+                      "num_gpus", this.gpus.toString(),
+                      "tensorflow", new Boolean(this.tensorflow).toString()
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
               sparkmagic_config_file,
@@ -464,6 +474,14 @@ public class JupyterConfig {
 
   public String getProjectUserDirPath() {
     return projectUserDirPath;
+  }
+
+  public Integer getNumParamServers() {
+    return numParamServers;
+  }
+
+  public boolean isTensorflow() {
+    return tensorflow;
   }
 
 }

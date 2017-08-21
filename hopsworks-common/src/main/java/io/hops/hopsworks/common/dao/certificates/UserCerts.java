@@ -8,6 +8,7 @@ import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
@@ -39,7 +40,11 @@ public class UserCerts implements Serializable {
   @Lob
   @Column(name = "user_cert")
   private byte[] userCert;
-
+  @Size(min = 1, 
+        max = 200)
+  @Column(name = "user_key_pwd")
+  private String userKeyPwd;
+  
   public UserCerts() {
   }
 
@@ -75,6 +80,14 @@ public class UserCerts implements Serializable {
     this.userCert = userCert;
   }
 
+  public String getUserKeyPwd() {
+    return userKeyPwd;
+  }
+
+  public void setUserKeyPwd(String userKeyPwd) {
+    this.userKeyPwd = userKeyPwd;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -89,12 +102,8 @@ public class UserCerts implements Serializable {
       return false;
     }
     UserCerts other = (UserCerts) object;
-    if ((this.userCertsPK == null && other.userCertsPK != null)
-            || (this.userCertsPK != null && !this.userCertsPK.equals(
-                    other.userCertsPK))) {
-      return false;
-    }
-    return true;
+    return !((this.userCertsPK == null && other.userCertsPK != null) || 
+        (this.userCertsPK != null && !this.userCertsPK.equals(other.userCertsPK)));
   }
 
   @Override

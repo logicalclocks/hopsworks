@@ -23,6 +23,12 @@ import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
+import java.security.Key;
+import java.security.SecureRandom;
+import java.util.Random;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.net.util.Base64;
 
 /**
  * Utility methods.
@@ -181,7 +187,7 @@ public class HopsUtils {
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties, 
+      Map<String, String> jobSystemProperties,
       String flinkCertsDir, String applicationId) {
     //Pull the certificate of the client
     UserCerts userCert = userCerts.findUserCert(project.getName(),
@@ -315,7 +321,7 @@ public class HopsUtils {
 
                   projectLocalResources.add(new LocalResourceDTO(
                       entry.getKey(),
-                      "hdfs:///" +  remoteProjAppDir + File.separator + entry.getValue().getName(),
+                      "hdfs://" + remoteProjAppDir + File.separator + entry.getValue().getName(),
                       LocalResourceVisibility.APPLICATION.toString(),
                       LocalResourceType.FILE.toString(), null));
                 }
@@ -339,12 +345,12 @@ public class HopsUtils {
       }
     }
   }
-  
+
   /**
-   * 
+   *
    * @param jobName
    * @param dissalowedChars
-   * @return 
+   * @return
    */
   public static boolean jobNameValidator(String jobName, String dissalowedChars) {
     for (char c : dissalowedChars.toCharArray()) {
@@ -353,6 +359,56 @@ public class HopsUtils {
       }
     }
     return true;
+  }
+
+  /**
+   *
+   * @param key
+   * @param salt
+   * @param plaintext
+   * @return
+   * @throws Exception
+   */
+  public static String encrypt(String key, String salt, String plaintext) throws Exception {
+    Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.ENCRYPT_MODE, aesKey);
+    byte[] encrypted = cipher.doFinal(plaintext.getBytes());
+    return Base64.encodeBase64String(encrypted);
+  }
+
+  /**
+   *
+   * @param key
+   * @param salt
+   * @param ciphertext
+   * @return
+   * @throws Exception
+   */
+  public static String decrypt(String key, String salt, String ciphertext) throws Exception {
+    Cipher cipher = Cipher.getInstance("AES");
+    Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
+    cipher.init(Cipher.DECRYPT_MODE, aesKey);
+    String decrypted = new String(cipher.doFinal(Base64.decodeBase64(ciphertext)));
+    return decrypted;
+  }
+
+  /**
+   * Generates a pseudo-random password for the user keystore. A list of characters is excluded.
+   *
+   * @param length
+   * @return
+   */
+  public static String randomString(int length) {
+    char[] characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+    Random random = new SecureRandom();
+    char[] result = new char[length];
+    for (int i = 0; i < result.length; i++) {
+      // picks a random index out of character set > random character
+      int randomCharIndex = random.nextInt(characterSet.length);
+      result[i] = characterSet[randomCharIndex];
+    }
+    return new String(result);
   }
 
 }

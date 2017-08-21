@@ -15,7 +15,7 @@
     </ui:define>
 
     <ui:define name="content">
-
+    
       <!--Navigation Bar - Begin -->
       <p:outputPanel rendered="true">
         <h:form styleClass="styleNav">
@@ -28,6 +28,7 @@
                 <h:outputText value=" &raquo; "/>
                 <p:commandLink action="#{urlController.clusterStatus(roleController.cluster)}" ajax="false">  
                   <h:outputText value="#{roleController.cluster}" />
+                  <f:param name="cluster" value="#{roleController.cluster}"/>
                 </p:commandLink> 
                 <h:outputText value=" &raquo; "/>
                 <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
@@ -54,7 +55,7 @@
         <!-- Second Toolbar-->
         <p:outputPanel id="second_toolbar" rendered="true">       
           <h:form>  
-
+       
             <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
               <p:toolbarGroup align="left">  
                 <p:commandLink  action="#{urlController.roleStatus}" ajax="false">
@@ -64,13 +65,6 @@
                   <f:param name="service" value="#{roleController.service}"/>                              
                   <f:param name="hostid" value="#{roleController.hostId}"/>
                 </p:commandLink>
-                <p:commandButton value="Action History" icon="ui-icon-circle-triangle-e"
-                                 action="#{urlController.roleActionHistory}" ajax="false">
-                  <f:param name="cluster" value="#{roleController.cluster}"/>
-                  <f:param name="role" value="#{roleController.role}"/>
-                  <f:param name="service" value="#{roleController.service}"/>                             
-                  <f:param name="hostid" value="#{roleController.hostId}"/>                          
-                </p:commandButton>                       
               </p:toolbarGroup>  
 
 
@@ -107,12 +101,12 @@
               </p:toolbarGroup>  
             </p:toolbar>  
 
-          </h:form>
+        </h:form>
 
 
         </p:outputPanel>  
         <!-- Second Toolbar - End -->
-
+        
 
         <!-- Progress Dialog -->
         <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
@@ -128,17 +122,20 @@
         <h:form id="form_messages" >
           <p:messages id="messages" showDetail="true" autoUpdate="true" closable="true"/>  
         </h:form>
-
-
-        <h:form id="Instance" styleClass="styleInfoPanel">                    
+        
+        
+        <h:form styleClass="styleInfoPanel" id="formInstances">
           <p:panel header="Role Status">
             <p:dataTable id="instances" var="instance" value="#{roleController.instanceFullInfo}">
               <p:column headerText="Name"><h:outputText value="#{instance.name}"/></p:column>
-              <p:column headerText="Host">
-                <p:commandLink id="gotohost" action="#{urlController.host()}" ajax="false">
-                  <h:outputText value="#{instance.host}" />
-                  <f:param name="hostid" value="#{instance.host}"/>
-                </p:commandLink>                      
+              <p:column id="Host" headerText="Host">
+                <p:commandLink action="#{urlController.host}" ajax="false">                  
+                  <h:outputText value="#{instance.host}"/>
+                  <f:param name="hostid" value="#{roleController.hostId}"/>
+                  <f:param name="cluster" value="#{instance.cluster}"/>
+                  <f:param name="role" value="#{instance.role}"/>
+                  <f:param name="service" value="#{instance.service}"/>
+                </p:commandLink> 
               </p:column>
               <p:column headerText="Status">
                 <h:outputText id="status" styleClass="Status-#{instance.status}" value="#{instance.status}"/>
@@ -148,11 +145,10 @@
                 <h:outputText styleClass="Health-#{instance.health}" value="#{instance.health}"/>
               </p:column>
               <p:column headerText="Uptime"><h:outputText value="#{instance.uptime}"/></p:column>                  
-              <p:column headerText="Pid"><h:outputText value="#{instance.pid}"/></p:column>
-              <p:column headerText="Web UI" rendered="#{roleController.renderWebUi}">
+<!--              <p:column headerText="Web UI" rendered="#{roleController.renderWebUi}">
                 <h:outputLink target="_blank" value="#{instance.webUiLink}">#{instance.webUiLabel}</h:outputLink>
-              </p:column>                 
-            </p:dataTable> 
+              </p:column>                 -->
+            </p:dataTable>                   
           </p:panel>                    
         </h:form>
 
@@ -162,13 +158,6 @@
 
           <p:tab title ="Recent Log">
             <h:form id="logform">
-              <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
-                             onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-                <f:param name="cluster" value="#{roleController.cluster}"/>
-                <f:param name="service" value="#{roleController.service}"/>                       
-                <f:param name="role" value="#{roleController.role}"/>  
-                <f:param name="hostid" value="#{roleController.hostId}"/>
-              </p:commandLink>
               <p:panelGrid id="log" styleClass="LogOutput">
                 <p:row>
                   <p:column  styleClass="LogOutput column">
@@ -186,7 +175,7 @@
         <p:spacer width="1" height="20" />
 
 
-      </p:outputPanel>          
+      </p:outputPanel>
 
     </ui:define>
 

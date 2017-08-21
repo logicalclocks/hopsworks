@@ -35,6 +35,8 @@ public final class InodeView {
   private boolean publicDs = false;
   private int sharedWith = 0;
   private boolean searchable = false;
+  // FSM states: STAGING, UNZIPPING, UPLOADING, CHOWNING, SUCCESS, FAILED
+  private String unzippingState = "NONE";
 
   public InodeView() {
   }
@@ -292,6 +294,14 @@ public final class InodeView {
 
   public void setSearchable(boolean searchable) {
     this.searchable = searchable;
+  }
+
+  public String getUnzippingState() {
+    return unzippingState;
+  }
+
+  public void setUnzippingState(String unzippingState) {
+    this.unzippingState = unzippingState;
   }
 
   @Override

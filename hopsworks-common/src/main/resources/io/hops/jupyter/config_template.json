@@ -1,82 +1,82 @@
 {
 "kernel_python_credentials" : {
 "username": "",
-"password": "",
-"url": "http://%%livy_ip%%:8998"
-},
-
-"kernel_scala_credentials" : {
-"username": "",
-"password": "",
-"url": "http://%%livy_ip%%:8998"
-},
-
-"logging_config": {
-"version": 1,
-"formatters": {
-"magicsFormatter": {
-"format": "%(asctime)s\t%(levelname)s\t%(message)s",
-"datefmt": ""
-}
-},
-"handlers": {
-"magicsHandler": {
-"class": "hdijupyterutils.filehandler.MagicsFileHandler",
-"formatter": "magicsFormatter",
-"home_path": "%%jupyter_home%%/.sparkmagic"
-}
-},
-"loggers": {
-"magicsLogger": {
-"handlers": ["magicsHandler"],
-"level": "DEBUG",
-"propagate": 0
-}
-}
-},
-
-"wait_for_idle_timeout_seconds": 15,
-"status_sleep_seconds": 2,
-"statement_sleep_seconds": 2,
-"livy_session_startup_timeout_seconds": 120,
-
-"fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
-
-"ignore_ssl_errors": false,
-
-"session_configs": {
-  "driverCores": %%driver_cores%%,
-  "driverMemory": "%%driver_memory%%",
-  "numExecutors": %%num_executors%%,
-  "executorCores": %%executor_cores%%,
-  "executorMemory": "%%executor_memory%%",
-  "proxyUser": "%%hdfs_user%%",
-  "queue": "%%yarn_queue%%",
-  "archives": [%%archives%%],
-  "jars": [%%jars%%],
-  "pyFiles": [%%pyFiles%%],
-  "conf" : { "spark.yarn.stagingDir": "hdfs://%%nn_endpoint%%/Projects/%%project%%/Resources",
-           "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
-           "spark.driverEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
-           "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
-           "spark.driverEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
-           "spark.executorEnv.PATH" : "%%anaconda_env%%:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:%%anaconda_dir%%/bin",
-           "spark.driverEnv.PATH" : "%%anaconda_env%%:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:%%anaconda_env%%",
-           "spark.pyspark.python" : "%%pyspark_bin%%",
-           "spark.pyspark.driver.python" : "%%pyspark_bin%%",
-           "spark.shuffle.service.enabled" : "true",
-           "spark.dynamicAllocation.enabled" : "true"
-   }
-  },
-
-"use_auto_viz": true,
-"max_results_sql": 2500,
-"pyspark_dataframe_encoding": "utf-8",
-
-"heartbeat_refresh_seconds": 30,
-"livy_server_heartbeat_timeout_seconds": 0,
-"heartbeat_retry_seconds": 10,
-
-"server_extension_default_kernel_name": "pysparkkernel"
-}
+    "password": "",
+    "url": "http://%%livy_ip%%:8998"
+    },
+    "kernel_scala_credentials" : {
+    "username": "",
+        "password": "",
+        "url": "http://%%livy_ip%%:8998"
+        },
+    "logging_config": {
+    "version": 1,
+        "formatters": {
+        "magicsFormatter": {
+        "format": "%(asctime)s\t%(levelname)s\t%(message)s",
+            "datefmt": ""
+            }
+        },
+        "handlers": {
+        "magicsHandler": {
+        "class": "hdijupyterutils.filehandler.MagicsFileHandler",
+            "formatter": "magicsFormatter",
+            "home_path": "%%jupyter_home%%/.sparkmagic"
+            }
+        },
+        "loggers": {
+        "magicsLogger": {
+        "handlers": ["magicsHandler"],
+            "level": "DEBUG",
+            "propagate": 0
+            }
+        }
+    },
+    "wait_for_idle_timeout_seconds": 15,
+    "status_sleep_seconds": 2,
+    "statement_sleep_seconds": 2,
+    "livy_session_startup_timeout_seconds": 120,
+    "fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
+    "ignore_ssl_errors": false,
+    "session_configs": {
+    "driverCores": %%driver_cores%%,
+        "driverMemory": "%%driver_memory%%",
+        "numExecutors": %%num_executors%%,
+        "executorCores": %%executor_cores%%,
+        "executorMemory": "%%executor_memory%%",
+        "proxyUser": "%%hdfs_user%%",
+        "name":"remotesparkmagics-jupyter",
+        "queue": "%%yarn_queue%%",
+        "archives": [%%archives%%],
+        "jars": [%%jars%%],
+        "pyFiles": [%%pyFiles%%],
+        "conf" : {
+        "spark.yarn.stagingDir": "hdfs://%%nn_endpoint%%/Projects/%%project%%/Resources",
+            "spark.driver.extraLibraryPath" : "%%cuda_dir%%/lib64",
+            "spark.yarn.appMasterEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
+            "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON" : "%%pyspark_bin%%",
+            "spark.yarn.appMasterEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
+            "spark.yarn.appMasterEnv.LD_LIBRARY_PATH" : "%%cuda_dir%%/lib64",
+            "spark.yarn.appMasterEnv.CUDA_VISIBLE_DEVICES" : "",
+            "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
+            "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
+            "spark.executorEnv.PATH" : "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:%%anaconda_dir%%/bin",
+            "spark.executorEnv.LD_LIBRARY_PATH" : "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64",
+            "spark.pyspark.python" : "%%pyspark_bin%%",
+            "spark.shuffle.service.enabled" : "true",
+            "spark.submit.deployMode" : "cluster",
+            "spark.dynamicAllocation.enabled" : "%%tensorflow%%",
+            "spark.tensorflow.application" : "%%tensorflow%%",
+            "spark.tensorflow.num.ps" : "%%num_ps%%",
+            "spark.executor.gpus" : "%%num_gpus%%"
+        }
+    },
+    "use_auto_viz": true,
+    "max_results_sql": 2500,
+    "pyspark_dataframe_encoding": "utf-8",
+    "heartbeat_refresh_seconds": 30,
+    "livy_server_heartbeat_timeout_seconds": 0,
+    "heartbeat_retry_seconds": 10,
+    "server_extension_default_kernel_name": "pysparkkernel"
+    }
 

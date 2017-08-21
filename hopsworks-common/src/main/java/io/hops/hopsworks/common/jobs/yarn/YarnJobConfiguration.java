@@ -34,6 +34,8 @@ public class YarnJobConfiguration extends JobConfiguration {
   public final static String KEY_RESOURCESTYPE = "TYPE";
   public final static String KEY_RESOURCESPATTERN = "PATTERN";
 
+  private String sessionId;
+
   public YarnJobConfiguration() {
     super();
   }
@@ -88,6 +90,14 @@ public class YarnJobConfiguration extends JobConfiguration {
     this.localResources = localResources;
   }
 
+  public String getSessionId() {
+    return sessionId;
+  }
+
+  public void setSessionId(String sessionId) {
+    this.sessionId = sessionId;
+  }
+
   @Override
   public JobType getType() {
     return JobType.YARN;
@@ -105,10 +115,10 @@ public class YarnJobConfiguration extends JobConfiguration {
         localResourceJson.set(KEY_RESOURCESPATH, localResource.getPath());
         localResourceJson.set(KEY_RESOURCESTYPE, localResource.getType());
         localResourceJson.set(KEY_RESOURCESVISIBILITY, localResource.
-                getVisibility());
+            getVisibility());
         if (localResource.getPattern() != null) {
           localResourceJson.
-                  set(KEY_RESOURCESPATTERN, localResource.getPattern());
+              set(KEY_RESOURCESPATTERN, localResource.getPattern());
         }
         resources.set(localResource.getName(), localResourceJson);
       }
@@ -125,7 +135,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
   @Override
   public void updateFromJson(MutableJsonObject json) throws
-          IllegalArgumentException {
+      IllegalArgumentException {
     //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonCors, jsonMem, jsonQueue;
@@ -146,18 +156,18 @@ public class YarnJobConfiguration extends JobConfiguration {
           MutableJsonObject resource = resources.getJsonObject(key);
           if (resource.containsKey(KEY_RESOURCESPATTERN)) {
             jsonResources[i] = new LocalResourceDTO(
-                    resource.getString(KEY_RESOURCESNAME),
-                    resource.getString(KEY_RESOURCESPATH),
-                    resource.getString(KEY_RESOURCESVISIBILITY),
-                    resource.getString(KEY_RESOURCESTYPE),
-                    resource.getString(KEY_RESOURCESPATTERN));
+                resource.getString(KEY_RESOURCESNAME),
+                resource.getString(KEY_RESOURCESPATH),
+                resource.getString(KEY_RESOURCESVISIBILITY),
+                resource.getString(KEY_RESOURCESTYPE),
+                resource.getString(KEY_RESOURCESPATTERN));
           } else {
             jsonResources[i] = new LocalResourceDTO(
-                    resource.getString(KEY_RESOURCESNAME),
-                    resource.getString(KEY_RESOURCESPATH),
-                    resource.getString(KEY_RESOURCESVISIBILITY),
-                    resource.getString(KEY_RESOURCESTYPE),
-                    null);
+                resource.getString(KEY_RESOURCESNAME),
+                resource.getString(KEY_RESOURCESPATH),
+                resource.getString(KEY_RESOURCESVISIBILITY),
+                resource.getString(KEY_RESOURCESTYPE),
+                null);
           }
           i++;
         }
@@ -169,7 +179,7 @@ public class YarnJobConfiguration extends JobConfiguration {
 
     } catch (Exception e) {
       throw new IllegalArgumentException(
-              "Cannot convert object into YarnJobConfiguration.", e);
+          "Cannot convert object into YarnJobConfiguration.", e);
     }
     super.updateFromJson(json);
     //Second: we're now sure everything is valid: actually update the state

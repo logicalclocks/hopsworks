@@ -97,7 +97,7 @@ public class TerminalController {
       if (command.equals("mysql")) {
         roleName = RoleType.mysqld.toString();
       } else if (command.equals("ndb_mgm")) {
-        roleName = RoleType.mgmserver.toString();
+        roleName = RoleType.ndb_mgmd.toString();
       } else {
         return "Unknown command. Accepted commands are: mysql, ndb_mgm";
       }

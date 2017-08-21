@@ -1,7 +1,5 @@
 package io.hops.hopsworks.common.jobs.flink;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import java.io.File;
@@ -35,7 +33,7 @@ import io.hops.hopsworks.common.util.Settings;
 public class FlinkController {
 
   private static final Logger LOG = Logger.getLogger(FlinkController.class.
-          getName());
+      getName());
 
   @EJB
   YarnJobsMonitor jobsMonitor;
@@ -51,14 +49,13 @@ public class FlinkController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
 
   /**
    * Start the Flink job as the given user.
    * <p/>
    * @param job
    * @param user
+   * @param sessionId
    * @return
    * @throws IllegalStateException If Flink is not set up properly.
    * @throws IOException If starting the job fails.
@@ -66,9 +63,9 @@ public class FlinkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Flink job.
    */
-  public Execution startJob(final JobDescription job, final Users user) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
+  public Execution startJob(final JobDescription job, final Users user, String sessionId) throws
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -76,7 +73,7 @@ public class FlinkController {
       throw new NullPointerException("Cannot run a job as a null user.");
     } else if (job.getJobType() != JobType.FLINK) {
       throw new IllegalArgumentException(
-              "Job configuration is not a Flink job configuration.");
+          "Job configuration is not a Flink job configuration.");
     } else if (!isFlinkJarAvailable()) {
       throw new IllegalStateException("Flink is not installed on this system.");
     }
@@ -89,15 +86,13 @@ public class FlinkController {
         @Override
         public FlinkJob run() throws Exception {
           return new FlinkJob(job, submitter, user,
-                  settings.getHadoopDir(), settings.getFlinkDir(),
-                  settings.getFlinkConfDir(),
-                  settings.getFlinkConfFile(),
-                  hdfsLeDescriptorsFacade.getSingleEndpoint(),
-                  settings.getFlinkUser(),
-                  hdfsUsersBean.getHdfsUserName(job.getProject(),
-                          job.getCreator()),
-                  settings.getHopsworksDomainDir(), jobsMonitor
-          );
+              settings.getHadoopDir(), settings.getFlinkDir(),
+              settings.getFlinkConfDir(),
+              settings.getFlinkConfFile(),
+              settings.getFlinkUser(),
+              hdfsUsersBean.getHdfsUserName(job.getProject(),
+                  job.getCreator()),
+              settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
         }
       });
     } catch (InterruptedException ex) {
@@ -111,17 +106,17 @@ public class FlinkController {
       submitter.startExecution(flinkjob);
     } else {
       LOG.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
+          "Failed to persist JobHistory. Aborting execution.");
       throw new IOException("Failed to persist JobHistory.");
     }
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, job.getProject(),
-            user.asUser());
+        user.asUser());
     return execution;
   }
 
-  public void stopJob(JobDescription job, Users user, String appid) throws
-          IllegalStateException,
-          IOException, NullPointerException, IllegalArgumentException {
+  public void stopJob(JobDescription job, Users user, String appid, String sessionId) throws
+      IllegalStateException,
+      IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot stop a null job.");
@@ -129,19 +124,17 @@ public class FlinkController {
       throw new NullPointerException("Cannot stop a job as a null user.");
     } else if (job.getJobType() != JobType.FLINK) {
       throw new IllegalArgumentException(
-              "Job configuration is not a Flink job configuration.");
+          "Job configuration is not a Flink job configuration.");
     } else if (!isFlinkJarAvailable()) {
       throw new IllegalStateException("Flink is not installed on this system.");
     }
 
     FlinkJob flinkJob = new FlinkJob(job, submitter, user,
-            settings.getHadoopDir(), settings.getFlinkDir(),
-            settings.getFlinkConfDir(), settings.getFlinkConfFile(),
-            hdfsLeDescriptorsFacade.getSingleEndpoint(),
-            settings.getFlinkUser(),
-            job.getProject().getName() + "__" + user.getUsername(),
-            settings.getHopsworksDomainDir(), jobsMonitor
-    );
+        settings.getHadoopDir(), settings.getFlinkDir(),
+        settings.getFlinkConfDir(), settings.getFlinkConfFile(),
+        settings.getFlinkUser(),
+        job.getProject().getName() + "__" + user.getUsername(),
+        settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
 
     submitter.stopExecution(flinkJob, appid);
 
@@ -162,7 +155,7 @@ public class FlinkController {
         isInHdfs = dfso.exists(settings.getHdfsFlinkJarPath());
       } catch (IOException e) {
         LOG.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
-                settings.getHdfsFlinkJarPath());
+            settings.getHdfsFlinkJarPath());
         //Can't connect to HDFS: return false
         return false;
       }
@@ -175,13 +168,13 @@ public class FlinkController {
         try {
           String hdfsJarPath = settings.getHdfsFlinkJarPath();
           dfso.copyToHDFSFromLocal(false, settings.getLocalFlinkJarPath(),
-                  hdfsJarPath);
+              hdfsJarPath);
         } catch (IOException e) {
           return false;
         }
       } else {
         LOG.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
-                settings.getLocalFlinkJarPath());
+            settings.getLocalFlinkJarPath());
         return false;
       }
     } finally {
@@ -205,20 +198,16 @@ public class FlinkController {
    * @throws IOException
    */
   public FlinkJobConfiguration inspectJar(String path, String username,
-          DistributedFileSystemOps udfso) throws
-          AccessControlException, IOException,
-          IllegalArgumentException {
+      DistributedFileSystemOps udfso) throws
+      AccessControlException, IOException,
+      IllegalArgumentException {
     LOG.log(Level.INFO, "Executing Flink job by {0} at path: {1}", new Object[]{
       username, path});
     if (!path.endsWith(".jar")) {
       throw new IllegalArgumentException("Path does not point to a jar file.");
     }
-    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-    // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
-    path = path.replaceFirst("hdfs:/*Projects",
-            "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
     LOG.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
-            new Object[]{username, path});
+        new Object[]{username, path});
 
     JarInputStream jis = new JarInputStream(udfso.open(path));
     Manifest mf = jis.getManifest();

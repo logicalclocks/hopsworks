@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class NewNotebookRequest {
 
   String name;
+  String defaultInterpreterId;
   List<NewParagraphRequest> paragraphs;
 
   public NewNotebookRequest() {
@@ -41,8 +42,21 @@ public class NewNotebookRequest {
     return name;
   }
 
+  public String getDefaultInterpreterId() {
+    return defaultInterpreterId;
+  }
+
+  public void setDefaultInterpreterId(String defaultInterpreterId) {
+    this.defaultInterpreterId = defaultInterpreterId;
+  }
+
   public List<NewParagraphRequest> getParagraphs() {
     return paragraphs;
+  }
+
+  @Override
+  public String toString() {
+    return "NewNotebookRequest{" + "name=" + name + ", defaultInterpreterId=" + defaultInterpreterId + '}';
   }
 
 }

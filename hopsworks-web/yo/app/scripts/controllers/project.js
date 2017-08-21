@@ -230,13 +230,13 @@ angular.module('hopsWorksApp')
             self.goToHopsworksInstance = function (endpoint, serviceName) {
               $scope.activeService = serviceName;
               $location.path('http://' + endpoint + '/project/' + self.projectId + '/' + serviceName);
-            }
+            };
 
 
             self.goToUrl = function (serviceName) {
               $scope.activeService = serviceName;
               $location.path('project/' + self.projectId + '/' + serviceName);
-            }
+            };
 
             self.goToDatasets = function () {
               self.goToUrl('datasets');
@@ -275,11 +275,23 @@ angular.module('hopsWorksApp')
                       growl.info("Enable anaconda before running Jupyter.", 
                       {title: 'Enable Anaconda First', ttl: 2000});
                         $timeout(function () {
-                          self.goToUrl('settings')
+                          self.goToUrl('settings');
                         }, 2000); 
               });
-
-
+            };
+            
+            self.goToZeppelin = function () {
+              self.enabling = true;
+              PythonDepsService.enabled(self.projectId).then( function (success) {
+                  self.goToUrl('zeppelin');
+                }, function (error) {
+                   ModalService.confirm('sm', 'Enable anaconda', 'You need to enable anaconda to use pyspark!')
+                      .then(function (success) {
+                        self.goToUrl('settings');
+                      }, function (error) {
+                        self.goToUrl('zeppelin');
+                   });
+              });
             };
 
 

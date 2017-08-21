@@ -7,6 +7,16 @@ angular.module('hopsWorksApp')
         .factory('DataSetService', ['$http', function ($http) {
             return function (id) {
               var services = {
+
+                /**
+                 * 
+                 * @param {type} fileName
+                 * @returns json
+                 */
+               unzip: function (fileName) {
+                  return $http.get('/api/project/' + id + '/dataset/unzip/' + fileName);
+                },
+                 
                 /**
                  * Get the listing of all datasets under the current project.
                  * @returns {unresolved}

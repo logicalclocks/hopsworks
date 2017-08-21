@@ -16,11 +16,16 @@
  */
 package io.hops.hopsworks.api.zeppelin.rest.message;
 
+import com.google.gson.Gson;
+import org.apache.zeppelin.common.JsonSerializable;
+
 /**
  * CronRequest rest api request message
  * <p>
  */
-public class CronRequest {
+public class CronRequest implements JsonSerializable {
+
+  private static final Gson gson = new Gson();
 
   String cron;
 
@@ -30,5 +35,13 @@ public class CronRequest {
 
   public String getCronString() {
     return cron;
+  }
+
+  public String toJson() {
+    return gson.toJson(this);
+  }
+
+  public static CronRequest fromJson(String json) {
+    return gson.fromJson(json, CronRequest.class);
   }
 }

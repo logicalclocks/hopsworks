@@ -99,6 +99,8 @@ public class ProjectService {
   private WorkflowService workflowService;
   @Inject
   private PythonDepsService pysparkService;
+  @Inject
+  private CertService certs;
 
   @EJB
   private ActivityFacade activityFacade;
@@ -663,6 +665,18 @@ public class ProjectService {
       AppException {
     Project project = projectController.findProjectById(projectId);
     return this.biobanking.setProject(project);
+  }
+  
+  @Path("{projectId}/certs")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public CertService certs(@PathParam("projectId") Integer projectId) throws
+      AppException {
+    Project project = projectController.findProjectById(projectId);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    return this.certs.setProject(project);
   }
 
   @GET

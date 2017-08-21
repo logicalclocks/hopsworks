@@ -66,10 +66,10 @@ public class TensorFlowController {
         @Override
         public TensorFlowJob run() throws Exception {
           return new TensorFlowJob(job, submitter, user,
-              settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
+              settings.getHadoopDir(),
               settings.getHdfsSuperUser(),
               hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-              jobsMonitor);
+              jobsMonitor, settings);
         }
       });
     } catch (InterruptedException ex) {
@@ -105,9 +105,10 @@ public class TensorFlowController {
     }
 
     TensorFlowJob tfJob = new TensorFlowJob(job, submitter, user,
-        settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(),
+        settings.getHadoopDir(),
         settings.getHdfsSuperUser(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),jobsMonitor);
+        hdfsUsersBean.getHdfsUserName(job.getProject(), 
+                job.getCreator()), jobsMonitor, settings);
 
     submitter.stopExecution(tfJob, appid);
 
@@ -134,10 +135,7 @@ public class TensorFlowController {
     if (!path.endsWith(".py")) {
       throw new IllegalArgumentException("Path does not point to a .py file.");
     }
-//    HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.findEndpoint();
-//    // If the hdfs endpoint (ip:port - e.g., 10.0.2.15:8020) is missing, add it.
-//    path = path.replaceFirst("hdfs:/*Projects",
-//        "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
+
     LOGGER.log(Level.INFO, "Really executing TensorFlow job by {0} at path: {1}",
         new Object[]{username, path});
     TensorFlowJobConfiguration config = new TensorFlowJobConfiguration();

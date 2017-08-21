@@ -47,12 +47,12 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
@@ -79,6 +79,8 @@ import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.SystemCommandExecutor;
+import org.apache.commons.codec.digest.DigestUtils;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -110,7 +112,7 @@ public class DataSetService {
   @EJB
   private AsynchronousJobExecutor async;
   @EJB
-  private UserFacade userfacade;
+  private UserFacade userFacade;
   @EJB
   private JobController jobcontroller;
   @EJB
@@ -122,10 +124,10 @@ public class DataSetService {
   @Inject
   private DownloadService downloader;
   @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
-  @EJB
   private YarnJobsMonitor jobsMonitor;
-  
+  @EJB
+  private JupyterFacade jupyterFacade;
+
   private Integer projectId;
   private Project project;
   private String path;
@@ -143,6 +145,85 @@ public class DataSetService {
 
   public Integer getProjectId() {
     return projectId;
+  }
+
+  @GET
+  @Path("unzip/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response unzip(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+
+    Response.Status resp = Response.Status.OK;
+    if (path == null) {
+      path = "";
+    }
+    path = getFullPath(path);
+
+    // HDFS_USERNAME is the next param to the bash script
+    String email = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(email);
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
+    String localDir = DigestUtils.sha256Hex(path);
+    String stagingDir = settings.getStagingDir() + File.separator + localDir;
+
+    File unzipDir = new File(stagingDir);
+    unzipDir.mkdirs();
+
+//    Set<PosixFilePermission> perms = new HashSet<>();
+//    //add owners permission
+//    perms.add(PosixFilePermission.OWNER_READ);
+//    perms.add(PosixFilePermission.OWNER_WRITE);
+//    perms.add(PosixFilePermission.OWNER_EXECUTE);
+//    //add group permissions
+//    perms.add(PosixFilePermission.GROUP_READ);
+//    perms.add(PosixFilePermission.GROUP_WRITE);
+//    perms.add(PosixFilePermission.GROUP_EXECUTE);
+//    //add others permissions
+//    perms.add(PosixFilePermission.OTHERS_READ);
+//    perms.add(PosixFilePermission.OTHERS_WRITE);
+//    perms.add(PosixFilePermission.OTHERS_EXECUTE);
+//    Files.setPosixFilePermissions(Paths.get(unzipDir), perms);
+    List<String> commands = new ArrayList<>();
+//    commands.add("/bin/bash");
+//    commands.add("-c");
+    commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
+    commands.add(stagingDir);
+    commands.add(path);
+    commands.add(hdfsUser);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    settings.addUnzippingState(path);
+    try {
+      int result = commandExecutor.executeCommand();
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result == 2) {
+        throw new AppException(Response.Status.EXPECTATION_FAILED.
+                getStatusCode(),
+                "Not enough free space on the local scratch directory to download and unzip this file."
+                + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
+      }
+      if (result != 0) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Could not unzip the file at path: " + path);
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Interrupted exception. Could not unzip the file at path: " + path);
+    } catch (IOException ex) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "IOException. Could not unzip the file at path: " + path);
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(resp).build();
   }
 
   @GET
@@ -174,7 +255,7 @@ public class DataSetService {
       inodeView = new InodeView(parent, ds, projPath + File.separator + ds.
               getInode()
               .getInodePK().getName());
-      user = userfacade.findByUsername(inodeView.getOwner());
+      user = userFacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
@@ -204,7 +285,7 @@ public class DataSetService {
 
         inodeView = new InodeView(projectInode, newDS, projPath + File.separator
                 + ds.getInodePK().getName());
-        user = userfacade.findByUsername(inodeView.getOwner());
+        user = userFacade.findByUsername(inodeView.getOwner());
         if (user != null) {
           inodeView.setOwner(user.getFname() + " " + user.getLname());
           inodeView.setEmail(user.getEmail());
@@ -249,7 +330,9 @@ public class DataSetService {
     Users user;
     for (Inode i : cwdChildren) {
       inodeView = new InodeView(i, fullpath + "/" + i.getInodePK().getName());
-      user = userfacade.findByUsername(inodeView.getOwner());
+      inodeView.setUnzippingState(settings.getUnzippingState(
+              fullpath + "/" + i.getInodePK().getName()));
+      user = userFacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());
         inodeView.setEmail(user.getEmail());
@@ -282,14 +365,16 @@ public class DataSetService {
 
     inodeView = new InodeView(inode, fullpath + "/" + inode.getInodePK().
             getName());
-    user = userfacade.findByUsername(inodeView.getOwner());
+    inodeView.setUnzippingState(settings.getUnzippingState(
+            fullpath + "/" + inode.getInodePK().getName()));
+    user = userFacade.findByUsername(inodeView.getOwner());
     if (user != null) {
       inodeView.setOwner(user.getFname() + " " + user.getLname());
       inodeView.setEmail(user.getEmail());
     }
 
     GenericEntity<InodeView> inodeViews
-            = new GenericEntity<InodeView>(inodeView) {};
+            = new GenericEntity<InodeView>(inodeView) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             inodeViews).build();
   }
@@ -456,8 +541,7 @@ public class DataSetService {
     List<Project> list = datasetFacade.findProjectSharedWith(project, dataSet.
             getName());
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
-            list) {
-    };
+            list) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             projects).build();
@@ -1169,12 +1253,13 @@ public class DataSetService {
     Response.ResponseBuilder response = Response.ok();
     return response.build();
   }
-  
+
   @GET
   @Path("checkFileForDownload/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response checkFileForDownload(@PathParam("path") String path, @Context SecurityContext sc) throws
+  public Response checkFileForDownload(@PathParam("path") String path,
+          @Context SecurityContext sc) throws
           AppException, AccessControlException {
     return checkFileExists(path, sc);
   }
@@ -1435,7 +1520,7 @@ public class DataSetService {
       path = path + File.separator;
     }
 
-    Users user = this.userfacade.findByEmail(context.getUserPrincipal().
+    Users user = this.userFacade.findByEmail(context.getUserPrincipal().
             getName());
 
     ErasureCodeJobConfiguration ecConfig
@@ -1448,7 +1533,7 @@ public class DataSetService {
             ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopDir(), hdfsLeDescriptorsFacade.getSingleEndpoint(), jobsMonitor);
+            settings.getHadoopDir(), jobsMonitor);
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     if (exec != null) {

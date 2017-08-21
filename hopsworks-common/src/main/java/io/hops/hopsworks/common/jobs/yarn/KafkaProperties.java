@@ -17,6 +17,7 @@ public class KafkaProperties extends ServiceProperties {
   private String consumerGroups;
   //Comma-separated list of topics;
   private String topics;
+  private String sessionId;
 
   public KafkaProperties() {
   }
@@ -67,6 +68,14 @@ public class KafkaProperties extends ServiceProperties {
       sb.append(topic.getName()).append(File.pathSeparator);
     }
     this.topics = sb.substring(0, sb.lastIndexOf(File.pathSeparator));
+  }
+
+  public String getSessionId() {
+    return sessionId;
+  }
+
+  public void setSessionId(String sessionId) {
+    this.sessionId = sessionId;
   }
 
   @Override

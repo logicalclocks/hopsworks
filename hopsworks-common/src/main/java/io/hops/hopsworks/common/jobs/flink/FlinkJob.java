@@ -48,18 +48,20 @@ public class FlinkJob extends YarnJob {
    * @param flinkDir
    * @param flinkConfDir
    * @param flinkConfFile
-   * @param nameNodeIpPort
    * @param flinkUser
    * @param jobUser
    * @param glassfishDomainsDir
    * @param jobsMonitor
+   * @param settings
+   * @param sessionId
    */
   public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String flinkDir, final String flinkConfDir,
-      final String flinkConfFile, final String nameNodeIpPort,
-      String flinkUser, String jobUser, final String glassfishDomainsDir, YarnJobsMonitor jobsMonitor) {
-    super(job, services, user, jobUser, hadoopDir, nameNodeIpPort, jobsMonitor);
+      final String flinkConfFile, String flinkUser,
+      String jobUser, final String glassfishDomainsDir, YarnJobsMonitor jobsMonitor,
+      Settings settings, String sessionId) {
+    super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings, sessionId);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a FlinkJobConfiguration object. Received: "
@@ -78,7 +80,7 @@ public class FlinkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso) {
     super.setupJob(dfso);
-    
+
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Flink Job");
@@ -131,7 +133,7 @@ public class FlinkJob extends YarnJob {
       runner = flinkBuilder.
           getYarnRunner(jobDescription.getProject().getName(),
               flinkUser, jobUser, hadoopDir, flinkDir, flinkConfDir,
-              flinkConfFile, nameNodeIpPort, glassfishDomainDir + "/domain1/config/", services);
+              flinkConfFile, glassfishDomainDir + "/domain1/config/", services);
 
     } catch (IOException e) {
       LOG.log(Level.SEVERE,

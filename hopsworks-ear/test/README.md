@@ -4,14 +4,14 @@
 -Warning: This test will clean hdfs and drop hopsworks database. So it should only be used on a test machine.
 ```
 
-First create a .env file with your specific configurations by copying the .env.example file.
+First create a .env file by copying the .env.example file. Then edit the .env file by providing your specific configuration. 
 ```sh
    cd hopsworks/hopsworks-ear/test
    cp .env.example .env
 ```
 
 
-Then change the properties in hopsworks pom.xml to match the server you are deploying to:
+Then change the properties in hopsworks parent pom.xml to match the server you are deploying to:
 ```xml
   <properties>
     ...

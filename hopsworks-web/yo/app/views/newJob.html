@@ -21,18 +21,18 @@
         </div>
         <div uib-accordion close-others="false" >
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
-              <md-input-container  class="md-block">
-                <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
-                <input name="jobname" type="text" id="jobname"
-                       ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
-              </md-input-container>
+            <md-input-container  class="md-block">
+              <label id="inputJobName" for="jobname" style="color: black;">Job name</label>
+              <input name="jobname" type="text" id="jobname"
+                     ng-model="newJobCtrl.jobname" ng-change="newJobCtrl.nameFilledIn()"  autofocus>
+            </md-input-container>
           </div>
 
           <!-- Select the type of job -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion2.title}} {{newJobCtrl.accordion2.value}}"
-                               is-open="newJobCtrl.accordion2.isOpen"
-                               ng-show="newJobCtrl.accordion2.visible"
-                                id="jobTypeDiv">
+               is-open="newJobCtrl.accordion2.isOpen"
+               ng-show="newJobCtrl.accordion2.visible"
+               id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
               <label id="tensorflowJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
@@ -46,8 +46,8 @@
 
           <!-- Select the main execution file -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}"
-                               is-open="newJobCtrl.accordion3.isOpen"
-                               ng-show="newJobCtrl.accordion3.visible">
+               is-open="newJobCtrl.accordion3.isOpen"
+               ng-show="newJobCtrl.accordion3.visible">
             <!-- Adam, Spark, Flink, TensorFlow  -->
             <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 4 || newJobCtrl.jobtype == 5 || newJobCtrl.jobtype == 6">
               <span>Select...</span>
@@ -68,9 +68,9 @@
 
           <!-- Set up the job details -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}"
-                               is-open="newJobCtrl.accordion4.isOpen"
-                               ng-show="newJobCtrl.accordion4.visible"
-                               id="chooseParametersAndArguments">
+               is-open="newJobCtrl.accordion4.isOpen"
+               ng-show="newJobCtrl.accordion4.visible"
+               id="chooseParametersAndArguments">
             <!-- Spark, Flink, TensorFlow-->
             <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 5 || newJobCtrl.jobtype === 6">
               <div class="row" ng-show="newJobCtrl.jobtype !== 4 && newJobCtrl.jobtype !== 5 && newJobCtrl.jobtype !== 6">
@@ -121,9 +121,9 @@
           </div>
           <!--Pre-configuration uib-accordion visible only for Spark jobs-->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}"
-                               is-open="newJobCtrl.accordion6.isOpen"
-                               ng-show="newJobCtrl.accordion6.visible && (newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)"
-                               id="preConfig">
+               is-open="newJobCtrl.accordion6.isOpen"
+               ng-show="newJobCtrl.accordion6.visible && (newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)"
+               id="preConfig">
             <div>
               <div class="row" style="float: left;width: 100%;" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)">
                 <div style="float: left;width: 150px;">
@@ -197,9 +197,9 @@
           </div>
           <!-- Set some run configuration -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}"
-                               is-open="newJobCtrl.accordion5.isOpen"
-                               ng-show="newJobCtrl.accordion5.visible"
-                               id="moreConfigs">
+               is-open="newJobCtrl.accordion5.isOpen"
+               ng-show="newJobCtrl.accordion5.visible"
+               id="moreConfigs">
             <div class="row" style="margin-top: 10px">
               <div class="text-right col-md-4">Application master memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
@@ -227,11 +227,11 @@
             <div class="row">
               <div class="col-md-4"></div>
               <div class="col-md-8">
-              <rzslider  ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4) && newJobCtrl.runConfig.dynamicExecutors" style="margin-top: 32px;"
-                  rz-slider-model="newJobCtrl.sliderOptions.min"
-                  rz-slider-high="newJobCtrl.sliderOptions.max"
-                  rz-slider-options="newJobCtrl.sliderOptions.options">
-              </rzslider>
+                <rzslider  ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4) && newJobCtrl.runConfig.dynamicExecutors" style="margin-top: 32px;"
+                           rz-slider-model="newJobCtrl.sliderOptions.min"
+                           rz-slider-high="newJobCtrl.sliderOptions.max"
+                           rz-slider-options="newJobCtrl.sliderOptions.options">
+                </rzslider>
               </div>
             </div>
             <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4) && newJobCtrl.runConfig.dynamicExecutors">
@@ -280,17 +280,17 @@
                 </select>
               </div>
             </div>
-            <!-- TensorFlow -->
+            <!-- TensorFlow and TFSPARK (partially) -->
             <div class="row" ng-show="newJobCtrl.jobtype === 6">
               <div class="text-right col-md-4">Number of Workers <i class="fa fa-info-circle" uib-tooltip="The number of Workers that should be requested." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfWorkers" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 6">
+            <div class="row" ng-show="newJobCtrl.jobtype === 5 ||  newJobCtrl.jobtype === 6">
               <div class="text-right col-md-4">Number of Parameter Servers<i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.numOfPs" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 6">
-              <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per container." style="margin-left: 10px"></i></div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 5 || newJobCtrl.jobtype === 6">
+              <div class="text-right col-md-4">Number of GPUs <i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested per executor." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numOfGPUs" class="form-control"></div>
             </div>
             <div class="row" ng-show="newJobCtrl.jobtype === 6">
@@ -301,47 +301,89 @@
               <div class="text-right col-md-4">Number of VCores <i class="fa fa-info-circle" uib-tooltip="The number of VCores that should be requested for each Worker." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.workerVCores" class="form-control"></div>
             </div>
-            
+
             <!-- Services -->
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
-              <div class="text-right col-md-4">Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
+              <div class="text-right col-md-4">Settings & Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
-                <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" style="width:121px" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
-                  Kafka
-                </button>
-              </div>
-            </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
-              <div class="text-right col-md-4">Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px"></i></div>
-                <div  class="col-md-8" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected"
-                  isteven-multi-select
-                  input-model="newJobCtrl.topics"
-                  output-model="newJobCtrl.runConfig.kafka.topics"
-                  button-label="name"
-                  item-label="name"
-                  tick-property="ticked"
-                  helper-elements="all none filter"
-                  >
-              </div>
-            </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
-              <div class="text-right col-md-4"></div>
-              <div class="col-md-8">
-                <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()" style="width:121px">
-                  Advanced
-                </button>
-              </div>
-            </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
-              <div class="text-right col-md-4">Consumer Groups<i class="fa fa-info-circle" uib-tooltip="Choose Consumer groups to be available in the job via HopsUtil." style="margin-left: 10px"></i></div>
-              <div class="col-md-8">
-                <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
-                  <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">
-                  <button class="kafka-consumergroups-buttons glyphicon glyphicon-remove-sign" ng-show="$last" ng-click="newJobCtrl.removeGroup()">
-                  </button>
-                  <button class="kafka-consumergroups-buttons glyphicon glyphicon-plus-sign" ng-show="$last" ng-click="newJobCtrl.addGroup(group)">
-                  </button>
-                </fieldset>
+                <div class="row">
+                  <div class="col-md-1">
+                    <div class="row">
+                      <div class="col-md-12">
+                        <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.settingsSelected}" style="width:80px" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleSettings()">
+                          Settings
+                        </button>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12">
+                        <button type="button" class="btn btn-default" ng-class="{'active': newJobCtrl.kafkaSelected}" style="width:80px" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleKafka()">
+                          Kafka
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-11" >
+                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5) && newJobCtrl.settingsSelected" style="margin-top: 3px">
+                      <div class="col-md-12" >
+                        <div class="row">
+                          <div class="col-md-12">
+                            Properties<i class="fa fa-info-circle" uib-tooltip="Insert here your job properties in the form of key1=val1:key2:val2." style="margin-left: 10px; text-align: left;" ></i>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-12">
+                            <textarea ng-model="newJobCtrl.runConfig.properties" class="form-control" ></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
+                      <div class="col-md-12" >
+                        <div class="row">
+                          <div class="col-md-12">
+                            Topics<i class="fa fa-info-circle" uib-tooltip="Kafka topics this job uses." style="margin-left: 10px; text-align: left;" ></i>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div  class="col-md-12" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected"
+                                isteven-multi-select
+                                input-model="newJobCtrl.topics"
+                                output-model="newJobCtrl.runConfig.kafka.topics"
+                                button-label="name"
+                                item-label="name"
+                                tick-property="ticked"
+                                helper-elements="all none filter"
+                                >
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div  class="col-md-12" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected">
+                            <button type="button" class="btn btn-default" data-toggle="button" aria-pressed="false" ng-click="newJobCtrl.toggleAdvanced()" style="width:80px">
+                              Advanced
+                            </button>
+                          </div>
+                        </div>
+                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
+                          <div class="col-md-12">
+                            Consumer Groups<i class="fa fa-info-circle" uib-tooltip="Choose Consumer groups to be available in the job via HopsUtil." style="margin-left: 10px; text-align: left;"></i>
+                          </div>
+                        </div>
+                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
+                          <div class="col-md-12">
+                            <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
+                              <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">
+                              <button class="kafka-consumergroups-buttons glyphicon glyphicon-remove-sign" ng-show="$last" ng-click="newJobCtrl.removeGroup()">
+                              </button>
+                              <button class="kafka-consumergroups-buttons glyphicon glyphicon-plus-sign" ng-show="$last" ng-click="newJobCtrl.addGroup(group)">
+                              </button>
+                            </fieldset>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <!-- Add libraries -->
@@ -390,16 +432,16 @@
                     </td>
                     <td>
                       <select name="visibility" ng-model="resource.visibility">
-                        <option ng-selected="resource.visibility ==='application'" value="application">Application</option>
-                        <option ng-selected="resource.visibility ==='private'" value="private">Private</option>
-                        <option ng-selected="resource.visibility ==='public'" value="public">Public</option>
+                        <option ng-selected="resource.visibility === 'application'" value="application">Application</option>
+                        <option ng-selected="resource.visibility === 'private'" value="private">Private</option>
+                        <option ng-selected="resource.visibility === 'public'" value="public">Public</option>
                       </select>
                     </td>
                     <td>
                       <select name="type" ng-model="resource.type" ng-change="newJobCtrl.setResourceType(resource.type)">
-                        <option ng-selected="resource.type ==='file'" value="file">File</option>
-                        <option ng-selected="resource.type ==='archive'"value="archive">Archive</option>
-                        <option ng-selected="resource.type ==='pattern'"value="pattern">Pattern</option>
+                        <option ng-selected="resource.type === 'file'" value="file">File</option>
+                        <option ng-selected="resource.type === 'archive'"value="archive">Archive</option>
+                        <option ng-selected="resource.type === 'pattern'"value="pattern">Pattern</option>
                       </select>
                     </td>
                     <td ng-show="resource.type === 'pattern'">
@@ -417,50 +459,50 @@
                   Create job
                 </button>
               </div>
-           </div>
-         </div>
+            </div>
+          </div>
         </div>
       </div>
-         <!-- /#page-content-wrapper -->
+      <!-- /#page-content-wrapper -->
     </section>
     <tour class="ng-scope"
           step="newJobCtrl.tourService.currentStep_TourSeven"
           post-tour="closeTour()"
-          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour ==='kafka'
-            && (projectCtrl.tourService.informAndTips
-                || projectCtrl.tourService.tipsOnly)">
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
+                              && (projectCtrl.tourService.informAndTips
+                                      || projectCtrl.tourService.tipsOnly)">
       <virtual-step
-              class="ng-scope"
-              tourtip="Click Next OR give a name to your job kafka"
-              tourtip-step="0"
-              tourtip-element="#inputJobName"
-              tourtip-placement="bottom"
-              tourtip-next-label="Next"
-              on-proceed="newJobCtrl.nameFilledIn()"
-              on-show="newJobCtrl.guideSetJobName()"
-      ></virtual-step>
+        class="ng-scope"
+        tourtip="Click Next OR give a name to your job kafka"
+        tourtip-step="0"
+        tourtip-element="#inputJobName"
+        tourtip-placement="bottom"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.nameFilledIn()"
+        on-show="newJobCtrl.guideSetJobName()"
+        ></virtual-step>
       <virtual-step
-              ng-hide="true"
-              class="ng-scope"
-              tourtip="invisible"
-              tourtip-step="1"
-      ></virtual-step>
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="1"
+        ></virtual-step>
       <virtual-step
-              class="ng-scope"
-              tourtip="Click Next OR SPARK"
-              tourtip-step="2"
-              tourtip-element="#sparkJobType"
-              tourtip-placement="right"
-              tourtip-next-label="Next"
-              on-proceed="newJobCtrl.setTourJobType(1)"
-              ng-if="newJobCtrl.accordion2.visible"
-      ></virtual-step>
+        class="ng-scope"
+        tourtip="Click Next OR SPARK"
+        tourtip-step="2"
+        tourtip-element="#sparkJobType"
+        tourtip-placement="right"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.setTourJobType(1)"
+        ng-if="newJobCtrl.accordion2.visible"
+        ></virtual-step>
       <virtual-step
-              ng-hide="true"
-              class="ng-scope"
-              tourtip="invisible"
-              tourtip-step="3"
-      ></virtual-step>
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="3"
+        ></virtual-step>
       <virtual-step
               class="ng-scope"
               tourtip="Browse(select your own .jar) or let us choose one for you (Next)"
@@ -468,38 +510,38 @@
               tourtip-element="#selectFileButton"
               tourtip-placement="right"
               tourtip-next-label="Next"
-              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.endpoint, projectCtrl.currentProject.projectName))"
+              on-proceed="newJobCtrl.onFileSelected('SPARK', newJobCtrl.tourService.getKafkaGuideJarPath(projectCtrl.currentProject.projectName))"
               ng-if="newJobCtrl.accordion3.visible"
       ></virtual-step>
       <virtual-step
-              ng-hide="true"
-              class="ng-scope"
-              tourtip="invisible"
-              tourtip-step="5"
-      ></virtual-step>
+        ng-hide="true"
+        class="ng-scope"
+        tourtip="invisible"
+        tourtip-step="5"
+        ></virtual-step>
       <virtual-step
-              class="ng-scope"
-              tourtip="Choose parameters on you own or click Next and let us choose for you"
-              tourtip-step="6"
-              tourtip-element="#chooseParametersAndArguments"
-              tourtip-placement="top"
-              tourtip-next-label="Next"
-              on-proceed="newJobCtrl.chooseParameters()"
-              on-show="newJobCtrl.populateKafkaJobParameters()"
-              ng-if="newJobCtrl.accordion4.visible"
-      ></virtual-step>
+        class="ng-scope"
+        tourtip="Choose parameters on you own or click Next and let us choose for you"
+        tourtip-step="6"
+        tourtip-element="#chooseParametersAndArguments"
+        tourtip-placement="top"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.chooseParameters()"
+        on-show="newJobCtrl.populateKafkaJobParameters()"
+        ng-if="newJobCtrl.accordion4.visible"
+        ></virtual-step>
 
       <virtual-step
-              class="ng-scope"
-              tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
-              tourtip-step="7"
-              tourtip-element="#moreConfigs"
-              tourtip-placement="top"
-              tourtip-next-label="Next"
-              on-proceed="newJobCtrl.createJob()"
-              on-show="newJobCtrl.populateKafkaTopic()"
-              ng-if="newJobCtrl.accordion5.visible"
-      ></virtual-step>
+        class="ng-scope"
+        tourtip="Click Next OR click on Configure and create, choose Kafka services and select the created Topic"
+        tourtip-step="7"
+        tourtip-element="#moreConfigs"
+        tourtip-placement="top"
+        tourtip-next-label="Next"
+        on-proceed="newJobCtrl.createJob()"
+        on-show="newJobCtrl.populateKafkaTopic()"
+        ng-if="newJobCtrl.accordion5.visible"
+        ></virtual-step>
     </tour>
 
 
@@ -510,8 +552,8 @@
           step="projectCtrl.tourService.currentStep_TourFour"
           post-tour="closeTour()"
           ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'
-            && (projectCtrl.tourService.informAndTips
-                || projectCtrl.tourService.tipsOnly)">
+                              && (projectCtrl.tourService.informAndTips
+                                      || projectCtrl.tourService.tipsOnly)">
       <virtual-step
         class="ng-scope"
         tourtip="Click Next OR name the job yourself by typing in the field below"
@@ -553,7 +595,7 @@
         tourtip-element="#selectFileButton"
         tourtip-placement="bottom"
         tourtip-next-label="Next"
-        on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
+        on-proceed="newJobCtrl.onFileSelected('SPARK','hdfs:///Projects/' + projectCtrl.currentProject.projectName + '/TestJob/spark-examples.jar')"
         tourtip-offset-vertical="-14"
         tourtip-offset-horizontal="-5"
         ng-if="newJobCtrl.accordion3.visible"
@@ -589,13 +631,13 @@
         ng-if="newJobCtrl.accordion5.visible"
         ></virtual-step>
     </tour>
-    
+
     <tour class="ng-scope"
           step="projectCtrl.tourService.currentStep_TourFour"
           post-tour="closeTour()"
           ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow'
-            && (projectCtrl.tourService.informAndTips
-                || projectCtrl.tourService.tipsOnly)">
+                              && (projectCtrl.tourService.informAndTips
+                                      || projectCtrl.tourService.tipsOnly)">
       <virtual-step
         class="ng-scope"
         tourtip="Click Next OR name the job yourself by typing in the field below"
@@ -637,7 +679,7 @@
         tourtip-element="#selectFileButton"
         tourtip-placement="bottom"
         tourtip-next-label="Next"
-        on-proceed="newJobCtrl.onFileSelected('TENSORFLOW','hdfs://' + projectCtrl.endpoint + '/Projects/' + projectCtrl.currentProject.projectName + '/TestJob/mnist.py')"
+        on-proceed="newJobCtrl.onFileSelected('TENSORFLOW','hdfs:///Projects/' + projectCtrl.currentProject.projectName + '/TestJob/mnist.py')"
         tourtip-offset-vertical="-14"
         tourtip-offset-horizontal="-5"
         ng-if="newJobCtrl.accordion3.visible"

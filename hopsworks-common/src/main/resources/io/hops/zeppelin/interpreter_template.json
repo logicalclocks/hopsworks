@@ -177,65 +177,6 @@
         "isUserImpersonate": false
       }
     },
-    "2CHMTCH4F": {
-      "id": "2CHMTCH4F",
-      "name": "python",
-      "group": "python",
-      "properties": {
-        "zeppelin.python": "%%zeppelin.python_conda_path%%",
-        "zeppelin.python.maxResult": "1000"
-      },
-      "status": "READY",
-      "interpreterGroup": [
-        {
-          "name": "python",
-          "class": "org.apache.zeppelin.python.PythonInterpreter",
-          "defaultInterpreter": false,
-          "editor": {
-            "language": "python",
-            "editOnDblClick": false
-          }
-        },
-        {
-          "name": "sql",
-          "class": "org.apache.zeppelin.python.PythonInterpreterPandasSql",
-          "defaultInterpreter": false,
-          "editor": {
-            "language": "sql",
-            "editOnDblClick": false
-          }
-        },
-        {
-          "name": "conda",
-          "class": "org.apache.zeppelin.python.PythonCondaInterpreter",
-          "defaultInterpreter": false,
-          "editor": {
-            "language": "sh",
-            "editOnDblClick": false
-          }
-        },
-        {
-          "name": "docker",
-          "class": "org.apache.zeppelin.python.PythonDockerInterpreter",
-          "defaultInterpreter": false,
-          "editor": {
-            "language": "sh",
-            "editOnDblClick": false
-          }
-        }
-      ],
-      "dependencies": [],
-      "option": {
-        "remote": true,
-        "port": -1,
-        "perNote": "shared",
-        "perUser": "shared",
-        "isExistingProcess": false,
-        "setPermission": false,
-        "users": [],
-        "isUserImpersonate": false
-      }
-    },
     "2CHUQQW33": {
       "id": "2CHUQQW33",
       "name": "livy",
@@ -267,7 +208,13 @@
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",
         "livy.spark.submit.deployMode": "cluster",
         "livy.spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
-        "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%"
+        "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.driverEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.driverEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.executorEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.yarn.executorEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
+        "livy.spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
+        "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%"
       },
       "status": "READY",
             "interpreterGroup": [

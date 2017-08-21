@@ -96,7 +96,7 @@ public class ExecutionService {
           "You are not authorized for this invocation.");
     }
     try {
-      Execution exec = executionController.start(job, user);
+      Execution exec = executionController.start(job, user, req.getSession().getId());
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(exec).build();
     } catch (IOException | IllegalArgumentException | NullPointerException ex) {

@@ -24,8 +24,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptors;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -68,8 +66,6 @@ public class FlinkService {
   private JobController jobController;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
   @EJB
   private DistributedFsService dfs;
 
@@ -175,10 +171,6 @@ public class FlinkService {
       if (!path.startsWith("hdfs")) {
         path = "hdfs://" + path;
       }
-      HdfsLeDescriptors hdfsLeDescriptors = hdfsLeDescriptorsFacade.
-          findEndpoint();
-      path = path.replaceFirst("hdfs:/*Projects",
-          "hdfs://" + hdfsLeDescriptors.getHostname() + "/Projects");
 
       if (user == null) {
         //Should not be possible, but, well...
