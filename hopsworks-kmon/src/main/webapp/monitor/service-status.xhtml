@@ -157,16 +157,28 @@
 
           </p:panel>                    
         </h:form>
+      </p:outputPanel>
+      <!--<p:spacer width="1" height="10" />-->
 
-        <p:spacer width="1" height="25" />
-  
-        
-        <c:if test="#{serviceInstancesController.serviceWithMetrics}">
-          <p:outputPanel>
-            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
-          </p:outputPanel>
-        </c:if>
-      </p:outputPanel> 
+      <h:form>
+        <p:commandLink value="Yarn UI" action="#{facesContext.externalContext.redirect('/hopsworks-api/yarnui')}" rendered="#{serviceInstancesController.isYarnService()}">
+          <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+          <f:param name="service" value="#{serviceInstancesController.service}"/>   
+        </p:commandLink>
+        <p:commandLink value="HDFS UI" action="#{facesContext.externalContext.redirect('/hopsworks-api/hdfsui')}" rendered="#{serviceInstancesController.isHDFSService()}">
+          <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+          <f:param name="service" value="#{serviceInstancesController.service}"/>   
+        </p:commandLink>
+      </h:form>
+
+      <p:spacer width="1" height="25" />
+
+
+      <c:if test="#{serviceInstancesController.serviceWithMetrics}">
+        <p:outputPanel>
+          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
+        </p:outputPanel>
+      </c:if>
 
     </ui:define>
 

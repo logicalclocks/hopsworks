@@ -78,7 +78,7 @@
             </p:column>
 
             <p:column>
-              <h:commandLink  action="jobMgmt">
+              <h:commandLink action="#{facesContext.externalContext.redirect('/hopsworks-api/yarnui')}">
                 <p:graphicImage id="jobs"
                                 value="/resources/images/users/elephant.png"
                                 width="100"

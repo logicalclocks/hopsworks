@@ -89,6 +89,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
+  private static final String VARIABLE_HDFS_WEB_UI_IP = "hdfs_ui_ip";
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
           = "file_preview_image_size";
@@ -289,6 +290,7 @@ public class Settings implements Serializable {
       YARN_DEFAULT_QUOTA = setDirVar(VARIABLE_YARN_DEFAULT_QUOTA,
               YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
+      HDFS_WEB_UI_IP = setIpVar(VARIABLE_HDFS_WEB_UI_IP, HDFS_WEB_UI_IP);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
               HDFS_DEFAULT_QUOTA_MBs);
@@ -616,6 +618,15 @@ public class Settings implements Serializable {
     return YARN_WEB_UI_IP + ":" + YARN_WEB_UI_PORT;
   }
 
+  private String HDFS_WEB_UI_IP = "127.0.0.1";
+  private int HDFS_WEB_UI_PORT = 50070;
+
+  public synchronized String getHDFSWebUIAddress() {
+    checkCache();
+    return HDFS_WEB_UI_IP + ":" + HDFS_WEB_UI_PORT;
+  }
+
+  
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
   public synchronized long getHdfsDefaultQuotaInMBs() {
