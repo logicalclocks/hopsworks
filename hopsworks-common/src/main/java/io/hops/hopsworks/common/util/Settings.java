@@ -41,6 +41,7 @@ public class Settings implements Serializable {
   /**
    * Global Variables taken from the DB
    */
+  private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_JAVA_HOME = "java_home";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
@@ -186,6 +187,17 @@ public class Settings implements Serializable {
     return defaultValue;
   }
 
+  private Boolean setBoolVar(String varName, Boolean defaultValue) {
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null) {
+      String val = var.getValue();
+      if (val != null && val.isEmpty() == false) {
+        return Boolean.parseBoolean(val);
+      }
+    }
+    return defaultValue;
+  }
+
   private Integer setIntVar(String varName, Integer defaultValue) {
     Variables var = findById(varName);
     try {
@@ -223,6 +235,7 @@ public class Settings implements Serializable {
 
   private void populateCache() {
     if (!cached) {
+      PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
@@ -319,6 +332,18 @@ public class Settings implements Serializable {
     }
   }
 
+  /**
+   * This method will invalidate the cache of variables.
+   * The next call to read a variable after invalidateCache() will trigger a read of all variables
+   * from the database.
+   */
+  public synchronized void invalidateCache() {
+    cached = false;
+  }
+
+  
+  /*********************************************************************/
+  
   private static final String GLASSFISH_DIR = "/srv/hops/glassfish";
 
   public static synchronized String getGlassfishDir() {
@@ -335,6 +360,8 @@ public class Settings implements Serializable {
   /**
    * Default Directory locations
    */
+  public static String PRIVATE_DIRS = "/private_dirs/";
+
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
   public static final String HOPS_VERSION = "2.4.0";
@@ -1153,7 +1180,8 @@ public class Settings implements Serializable {
   private static final String INTERMEDIATE_CA_DIR = CA_DIR + "/intermediate";
   public static final String SSL_CREATE_CERT_SCRIPTNAME = "createusercerts.sh";
   public static final String SSL_DELETE_CERT_SCRIPTNAME = "deleteusercerts.sh";
-  public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME = "deleteprojectcerts.sh";
+  public static final String SSL_DELETE_PROJECT_CERTS_SCRIPTNAME
+          = "deleteprojectcerts.sh";
   public static final String UNZIP_FILES_SCRIPTNAME = "unzip-hdfs-files.sh";
   public static final int USERNAME_LEN = 8;
   public static final int MAX_USERNAME_SUFFIX = 99;
@@ -1184,9 +1212,12 @@ public class Settings implements Serializable {
   public static final String T_CERTIFICATE = "t_certificate";
 
   //Used to retrieve schema by HopsUtil
-  public static final String HOPSWORKS_PROJECTID_PROPERTY = "hopsworks.projectid";
-  public static final String HOPSWORKS_PROJECTNAME_PROPERTY = "hopsworks.projectname";
-  public static final String HOPSWORKS_PROJECTUSER_PROPERTY = "hopsworks.projectuser";
+  public static final String HOPSWORKS_PROJECTID_PROPERTY
+          = "hopsworks.projectid";
+  public static final String HOPSWORKS_PROJECTNAME_PROPERTY
+          = "hopsworks.projectname";
+  public static final String HOPSWORKS_PROJECTUSER_PROPERTY
+          = "hopsworks.projectuser";
   public static final String HOPSWORKS_JOBNAME_PROPERTY = "hopsworks.job.name";
   public static final String HOPSWORKS_JOBTYPE_PROPERTY = "hopsworks.job.type";
   public static final String HOPSWORKS_APPID_PROPERTY = "hopsworks.job.appid";
@@ -1195,12 +1226,14 @@ public class Settings implements Serializable {
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
   public static final String KAFKA_JOB_TOPICS_ENV_VAR
           = "hopsworks.kafka.job.topics";
-  public static final String HOPSWORKS_SESSIONID_PROPERTY = "hopsworks.sessionid";
+  public static final String HOPSWORKS_SESSIONID_PROPERTY
+          = "hopsworks.sessionid";
   public static final String HOPSWORKS_KEYSTORE_PROPERTY = "hopsworks.keystore";
   public static final String KEYSTORE_VAL_ENV_VAR = "keyPw";
-  public static final String HOPSWORKS_TRUSTSTORE_PROPERTY = "hopsworks.truststore";
+  public static final String HOPSWORKS_TRUSTSTORE_PROPERTY
+          = "hopsworks.truststore";
   public static final String TRUSTSTORE_VAL_ENV_VAR = "trustPw";
-  
+
   public static final String KAFKA_CONSUMER_GROUPS
           = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY
@@ -1496,6 +1529,13 @@ public class Settings implements Serializable {
     }
 
     return state;
+  }
+
+  private static boolean PYTHON_KERNEL = true;
+
+  public synchronized boolean isPythonKernelEnabled() {
+    checkCache();
+    return PYTHON_KERNEL;
   }
 
   private static String HOPSUTIL_VERSION = "0.1.1";

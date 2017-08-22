@@ -101,7 +101,6 @@ public class ProjectService {
   private PythonDepsService pysparkService;
   @Inject
   private CertService certs;
-
   @EJB
   private ActivityFacade activityFacade;
   @EJB

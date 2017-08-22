@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.user;
 
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.Yubikey;
@@ -21,6 +22,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -201,6 +203,11 @@ public class Users implements Serializable {
           mappedBy = "uid")
   private Yubikey yubikey;
 
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "users")
+  private Collection<JupyterSettings> jupyterSettingsCollection;
+  
+  
   public Users() {
   }
 
@@ -473,6 +480,18 @@ public class Users implements Serializable {
   
   public void setToursState(int toursState) {
     this.toursState = toursState;
+  }
+
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<JupyterSettings> getJupyterSettingsCollection() {
+    return jupyterSettingsCollection;
+  }
+
+  public void setJupyterSettingsCollection(
+          Collection<JupyterSettings> jupyterSettingsCollection) {
+    this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
   
   @Override

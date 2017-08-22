@@ -4,6 +4,8 @@ import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.exception.AppException;
@@ -53,6 +55,8 @@ public class JupyterConfigFactory {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private JupyterFacade jupyterFacade;
+  @EJB
+  private JupyterSettingsFacade jupyterSettingsFacade;
 
   private String hadoopClasspath = null;
 
@@ -136,16 +140,13 @@ public class JupyterConfigFactory {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public JupyterDTO startServerAsJupyterUser(Project project, String secret,
-          String hdfsUser,
-          int driverCores, String driverMemory, int numExecutors,
-          int executorCores, String executorMemory, int gpus,
-          String archives, String jars, String files, String pyFiles,
-          int numParameterServers, boolean tensorflow) throws
+  public JupyterDTO startServerAsJupyterUser(Project project,
+          String secretConfig,
+          String hdfsUser, JupyterSettings js) throws
           AppException, IOException, InterruptedException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-    String hadoopClasspath = getHadoopClasspath();
+//    getHadoopClasspath();
 
     JupyterProject jp = null;
     String token = null;
@@ -168,18 +169,19 @@ public class JupyterConfigFactory {
       // use pidfile to kill any running servers
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-      jc = new JupyterConfig(project.getName(), secret, hdfsUser, hdfsLeFacade.
-              getSingleEndpoint(), settings, port, driverCores,
-              driverMemory, numExecutors, executorCores, executorMemory, gpus,
-              archives, jars, files, pyFiles, numParameterServers, tensorflow);
+      jc = new JupyterConfig(project.getName(), secretConfig, hdfsUser,
+              hdfsLeFacade.
+                      getSingleEndpoint(), settings, port, token, js);
 
+      String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.
+              getSecret();
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
               = {"/usr/bin/sudo", prog, "start", jc.getProjectDirPath(),
                 jc.getSettings().getHadoopDir(), settings.getJavaHome(),
                 settings.getAnacondaProjectDir(project.getName()), port.
                 toString(),
-                hdfsUser + "-" + port + ".log"};
+                hdfsUser + "-" + port + ".log", secretDir};
       logger.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
       String pidfile = jc.getRunDirPath() + "/jupyter.pid";
@@ -247,12 +249,7 @@ public class JupyterConfigFactory {
       jc.setToken(token);
     }
 
-    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), jc.
-            getDriverCores(), jc.getDriverMemory(), jc.getNumExecutors(), jc.
-            getExecutorCores(), jc.getExecutorMemory(), jc.getGpus(), jc.
-            getArchives(), jc.getJars(), jc.getFiles(), jc.getPyFiles(),
-    jc.getNumParamServers(), jc.isTensorflow());
-
+    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), secretConfig);
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -434,7 +431,7 @@ public class JupyterConfigFactory {
     } catch (IOException | InterruptedException ex) {
       logger.log(Level.SEVERE,
               "Problem checking if Jupyter Notebook server is running: {0}", ex.
-              toString());
+                      toString());
       exitValue = -2;
     }
 

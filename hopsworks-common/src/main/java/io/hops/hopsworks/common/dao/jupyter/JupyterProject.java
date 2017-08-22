@@ -1,10 +1,13 @@
 package io.hops.hopsworks.common.dao.jupyter;
 
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterInterpreter;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -12,12 +15,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
 @Table(name = "jupyter_project",
@@ -47,6 +53,14 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT j FROM JupyterProject j WHERE j.pid = :pid")})
 public class JupyterProject implements Serializable {
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "pid")
+  private long pid;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "jupyterProject")
+  private Collection<JupyterInterpreter> jupyterInterpreterCollection;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -82,10 +96,6 @@ public class JupyterProject implements Serializable {
           max = 255)
   @Column(name = "token")
   private String token;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "pid")
-  private Long pid;
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -95,74 +105,11 @@ public class JupyterProject implements Serializable {
   @Column(name = "hdfs_user_id")
   private int hdfsUserId;
 
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "driver_cores")
-  private Integer driverCores;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "num_executors")
-  private Integer numExecutors;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "executor_cores")
-  private Integer executorCores;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 2,
-          max = 32)
-  @Column(name = "driver_memory")
-  private String driverMemory;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 2,
-          max = 32)
-  @Column(name = "executor_memory")
-  private String executorMemory;
-  @Basic(optional = true)
-  @Column(name = "gpus")
-  private Integer gpus;
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 0,
-          max = 3000)
-  @Column(name = "archives")
-  private String archives;
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 0,
-          max = 3000)
-  @Column(name = "jars")
-  private String jars;
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 0,
-          max = 3000)
-  @Column(name = "files")
-  private String files;
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 0,
-          max = 3000)
-  @Column(name = "pyFiles")
-  private String pyFiles;
-  
-  
   public JupyterProject() {
   }
 
   public JupyterProject(Project project, String secret, Integer port,
-          int hdfsUserId, String hostIp, String token, Long pid, int driverCores,
-          String driverMemory, int numExecutors, int executorCores,
-          String executorMemory, int gpus, String archives, String jars,
-          String files, String pyFiles
-  ) {
+          int hdfsUserId, String hostIp, String token, Long pid) {
     this.projectId = project;
     this.secret = secret;
     this.port = port;
@@ -172,16 +119,6 @@ public class JupyterProject implements Serializable {
     this.hostIp = hostIp;
     this.token = token;
     this.pid = pid;
-    this.driverCores = driverCores;
-    this.driverMemory = driverMemory;
-    this.numExecutors = numExecutors;
-    this.executorCores = executorCores;
-    this.executorMemory = driverMemory;
-    this.gpus = gpus;
-    this.archives = archives;
-    this.jars = jars;
-    this.files = files;
-    this.pyFiles = pyFiles;
   }
 
   public String getSecret() {
@@ -240,13 +177,6 @@ public class JupyterProject implements Serializable {
     this.token = token;
   }
 
-  public Long getPid() {
-    return pid;
-  }
-
-  public void setPid(Long pid) {
-    this.pid = pid;
-  }
 
   public Project getProjectId() {
     return projectId;
@@ -254,86 +184,6 @@ public class JupyterProject implements Serializable {
 
   public void setProjectId(Project projectId) {
     this.projectId = projectId;
-  }
-
-  public Integer getDriverCores() {
-    return driverCores;
-  }
-
-  public void setDriverCores(Integer driverCores) {
-    this.driverCores = driverCores;
-  }
-
-  public String getDriverMemory() {
-    return driverMemory;
-  }
-
-  public void setDriverMemory(String driverMemory) {
-    this.driverMemory = driverMemory;
-  }
-
-  public Integer getNumExecutors() {
-    return numExecutors;
-  }
-
-  public void setNumExecutors(Integer numExecutors) {
-    this.numExecutors = numExecutors;
-  }
-
-  public Integer getExecutorCores() {
-    return executorCores;
-  }
-
-  public void setExecutorCores(Integer executorCores) {
-    this.executorCores = executorCores;
-  }
-
-  public String getExecutorMemory() {
-    return executorMemory;
-  }
-
-  public void setExecutorMemory(String executorMemory) {
-    this.executorMemory = executorMemory;
-  }
-
-  public Integer getGpus() {
-    return gpus;
-  }
-
-  public void setGpus(Integer gpus) {
-    this.gpus = gpus;
-  }
-
-  public String getArchives() {
-    return archives;
-  }
-
-  public void setArchives(String archives) {
-    this.archives = archives;
-  }
-
-  public String getJars() {
-    return jars;
-  }
-
-  public void setJars(String jars) {
-    this.jars = jars;
-  }
-
-  public String getFiles() {
-    return files;
-  }
-
-  public void setFiles(String files) {
-    this.files = files;
-  }
-
-  public String getPyFiles() {
-    return pyFiles;
-  }
-
-  public void setPyFiles(String pyFiles) {
-    this.pyFiles = pyFiles;
   }
 
   @Override
@@ -360,6 +210,25 @@ public class JupyterProject implements Serializable {
   public String toString() {
     return "io.hops.hopsworks.common.dao.jupyter.JupyterProject[ port=" + port
             + " ]";
+  }
+
+  public long getPid() {
+    return pid;
+  }
+
+  public void setPid(long pid) {
+    this.pid = pid;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<JupyterInterpreter> getJupyterInterpreterCollection() {
+    return jupyterInterpreterCollection;
+  }
+
+  public void setJupyterInterpreterCollection(
+          Collection<JupyterInterpreter> jupyterInterpreterCollection) {
+    this.jupyterInterpreterCollection = jupyterInterpreterCollection;
   }
 
 }
