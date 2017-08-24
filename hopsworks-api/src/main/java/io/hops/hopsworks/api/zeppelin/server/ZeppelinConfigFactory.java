@@ -90,7 +90,7 @@ public class ZeppelinConfigFactory {
     if (userConfig != null) {
       return userConfig;
     }
-    userConfig = new ZeppelinConfig(config, nbs);
+    userConfig = new ZeppelinConfig(config, nbs, hdfsUser);
     projectUserConfCache.put(hdfsUser, userConfig);
     return userConfig;
   }

@@ -1103,7 +1103,7 @@ public class JobService {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     JsonResponse json = new JsonResponse();

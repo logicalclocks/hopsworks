@@ -9,6 +9,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.dao.user.Users;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 
 public class ErasureCodeJob extends HopsJob {
@@ -32,7 +33,7 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     if (jobConfig.getAppName() == null || jobConfig.getAppName().isEmpty()) {
       jobConfig.setAppName("Untitled Erasure coding Job");
     }

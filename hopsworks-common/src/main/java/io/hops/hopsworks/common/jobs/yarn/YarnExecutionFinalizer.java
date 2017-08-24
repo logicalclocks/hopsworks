@@ -23,7 +23,6 @@ import javax.ejb.Asynchronous;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
@@ -62,56 +61,74 @@ public class YarnExecutionFinalizer {
   private void copyLogs(Execution exec) {
     DistributedFileSystemOps udfso = dfs.getDfsOps(exec.getHdfsUser());
 
-    String defaultOutputPath;
-    switch (exec.getJob().getJobType()) {
-      case SPARK:
-      case PYSPARK:
-      case TFSPARK:
-        defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
-        break;
-      case FLINK:
-        defaultOutputPath = Settings.FLINK_DEFAULT_OUTPUT_PATH;
-        break;
-      case ADAM:
-        defaultOutputPath = Settings.ADAM_DEFAULT_OUTPUT_PATH;
-        break;
-      case YARN:
-        defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
-      default:
-        defaultOutputPath = "Logs/";
+    try {
+      String defaultOutputPath;
+      switch (exec.getJob().getJobType()) {
+        case SPARK:
+        case PYSPARK:
+        case TFSPARK:
+          defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
+          break;
+        case FLINK:
+          defaultOutputPath = Settings.FLINK_DEFAULT_OUTPUT_PATH;
+          break;
+        case ADAM:
+          defaultOutputPath = Settings.ADAM_DEFAULT_OUTPUT_PATH;
+          break;
+        case YARN:
+          defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
+        default:
+          defaultOutputPath = "Logs/";
+      }
+      String stdOutFinalDestination =
+          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+              defaultOutputPath;
+      String stdErrFinalDestination =
+          Utils.getHdfsRootPath(exec.getJob().getProject().getName()) +
+              defaultOutputPath;
+  
+      String stdOutPath =
+          settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
+      if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
+        stdOutFinalDestination =
+            stdOutFinalDestination + exec.getAppId() + File.separator +
+                "stdout.log";
+        String[] desiredLogTypes = {"out"};
+        YarnLogUtil
+            .copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
+                desiredLogTypes);
+      }
+      if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
+        stdErrFinalDestination =
+            stdErrFinalDestination + exec.getAppId() + File.separator +
+                "stderr.log";
+        String[] desiredLogTypes = {"err", ".log"};
+        YarnLogUtil
+            .copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
+                desiredLogTypes);
+      }
+      updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination,
+          exec);
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
-    String stdOutFinalDestination = Utils.getHdfsRootPath(exec.getJob().getProject().getName()) + defaultOutputPath;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(exec.getJob().getProject().getName()) + defaultOutputPath;
-
-    String stdOutPath = settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
-    if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
-      stdOutFinalDestination = stdOutFinalDestination + exec.getAppId() + File.separator + "stdout.log";
-      String[] desiredLogTypes = {"out"};
-      YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination, desiredLogTypes);
-    }
-    if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
-      stdErrFinalDestination = stdErrFinalDestination + exec.getAppId() + File.separator + "stderr.log";
-      String[] desiredLogTypes = {"err", ".log"};
-      YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination, desiredLogTypes);
-    }
-    updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination, exec);
   }
 
   /**
    * Removes the marker file for streaming jobs if it exists, after a non FINISHED/SUCCEEDED job.
-   *
-   * @param udfso
    */
   private void removeMarkerFile(Execution exec) {
     String marker = Settings.getJobMarkerFile(exec.getJob(), exec.getAppId());
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
-      DistributedFileSystemOps dfso = dfs.getDfsOps();
       if (dfso.exists(marker)) {
         dfso.rm(new org.apache.hadoop.fs.Path(marker), false);
       }
     } catch (IOException ex) {
       LOG.log(Level.WARNING, "Could not remove marker file for job:{0}, with appId:{1}, {2}", new Object[]{
         exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
   }
 
@@ -153,15 +170,19 @@ public class YarnExecutionFinalizer {
     filesToRemove.add(tensorboardFile);
     String certsAppDir = Paths.get(settings.getFlinkKafkaCertDir(), exec.getAppId()).toString();
     filesToRemove.add(certsAppDir);
-    FileSystem fs = FileSystem.get(settings.getConfiguration());
-    for (String s : filesToRemove) {
-      if (s.startsWith("hdfs:") && fs.exists(new Path(s))) {
-        fs.delete(new Path(s), true);
-      } else {
-        org.apache.commons.io.FileUtils.deleteQuietly(new File(s));
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    try {
+      for (String s : filesToRemove) {
+        if (s.startsWith("hdfs:") && dfso.getFilesystem().exists(new Path(s))) {
+          dfso.getFilesystem().delete(new Path(s), true);
+        } else {
+          org.apache.commons.io.FileUtils.deleteQuietly(new File(s));
+        }
       }
+      removeMarkerFile(exec);
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
-    removeMarkerFile(exec);
   }
 
   private void cleanCerts(Execution exec) {
