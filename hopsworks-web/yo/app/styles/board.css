@@ -200,3 +200,30 @@ div.story h3, div.task h3 {
 .expanded-job-monitor {
     margin-top: -5px;
 }
+
+
+.top-buffer { 
+  margin-top:20px; 
+}
+
+.jupyter-left { 
+  margin-left:10px; 
+  margin-top: -5px;
+}
+
+.shift-left { 
+  margin-left:-50px; 
+}
+
+.top-big-buffer { 
+  margin-top:100px; 
+}
+
+.blocks .btn-primary
+{
+    padding: 4px 5px;
+    margin: 0 50px 0 0;
+    border-radius: 5px;
+    border: 1px solid #fff;
+}
+

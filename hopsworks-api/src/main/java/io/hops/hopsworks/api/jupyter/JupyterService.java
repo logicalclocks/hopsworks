@@ -18,6 +18,8 @@ import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
@@ -63,6 +65,8 @@ public class JupyterService {
   private JupyterConfigFactory jupyterConfigFactory;
   @EJB
   private JupyterFacade jupyterFacade;
+  @EJB
+  private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -119,9 +123,28 @@ public class JupyterService {
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) { };
+            = new GenericEntity<List<JupyterProject>>(listServers) {   };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
+  }
+
+  @GET
+  @Path("/settings")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response settings(@Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    String loggedinemail = sc.getUserPrincipal().getName();
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId,
+            loggedinemail);
+
+    if (settings.isPythonKernelEnabled()) {
+      js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.
+              getSecret());
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            js).build();
   }
 
   @GET
@@ -142,26 +165,24 @@ public class JupyterService {
               Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find any Jupyter notebook server for this project.");
     }
-    if (jp != null) {
-      // Check to make sure the jupyter notebook server is running
-      boolean running = jupyterConfigFactory.pingServerJupyterUser(jp.getPid());
-      // if the notebook is not running but we have a database entry for it,
-      // we should remove the DB entry (and restart the notebook server).
-      if (!running) {
-        jupyterFacade.removeNotebookServer(hdfsUser);
-        throw new AppException(
-                Response.Status.NOT_FOUND.getStatusCode(),
-                "Found Jupyter notebook server for you, but it wasn't running.");
-      }
-      String externalIp = Ip.getHost(req.getRequestURL().toString());
-      settings.setHopsworksExternalIp(externalIp);
-      Integer port = req.getLocalPort();
-      String endpoint = externalIp + ":" + port;
-      if (endpoint.compareToIgnoreCase(jp.getHostIp()) != 0) {
-        // update the host_ip to whatever the client saw as the remote host:port
-        jp.setHostIp(endpoint);
-        jupyterFacade.update(jp);
-      }
+    // Check to make sure the jupyter notebook server is running
+    boolean running = jupyterConfigFactory.pingServerJupyterUser(jp.getPid());
+    // if the notebook is not running but we have a database entry for it,
+    // we should remove the DB entry (and restart the notebook server).
+    if (!running) {
+      jupyterFacade.removeNotebookServer(hdfsUser);
+      throw new AppException(
+              Response.Status.NOT_FOUND.getStatusCode(),
+              "Found Jupyter notebook server for you, but it wasn't running.");
+    }
+    String externalIp = Ip.getHost(req.getRequestURL().toString());
+    settings.setHopsworksExternalIp(externalIp);
+    Integer port = req.getLocalPort();
+    String endpoint = externalIp + ":" + port;
+    if (endpoint.compareToIgnoreCase(jp.getHostIp()) != 0) {
+      // update the host_ip to whatever the client saw as the remote host:port
+      jp.setHostIp(endpoint);
+      jupyterFacade.update(jp);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -173,7 +194,7 @@ public class JupyterService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public Response startNotebookServer(JupyterDTO jupyterConfig,
+  public Response startNotebookServer(JupyterSettings jupyterSettings,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
@@ -199,21 +220,17 @@ public class JupyterService {
     if (jp == null) {
       HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
 
-      String secret = DigestUtils.sha256Hex(Integer.toString(
+      String configSecret = DigestUtils.sha256Hex(Integer.toString(
               ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto;
       try {
 
-        dto = jupyterConfigFactory.startServerAsJupyterUser(project, secret,
-                hdfsUser,
-                jupyterConfig.getDriverCores(), jupyterConfig.getDriverMemory(),
-                jupyterConfig.getNumExecutors(),
-                jupyterConfig.getExecutorCores(), jupyterConfig.
-                getExecutorMemory(), jupyterConfig.getGpus(),
-                jupyterConfig.getArchives(), jupyterConfig.getJars(),
-                jupyterConfig.getFiles(), jupyterConfig.getPyFiles(),
-                jupyterConfig.getNumParamServers(),
-                jupyterConfig.isTensorflow());
+//        if (jupyterConfig.isSaveSettings()) {
+        jupyterSettingsFacade.update(jupyterSettings);
+//        }
+
+        dto = jupyterConfigFactory.startServerAsJupyterUser(project,
+                configSecret, hdfsUser, jupyterSettings);
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
                 ex);
@@ -229,13 +246,8 @@ public class JupyterService {
 
       String externalIp = Ip.getHost(req.getRequestURL().toString());
 
-      jp = jupyterFacade.
-              saveServer(externalIp, project, secret, dto.getPort(), user.
-                      getId(), dto.getToken(), dto.getPid(),
-                      dto.getDriverCores(), dto.getDriverMemory(),
-                      dto.getNumExecutors(), dto.getExecutorCores(),
-                      dto.getExecutorMemory(), dto.getGpus(), dto.getArchives(),
-                      dto.getJars(), dto.getFiles(), dto.getPyFiles());
+      jp = jupyterFacade.saveServer(externalIp, project, configSecret,
+              dto.getPort(), user.getId(), dto.getToken(), dto.getPid());
 
       if (jp == null) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.

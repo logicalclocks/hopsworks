@@ -151,21 +151,13 @@ public class JupyterFacade {
   }
 
   public JupyterProject saveServer(String host,
-          Project project, String secret, int port,
-          int hdfsUserId,
-          String token, long pid, int driverCores, String driverMemory,
-          int numExecutors, int executorCores, String executorMemory, int gpus,
-          String archives, String jars, String files, String pyFiles)
+          Project project, String secretConfig, int port,
+          int hdfsUserId, String token, long pid)
           throws AppException {
     JupyterProject jp = null;
     String ip;
-//    ip = settings.getHopsworksIp() + ":" + settings.getHopsworksPort();
     ip = host + ":" + settings.getHopsworksPort();
-
-    jp = new JupyterProject(project, secret, port, hdfsUserId, ip, token, pid,
-            driverCores, driverMemory, numExecutors, executorCores,
-            executorMemory, gpus,
-            archives, jars, files, pyFiles);
+    jp = new JupyterProject(project, secretConfig, port, hdfsUserId, ip, token, pid);
 
     persist(jp);
     return jp;

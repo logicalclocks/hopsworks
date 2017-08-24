@@ -9,6 +9,9 @@ angular.module('hopsWorksApp')
               running: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter/running' );
               },
+              settings: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/jupyter/settings' );
+              },
               start: function (projectId, sparkConfig) {
                 var req = {
                   method: 'POST',

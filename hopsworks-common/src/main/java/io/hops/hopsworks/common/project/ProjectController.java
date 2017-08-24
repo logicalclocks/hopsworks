@@ -4,6 +4,7 @@ import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -80,7 +81,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -1803,7 +1803,9 @@ public class ProjectController {
     //Compare the sent certificate with the one in the database
     String keypw = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(), userCertsFacade.
         findUserCert(projectName, user.getUsername()).getUserKeyPwd());
-    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray());
+    String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
+        + user.getUsername();
+    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(), projectUser);
 
     CertPwDTO respDTO = new CertPwDTO();
     respDTO.setKeyPw(keypw);
@@ -1819,7 +1821,7 @@ public class ProjectController {
    * @return
    * @throws AppException
    */
-  public void validateCert(byte[] keyStore, char[] keyStorePwd)
+  public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser)
       throws AppException {
     try {
       KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -1827,18 +1829,20 @@ public class ProjectController {
 
       ks.load(stream, keyStorePwd);
 
-      String projectUser = "";
-      Enumeration<String> aliases = ks.aliases();
-      while (aliases.hasMoreElements()) {
-        String alias = aliases.nextElement();
-        if (!alias.equals("caroot")) {
-          projectUser = alias;
-          break;
-        }
+      X509Certificate certificate = (X509Certificate) ks
+          .getCertificate(projectUser.toLowerCase());
+      String subjectDN = certificate.getSubjectX500Principal()
+          .getName("RFC2253");
+      String[] dnTokens = subjectDN.split(",");
+      String[] cnTokens = dnTokens[0].split("=", 2);
+      
+      if (!projectUser.equals(cnTokens[1])) {
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+            "Certificate CN does not match the username provided");
       }
-
+      
       UserCerts userCert = userCertsFacade.findUserCert(hdfsUsersBean.
-          getProjectName(projectUser), hdfsUsersBean.getUserName(projectUser));
+          getProjectName(cnTokens[1]), hdfsUsersBean.getUserName(cnTokens[1]));
 
       if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),

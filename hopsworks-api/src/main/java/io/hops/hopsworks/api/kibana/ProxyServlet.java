@@ -314,7 +314,7 @@ public class ProxyServlet extends HttpServlet {
       }
       proxyResponse = proxyClient.execute(getTargetHost(servletRequest),
               proxyRequest);
-
+      
       // Process the response
       int statusCode = proxyResponse.getStatusLine().getStatusCode();
 
@@ -509,7 +509,7 @@ public class ProxyServlet extends HttpServlet {
       if (header.getName().
               equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE) || header.
               getName().equalsIgnoreCase(org.apache.http.cookie.SM.SET_COOKIE2)) {
-        copyProxyCookie(servletRequest, servletResponse, header);
+        copyProxyCookie(servletRequest, servletResponse, header.getValue());
       } else {
         servletResponse.addHeader(header.getName(), header.getValue());
       }
@@ -521,8 +521,8 @@ public class ProxyServlet extends HttpServlet {
    * Replaces cookie path to local path and renames cookie to avoid collisions.
    */
   protected void copyProxyCookie(HttpServletRequest servletRequest,
-          HttpServletResponse servletResponse, Header header) {
-    List<HttpCookie> cookies = HttpCookie.parse(header.getValue());
+          HttpServletResponse servletResponse, String header) {
+    List<HttpCookie> cookies = HttpCookie.parse(header);
     String path = servletRequest.getContextPath(); // path starts with / or is empty string
     path += servletRequest.getServletPath(); // servlet path starts with / or is empty string
 

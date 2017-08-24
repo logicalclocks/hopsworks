@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
@@ -95,6 +96,9 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "projectId")
   private Collection<CondaCommands> condaCommandsCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<JupyterSettings> jupyterSettingsCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -394,6 +398,18 @@ public class Project implements Serializable {
           Collection<JupyterProject> jupyterProjectCollection) {
     this.jupyterProjectCollection = jupyterProjectCollection;
   }
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<JupyterSettings> getJupyterSettingsCollection() {
+    return jupyterSettingsCollection;
+  }
+
+  public void setJupyterSettingsCollection(
+          Collection<JupyterSettings> jupyterSettingsCollection) {
+    this.jupyterSettingsCollection = jupyterSettingsCollection;
+  }
+  
   
   
   @Override

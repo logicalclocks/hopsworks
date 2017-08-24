@@ -117,6 +117,48 @@
         <servlet-name>GrafanaProxyServlet</servlet-name>
         <url-pattern>/grafana</url-pattern>
     </servlet-mapping>
+    <!-- YARN UI proxy servlet -->
+    <servlet>
+        <servlet-name>YarnUIProxyServlet</servlet-name>
+        <servlet-class>io.hops.hopsworks.api.admin.YarnUIProxyServlet</servlet-class>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://localhost:8088/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>YarnUIProxyServlet</servlet-name>
+        <url-pattern>/yarnui/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>YarnUIProxyServlet</servlet-name>
+        <url-pattern>/yarnui</url-pattern>
+    </servlet-mapping>
+    <!-- HDFS UI proxy servlet -->
+    <servlet>
+        <servlet-name>HDFSUIProxyServlet</servlet-name>
+        <servlet-class>io.hops.hopsworks.api.admin.HDFSUIProxyServlet</servlet-class>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://localhost:50070/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HDFSUIProxyServlet</servlet-name>
+        <url-pattern>/hdfsui/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>HDFSUIProxyServlet</servlet-name>
+        <url-pattern>/hdfsui</url-pattern>
+    </servlet-mapping>
     <!-- tensorboard proxy servlet -->
     <servlet>
         <servlet-name>TensorboardProxyServlet</servlet-name>

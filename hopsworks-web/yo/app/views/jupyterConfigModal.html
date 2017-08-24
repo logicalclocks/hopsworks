@@ -4,20 +4,36 @@
 </div>
 
 <div class="btn-group">
-    <label class="btn btn-info" ng-click="ctrl.spark()" ng-model="ctrl.val.tensorflow" btn-radio="true">Tensorflow</label>
-    <label class="btn btn-info" ng-click="ctrl.tensorflow()" ng-model="ctrl.val.tensorflow" btn-radio="false">Spark</label>
+  <label class="btn btn-info" ng-click="ctrl.spark()" ng-model="ctrl.val.tensorflow" btn-radio="true">Tensorflow</label>
+  <label class="btn btn-info" ng-click="ctrl.tensorflow()" ng-model="ctrl.val.tensorflow" btn-radio="false">Spark</label>
 </div>
 
-<div class="modal-body" ng-show="ctrl.model!=''">
+<div class="modal-body" ng-show="ctrl.model != ''">
+
+<div uib-accordion-group class="panel-default" heading="Choose Framework"
+     is-open="true"
+     ng-show="ctrl.accordion2.visible"
+     id="jobTypeDiv">
+  <div class="btn-group">
+    <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
+    <label id="tensorflowJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
+    <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="5" ng-change="newJobCtrl.jobTypeChosen()">TensorFlowOnSpark</label>
+
+    <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
+    <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
+  </div>
+</div>
+
+
   <div class="col-md-5">
     <div class="form-group">
-      <label for="driverCores">Number of Driver Cores <input
+      <label for="driverCores">Number of Driver Cores<input
           type="text" class="form-control" id="driverCores" 
           ng-model="ctrl.val.driverCores" ng-init="ctrl.val.driverCores = 1">
       </label>
     </div>
     <div class="form-group">
-      <label for="driverMemory">Driver Memory <input
+      <label for="driverMemory">Driver Memory<input
           ng-init="ctrl.val.driverMemory = '1500M'" type="text" class="form-control"
           id="driverMemory" ng-model="ctrl.val.driverMemory">
       </label>
@@ -42,6 +58,7 @@
           ng-init="ctrl.val.numExecutors = 1" type="text" class="form-control"
           id="numExecutors" ng-model="ctrl.val.numExecutors">
       </label>
+
     </div>
     <div class="form-group">
       <label for="executorCores">Number of Cores per Executor <input
@@ -90,8 +107,8 @@
         </button> 
       </label>
       <input uib-tooltip="comma-separated quoted list of files"
-                                              ng-init="ctrl.val.files = ''" type="text" class="form-control"
-                                              id="files" ng-model="ctrl.val.files">
+             ng-init="ctrl.val.files = ''" type="text" class="form-control"
+             id="files" ng-model="ctrl.val.files">
     </div>
     <div class="form-group">
       <label for="pyFiles">
@@ -100,8 +117,8 @@
         </button>
       </label>
       <input uib-tooltip="comma-separated quoted list of python files. E.g.: 'my.py', 'your.py'"
-                                                  ng-init="ctrl.val.pyFiles = ''" type="text" class="form-control"
-                                                  id="pyFiles" ng-model="ctrl.val.pyFiles">
+             ng-init="ctrl.val.pyFiles = ''" type="text" class="form-control"
+             id="pyFiles" ng-model="ctrl.val.pyFiles">
     </div>
   </div>
 </div>

@@ -67,6 +67,30 @@ public class ServiceInstancesController {
     this.service = service;
   }
 
+  public boolean isYarnService() {
+    if (service != null) {
+      try {
+        if (ServiceType.valueOf(service).equals(ServiceType.YARN)) {
+          return true;
+        }
+      } catch (IllegalArgumentException ex) {
+      }
+    }
+    return false;
+  }
+
+  public boolean isHDFSService() {
+    if (service != null) {
+      try {
+        if (ServiceType.valueOf(service).equals(ServiceType.HDFS)) {
+          return true;
+        }
+      } catch (IllegalArgumentException ex) {
+      }
+    }
+    return false;
+  }
+  
   public boolean getServiceWithMetrics() {
     if (service != null) {
       try {
