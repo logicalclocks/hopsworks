@@ -16,7 +16,11 @@ import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import java.io.IOException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.util.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
 
 /**
  * Utility class for executing a HopsJob asynchronously. Passing the Hopsjob to
@@ -44,6 +48,12 @@ public class AsynchronousJobExecutor {
   private Settings settings;
   @EJB
   private YarnExecutionFinalizer yarnExecutionFinalizer;
+  @EJB
+  private YarnClientService yarnClientService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private BaseHadoopClientsService baseHadoopClientsService;
 
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -74,7 +84,11 @@ public class AsynchronousJobExecutor {
   public InodeFacade getInodeFacade() {
     return inodeFacade;
   }
-
+  
+  public YarnClientService getYarnClientService() {
+    return yarnClientService;
+  }
+  
   public DistributedFileSystemOps getFileOperations(String hdfsUser) throws
           IOException {
     return dfs.getDfsOps(hdfsUser);
@@ -92,4 +106,11 @@ public class AsynchronousJobExecutor {
     return settings;
   }
 
+  public CertificateMaterializer getCertificateMaterializer() {
+    return certificateMaterializer;
+  }
+  
+  public BaseHadoopClientsService getBaseHadoopClientsService() {
+    return baseHadoopClientsService;
+  }
 }

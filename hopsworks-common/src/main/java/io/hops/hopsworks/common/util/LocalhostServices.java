@@ -103,7 +103,7 @@ public class LocalhostServices {
   }
 
   //Make this asynchronous and call back UserCertsFacade.putUSer()
-  private static String createServiceCertificates(String intermediateCaDir,
+  public static String createServiceCertificates(String intermediateCaDir,
           String service, String countryCode, String city, String org,
           String email, String orcid, String userKeyPwd) throws IOException {
     String sslCertFile = intermediateCaDir + "/certs/" + service + ".cert.pem";

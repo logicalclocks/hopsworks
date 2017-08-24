@@ -41,6 +41,9 @@ public class ServiceCerts implements Serializable {
   @Lob
   @Column(name = "service_cert")
   private byte[] serviceCert;
+  @NotNull
+  @Column(name = "cert_password")
+  private String certificatePassword;
 
   public ServiceCerts() {
   }
@@ -73,6 +76,14 @@ public class ServiceCerts implements Serializable {
     this.serviceCert = serviceCert;
   }
 
+  public String getCertificatePassword() {
+    return certificatePassword;
+  }
+  
+  public void setCertificatePassword(String certificatePassword) {
+    this.certificatePassword = certificatePassword;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

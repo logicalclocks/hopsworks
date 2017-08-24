@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.client.api.impl.YarnClientImpl;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
@@ -140,8 +141,9 @@ public abstract class YarnJob extends HopsJob {
     }
     try {
       updateState(JobState.STARTING_APP_MASTER);
-      monitor = runner.startAppMaster(jobDescription.getProject(),
-          dfso, user.getUsername());
+      monitor = runner.startAppMaster(services.getYarnClientService(),
+          hdfsUser.getUserName(), jobDescription.getProject(), dfso,
+          user.getUsername());
       execution = services.getExecutionFacade().updateFilesToRemove(execution, runner.getFilesToRemove());
       execution = services.getExecutionFacade().updateAppId(execution, monitor.getApplicationId().toString());
       return true;
@@ -165,7 +167,7 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     //Check if this job is using Kakfa, and include certificate
     //in local resources
     serviceProps = new ServiceProperties(jobDescription.getProject().getId(), jobDescription.getProject().getName(),
@@ -220,7 +222,15 @@ public abstract class YarnJob extends HopsJob {
 
   @Override
   protected void writeToLogs(String message, Exception e) throws IOException {
-    writeLog(message, e, services.getFileOperations(jobUser));
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = services.getFileOperations(jobUser);
+      writeLog(message, e, udfso);
+    } finally {
+      if (null != udfso) {
+        services.getFsService().closeDfsClient(udfso);
+      }
+    }
   }
 
   @Override
@@ -244,23 +254,16 @@ public abstract class YarnJob extends HopsJob {
   @Override
   //DOESN'T WORK FOR NOW
   protected void stopJob(String appid) {
-    YarnClient yarnClient = null;
+    YarnClientWrapper yarnClientWrapper = services.getYarnClientService()
+        .getYarnClient(jobUser);
     try {
-      yarnClient = new YarnClientImpl();
-      yarnClient.init(conf);
-      yarnClient.start();
       ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
-      yarnClient.killApplication(applicationId);
+      yarnClientWrapper.getYarnClient().killApplication(applicationId);
     } catch (YarnException | IOException e) {
       LOG.log(Level.SEVERE, "Could not close yarn client for killing yarn job");
     } finally {
-      if (yarnClient != null) {
-        try {
-          yarnClient.close();
-        } catch (IOException ex) {
-          LOG.log(Level.WARNING,
-              "Could not close yarn client for killing yarn job");
-        }
+      if (yarnClientWrapper != null) {
+        services.getYarnClientService().closeYarnClient(yarnClientWrapper);
       }
     }
   }

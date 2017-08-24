@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.Set;
 import java.util.logging.Level;
@@ -33,6 +34,7 @@ public class DistributedFileSystemOps {
   private final DistributedFileSystem dfs;
   private Configuration conf;
   private String hadoopConfDir;
+  private final String effectiveUser;
 
   /**
    * Returns a file system with username access.
@@ -40,25 +42,43 @@ public class DistributedFileSystemOps {
    * @param ugi
    * @param conf
    */
-  public DistributedFileSystemOps(UserGroupInformation ugi, Configuration conf) {
-    this.dfs = getDfs(ugi, conf);
+  public DistributedFileSystemOps(UserGroupInformation ugi, Configuration
+      conf, URI uri) {
+    this.dfs = getDfs(ugi, conf, uri);
     this.conf = conf;
+    effectiveUser = ugi.getUserName();
   }
 
+  public DistributedFileSystemOps(UserGroupInformation ugi, Configuration conf) {
+    this(ugi, conf, null);
+  }
+  
   private DistributedFileSystem getDfs(UserGroupInformation ugi,
-          final Configuration conf) {
+          final Configuration conf, final URI uri) {
     FileSystem fs = null;
     try {
       fs = ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
         @Override
         public FileSystem run() throws IOException {
-          return FileSystem.get(FileSystem.getDefaultUri(conf), conf);
+          if (null != uri) {
+            return FileSystem.get(uri, conf);
+          } else {
+            return FileSystem.get(FileSystem.getDefaultUri(conf), conf);
+          }
         }
       });
     } catch (IOException | InterruptedException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
     return (DistributedFileSystem) fs;
+  }
+
+  public DistributedFileSystem getFilesystem() {
+    return dfs;
+  }
+  
+  public String getEffectiveUser() {
+    return effectiveUser;
   }
 
   /**

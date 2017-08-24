@@ -591,7 +591,7 @@ public class DataSetService {
               getLocalizedMessage());
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
 
@@ -646,7 +646,7 @@ public class DataSetService {
               getLocalizedMessage());
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
 
@@ -775,7 +775,7 @@ public class DataSetService {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
 
@@ -844,7 +844,7 @@ public class DataSetService {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     json.setSuccessMessage("A directory was created at " + dsPath);
@@ -965,7 +965,7 @@ public class DataSetService {
               "Could not delete the file at " + filePath);
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     if (!success) {
@@ -1097,7 +1097,7 @@ public class DataSetService {
               + " move in this folder");
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
       if (dfso != null) {
         dfso.close();
@@ -1201,7 +1201,7 @@ public class DataSetService {
               + "copy in this folder");
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
   }
@@ -1247,7 +1247,7 @@ public class DataSetService {
         }
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     Response.ResponseBuilder response = Response.ok();
@@ -1384,7 +1384,7 @@ public class DataSetService {
         }
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
 
