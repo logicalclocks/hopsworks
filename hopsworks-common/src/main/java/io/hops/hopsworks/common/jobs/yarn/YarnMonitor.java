@@ -2,51 +2,43 @@ package io.hops.hopsworks.common.jobs.yarn;
 
 import java.io.Closeable;
 import java.io.IOException;
-
-import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
 public final class YarnMonitor implements Closeable {
 
-  private final YarnClientWrapper yarnClientWrapper;
+  private final YarnClient yarnClient;
   private final ApplicationId appId;
-  private final YarnClientService ycs;
 
-  public YarnMonitor(ApplicationId id, YarnClientWrapper yarnClientWrapper,
-      YarnClientService ycs) {
+  public YarnMonitor(ApplicationId id, YarnClient yarnClient) {
     if (id == null) {
       throw new IllegalArgumentException(
               "ApplicationId cannot be null for Yarn monitor!");
     }
     this.appId = id;
-    this.yarnClientWrapper = yarnClientWrapper;
-    this.ycs = ycs;
+    this.yarnClient = yarnClient;
   }
 
-  // Deprecated: YarnClient is initialized and started from the YarnClientService
   public YarnMonitor start() {
-    yarnClientWrapper.getYarnClient().start();
+    yarnClient.start();
     return this;
   }
 
   public void stop() {
-    if (null != yarnClientWrapper) {
-      ycs.closeYarnClient(yarnClientWrapper);
-    }
+    yarnClient.stop();
   }
 
   public boolean isStarted() {
-    return yarnClientWrapper.getYarnClient().isInState(Service.STATE.STARTED);
+    return yarnClient.isInState(Service.STATE.STARTED);
   }
 
   public boolean isStopped() {
-    return yarnClientWrapper.getYarnClient().isInState(Service.STATE.STOPPED);
+    return yarnClient.isInState(Service.STATE.STOPPED);
   }
 
   //---------------------------------------------------------------------------        
@@ -54,19 +46,17 @@ public final class YarnMonitor implements Closeable {
   //---------------------------------------------------------------------------
   public YarnApplicationState getApplicationState() throws YarnException,
           IOException {
-    return yarnClientWrapper.getYarnClient().getApplicationReport(appId)
-        .getYarnApplicationState();
+    return yarnClient.getApplicationReport(appId).getYarnApplicationState();
   }
 
   public FinalApplicationStatus getFinalApplicationStatus() throws YarnException,
           IOException {
-    return yarnClientWrapper.getYarnClient().getApplicationReport(appId)
-        .getFinalApplicationStatus();
+    return yarnClient.getApplicationReport(appId).getFinalApplicationStatus();
   }
 
   public float getProgress() throws YarnException,
           IOException {
-    return yarnClientWrapper.getYarnClient().getApplicationReport(appId).getProgress();
+    return yarnClient.getApplicationReport(appId).getProgress();
   }
 
   public ApplicationId getApplicationId() {
@@ -83,6 +73,6 @@ public final class YarnMonitor implements Closeable {
 
   public void cancelJob(String appid) throws YarnException, IOException {
     ApplicationId applicationId = ConverterUtils.toApplicationId(appid);
-    yarnClientWrapper.getYarnClient().killApplication(applicationId);
+    yarnClient.killApplication(applicationId);
   }
 }

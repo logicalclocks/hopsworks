@@ -63,7 +63,7 @@ public class CertService {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     try {
-      CertPwDTO respDTO = projectController.getProjectSpecificCertPw(user, project.getName(), keyStore);
+      CertPwDTO respDTO = projectController.getCertPw(user, project.getName(), keyStore);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(respDTO).build();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, "Could not retrieve certificate passwords for user:" + user.getUsername(), ex);

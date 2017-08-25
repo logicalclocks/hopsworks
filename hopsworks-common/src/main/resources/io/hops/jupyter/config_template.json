@@ -71,8 +71,7 @@
             "spark.dynamicAllocation.enabled" : "%%dynamic_executors%%",
             "spark.dynamicAllocation.initialExecutors" : "%%initial_executors%%",
             "spark.dynamicAllocation.minExecutors" : "%%min_executors%%",
-            "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%",
-            "spark.files" : "%%spark_files%%"
+            "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%"            
         }
     },
     "use_auto_viz": true,

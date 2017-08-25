@@ -56,13 +56,13 @@
       <artifactId>junit</artifactId>
       <version>4.10</version>
       <scope>test</scope>
-    </dependency>
+    </dependency> 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.21</version>
     </dependency>
-  </dependencies>
+  </dependencies>  
   <build>
     <finalName>hopsworks</finalName>
     <plugins>
@@ -135,7 +135,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>
+    </repository>      
     <repository>
       <id>sics-snapshot-repository</id>
       <name>SICS Release Repository</name>
@@ -152,6 +152,6 @@
       <url>http://kompics.sics.se/maven/repository</url>
       <releases>
       </releases>
-    </repository>
+    </repository>  
   </repositories>
 </project>

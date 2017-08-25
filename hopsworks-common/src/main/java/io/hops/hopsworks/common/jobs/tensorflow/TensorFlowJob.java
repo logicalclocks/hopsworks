@@ -8,8 +8,6 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -37,8 +35,8 @@ public class TensorFlowJob extends YarnJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
-    super.setupJob(dfso, yarnClient);
+  protected boolean setupJob(DistributedFileSystemOps dfso) {
+    super.setupJob(dfso);
     TensorFlowJobConfiguration jobconfig = (TensorFlowJobConfiguration) jobDescription.getJobConfig();
 
     runnerbuilder = new TensorFlowYarnRunnerBuilder(jobDescription);
@@ -75,7 +73,6 @@ public class TensorFlowJob extends YarnJob {
 
     try {
       runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(), tfUser, jobUser, hadoopDir,
-          services.getFileOperations(hdfsUser.getUserName()), yarnClient,
           services);
 
     } catch (Exception e) {

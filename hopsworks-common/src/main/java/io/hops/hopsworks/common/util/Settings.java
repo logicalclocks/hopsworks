@@ -102,8 +102,6 @@ public class Settings implements Serializable {
           = "hopsworks_endpoint";
   private static final String VARIABLE_REST_PORT = "rest_port";
 
-  private static final String VARIABLE_HOPS_RPC_TLS = "hops_rpc_tls";
-
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS
@@ -128,8 +126,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
-  private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
-  private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
+
+  private static final String VARIABLE_MAX_STATUS_POLL_RETRY
+          = "max_status_poll_retry";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -323,11 +322,8 @@ public class Settings implements Serializable {
       INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
       VAGRANT_ENABLED = setIntVar(VARIABLE_VAGRANT_ENABLED, VAGRANT_ENABLED);
-      MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY, MAX_STATUS_POLL_RETRY);
-      HOPS_RPC_TLS = setStrVar(VARIABLE_HOPS_RPC_TLS, HOPS_RPC_TLS);
-      CERTIFICATE_MATERIALIZER_DELAY = setStrVar(VARIABLE_CERT_MATER_DELAY,
-          CERTIFICATE_MATERIALIZER_DELAY);
-      
+      MAX_STATUS_POLL_RETRY = setIntVar(VARIABLE_MAX_STATUS_POLL_RETRY,
+              MAX_STATUS_POLL_RETRY);
       cached = true;
     }
   }
@@ -361,14 +357,6 @@ public class Settings implements Serializable {
   public synchronized String getTwoFactorAuth() {
     checkCache();
     return TWOFACTOR_AUTH;
-  }
-
-
-  private String HOPS_RPC_TLS = "false";
-
-  public synchronized boolean getHopsRpcTls() {
-    checkCache();
-    return HOPS_RPC_TLS.toLowerCase().equals("true");
   }
 
   /**
@@ -945,23 +933,7 @@ public class Settings implements Serializable {
   public static String getJobLogsIdField() {
     return JOB_LOGS_ID_FIELD;
   }
-  
-  // CertificateMaterializer service. Delay for deleting crypto material from
-  // the local filesystem. The lower the value the more frequent we reach DB
-  // for materialization
-  // Suffix, defaults to minutes if omitted:
-  // ms: milliseconds
-  // s: seconds
-  // m: minutes (default)
-  // h: hours
-  // d: days
-  private String CERTIFICATE_MATERIALIZER_DELAY = "1m";
-  
-  public synchronized String getCertificateMaterializerDelay() {
-    checkCache();
-    return CERTIFICATE_MATERIALIZER_DELAY;
-  }
-  
+
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 
@@ -1295,7 +1267,7 @@ public class Settings implements Serializable {
           + "## %s";
 
   public String getHopsworksTmpCertDir() {
-    return Paths.get(getCertsDir(), "transient").toString();
+    return getHopsworksDomainDir() + File.separator + "kafkacerts";
   }
 
   public String getHdfsTmpCertDir() {

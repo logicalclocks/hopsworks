@@ -1,19 +1,17 @@
 package io.hops.hopsworks.common.dao.hdfs;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless
@@ -22,9 +20,6 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  @EJB
-  private DistributedFsService dfsService;
-  
   @Override
   protected EntityManager getEntityManager() {
     return em;
@@ -77,9 +72,9 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
   public HdfsLeDescriptors getActiveNN() {
     try {
       List<HdfsLeDescriptors> res = em.createNamedQuery(
-          "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
-          getResultList();
-    
+              "HdfsLeDescriptors.findEndpoint", HdfsLeDescriptors.class).
+              getResultList();
+
       if (res.isEmpty()) {
         return null;
       } else {
@@ -87,14 +82,16 @@ public class HdfsLeDescriptorsFacade extends AbstractFacade<HdfsLeDescriptors> {
         Configuration conf = new Configuration();
         for (HdfsLeDescriptors hdfsLeDesc : res) {
           try {
-            DistributedFileSystemOps dfso = dfsService.getDfsOps(
-                new URI("hdfs://" + hdfsLeDesc.getHostname()));
-            if (null != dfso) {
-              return hdfsLeDesc;
-            }
+            FileSystem.get(new URI("hdfs://" + hdfsLeDesc.getHostname()),
+                    conf);
+            return hdfsLeDesc;
           } catch (URISyntaxException ex) {
             Logger.getLogger(HdfsLeDescriptorsFacade.class.getName()).
-                log(Level.SEVERE, null, ex);
+                    log(Level.SEVERE, null, ex);
+          } catch (IOException ex) {
+            //NN was not active, try the next one
+            Logger.getLogger(HdfsLeDescriptorsFacade.class.getName()).
+                    log(Level.SEVERE, null, ex);
           }
         }
       }

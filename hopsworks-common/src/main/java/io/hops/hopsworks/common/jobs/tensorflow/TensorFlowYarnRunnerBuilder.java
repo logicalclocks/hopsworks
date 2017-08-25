@@ -2,7 +2,6 @@ package io.hops.hopsworks.common.jobs.tensorflow;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -10,8 +9,6 @@ import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.tensorflow.Client;
 import io.hops.tensorflow.LocalResourceInfo;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,9 +49,8 @@ public class TensorFlowYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner(String project, String tfUser,
-      String jobUser, final String hadoopDir,
-      final DistributedFileSystemOps dfsClient, YarnClient yarnClient,
-      AsynchronousJobExecutor services) throws IOException, Exception {
+      String jobUser, final String hadoopDir, AsynchronousJobExecutor services) throws
+      IOException, Exception {
 
 //    if (!serviceProps.isAnacondaEnabled()) {
 //      //Throw error in Hopswors UI to notify user to enable Anaconda
@@ -63,8 +59,6 @@ public class TensorFlowYarnRunnerBuilder {
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     JobType jobType = ((TensorFlowJobConfiguration) jobDescription.getJobConfig()).getType();
     builder.setJobType(jobType);
-    builder.setYarnClient(yarnClient);
-    builder.setDfsClient(dfsClient);
     Client client = new Client();
 
     //Add extra files to local resources, use filename as key
@@ -80,7 +74,7 @@ public class TensorFlowYarnRunnerBuilder {
             getVisibility(), dto.getType(), dto.getPattern()));
       }
     }
-    
+
     client.setAmMemory(amMemory);
     client.setAmVCores(amVCores);
     client.setMemory(workerMemory);

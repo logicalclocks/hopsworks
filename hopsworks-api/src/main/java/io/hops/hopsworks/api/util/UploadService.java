@@ -23,7 +23,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -211,7 +210,7 @@ public class UploadService {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
         } finally {
-          dfs.closeDfsClient(udfso);
+          udfso.close();
         }
       }
     }
@@ -369,7 +368,7 @@ public class UploadService {
                 Response.Status.BAD_REQUEST).entity(json).build();
       } finally {
         if (dfsOps != null) {
-          dfs.closeDfsClient(dfsOps);
+          dfsOps.close();
         }
       }
     }
@@ -397,6 +396,7 @@ public class UploadService {
   /**
    * Persist a template to the database after it has been uploaded to hopsfs
    * <p/>
+   * @param filePath
    * @throws AppException
    */
   private void persistUploadedTemplate(String fileContent) throws AppException {

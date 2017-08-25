@@ -1,7 +1,6 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
@@ -11,6 +10,8 @@ import java.io.File;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,12 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
 /**
@@ -314,9 +315,7 @@ public class FlinkYarnRunnerBuilder {
   protected YarnRunner getYarnRunner(String project, final String flinkUser,
           String jobUser, String hadoopDir, final String flinkDir,
           final String flinkConfDir, final String flinkConfFile,
-          DistributedFileSystemOps dfsClient,
-          YarnClient yarnClient, final String certsDir,
-          AsynchronousJobExecutor services) throws IOException {
+          final String certsDir, AsynchronousJobExecutor services) throws IOException {
 
     //Create the YarnRunner builder for Flink, proceed with setting values
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
@@ -336,9 +335,6 @@ public class FlinkYarnRunnerBuilder {
     cluster.setQueue(jobManagerQueue);
     cluster.setLocalJarPath(new Path("file://" + flinkDir + "/flink.jar"));
 
-    builder.setYarnClient(yarnClient);
-    builder.setDfsClient(dfsClient);
-    builder.setJobUser(jobUser);
     builder.setFlinkCluster(cluster);
     
     String stagingPath = File.separator + "Projects" + File.separator + project
@@ -349,10 +345,18 @@ public class FlinkYarnRunnerBuilder {
     //Add extra files to local resources, use filename as key
     //Get filesystem
     if (!extraFiles.isEmpty()) {
-      if (null == dfsClient) {
+      Configuration conf = new Configuration();
+      FileSystem fs = null;
+      try {
+        fs = FileSystem.get(new URI("hdfs://"), conf);
+        //Set the Configuration object for the returned YarnClient
+      } catch (URISyntaxException ex) {
+        Logger.getLogger(FlinkYarnRunnerBuilder.class.getName()).
+                log(Level.SEVERE, null, ex);
+      }
+      if (fs == null) {
         throw new YarnDeploymentException("Could not connect to filesystem");
       }
-      FileSystem fs = dfsClient.getFilesystem();
       for (LocalResourceDTO dto : extraFiles) {
         String pathToResource = dto.getPath();
         pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",

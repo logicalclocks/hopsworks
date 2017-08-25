@@ -14,13 +14,11 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
-
-import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import io.hops.hopsworks.common.util.Settings;
 import javax.ejb.Stateless;
@@ -37,11 +35,9 @@ public class JobAdministration implements Serializable {
           getName());
   @EJB
   private Settings settings;
-  @EJB
-  private YarnClientService ycs;
 
   private Configuration conf;
-  private YarnClientWrapper yarnClientWrapper;
+  private YarnClient client;
   private List<YarnApplicationReport> jobs = new ArrayList<>();
 
   private List<YarnApplicationReport> filteredJobs = new ArrayList<>();
@@ -75,13 +71,14 @@ public class JobAdministration implements Serializable {
   }
 
   public String getNumberOfJobs() {
-    if (yarnClientWrapper == null) {
+    if (client == null) {
+      client = YarnClient.createYarnClient();
       conf = settings.getConfiguration();
-      yarnClientWrapper = ycs.getYarnClientSuper(conf);
+      client.init(conf);
+      client.start();
     }
     try {
-      return String.valueOf(yarnClientWrapper.getYarnClient().getApplications()
-          .size());
+      return String.valueOf(client.getApplications().size());
     } catch (YarnException | IOException ex) {
       Logger.getLogger(JobAdministration.class.getName()).
               log(Level.SEVERE, null, ex);
@@ -91,9 +88,11 @@ public class JobAdministration implements Serializable {
 
   public void killJob(final String appId) {
     error.put(appId, "Trying to kill job");
-    if (yarnClientWrapper == null) {
+    if (client == null) {
+      client = YarnClient.createYarnClient();
       conf = settings.getConfiguration();
-      yarnClientWrapper = ycs.getYarnClientSuper(conf);
+      client.init(conf);
+      client.start();
     }
     //Find applicationId and kill it
     error.put(appId, "Application was not found");
@@ -105,8 +104,7 @@ public class JobAdministration implements Serializable {
           appIdToKill = ApplicationId.newInstance(report.
                   getClusterTimestamp(), report.getId());
 
-          ApplicationReport appReport = yarnClientWrapper.getYarnClient()
-              .getApplicationReport(appIdToKill);
+          ApplicationReport appReport = client.getApplicationReport(appIdToKill);
           if (appReport.getYarnApplicationState()
                   == YarnApplicationState.FINISHED || appReport.
                   getYarnApplicationState() == YarnApplicationState.KILLED) {
@@ -114,7 +112,7 @@ public class JobAdministration implements Serializable {
                     getYarnApplicationState());
             break;
           } else {
-            yarnClientWrapper.getYarnClient().killApplication(appIdToKill);
+            client.killApplication(appIdToKill);
             error.put(appId, "Job killed successfully");
             break;
           }
@@ -124,8 +122,7 @@ public class JobAdministration implements Serializable {
       jobs.clear();
       try {
         //Create our custom YarnApplicationReport Pojo
-        for (ApplicationReport appReport : yarnClientWrapper.getYarnClient()
-            .getApplications()) {
+        for (ApplicationReport appReport : client.getApplications()) {
           jobs.add(new YarnApplicationReport(appReport.getApplicationId().
                   toString(),
                   appReport.getName(), appReport.getUser(), appReport.
@@ -144,9 +141,8 @@ public class JobAdministration implements Serializable {
           YarnApplicationReport next = iter.next();
           if (next.getAppId().equals(appId)) {
             //Updated AppReport
-            ApplicationReport appReport =
-                yarnClientWrapper.getYarnClient()
-                    .getApplicationReport(appIdToKill);
+            ApplicationReport appReport = client.getApplicationReport(
+                    appIdToKill);
 
             iter.set(new YarnApplicationReport(appReport.getApplicationId().
                     toString(),
@@ -167,14 +163,15 @@ public class JobAdministration implements Serializable {
   }
 
   private void fetchJobs(List<YarnApplicationReport> reports) {
-    if (yarnClientWrapper == null) {
+    if (client == null) {
+      client = YarnClient.createYarnClient();
       conf = settings.getConfiguration();
-      yarnClientWrapper = ycs.getYarnClientSuper(conf);
+      client.init(conf);
+      client.start();
     }
     try {
       //Create our custom YarnApplicationReport Pojo
-      for (ApplicationReport appReport : yarnClientWrapper.getYarnClient()
-          .getApplications()) {
+      for (ApplicationReport appReport : client.getApplications()) {
         reports.add(new YarnApplicationReport(appReport.getApplicationId().
                 toString(),
                 appReport.getName(), appReport.getUser(), appReport.
@@ -190,8 +187,12 @@ public class JobAdministration implements Serializable {
 
   @PreDestroy
   public void preDestroy() {
-    if (null != yarnClientWrapper) {
-      ycs.closeYarnClient(yarnClientWrapper);
+    if (client != null) {
+      try {
+        client.close();
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
     }
   }
 

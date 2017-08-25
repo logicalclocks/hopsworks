@@ -38,7 +38,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.regex.Pattern;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
@@ -56,8 +55,6 @@ public class ApplicationService {
 
   final static Logger LOGGER = Logger.getLogger(ApplicationService.class.
       getName());
-  
-  private final Pattern projectUserPattern = Pattern.compile("\\w*__\\w*");
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -140,28 +137,16 @@ public class ApplicationService {
   public Response getCertPw(@QueryParam("keyStore") String keyStore, @QueryParam("projectUser") String projectUser,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    
+    //Find user
+    String username = hdfsUserBean.getUserName(projectUser);
+    String projectName = hdfsUserBean.getProjectName(projectUser);
+    Users user = userFacade.findByUsername(username);
+
     try {
-      CertPwDTO respDTO;
-      Users user;
-      if (projectUserPattern.matcher(projectUser).matches()) {
-        //Find user
-        String username = hdfsUserBean.getUserName(projectUser);
-        String projectName = hdfsUserBean.getProjectName(projectUser);
-        user = userFacade.findByUsername(username);
-        respDTO = projectController.getProjectSpecificCertPw(user, projectName, keyStore);
-      } else {
-        // In that case projectUser is the project name. It is used by the Spark
-        // interpreter of Zeppelin which runs as user Project
-        user = projectFacade.findByName(projectUser).getOwner();
-        respDTO = projectController.getProjectWideCertPw(user,
-            projectUser, keyStore);
-      }
-    
+      CertPwDTO respDTO = projectController.getCertPw(user, projectName, keyStore);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(respDTO).build();
     } catch (Exception ex) {
-      LOGGER.log(Level.SEVERE, "Could not retrieve certificate passwords for " +
-          "user:" + projectUser, ex);
+      LOGGER.log(Level.SEVERE, "Could not retrieve certificate passwords for user:" + user.getUsername(), ex);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
     }
   }

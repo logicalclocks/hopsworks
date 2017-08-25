@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
@@ -16,7 +13,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 /**
  * Contains the execution logic of a Hops job. This class takes care of the main
@@ -123,14 +119,11 @@ public abstract class HopsJob {
         public Void run() {
           DistributedFileSystemOps dfso = null;
           DistributedFileSystemOps udfso = null;
-          YarnClientWrapper yarnClientWrapper = null;
           try {
             execution = services.getExecutionFacade().updateExecutionStart(execution, System.currentTimeMillis());
             dfso = services.getFsService().getDfsOps();
             udfso = services.getFileOperations(hdfsUser.getUserName());
-            yarnClientWrapper = services.getYarnClientService()
-                .getYarnClient(hdfsUser.getUserName());
-            boolean proceed = setupJob(dfso, yarnClientWrapper.getYarnClient());
+            boolean proceed = setupJob(dfso);
             if (!proceed) {
               execution = services.getExecutionFacade().updateExecutionStop(execution, System.currentTimeMillis());
               services.getExecutionFacade().updateState(execution, JobState.INITIALIZATION_FAILED);
@@ -147,13 +140,8 @@ public abstract class HopsJob {
             if (dfso != null) {
               dfso.close();
             }
-            String[] tokens = hdfsUser.getUserName().split(
-                HdfsUsersController.USER_NAME_DELIMITER);
-            if (null != udfso) {
-              services.getFsService().closeDfsClient(udfso);
-            }
-            if (yarnClientWrapper != null) {
-              services.getYarnClientService().closeYarnClient(yarnClientWrapper);
+            if (udfso != null) {
+              udfso.close();
             }
           }
           return null;
@@ -176,8 +164,7 @@ public abstract class HopsJob {
    * @return False if execution should be aborted. Cleanup() is still executed
    * in that case.
    */
-  protected abstract boolean setupJob(DistributedFileSystemOps dfso,
-      YarnClient yarnClient);
+  protected abstract boolean setupJob(DistributedFileSystemOps dfso);
 
   /**
    * Takes care of the execution of the job. Called by execute() after
