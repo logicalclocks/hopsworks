@@ -14,7 +14,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
@@ -61,7 +60,7 @@ public class DownloadService {
         stream = udfso.open(new Path(this.path));
       }
       Response.ResponseBuilder response = Response.ok(buildOutputStream(stream,
-              udfso, username));
+              udfso));
       response.header("Content-disposition", "attachment;");
 
       return response.build();
@@ -76,23 +75,19 @@ public class DownloadService {
   }
 
   private StreamingOutput buildOutputStream(final FSDataInputStream stream,
-          final DistributedFileSystemOps udfso, final String
-      projectSpecificUsername) {
+          final DistributedFileSystemOps dfso) {
     StreamingOutput output = new StreamingOutput() {
       @Override
       public void write(OutputStream out) throws IOException,
               WebApplicationException {
-        try {
-          int length;
-          byte[] buffer = new byte[1024];
-          while ((length = stream.read(buffer)) != -1) {
-            out.write(buffer, 0, length);
-          }
-          out.flush();
-          stream.close();
-        } finally {
-          dfs.closeDfsClient(udfso);
+        int length;
+        byte[] buffer = new byte[1024];
+        while ((length = stream.read(buffer)) != -1) {
+          out.write(buffer, 0, length);
         }
+        out.flush();
+        stream.close();
+        dfso.close();
       }
     };
 

@@ -2,7 +2,6 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
@@ -25,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
@@ -93,8 +91,8 @@ public class SparkYarnRunnerBuilder {
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project, String sparkUser,
-      String jobUser, final String sparkDir, AsynchronousJobExecutor services,
-      final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
+      String jobUser, final String sparkDir,
+      AsynchronousJobExecutor services,
       Settings settings)
       throws IOException {
 
@@ -120,17 +118,6 @@ public class SparkYarnRunnerBuilder {
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     builder.setJobType(jobType);
-    builder.setYarnClient(yarnClient);
-    builder.setDfsClient(dfsClient);
-    builder.setJobUser(jobUser);
-    try {
-      String password = services.getBaseHadoopClientsService()
-          .getProjectSpecificUserCertPassword(jobUser);
-      builder.setKeyStorePassword(password);
-      builder.setTrustStorePassword(password);
-    } catch (Exception ex) {
-      throw new IOException(ex);
-    }
 
     String stagingPath = "/Projects/ " + project + "/"
         + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";

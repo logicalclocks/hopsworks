@@ -259,17 +259,6 @@ public class JupyterConfig {
               jupyter_notebook_config.toString());
     }
     if (!sparkmagic_config_file.exists()) {
-      
-      StringBuilder sparkFiles = new StringBuilder();
-      sparkFiles
-          // Keystore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__kstore.jks#").append(Settings.K_CERTIFICATE).append(",")
-          // TrustStore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
 
       StringBuilder sparkmagic_sb
               = ConfigFileGenerator.
@@ -321,8 +310,7 @@ public class JupyterConfig {
                                       getAnacondaProjectDir(
                                               projectName),
                               "sparkhistoryserver_ip", this.settings.
-                                      getSparkHistoryServerIp(),
-                              "spark_files", sparkFiles.toString()
+                                      getSparkHistoryServerIp()
                       );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
               sparkmagic_config_file,

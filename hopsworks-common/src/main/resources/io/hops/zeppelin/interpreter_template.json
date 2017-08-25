@@ -37,7 +37,6 @@
       "name": "spark",
       "group": "spark",
       "properties": {
-        "spark.yarn.dist.files": "%%spark.yarn.dist.files%%",
         "spark.executor.memory": "",
         "args": "",
         "zeppelin.spark.printREPLOutput": "true",
@@ -190,7 +189,7 @@
         "zeppelin.livy.spark.sql.maxResult": "1000",
         "zeppelin.livy.keytab": "",
         "zeppelin.livy.concurrentSQL": "false",
-        "zeppelin.livy.spark.sql.field.truncate": "true",
+        "zeppelin.livy.spark.sql.field.truncate": "true", 
         "livy.spark.executor.cores": "",
         "zeppelin.livy.displayAppInfo": "false",
         "zeppelin.livy.url": "%%livy_url%%",

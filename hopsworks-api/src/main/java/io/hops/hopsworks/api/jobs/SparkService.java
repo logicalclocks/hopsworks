@@ -143,7 +143,7 @@ public class SparkService {
               getLocalizedMessage());
     } finally {
       if (udfso != null) {
-        dfs.closeDfsClient(udfso);
+        udfso.close();
       }
     }
   }

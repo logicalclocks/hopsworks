@@ -426,7 +426,7 @@ public class ProjectService {
                     + "Try recreating "+ ds.getName() +" dir manualy.");
           } finally {
             if (udfso != null) {
-              dfs.closeDfsClient(udfso);
+              udfso.close();
             }
             if (dfso != null) {
               dfso.close();
@@ -536,7 +536,7 @@ public class ProjectService {
         dfso.close();
       }
       if (udfso != null) {
-        dfs.closeDfsClient(udfso);
+        udfso.close();
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
@@ -566,7 +566,7 @@ public class ProjectService {
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
     JsonResponse json = new JsonResponse();
-    json.setStatus("201");// Created
+    json.setStatus("201");// Created 
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
     if (failedMembers != null && !failedMembers.isEmpty()) {
