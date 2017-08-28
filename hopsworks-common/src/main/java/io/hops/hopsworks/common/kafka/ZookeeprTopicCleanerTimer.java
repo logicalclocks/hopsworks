@@ -30,8 +30,8 @@ import io.hops.hopsworks.common.util.Settings;
 @Singleton
 public class ZookeeprTopicCleanerTimer {
 
-  private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.
-          getName());
+  private final static Logger LOGGER = Logger.getLogger(
+          ZookeeprTopicCleanerTimer.class.getName());
 
   public final int connectionTimeout = 90 * 1000;// 30 seconds
 
@@ -54,7 +54,7 @@ public class ZookeeprTopicCleanerTimer {
 
   // Run once per minute
   @Schedule(persistent = false,
-          minute = "*",
+          minute = "0",
           hour = "*")
   public void execute(Timer timer) {
 

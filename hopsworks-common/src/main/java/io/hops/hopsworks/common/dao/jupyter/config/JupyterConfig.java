@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 
 public class JupyterConfig {
 
-  private static final Logger LOGGGER = Logger.getLogger(JupyterConfig.class.
+  private static final Logger LOGGER = Logger.getLogger(JupyterConfig.class.
           getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String JUPYTER_NOTEBOOK_CONFIG
@@ -39,8 +39,8 @@ public class JupyterConfig {
   private final Settings settings;
   private final String projectName;
   private final String hdfsUser;
-  private final String projectPath;
-  private final String projectUserDirPath;
+  private final String projectUserPath;
+  private final String notebookPath;
   private final String confDirPath;
   private final String runDirPath;
   private final String logDirPath;
@@ -61,24 +61,24 @@ public class JupyterConfig {
     boolean newFile = false;
     this.settings = settings;
     this.port = port;
-    projectPath = settings.getJupyterDir() + File.separator
+    projectUserPath = settings.getJupyterDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName
             + File.separator + hdfsUser;
-    projectUserDirPath = projectPath + File.separator + secretConfig;
-    confDirPath = projectUserDirPath + File.separator + "conf";
-    logDirPath = projectUserDirPath + File.separator + "logs";
-    runDirPath = projectUserDirPath + File.separator + "run";
+    notebookPath = projectUserPath + File.separator + secretConfig;
+    confDirPath = notebookPath + File.separator + "conf";
+    logDirPath = notebookPath + File.separator + "logs";
+    runDirPath = notebookPath + File.separator + "run";
     this.token = token;
     try {
       newDir = createJupyterDirs();
       createConfigFiles(nameNodeEndpoint, port, js);
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
-        removeProjectDirRecursive();
+        removeProjectUserDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
         removeProjectConfFiles();
       }
-      LOGGGER.log(Level.SEVERE,
+      LOGGER.log(Level.SEVERE,
               "Error in initializing JupyterConfig for project: {0}. {1}",
               new Object[]{this.projectName, e});
       throw new AppException(
@@ -88,8 +88,8 @@ public class JupyterConfig {
     }
   }
 
-  public String getProjectPath() {
-    return projectPath;
+  public String getProjectUserPath() {
+    return projectUserPath;
   }
 
   public String getSecret() {
@@ -161,10 +161,6 @@ public class JupyterConfig {
     return projectName;
   }
 
-  public String getProjectDirPath() {
-    return projectUserDirPath;
-  }
-
   public String getConfDirPath() {
     return confDirPath;
   }
@@ -179,14 +175,16 @@ public class JupyterConfig {
 
   //returns true if the project dir was created 
   private boolean createJupyterDirs() throws IOException {
-    File projectDir = new File(projectPath);
+    File projectDir = new File(projectUserPath);
     projectDir.mkdirs();
-    File baseDir = new File(projectUserDirPath);
+    File baseDir = new File(notebookPath);
     baseDir.mkdirs();
     // Set owner persmissions
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
     xOnly.add(PosixFilePermission.OWNER_EXECUTE);
+    xOnly.add(PosixFilePermission.GROUP_WRITE);
+    xOnly.add(PosixFilePermission.GROUP_EXECUTE);
 
     Set<PosixFilePermission> perms = new HashSet<>();
     //add owners permission
@@ -202,8 +200,8 @@ public class JupyterConfig {
 //    perms.add(PosixFilePermission.OTHERS_WRITE);
     perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
-    Files.setPosixFilePermissions(Paths.get(projectUserDirPath), perms);
-    Files.setPosixFilePermissions(Paths.get(projectPath), xOnly);
+    Files.setPosixFilePermissions(Paths.get(notebookPath), perms);
+    Files.setPosixFilePermissions(Paths.get(projectUserPath), xOnly);
 
     new File(confDirPath + "/custom").mkdirs();
     new File(runDirPath).mkdirs();
@@ -294,7 +292,7 @@ public class JupyterConfig {
                               "num_ps", Integer.toString(js.getNumTfPs()),
                               "num_gpus", Integer.toString(js.getNumTfGpus()),
                               "tensorflow", Boolean.toString(js.getMode().
-                                      compareToIgnoreCase("tensorflow") == 0),
+                                      startsWith("tensorflow")),
                               "jupyter_home", this.confDirPath,
                               "project", this.projectName,
                               "nn_endpoint", this.nameNodeEndpoint,
@@ -337,17 +335,17 @@ public class JupyterConfig {
    * @return true if the dir is deleted
    */
   public boolean cleanAndRemoveConfDirs() {
-    return removeProjectDirRecursive();
+    return removeProjectUserDirRecursive();
   }
 
-  private boolean removeProjectDirRecursive() {
-    File projectDir = new File(projectPath);
-    if (!projectDir.exists()) {
+  private boolean removeProjectUserDirRecursive() {
+    File projectUserDir = new File(projectUserPath);
+    if (!projectUserDir.exists()) {
       return true;
     }
     boolean ret = false;
     try {
-      ret = ConfigFileGenerator.deleteRecursive(projectDir);
+      ret = ConfigFileGenerator.deleteRecursive(projectUserDir);
     } catch (FileNotFoundException ex) {
       // do nothing
     }
@@ -368,8 +366,8 @@ public class JupyterConfig {
     return ret;
   }
 
-  public String getProjectUserDirPath() {
-    return projectUserDirPath;
+  public String getNotebookPath() {
+    return notebookPath;
   }
 
 }

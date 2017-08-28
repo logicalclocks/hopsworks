@@ -352,7 +352,7 @@ public class WebCommunication {
   public int anaconda(String hostAddress, String agentPassword, String op,
           String project, String arg) throws Exception {
 
-    String path = "anaconda/" + settings.getSparkUser() + '/' + op.toLowerCase()
+    String path = "anaconda/" + settings.getAnacondaUser() + '/' + op.toLowerCase()
             + "/" + project;
     String template = "%s://%s:%s/%s";
     String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
@@ -383,7 +383,7 @@ public class WebCommunication {
 
     String template = "%s://%s:%s/%s";
     String channelEscaped = StringEscapeUtils.escapeJava(channel);
-    String path = "conda/" + settings.getSparkUser() + '/' + op.toLowerCase()
+    String path = "conda/" + settings.getAdamUser() + '/' + op.toLowerCase()
             + "/" + project + "/" + lib;
 
     String url = String.format(template, PROTOCOL, hostAddress, PORT, path);

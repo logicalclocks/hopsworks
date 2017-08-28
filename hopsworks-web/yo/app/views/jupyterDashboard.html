@@ -24,16 +24,20 @@
               </div>
             <div class="col-sm-3 col-md-3 col-lg-3" style="margin-top:-17px;">
               <div class="btn-group blocks" data-toggle="buttons" ng-show="jupyterCtrl.ui === ''">
-                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode == 'tensorflow', focus: jupyterCtrl.val.mode == 'tensorflow'}"
+                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'tensorflow', focus: jupyterCtrl.val.mode === 'tensorflow'}"
                        ng-click="jupyterCtrl.val.mode = 'tensorflow'">
-                  <input type="radio" name="tf" id="option1" autocomplete="off"> Tensorflow
+                  <input type="radio" name="tf" id="option1" autocomplete="off"> TensorFlow
                 </label>
-                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode == 'sparkStatic', focus: jupyterCtrl.val.mode == 'sparkStatic'}"
+                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'distributedTensorflow', focus: jupyterCtrl.val.mode === 'distributedTensorflow'}"
+                       ng-click="jupyterCtrl.val.mode = 'distributedTensorflow'">
+                  <input type="radio" name="tf" id="option1" autocomplete="off"> Distributed TensorFlow
+                </label>
+                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkStatic', focus: jupyterCtrl.val.mode === 'sparkStatic'}"
                        ng-click="jupyterCtrl.val.mode = 'sparkStatic'">
                   <input type="radio" name="sparks" id="option2" autocomplete="off"> Spark (Static)
 
                 </label>
-                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode == 'sparkDynamic', focus: jupyterCtrl.val.mode == 'sparkDynamic'}"
+                <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkDynamic', focus: jupyterCtrl.val.mode === 'sparkDynamic'}"
                        ng-click="jupyterCtrl.val.mode = 'sparkDynamic'">
                   <input type="radio" name="sparkd" id="option3" autocomplete="off"> Spark (Dynamic)
                 </label>
@@ -65,7 +69,7 @@
         </div>
 
 
-        <div class="row" ng-show="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''">
+        <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''">
           <div class="col-sm-8 col-md-8 col-lg-8" style='margin-top:20px; margin-left: 20px;'>
 
             <div class="row">
@@ -110,9 +114,9 @@
               </div>
 
 
-              <div class="row"  ng-show="jupyterCtrl.val.mode === 'tensorflow'">
+              <div class="row">
 
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTensorflow'">
                   <div class="text-right col-md-6">Parameter Servers <i class="fa fa-info-circle" 
                                                                         uib-tooltip="Tensorflow's number of parameter servers that will be run." 
                                                                         style="margin-left: 10px"></i>
@@ -122,9 +126,18 @@
                            ng-model="jupyterCtrl.val.numTfPs" class="form-control">
                   </div>
                 </div>
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTensorflow'">
                   <div class="text-right col-md-6">Number of GPUs per worker<i class="fa fa-info-circle" 
-                                                                               uib-tooltip="Tensorflow's number of GPUs used for training/inference." 
+                                                                               uib-tooltip="The number of GPUs used for training/inference." 
+                                                                               style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-2 jupyter-left">
+                    <input type="number"  ng-model="jupyterCtrl.val.numTfGpus" class="form-control">
+                  </div>
+                </div>
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
+                  <div class="text-right col-md-6">Number of GPUs<i class="fa fa-info-circle" 
+                                                                               uib-tooltip="The number of GPUs used for training/inference." 
                                                                                style="margin-left: 10px"></i>
                   </div>
                   <div class="col-md-2 jupyter-left">
@@ -133,8 +146,7 @@
                 </div>
               </div>
 
-              <div class="row"  ng-show="jupyterCtrl.val.mode === 'tensorflow' || jupyterCtrl.val.mode === 'sparkStatic'">
-
+              <div class="row"  ng-if="jupyterCtrl.val.mode === 'tensorflow' || jupyterCtrl.val.mode === 'sparkStatic'">
                 <div class="row">
                   <div class="text-right col-md-6">AppMaster memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
                   <div class="col-md-2 jupyter-left">
@@ -147,9 +159,24 @@
                     <input type="number" ng-model="jupyterCtrl.val.appmasterCores" min="1" class="form-control">
                   </div>
                 </div>
-
               </div>
-              <div class="row" ng-show="jupyterCtrl.val.mode === 'sparkDynamic'">
+              <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorflow'">
+                <div class="row" ng-show="false">
+                  <div class="text-right col-md-6">AppMaster memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+                  <div class="col-md-2 jupyter-left">
+                    <input type="number"  ng-init="1024m" ng-model="jupyterCtrl.val.appmasterMemory" min="0" class="form-control">
+                  </div>
+                </div>
+                <div class="row" ng-show="false">
+                  <div class="text-right col-md-6">AppMaster vcores<i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
+                  <div class="col-md-2 jupyter-left">
+                    <input type="number" ng-init="1" ng-model="jupyterCtrl.val.appmasterCores" min="1" class="form-control">
+                  </div>
+                </div>
+              </div>
+              
+              
+              <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkDynamic'">
                 <div class="row top-buffer">
                   <div class="col-md-3"></div>
                   <div class="col-md-6" style="margin-left:20px;">Set min and max number of executors with the Slider below.</div>
@@ -176,9 +203,21 @@
                   </div>
                 </div>
               </div>
-
-              <div class="row"  ng-show="jupyterCtrl.val.mode !== 'sparkDynamic'">
+              
+              <div class="row"  ng-if="jupyterCtrl.val.mode === 'tensorflow'">
                 <div class="row">
+                  <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle" 
+                                                                          uib-tooltip="The number of executors is fixed as '1' for single-server Tensorflow." style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-2 jupyter-left"><input type="number" ng-init="1" ng-disabled="true" ng-model="jupyterCtrl.val.numExecutors" class="form-control"></div>
+                </div>
+              </div>
+              
+              
+              
+
+              <div class="row"  ng-if="jupyterCtrl.val.mode !== 'sparkDynamic'">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle" 
                                                                           uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
                   </div>
@@ -196,7 +235,7 @@
                   <div class="col-md-2 jupyter-left"><input type="number" min="0" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                 </div>
 
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="text-right col-md-6">
                     <label for="archives">
                       <button uib-tooltip='Select a .zip file' id="selectArchiveButton" class="btn btn-default" ng-click="jupyterCtrl.selectFile('.zip')">
@@ -210,7 +249,7 @@
                            id="archives" ng-model="jupyterCtrl.val.archives">
                   </div>
                 </div>
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="text-right col-md-6">
                     <label for="jars">
                       <button  id="selectJarButton" class="btn btn-default" 
@@ -226,7 +265,7 @@
                   </div>
                 </div>
 
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="text-right col-md-6">
                     <label for="jars">
                       <button uib-tooltip='Select a file' id="selectFileButton" class="btn btn-default" 
@@ -241,7 +280,7 @@
                            type="text" class="form-control" id="files" ng-model="jupyterCtrl.val.files">
                   </div>
                 </div>
-                <div class="row">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="text-right col-md-6">
                     <label for="pyFiles">
                       <button uib-tooltip='Select a .py file' id="selectPyFileButton" class="btn btn-default" 

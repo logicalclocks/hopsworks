@@ -42,7 +42,7 @@ public class HostController implements Serializable {
   @EJB
   private WebCommunication web;
 
-  @Resource
+  @Resource(lookup = "concurrent/kagentExecutorService")
   private ManagedExecutorService executorService;
 
   @ManagedProperty("#{param.cluster}")

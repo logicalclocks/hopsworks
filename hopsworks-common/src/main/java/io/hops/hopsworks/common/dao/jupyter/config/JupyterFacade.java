@@ -138,11 +138,22 @@ public class JupyterFacade {
               "Could not find a Jupyter Notebook server to delete.");
     }
 
-//    JupyterConfig.removeNotebookServer(hdfsUser);
     JupyterProject jp = this.findByUser(hdfsUser);
     remove(jp);
+  }
 
-    // delete JupyterProject entity bean
+  public List<JupyterProject> getAllNotebookServers() {
+    List<JupyterProject> res = null;
+    TypedQuery<JupyterProject> query = em.createNamedQuery(
+            "JupyterProject.findAll", JupyterProject.class);
+    try {
+      res = query.getResultList();
+    } catch (EntityNotFoundException | NoResultException e) {
+      Logger.getLogger(JupyterFacade.class.getName()).log(Level.FINE, null,
+              e);
+      return null;
+    }
+    return res;
   }
 
   public void stopServers(Project project) {
@@ -157,7 +168,8 @@ public class JupyterFacade {
     JupyterProject jp = null;
     String ip;
     ip = host + ":" + settings.getHopsworksPort();
-    jp = new JupyterProject(project, secretConfig, port, hdfsUserId, ip, token, pid);
+    jp = new JupyterProject(project, secretConfig, port, hdfsUserId, ip, token,
+            pid);
 
     persist(jp);
     return jp;

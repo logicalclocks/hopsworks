@@ -168,7 +168,6 @@ public class PythonDepsFacade {
 
     List<PythonDep> all = new ArrayList<>();
     //TODO(Theofilos): Comment out for now, until anaconda root environment is fixed
-
 //    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
 //    for (String k : libs.keySet()) {
 //      PythonDep pd = getDep(repoUrl, k, libs.get(k), true, true);
@@ -189,28 +188,6 @@ public class PythonDepsFacade {
     return all;
   }
 
-//  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-//  public Collection<PythonDep> createProjectInDb(Project project,
-//          Map<String, String> libs) throws AppException {
-//    List<PythonDep> all = new ArrayList<>();
-//    AnacondaRepo repoUrl = getRepo(project, settings.getCondaChannelUrl(), true);
-//    for (String k : libs.keySet()) {
-//      PythonDep pd = getDep(repoUrl, k, libs.get(k), true);
-//      pd.setStatus(PythonDepsFacade.CondaStatus.INSTALLED);
-//      Collection<Project> projs = pd.getProjectCollection();
-//      projs.add(project);
-//      all.add(pd);
-//    }
-//    Collection<PythonDep> projDeps = project.getPythonDepCollection();
-//    projDeps.addAll(all);
-//    em.merge(project);
-//    for (PythonDep p : all) {
-//      em.persist(p);
-//    }
-//    em.flush();
-//
-//    return all;
-//  }
   /**
    * Get all the Python Deps for the given project and channel
    * <p/>
@@ -403,7 +380,7 @@ public class PythonDepsFacade {
   public void condaEnvironmentOp(CondaOp op, Project proj, String arg,
           List<Host> hosts) throws AppException {
     for (Host h : hosts) {
-      CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
+      CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
               op, CondaStatus.ONGOING, proj, "", "", "default",
               new Date(), arg);
       em.persist(cc);
@@ -549,7 +526,7 @@ public class PythonDepsFacade {
       // 4. Mark that the operation is executing at all hosts
       hosts = hostsFacade.find();
       for (Host h : hosts) {
-        CondaCommands cc = new CondaCommands(h, settings.getSparkUser(),
+        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
                 op, CondaStatus.ONGOING, proj, lib,
                 version, channelUrl, new Date(), "");
         em.persist(cc);

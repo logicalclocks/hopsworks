@@ -332,7 +332,7 @@ public class AgentResource {
               BlockReport.Lib blockLib = br.getLib(lib.getDependency());
               if (blockLib == null || blockLib.compareTo(lib) != 0) {
                 CondaCommands cc = new CondaCommands(host, settings.
-                        getSparkUser(),
+                        getAnacondaUser(),
                         CondaOp.INSTALL, CondaStatus.ONGOING, project,
                         lib.getDependency(),
                         lib.getRepoUrl().getUrl(), lib.getVersion(),
@@ -349,7 +349,7 @@ public class AgentResource {
             // get removed from the conda env.
             for (BlockReport.Lib blockLib : br.getLibs()) {
               CondaCommands cc
-                      = new CondaCommands(host, settings.getSparkUser(),
+                      = new CondaCommands(host, settings.getAnacondaUser(),
                               CondaOp.UNINSTALL, CondaStatus.ONGOING, project,
                               blockLib.getLib(),
                               blockLib.getChannelUrl(), blockLib.getVersion(),
@@ -374,7 +374,7 @@ public class AgentResource {
           CondaCommands cc = new CondaCommands();
           cc.setId(-1);
           cc.setHostId(host);
-          cc.setUser(settings.getSparkUser());
+          cc.setUser(settings.getAnacondaUser());
           cc.setProj(br.getProject());
           cc.setOp(PythonDepsFacade.CondaOp.REMOVE);
           differenceList.add(cc);
