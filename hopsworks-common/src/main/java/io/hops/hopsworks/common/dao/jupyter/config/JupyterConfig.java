@@ -182,6 +182,7 @@ public class JupyterConfig {
     // Set owner persmissions
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
+    xOnly.add(PosixFilePermission.OWNER_READ);
     xOnly.add(PosixFilePermission.OWNER_EXECUTE);
     xOnly.add(PosixFilePermission.GROUP_WRITE);
     xOnly.add(PosixFilePermission.GROUP_EXECUTE);
