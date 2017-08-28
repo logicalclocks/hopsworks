@@ -64,8 +64,12 @@ public class YarnJobsMonitor {
   synchronized public void monitor(Timer timer) {
     if (init) {
       List<Execution> execs = executionFacade.findAllNotFinished();
-      for (Execution exec : execs) {
-        executions.put(exec.getAppId(), exec);
+      if (execs != null) {
+        for (Execution exec : execs) {
+          if (exec.getAppId() != null) {
+            executions.put(exec.getAppId(), exec);
+          }
+        }
       }
       maxStatusPollRetry = settings.getMaxStatusPollRetry();
       init = false;
