@@ -403,8 +403,6 @@ public class Settings implements Serializable {
           = "spark.executorEnv.LD_LIBRARY_PATH";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_PATH
-          = "spark.executorEnv.PATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";

@@ -281,17 +281,15 @@ public class SparkYarnRunnerBuilder {
       // 1. ssh to machine where the container failed
       // 2. Make sure /usr/local/cuda exists and is a symlink pointing to e.g. /usr/local/cuda-8.0
       // 3. Make sure /etc/ld.so.conf.d directory on the host has an entry pointing to /usr/local/cuda/lib64
-      // 4. Run 'sudo ldconfig'
+      // 4. /usr/local/cuda/lib64 can be a symlink and should point to the real location with libcu(...).so files
+      // 5. Run 'sudo ldconfig'
 
-      String binCuda = settings.getCudaDir() + "/bin";
       String libCuda = settings.getCudaDir() + "/lib64";
       String libJVM = settings.getJavaHome() + "/jre/lib/amd64/server";
       String libHDFS = settings.getHadoopDir() + "/lib/native";
 
-      builder.addToAppMasterEnvironment("PATH", binCuda + ":$PATH");
       builder.addToAppMasterEnvironment("LD_LIBRARY_PATH", libCuda);
 
-      addSystemProperty(Settings.SPARK_EXECUTORENV_PATH, binCuda + ":$PATH");
       addSystemProperty(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
               libCuda + ":" + libJVM + ":" + libHDFS);
     }
