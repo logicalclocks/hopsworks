@@ -1110,7 +1110,7 @@ public class ProjectController {
             }
             // TODO: This should now be a REST call
             try {
-              createCertificates(project, user);
+              createCertificates(project, newMember);
             } catch (Exception ex) {
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {

@@ -112,6 +112,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_GLASSFISH_CERT_CENERATED
           = "glassfish_cert";
   private static final String VARIABLE_CUDA_DIR = "conda_dir";
+  private static final String VARIABLE_ANACONDA_USER = "anaconda_user";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_enabled";
 
@@ -312,6 +313,7 @@ public class Settings implements Serializable {
               HOPSWORKS_REST_ENDPOINT);
       REST_PORT = setIntVar(VARIABLE_REST_PORT, REST_PORT);
       CUDA_DIR = setDirVar(VARIABLE_CUDA_DIR, CUDA_DIR);
+      ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
       ANACONDA_INSTALLED = Boolean.parseBoolean(setStrVar(
@@ -392,6 +394,7 @@ public class Settings implements Serializable {
           = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
   public static final String SPARK_METRICS_ENV = "spark.metrics.conf";
+  public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH
@@ -400,6 +403,8 @@ public class Settings implements Serializable {
           = "spark.executorEnv.LD_LIBRARY_PATH";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
+  public static final String SPARK_EXECUTORENV_PATH
+          = "spark.executorEnv.PATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
@@ -1053,6 +1058,13 @@ public class Settings implements Serializable {
     return KAFKA_DIR;
   }
 
+  private String ANACONDA_USER = "anaconda";
+
+  public synchronized String getAnacondaUser() {
+    checkCache();
+    return ANACONDA_USER;
+  }
+
   private String ANACONDA_DIR = "/srv/hops/anaconda/anaconda";
 
   public synchronized String getAnacondaDir() {
@@ -1360,6 +1372,7 @@ public class Settings implements Serializable {
     return VAGRANT_ENABLED == 1;
   }
 
+  public static String JUPYTER_PIDS = " /tmp/jupyterNotebookServer.pids";
   public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
 
   public synchronized String getResourceDirs() {

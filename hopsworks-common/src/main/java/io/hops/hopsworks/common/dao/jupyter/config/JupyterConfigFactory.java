@@ -146,7 +146,6 @@ public class JupyterConfigFactory {
           AppException, IOException, InterruptedException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-//    getHadoopClasspath();
 
     JupyterProject jp = null;
     String token = null;
@@ -177,7 +176,7 @@ public class JupyterConfigFactory {
               getSecret();
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
-              = {"/usr/bin/sudo", prog, "start", jc.getProjectDirPath(),
+              = {"/usr/bin/sudo", prog, "start", jc.getNotebookPath(),
                 jc.getSettings().getHadoopDir(), settings.getJavaHome(),
                 settings.getAnacondaProjectDir(project.getName()), port.
                 toString(),
@@ -188,7 +187,7 @@ public class JupyterConfigFactory {
       try {
         // Send both stdout and stderr to the same stream
         pb.redirectErrorStream(true);
-        pb.directory(new File(jc.getProjectDirPath()));
+        pb.directory(new File(jc.getNotebookPath()));
 
         process = pb.start();
 

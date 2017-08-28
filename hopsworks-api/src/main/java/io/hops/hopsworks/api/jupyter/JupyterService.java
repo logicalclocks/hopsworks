@@ -225,9 +225,7 @@ public class JupyterService {
       JupyterDTO dto;
       try {
 
-//        if (jupyterConfig.isSaveSettings()) {
         jupyterSettingsFacade.update(jupyterSettings);
-//        }
 
         dto = jupyterConfigFactory.startServerAsJupyterUser(project,
                 configSecret, hdfsUser, jupyterSettings);

@@ -82,7 +82,7 @@ public class PythonDepsService {
     preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
             "pydoop", "0.4", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
-            "TensorflowOnSpark", "0.1.0", "true", "Installed"));
+            "tensorflowonspark", "0.1.2", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("http://hops.io/conda",
             "hopsutil", "0.1.0", "true", "Installed"));
   }
