@@ -25,7 +25,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 
 @Stateless
 @DependsOn("Settings")
@@ -44,8 +48,14 @@ public class YarnExecutionFinalizer {
 
   @Asynchronous
   public void copyLogsAndFinalize(Execution exec, YarnApplicationState appState) {
+    YarnClient newClient = YarnClient.createYarnClient();
+    newClient.init(settings.getConfiguration());
+    ApplicationId applicationId = ConverterUtils.toApplicationId(exec.getAppId());
+    YarnMonitor monitor = new YarnMonitor(applicationId, newClient);
+    monitor = monitor.start();
     exec = updateState(JobState.AGGREGATING_LOGS, exec);
-    copyLogs(exec);
+    copyLogs(exec, monitor);
+    monitor.close();
     finalize(exec, JobState.getJobState(appState));
 
   }
@@ -59,7 +69,7 @@ public class YarnExecutionFinalizer {
     return executionFacade.updateState(execution, newState);
   }
 
-  private void copyLogs(Execution exec) {
+  private void copyLogs(Execution exec, YarnMonitor monitor) {
     DistributedFileSystemOps udfso = dfs.getDfsOps(exec.getHdfsUser());
 
     String defaultOutputPath;
@@ -82,17 +92,21 @@ public class YarnExecutionFinalizer {
     }
     String stdOutFinalDestination = Utils.getHdfsRootPath(exec.getJob().getProject().getName()) + defaultOutputPath;
     String stdErrFinalDestination = Utils.getHdfsRootPath(exec.getJob().getProject().getName()) + defaultOutputPath;
-
+    
     String stdOutPath = settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
-    if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
-      stdOutFinalDestination = stdOutFinalDestination + exec.getAppId() + File.separator + "stdout.log";
-      String[] desiredLogTypes = {"out"};
-      YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination, desiredLogTypes);
-    }
-    if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
-      stdErrFinalDestination = stdErrFinalDestination + exec.getAppId() + File.separator + "stderr.log";
-      String[] desiredLogTypes = {"err", ".log"};
-      YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination, desiredLogTypes);
+    try {
+      if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
+        stdOutFinalDestination = stdOutFinalDestination + exec.getAppId() + File.separator + "stdout.log";
+        String[] desiredLogTypes = {"out"};
+        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination, desiredLogTypes, monitor);
+      }
+      if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
+        stdErrFinalDestination = stdErrFinalDestination + exec.getAppId() + File.separator + "stderr.log";
+        String[] desiredLogTypes = {"err", ".log"};
+        YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination, desiredLogTypes, monitor);
+      }
+    } catch (IOException | InterruptedException | YarnException ex) {
+      LOG.severe("error while aggregation logs" + ex.toString());
     }
     updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination, exec);
   }
