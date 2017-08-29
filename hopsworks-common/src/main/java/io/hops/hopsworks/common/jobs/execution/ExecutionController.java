@@ -155,7 +155,7 @@ public class ExecutionController {
       LOGGER.log(Level.SEVERE, "Could not remove marker file for job:" + job.getName() + "with appId:" + appId, ex);
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
   }

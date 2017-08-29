@@ -1,7 +1,8 @@
 package io.hops.hopsworks.common.dao.certificates;
 
 import com.google.common.io.ByteStreams;
-import io.hops.hopsworks.common.hdfs.Utils;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -117,12 +118,14 @@ public class CertsFacade {
     return new ArrayList<>();
   }
 
-  public void putUserCerts(String projectname, String username, String userKeyPwd) throws
-      IOException {
-    FileInputStream kfin = new FileInputStream(new File("/tmp/" + Utils.getProjectUsername(projectname, username)
-        + "__kstore.jks"));
-    FileInputStream tfin = new FileInputStream(new File("/tmp/" + Utils.getProjectUsername(projectname, username)
-        + "__tstore.jks"));
+  public void putUserCerts(String projectname, String username, String userKeyPwd)
+      throws IOException {
+    File kFile = new File("/tmp/" + projectname + "__"
+        + username + "__kstore.jks");
+    FileInputStream kfin = new FileInputStream(kFile);
+    File tFile = new File("/tmp/" + projectname + "__"
+        + username + "__tstore.jks");
+    FileInputStream tfin = new FileInputStream(tFile);
 
     byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
     byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
@@ -133,14 +136,16 @@ public class CertsFacade {
     uc.setUserKeyPwd(userKeyPwd);
     em.persist(uc);
     em.flush();
-
+  
+    FileUtils.deleteQuietly(kFile);
+    FileUtils.deleteQuietly(tFile);
   }
 
-  public void putServiceCerts(String service) {
-    try (FileInputStream kfin = new FileInputStream(new File("/tmp/"
-        + service + "__kstore.jks"));
-        FileInputStream tfin = new FileInputStream(new File("/tmp/"
-            + service + "__tstore.jks"))) {
+  public void putServiceCerts(String service, String certificatePassword) {
+    File kFile = new File("/tmp/" + service + "__kstore.jks");
+    File tFile = new File("/tmp/" + service + "__tstore.jks");
+    try (FileInputStream kfin = new FileInputStream(kFile);
+            FileInputStream tfin = new FileInputStream(tFile)) {
 
       byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
       byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
@@ -148,6 +153,7 @@ public class CertsFacade {
       ServiceCerts sc = new ServiceCerts(service);
       sc.setServiceKey(kStoreBlob);
       sc.setServiceCert(tStoreBlob);
+      sc.setCertificatePassword(certificatePassword);
       em.persist(sc);
       em.flush();
 
@@ -160,7 +166,10 @@ public class CertsFacade {
           ex);
     } catch (Throwable ex) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-          ex);
+              ex);
+    } finally {
+      FileUtils.deleteQuietly(kFile);
+      FileUtils.deleteQuietly(tFile);
     }
   }
 
@@ -168,7 +177,7 @@ public class CertsFacade {
     em.merge(uc);
   }
 
-  public void remove(UserCerts uc) {
+  public <T> void remove(T uc) {
     em.remove(uc);
   }
 
@@ -192,9 +201,24 @@ public class CertsFacade {
 
   public void removeAllCertsOfAProject(String projectname) {
     List<UserCerts> items = findUserCertsByProjectId(projectname);
+    removeCerts(items);
+    
+    String[] tokens = projectname.split("__");
+    if (tokens.length == 2) {
+      removeProjectGenericCertificates(tokens[0]);
+    }
+  }
+  
+  public void removeProjectGenericCertificates(String projectName) {
+    List<ServiceCerts> srvCerts = findServiceCertsByName(projectName);
+    
+    removeCerts(srvCerts);
+  }
+  
+  private <T> void removeCerts(List<T> items) {
     if (items != null) {
-      for (UserCerts uc : items) {
-        UserCerts tmp = em.merge(uc);
+      for (T item : items) {
+        T tmp = em.merge(item);
         remove(tmp);
       }
     }

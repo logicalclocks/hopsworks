@@ -3,6 +3,9 @@ package io.hops.hopsworks.common.hdfs;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,15 +19,18 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import io.hops.hopsworks.common.util.BaseHadoopClientsService;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
-import io.hops.hopsworks.common.util.Settings;
 
 @Stateless
 public class DistributedFsService {
@@ -32,9 +38,7 @@ public class DistributedFsService {
   private static final Logger logger = Logger.getLogger(
           DistributedFsService.class.
           getName());
-
-  @EJB
-  private Settings settings;
+  
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -43,13 +47,20 @@ public class DistributedFsService {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  @EJB
+  private Settings settings;
+  @EJB
+  private BaseHadoopClientsService bhcs;
 
   private Configuration conf;
   private String hadoopConfDir;
+  private String hostname;
+  private String transientDir;
+  private String serviceCertsDir;
 
   public DistributedFsService() {
   }
-
+  
   @PostConstruct
   public void init() {
     System.setProperty("hadoop.home.dir", settings.getHadoopDir());
@@ -62,13 +73,6 @@ public class DistributedFsService {
       throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
 
-    File yarnConfFile = new File(hadoopConfDir, "yarn-site.xml");
-    if (!yarnConfFile.exists()) {
-      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
-              yarnConfFile);
-      throw new IllegalStateException("No yarn conf file: yarn-site.xml");
-    }
-
     File hdfsConfFile = new File(hadoopConfDir, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
@@ -77,18 +81,31 @@ public class DistributedFsService {
     }
 
     //Set the Configuration object for the hdfs client
-    Path yarnPath = new Path(yarnConfFile.getAbsolutePath());
     Path hdfsPath = new Path(hdfsConfFile.getAbsolutePath());
     Path hadoopPath = new Path(hadoopConfFile.getAbsolutePath());
     conf = new Configuration();
     conf.addResource(hadoopPath);
-    conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
     conf.set("fs.permissions.umask-mode", "000");
     conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.
             getSingleEndpoint());
 //    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
 //    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
+    if (settings.getHopsRpcTls()) {
+      bhcs.parseServerSSLConf(conf);
+      
+      try {
+        hostname = InetAddress.getLocalHost().getHostName();
+        transientDir = settings.getHopsworksTmpCertDir();
+        serviceCertsDir = conf.get(HopsSSLSocketFactory.CryptoKeys
+                .SERVICE_CERTS_DIR.getValue(),
+            HopsSSLSocketFactory.CryptoKeys.SERVICE_CERTS_DIR.getDefaultValue());
+      } catch (UnknownHostException ex) {
+        logger.log(Level.SEVERE, "Could not determine hostname "
+            + ex.getMessage(), ex);
+        throw new RuntimeException("Could not determine hostname", ex);
+      }
+    }
   }
 
   @PreDestroy
@@ -103,10 +120,47 @@ public class DistributedFsService {
    * @return DistributedFileSystemOps
    */
   public DistributedFileSystemOps getDfsOps() {
+    if (settings.getHopsRpcTls()) {
+      Configuration newConf = new Configuration(conf);
+  
+      String keystorePath = bhcs.getSuperKeystorePath();
+      String keystorePass = bhcs.getSuperKeystorePassword();
+      String truststorePath = bhcs.getSuperTrustStorePath();
+      String truststorePass = bhcs.getSuperTrustStorePassword();
+  
+      HopsSSLSocketFactory.setTlsConfiguration(keystorePath, keystorePass,
+          truststorePath, truststorePass, newConf);
+      
+      return new DistributedFileSystemOps(
+          UserGroupInformation.createRemoteUser(settings.getHdfsSuperUser()),
+          newConf);
+    }
+  
     return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(
-            settings.getHdfsSuperUser()), conf);
+        settings.getHdfsSuperUser()), conf);
   }
-
+  
+  public DistributedFileSystemOps getDfsOps(URI uri) {
+    if (settings.getHopsRpcTls()) {
+      Configuration newConf = new Configuration(conf);
+  
+      String keystorePath = bhcs.getSuperKeystorePath();
+      String keystorePass = bhcs.getSuperKeystorePassword();
+      String truststorePath = bhcs.getSuperTrustStorePath();
+      String truststorePass = bhcs.getSuperTrustStorePassword();
+  
+      HopsSSLSocketFactory.setTlsConfiguration(keystorePath, keystorePass,
+          truststorePath, truststorePass, newConf);
+      
+      return new DistributedFileSystemOps(
+          UserGroupInformation.createRemoteUser(settings.getHdfsSuperUser()),
+          newConf, uri);
+    }
+    
+    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser
+        (settings.getHdfsSuperUser()), conf, uri);
+  }
+  
   /**
    * Returns the user specific distributed file system operations
    * <p>
@@ -125,9 +179,40 @@ public class DistributedFsService {
       logger.log(Level.SEVERE, null, ex);
       return null;
     }
+    if (settings.getHopsRpcTls()) {
+      // TODO(Antonis) We should propagate the original exception
+      // Runtime exceptions are not useful
+      try {
+        bhcs.materializeCertsForNonSuperUser(username);
+        Configuration newConf = new Configuration(conf);
+        bhcs.configureTlsForProjectSpecificUser(username, transientDir,
+            newConf);
+  
+        return new DistributedFileSystemOps(ugi, newConf);
+      } catch (BaseHadoopClientsService.CryptoPasswordNotFoundException ex) {
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
+        String[] project_username = username.split(HdfsUsersController
+            .USER_NAME_DELIMITER);
+        bhcs.removeNonSuperUserCertificate(project_username[1],
+            project_username[0]);
+        return null;
+      }
+    }
+
     return new DistributedFileSystemOps(ugi, conf);
   }
 
+  public void closeDfsClient(DistributedFileSystemOps udfso) {
+    if (null != udfso) {
+      String[] tokens = udfso.getEffectiveUser().split(HdfsUsersController
+          .USER_NAME_DELIMITER);
+      if (null != tokens && tokens.length == 2) {
+        bhcs.removeNonSuperUserCertificate(tokens[1], tokens[0]);
+      }
+      udfso.close();
+    }
+  }
+  
   public DistributedFileSystemOps getDfsOpsForTesting(String username) {
     if (username == null || username.isEmpty()) {
       throw new NullPointerException("username not set.");
@@ -151,6 +236,27 @@ public class DistributedFsService {
       logger.log(Level.SEVERE, null, ex);
       return null;
     }
+
+    if (settings.getHopsRpcTls()) {
+      // TODO(Antonis) We should propagate the original exception
+      // Runtime exceptions are not useful
+      try {
+        bhcs.materializeCertsForNonSuperUser(username);
+        Configuration newConf = new Configuration(conf);
+        bhcs.configureTlsForProjectSpecificUser(username, transientDir,
+            newConf);
+    
+        return new DistributedFileSystemOps(ugi, newConf);
+      } catch (BaseHadoopClientsService.CryptoPasswordNotFoundException ex) {
+        logger.log(Level.SEVERE, ex.getMessage(), ex);
+        String[] project_username = username.split(HdfsUsersController
+            .USER_NAME_DELIMITER);
+        bhcs.removeNonSuperUserCertificate(project_username[1],
+            project_username[0]);
+        return null;
+      }
+    }
+
     return new DistributedFileSystemOps(ugi, conf);
   }
 

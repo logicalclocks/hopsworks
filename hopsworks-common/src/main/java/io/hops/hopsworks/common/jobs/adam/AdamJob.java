@@ -17,6 +17,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 
 public class AdamJob extends SparkJob {
 
@@ -73,7 +74,7 @@ public class AdamJob extends SparkJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso) {
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     //Get to starting the job
     List<String> missingArgs = checkIfRequiredPresent(jobconfig); //thows an IllegalArgumentException if not ok.
     if (!missingArgs.isEmpty()) {
@@ -96,7 +97,7 @@ public class AdamJob extends SparkJob {
     jobDescription.setJobConfig(jobconfig);
     
     runnerbuilder = new SparkYarnRunnerBuilder(jobDescription);
-    super.setupJob(dfso);
+    super.setupJob(dfso, yarnClient);
     //Set some ADAM-specific property values   
     runnerbuilder.addSystemProperty("spark.serializer",
         "org.apache.spark.serializer.KryoSerializer");
@@ -118,8 +119,10 @@ public class AdamJob extends SparkJob {
 
     try {
       runner = runnerbuilder.
-          getYarnRunner(jobDescription.getProject().getName(),
-              adamUser, jobUser, sparkDir, services, settings);
+              getYarnRunner(jobDescription.getProject().getName(),
+                      adamUser, jobUser, sparkDir, services, services
+                      .getFileOperations(hdfsUser.getUserName()), yarnClient,
+                  settings);
     } catch (IOException e) {
       LOG.log(Level.SEVERE,
           "Failed to create YarnRunner.", e);

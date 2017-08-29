@@ -29,7 +29,11 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
@@ -75,6 +79,10 @@ public class JupyterService {
   private Settings settings;
   @EJB
   private LivyService livyService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private DistributedFsService dfsService;
 
   private Integer projectId;
   private Project project;
@@ -223,18 +231,38 @@ public class JupyterService {
       String configSecret = DigestUtils.sha256Hex(Integer.toString(
               ThreadLocalRandom.current().nextInt()));
       JupyterDTO dto;
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
+      
       try {
 
         jupyterSettingsFacade.update(jupyterSettings);
 
         dto = jupyterConfigFactory.startServerAsJupyterUser(project,
                 configSecret, hdfsUser, jupyterSettings);
+        
+        HopsUtils.materializeCertificatesForUser(project.getName(),
+            project_user[1], settings.getHopsworksTmpCertDir(), settings
+                .getHdfsTmpCertDir(), dfso, certificateMaterializer,
+            settings, false);
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
                 ex);
+        try {
+          HopsUtils.cleanupCertificatesForUser(project_user[1], project
+                  .getName(), settings.getHdfsTmpCertDir(), dfso,
+              certificateMaterializer, false);
+        } catch (IOException e) {
+          LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " +
+              hdfsUser);
+        }
         throw new AppException(
                 Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Problem starting a Jupyter notebook server.");
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
       }
 
       if (dto == null) {
@@ -310,6 +338,20 @@ public class JupyterService {
             getPort());
     // remove the reference to th e server in the DB.
     jupyterFacade.removeNotebookServer(hdfsUser);
+  
+    String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    try {
+      HopsUtils.cleanupCertificatesForUser(project_user[1], project
+              .getName(), settings.getHdfsTmpCertDir(), dfso,
+          certificateMaterializer, false);
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
+      }
+    }
   }
 
   private String getHdfsUser(SecurityContext sc) throws AppException {
