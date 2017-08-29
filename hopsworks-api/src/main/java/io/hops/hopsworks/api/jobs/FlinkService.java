@@ -141,7 +141,7 @@ public class FlinkService {
           getStatusCode(), "Error reading jar file: " + e.
               getLocalizedMessage());
     } finally {
-      udfso.close();
+      dfs.closeDfsClient(udfso);
     }
   }
 

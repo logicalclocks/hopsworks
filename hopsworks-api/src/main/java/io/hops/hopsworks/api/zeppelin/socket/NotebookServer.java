@@ -44,6 +44,11 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
@@ -171,6 +176,12 @@ public class NotebookServer implements
   private ZeppelinConfigFactory zeppelin;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private Settings settings;
+  @EJB
+  private DistributedFsService dfsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
   @EJB
   private ZeppelinResource zeppelinResource;
 
@@ -416,13 +427,13 @@ public class NotebookServer implements
     connectedSockets.remove(conn);
     removeUserConnection(this.hdfsUsername, conn);
   }
-
+  
   @OnError
   public void onError(Session conn, Throwable exc) {
     removeConnectionFromAllNote(conn);
     connectedSockets.remove(conn);
   }
-
+  
   private void removeUserConnection(String user, Session conn) {
     if (userConnectedSockets.containsKey(user)) {
       userConnectedSockets.get(user).remove(conn);
@@ -1834,7 +1845,47 @@ public class NotebookServer implements
     if (!persistNoteWithAuthInfo(conn, note, p)) {
       return;
     }
-
+  
+    // Materialize certificates both in local filesystem and
+    // in HDFS for the interpreters
+    // Interpreter group is in the form GROUP_ID:shared_process
+    // GROUP_ID: 2CFZ6Q3A2 -> Spark group
+    // GROUP_ID: 2CHUQQW33 -> Livy group
+    String[] interpreterGrp = p.getCurrentRepl().getInterpreterGroup()
+        .getId().split(":");
+    String interpreterGroup;
+    if (interpreterGrp.length >=2) {
+      interpreterGroup = interpreterGrp[0];
+    } else {
+      interpreterGroup = p.getCurrentRepl().getInterpreterGroup().getId();
+    }
+    
+    if (certificateMaterializer.openedInterpreter(project.getId(),
+        interpreterGroup)) {
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      try {
+        HopsUtils.materializeCertificatesForUser(project.getName(),
+            project.getOwner().getUsername(),
+            settings.getHopsworksTmpCertDir(),
+            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
+            settings, true);
+      } catch (IOException ex) {
+        // Cleanup certificates here
+        HopsUtils
+            .cleanupCertificatesForUser(project.getOwner().getUsername(),
+                project.getName(), settings.getHdfsTmpCertDir(), dfso,
+                certificateMaterializer, true);
+        LOG.log(Level.WARNING, "User certificates could not be materialized",
+            ex);
+        throw ex;
+      } finally {
+        if (null != dfso) {
+          dfso.close();
+          dfso = null;
+        }
+      }
+    }
+    
     try {
       note.run(p.getId());
     } catch (Exception ex) {

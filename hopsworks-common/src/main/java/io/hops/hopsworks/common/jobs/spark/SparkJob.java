@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.elasticsearch.common.Strings;
 
 /**
@@ -54,8 +55,8 @@ public class SparkJob extends YarnJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso) {
-    super.setupJob(dfso);
+  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
+    super.setupJob(dfso, yarnClient);
     SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobDescription.getJobConfig();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
@@ -119,7 +120,9 @@ public class SparkJob extends YarnJob {
     try {
       runner = runnerbuilder.
           getYarnRunner(jobDescription.getProject().getName(),
-              sparkUser, jobUser, sparkDir, services, settings);
+              sparkUser, jobUser, sparkDir, services, services
+                  .getFileOperations(hdfsUser.getUserName()), yarnClient,
+              settings);
 
     } catch (IOException e) {
       LOG.log(Level.WARNING,

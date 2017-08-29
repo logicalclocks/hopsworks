@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.ejb.EJB;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.Consumes;
@@ -18,7 +19,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.enterprise.context.RequestScoped;
+
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.slf4j.Logger;
@@ -45,7 +53,6 @@ import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import java.util.LinkedList;
-import javax.ejb.EJB;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.notebook.NoteInfo;
 import org.apache.zeppelin.notebook.Notebook;
@@ -60,10 +67,17 @@ import org.quartz.CronExpression;
 @RequestScoped
 public class NotebookRestApi {
 
-  private static final Logger LOG = LoggerFactory.getLogger(NotebookRestApi.class);
-  
+  @EJB
+  private DistributedFsService dfsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private Settings settings;
   @EJB
   private ZeppelinResource zeppelinResource;
+  
+  private static final Logger LOG = LoggerFactory.getLogger(
+          NotebookRestApi.class);
   
   Gson gson = new Gson();
   private Notebook notebook;
@@ -583,7 +597,42 @@ public class NotebookRestApi {
 
     return new JsonResponse(Status.OK, "").build();
   }
-
+  
+  private void materializeCertificates(List<Paragraph> paragraphs)
+    throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      for (Paragraph p : paragraphs) {
+        Interpreter interpreter = p.getCurrentRepl();
+        if (null != interpreter) {
+          String interpreterGroup = interpreter.getInterpreterGroup().getId()
+              .split(":")[0];
+          if (certificateMaterializer.openedInterpreter(project.getId(),
+              interpreterGroup)) {
+            try {
+              HopsUtils.materializeCertificatesForUser(project.getName(),
+                  project.getOwner().getUsername(), settings
+                      .getHopsworksTmpCertDir(), settings.getHdfsTmpCertDir(),
+                  dfso, certificateMaterializer, settings, true);
+            } catch (IOException ex) {
+              LOG.warn("Could not materialize certificates for user: " +
+                  project.getName() + "__" + project.getOwner().getUsername());
+              HopsUtils.cleanupCertificatesForUser(project.getOwner()
+                  .getUsername(), project.getName(), settings
+                  .getHdfsTmpCertDir(), dfso, certificateMaterializer, true);
+              throw ex;
+            }
+          }
+        }
+      }
+    } finally {
+      if (null != dfso) {
+        dfso.close();
+      }
+    }
+  }
+  
   /**
    * Run note jobs REST API
    *
@@ -599,7 +648,9 @@ public class NotebookRestApi {
     Note note = notebook.getNote(noteId);
     checkIfNoteIsNotNull(note);
     checkIfUserCanWrite(noteId, "Insufficient privileges you cannot run job for this note");
-
+    
+    materializeCertificates(note.getParagraphs());
+  
     try {
       note.runAll();
     } catch (Exception ex) {

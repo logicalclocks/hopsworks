@@ -78,6 +78,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
+
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -87,7 +90,6 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.influxdb.InfluxDB;
@@ -134,6 +136,8 @@ public class JobService {
   private ActivityFacade activityFacade;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private YarnClientService ycs;
   @EJB
   private Settings settings;
   @EJB
@@ -1081,19 +1085,21 @@ public class JobService {
                 "Destination file is not empty.");
           } else {
             String[] desiredLogTypes = {"out"};
-            YarnClient newClient = YarnClient.createYarnClient();
-            newClient.init(settings.getConfiguration());
+            YarnClientWrapper yarnClientWrapper = ycs
+                .getYarnClientSuper(settings.getConfiguration());
+            
             ApplicationId applicationId = ConverterUtils.toApplicationId(appId);
-            YarnMonitor monitor = new YarnMonitor(applicationId, newClient);
-            monitor = monitor.start();
+            YarnMonitor monitor = new YarnMonitor(applicationId,
+                yarnClientWrapper, ycs);
             try {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsLogPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
               throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                   "something went wrong during the log aggregation");
+            } finally {
+              monitor.close();
             }
-            monitor.close();
           }
         }
       } else if (type.equals("err")) {
@@ -1107,19 +1113,20 @@ public class JobService {
                 "Destination file is not empty.");
           } else {
             String[] desiredLogTypes = {"err", ".log"};
-            YarnClient newClient = YarnClient.createYarnClient();
-            newClient.init(settings.getConfiguration());
+            YarnClientWrapper yarnClientWrapper = ycs
+                .getYarnClientSuper(settings.getConfiguration());
             ApplicationId applicationId = ConverterUtils.toApplicationId(appId);
-            YarnMonitor monitor = new YarnMonitor(applicationId, newClient);
-            monitor = monitor.start();
+            YarnMonitor monitor = new YarnMonitor(applicationId,
+                yarnClientWrapper, ycs);
             try {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsErrPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
               throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                   "something went wrong during the log aggregation");
+            } finally {
+              monitor.close();
             }
-            monitor.close();
           }
         }
       }
@@ -1130,7 +1137,7 @@ public class JobService {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     JsonResponse json = new JsonResponse();
