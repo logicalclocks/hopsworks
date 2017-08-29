@@ -25,6 +25,9 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -104,7 +107,16 @@ public class YarnUIProxyServlet extends ProxyServlet {
       InetAddress localAddress = InetAddress.getLocalHost();
       config.setLocalAddress(localAddress);
 
-      HttpMethod m = new GetMethod(proxyRequestUri);
+      String method = servletRequest.getMethod();
+      HttpMethod m;
+      if (method.equalsIgnoreCase("PUT")) {
+        m = new PutMethod(proxyRequestUri);
+        RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
+            getContentType());
+        ((PutMethod) m).setRequestEntity(requestEntity);
+      } else {
+        m = new GetMethod(proxyRequestUri);
+      }
       Enumeration<String> names = servletRequest.getHeaderNames();
       while (names.hasMoreElements()) {
         String headerName = names.nextElement();
@@ -226,35 +238,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
         "/hopsworks-api/yarnui/" + source + "/" );
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
         "/hopsworks-api/yarnui/" + source + "/" );
+    ui = ui.replaceAll("(?<=(url: '))/(?=[a-z])", "/hopsworks-api/yarnui/");
+    ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-z])", "/hopsworks-api/yarnui/");
     return ui;
 
   }
 
-//  @Override
-//  protected String rewriteUrlFromResponse(HttpServletRequest servletRequest,
-//      String theUrl) {
-//    //TODO document example paths
-//    final String targetUri = getTargetUri(servletRequest);
-//    String curUrl = servletRequest.getRequestURL().toString();//no query
-//
-//    String pathInfo = servletRequest.getPathInfo();
-//    if (pathInfo != null) {
-//      assert curUrl.endsWith(pathInfo);
-//      curUrl = curUrl.substring(0, curUrl.length() - pathInfo.length());//take pathInfo off
-//    }
-//    if (theUrl.startsWith(targetUri)) {
-//      if (curUrl.endsWith("/") || theUrl.substring(targetUri.length()).startsWith("/")) {
-//        theUrl = curUrl + theUrl.substring(targetUri.length());
-//      } else {
-//        theUrl = curUrl + "/" + theUrl.substring(targetUri.length());
-//      }
-//    } else if (curUrl.endsWith("/") || theUrl.substring(targetUri.length()).startsWith("/")) {
-//      theUrl = curUrl + theUrl;
-//    } else {
-//      theUrl = curUrl + "/" + theUrl;
-//    }
-//    return theUrl;
-//  }
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
