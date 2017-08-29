@@ -175,13 +175,8 @@ public class AgentResource {
         String roleName = s.getString("role");
         String service = s.getString("service");
         Role role = null;
-        try {
-          roleFacade.find(hostId, cluster, service, roleName);
-        } catch (Exception ex) {
-          logger.warning("Problem finding a role, transaction timing out? "
-                  + ex.toString());
-        }
-
+        role = roleFacade.find(hostId, cluster, service, roleName);
+          
         if (role == null) {
           role = new Role();
           role.setHostId(hostId);
@@ -202,9 +197,9 @@ public class AgentResource {
                   "Invalid webport or pid - not a number for: {0}", role);
           continue;
         }
-        if (s.containsKey("status") && role.getStatus() != null) {
-          if (!role.getStatus().equals(Status.Started) && Status.valueOf(s.
-                  getString("status")).equals(Status.Started)) {
+        if (s.containsKey("status")) {
+          if ((role.getStatus() == null || !role.getStatus().equals(Status.Started)) && Status.valueOf(s.getString(
+              "status")).equals(Status.Started)) {
             role.setStartTime(agentTime);
           }
           role.setStatus(Status.valueOf(s.getString("status")));
