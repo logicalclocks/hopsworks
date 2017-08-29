@@ -11,7 +11,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat.ContainerLogsReader;
 
@@ -49,7 +51,7 @@ public class YarnLogUtil {
       }
     }
   }
-  
+   
   /**
    * Given aggregated yarn log path and destination path copies the desired log
    * type (stdout/stderr)
@@ -58,35 +60,36 @@ public class YarnLogUtil {
    * @param src aggregated yarn log path
    * @param dst destination path to copy to
    * @param desiredLogTypes stderr or stdout or stdlog
+   * @param monitor the monitor to check the log aggregation status
    */
-  public static void copyAggregatedYarnLogs(DistributedFileSystemOps dfs,
-          String src, String dst,
-          String[] desiredLogTypes) {
-    long wait = dfs.getConf().getLong(
-            YarnConfiguration.LOG_AGGREGATION_RETAIN_SECONDS, 86400);
-    wait = (wait > 0 ? wait : 86400);
+  public static void copyAggregatedYarnLogs(DistributedFileSystemOps dfs, String src, String dst,
+      String[] desiredLogTypes, YarnMonitor monitor) throws YarnException, IOException, InterruptedException {
+  
+    LogAggregationStatus logAggregationStatus = waitForLogAggregation(monitor);
+    
+    
     PrintStream writer = null;
     String[] srcs;
-    try {
-      Result result = waitForAggregatedLogFileCreation(src, dfs);
+    try {   
       srcs = getAggregatedLogFilePaths(src, dfs);
       if (!logFilesReady(srcs, dfs)) {
         LOGGER.log(Level.SEVERE, "Error getting logs");
       }
       writer = new PrintStream(dfs.create(dst));
-      switch (result) {
+      switch (logAggregationStatus) {
         case FAILED:
-          writer.print("Failed to get the aggregated logs.");
+          writer.print("The log aggregation failed");
           break;
-        case TIMEOUT:
-          writer.print("Failed to get the aggregated logs after waitting for "
-                  + wait + " seconds.");
+        case TIME_OUT:
+          writer.print("The log aggregation timedout.");
           break;
-        case SUCCESS:
+        case SUCCEEDED:
           for (String desiredLogType : desiredLogTypes) {
             writeLogs(dfs, srcs, writer, desiredLogType);
           }
           break;
+        default :
+          writer.print("something went wrond durring the log aggregation.");
       }
     } catch (Exception ex) {
       if (writer != null) {
@@ -99,6 +102,28 @@ public class YarnLogUtil {
         writer.flush();
         writer.close();
       }
+    }
+  }
+  
+  public static LogAggregationStatus waitForLogAggregation(YarnMonitor monitor) throws InterruptedException,
+      YarnException, IOException {
+    LogAggregationStatus logAggregationStatus = monitor.getLogAggregationStatus();
+
+    while (!isFinal(logAggregationStatus)) {
+      Thread.sleep(1000);
+      logAggregationStatus = monitor.getLogAggregationStatus();
+    }
+    return logAggregationStatus;
+  }
+
+  public static boolean isFinal(LogAggregationStatus status){
+    switch(status){
+      case RUNNING:
+      case RUNNING_WITH_FAILURE:
+      case NOT_START:
+        return false;
+      default :
+        return true;
     }
   }
 

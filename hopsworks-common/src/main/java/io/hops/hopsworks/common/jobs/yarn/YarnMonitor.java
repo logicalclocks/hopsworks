@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -49,6 +50,10 @@ public final class YarnMonitor implements Closeable {
     return yarnClient.getApplicationReport(appId).getYarnApplicationState();
   }
 
+  public LogAggregationStatus getLogAggregationStatus() throws YarnException, IOException {
+    return yarnClient.getApplicationReport(appId).getLogAggregationStatus();
+  }
+  
   public FinalApplicationStatus getFinalApplicationStatus() throws YarnException,
           IOException {
     return yarnClient.getApplicationReport(appId).getFinalApplicationStatus();

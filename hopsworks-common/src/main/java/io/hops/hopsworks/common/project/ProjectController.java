@@ -63,6 +63,7 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -81,8 +82,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
@@ -99,6 +103,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.json.JSONObject;
 
@@ -152,7 +161,9 @@ public class ProjectController {
   private ElasticController elasticController;
   @EJB
   private ExecutionFacade execFacade;
-
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -820,7 +831,34 @@ public class ProjectController {
     int nbTry = 0;
     while (nbTry < 3) {
       nbTry++;
+      YarnClient client = YarnClient.createYarnClient();
+      client.init(settings.getConfiguration());
+      client.start();
       try {
+        //remove from project_team so that nobody can see the project anymore
+        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
+
+        /*
+         * get all running yarn application owned by anny of the project members
+         * we will check later if this application have been stoped and their log aggregation have been finished
+         * it would be better to check all application (even the ones that have finished running)
+         * but the log aggregation status is not recovered when the resource manager restart. As a result
+         * we can't know if the status in "NOT_START" because we should wait for it or because the
+         * resourcemanager restarted.
+         */
+        Collection<ProjectTeam> team = project.getProjectTeamCollection();
+        Set<String> hdfsUsers = new HashSet<>();
+        for (ProjectTeam pt : team) {
+          String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
+              getUser());
+          hdfsUsers.add(hdfsUsername);
+        }
+        hdfsUsers.add(project.getName());
+
+        List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
+            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+
         //Restart zeppelin so interpreters shut down
         Response resp = ClientBuilder.newClient()
             .target(settings.getRestEndpoint()
@@ -849,9 +887,6 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterConfigFactory.stopProject(project);
 
-        //remove from project_team so that nobody can see the project anymore
-        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
-
         //kill jobs
         List<JobDescription> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
@@ -878,6 +913,22 @@ public class ProjectController {
           }
         }
 
+        
+        for (ApplicationReport appReport : projectsApps) {
+          FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
+          while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
+            client.killApplication(appReport.getApplicationId());
+            appReport = client.getApplicationReport(appReport.getApplicationId());
+            finalState = appReport.getFinalApplicationStatus();
+          }
+          LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
+          while (!YarnLogUtil.isFinal(logAggregationState)) {
+            Thread.sleep(500);
+            appReport = client.getApplicationReport(appReport.getApplicationId());
+            logAggregationState = appReport.getLogAggregationStatus();
+          }
+        }
+        
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean);
@@ -893,6 +944,8 @@ public class ProjectController {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ex.getMessage());
         }
+      } finally {
+        client.stop();
       }
     }
   }
