@@ -2,6 +2,8 @@ package io.hops.hopsworks.common.jobs.yarn;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
@@ -10,6 +12,7 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.tensorflow.Client;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +30,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.tensorflow.LocalResourceInfo;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 
@@ -52,7 +58,6 @@ import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
- *
  * <p>
  */
 public class YarnRunner {
@@ -64,7 +69,6 @@ public class YarnRunner {
   public static final String KEY_CLASSPATH = "CLASSPATH";
   private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
-  private YarnClient yarnClient;
   private Configuration conf;
   private ApplicationId appId = null;
   //Type of Job to run, Spark/Flink/Adam...
@@ -93,6 +97,11 @@ public class YarnRunner {
   private final List<String> filesToRemove;
   private String serviceDir;
   private final AsynchronousJobExecutor services;
+  private DistributedFileSystemOps dfsClient;
+  private YarnClient yarnClient;
+  private final String keyStorePassword;
+  private final String trustStorePassword;
+  private String jobUser;
   
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
@@ -153,7 +162,7 @@ public class YarnRunner {
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), jobType,
         dfso, materialResources, systemProperties,
-        applicationId);
+        applicationId, services.getCertificateMaterializer());
 
     for (LocalResourceDTO materialDTO : materialResources) {
       amLocalResourcesOnHDFS.put(materialDTO.getName(), materialDTO);
@@ -179,20 +188,18 @@ public class YarnRunner {
    * files.
    * @throws java.net.URISyntaxException
    */
-  public YarnMonitor startAppMaster(
-      Project project, DistributedFileSystemOps dfso,
-      String username)
-      throws
-      YarnException, IOException,
-      URISyntaxException {
+  public YarnMonitor startAppMaster(YarnClientService ycs, String dfsUsername,
+      Project project, DistributedFileSystemOps dfso, String username) throws
+      YarnException, IOException, URISyntaxException {
     logger.info("Starting application master.");
-    YarnClient newClient = YarnClient.createYarnClient();
+    // Create a new client for monitoring
+    YarnClientWrapper newYarnClientWrapper = ycs.getYarnClient(dfsUsername);
+    
     YarnMonitor monitor = null;
     if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || 
         jobType == JobType.TFSPARK) {
       //Get application id
-      yarnClient.start();
-
+      
       YarnClientApplication app = yarnClient.createApplication();
       GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
       appId = appResponse.getApplicationId();
@@ -241,13 +248,15 @@ public class YarnRunner {
         c.execute(this);
       }
 
+      // Set keystore and truststore passwords
+      appContext.setKeyStorePassword(keyStorePassword);
+      appContext.setTrustStorePassword(trustStorePassword);
+      
       //And submit
       logger.log(Level.INFO,
           "Submitting application {0} to applications manager.", appId);
       yarnClient.submitApplication(appContext);
-      // Create a new client for monitoring
-      newClient.init(conf);
-      monitor = new YarnMonitor(appId, newClient);
+      monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
 
     } else if (jobType == JobType.FLINK) {
       // Objects needed for materializing user certificates
@@ -257,8 +266,7 @@ public class YarnRunner {
       appId = client.getApplicationId();
 
       fillInAppid(appId.toString());
-      newClient.init(conf);
-      monitor = new YarnMonitor(appId, newClient);
+      monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
       String[] args = {};
       if (amArgs != null) {
         if (!javaOptions.isEmpty()) {
@@ -312,9 +320,7 @@ public class YarnRunner {
       } finally {
         //Remove local flink app jar
         FileUtils.deleteDirectory(localPathAppJarDir);
-        yarnClient.close();
         flinkCluster = null;
-        yarnClient = null;
         appId = null;
         appContext = null;
         //Try to delete any local certificates for this project
@@ -326,16 +332,42 @@ public class YarnRunner {
         
         tfClient.setConf(conf);
         tfClient.initYarnClient();
-        appId = tfClient.submitApplication();
+        YarnClientApplication app = tfClient.createApplication();
+        appId = app.getNewApplicationResponse().getApplicationId();
+        
+        copyUserCertificates(project, jobType, dfso, username, appId.toString());
+        
+        String kstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
+            + File.separator + project.getName() + HdfsUsersController
+            .USER_NAME_DELIMITER + username + File.separator + appId.toString()
+            + File.separator + HopsUtils.getProjectKeystoreName(project.getName(),
+            username);
+        
+  
+        String tstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
+            + File.separator + project.getName() + HdfsUsersController
+            .USER_NAME_DELIMITER + username + File.separator +appId.toString()
+            + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
+            username);
+        
+        tfClient.addFile(kstore);
+        tfClient.addFile(tstore);
+        tfClient.getFilesInfo().put(kstore, new LocalResourceInfo(Settings
+            .K_CERTIFICATE, kstore, LocalResourceVisibility.PRIVATE.toString(),
+            LocalResourceType.FILE.toString(), null));
+        tfClient.getFilesInfo().put(tstore, new LocalResourceInfo(Settings
+            .T_CERTIFICATE, tstore, LocalResourceVisibility.PRIVATE.toString(),
+            LocalResourceType.FILE.toString(), null));
+        logger.log(Level.INFO, "Adding local resource {0}", kstore);
+        logger.log(Level.INFO, "Adding local resource {0}", tstore);
+        
+        tfClient.submitApplication(app);
 //        String logstashInfo = tfClient.getEnvironment().get(Settings.LOGSTASH_JOB_INFO);
 //        logstashInfo = logstashInfo.replaceAll(APPID_REGEX, appId.toString());
 //        tfClient.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, logstashInfo);
         fillInAppid(appId.toString());
-        newClient.init(conf);
-        monitor = new YarnMonitor(appId, newClient);
+        monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
       } finally {
-        yarnClient.close();
-        yarnClient = null;
         appId = null;
       }
     }
@@ -362,7 +394,13 @@ public class YarnRunner {
     }
     return appContext;
   }
-
+  
+  public void stop(DistributedFsService dfs) {
+    if (dfsClient != null && dfs != null) {
+      dfs.closeDfsClient(dfsClient);
+    }
+  }
+  
   //---------------------------------------------------------------------------
   //------------------------- UTILITY METHODS ---------------------------------
   //---------------------------------------------------------------------------
@@ -424,7 +462,7 @@ public class YarnRunner {
       }
     }
     //Construct basepath
-    FileSystem fs = FileSystem.get(conf);
+    FileSystem fs = dfsClient.getFilesystem();
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
     logger.log(Level.FINER, "Base path: {0}", basePath);
@@ -513,7 +551,7 @@ public class YarnRunner {
   }
 
   private void copyAllToHDFS() throws IOException {
-    FileSystem fs = FileSystem.get(conf);
+    FileSystem fs = dfsClient.getFilesystem();
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
     for (String path : filesToBeCopied) {
@@ -639,6 +677,10 @@ public class YarnRunner {
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
     this.yarnClient = builder.yarnClient;
+    this.dfsClient = builder.dfsClient;
+    this.keyStorePassword = builder.keyStorePassword;
+    this.trustStorePassword = builder.trustStorePassword;
+    this.jobUser = builder.jobUser;
     this.conf = builder.conf;
     this.shouldCopyAmJarToLocalResources
         = builder.shouldAddAmJarToLocalResources;
@@ -726,7 +768,12 @@ public class YarnRunner {
     private Configuration conf;
     //YarnClient
     private YarnClient yarnClient;
+    private DistributedFileSystemOps dfsClient;
+    private String jobUser;
 
+    private String keyStorePassword;
+    private String trustStorePassword;
+    
     private String serviceDir;
     private AsynchronousJobExecutor services;
     
@@ -739,7 +786,44 @@ public class YarnRunner {
       this.amJarPath = amJarPath;
       this.amJarLocalName = amJarLocalName;
     }
+    
+    /**
+     * Sets the configured DFS client
+     *
+     * @param dfsClient
+     * @return
+     */
+    public Builder setDfsClient(DistributedFileSystemOps dfsClient) {
+      this.dfsClient = dfsClient;
+      return this;
+    }
+  
+    /**
+     * Sets the configured Yarn client
+     *
+     * @param yarnClient
+     * @return
+     */
+    public Builder setYarnClient(YarnClient yarnClient) {
+      this.yarnClient = yarnClient;
+      return this;
+    }
 
+    public Builder setJobUser(String jobUser) {
+      this.jobUser = jobUser;
+      return this;
+    }
+    
+    public Builder setKeyStorePassword(String password) {
+      this.keyStorePassword = password;
+      return this;
+    }
+    
+    public Builder setTrustStorePassword(String password) {
+      this.trustStorePassword = password;
+      return this;
+    }
+    
     /**
      * Sets the arguments to be passed to the Application Master.
      * <p/>
