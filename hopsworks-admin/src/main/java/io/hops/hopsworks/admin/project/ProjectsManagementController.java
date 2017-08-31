@@ -19,8 +19,6 @@ package io.hops.hopsworks.admin.project;
 
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
-import io.hops.hopsworks.common.dao.project.management.ProjectsManagement;
-import io.hops.hopsworks.common.dao.project.management.ProjectsManagementFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.util.Settings;
@@ -33,17 +31,19 @@ import java.io.IOException;
 import java.util.List;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.payment.LastPayment;
+import io.hops.hopsworks.common.dao.project.payment.LastPaymentFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import java.util.Date;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsManagementController {
-
-  @EJB
-  private ProjectsManagementFacade projectsManagementFacade;
 
   @EJB
   private ProjectController projectController;
@@ -66,31 +66,8 @@ public class ProjectsManagementController {
   @EJB
   private DistributedFsService dfs;
 
-  /**
-   *
-   * @param projectname
-   * @return size of quota for project subtree in HDFS in GBs
-   * @throws IOException
-   */
-//  public long getHdfsSpaceQuota(String projectname) throws IOException {
-//    try {
-//      long numBytes = projectController.getHdfsSpaceQuotaInBytes(projectname);
-//      return numBytes / (1024*1024*1024);
-//    } catch (AppException ex) {
-//      throw new IOException(ex);
-//    }
-//  }
-  /**
-   *
-   * @return size of quota for project subtree in HDFS in GBs
-   */
-//  public long getHDFSUsedSpaceQuota(String projectname) throws IOException {
-//    try {
-//      return projectController.getHdfsSpaceQuotaInBytes(projectname);
-//    } catch (AppException ex) {
-//      throw new IOException(ex);
-//    }
-//  }
+  @EJB
+  private LastPaymentFacade lastPaymentFacade;
   /**
    *
    * @param name
@@ -127,13 +104,8 @@ public class ProjectsManagementController {
     }
   }
 
-  public void setHdfsNumFilesQuota(String projectname, long quotaInMBs) throws
-          IOException {
-//    projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
-  }
-
-  public List<ProjectsManagement> getAllProjects() {
-    return projectsManagementFacade.findAll();
+  public List<Project> getAllProjects() {
+    return projectFacade.findAll();
   }
 
   public void disableProject(String projectname) {
@@ -144,7 +116,20 @@ public class ProjectsManagementController {
     projectFacade.unarchiveProject(projectname);
   }
 
-  public void changeYarnQuota(String projectname, int quota) {
+  public void changeYarnQuota(String projectname, float quota) {
     yarnProjectsQuotaFacade.changeYarnQuota(projectname, quota);
+  }
+ 
+  public YarnProjectsQuota getYarnQuotas(String name) throws AppException {
+    return yarnProjectsQuotaFacade.findByProjectName(name);
+  }
+  
+  public Date getLastPaymentDate(String projectName){
+    LastPayment lastPayment = lastPaymentFacade.findByProjectName(projectName);
+    if(lastPayment!=null){
+      return lastPayment.getTransactionDate();
+    }else{
+      return null;
+    }
   }
 }

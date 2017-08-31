@@ -23,7 +23,7 @@
             </div> 
 
             <!--<div class="row" resizable r-directions="['bottom']">-->
-            <div class="row" style="margin-left: 10px; height: 100% ">
+            <div class="row" style="margin-left: 10px; height: 100%; overflow-y: auto;">
 
               <div style="padding-bottom: 10px">
                 <span class="field-info" uib-tooltip="Show Job Spark Dashboard" style="padding-top: 5px;padding-left:3px">
@@ -97,7 +97,7 @@
               <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
               <div ng-if="jobUICtrl.current === 'vizopsUI'">
                 <div ng-controller="VizopsCtrl as vizopsCtrl">
-                  <div ng-include="'views/vizops.html'"></div>
+                  <div ng-include="'views/vizops.html'" style="overflow-y: auto;"></div>
                 </div>
               </div>
 

@@ -31,6 +31,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -99,7 +105,15 @@ public class InterpreterRestApi {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
+  private YarnClientService ycs;
+  @EJB
+  private DistributedFsService dfsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
   private LivyService livyService;
+  @EJB
+  private Settings settings;
 
   Gson gson = new Gson();
 
@@ -225,6 +239,8 @@ public class InterpreterRestApi {
       } else {
         interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
       }
+      cleanUserCertificates(project, settingId);
+      
       zeppelinConf.getNotebookServer().clearParagraphRuntimeInfo(setting);
 
     } catch (InterpreterException e) {
@@ -250,6 +266,26 @@ public class InterpreterRestApi {
     return new JsonResponse(Status.OK, "", interpreter).build();
   }
 
+  private void cleanUserCertificates(Project project, String interpreterGroup) {
+    if (certificateMaterializer.closedInterpreter(project.getId(), interpreterGroup)) {
+      DistributedFileSystemOps dfso = null;
+      dfso = dfsService.getDfsOps();
+      try {
+        HopsUtils
+            .cleanupCertificatesForUser(project.getOwner().getUsername(),
+                project.getName(), settings.getHdfsTmpCertDir(), dfso,
+                certificateMaterializer, true);
+      } catch (IOException ex) {
+        logger.warn("Could not remove materialized certificates for user " +
+            project.getOwner().getUsername(), ex);
+      } finally {
+        if (null != dfso) {
+          dfso.close();
+        }
+      }
+    }
+  }
+  
   /**
    * Get livy session Yarn AppId
    *
@@ -362,10 +398,12 @@ public class InterpreterRestApi {
       }
     }
     int res = livyService.deleteLivySession(sessionId);
+    cleanUserCertificates(project, settingId);
+    
     if (res != Response.Status.NOT_FOUND.getStatusCode() && res != Response.Status.OK.getStatusCode()) {
       return new JsonResponse(Status.EXPECTATION_FAILED, "Could not stop session '" + sessionId + "'").build();
     }
-
+    
     InterpreterDTO interpreter = new InterpreterDTO(setting, !zeppelinResource.isInterpreterRunning(setting, project),
             livyService.getZeppelinLivySessions(this.project));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();

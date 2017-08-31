@@ -15,8 +15,8 @@ var getBaseChartOptions = function() {
             "margin": {
                 "top": 50,
                 "right": 50,
-                "bottom": 50,
-                "left": 50
+                "bottom": 50
+                
             },
             "x": function(d){ return d.x; },
             "y": function(d){ return d.y; },
@@ -38,14 +38,14 @@ var getBaseChartOptions = function() {
             },
             "yAxis": {
               "axisLabel": "Default",
-              "rotateYLabel": true,
+              "rotateYLabel": false,
               "tickFormat": function(d) {
                 return d3.format("d")(d);
               }
             },
             "yAxis1": {},
             "yAxis2": {},
-            "y2Axis": {},
+            "y2Axis": {}
 
         },
         title: {
@@ -75,8 +75,8 @@ var getBaseChartOptions = function() {
 var vizopsTotalActiveTasksOptions = function() {
     var options = getBaseChartOptions();
     options.chart.yAxis = {
-        "axisLabel": "Tasks",
-        "rotateYLabel": true,
+//        "axisLabel": "Tasks",
+//        "rotateYLabel": true,
         "tickFormat": function(d) {
           return d3.format("d")(d);
         }
@@ -297,20 +297,32 @@ var vizopsVCPUDriverTemplate = function() {
 var vizopsRDDCacheDiskSpillOptions = function() {
     var options = getBaseChartOptions();
     options.chart.type = "multiChart";
+    options.chart.showXAxis = "false";
+    options.chart.showControls = true;
+    options.chart.showLegend = true;
+    options.chart.margin = {
+                "top": 50,
+                "right": 50};
     options.chart.yAxis1 = {
-         "axisLabel": "RDD Cache Bytes",
-         "rotateYLabel": true,
+//         "axisLabel": "RDD Cache Bytes",
+//         "rotateYLabel": true,
          "tickFormat": function(d) {
            return d3.format(".2s")(d);
          }
        };
     options.chart.yAxis2 ={
-        "axisLabel": "Disk spill Bytes",
-        "rotateYLabel": true,
+//        "axisLabel": "Disk spill Bytes",
+//        "rotateYLabel": true,
         "tickFormat": function(d) {
           return d3.format(".2s")(d);
         }
       } ;
+    options.chart.xAxis = {
+              
+              "tickFormat": function(d) {
+                return d3.time.format("%H:%M:%S")(new Date(d));
+              }
+            },
     options.title.text = "BlockManager";
     options.subtitle.enable = true;
     options.subtitle.text = 'In case disk spill increases, consider adding executor memory';
@@ -322,14 +334,14 @@ var vizopsRDDCacheDiskSpillTemplate = function() {
     return [
         {
             values: [],
-            key: 'rdd cache',
+            key: 'rdd cache (bytes)',
             color: _getColor[3],
             type: "line",
             yAxis: 1
         },
         {
             values: [],
-            key: 'disk spill',
+            key: 'disk spill (bytes)',
             color: _getColor[5],
             type: "line",
             yAxis: 2
@@ -765,7 +777,8 @@ var vizopsWorkerExecutorsPerHostOptions = function() {
     var options = getBaseChartOptions();
     options.chart.type = 'pieChart';
     options.chart.labelThreshold = 0.01;
-    options.chart.labelSunbeamLayout = true;
+    options.chart.labelSunbeamLayout = false;
+    //options.chart.labelsOutside = true;
     options.chart.donut = true;
     options.chart.donutRatio = 0.3;
     options.chart.labelType = "percent";
@@ -785,7 +798,7 @@ var vizopsWorkerCompletedTasksPerHostOptions = function() {
     var options = getBaseChartOptions();
     options.chart.type = 'pieChart';
     options.chart.labelThreshold = 0.01;
-    options.chart.labelSunbeamLayout = true;
+    options.chart.labelSunbeamLayout = false;
     options.chart.donut = true;
     options.chart.donutRatio = 0.3;
     options.chart.labelType = "percent";

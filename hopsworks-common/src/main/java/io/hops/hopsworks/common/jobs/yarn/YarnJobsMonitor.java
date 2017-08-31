@@ -17,10 +17,12 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
@@ -36,6 +38,8 @@ public class YarnJobsMonitor {
   private ExecutionFacade executionFacade;
   @EJB
   private YarnExecutionFinalizer execFinalizer;
+  @EJB
+  private YarnClientService ycs;
 
   private int maxStatusPollRetry;
 
@@ -64,8 +68,12 @@ public class YarnJobsMonitor {
   synchronized public void monitor(Timer timer) {
     if (init) {
       List<Execution> execs = executionFacade.findAllNotFinished();
-      for (Execution exec : execs) {
-        executions.put(exec.getAppId(), exec);
+      if (execs != null) {
+        for (Execution exec : execs) {
+          if (exec.getAppId() != null) {
+            executions.put(exec.getAppId(), exec);
+          }
+        }
       }
       maxStatusPollRetry = settings.getMaxStatusPollRetry();
       init = false;
@@ -75,11 +83,10 @@ public class YarnJobsMonitor {
     for (String appID : executions.keySet()) {
       YarnMonitor monitor = monitors.get(appID);
       if (monitor == null) {
-        YarnClient newClient = YarnClient.createYarnClient();
-        newClient.init(settings.getConfiguration());
         ApplicationId appId = ConverterUtils.toApplicationId(appID);
-        monitor = new YarnMonitor(appId, newClient);
-        monitor = monitor.start();
+        YarnClientWrapper newYarnclientWrapper = ycs.getYarnClientSuper(settings
+            .getConfiguration());
+        monitor = new YarnMonitor(appId, newYarnclientWrapper, ycs);
         monitors.put(appID, monitor);
       }
       Execution exec = internalMonitor(executions.get(appID), monitor);

@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedWriter;
@@ -77,6 +78,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
+
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -85,6 +89,9 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
@@ -129,6 +136,8 @@ public class JobService {
   private ActivityFacade activityFacade;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private YarnClientService ycs;
   @EJB
   private Settings settings;
   @EJB
@@ -1076,8 +1085,21 @@ public class JobService {
                 "Destination file is not empty.");
           } else {
             String[] desiredLogTypes = {"out"};
-            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                hdfsLogPath, desiredLogTypes);
+            YarnClientWrapper yarnClientWrapper = ycs
+                .getYarnClientSuper(settings.getConfiguration());
+            
+            ApplicationId applicationId = ConverterUtils.toApplicationId(appId);
+            YarnMonitor monitor = new YarnMonitor(applicationId,
+                yarnClientWrapper, ycs);
+            try {
+              YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                  hdfsLogPath, desiredLogTypes, monitor);
+            } catch (IOException | InterruptedException | YarnException ex) {
+              throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                  "something went wrong during the log aggregation");
+            } finally {
+              monitor.close();
+            }
           }
         }
       } else if (type.equals("err")) {
@@ -1091,8 +1113,20 @@ public class JobService {
                 "Destination file is not empty.");
           } else {
             String[] desiredLogTypes = {"err", ".log"};
-            YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
-                hdfsErrPath, desiredLogTypes);
+            YarnClientWrapper yarnClientWrapper = ycs
+                .getYarnClientSuper(settings.getConfiguration());
+            ApplicationId applicationId = ConverterUtils.toApplicationId(appId);
+            YarnMonitor monitor = new YarnMonitor(applicationId,
+                yarnClientWrapper, ycs);
+            try {
+              YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
+                  hdfsErrPath, desiredLogTypes, monitor);
+            } catch (IOException | InterruptedException | YarnException ex) {
+              throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                  "something went wrong during the log aggregation");
+            } finally {
+              monitor.close();
+            }
           }
         }
       }
@@ -1103,7 +1137,7 @@ public class JobService {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
     JsonResponse json = new JsonResponse();

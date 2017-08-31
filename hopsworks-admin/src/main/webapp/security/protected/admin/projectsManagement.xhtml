@@ -42,7 +42,7 @@
                              filteredValue="#{projectsmanagement.filteredProjects}"
                              widgetVar="projectsTable"
                              emptyMessage="No projects found with given criteria"
-                             rowKey="#{project.projectname}"
+                             rowKey="#{project.name}"
                              style="table-layout: fixed"
                              sortMode="multiple"
                              editable="true"
@@ -58,26 +58,26 @@
                   <p:ajax event="rowEditCancel" update=":projectmodifyForm:msgs" />
 
                   <p:column id="projectNameColumn"
-                            filterBy="#{project.projectname}"
-                            sortBy="#{project.projectname}"
+                            filterBy="#{project.name}"
+                            sortBy="#{project.name}"
                             filterMatchMode="contains"
                             headerText="Project"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{project.projectname}" />
+                    <h:outputText value="#{project.name}" />
                   </p:column>
 
                   <p:column id="yarnquotaColumn"
-                            filterBy="#{project.yarnQuotaRemaining}"
-                            sortBy="#{project.yarnQuotaRemaining}"
+                            filterBy="#{projectsmanagement.getYarnQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getYarnQuota(project.name)}"
                             filterMatchMode="contains"
-                            headerText="CPU quota left"
+                            headerText="Yarn quota left"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
-                        <h:outputText value="#{project.yarnQuotaRemaining}" />
+                        <h:outputText value="#{projectsmanagement.getYarnQuota(project.name)}" />
                       </f:facet>
                       <f:facet name="input">
-                        <p:inputText value="#{project.yarnQuotaRemaining}" style="width:100%">
+                        <p:inputText value="#{projectsmanagement.yarnquota}" style="width:100%">
                           <f:validateLongRange
                             maximum="100000000"
                             minimum="0" />
@@ -87,55 +87,53 @@
                   </p:column>
 
                   <p:column id="yarntotalquotaColumn"
-                            filterBy="#{project.yarnQuotaTotal}"
-                            sortBy="#{project.yarnQuotaTotal}"
+                            filterBy="#{projectsmanagement.getTotalYarnQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getTotalYarnQuota(project.name)}"
                             filterMatchMode="contains"
-                            headerText="CPU to date"
+                            headerText="Yarn quota to date"
                             style=" font-size: 12px; text-align: center;">
                     <h:outputText
-                      value="#{project.yarnQuotaTotal}" />
+                      value="#{projectsmanagement.getTotalYarnQuota(project.name)}" />
                   </p:column>
 
                   <p:column id="hdfsquotaColumn"
-                            filterBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
-                            sortBy="#{projectsmanagement.getHdfsQuota(project.projectname)}"
+                            filterBy="#{projectsmanagement.getHdfsQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getHdfsQuota(project.name)}"
                             filterMatchMode="contains"
-                            headerText="Disk size quota (MB)"
+                            headerText="Disk quota"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHdfsQuota(project.projectname)}" />
+                          value="#{projectsmanagement.getHdfsQuota(project.name)}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hdfsquota}" style="width:100%">
-                          <f:validateLongRange
-                            maximum="10000000000000"
-                            minimum="0" />
+                          value="#{projectsmanagement.hdfsquotastring}" style="width:100%">
+                          <f:validateRegex pattern = "([0-9]+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
                   <p:column id="diskUsedColumn"
-                            filterBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
-                            sortBy="#{projectsmanagement.getHdfsUsed(project.projectname)}"
+                            filterBy="#{projectsmanagement.getHdfsUsed(project.name)}"
+                            sortBy="#{projectsmanagement.getHdfsUsed(project.name)}"
                             filterMatchMode="contains"
                             headerText="Disk Used (MB)"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHdfsUsed(project.projectname)}" />
+                    <h:outputText value="#{projectsmanagement.getHdfsUsed(project.name)}" />
                   </p:column>
 
                   <p:column id="hdfsNsquotaColumn"
-                            filterBy="#{projectsmanagement.getHdfsNsQuota(project.projectname)}"
-                            sortBy="#{projectsmanagement.getHdfsNsQuota(project.projectname)}"
+                            filterBy="#{projectsmanagement.getHdfsNsQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getHdfsNsQuota(project.name)}"
                             filterMatchMode="contains"
                             headerText="Max No of Files"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHdfsNsQuota(project.projectname)}" />
+                          value="#{projectsmanagement.getHdfsNsQuota(project.name)}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
@@ -148,48 +146,48 @@
                     </p:cellEditor>
                   </p:column>
                   <p:column id="noFilesUsedColumn"
-                            filterBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
-                            sortBy="#{projectsmanagement.getHdfsNsUsed(project.projectname)}"
+                            filterBy="#{projectsmanagement.getHdfsNsUsed(project.name)}"
+                            sortBy="#{projectsmanagement.getHdfsNsUsed(project.name)}"
                             filterMatchMode="contains"
                             headerText="Num Files Used"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.projectname)}" />
+                    <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.name)}" />
                   </p:column>
 
                   <p:column id="useremailColumn"
-                            filterBy="#{project.username}"
-                            sortBy="#{project.username}"
+                            filterBy="#{project.owner.username}"
+                            sortBy="#{project.owner.username}"
                             filterMatchMode="contains"
                             headerText="Owner"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{project.username}" />
+                    <h:outputText value="#{project.owner.username}" />
                   </p:column>
 
                   <p:column id="enabledColumn"
-                            filterBy="#{project.disabled}"
-                            sortBy="#{project.disabled}"
+                            filterBy="#{project.archived}"
+                            sortBy="#{project.archived}"
                             filterMatchMode="contains"
-                            headerText="Disabled"
+                            headerText="Archived"
                             style=" font-size: 12px; text-align: center;">
 
                     <p:cellEditor>
                       <f:facet name="output">
-                        <h:outputText value="#{project.disabled}" />
+                        <h:outputText value="#{project.archived}" />
                       </f:facet>
                       <f:facet name="input">
-                        <h:selectBooleanCheckbox value="#{project.disabled}" style="width:100%"/>
+                        <h:selectBooleanCheckbox value="#{project.archived}" style="width:100%"/>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
 
                   <p:column id="lastcreditpurchachedColumn"
-                            filterBy="#{project.lastPaidAt}"
-                            sortBy="#{project.lastPaidAt}"
+                            filterBy="#{projectsmanagement.getLastPaymentDate(project.name)}"
+                            sortBy="#{projectsmanagement.getLastPaymentDate(project.name)}"
                             filterMatchMode="contains"
                             headerText="Last purchase"
                             style=" font-size: 12px; text-align: left;">
                     <h:outputText
-                      value="#{project.lastPaidAt}" />
+                      value="#{projectsmanagement.getLastPaymentDate(project.name)}" />
                   </p:column>
 
                   <p:column id="totalcreditColumn"

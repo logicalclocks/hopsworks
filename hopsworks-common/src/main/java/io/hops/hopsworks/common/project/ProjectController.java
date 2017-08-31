@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.UserCerts;
+import io.hops.hopsworks.common.dao.certificates.ServiceCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
@@ -63,6 +63,8 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -81,8 +83,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
@@ -92,6 +97,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
+
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -99,6 +107,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.json.JSONObject;
 
@@ -137,6 +150,8 @@ public class ProjectController {
   @EJB
   private DistributedFsService dfs;
   @EJB
+  private YarnClientService ycs;
+  @EJB
   private InodeFacade inodeFacade;
   @EJB
   private OperationsLogFacade operationsLogFacade;
@@ -152,7 +167,12 @@ public class ProjectController {
   private ElasticController elasticController;
   @EJB
   private ExecutionFacade execFacade;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
 
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -202,6 +222,7 @@ public class ProjectController {
     }
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
+    Project project = null;
     try {
       dfso = dfs.getDfsOps();
       /*
@@ -212,7 +233,6 @@ public class ProjectController {
        * with the same name
        * until this project is removed from the database
        */
-      Project project = null;
       try {
         try {
           project = createProject(projectName, owner, projectDTO.
@@ -240,6 +260,20 @@ public class ProjectController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "wrong user name");
       }
+  
+      //create certificate for this user
+      // User's certificates should be created before making any call to
+      // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
+      try {
+        //create certificate for this user
+        createCertificates(project, owner, true);
+      } catch (Exception ex) {
+        LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.getMessage(), ex);
+        cleanup(project, sessionId);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "Error while creating certificates");
+      }
+      
       udfso = dfs.getDfsOps(username);
       if (udfso == null) {
         cleanup(project, sessionId);
@@ -288,17 +322,6 @@ public class ProjectController {
             getStatusCode(), "could not set folder quota");
       }
 
-      try {
-        //create certificate for this user
-        createCertificates(project, owner);
-      } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.
-            getMessage(), ex);
-        cleanup(project, sessionId);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Error while creating certificates");
-      }
-
       //add the services for the project
       addServices(project, projectServices, owner.getEmail());
 
@@ -338,7 +361,7 @@ public class ProjectController {
         dfso.close();
       }
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
 
@@ -473,9 +496,12 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void createCertificates(Project project, Users owner) throws Exception {
+  private void createCertificates(Project project, Users owner, boolean
+      createProjectWideCerts) throws Exception {
     //Generate and hash random password.
     String userKeyPwd = HopsUtils.randomString(64);
+    String encryptedKey = HopsUtils.encrypt(owner.getPassword(), settings
+        .getHopsworksMasterPasswordSsl(), userKeyPwd);
     LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(), project.
         getName(), owner.getUsername(),
         owner.getAddress().getCountry(),
@@ -484,8 +510,21 @@ public class ProjectController {
         owner.getEmail(),
         owner.getOrcid(),
         userKeyPwd);
-    userCertsFacade.putUserCerts(project.getName(), owner.getUsername(),
-        HopsUtils.encrypt(owner.getPassword(), settings.getHopsworksMasterPasswordSsl(), userKeyPwd));
+    userCertsFacade.putUserCerts(project.getName(), owner.getUsername(), encryptedKey);
+  
+    // Project-wide certificates are needed because Zeppelin submits
+    // requests as user: ProjectName
+    if (createProjectWideCerts) {
+      LocalhostServices.createServiceCertificates(settings
+              .getIntermediateCaDir(), project.getName(),
+          owner.getAddress().getCountry(),
+          owner.getAddress().getCity(),
+          owner.getOrganization().getOrgName(),
+          owner.getEmail(),
+          owner.getOrcid(),
+          userKeyPwd);
+      userCertsFacade.putServiceCerts(project.getName(), encryptedKey);
+    }
   }
 
   private boolean existingProjectFolder(Project project) {
@@ -811,6 +850,8 @@ public class ProjectController {
     }
 
     cleanup(project, sessionId);
+    certificateMaterializer.forceRemoveCertificates(user.getUsername(),
+        project.getName());
   }
 
   public void cleanup(Project project, String sessionId) throws AppException {
@@ -820,7 +861,35 @@ public class ProjectController {
     int nbTry = 0;
     while (nbTry < 3) {
       nbTry++;
+  
+      YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
+          .getConfiguration());
+      YarnClient client = yarnClientWrapper.getYarnClient();
       try {
+        //remove from project_team so that nobody can see the project anymore
+        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
+
+        /*
+         * get all running yarn application owned by anny of the project members
+         * we will check later if this application have been stoped and their log aggregation have been finished
+         * it would be better to check all application (even the ones that have finished running)
+         * but the log aggregation status is not recovered when the resource manager restart. As a result
+         * we can't know if the status in "NOT_START" because we should wait for it or because the
+         * resourcemanager restarted.
+         */
+        Collection<ProjectTeam> team = project.getProjectTeamCollection();
+        Set<String> hdfsUsers = new HashSet<>();
+        for (ProjectTeam pt : team) {
+          String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
+              getUser());
+          hdfsUsers.add(hdfsUsername);
+        }
+        hdfsUsers.add(project.getName());
+
+        List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
+            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+
         //Restart zeppelin so interpreters shut down
         Response resp = ClientBuilder.newClient()
             .target(settings.getRestEndpoint()
@@ -849,9 +918,6 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterConfigFactory.stopProject(project);
 
-        //remove from project_team so that nobody can see the project anymore
-        updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
-
         //kill jobs
         List<JobDescription> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
@@ -878,6 +944,22 @@ public class ProjectController {
           }
         }
 
+        
+        for (ApplicationReport appReport : projectsApps) {
+          FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
+          while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
+            client.killApplication(appReport.getApplicationId());
+            appReport = client.getApplicationReport(appReport.getApplicationId());
+            finalState = appReport.getFinalApplicationStatus();
+          }
+          LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
+          while (!YarnLogUtil.isFinal(logAggregationState)) {
+            Thread.sleep(500);
+            appReport = client.getApplicationReport(appReport.getApplicationId());
+            logAggregationState = appReport.getLogAggregationStatus();
+          }
+        }
+        
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean);
@@ -893,6 +975,8 @@ public class ProjectController {
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ex.getMessage());
         }
+      } finally {
+        ycs.closeYarnClient(yarnClientWrapper);
       }
     }
   }
@@ -980,6 +1064,11 @@ public class ProjectController {
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
+  
+      // Remove project generic certificates used by Spark interpreter in
+      // Zeppelin. User specific certificates are removed by the foreign key
+      // constraint in the DB
+      userCertsFacade.removeProjectGenericCertificates(project.getName());
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
@@ -1110,7 +1199,7 @@ public class ProjectController {
             }
             // TODO: This should now be a REST call
             try {
-              createCertificates(project, newMember);
+              createCertificates(project, newMember, false);
             } catch (Exception ex) {
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
@@ -1799,20 +1888,43 @@ public class ProjectController {
     return null;
   }
 
-  public CertPwDTO getCertPw(Users user, String projectName, String keyStore) throws Exception {
+  public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,
+      String keyStore) throws Exception {
     //Compare the sent certificate with the one in the database
     String keypw = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(), userCertsFacade.
         findUserCert(projectName, user.getUsername()).getUserKeyPwd());
     String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
         + user.getUsername();
-    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(), projectUser);
+    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
+        projectUser, true);
 
     CertPwDTO respDTO = new CertPwDTO();
     respDTO.setKeyPw(keypw);
-    respDTO.setTrustPw(settings.getHopsworksMasterPasswordSsl());
+    respDTO.setTrustPw(keypw);
     return respDTO;
   }
 
+  public CertPwDTO getProjectWideCertPw(Users user, String projectName,
+      String keyStore) throws Exception {
+    List<ServiceCerts> serviceCerts = userCertsFacade.findServiceCertsByName
+        (projectName);
+    if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
+      throw new Exception("Found more than one or none project-wide " +
+          "certificates for project " + projectName);
+    }
+    
+    String keypw = HopsUtils.decrypt(user.getPassword(), settings
+        .getHopsworksMasterPasswordSsl(), serviceCerts.get(0)
+        .getCertificatePassword());
+    validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
+        projectName, false);
+    
+    CertPwDTO respDTO = new CertPwDTO();
+    respDTO.setKeyPw(keypw);
+    respDTO.setTrustPw(keypw);
+    
+    return respDTO;
+  }
   /**
    * Returns the project user from the keystore and verifies it.
    *
@@ -1821,7 +1933,8 @@ public class ProjectController {
    * @return
    * @throws AppException
    */
-  public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser)
+  public void validateCert(byte[] keyStore, char[] keyStorePwd, String
+      projectUser, boolean isProjectSpecific)
       throws AppException {
     try {
       KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -1841,10 +1954,25 @@ public class ProjectController {
             "Certificate CN does not match the username provided");
       }
       
-      UserCerts userCert = userCertsFacade.findUserCert(hdfsUsersBean.
-          getProjectName(cnTokens[1]), hdfsUsersBean.getUserName(cnTokens[1]));
+      byte[] userKey;
+      
+      if (isProjectSpecific) {
+        userKey = userCertsFacade.findUserCert(hdfsUsersBean.
+                getProjectName(cnTokens[1]),
+            hdfsUsersBean.getUserName(cnTokens[1])).getUserKey();
+      } else {
+        // In that case projectUser is the name of the Project, see Spark
+        // interpreter in Zeppelin
+        List<ServiceCerts> serviceCerts = userCertsFacade
+            .findServiceCertsByName(projectUser);
+        if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
+          throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "Could not find exactly one certificate for " + projectUser);
+        }
+        userKey = serviceCerts.get(0).getServiceKey();
+      }
 
-      if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
+      if (!Arrays.equals(userKey, keyStore)) {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
             "Certificate error!");
       }
