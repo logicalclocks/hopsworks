@@ -46,7 +46,6 @@ public class ZeppelinConfig {
   private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
-  private static final String HIVE_SITE_XML = "/hive-site.xml";
   public static final String INTERPRETER_JSON = "/interpreter.json";
   public static final String METRICS_PROPERTIES = "/metrics.properties";
   private static final int DELETE_RETRY = 10;
@@ -356,7 +355,7 @@ public class ZeppelinConfig {
     return credentials;
   }
 
-  //returns true if the project dir was created 
+  //returns true if the project dir was created
   private boolean createZeppelinDirs() {
     File projectDir = new File(projectDirPath);
     boolean newProjectDir = projectDir.mkdirs();
@@ -419,13 +418,12 @@ public class ZeppelinConfig {
     }
   }
 
-  // returns true if one of the conf files were created anew 
+  // returns true if one of the conf files were created anew
   private boolean createZeppelinConfFiles(String interpreterConf) throws
           IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
     File log4j_file = new File(confDirPath + LOG4J_PROPS);
-    File hive_site_xml_file = new File(confDirPath + HIVE_SITE_XML);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator
             + Settings.DIR_ROOT + File.separator + this.projectName;
@@ -433,7 +431,7 @@ public class ZeppelinConfig {
             + this.projectName;
     String resourceDir = File.separator + Settings.DIR_ROOT + File.separator
             + this.projectName + File.separator
-            + Settings.DefaultDataset.RESOURCES.getName();
+            + Settings.BaseDataset.RESOURCES.getName();
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
@@ -491,15 +489,6 @@ public class ZeppelinConfig {
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
               zeppelin_site_xml.
               toString());
-    }
-
-    if (!hive_site_xml_file.exists()) {
-      StringBuilder hive_site_xml = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.HIVE_SITE_TEMPLATE,
-                      "metastore_dir", home);
-      createdXml = ConfigFileGenerator.createConfigFile(hive_site_xml_file,
-              hive_site_xml.toString());
     }
 
     //get interpreter string from db
@@ -647,7 +636,6 @@ public class ZeppelinConfig {
   private boolean removeProjectConfFiles() {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
-    File hive_site_xml_file = new File(confDirPath + HIVE_SITE_XML);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     boolean ret = false;
     if (zeppelin_env_file.exists()) {
@@ -655,9 +643,6 @@ public class ZeppelinConfig {
     }
     if (zeppelin_site_xml_file.exists()) {
       ret = zeppelin_site_xml_file.delete();
-    }
-    if (hive_site_xml_file.exists()) {
-      ret = hive_site_xml_file.delete();
     }
     if (interpreter_file.exists()) {
       ret = interpreter_file.delete();

@@ -24,6 +24,7 @@ public class DataSetDTO {
   private String templateName;
   private List<UserCardDTO> projectTeam;
   private List<String> sharedWith;
+  private DatasetType type;
 
   public DataSetDTO() {
   }
@@ -51,6 +52,7 @@ public class DataSetDTO {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
               getUser().getLname(), member.getUser().getEmail()));
     }
+    this.type = ds.getType();
   }
 
   public DataSetDTO(String name, int inodeId, Project project) {
@@ -184,6 +186,10 @@ public class DataSetDTO {
   public void setGenerateReadme(boolean generateReadme) {
     this.generateReadme = generateReadme;
   }
+
+  public void setType(DatasetType type) { this.type = type; }
+
+  public DatasetType getType() { return this.type; }
 
   @Override
   public String toString() {

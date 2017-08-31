@@ -38,9 +38,6 @@ public class ConfigFileGenerator {
   public static final String INTERPRETER_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
           + "interpreter_template.json";
-  public static final String HIVE_SITE_TEMPLATE
-          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
-          + "hive_site_template.xml";
   public static final String JUPYTER_NOTEBOOK_CONFIG_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "jupyter_notebook_config_template.py";

@@ -97,7 +97,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
-
+import javax.xml.rpc.ServiceException;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.codec.binary.Base64;
@@ -322,9 +322,6 @@ public class ProjectController {
             getStatusCode(), "could not set folder quota");
       }
 
-      //add the services for the project
-      addServices(project, projectServices, owner.getEmail());
-
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso, udfso);
@@ -337,6 +334,17 @@ public class ProjectController {
       } catch (AppException ex) {
         cleanup(project, sessionId);
         throw ex;
+      }
+
+      // enable services
+      for (ProjectServiceEnum service : projectServices) {
+        try {
+          addService(project, service, owner, dfso, udfso);
+        } catch (ServiceException sex) {
+          cleanup(project, sessionId);
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Error while enabling the services");
+        }
       }
 
       //add members of the project   
@@ -628,31 +636,20 @@ public class ProjectController {
       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws
       AppException, IOException {
 
-    List<ProjectServiceEnum> services = projectServicesFacade.
-        findEnabledServicesForProject(project);
-    String[] subResources = settings.getResourceDirs().split(";");
 
-    for (Settings.DefaultDataset ds : Settings.DefaultDataset.values()) {
-      boolean globallyVisible = (ds.equals(Settings.DefaultDataset.RESOURCES)
-          || ds.equals(Settings.DefaultDataset.LOGS)
-          || ds.equals(Settings.DefaultDataset.ZEPPELIN)
-          || ds.equals(Settings.DefaultDataset.JUPYTER));
-      if (!services.contains(ProjectServiceEnum.ZEPPELIN) && ds.equals(
-          Settings.DefaultDataset.ZEPPELIN)) {
-        continue;
-      }
-      if (!services.contains(ProjectServiceEnum.JUPYTER) && ds.equals(
-          Settings.DefaultDataset.JUPYTER)) {
-        continue;
-      }
-
+    for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, false, globallyVisible, dfso,
-          dfso);// both are dfso to create it as root user
-      if (ds.equals(Settings.DefaultDataset.RESOURCES) && subResources != null) {
+              getDescription(), -1, false, true, dfso);
+
+      // create subdirectories for the resource dataset
+      if (ds.equals(Settings.BaseDataset.RESOURCES)) {
+        String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
-          datasetController.createSubDirectory(user, project, ds.getName(),
-              sub, -1, "", false, dfso, udfso);
+          Path resourceDir = new Path(Settings.getProjectPath(project.getName()),
+              ds.getName());
+          Path subDirPath = new Path(resourceDir, sub);
+          datasetController.createSubDirectory(project, subDirPath, -1,
+              "", false, udfso);
         }
       }
 
@@ -661,14 +658,6 @@ public class ProjectController {
           ds.getDescription(), project.getName());
 
     }
-
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void logDataSet(Project project, Settings.DefaultDataset ds) {
-    Dataset dataset = datasetFacade.
-        findByNameAndProjectId(project, ds.getName());
-    datasetController.logDataset(dataset, OperationType.Add);
   }
 
   /**
@@ -685,11 +674,11 @@ public class ProjectController {
       ProjectInternalFoldersFailedException, AppException {
     try {
       udfso.copyInHdfs(new Path(settings.getSparkLog4JPath()), new Path(
-          "/Projects/" + project.getName()
-          + "/" + Settings.DefaultDataset.RESOURCES));
+              "/Projects/" + project.getName()
+              + "/" + Settings.BaseDataset.RESOURCES));
       udfso.copyInHdfs(new Path(settings.getSparkMetricsPath()), new Path(
-          "/Projects/" + project.getName()
-          + "/" + Settings.DefaultDataset.RESOURCES));
+              "/Projects/" + project.getName()
+              + "/" + Settings.BaseDataset.RESOURCES));
     } catch (IOException e) {
       throw new ProjectInternalFoldersFailedException(
           "Could not create project resources ", e);
@@ -705,7 +694,7 @@ public class ProjectController {
 
     try {
       datasetController.createDataset(user, project, "consents",
-          "Biobanking consent forms", -1, false, false, dfso, udfso);
+          "Biobanking consent forms", -1, false, false, dfso);
     } catch (IOException | EJBException e) {
       throw new ProjectInternalFoldersFailedException(
           "Could not create project consents folder ", e);
@@ -731,51 +720,99 @@ public class ProjectController {
     }
   }
 
-  public boolean addServices(Project project, List<ProjectServiceEnum> services,
-      String userEmail) {
-    boolean addedService = false;
-    //Add the desired services
-    for (ProjectServiceEnum se : services) {
-      if (!projectServicesFacade.findEnabledServicesForProject(project).
-          contains(se)) {
-        projectServicesFacade.addServiceForProject(project, se);
-        addedService = true;
-      }
+  public boolean addService(Project project, ProjectServiceEnum service,
+        Users user, DistributedFileSystemOps dfso,
+        DistributedFileSystemOps udfso) throws ServiceException {
+    if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
+      // Service already enabled fro the current project. Nothing to do
+      return false;
     }
 
-    if (addedService) {
-      Users user = userBean.getUserByEmail(userEmail);
-      String servicesString = "";
-      for (int i = 0; i < services.size(); i++) {
-        servicesString = servicesString + services.get(i).name() + " ";
-      }
-      logActivity(ActivityFacade.ADDED_SERVICES + servicesString,
-          ActivityFacade.FLAG_PROJECT,
-          user, project);
-
+    boolean toPersist;
+    switch (service) {
+      case ZEPPELIN:
+        toPersist = addServiceDataset(project, user,
+            Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
+        break;
+      case JUPYTER:
+        toPersist = addServiceDataset(project, user,
+            Settings.ServiceDataset.JUPYTER, dfso, udfso);
+        break;
+      default:
+        toPersist = true;
     }
-    return addedService;
+
+    if (toPersist) {
+      // Persist enabled service in the database
+      projectServicesFacade.addServiceForProject(project, service);
+      logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
+          ActivityFacade.FLAG_PROJECT, user, project);
+    } else {
+      // either addServiceZeppelin or addServiceHive failed. Throw ServiceException to
+      // signal it to the view
+      throw new ServiceException();
+    }
+
+    return true;
+  }
+
+  private boolean addServiceDataset(Project project, Users user,
+        Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
+        DistributedFileSystemOps udfso){
+    try {
+      datasetController.createDataset(user, project, ds.getName(), ds.
+          getDescription(), -1, false, true, dfso);
+      datasetController.generateReadme(udfso, ds.getName(),
+          ds.getDescription(), project.getName());
+    } catch (IOException | AppException ex) {
+      LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
+      return false;
+    }
+
+    return true;
   }
 
   /**
-   * Change the project description
+   * Change, if necessary, the project description
    * <p/>
    *
-   * @param project
-   * @param proj
-   * @param userEmail of the user making the change
+   * @param project the project to change
+   * @param projectDescr the description
+   * @param user the user making the change
    */
-  public void updateProject(Project project, ProjectDTO proj,
-      String userEmail) {
-    Users user = userBean.getUserByEmail(userEmail);
+  public boolean updateProjectDescription(Project project, String projectDescr,
+          Users user) throws AppException {
+    if (project.getDescription() == null || !project.getDescription().equals(projectDescr)){
+      project.setDescription(projectDescr);
+      projectFacade.mergeProject(project);
+      logProject(project, OperationType.Update);
+      logActivity(ActivityFacade.PROJECT_DESC_CHANGED + projectDescr,
+          ActivityFacade.FLAG_PROJECT, user, project);
+      return true;
+    }
+    return false;
+  }
 
-    project.setDescription(proj.getDescription());
-    project.setRetentionPeriod(proj.getRetentionPeriod());
-
-    projectFacade.mergeProject(project);
-    logProject(project, OperationType.Update);
-    logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
-        user, project);
+  /**
+   * Change, if necessary, the project retention period
+   * <p/>
+   *
+   * @param project the project to change
+   * @param projectRetention the retention period
+   * @param user the user making the change
+   */
+  public boolean updateProjectRetention(Project project, Date projectRetention,
+          Users user) throws AppException {
+    if (project.getRetentionPeriod() == null ||
+        !project.getRetentionPeriod().equals(projectRetention)) {
+      project.setRetentionPeriod(projectRetention);
+      projectFacade.mergeProject(project);
+      logProject(project, OperationType.Update);
+      logActivity(ActivityFacade.PROJECT_RETENTION_CHANGED + projectRetention,
+          ActivityFacade.FLAG_PROJECT, user, project);
+      return true;
+    }
+    return false;
   }
 
   //Set the project owner as project master in ProjectTeam table
@@ -1060,7 +1097,7 @@ public class ProjectController {
       removeAnacondaEnv(project);
 
       //remove anaconda repos
-      removeJupypter(project);
+      removeJupyter(project);
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
@@ -1561,7 +1598,7 @@ public class ProjectController {
     Users user = userBean.getUserByEmail(username);
     try {
       datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
-          "files for guide projects", -1, false, true, dfso, udfso);
+          "files for guide projects", -1, false, true, dfso);
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -1683,7 +1720,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeJupypter(Project project) throws AppException {
+  public void removeJupyter(Project project) throws AppException {
     jupyterConfigFactory.removeProject(project);
   }
 

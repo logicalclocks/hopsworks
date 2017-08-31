@@ -2,7 +2,6 @@ package io.hops.hopsworks.common.dao.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -10,7 +9,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless
@@ -19,9 +17,6 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  @EJB
-  private InodeFacade inodes;
-  
   @Override
   protected EntityManager getEntityManager() {
     return em;
@@ -81,19 +76,12 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
   }
 
-  public List<Project> findProjectSharedWith(Project project, String name) {
-    Dataset dataset = findByNameAndProjectId(project, name);
-    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInode",Dataset.class);
-    query.setParameter("inode", dataset.getInode());
-    List<Dataset> datasets =null;
-    try {
-      datasets = query.getResultList();
-    } catch (NoResultException e) {
+  public List<Project> findProjectSharedWith(Project project, Inode inode) {
+    List<Dataset> datasets = findByInode(inode);
+    if (datasets == null){
       return null;
     }
-    if(datasets==null){
-      return null;
-    }
+
     List<Project> projects = new ArrayList<>();
     for(Dataset ds : datasets){
       if(!ds.getProject().equals(project)){
