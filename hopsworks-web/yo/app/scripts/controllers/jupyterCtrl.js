@@ -3,7 +3,7 @@
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
           'growl', 'ModalService', 'JupyterService', 'TensorFlowService', 'SparkService', '$location', '$timeout', '$window', '$sce',
-            function ($scope, $routeParams, $route, growl, ModalService, JupyterService, TensorFlowService, SparkService,
+          function ($scope, $routeParams, $route, growl, ModalService, JupyterService, TensorFlowService, SparkService,
                   $location, $timeout, $window, $sce) {
 
             var self = this;
@@ -20,6 +20,7 @@ angular.module('hopsWorksApp')
             self.sparkStatic = false;
             self.sparkDynamic = false;
             self.tensorflow = false;
+            $scope.sessions = null;
             self.val = {};
             $scope.tgState = true;
             self.config = {};
@@ -29,17 +30,33 @@ angular.module('hopsWorksApp')
             ];
             self.selected = self.dirs[1];
 
-		
+
 
             self.changeBaseDir = function () {
-               self.val.baseDir = self.selected.name;
+              self.val.baseDir = self.selected.name;
+            };
+
+            self.deselect = function () {
+            };
+
+
+            self.livySessions = function (projectId) {
+              JupyterService.livySessions(projectId).then(
+                      function (success) {
+                        $scope.sessions = success.data;
+                      }, function (error) {
+                        // nothing to do
+//                        console.info("No livy sessions running.");
+                        $scope.sessions = null;
+              }
+              );
+
             };
             
-            self.deselect = function () {
-//              self.selected = null;
+            self.showLivyUI = function (appId) {
+              $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
             };
-
-
+            
             self.sliderVisible = false;
 
             self.sliderOptions = {
@@ -237,6 +254,7 @@ angular.module('hopsWorksApp')
                 growl.error("Could not get Jupyter Notebook Server Settings.");
               }
               );
+              self.livySessions(projectId);
 
             };
 

@@ -13,8 +13,8 @@ angular.module('hopsWorksApp')
               index: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps')
               },
-              enable: function (projectId, version) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/enable/' + version)
+              enable: function (projectId, version, pythonKernel) {
+                return $http.get('/api/project/' + projectId + '/pythonDeps/enable/' + version + "/" + pythonKernel)
               },
               enabled: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps/enabled')

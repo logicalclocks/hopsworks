@@ -125,6 +125,7 @@ public class LivyService {
     YarnApplicationstate appStates;
     String hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
     for (LivyMsg.Session s : sessionList.getSessions()) {
+//      LOGGER.log(Level.INFO, "Found Livy session: {0}", s.getAppId());
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
         appStates = appStateBean.findByAppId(s.getAppId());
         if (!jupyter && (appStates == null || appStates.getAppname().equals(JUPYTER_SESSION_NAME))) {
@@ -202,15 +203,17 @@ public class LivyService {
 
   /**
    * Delete all Zeppelin livy sessions
-   * @param hdfsUser 
+   *
+   * @param hdfsUser
    */
   public void deleteAllZeppelinLivySessions(String hdfsUser) {
     deleteAllLivySessions(hdfsUser, false);
   }
-  
+
   /**
    * Delete all Jupyter livy sessions
-   * @param hdfsUser 
+   *
+   * @param hdfsUser
    */
   public void deleteAllJupyterLivySessions(String hdfsUser) {
     deleteAllLivySessions(hdfsUser, true);

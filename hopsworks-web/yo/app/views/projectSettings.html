@@ -75,24 +75,24 @@
                           <div class="col-md-5">
                             <label class="text-muted">Status</label>
                             <div class="row" style="margin-left:15px; margin-bottom:0px">
-                              <fieldset ng-if="projectCtrl.hdfsQuota()!=null">
+                              <fieldset ng-if="projectCtrl.hdfsQuota() != null">
                                 <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
                                   {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
                                 </span>          
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                              <fieldset ng-if="projectCtrl.hdfsNsCount()!=null">
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() ===-1">
+                              <fieldset ng-if="projectCtrl.hdfsNsCount() != null">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() === -1">
                                   {{projectCtrl.hdfsNsCount()}} files 
                                 </span>  
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !==-1">
+                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !== -1">
                                   {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
                                 </span>  
                               </fieldset>
                             </div>
                             <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
-                              <fieldset ng-if="projectCtrl.yarnQuota()!=null">
+                              <fieldset ng-if="projectCtrl.yarnQuota() != null">
                                 <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
                                   {{projectCtrl.yarnQuota()}} CPU hours
                                 </span>          
@@ -135,6 +135,12 @@
                       <p class="lead">Jupyter requries an Anaconda installation. Click on the button below to install Anaconda for this project.</p>
                       <p>You cannot change the version of python after you have selected enabled the anaconda environment for this project.</p>
                       <p class="lead">
+                      <div><span> <label>Enable Python Kernel: 
+                            <input type="checkbox" ng-init="pythonDepsCtrl.pythonKernelEnabled = true" ng-model="pythonDepsCtrl.pythonKernelEnabled"></label>
+                      <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonDepsCtrl.pythonKernelEnabled == true, 'fa-info' : pythonDepsCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project." 
+                                                          style="margin-left: 10px"></i></span>
+                      </div>
+
                       <div>
                         <div class="btn-group" uib-dropdown is-open="pythonDepsCtrl.pythonVersionOpen">
                           <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button" 
@@ -144,16 +150,13 @@
                           </button>
                           <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
                             <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('2.7')">Python 2.7</a></li>
-<!--                            <li class="divider"></li>
-                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
-                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.5')">Python 3.5</a></li>-->
+                            <!--                            <li class="divider"></li>
+                                                        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
+                                                        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.5')">Python 3.5</a></li>-->
                           </ul>
                         </div>
-
-
-
-
                       </div>
+                      </p>
                     </div>                  
                   </div>                  
                   <div class="row"></div>
@@ -166,7 +169,8 @@
                   <div class="col-md-offset-1 col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
                     <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                          aria-valuenow="{{pythonDepsCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
-                      Number of hosts left: {{pythonDepsCtrl.numEnvsNotEnabled}}
+                      Installing conda at all hosts
+                      <!--Number of hosts left: {{pythonDepsCtrl.numEnvsNotEnabled}}-->
                     </div>
                   </div>
                 </div>

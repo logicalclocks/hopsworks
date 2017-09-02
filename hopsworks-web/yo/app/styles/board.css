@@ -219,11 +219,22 @@ div.story h3, div.task h3 {
   margin-top:100px; 
 }
 
+.blocks .btn-primary .active .focus
+{
+    background-color: #5cb85c;
+}
 .blocks .btn-primary
 {
-    padding: 4px 5px;
     margin: 0 50px 0 0;
-    border-radius: 5px;
-    border: 1px solid #fff;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+    background-color: #2e353d;
 }
 
+.blocks .btn-group.btn-block {
+    display: table;
+}
+
+.clusterparams { 
+  margin-top:10px; 
+}

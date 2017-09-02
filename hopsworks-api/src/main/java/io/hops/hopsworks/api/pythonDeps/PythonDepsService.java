@@ -110,13 +110,22 @@ public class PythonDepsService {
   }
 
   @GET
-  @Path("/enable/{version}")
+  @Path("/enable/{version}/{pythonKernelEnable}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response enable(@PathParam("version") String version,
+          @PathParam("pythonKernelEnable") String pythonKernelEnable,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
-    pythonDepsFacade.createProjectInDb(project, deps, version);
+    Boolean enablePythonKernel = Boolean.parseBoolean(pythonKernelEnable);
+    if (!enablePythonKernel) {
+      // 'X' indicates that the python kernel should not be enabled in Conda
+      version=version + "X";
+    }
+    pythonDepsFacade.createProjectInDb(project, deps, version, enablePythonKernel);
+     
+    project.setPythonVersion(version);
+    projectFacade.update(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

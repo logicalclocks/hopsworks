@@ -168,7 +168,7 @@ public class JupyterConfigFactory {
       // use pidfile to kill any running servers
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-      jc = new JupyterConfig(project.getName(), secretConfig, hdfsUser,
+      jc = new JupyterConfig(project, secretConfig, hdfsUser,
               hdfsLeFacade.
                       getSingleEndpoint(), settings, port, token, js);
 

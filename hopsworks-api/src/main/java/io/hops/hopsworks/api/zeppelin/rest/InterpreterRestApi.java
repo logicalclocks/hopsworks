@@ -97,7 +97,7 @@ public class InterpreterRestApi {
   @EJB
   private ProjectTeamFacade teambean;
   @EJB
-  private HdfsUsersController hdfsUserBean;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private YarnApplicationstateFacade appStateBean;
   @EJB
@@ -301,8 +301,8 @@ public class InterpreterRestApi {
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
-    String projName = hdfsUserBean.getProjectName(session.getProxyUser());
-    String username = hdfsUserBean.getUserName(session.getProxyUser());
+    String projName = hdfsUsersController.getProjectName(session.getProxyUser());
+    String username = hdfsUsersController.getUserName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
     }
@@ -358,8 +358,8 @@ public class InterpreterRestApi {
     if (session == null) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
-    String projName = hdfsUserBean.getProjectName(session.getProxyUser());
-    String username = hdfsUserBean.getUserName(session.getProxyUser());
+    String projName = hdfsUsersController.getProjectName(session.getProxyUser());
+    String username = hdfsUsersController.getUserName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
     }

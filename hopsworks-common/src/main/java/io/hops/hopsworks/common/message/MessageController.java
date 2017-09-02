@@ -74,14 +74,14 @@ public class MessageController {
     if (newMessage) {
       messageFacade.save(newMsg);
     } else {
-      messageFacade.edit(newMsg);
+      messageFacade.update(newMsg);
     }
 
     msg.setContent(replyMsg);
     if (msg.getReplyToMsg() == null) {
       msg.setReplyToMsg(newMsg);
     }
-    messageFacade.edit(msg);
+    messageFacade.update(msg);
   }
 
   /**

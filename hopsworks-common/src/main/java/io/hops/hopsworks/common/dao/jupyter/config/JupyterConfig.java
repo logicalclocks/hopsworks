@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
@@ -37,7 +38,7 @@ public class JupyterConfig {
    * A configuration that is common for all projects.
    */
   private final Settings settings;
-  private final String projectName;
+  private final Project project;
   private final String hdfsUser;
   private final String projectUserPath;
   private final String notebookPath;
@@ -50,11 +51,11 @@ public class JupyterConfig {
   private String token;
   private String nameNodeEndpoint;
 
-  JupyterConfig(String projectName, String secretConfig, String hdfsUser,
+  JupyterConfig(Project project, String secretConfig, String hdfsUser,
           String nameNodeEndpoint, Settings settings, int port, String token,
           JupyterSettings js)
           throws AppException {
-    this.projectName = projectName;
+    this.project = project;
     this.hdfsUser = hdfsUser;
     this.nameNodeEndpoint = nameNodeEndpoint;
     boolean newDir = false;
@@ -62,7 +63,7 @@ public class JupyterConfig {
     this.settings = settings;
     this.port = port;
     projectUserPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
+            + Settings.DIR_ROOT + File.separator + this.project.getName()
             + File.separator + hdfsUser;
     notebookPath = projectUserPath + File.separator + secretConfig;
     confDirPath = notebookPath + File.separator + "conf";
@@ -80,7 +81,7 @@ public class JupyterConfig {
       }
       LOGGER.log(Level.SEVERE,
               "Error in initializing JupyterConfig for project: {0}. {1}",
-              new Object[]{this.projectName, e});
+              new Object[]{this.project.getName(), e});
       throw new AppException(
               Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
               "Could not configure Jupyter. Report a bug.");
@@ -158,7 +159,7 @@ public class JupyterConfig {
   }
 
   public String getProjectName() {
-    return projectName;
+    return project.getName();
   }
 
   public String getConfDirPath() {
@@ -182,6 +183,7 @@ public class JupyterConfig {
     // Set owner persmissions
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
+    xOnly.add(PosixFilePermission.OWNER_READ);
     xOnly.add(PosixFilePermission.OWNER_EXECUTE);
     xOnly.add(PosixFilePermission.GROUP_WRITE);
     xOnly.add(PosixFilePermission.GROUP_EXECUTE);
@@ -233,14 +235,14 @@ public class JupyterConfig {
 
       String pythonKernel = "";
 
-      if (settings.isPythonKernelEnabled()) {
-        pythonKernel = ", 'python-" + projectName + "'";
+      if (settings.isPythonKernelEnabled() && project.getPythonVersion().contains("X") == false) {
+        pythonKernel = ", 'python-" + project.getName() + "'";
       }
 
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
               instantiateFromTemplate(
                       ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
-                      "project", this.projectName,
+                      "project", this.project.getName(),
                       "namenode_ip", nameNodeIp,
                       "namenode_port", nameNodePort,
                       "hopsworks_ip", settings.getHopsworksIp(),
@@ -305,19 +307,19 @@ public class JupyterConfig {
                               "tensorflow", Boolean.toString(js.getMode().
                                       startsWith("tensorflow")),
                               "jupyter_home", this.confDirPath,
-                              "project", this.projectName,
+                              "project", this.project.getName(),
                               "nn_endpoint", this.nameNodeEndpoint,
                               "spark_user", this.settings.getSparkUser(),
                               "java_home", this.settings.getJavaHome(),
                               "hadoop_home", this.settings.getHadoopDir(),
                               "pyspark_bin", this.settings.
                                       getAnacondaProjectDir(
-                                              projectName) + "/bin/python",
+                                              project.getName()) + "/bin/python",
                               "anaconda_dir", this.settings.getAnacondaDir(),
                               "cuda_dir", this.settings.getCudaDir(),
                               "anaconda_env", this.settings.
                                       getAnacondaProjectDir(
-                                              projectName),
+                                              project.getName()),
                               "sparkhistoryserver_ip", this.settings.
                                       getSparkHistoryServerIp(),
                               "spark_files", sparkFiles.toString()

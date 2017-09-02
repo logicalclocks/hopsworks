@@ -15,6 +15,8 @@ import javax.ejb.Singleton;
 import javax.ejb.Timer;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -130,19 +132,22 @@ public class JupyterNotebookCleaner {
                       toString());
     }
 
-    Scanner s = new Scanner(Settings.JUPYTER_PIDS);
-    while (s.hasNextLine()) {
-      //read each line in the file and split the line content on the basis of space
-      String line = s.nextLine();
-      try {
-        pids.add(Long.parseLong(line));
-      } catch (NumberFormatException ex) {
-        Logger.getLogger(JupyterNotebookCleaner.class.getName()).
-                log(Level.SEVERE, "Badly formatted PIDs in "
-                        + Settings.JUPYTER_PIDS, ex);
+    try {
+      Scanner s = new Scanner(new File(Settings.JUPYTER_PIDS));
+      while (s.hasNextLine()) {
+        //read each line in the file and split the line content on the basis of space
+        String line = s.nextLine();
+        try {
+          pids.add(Long.parseLong(line));
+        } catch (NumberFormatException ex) {
+          Logger.getLogger(JupyterNotebookCleaner.class.getName()).
+                  log(Level.SEVERE, "Badly formatted PIDs in "
+                          + Settings.JUPYTER_PIDS, ex);
+        }
       }
+    } catch (FileNotFoundException ex) {
+      Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.INFO, "Could not find any Pids");
     }
-
     return pids;
   }
 
