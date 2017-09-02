@@ -102,6 +102,7 @@ public class LivyMsg {
     public void setState(String state) {
       this.state = state;
     }
+    
 
   }
 }

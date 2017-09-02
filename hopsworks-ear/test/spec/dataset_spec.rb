@@ -33,7 +33,7 @@ describe 'dataset' do
         ds = json_body.detect { |d| d[:name] == "README.md" }
         expect(ds).to be_present
       end
-      
+
       it 'should work with valid params and no README.md' do
         dsname = "dataset_#{short_random_id}"
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: false}
@@ -83,7 +83,7 @@ describe 'dataset' do
       end
       it "should fail to delete dataset" do
         project = get_project
-        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs" 
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -101,7 +101,7 @@ describe 'dataset' do
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
         reset_session
-      end     
+      end
 #      it "should fail to delete dataset belonging to someone else." do
 #        with_valid_project
 #        dsname = "dataset_#{short_random_id}"
@@ -180,7 +180,7 @@ describe 'dataset' do
         create_session(project[:username],"Pass123")
         create_dataset_by_name(project, dsname)
         reset_session
-        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -200,15 +200,17 @@ describe 'dataset' do
         member = create_user
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
-        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]} 
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
         expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
         expect_status(403)
       end
     end
     context 'with authentication and sufficient privilege' do
-      before :all do
+      before :each do
+        check_project_limit
         with_valid_project
       end
+
       it "should share dataset" do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
@@ -238,6 +240,131 @@ describe 'dataset' do
         datasets = get_all_datasets(project)
         shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname]}::#{dsname}" }
         expect(shared_ds[:status]).to be true
+      end
+      it "shoudl fail to make a shared dataset editable" do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        dsname = "dataset_#{short_random_id}"
+        ds = create_dataset_by_name(@project, dsname)
+        share_dataset(@project, dsname, project)
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/makeEditable", {name: dsname}
+        expect_status(400)
+      end
+      it "should fail to write on a non editable shared dataset" do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        dsname = "dataset_#{short_random_id}"
+        ds = create_dataset_by_name(@project, dsname)
+        share_dataset(@project, dsname, project)
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset", {name: "#{dsname + "/testdir"}"}
+        expect_status(403)
+      end
+      it "should write in an editable shared dataset" do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        dsname = "dataset_#{short_random_id}"
+        ds = create_dataset_by_name(@project, dsname)
+        # Make the dataset editable
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/makeEditable", {name: dsname}
+        share_dataset(@project, dsname, project)
+        # Accept dataset
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
+        # Create a directory - from the "target" project
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
+             {name: "#{@project[:projectname] + "::" + dsname + "/testdir"}"}
+        expect_status(200)
+        # Check if the directory is present
+        get_datasets_in(@project, dsname)
+        ds = json_body.detect { |d| d[:name] == "testdir"}
+        expect(ds).to be_present
+      end
+    end
+  end
+
+  describe "#makeEditable" do
+    context 'with authentication and insufficient privileges' do
+      before :all do
+        with_valid_project
+      end
+
+      it "should fail" do
+        project = get_project
+        dsname = "dataset_#{short_random_id}"
+        create_dataset_by_name(project, dsname)
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email],"Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/makeEditable", {name: dsname, projectId: project[:id]}
+        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+        expect_status(403)
+      end
+    end
+
+    context 'with authentication and sufficient privileges' do
+      before :all do
+        with_valid_project
+        with_valid_dataset
+      end
+
+      it "should make the dataset editable" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/makeEditable", {name: @dataset[:inode_name]}
+        expect_status(200)
+        # check for correct permissions
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+        ds = json_body.detect { |d| d[:name] == @dataset[:inode_name]}
+        expect(ds[:permission]).to eq ("rwxrwx--T")
+      end
+
+      it "should allow data scientist to create a directory" do
+        dirname = @dataset[:inode_name] + "/testDir"
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email],"Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
+        expect_status(200)
+        get_datasets_in(@project, @dataset[:inode_name])
+        createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
+        expect(createdDir[:permission]).to eq ("rwxrwx--T")
+      end
+
+      it "should fail to delete a directory of another user" do
+        create_session(@project[:username], "Pass123")
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email],"Pass123")
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
+        expect_status(403)
+        # Directory should still be there
+        get_datasets_in(@project, @dataset[:inode_name])
+        createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
+        expect(createdDir).to be_present
+      end
+
+      it "should make the dataset not editable" do
+        create_session(@project[:username],"Pass123") # be the user of the project that owns the dataset
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/removeEditable", {name: @dataset[:inode_name]}
+        expect_status(200)
+        # check for permission
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+        ds = json_body.detect { |d| d[:name] == @dataset[:inode_name]}
+        expect(ds[:permission]).to eq ("rwxr-x---")
+        # check for permission inside the dataset directory
+        get_datasets_in(@project, @dataset[:inode_name])
+        createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
+        expect(createdDir[:permission]).to eq ("rwxr-x---")
+      end
+
+      it "should fail to create a directory as data scientist" do
+        dataset = @dataset[:inode_name]
+        dirname = dataset + "/afterDir"
+        member = create_user
+        add_member(member[:email], "Data scientist")
+        create_session(member[:email],"Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
+        expect_status(400)
+        get_datasets_in(@project, @dataset[:name])
+        createdDir = json_body.detect { |inode| inode[:name] == "afterDir" }
+        expect(createdDir).to be_nil
       end
     end
   end

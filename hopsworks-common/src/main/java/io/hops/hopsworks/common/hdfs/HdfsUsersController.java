@@ -3,7 +3,6 @@ package io.hops.hopsworks.common.hdfs;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import javax.ejb.EJB;
@@ -16,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -50,6 +51,8 @@ public class HdfsUsersController {
   private UserFacade userFacade;
   @EJB
   private DatasetFacade datasetFacade;
+  @EJB
+  private DatasetController datasetController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
@@ -188,9 +191,7 @@ public class HdfsUsersController {
     }
     String datasetGroup = getHdfsGroupName(project, dataset);
     String dsOwner = getHdfsUserName(project, owner);
-    String dsPath = File.separator + Settings.DIR_ROOT + File.separator
-            + project.getName() + File.separator + dataset.getInode().
-            getInodePK().getName();
+    String dsPath = inodes.getPath(dataset.getInode());
     Path location = new Path(dsPath);
     dfso.setOwner(location, dsOwner, datasetGroup);
 
@@ -667,8 +668,8 @@ public class HdfsUsersController {
     if (dataset == null) {
       return null;
     }
-    Inode inode = inodes.findById(dataset.getInode().getInodePK().getParentId());
-    return inode.getInodePK().getName() + USER_NAME_DELIMITER
+    Project owningProject = datasetController.getOwningProject(dataset);
+    return owningProject.getName() + USER_NAME_DELIMITER
             + dataset.getInode().getInodePK().getName();
 
   }

@@ -34,9 +34,11 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String REMOVED_PROJECT = " removed project ";
   public static final String RAN_JOB = " ran a job named ";
   public static final String ADDED_SERVICES = " added new services ";
+  public static final String ADDED_SERVICE = " added new service ";
   public static final String PROJECT_NAME_CHANGED = " changed project name ";
   public static final String PROJECT_DESC_CHANGED
-          = " changed project description.";
+          = " changed project description ";
+  public static final String PROJECT_RETENTION_CHANGED = " changed project retention ";
   public static final String CREATED_JOB = " created a new job named ";
   public static final String DELETED_JOB = " deleted a job named ";
   public static final String SCHEDULED_JOB = " scheduled a job named ";

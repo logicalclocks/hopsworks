@@ -145,6 +145,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param i
    * @return The parent, or null if no parent.
    */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findParent(Inode i) {
     int id = i.getInodePK().getParentId();
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
@@ -376,6 +377,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param i
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getPath(Inode i) {
     List<String> pathComponents = new ArrayList<>();
     Inode parent = i;

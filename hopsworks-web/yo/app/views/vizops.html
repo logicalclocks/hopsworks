@@ -1,15 +1,20 @@
 <div id="body" style="background:#ffffff !important; border-radius: 7px; padding: 20px;">
   <div class="row">
     <div class="col-md-4" id="headers">
-      <h3>{{vizopsCtrl.jobName}}&nbsp;<small>{{vizopsCtrl.appId}}</small></h3>
+      <div class="row">
+        <h3>{{vizopsCtrl.jobName}}&nbsp;</h3>
+      </div>
+      <div class="row">
+        <small>{{vizopsCtrl.appId}}</small>
+      </div>
     </div>
     <div class="col-md-1 text-right">
-      <h4 uib-tooltip="Bigger interval results to less data points">Group by interval</h4>
+      <h4 uib-tooltip="Bigger interval results result in less data points">Group by interval</h4>
 
       <ui-select name="groupBySelection" theme="select2" ng-model="vizopsCtrl.chosenGroupByInterval"
-                 style="min-width: 150px;" on-select="vizopsCtrl.onGroupByIntervalSelection()">
+                  on-select="vizopsCtrl.onGroupByIntervalSelection()">
 
-        <ui-select-match placeholder="Group by interval" allow-clear="false">{{$select.selected}}</ui-select-match>
+        <ui-select-match placeholder="Interval" allow-clear="false">{{$select.selected}}</ui-select-match>
 
         <ui-select-choices repeat="choice in vizopsCtrl.groupByIntervals">
           <div ng-bind-html="choice | highlight: $select.search"></div>
@@ -32,7 +37,7 @@
 
   <hr />
 
-  <div class="container-fluid" style="max-height: 80vh; overflow-y: scroll;">
+  <div class="row">
     <uib-tabset active="active">
 
       <uib-tab index="0" heading="Overview">
@@ -44,7 +49,7 @@
               <md-card>
                 <md-card-title>
                   <md-card-title-text>
-                    <span class="md-headline strong">Total executors/Hosts</span>
+                    <span class="md-headline strong">Total Executors & Hosts</span>
                     <span class="md-subhead">
                       <b>{{vizopsOverviewCtrl.nbExecutors - 1}}</b> executor(s) running on <b>{{vizopsOverviewCtrl.nbHosts}}</b> machine(s)
                     </span>
@@ -268,18 +273,18 @@
               <md-card>
                 <md-card-title>
                   <md-card-title-text>
-                    <span class="md-headline strong">Filters(enter to load by id)</span>
+                    <span class="md-headline strong" uib-tooltip="Hit Return to apply filter">Filter by executor</span>
                     <span class="md-subhead">
                       <ui-select name="execFilter" theme="select2" ng-model="vizopsExecutorCtrl.chosenFilter"
-                                 style="min-width: 200px;" on-select="vizopsExecutorCtrl.onFilterChoiceChange()">
+                                 on-select="vizopsExecutorCtrl.onFilterChoiceChange()">
 
-                        <ui-select-match placeholder="Filter by host or ID" allow-clear="true">{{$select.selected}}</ui-select-match>
+                        <ui-select-match placeholder="Host or Id" allow-clear="true">{{$select.selected}}</ui-select-match>
 
                         <ui-select-choices repeat="choice in vizopsExecutorCtrl.filterChoices">
                           <div ng-bind-html="choice | highlight: $select.search"></div>
                         </ui-select-choices>
                       </ui-select>
-
+                      <br>
                       <input type="number" class="form-control" ng-disabled="vizopsExecutorCtrl.chosenFilter !== 'by executor id'"
                              style="max-width: 80px; display: inline; max-height: 30px;"
                              ng-model="vizopsExecutorCtrl.executorIDFromInput"
@@ -386,7 +391,7 @@
                     <span class="md-headline strong">Filters</span>
                     <span class="md-subhead">
                       <ui-select name="hostFilter" theme="select2" ng-model="vizopsWorkerCtrl.chosenHostToFilter"
-                                 style="min-width: 200px;" on-select="vizopsWorkerCtrl.onHostFilterChange()">
+                                 on-select="vizopsWorkerCtrl.onHostFilterChange()">
 
                         <ui-select-match placeholder="Filter by host" allow-clear="true">{{$select.selected}}</ui-select-match>
 

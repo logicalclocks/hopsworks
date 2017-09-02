@@ -24,12 +24,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
 import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
+import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -48,6 +51,7 @@ import io.hops.hopsworks.common.upload.HttpUtils;
 import io.hops.hopsworks.common.upload.ResumableInfo;
 import io.hops.hopsworks.common.upload.ResumableInfoStorage;
 import io.hops.hopsworks.common.upload.StagingManager;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.HopsUtils;
 
 @RequestScoped
@@ -71,6 +75,8 @@ public class UploadService {
   private InodeBasicMetadataFacade basicMetaFacade;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private DatasetController datasetController;
 
   private String path;
   private String username;
@@ -84,93 +90,79 @@ public class UploadService {
   /**
    * Sets the upload path for the file to be uploaded.
    * <p/>
-   * @param uploadPath starting with Projects/projectName/...
-   * @throws AppException if there is a folder name that is not valid in the
-   * given path, the path is empty, or project
-   * name was not found.
+   * @param dsPath the dsPath object built by the DatasetService.java
+   * @param username the username of the user uploading the file
+   * @param templateId the template to associate the the uploaded file
+   * @throws AppException if new directories need to be created and the name
+   * is not valid
    */
-  public void setPath(String uploadPath) throws AppException {
-    boolean exist = true;
-    String[] pathArray = uploadPath.split(File.separator);
-    if (pathArray.length < 3) { // if path does not contain project name.
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Not a valid path!");
-    }
-    //check if all the non existing dir names in the path are valid.
-    Inode parent = inodes.getProjectRoot(pathArray[2]);
-    if (parent == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
-    }
+  public void confFileUpload(DsPath dsPath, String username,
+                             int templateId) throws AppException {
+    if (dsPath.getDsRelativePath() != null) {
+      // We need to validate that each component of the path, either it exists
+      // or it is a valid directory name
+      String[] dsPathComponents = dsPath.getDsRelativePath()
+          .toString().split(File.separator);
 
-    for (int i = 3; i < pathArray.length; i++) {
-      if (parent != null) {
-        int pathLen = pathArray.length;
-        int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
-                pathArray[i], pathLen);
-        parent = inodes.findByInodePK(parent, pathArray[i], partitionId);
-      } else {
-        FolderNameValidator.isValidName(pathArray[i]);
-        exist = false;
+      // Used to compute the partition id. Start from the depth of the Ds dir
+      int depth = datasetController.getDatasetPath(dsPath.getDs()).depth() + 1;
+      Inode parent = dsPath.getDs().getInode();
+      boolean exist = true;
+
+      for (String dirName : dsPathComponents) {
+        if (parent != null) {
+          int pathLen = depth;
+          int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
+              dirName, pathLen);
+          parent = inodes.findByInodePK(parent, dirName, partitionId);
+          depth += 1;
+        } else {
+          FolderNameValidator.isValidName(dirName);
+          exist = false;
+        }
       }
-    }
-    if (exist) { //if the path exists check if the file exists.
-      this.fileParent = parent;
-    }
-    this.path = uploadPath;
-  }
 
-  public void setUsername(String username) {
+      //if the path exists check if the file exists.
+      if (exist) {
+        this.fileParent = parent;
+      }
+    } else {
+      // The user is trying to upload directly in a dataset.
+      // We are sure the dir exists and the inode is the dataset inode
+      this.fileParent = dsPath.getDs().getInode();
+    }
+
     this.username = username;
+    this.templateId = templateId;
+    this.isTemplate = false;
+    this.path = dsPath.getFullPath().toString();
   }
 
-  public void setIsTemplate(boolean isTemplate) {
-    this.isTemplate = isTemplate;
-  }
 
   /**
-   * Sets the path for the file to be uploaded. It does not require a project
-   * name since the file to be uploaded is a
-   * template schema, irrelevant to any project or dataset. The only requirement
-   * is that the upload has to be performed
-   * in the Uploads directory
+   * Configure the uploader to upload a metadata Template.
+   * All the templates are uploaded to /Projects/Uploads
    * <p/>
-   * @param path
    * @throws AppException
    */
-  public void setUploadPath(String path) throws AppException {
-    String[] pathArray = path.substring(1).split(File.separator);
-    if (pathArray.length < 2) { // if path does not contain project name.
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Not a valid path!");
-    }
+  public void confUploadTemplate() throws AppException {
     DistributedFileSystemOps dfso = null;
-    //check if the parent directory exists. If it doesn't create it first
     try {
       dfso = dfs.getDfsOps();
-      if (!dfso.isDir(File.separator + pathArray[0])) {
-        dfso.mkdir(File.separator + pathArray[0]);
+      if (!dfso.isDir(Settings.DIR_META_TEMPLATES)) {
+        dfso.mkdir(Settings.DIR_META_TEMPLATES);
       }
     } catch (IOException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Upload directory could not be created in the file system");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+              "Uploads directory could not be created in the file system");
     } finally {
       if (dfso != null) {
         dfso.close();
       }
     }
 
-    this.path = path;
-  }
-
-  /**
-   * Sets the template id to be attached to the file that's being uploaded.
-   * <p/>
-   * @param templateId
-   */
-  public void setTemplateId(int templateId) {
-    this.templateId = templateId;
+    this.isTemplate = true;
+    this.path = Settings.DIR_META_TEMPLATES;
   }
 
   @GET
@@ -188,8 +180,7 @@ public class UploadService {
       if (this.fileParent != null) {
 
         int pathLen = Utils.pathLen(this.path) - 1;
-        int partitionId
-                = HopsUtils.calculatePartitionId(this.fileParent.getId(),
+        int partitionId = HopsUtils.calculatePartitionId(this.fileParent.getId(),
                         fileName, pathLen);
         parent = inodes.findByInodePK(this.fileParent, fileName, partitionId);
         if (parent != null) {
@@ -205,8 +196,7 @@ public class UploadService {
         DistributedFileSystemOps udfso = null;
         try {
           udfso = dfs.getDfsOps(username);
-          udfso.touchz(new org.apache.hadoop.fs.Path(this.path
-                  + fileName));
+          udfso.touchz(new Path(this.path, fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException(
                   "Permission denied: You can not upload to this folder. ");
@@ -294,18 +284,19 @@ public class UploadService {
       DistributedFileSystemOps dfsOps = null;
       try {
         String fileContent = null;
+        Path location = new Path(this.path, fileName);
+        String stagingFilePath = new Path(stagingManager.getStagingPath() + this.path,
+            fileName).toString();
 
         //if it is about a template file check its validity
         if (this.isTemplate) {
-          String filePath = stagingManager.getStagingPath() + this.path
-                  + fileName;
-
-          if (!Utils.checkJsonValidity(filePath)) {
+          //TODO. More checks needed to ensure the valid template format
+          if (!Utils.checkJsonValidity(stagingFilePath)) {
             json.setErrorMsg("This was an invalid json file");
             return noCacheResponse.getNoCacheResponseBuilder(
                     Response.Status.NOT_ACCEPTABLE).entity(json).build();
           }
-          fileContent = Utils.getFileContents(filePath);
+          fileContent = Utils.getFileContents(stagingFilePath);
           JsonObject obj = Json.createReader(new StringReader(fileContent)).
                   readObject();
           String templateName = obj.getString("templateName");
@@ -319,19 +310,13 @@ public class UploadService {
 
         }
 
-        this.path = Utils.ensurePathEndsInSlash(this.path);
-
         if (this.username != null) {
           dfsOps = dfs.getDfsOps(username);
-        } else { // to accommodate previous implimentations  
+        } else { // to accommodate previous implementations
           dfsOps = dfs.getDfsOps();
         }
-        dfsOps.copyToHDFSFromLocal(true, stagingManager.
-                getStagingPath()
-                + this.path + fileName, this.path
-                + fileName);
-        org.apache.hadoop.fs.Path location = new org.apache.hadoop.fs.Path(
-                this.path + fileName);
+
+        dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));
         logger.log(Level.INFO, "Copied to HDFS");
 
@@ -339,29 +324,25 @@ public class UploadService {
           this.attachTemplateToInode(info, this.path + fileName);
         }
 
-        //if it is about a template file persist it in the database as well
         if (this.isTemplate) {
-          //TODO. More checks needed to ensure the valid template format
+          //if it is about a template file persist it in the database as well
           this.persistUploadedTemplate(fileContent);
-        } //this is a common file being uploaded so add basic metadata to it
-        //description and searchable
-        else {
-          //find the corresponding inode
-          Inode parent = this.inodes.getInodeAtPath(this.path);
-          int pathLen = Utils.pathLen(this.path);
-          int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
-                  fileName, pathLen);
-          Inode file = this.inodes.findByInodePK(parent, fileName, partitionId);
-
-          InodeBasicMetadata basicMeta = new InodeBasicMetadata(file, "", true);
+        } else {
+          //this is a common file being uploaded so add basic metadata to it
+          //description and searchable
+          Inode fileInode = inodes.getInodeAtPath(location.toString());
+          InodeBasicMetadata basicMeta = new InodeBasicMetadata(fileInode, "", true);
           this.basicMetaFacade.addBasicMetadata(basicMeta);
         }
+
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
+
       } catch (AccessControlException ex) {
         throw new AccessControlException(
                 "Permission denied: You can not upload to this folder. ");
+
       } catch (IOException e) {
         logger.log(Level.INFO, "Failed to write to HDFS", e);
         json.setErrorMsg("Failed to write to HDFS");
@@ -517,5 +498,4 @@ public class UploadService {
     }
     return info;
   }
-
 }

@@ -30,6 +30,9 @@ glassfish-resources.xml
 nb-configuration.xml
 nbactions.xml
 
+### Intellj ###
+hopsworks-web/overlays/
+
 ### Java ###
 *.class
 

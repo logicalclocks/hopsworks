@@ -18,7 +18,8 @@
 package io.hops.hopsworks.admin.project;
 
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
-import io.hops.hopsworks.common.dao.project.management.ProjectsManagement;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import org.primefaces.event.RowEditEvent;
 
@@ -27,6 +28,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,12 +43,15 @@ public class ProjectsManagementBean {
 
   public String action;
 
-  private List<ProjectsManagement> filteredProjects;
+  private List<Project> filteredProjects;
 
-  private List<ProjectsManagement> allProjects;
+  private List<Project> allProjects;
 
   private long hdfsquota = -1;
+  private float yarnquota = -1;
+  private float totalyarnquota = -1;
   private long hdfsNsquota = 01;
+  private String hdfsquotastring = "";
 
   public long getHdfsNsquota() {
     return hdfsNsquota;
@@ -63,26 +69,50 @@ public class ProjectsManagementBean {
     this.hdfsquota = hdfsquota;
   }
 
-  public void setFilteredProjects(List<ProjectsManagement> filteredProjects) {
+  public String getHdfsquotastring() {
+    return hdfsquotastring;
+  }
+
+  public void setHdfsquotastring(String hdfsquotastring) {
+    this.hdfsquotastring = hdfsquotastring;
+  }
+
+  public float getYarnquota() {
+    return yarnquota;
+  }
+
+  public void setYarnquota(float yarnquota) {
+    this.yarnquota = yarnquota;
+  }
+  
+  public float getTotalYarnquota() {
+    return totalyarnquota;
+  }
+
+  public void setTotalYarnquota(float totalyarnquota) {
+    this.totalyarnquota = totalyarnquota;
+  }
+  
+  public void setFilteredProjects(List<Project> filteredProjects) {
     this.filteredProjects = filteredProjects;
   }
 
-  public List<ProjectsManagement> getFilteredProjects() {
+  public List<Project> getFilteredProjects() {
     return filteredProjects;
   }
 
-  public void setAllProjects(List<ProjectsManagement> allProjects) {
+  public void setAllProjects(List<Project> allProjects) {
     this.allProjects = allProjects;
   }
 
-  public List<ProjectsManagement> getAllProjects() {
+  public List<Project> getAllProjects() {
     if (allProjects == null) {
       allProjects = projectsManagementController.getAllProjects();
     }
     return allProjects;
   }
 
-  public long getHdfsQuota(String projectname) throws IOException {
+  public String getHdfsQuota(String projectname) throws IOException {
     try {
       HdfsInodeAttributes quotas = projectsManagementController.getHDFSQuotas(
               projectname);
@@ -91,7 +121,18 @@ public class ProjectsManagementBean {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
     }
-    return this.hdfsquota;
+    DecimalFormat df = new DecimalFormat("##.##");
+    if(this.hdfsquota > 1000000){
+      float tbSize = this.hdfsquota / 1000000;
+      return df.format(tbSize) + "TB";
+    }
+    else if(this.hdfsquota > 1000){
+      float gbSize = this.hdfsquota / 1000;
+      return df.format(gbSize) + "GB";
+    }else {
+      return df.format(this.hdfsquota) + "MB";
+    }
+  
   }
 
   public long getHdfsNsQuota(String projectname) throws IOException {
@@ -134,6 +175,32 @@ public class ProjectsManagementBean {
     return quota;
   }
 
+  public float getYarnQuota(String projectName) throws IOException {
+    try {
+      YarnProjectsQuota quotas = projectsManagementController.getYarnQuotas(projectName);
+      this.yarnquota = quotas.getQuotaRemaining();
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+    return this.yarnquota;
+  }
+  
+  public float getTotalYarnQuota(String projectName) throws IOException {
+    try {
+      YarnProjectsQuota quotas = projectsManagementController.getYarnQuotas(projectName);
+      this.totalyarnquota = quotas.getTotal();
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+    return this.totalyarnquota;
+  }
+  
+  public Date getLastPaymentDate(String projectName) {
+    return projectsManagementController.getLastPaymentDate(projectName);
+  }
+  
   public String getAction() {
     return action;
   }
@@ -157,18 +224,36 @@ public class ProjectsManagementBean {
 //  , DistributedFileSystemOps dfso
   public void onRowEdit(RowEditEvent event)
           throws IOException {
-    ProjectsManagement row = (ProjectsManagement) event.getObject();
-    if (row.getDisabled()) {
-      projectsManagementController.disableProject(row.getProjectname());
+    Project row = (Project) event.getObject();
+    if (row.getArchived()) {
+      projectsManagementController.disableProject(row.getName());
     } else {
-      projectsManagementController.enableProject(row.getProjectname());
+      projectsManagementController.enableProject(row.getName());
     }
-    projectsManagementController.changeYarnQuota(row.getProjectname(), row.
-            getYarnQuotaRemaining());
-    projectsManagementController.setHdfsSpaceQuota(row.getProjectname(),
+    projectsManagementController.changeYarnQuota(row.getName(), this.yarnquota);
+    if(this.hdfsquotastring!=null){
+      convertHdfsQuotaString();
+    }
+    projectsManagementController.setHdfsSpaceQuota(row.getName(),
             this.hdfsquota);
   }
 
+  private void convertHdfsQuotaString(){
+    if(this.hdfsquotastring.endsWith("TB")){
+      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
+      this.hdfsquota = value * 1000000;
+    }else if(this.hdfsquotastring.endsWith("GB")){
+      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
+      this.hdfsquota = value * 1000;
+    }else if(this.hdfsquotastring.endsWith("MB")){
+      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
+      this.hdfsquota = value;
+    }else {
+      Long value = Long.parseLong(this.hdfsquotastring);
+      this.hdfsquota = value;
+    }
+  }
+  
   public void onRowCancel(RowEditEvent event) {
   }
 

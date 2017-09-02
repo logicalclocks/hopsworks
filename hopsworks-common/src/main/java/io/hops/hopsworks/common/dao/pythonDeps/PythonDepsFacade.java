@@ -145,7 +145,7 @@ public class PythonDepsFacade {
   public PythonDepsFacade() throws Exception {
   }
 
-  public PythonDep findPythonDeps(String lib, String version) {
+  public PythonDep findPythonDeps(String lib, String version, boolean pythonKernelEnable) {
     TypedQuery<PythonDep> query = em.createNamedQuery(
             "findByDependencyAndVersion",
             PythonDep.class);
@@ -155,16 +155,15 @@ public class PythonDepsFacade {
   }
 
   public Collection<PythonDep> createProjectInDb(Project project,
-          Map<String, String> libs, String pythonVersion) throws AppException {
+          Map<String, String> libs, String pythonVersion, boolean enablePythonKernel) throws AppException {
     if (pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
             compareToIgnoreCase("3.5") != 0 && pythonVersion.
-            compareToIgnoreCase("3.6") != 0) {
+            compareToIgnoreCase("3.6") != 0 && pythonVersion.contains("X") == false) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Invalid version of python " + pythonVersion
-              + " (valid: '2.7', and '3.5'");
+              + " (valid: '2.7', and '3.5', and '3.6'");
     }
-
-    condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion, getHosts());
+    condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion,  getHosts());
 
     List<PythonDep> all = new ArrayList<>();
     //TODO(Theofilos): Comment out for now, until anaconda root environment is fixed

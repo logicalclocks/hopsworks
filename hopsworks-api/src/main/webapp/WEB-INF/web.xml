@@ -30,28 +30,6 @@
         <servlet-name>KibanaProxyServlet</servlet-name>
         <url-pattern>/kibana</url-pattern>
     </servlet-mapping>
-    <!--  <servlet>
-    <servlet-name>JupyterProxyServlet</servlet-name>
-    <servlet-class>io.hops.hopsworks.api.jupyter.JupyterProxyServlet</servlet-class>
-    <init-param>
-      <param-name>targetUri</param-name>
-      <param-value>http://localhost:8888/hopsworks-api/jupyter</param-value>
-      <param-value>http://localhost:{_port}/hopsworks-api/jupyter</param-value>
-    </init-param>
-    <init-param>
-      <param-name>log</param-name>
-      <param-value>true</param-value>
-    </init-param>
-  </servlet>
-
-  <servlet-mapping>
-    <servlet-name>JupyterProxyServlet</servlet-name>
-    <url-pattern>/jupyter/*</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>JupyterProxyServlet</servlet-name>
-    <url-pattern>/jupyter</url-pattern>
-  </servlet-mapping>-->
     <servlet>
         <servlet-name>jupyter</servlet-name>
         <servlet-class>com.predic8.membrane.servlet.embedded.MembraneServlet</servlet-class>

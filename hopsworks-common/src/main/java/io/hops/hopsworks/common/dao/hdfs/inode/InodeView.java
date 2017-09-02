@@ -88,13 +88,18 @@ public final class InodeView {
     this.modification
             = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
-    this.shared
-            = (!parent.inodePK.getName().equals(ds.getProject().getName()));
-    if (this.shared) {
-      this.name = parent.inodePK.getName() + Settings.SHARED_FILE_SEPARATOR
-              + this.name;
-    }
+    this.shared = ds.isShared();
     this.owningProjectName = parent.inodePK.getName();
+    if (this.shared) {
+      switch (ds.getType()) {
+        case DATASET:
+          this.owningProjectName = parent.getInodePK().getName();
+          break;
+        case HIVEDB:
+          this.owningProjectName = this.name.substring(0, this.name.lastIndexOf("."));
+      }
+      this.name = this.owningProjectName + Settings.SHARED_FILE_SEPARATOR + this.name;
+    }
     this.description = ds.getDescription();
     this.status = ds.getStatus();
     if (ds.getInode().getHdfsUser() != null) {

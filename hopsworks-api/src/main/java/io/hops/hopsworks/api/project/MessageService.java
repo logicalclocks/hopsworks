@@ -113,7 +113,7 @@ public class MessageService {
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setUnread(false);
-    msgFacade.edit(msg);
+    msgFacade.update(msg);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -138,7 +138,7 @@ public class MessageService {
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(true);
-    msgFacade.edit(msg);
+    msgFacade.update(msg);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -156,7 +156,7 @@ public class MessageService {
     }
     checkMsgUser(msg, user);//check if the user is the owner of the message
     msg.setDeleted(false);
-    msgFacade.edit(msg);
+    msgFacade.update(msg);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

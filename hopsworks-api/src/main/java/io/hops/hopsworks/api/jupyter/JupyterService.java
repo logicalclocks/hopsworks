@@ -15,8 +15,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.util.LivyService;
+import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
@@ -83,6 +85,8 @@ public class JupyterService {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private DistributedFsService dfsService;
+  @EJB
+  private YarnApplicationstateFacade appStateBean;
 
   private Integer projectId;
   private Project project;
@@ -131,10 +135,32 @@ public class JupyterService {
     listServers.addAll(servers);
 
     GenericEntity<List<JupyterProject>> notebookServers
-            = new GenericEntity<List<JupyterProject>>(listServers) {   };
+            = new GenericEntity<List<JupyterProject>>(listServers) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             notebookServers).build();
   }
+
+  @GET
+  @Path("/livy/sessions")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response livySessions(@Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    String loggedinemail = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    List<LivyMsg.Session> sessions = livyService.getJupyterLivySessionsForProjectUser(this.project, user);
+    GenericEntity<List<LivyMsg.Session>> livyActive
+            = new GenericEntity<List<LivyMsg.Session>>(sessions) { };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();
+  }
+
+  /**
+   * Get livy session Yarn AppId
+   *
+   * @param sessionId
+   * @return
+   * @throws AppException
+   */
 
   @GET
   @Path("/settings")
@@ -233,28 +259,27 @@ public class JupyterService {
       JupyterDTO dto;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
       String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
-      
+
       try {
 
         jupyterSettingsFacade.update(jupyterSettings);
 
         dto = jupyterConfigFactory.startServerAsJupyterUser(project,
                 configSecret, hdfsUser, jupyterSettings);
-        
+
         HopsUtils.materializeCertificatesForUser(project.getName(),
-            project_user[1], settings.getHopsworksTmpCertDir(), settings
+                project_user[1], settings.getHopsworksTmpCertDir(), settings
                 .getHdfsTmpCertDir(), dfso, certificateMaterializer,
-            settings, false);
+                settings, false);
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null,
                 ex);
         try {
           HopsUtils.cleanupCertificatesForUser(project_user[1], project
                   .getName(), settings.getHdfsTmpCertDir(), dfso,
-              certificateMaterializer, false);
+                  certificateMaterializer, false);
         } catch (IOException e) {
-          LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " +
-              hdfsUser);
+          LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
         }
         throw new AppException(
                 Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -338,13 +363,13 @@ public class JupyterService {
             getPort());
     // remove the reference to th e server in the DB.
     jupyterFacade.removeNotebookServer(hdfsUser);
-  
+
     String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
       HopsUtils.cleanupCertificatesForUser(project_user[1], project
               .getName(), settings.getHdfsTmpCertDir(), dfso,
-          certificateMaterializer, false);
+              certificateMaterializer, false);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {

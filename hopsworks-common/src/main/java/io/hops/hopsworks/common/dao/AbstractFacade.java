@@ -17,7 +17,7 @@ public abstract class AbstractFacade<T> {
     getEntityManager().persist(entity);
   }
 
-  public void edit(T entity) {
+  public void update(T entity) {
     getEntityManager().merge(entity);
   }
 

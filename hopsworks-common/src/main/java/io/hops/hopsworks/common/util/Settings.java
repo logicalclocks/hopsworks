@@ -890,7 +890,8 @@ public class Settings implements Serializable {
   public static final String DIR_FASTQ = "fastq";
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
-  public static final String DIR_TEMPLATES = "Templates";
+  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT +
+      File.separator + "Uploads" + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
   // Elasticsearch
@@ -1365,18 +1366,16 @@ public class Settings implements Serializable {
   }
 
   //Project creation: default datasets
-  public static enum DefaultDataset {
+  public static enum BaseDataset {
 
     LOGS("Logs",
             "Contains the logs for jobs that have been run through the Hopsworks platform."),
     RESOURCES("Resources",
-            "Contains resources used by jobs, for example, jar files."),
-    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
-    JUPYTER("Jupyter", "Contains Jupyter notebooks.");
+            "Contains resources used by jobs, for example, jar files.");
     private final String name;
     private final String description;
 
-    private DefaultDataset(String name, String description) {
+    private BaseDataset(String name, String description) {
       this.name = name;
       this.description = description;
     }
@@ -1388,7 +1387,27 @@ public class Settings implements Serializable {
     public String getDescription() {
       return description;
     }
+  }
 
+  public static enum ServiceDataset {
+    ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
+    JUPYTER("Jupyter", "Contains Jupyter notebooks.");
+
+    private final String name;
+    private final String description;
+
+    private ServiceDataset(String name, String description) {
+      this.name = name;
+      this.description = description;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public String getDescription() {
+      return description;
+    }
   }
 
   public int VAGRANT_ENABLED = 0;
@@ -1398,7 +1417,7 @@ public class Settings implements Serializable {
     return VAGRANT_ENABLED == 1;
   }
 
-  public static String JUPYTER_PIDS = " /tmp/jupyterNotebookServer.pids";
+  public static String JUPYTER_PIDS = "/tmp/jupyterNotebookServer.pids";
   public String RESOURCE_DIRS = ".sparkStaging;spark-warehouse";
 
   public synchronized String getResourceDirs() {
