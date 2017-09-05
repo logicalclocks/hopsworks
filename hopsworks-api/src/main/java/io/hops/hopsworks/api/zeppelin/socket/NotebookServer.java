@@ -202,20 +202,21 @@ public class NotebookServer implements
     this.project = getProject(projectId);
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}",
-              this.sender);
+      LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}", this.sender);
       return;
     }
-    this.conf = zeppelin.getZeppelinConfig(this.project.getName(),
-            this.sender, this);
+    this.conf = zeppelin.getZeppelinConfig(this.project.getName(), this.sender, this);
+    if (this.conf == null) {
+      LOG.log(Level.INFO, "Could not create Zeppelin config for user: {0}, project: {1}", new Object[]{this.sender,
+        this.project.getName()});
+      return;
+    }
     this.notebook = this.conf.getNotebook();
     connectedSockets.add(conn);
     addUserConnection(this.hdfsUsername, conn);
     this.session.getUserProperties().put("projectID", this.project.getId());
-    String httpHeader = (String) config.getUserProperties().get(
-            WatcherSecurityKey.HTTP_HEADER);
-    this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER,
-            httpHeader);
+    String httpHeader = (String) config.getUserProperties().get(WatcherSecurityKey.HTTP_HEADER);
+    this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
     unicast(new Message(OP.CREATED_SOCKET), conn);
   }
 

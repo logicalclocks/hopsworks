@@ -100,6 +100,16 @@ public class ConfigFileGenerator {
     File cbDir = new File(path);
     return cbDir.mkdirs();
   }
+  
+  public static String getZeppelinDefaultInterpreterJson() {
+    String json;
+    try {
+      json = IoUtils.readContentFromClasspath(INTERPRETER_TEMPLATE);
+    } catch (IOException ex) {
+      return null;
+    }
+    return json;
+  }
 
   public static boolean deleteRecursive(File path) throws FileNotFoundException {
     if (!path.exists()) {
