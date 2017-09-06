@@ -42,12 +42,17 @@ public class Settings implements Serializable {
    * Global Variables taken from the DB
    */
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
+  private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "java_home";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
   private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
+  private static final String VARIABLE_RM_IP = "rm_ip";
+  private static final String VARIABLE_RM_PORT = "rm_port";
+  private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
+  private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
           = "spark_history_server_ip";
@@ -255,6 +260,7 @@ public class Settings implements Serializable {
               ZEPPELIN_PROJECTS_DIR);
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
               ZEPPELIN_SYNC_INTERVAL);
+      HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
       ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
@@ -270,6 +276,10 @@ public class Settings implements Serializable {
               ELASTIC_REST_PORT);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       HOPSWORKS_PORT = setIntVar(VARIABLE_HOPSWORKS_PORT, HOPSWORKS_PORT);
+      RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
+      RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
+      LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
+      LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
@@ -662,6 +672,14 @@ public class Settings implements Serializable {
     return num;
   }
 
+  
+  private static String HADOOP_VERSION = "2.8.2";
+  
+  public synchronized String getHadoopVersion() {
+    checkCache();
+    return HADOOP_VERSION;
+  }
+  
   //Hadoop locations
   public synchronized String getHadoopConfDir() {
     return hadoopConfDir(getHadoopDir());
@@ -813,7 +831,7 @@ public class Settings implements Serializable {
   }
 
   public String getSparkLog4JPath() {
-    return "hdfs:///user/" + getHdfsSuperUser() + "/log4j.properties";
+    return "hdfs:///user/" + getSparkUser() + "/log4j.properties";
   }
 
   public static String getSparkMetricsPath(String sparkUser) {
@@ -821,7 +839,7 @@ public class Settings implements Serializable {
   }
 
   public String getSparkMetricsPath() {
-    return "hdfs:///user/" + getHdfsSuperUser() + "/metrics.properties";
+    return "hdfs:///user/" + getSparkUser() + "/metrics.properties";
   }
 
   //TODO put the spark metrics in each project and take it from there
@@ -986,7 +1004,36 @@ public class Settings implements Serializable {
     checkCache();
     return JHS_IP;
   }
+  
+  // Resource Manager for YARN
+  private String RM_IP = "127.0.0.1";
+  public synchronized String getRmIp() {
+    checkCache();
+    return RM_IP;
+  }
+  
+  // Resource Manager Port 
+  private int RM_PORT = 8088;
+  public synchronized Integer getRmPort() {
+    checkCache();
+    return RM_PORT;
+  }
 
+  private String LOGSTASH_IP = "127.0.0.1";
+  public synchronized String getLogstashIp() {
+    checkCache();
+    return LOGSTASH_IP;
+  }
+  
+  // Resource Manager Port 
+  private int LOGSTASH_PORT = 8088;
+  public synchronized Integer getLogstashPort() {
+    checkCache();
+    return LOGSTASH_PORT;
+  }
+  
+  
+  
   // Livy Server`
   private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";

@@ -187,6 +187,11 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
+      <from-outcome>jupyterNotebooks</from-outcome>
+      <to-view-id>/security/protected/admin/jupyterNotebooks.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
       <from-outcome>mobUsers</from-outcome>
       <to-view-id>/security/protected/admin/mobileUsers.xhtml</to-view-id>
       <redirect/>
@@ -219,6 +224,16 @@
     <navigation-case>
       <from-outcome>RESTORE_FAILED</from-outcome>
       <to-view-id>/security/protected/admin/ndbBackupFailed.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>KILL_NOTEBOOK_FAILED</from-outcome>
+      <to-view-id>/security/protected/admin/jupyterNotebooks.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>KILL_NOTEBOOK_SUCCESS</from-outcome>
+      <to-view-id>/security/protected/admin/jupyterNotebooks.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
 

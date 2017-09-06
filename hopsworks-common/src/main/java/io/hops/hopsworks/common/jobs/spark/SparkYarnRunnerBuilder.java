@@ -146,10 +146,10 @@ public class SparkYarnRunnerBuilder {
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
     //Add metrics
-    builder.addLocalResource(new LocalResourceDTO(
-        Settings.SPARK_METRICS_PROPERTIES, metricsPath,
-        LocalResourceVisibility.PRIVATE.toString(),
-        LocalResourceType.FILE.toString(), null), false);
+//    builder.addLocalResource(new LocalResourceDTO(
+//        Settings.SPARK_METRICS_PROPERTIES, metricsPath,
+//        LocalResourceVisibility.PRIVATE.toString(),
+//        LocalResourceType.FILE.toString(), null), false);
 
     //Add app file
     String appExecName = null;

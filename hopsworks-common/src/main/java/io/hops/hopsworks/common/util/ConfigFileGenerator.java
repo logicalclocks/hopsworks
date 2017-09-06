@@ -47,6 +47,9 @@ public class ConfigFileGenerator {
   public static final String SPARKMAGIC_CONFIG_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "config_template.json";  
+  public static final String LOG4J_TEMPLATE_JUPYTER
+          = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
+          + "log4j_template.properties";  
   public static final String METRICS_TEMPLATE
           = TEMPLATE_ROOT + File.separator
           + "metrics_template.properties";

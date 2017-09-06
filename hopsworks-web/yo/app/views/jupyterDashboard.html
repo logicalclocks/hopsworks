@@ -96,10 +96,11 @@
                     <div class="text-right col-md-6">Base Directory <i class="fa fa-info-circle" 
                                                                        uib-tooltip="Root Directory for Jupyter Notebooks. If your Notebook is not stored in the '/Jupyter' Dataset, choose '/'." style="margin-left: 10px"></i>
                     </div>
-                    <div class="col-md-2 jupyter-left">
+                    <div class="col-md-2 jupyter-left"  style="z-index: -1;">
 
-                      <ui-select ng-model="jupyterCtrl.selected" theme="bootstrap" on-select="jupyterCtrl.changeBaseDir()">
-                        <ui-select-match>
+                      <ui-select  style="z-index: -1;"
+                                 ng-model="jupyterCtrl.selected" theme="bootstrap" on-select="jupyterCtrl.changeBaseDir()">
+                        <ui-select-match  style="z-index: -1;">
                           <span ng-bind="$select.selected.name"></span>
                         </ui-select-match>
                         <ui-select-choices repeat="dir in (jupyterCtrl.dirs | filter: $select.search) track by dir.name">
@@ -108,9 +109,9 @@
                       </ui-select>
                     </div>
                   </div>
-                  <div class="row jupyter-left" ng-show="jupyterCtrl.selected.name === '/'">
-                    <div class="col-md-3 jupyter-left"></div>
-                    <div class="col-md-8" style="font-weight: bold; color: red;">
+                  <div class="row" ng-show="jupyterCtrl.selected.name === '/'">
+                    <div class="col-md-2 jupyter-left"></div>
+                    <div class="col-md-10 pull-right" style="font-weight: bold; color: red;">
                       Info: You can only create notebooks inside a dataset - not in the '/' (root) directory.
                     </div>
                   </div>
@@ -165,6 +166,7 @@
                 </div>
                 <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorflow'">
                   <div class="row clusterparams" ng-show="false">
+                    
                     <div class="text-right col-md-6">AppMaster memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left">
                       <input type="number"  ng-init="1024" ng-model="jupyterCtrl.val.appmasterMemory" min="0" class="form-control">
@@ -179,16 +181,20 @@
                 </div>
 
 
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkDynamic'">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkDynamic'" >
+                  <div class="row top-buffer">
+                    <div class="col-md-3"></div>
+                    <!--<div class="col-md-6 customHr"></div>-->
+                  </div>
                   <div class="row top-buffer">
                     <div class="col-md-3"></div>
                     <div class="col-md-6" style="margin-left:20px;">Set min and max number of executors with the Slider below.</div>
                     <div class="col-md-2"></div>
                   </div>
-                  <div class="row top-buffer">
+                  <div class="row">
                     <div class="col-md-4"></div>
                     <div class="col-md-4">
-                      <rzslider style="margin-top: 32px;"
+                      <rzslider style="margin-top: 32px;" 
                                 rz-slider-model="jupyterCtrl.sliderOptions.min"
                                 rz-slider-high="jupyterCtrl.sliderOptions.max"
                                 rz-slider-options="jupyterCtrl.sliderOptions.options">
@@ -196,6 +202,11 @@
                     </div>
                     <div class="col-md-4"></div>
                   </div>
+                  <div class="row top-buffer">
+                    <div class="col-md-3"></div>
+                    <!--<div class="col-md-6 customHr"></div>-->
+                  </div>
+
                   <div class="row top-buffer">
                     <div class="text-right col-md-6">Initial number of executors <i class="fa fa-info-circle" 
                                                                                     uib-tooltip="The initial number of executors that should be requested. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
@@ -301,6 +312,23 @@
                     </div>
                   </div>
 
+                  <div class="row clusterparams" ng-show="jupyterCtrl.advanced === true">
+                    <div class="text-right col-md-6">Log Level <i class="fa fa-info-circle" 
+                                                                  uib-tooltip="Log4j log level for this job." 
+                                                                  style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-md-2 jupyter-left">
+                      <ui-select ng-model="jupyterCtrl.logLevelSelected" theme="bootstrap" style="z-index: -1;"
+                                 on-select="jupyterCtrl.changeLogLevel()">
+                        <ui-select-match >
+                          <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
+                        </ui-select-match>
+                        <ui-select-choices repeat="level in (jupyterCtrl.log_levels | filter: $select.search) track by level.name">
+                          <span ng-bind="level.name | highlight: $select.search"></span>
+                        </ui-select-choices>
+                      </ui-select>
+                    </div>
+                  </div>                
                 </div>
               </div>
 

@@ -407,8 +407,7 @@ public class ZeppelinConfig {
       StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.LOG4J_TEMPLATE);
       createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
     }
-    //String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
-    String metricsPath = Settings.getSparkMetricsPath(settings.getHdfsSuperUser());
+    String metricsPath = Settings.getSparkMetricsPath(settings.getSparkUser());
     String log4jPath = Settings.getSparkLog4JPath(settings.getHdfsSuperUser());
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
             + File.separator + "bin" + File.separator + "python";
@@ -435,7 +434,7 @@ public class ZeppelinConfig {
               "ld_library_path", ldLibraryPath,
               "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.
                       getHadoopDir() + "/bin/hadoop", "classpath", "--glob"),
-              "spark_options", "--files " + metricsPath + "," + log4jPath
+              "spark_options", "--files " +  log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
@@ -511,8 +510,7 @@ public class ZeppelinConfig {
                       "projectName", this.projectName,
                       "zeppelin_home_dir", home,
                       "livy_url", settings.getLivyUrl(),
-                      "metrics-properties_local_path", "./metrics.properties",
-                      "metrics-properties_path", metricsPath + "," + log4jPath
+                      "metrics-properties_path", log4jPath
                       + "," +livySparkDistFiles.toString(),
                       "extra_spark_java_options", extraSparkJavaOptions,
                       "spark.sql.warehouse.dir", hdfsResourceDir

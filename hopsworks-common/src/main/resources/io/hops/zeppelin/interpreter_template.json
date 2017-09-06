@@ -203,7 +203,6 @@
         "livy.spark.dynamicAllocation.maxExecutors": "",
         "livy.spark.dynamicAllocation.initialExecutors": "",
         "livy.spark.driver.memory": "",
-        "livy.spark.metrics.conf": "%%metrics-properties_local_path%%",
         "livy.spark.files": "%%metrics-properties_path%%",
         "livy.spark.sql.warehouse.dir": "%%livy.spark.sql.warehouse.dir%%",
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",

@@ -9,7 +9,6 @@ public class MessagesController {
   public static final String ERROR = "Error.";
   public static final String SUCCESS = "Success.";
 
-  //TODO: replace all occurrences of similar methods elsewhere.
   public static void addInfoMessage(String message) {
     addInfoMessage(message, message, null);
   }
