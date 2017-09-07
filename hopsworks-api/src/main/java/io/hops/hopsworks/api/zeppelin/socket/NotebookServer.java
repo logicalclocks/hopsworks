@@ -54,6 +54,7 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration.ConfVars;
 import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.AngularObjectRegistryListener;
+import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterGroup;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -90,6 +91,7 @@ import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
 import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -113,7 +115,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import org.apache.zeppelin.display.Input;
-import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.notebook.NotebookImportDeserializer;
 
 /**
@@ -177,13 +178,15 @@ public class NotebookServer implements
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private Settings settings;
-  @EJB
   private DistributedFsService dfsService;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private ZeppelinResource zeppelinResource;
+  @EJB
+  private CertsFacade certsFacade;
+  @EJB
+  private Settings settings;
 
   public NotebookServer() {
   }
@@ -199,20 +202,21 @@ public class NotebookServer implements
     this.project = getProject(projectId);
     authenticateUser(conn, this.project, this.sender);
     if (this.userRole == null) {
-      LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}",
-              this.sender);
+      LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}", this.sender);
       return;
     }
-    this.conf = zeppelin.getZeppelinConfig(this.project.getName(),
-            this.sender, this);
+    this.conf = zeppelin.getZeppelinConfig(this.project.getName(), this.sender, this);
+    if (this.conf == null) {
+      LOG.log(Level.INFO, "Could not create Zeppelin config for user: {0}, project: {1}", new Object[]{this.sender,
+        this.project.getName()});
+      return;
+    }
     this.notebook = this.conf.getNotebook();
     connectedSockets.add(conn);
     addUserConnection(this.hdfsUsername, conn);
     this.session.getUserProperties().put("projectID", this.project.getId());
-    String httpHeader = (String) config.getUserProperties().get(
-            WatcherSecurityKey.HTTP_HEADER);
-    this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER,
-            httpHeader);
+    String httpHeader = (String) config.getUserProperties().get(WatcherSecurityKey.HTTP_HEADER);
+    this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
     unicast(new Message(OP.CREATED_SOCKET), conn);
   }
 

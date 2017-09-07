@@ -8,6 +8,9 @@ angular.module('hopsWorksApp')
             return {
               getYarnmultiplicator: function () {
                 return $http.get('/api/clusterUtilisation/multiplicator');
+              },
+              getYarnGpu: function () {
+                return $http.get('/api/clusterUtilisation/gpus');
               }
             };
           }]);

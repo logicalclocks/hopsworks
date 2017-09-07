@@ -219,7 +219,7 @@ public class OozieFacade {
         workflowExecution.setWorkflowTimestamp(null);
         workflowExecution.setSnapshot(null);
       }
-      workflowExecutionFacade.edit(workflowExecution);
+      workflowExecutionFacade.update(workflowExecution);
 
     }
 

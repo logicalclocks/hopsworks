@@ -1,7 +1,6 @@
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.io.File;
 import java.util.HashSet;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -45,7 +44,6 @@ import io.hops.hopsworks.api.metadata.wscomm.message.Message;
 import io.hops.hopsworks.api.metadata.wscomm.message.TemplateMessage;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.UploadService;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
@@ -72,7 +70,6 @@ import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
-import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 
 @Path("/metadata")
@@ -117,35 +114,17 @@ public class MetadataService {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
 
-  private String path;
-
   /**
    * Uploads a template file (.json) to the file system (hopsfs) and persists it
    * to the database as well
    * <p/>
-   * @param path
    * @return
    * @throws AppException
    */
-  @Path("upload/{path: .+}")
+  @Path("upload")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public UploadService upload(
-          @PathParam("path") String path) throws AppException {
-
-    if (path == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.UPLOAD_PATH_NOT_SPECIFIED);
-    }
-    this.path = File.separator + Settings.DIR_ROOT + File.separator + path;
-
-    //sanitize the path
-    if (!path.endsWith(File.separator)) {
-      this.path += File.separator;
-    }
-
-    this.uploader.setUploadPath(this.path);
-    this.uploader.setIsTemplate(true);
-
+  public UploadService upload() throws AppException {
+    this.uploader.confUploadTemplate();
     return this.uploader;
   }
 

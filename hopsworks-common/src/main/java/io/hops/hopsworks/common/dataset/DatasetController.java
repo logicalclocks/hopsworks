@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dataset;
 
+import io.hops.common.Pair;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -13,6 +14,7 @@ import io.hops.hopsworks.common.dao.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.AppException;
@@ -25,6 +27,7 @@ import io.hops.hopsworks.common.util.Settings;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -53,6 +56,8 @@ public class DatasetController {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
+  private ProjectFacade projectFacade;
+  @EJB
   private ActivityFacade activityFacade;
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
@@ -61,11 +66,11 @@ public class DatasetController {
   @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
-  private Settings settings;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
    * folder.
+   * **The Dataset directory is created using the superuser dfso**
    * 
    * @param user The creating Users. Cannot be null.
    * @param project The project under which to create the DataSet. Cannot be
@@ -80,7 +85,6 @@ public class DatasetController {
    * whether it can be visible in the search results or not)
    * @param defaultDataset
    * @param dfso
-   * @param udfso
    * @throws NullPointerException If any of the given parameters is null.
    * @throws io.hops.hopsworks.common.exception.AppException
    * @throws IllegalArgumentException If the given DataSetDTO contains invalid
@@ -90,8 +94,7 @@ public class DatasetController {
    */
   public void createDataset(Users user, Project project, String dataSetName,
           String datasetDescription, int templateId, boolean searchable,
-          boolean defaultDataset, DistributedFileSystemOps dfso,
-          DistributedFileSystemOps udfso)
+          boolean defaultDataset, DistributedFileSystemOps dfso)
           throws IOException, AppException {
     //Parameter checking.
     if (user == null) {
@@ -124,15 +127,13 @@ public class DatasetController {
               "Invalid folder name for DataSet: "
               + ResponseMessages.FOLDER_NAME_EXIST);
     }
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Permission 770
     FsAction global = FsAction.NONE;
     FsAction group = (defaultDataset ? FsAction.ALL
             : FsAction.READ_EXECUTE);
     FsPermission fsPermission = new FsPermission(FsAction.ALL,
             group, global, defaultDataset);
-    success = createFolder(dsPath, templateId, username, fsPermission, dfso,
-            udfso);
+    success = createFolder(dsPath, templateId, fsPermission, dfso);
     if (success) {
       //set the dataset meta enabled. Support 3 level indexing
       if (searchable) {
@@ -173,21 +174,18 @@ public class DatasetController {
   /**
    * Create a directory under an existing DataSet. With the same permission as
    * the parent.
+   * The directory is created using the user dfso
    * 
-   * @param user creating the folder
    * @param project The project under which the directory is being created.
    * Cannot be null.
-   * @param datasetName The name of the DataSet under which the folder is being
-   * created. Must be an existing DataSet.
-   * @param dsRelativePath The DataSet-relative path to be created. E.g. if the
-   * full path is /Projects/projectA/datasetB/folder1/folder2/folder3, the
-   * DataSetRelative path is /folder1/folder2/folder3. Must be a valid path; all
-   * the folder names on it must be valid and it cannot be null.
+   *
+   * @param dirPath The full path of the folder to be created.
+   * /Projects/projectA/datasetB/folder1/folder2/folder3, folder1/folder2
+   * has to exist and folder3 needs to be a valid name.
    * @param templateId The id of the template to be associated with the newly
    * created directory.
    * @param description The description of the directory
    * @param searchable Defines if the directory can be searched upon
-   * @param dfso
    * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
@@ -195,66 +193,40 @@ public class DatasetController {
    * <ul>
    * <li>Any of the folder names on the given path does not have a valid name or
    * </li>
-   * <li>The dataset with given name does not exist or </li>
    * <li>Such a folder already exists. </li>
+   * <li>The parent folder does not exists. </li>
    * </ul>
-   * @see FolderNameValidator.java
+   * @see FolderNameValidator
    * @throws NullPointerException If any of the non-null-allowed parameters is
    * null.
    */
-  public void createSubDirectory(Users user, Project project, String datasetName,
-          String dsRelativePath, int templateId, String description,
-          boolean searchable, DistributedFileSystemOps dfso,
-          DistributedFileSystemOps udfso) throws IOException {
+  public void createSubDirectory(Project project, Path dirPath,
+          int templateId, String description, boolean searchable,
+          DistributedFileSystemOps udfso)  throws IOException {
 
-    //Preliminary
-    while (dsRelativePath.startsWith("/")) {
-      dsRelativePath = dsRelativePath.substring(1);
-    }
-    //The array representing the DataSet-relative path
-    String[] relativePathArray = dsRelativePath.split(File.separator);
-    String fullPath = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
-            + datasetName + "/" + dsRelativePath;
-    //Parameter checking
     if (project == null) {
       throw new NullPointerException(
-              "Cannot create a directory under a null project.");
-    } else if (datasetName == null) {
+          "Cannot create a directory under a null project.");
+    } else if (dirPath == null) {
       throw new NullPointerException(
-              "Cannot create a directory under a null DataSet.");
-    } else if (dsRelativePath == null) {
-      throw new NullPointerException(
-              "Cannot create a directory for a null path.");
-    } else if (dsRelativePath.isEmpty()) {
-      throw new IllegalArgumentException(
-              "Cannot create a directory for an empty path.");
-    } else if (datasetName.isEmpty()) {
-      throw new IllegalArgumentException("Invalid dataset: emtpy name.");
-    } else {
-      //Check every folder name for validity.
-      for (String s : relativePathArray) {
-        try {
-          FolderNameValidator.isValidName(s);
-        } catch (ValidationException e) {
-          throw new IllegalArgumentException("Invalid folder name on the path: "
-                  + s + "Reason: " + e.getLocalizedMessage());
-        }
-      }
+          "Cannot create a directory for an empty path.");
     }
+
+    String folderName = dirPath.getName();
+    String parentPath = dirPath.getParent().toString();
+    try {
+      FolderNameValidator.isValidName(folderName);
+    } catch(ValidationException e) {
+      throw new IllegalArgumentException("Invalid folder name on the path: "
+          + dirPath.getName() + "Reason: " + e.getLocalizedMessage());
+    }
+
     //Check if the given folder already exists
-    if (inodes.existsPath(fullPath)) {
+    if (inodes.existsPath(dirPath.toString())) {
       throw new IllegalArgumentException("The given path already exists.");
     }
 
-    //Check if the given dataset exists.
-    String parentPath = fullPath;
-    // strip any trailing '/' in the pathname
-    while (parentPath != null && parentPath.length() > 0 && parentPath.charAt(
-            parentPath.length() - 1) == '/') {
-      parentPath = parentPath.substring(0, parentPath.length() - 1);
-    }
-    // parent path prefixes the last '/' in the pathname
-    parentPath = parentPath.substring(0, parentPath.lastIndexOf("/"));
+    // Check if the parent directory exists
     Inode parent = inodes.getInodeAtPath(parentPath);
     if (parent == null) {
       throw new IllegalArgumentException(
@@ -262,21 +234,16 @@ public class DatasetController {
               + parentPath + " under " + project.getName());
     }
 
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
     //Now actually create the folder
-    boolean success = this.createFolder(fullPath, templateId, username, null,
-            dfso, udfso);
+    boolean success = this.createFolder(dirPath.toString(), templateId,
+        null, udfso);
 
     //if the folder was created successfully, persist basic metadata to it -
     //description and searchable attribute
     if (success) {
-      //get the folder name. The last part of fullPath
-      String pathParts[] = fullPath.split("/");
-      String folderName = pathParts[pathParts.length - 1];
-
       //find the corresponding inode
       int partitionId = HopsUtils.calculatePartitionId(parent.getId(),
-              folderName, pathParts.length);
+              folderName, dirPath.depth());
       Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
       InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description,
               searchable);
@@ -288,20 +255,15 @@ public class DatasetController {
    * Deletes a folder recursively as the given user.
    * <p>
    * @param dataset
-   * @param path
-   * @param user
-   * @param project
+   * @param location
    * @param udfso
    * @return
    * @throws java.io.IOException
    */
-  public boolean deleteDataset(Dataset dataset, String path, Users user,
-          Project project,
-          DistributedFileSystemOps udfso) throws
-          IOException {
+  public boolean deleteDatasetDir(Dataset dataset, Path location,
+       DistributedFileSystemOps udfso) throws IOException {
     OperationsLog log = new OperationsLog(dataset, OperationType.Delete);
     boolean success;
-    Path location = new Path(path);
     success = udfso.rm(location, true);
     if (success) {
       operationsLogFacade.persist(log);
@@ -310,43 +272,59 @@ public class DatasetController {
   }
 
   /**
-   * Change permission of the folder in path. This is performed with the
-   * username
-   * of the user in the given project.
-   * <p>
-   * @param path
-   * @param user
-   * @param project
-   * @param pemission
-   * @param udfso
-   * @throws IOException
+   * Change "editability" of all the datasets related to the same
+   * original dataset
+   * @param orgDs the dataset to be make editable
+   * @param editable whether the dataset should be editable
    */
-  public void changePermission(String path, Users user, Project project,
-          FsPermission pemission, DistributedFileSystemOps udfso) throws
-          IOException {
-
-    Path location = new Path(path);
-    udfso.setPermission(location, pemission);
+  //TODO: Add a reference in each dataset entry to the original dataset
+  public void changeEditable(Dataset orgDs, boolean editable) {
+    for (Dataset ds : datasetFacade.findByInode(orgDs.getInode())) {
+      ds.setEditable(editable);
+      datasetFacade.merge(ds);
+    }
   }
 
-  public void recursiveChangeOwnershipAndPermission(String path, Users user,
-          FsPermission pemission, DistributedFileSystemOps udfso) // , Inode ds
-          throws
-          IOException {
+  public void recChangeOwnershipAndPermission(Path path, FsPermission permission,
+                                              String username, String group,
+                                              DistributedFileSystemOps dfso,
+                                              DistributedFileSystemOps udfso)
+      throws  IOException {
 
-    // TODO: recursively change ownership of all files to the dataset owner
-    //       recursively change permissions of all files to remove group write
-//    List<Inode> children = new ArrayList<>(); 
-//    inodes.getAllChildren(ds, children);
-//    for (Inode i : children) {
-//      if (i.isDir()) {
-////        recursiveChangeOwnershipAndPermission(i.getP, user, pemission, udfso, ds);
-//      }
-//    }
-//    while ()
-    Path location = new Path(path);
-    udfso.setPermission(location, pemission);
+    /* TODO: Currently there is no change permission recursively operation
+       available in HopsFS client. So we build all the path of the tree and
+       we call the set permission on each one
+     */
 
+    // Set permission/ownership for the root
+    if (username != null && group != null && dfso != null) {
+      dfso.setOwner(path, username, group);
+    }
+    udfso.setPermission(path, permission);
+    Inode rootInode = inodes.getInodeAtPath(path.toString());
+
+    // Keep a list of directories to avoid using recursion
+    // Remember also the path to avoid going to the database for path resolution
+    Stack<Pair<Inode, Path>> dirs = new Stack<>();
+    if (rootInode.isDir()) {
+      dirs.push(new Pair<>(rootInode, path));
+    }
+
+    while (!dirs.isEmpty()) {
+      Pair<Inode, Path> dirInode = dirs.pop();
+      for (Inode child : inodes.getChildren(dirInode.getL())) {
+        Path childPath = new Path(dirInode.getR(), child.getInodePK().getName());
+
+        if (username != null && group != null && dfso != null) {
+          dfso.setOwner(path, username, group);
+        }
+        udfso.setPermission(childPath, permission);
+
+        if (child.isDir()) {
+          dirs.push(new Pair<>(child, childPath));
+        }
+      }
+    }
   }
 
   /**
@@ -360,25 +338,18 @@ public class DatasetController {
    * @return
    * @throws IOException
    */
-  private boolean createFolder(String path, int template, String username,
-          FsPermission fsPermission, DistributedFileSystemOps dfso,
-          DistributedFileSystemOps udfso) throws IOException {
+  private boolean createFolder(String path, int template,
+                               FsPermission fsPermission,
+                               DistributedFileSystemOps dfso) throws IOException {
     boolean success = false;
     Path location = new Path(path);
-    DistributedFileSystemOps dfs;
     if (fsPermission == null) {
       fsPermission = dfso.getParentPermission(location);
     }
     try {
-      //create the folder in the file system
-      if (username == null) {
-        dfs = dfso;
-      } else {
-        dfs = udfso;
-      }
-      success = dfs.mkdir(location, fsPermission);
+      success = dfso.mkdir(location, fsPermission);
       if (success) {
-        dfs.setPermission(location, fsPermission);
+        dfso.setPermission(location, fsPermission);
       }
       if (success && template != 0 && template != -1) {
         //Get the newly created Inode.
@@ -490,32 +461,37 @@ public class DatasetController {
     operationsLogFacade.persist(new OperationsLog(dataset, type));
   }
 
-  /**
-   * Create and Log dataset
-   * @param user
-   * @param project
-   * @param dataSetName
-   * @param datasetDescription
-   * @param templateId
-   * @param searchable
-   * @param defaultDataset
-   * @param dfso
-   * @param udfso
-   * @return
-   * @throws IOException
-   * @throws AppException 
-   */
-  public Dataset createAndLogDataset(Users user, Project project, String dataSetName,
-          String datasetDescription, int templateId, boolean searchable,
-          boolean defaultDataset, DistributedFileSystemOps dfso,
-          DistributedFileSystemOps udfso)
-          throws IOException, AppException {
+  public Path getDatasetPath(Dataset ds) {
+    Path path = null;
+    switch (ds.getType()) {
+      case DATASET:
+        Project owningProject = getOwningProject(ds);
+        path = new Path(Settings.getProjectPath(owningProject.getName()),
+            ds.getInode().getInodePK().getName());
+        break;
+      case HIVEDB:
+        // TODO (Fabio) - add hive dataset path resolution here
+    }
 
-    createDataset(user, project, dataSetName, datasetDescription, templateId,
-            searchable, defaultDataset, dfso, udfso);
-    Dataset dataset = datasetFacade.findByNameAndProjectId(project, dataSetName);
-    logDataset(dataset, OperationType.Add);
-    return dataset;
+    return path;
   }
-    
+
+  public Project getOwningProject(Dataset ds) {
+    // If the dataset is not a shared one, just return the project
+    if (!ds.isShared()) {
+      return ds.getProject();
+    }
+
+    switch (ds.getType()) {
+      case DATASET:
+        // Get the owning project based on the dataset inode
+        Inode projectInode = inodes.findParent(ds.getInode());
+        return projectFacade.findByName(projectInode.getInodePK().getName());
+      case HIVEDB:
+        // TODO (Fabio) - add hive owner resolution here
+        return null;
+      default:
+        return null;
+    }
+  }
 }

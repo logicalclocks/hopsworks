@@ -524,7 +524,7 @@ This will make all its files unavailable to other projects unless you share it e
 
             self.move = function (inodeId, name) {
               ModalService.selectDir('lg', "/[^]*/",
-                      "problem selecting doler").then(
+                      "problem selecting folder").then(
                       function (success) {
                         var destPath = success;
                         // Get the relative path of this DataSet, relative to the project home directory

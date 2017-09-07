@@ -27,7 +27,12 @@ import io.hops.hopsworks.common.dao.project.Project;
           + "WHERE s.project = :project ORDER BY s.projectServicePK.service"),
   @NamedQuery(name = "ProjectServices.findByService",
           query
-          = "SELECT s FROM ProjectServices s WHERE s.projectServicePK.service = :service")})
+          = "SELECT s FROM ProjectServices s WHERE s.projectServicePK.service = :service"),
+  @NamedQuery(name = "ProjectServices.isServiceEnabledForProject",
+    query
+        = "SELECT s FROM ProjectServices s WHERE s.project = :project and " +
+        "s.projectServicePK.service = :service")})
+
 public class ProjectServices implements Serializable {
 
   private static final long serialVersionUID = 1L;

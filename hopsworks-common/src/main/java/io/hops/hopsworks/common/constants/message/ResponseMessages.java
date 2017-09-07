@@ -44,6 +44,8 @@ public class ResponseMessages {
           = "Passwords do not match - typo?";
   public final static String TOS_NOT_AGREED
           = "You must agree to our terms of use.";
+  public final static String EMPTY_PATH
+          = "Empty path requested";
 
   //success response
   public final static String CREATED_ACCOUNT
@@ -64,6 +66,8 @@ public class ResponseMessages {
           = "Your ssh key was deleted successfully.";
   public final static String SSH_KEYS_LISTED
           = "Your ssh keys were listed successfully.";
+  public final static String NOTHING_TO_UPDATE
+          = "Nothing to update";
 
   //project error response
   public final static String PROJECT_EXISTS
@@ -119,6 +123,7 @@ public class ResponseMessages {
   public final static String ROLE_NOT_SET = "Role cannot be empty.";
   public final static String CONSENT_ALREADY_EXISTS
           = "Duplicate error. There is already a consent form in the Project with the same name";
+  public final static String PROJECT_NOT_SELECTED = "No project selected";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
@@ -127,7 +132,8 @@ public class ResponseMessages {
   public final static String PROJECT_RETENTON_CHANGED
           = "Project retention period changed.";
 
-  public final static String PROJECT_SERVICE_ADDED = "Project service added";
+  public final static String PROJECT_SERVICE_ADDED = "Project service added: ";
+  public final static String PROJECT_SERVICE_ADD_FAILURE = "Failure adding service: ";
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";
   public final static String PROJECT_REMOVED_NOT_FOLDER
@@ -155,6 +161,22 @@ public class ResponseMessages {
           = "DataSet is already public.";
   public final static String DATASET_NOT_PUBLIC
           = "DataSet is not public.";
+  public final static String DATASET_NOT_EDITABLE
+      = "DataSet is not editable.";
+  public final static String DATASET_PENDING
+          = "DataSet is not yet accessible. Accept the share request to access it.";
+  public final static String PATH_NOT_FOUND
+      = "Path not found";
+  public final static String PATH_NOT_DIRECTORY
+      = "Requested path is not a directory";
+  public final static String PATH_IS_DIRECTORY
+      = "Requested path is a directory";
+  public final static String DOWNLOAD_ERROR
+      = "You cannot download from a non public shared dataset";
+  public final static String COMPRESS_ERROR
+      = "You cannot compress files in a shared dataset";
+  public final static String DATASET_OWNER_ERROR
+      = "You cannot perform this action on a dataset you are not the owner";
 
   //Metadata
   public final static String TEMPLATE_INODEID_EMPTY
@@ -186,4 +208,12 @@ public class ResponseMessages {
 
   public final static String JOB_DETAILS
           = "Details for a job";
+
+  // Services
+  public final static String ZEPPELIN_ADD_FAILURE = "Failed to create Zeppelin notebook dir. "
+      + "Zeppelin will not work properly. "
+      + "Try recreating the following dir manually:";
+  public final static String JUPYTER_ADD_FAILURE = "Failed to create Jupyter notebook dir. "
+      + "Jupyter will not work properly. "
+      + "Try recreating the following dir manually:";
 }

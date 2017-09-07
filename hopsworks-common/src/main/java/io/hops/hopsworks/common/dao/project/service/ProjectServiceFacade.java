@@ -80,4 +80,11 @@ public class ProjectServiceFacade extends AbstractFacade<ProjectServices> {
     return q.getResultList();
   }
 
+  public boolean isServiceEnabledForProject(Project project, ProjectServiceEnum service){
+    Query q = em.createNamedQuery("ProjectServices.isServiceEnabledForProject",
+        ProjectServices.class);
+    q.setParameter("project", project);
+    q.setParameter("service", service);
+    return !(q.getResultList().isEmpty());
+  }
 }

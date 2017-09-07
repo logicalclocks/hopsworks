@@ -34,6 +34,7 @@ public class ZeppelinProjectCleaner {
 
   @PostConstruct
   public void startTimer() {
+    zeppelinConfFactory.checkInterpreterJsonValidity(); // prevent deployment if interpreter json not valid.
     setTimer(10);
   }
 

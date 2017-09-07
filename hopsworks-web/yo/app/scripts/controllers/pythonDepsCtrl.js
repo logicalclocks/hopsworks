@@ -41,6 +41,8 @@ angular.module('hopsWorksApp')
             self.numEnvsNotEnabled = 0;
             self.numEnvs = 0;
 
+            self.pythonKernelEnabled = "true";
+
 
 //            https://repo.continuum.io/pkgs/free/linux-64/
             self.condaUrl = "default";
@@ -167,7 +169,7 @@ angular.module('hopsWorksApp')
 
             self.enable = function (version) {
               self.enabling = true;
-              PythonDepsService.enable(self.projectId, version).then(
+            PythonDepsService.enable(self.projectId, version, self.pythonKernelEnabled).then(
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;

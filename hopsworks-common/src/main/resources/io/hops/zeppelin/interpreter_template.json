@@ -55,7 +55,7 @@
         "spark.app.name": "%%projectName%%-Zeppelin",
         "zeppelin.R.image.width": "100%",
         "zeppelin.R.render.options": "out.format \u003d \u0027html\u0027, comment \u003d NA, echo \u003d FALSE, results \u003d \u0027asis\u0027, message \u003d F, warning \u003d F",
-        "zeppelin.R.cmd": "R" ,
+        "zeppelin.R.cmd": "R",
         "spark.metrics.conf": "%%metrics-properties_local_path%%",
         "spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
         "spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
@@ -203,7 +203,6 @@
         "livy.spark.dynamicAllocation.maxExecutors": "",
         "livy.spark.dynamicAllocation.initialExecutors": "",
         "livy.spark.driver.memory": "",
-        "livy.spark.metrics.conf": "%%metrics-properties_local_path%%",
         "livy.spark.files": "%%metrics-properties_path%%",
         "livy.spark.sql.warehouse.dir": "%%livy.spark.sql.warehouse.dir%%",
         "livy.spark.yarn.stagingDir": "%%livy.spark.yarn.stagingDir%%",
@@ -218,7 +217,7 @@
         "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%"
       },
       "status": "READY",
-            "interpreterGroup": [
+      "interpreterGroup": [
         {
           "name": "spark",
           "class": "org.apache.zeppelin.livy.LivySparkInterpreter",

@@ -139,7 +139,11 @@ public class Project implements Serializable {
   @Column(name = "deleted")
   private Boolean deleted;
 
-  @Size(max = 3000)
+  @Column(name = "python_version")
+  private String pythonVersion;
+  
+  
+  @Size(max = 2000)
   @Column(name = "description")
   private String description;
 
@@ -237,6 +241,14 @@ public class Project implements Serializable {
     this.retentionPeriod = retentionPeriod;
   }
 
+  public String getPythonVersion() {
+    return pythonVersion;
+  }
+
+  public void setPythonVersion(String pythonVersion) {
+    this.pythonVersion = pythonVersion;
+  }
+  
   public String getDescription() {
     return description;
   }

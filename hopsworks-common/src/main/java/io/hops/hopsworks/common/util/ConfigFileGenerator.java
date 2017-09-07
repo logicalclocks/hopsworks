@@ -38,9 +38,6 @@ public class ConfigFileGenerator {
   public static final String INTERPRETER_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
           + "interpreter_template.json";
-  public static final String HIVE_SITE_TEMPLATE
-          = TEMPLATE_ROOT + File.separator + "zeppelin" + File.separator
-          + "hive_site_template.xml";
   public static final String JUPYTER_NOTEBOOK_CONFIG_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "jupyter_notebook_config_template.py";
@@ -50,6 +47,9 @@ public class ConfigFileGenerator {
   public static final String SPARKMAGIC_CONFIG_TEMPLATE
           = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
           + "config_template.json";  
+  public static final String LOG4J_TEMPLATE_JUPYTER
+          = TEMPLATE_ROOT + File.separator + "jupyter" + File.separator
+          + "log4j_template.properties";  
   public static final String METRICS_TEMPLATE
           = TEMPLATE_ROOT + File.separator
           + "metrics_template.properties";
@@ -102,6 +102,16 @@ public class ConfigFileGenerator {
   public static boolean mkdirs(String path) {
     File cbDir = new File(path);
     return cbDir.mkdirs();
+  }
+  
+  public static String getZeppelinDefaultInterpreterJson() {
+    String json;
+    try {
+      json = IoUtils.readContentFromClasspath(INTERPRETER_TEMPLATE);
+    } catch (IOException ex) {
+      return null;
+    }
+    return json;
   }
 
   public static boolean deleteRecursive(File path) throws FileNotFoundException {

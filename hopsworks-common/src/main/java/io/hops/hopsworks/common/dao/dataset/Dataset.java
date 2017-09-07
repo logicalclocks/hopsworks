@@ -6,6 +6,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
+import javax.persistence.EnumType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -19,6 +21,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 
@@ -114,6 +117,11 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "shared")
   private boolean shared = false;
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "dstype")
+  private DatasetType type = DatasetType.DATASET;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "dataset")
@@ -138,6 +146,18 @@ public class Dataset implements Serializable {
     this.project = project;
     this.InodeId = inode.getId();
     this.name = inode.getInodePK().getName();
+  }
+
+  public Dataset(Dataset ds, Project project){
+    this.inode = ds.getInode();
+    this.project = project;
+    this.InodeId = ds.getInodeId();
+    this.name = ds.getInode().getInodePK().getName();
+    this.searchable = ds.isSearchable();
+    this.description = ds.getDescription();
+    this.editable = ds.isEditable();
+    this.publicDs = ds.isPublicDs();
+    this.type = ds.getType();
   }
 
   public Integer getId() {
@@ -212,6 +232,10 @@ public class Dataset implements Serializable {
     this.shared = shared;
   }
 
+  public void setType(DatasetType type) { this.type = type; }
+
+  public DatasetType getType() { return this.type; }
+
   public Collection<DatasetRequest> getDatasetRequestCollection() {
     return datasetRequestCollection;
   }
@@ -241,7 +265,6 @@ public class Dataset implements Serializable {
     }
     return true;
   }
-
   /**
    * DO NOT USE THIS - used by ePipe
    *

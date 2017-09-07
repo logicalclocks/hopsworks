@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
@@ -23,10 +24,10 @@ import javax.ws.rs.core.Response;
 public class JupyterConfig {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterConfig.class.
-          getName());
+      getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String JUPYTER_NOTEBOOK_CONFIG
-          = "/jupyter_notebook_config.py";
+      = "/jupyter_notebook_config.py";
   private static final String JUPYTER_CUSTOM_JS = "/custom/custom.js";
   private static final String SPARKMAGIC_CONFIG = "/config.json";
   private static final int DELETE_RETRY = 10;
@@ -37,7 +38,7 @@ public class JupyterConfig {
    * A configuration that is common for all projects.
    */
   private final Settings settings;
-  private final String projectName;
+  private final Project project;
   private final String hdfsUser;
   private final String projectUserPath;
   private final String notebookPath;
@@ -50,11 +51,11 @@ public class JupyterConfig {
   private String token;
   private String nameNodeEndpoint;
 
-  JupyterConfig(String projectName, String secretConfig, String hdfsUser,
-          String nameNodeEndpoint, Settings settings, int port, String token,
-          JupyterSettings js)
-          throws AppException {
-    this.projectName = projectName;
+  JupyterConfig(Project project, String secretConfig, String hdfsUser,
+      String nameNodeEndpoint, Settings settings, int port, String token,
+      JupyterSettings js)
+      throws AppException {
+    this.project = project;
     this.hdfsUser = hdfsUser;
     this.nameNodeEndpoint = nameNodeEndpoint;
     boolean newDir = false;
@@ -62,8 +63,8 @@ public class JupyterConfig {
     this.settings = settings;
     this.port = port;
     projectUserPath = settings.getJupyterDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName
-            + File.separator + hdfsUser;
+        + Settings.DIR_ROOT + File.separator + this.project.getName()
+        + File.separator + hdfsUser;
     notebookPath = projectUserPath + File.separator + secretConfig;
     confDirPath = notebookPath + File.separator + "conf";
     logDirPath = notebookPath + File.separator + "logs";
@@ -79,11 +80,11 @@ public class JupyterConfig {
         removeProjectConfFiles();
       }
       LOGGER.log(Level.SEVERE,
-              "Error in initializing JupyterConfig for project: {0}. {1}",
-              new Object[]{this.projectName, e});
+          "Error in initializing JupyterConfig for project: {0}. {1}",
+          new Object[]{this.project.getName(), e});
       throw new AppException(
-              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Could not configure Jupyter. Report a bug.");
+          Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          "Could not configure Jupyter. Report a bug.");
 
     }
   }
@@ -137,13 +138,13 @@ public class JupyterConfig {
    * @throws IOException
    */
   public StringBuffer getConsoleOutput(String hdfsUsername, int port) throws
-          IOException {
+      IOException {
 
     // Read the whole log file and pass it as a StringBuffer. 
     String fname = this.getLogDirPath() + "/" + hdfsUsername + "-" + port
-            + ".log";
+        + ".log";
     BufferedReader br = new BufferedReader(new InputStreamReader(
-            new FileInputStream(fname), Charset.forName("UTF8")));
+        new FileInputStream(fname), Charset.forName("UTF8")));
     String line;
     StringBuffer sb = new StringBuffer();
     while (((line = br.readLine()) != null)) {
@@ -158,7 +159,7 @@ public class JupyterConfig {
   }
 
   public String getProjectName() {
-    return projectName;
+    return project.getName();
   }
 
   public String getConfDirPath() {
@@ -182,6 +183,7 @@ public class JupyterConfig {
     // Set owner persmissions
     Set<PosixFilePermission> xOnly = new HashSet<>();
     xOnly.add(PosixFilePermission.OWNER_WRITE);
+    xOnly.add(PosixFilePermission.OWNER_READ);
     xOnly.add(PosixFilePermission.OWNER_EXECUTE);
     xOnly.add(PosixFilePermission.GROUP_WRITE);
     xOnly.add(PosixFilePermission.GROUP_EXECUTE);
@@ -211,12 +213,13 @@ public class JupyterConfig {
 
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(String nameNodeEndpoint, Integer port,
-          JupyterSettings js)
-          throws
-          IOException {
+      JupyterSettings js)
+      throws
+      IOException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
+    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     boolean createdJupyter = false;
     boolean createdSparkmagic = false;
     boolean createdCustomJs = false;
@@ -233,31 +236,44 @@ public class JupyterConfig {
 
       String pythonKernel = "";
 
-      if (settings.isPythonKernelEnabled()) {
-        pythonKernel = ", 'python-" + projectName + "'";
+      if (settings.isPythonKernelEnabled() && project.getPythonVersion().contains("X") == false) {
+        pythonKernel = ", 'python-" + project.getName() + "'";
       }
 
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
-                      "project", this.projectName,
-                      "namenode_ip", nameNodeIp,
-                      "namenode_port", nameNodePort,
-                      "hopsworks_ip", settings.getHopsworksIp(),
-                      "base_dir", js.getBaseDir(),
-                      "hdfs_user", this.hdfsUser,
-                      "port", port.toString(),
-                      "python-kernel", pythonKernel,
-                      "hadoop_home", this.settings.getHadoopDir(),
-                      "hdfs_home", this.settings.getHadoopDir(),
-                      "secret_dir", this.settings.getStagingDir()
-                      + Settings.PRIVATE_DIRS + js.getSecret()
-              );
+          instantiateFromTemplate(
+              ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
+              "project", this.project.getName(),
+              "namenode_ip", nameNodeIp,
+              "namenode_port", nameNodePort,
+              "hopsworks_ip", settings.getHopsworksIp(),
+              "base_dir", js.getBaseDir(),
+              "hdfs_user", this.hdfsUser,
+              "port", port.toString(),
+              "python-kernel", pythonKernel,
+              "hadoop_home", this.settings.getHadoopDir(),
+              "hdfs_home", this.settings.getHadoopDir(),
+              "secret_dir", this.settings.getStagingDir()
+              + Settings.PRIVATE_DIRS + js.getSecret()
+          );
       createdJupyter = ConfigFileGenerator.createConfigFile(jupyter_config_file,
-              jupyter_notebook_config.toString());
+          jupyter_notebook_config.toString());
     }
     if (!sparkmagic_config_file.exists()) {
-      
+
+      // TODO: Add this local file to 'spark: file' to copy it to hdfs and localize it.
+      StringBuilder log4j_sb
+          = ConfigFileGenerator.instantiateFromTemplate(
+              ConfigFileGenerator.LOG4J_TEMPLATE_JUPYTER,
+              "logstash_ip", settings.getLogstashIp(),
+              "logstash_port", settings.getLogstashPort().toString(),
+              "log_level", js.getLogLevel().toUpperCase()
+          );
+      ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
+
+      StringBuilder executorFiles = new StringBuilder();
+//      executorFiles.append(log4j_file.toURI().toString());
+
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
           // Keystore
@@ -270,73 +286,76 @@ public class JupyterConfig {
           .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
 
       StringBuilder sparkmagic_sb
-              = ConfigFileGenerator.
-                      instantiateFromTemplate(
-                              ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
-                              "livy_ip", settings.getLivyIp(),
-                              "hdfs_user", this.hdfsUser,
-                              "driver_cores", Integer.toString(js.
-                                      getAppmasterCores()),
-                              "driver_memory", Integer.toString(js.
-                                      getAppmasterMemory()) + "m",
-                              "num_executors", Integer.toString(js.
-                                      getNumExecutors()),
-                              "executor_cores", Integer.toString(js.
-                                      getNumExecutorCores()),
-                              "executor_memory", Integer.
-                                      toString(js.getExecutorMemory()) + "m",
-                              "dynamic_executors", Boolean.toString(
-                                      js.getMode().compareToIgnoreCase(
-                                              "sparkDynamic")
-                                      == 0),
-                              "min_executors", Integer.toString(js.
-                                      getDynamicMinExecutors()),
-                              "initial_executors", Integer.toString(js.
-                                      getDynamicInitialExecutors()),
-                              "max_executors", Integer.toString(js.
-                                      getDynamicMaxExecutors()),
-                              "archives", js.getArchives(),
-                              "jars", js.getJars(),
-                              "files", js.getFiles(),
-                              "pyFiles", js.getPyFiles(),
-                              "yarn_queue", "default",
-                              "num_ps", Integer.toString(js.getNumTfPs()),
-                              "num_gpus", Integer.toString(js.getNumTfGpus()),
-                              "tensorflow", Boolean.toString(js.getMode().
-                                      startsWith("tensorflow")),
-                              "jupyter_home", this.confDirPath,
-                              "project", this.projectName,
-                              "nn_endpoint", this.nameNodeEndpoint,
-                              "spark_user", this.settings.getSparkUser(),
-                              "java_home", this.settings.getJavaHome(),
-                              "hadoop_home", this.settings.getHadoopDir(),
-                              "pyspark_bin", this.settings.
-                                      getAnacondaProjectDir(
-                                              projectName) + "/bin/python",
-                              "anaconda_dir", this.settings.getAnacondaDir(),
-                              "cuda_dir", this.settings.getCudaDir(),
-                              "anaconda_env", this.settings.
-                                      getAnacondaProjectDir(
-                                              projectName),
-                              "sparkhistoryserver_ip", this.settings.
-                                      getSparkHistoryServerIp(),
-                              "spark_files", sparkFiles.toString()
-                      );
+          = ConfigFileGenerator.
+              instantiateFromTemplate(
+                  ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
+                  "livy_ip", settings.getLivyIp(),
+                  "hdfs_user", this.hdfsUser,
+                  "driver_cores", Integer.toString(js.
+                      getAppmasterCores()),
+                  "driver_memory", Integer.toString(js.
+                      getAppmasterMemory()) + "m",
+                  "num_executors", Integer.toString(js.
+                      getNumExecutors()),
+                  "executor_cores", Integer.toString(js.
+                      getNumExecutorCores()),
+                  "executor_memory", Integer.
+                      toString(js.getExecutorMemory()) + "m",
+                  "dynamic_executors", Boolean.toString(
+                      js.getMode().compareToIgnoreCase(
+                          "sparkDynamic")
+                      == 0),
+                  "min_executors", Integer.toString(js.
+                      getDynamicMinExecutors()),
+                  "initial_executors", Integer.toString(js.
+                      getDynamicInitialExecutors()),
+                  "max_executors", Integer.toString(js.
+                      getDynamicMaxExecutors()),
+                  "archives", js.getArchives(),
+                  "jars", js.getJars(),
+                  "files", js.getFiles(),
+                  "pyFiles", js.getPyFiles(),
+                  "yarn_queue", "default",
+                  "num_ps", Integer.toString(js.getNumTfPs()),
+                  "num_gpus", Integer.toString(js.getNumTfGpus()),
+                  "tensorflow", Boolean.toString(js.getMode().
+                      startsWith("tensorflow")),
+                  "jupyter_home", this.confDirPath,
+                  "project", this.project.getName(),
+                  "nn_endpoint", this.nameNodeEndpoint,
+                  "spark_user", this.settings.getSparkUser(),
+                  "java_home", this.settings.getJavaHome(),
+                  "hadoop_home", this.settings.getHadoopDir(),
+                  "pyspark_bin", this.settings.
+                      getAnacondaProjectDir(
+                          project.getName()) + "/bin/python",
+                  "anaconda_dir", this.settings.getAnacondaDir(),
+                  "cuda_dir", this.settings.getCudaDir(),
+                  "anaconda_env", this.settings.
+                      getAnacondaProjectDir(
+                          project.getName()),
+                  "sparkhistoryserver_ip", this.settings.
+                      getSparkHistoryServerIp(),
+                  "metrics_path", settings.getSparkMetricsPath(),
+                  "spark_yarn_files", executorFiles.toString(),
+                  "spark_files", sparkFiles.toString()
+              );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
-              sparkmagic_config_file,
-              sparkmagic_sb.toString());
+          sparkmagic_config_file,
+          sparkmagic_sb.toString());
     }
     if (!custom_js.exists()) {
 
       StringBuilder custom_js_sb = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.JUPYTER_CUSTOM_TEMPLATE,
-                      "hadoop_home", this.settings.getHadoopDir()
-              );
+          instantiateFromTemplate(
+              ConfigFileGenerator.JUPYTER_CUSTOM_TEMPLATE,
+              "hadoop_home", this.settings.getHadoopDir()
+          );
       createdCustomJs = ConfigFileGenerator.createConfigFile(
-              custom_js, custom_js_sb.toString());
+          custom_js, custom_js_sb.toString());
     }
 
+    // Add this local file to 'spark: file' to copy it to hdfs and localize it.
     return createdJupyter || createdSparkmagic || createdCustomJs;
   }
 
@@ -367,7 +386,7 @@ public class JupyterConfig {
   private boolean removeProjectConfFiles() {
 //    File jupyter_js_file = new File(confDirPath + JUPYTER_CUSTOM_JS);
     File jupyter_config_file
-            = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
+        = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
     boolean ret = false;
 //    if (jupyter_js_file.exists()) {
 //      ret = jupyter_js_file.delete();
