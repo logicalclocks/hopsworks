@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">
+
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container" style="max-width: 1600px;">
+            <div align="left">
+              <h2>Manage Jupyter Notebook Servers</h2>
+            </div>
+
+            <div class="content">
+              <h:form id="jupytermodifyForm" >
+                <p:growl id="msgs" showDetail="true"/>
+
+                <p:dataTable id="jupyterTable" var="notebookServer"
+                             value="#{JupyterNotebooks.allNotebooks}"
+                             filteredValue="#{JupyterNotebooks.filteredNotebooks}"
+                             widgetVar="jupyterTable"
+                             emptyMessage="No notebook servers found with given criteria"
+                             rowKey="#{notebookServer.port}"
+                             style="table-layout: fixed"
+                             sortMode="multiple"
+                             editable="true"
+                             scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="25,50,75,100,500">
+
+                  <p:column id="jupyterPort"
+                            filterBy="#{notebookServer.port}"
+                            sortBy="#{notebookServer.port}"
+                            filterMatchMode="contains"
+                            headerText="Port"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{notebookServer.port}" />
+                  </p:column>
+                  <p:column id="projectName"
+                            filterBy="#{notebookServer.getProjectId().getName()}"
+                            sortBy="#{notebookServer.getProjectId().getName()}"
+                            filterMatchMode="contains"
+                            headerText="Project"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{notebookServer.getProjectId().getName()}" />
+                  </p:column>                  
+                  <p:column id="hdfsUsername"
+                            filterBy="#{JupyterNotebooks.getHdfsUser(notebookServer)}"
+                            sortBy="#{JupyterNotebooks.getHdfsUser(notebookServer)}"
+                            filterMatchMode="contains"
+                            headerText="ProjectUser"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{JupyterNotebooks.getHdfsUser(notebookServer)}" />
+                  </p:column>                  
+                  <p:column id="jupyterTimestampColumn"
+                            filterBy="#{notebookServer.getLastAccessed()}"
+                            sortBy="#{notebookServer.getLastAccessed()}"
+                            filterMatchMode="contains"
+                            headerText="LastAccessed"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{notebookServer.getLastAccessed()}" />
+                  </p:column>
+
+                <p:column id="actionColumn" headerText="Action">
+                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                   action="#{JupyterNotebooks.kill(notebookServer)}"
+                                   update="@form">
+                      <p:confirm header="Kill Jupyter Notebook Server" 
+                                 message="Are you sure you want to kill this Jupyter Notebook Server?" 
+                                 icon="ui-icon-alert"/>
+                    </p:commandLink>
+                </p:column>
+                  
+                  
+                </p:dataTable>
+                
+              <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+              </p:confirmDialog>
+                
+              </h:form>
+
+            </div>
+          </div>
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
+</html>

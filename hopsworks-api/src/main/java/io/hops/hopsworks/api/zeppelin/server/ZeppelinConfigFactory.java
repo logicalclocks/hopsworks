@@ -1,6 +1,7 @@
 package io.hops.hopsworks.api.zeppelin.server;
 
 import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfFacade;
 import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfs;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -31,15 +32,12 @@ import org.apache.zeppelin.conf.ZeppelinConfiguration;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ZeppelinConfigFactory {
 
-  private static final Logger LOGGGER = Logger.getLogger(
-          ZeppelinConfigFactory.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ZeppelinConfigFactory.class.getName());
   private static final String ZEPPELIN_SITE_XML = "/conf/zeppelin-site.xml";
-  private final ConcurrentMap<String, ZeppelinConfig> projectConfCache
-          = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, Long> projectCacheLastRestart
-          = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, ZeppelinConfig> projectUserConfCache
-          = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ZeppelinConfig> projectConfCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Long> projectCacheLastRestart = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, ZeppelinConfig> projectUserConfCache = new ConcurrentHashMap<>();
+
   @EJB
   private Settings settings;
   @EJB
@@ -49,11 +47,14 @@ public class ZeppelinConfigFactory {
   @EJB
   private HdfsUsersController hdfsUsername;
   @EJB
+  private ZeppelinResource zeppelinResource;
+  @EJB
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
 
   @PostConstruct
   public void init() {
     ZeppelinConfig.COMMON_CONF = loadConfig();
+    checkInterpreterJsonValidity();
   }
 
   @PreDestroy
@@ -77,9 +78,7 @@ public class ZeppelinConfigFactory {
    * @param nbs
    * @return null if the project does not exist.
    */
-  public ZeppelinConfig getZeppelinConfig(String projectName, String username,
-          NotebookServer nbs) {
-    ZeppelinConfig config = getprojectConf(projectName);
+  public ZeppelinConfig getZeppelinConfig(String projectName, String username, NotebookServer nbs) {
     Project project = projectBean.findByName(projectName);
     Users user = userFacade.findByEmail(username);
     if (project == null || user == null) {
@@ -90,6 +89,7 @@ public class ZeppelinConfigFactory {
     if (userConfig != null) {
       return userConfig;
     }
+    ZeppelinConfig config = getprojectConf(projectName);
     userConfig = new ZeppelinConfig(config, nbs, hdfsUser);
     projectUserConfCache.put(hdfsUser, userConfig);
     return userConfig;
@@ -133,8 +133,7 @@ public class ZeppelinConfigFactory {
       return null;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
-    ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.
-            findByName(projectName);
+    ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.findByName(projectName);
     String conf = null;
     if (interpreterConf != null) {
       conf = interpreterConf.getIntrepeterConf();
@@ -198,7 +197,7 @@ public class ZeppelinConfigFactory {
       return conf.cleanAndRemoveConfDirs();
     }
     String projectDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + project.getName();
+        + Settings.DIR_ROOT + File.separator + project.getName();
     File projectDir = new File(projectDirPath);
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
     if (projectDir.exists()) {
@@ -211,39 +210,50 @@ public class ZeppelinConfigFactory {
   private ZeppelinConfiguration loadConfig() {
     ZeppelinConfiguration conf;
     URL url = null;
-    File zeppelinConfig
-            = new File(settings.getZeppelinDir() + ZEPPELIN_SITE_XML);
+    File zeppelinConfig = new File(settings.getZeppelinDir() + ZEPPELIN_SITE_XML);
     try {
       if (!zeppelinConfig.exists()) {
         StringBuilder zeppelin_site_xml = ConfigFileGenerator.
-                instantiateFromTemplate(
-                        ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
-                        "zeppelin_home", settings.getZeppelinDir(),
-                        "zeppelin_home_dir", settings.getZeppelinDir(),
-                        "livy_url", settings.getLivyUrl(),
-                        "livy_master", settings.getLivyYarnMode(),
-                        "zeppelin_notebook_dir", "");
-        ConfigFileGenerator.createConfigFile(zeppelinConfig, zeppelin_site_xml.
-                toString());
+            instantiateFromTemplate(ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
+                "zeppelin_home", settings.getZeppelinDir(),
+                "zeppelin_home_dir", settings.getZeppelinDir(),
+                "livy_url", settings.getLivyUrl(),
+                "livy_master", settings.getLivyYarnMode(),
+                "zeppelin_notebook_dir", "");
+        ConfigFileGenerator.createConfigFile(zeppelinConfig, zeppelin_site_xml.toString());
       }
     } catch (IOException e) {
-      LOGGGER.log(Level.INFO, "Could not create zeppelin-site.xml at {0}", url);
+      LOGGER.log(Level.INFO, "Could not create zeppelin-site.xml at {0}", url);
     }
     try {
       url = zeppelinConfig.toURI().toURL();
-      LOGGGER.log(Level.INFO, "Load configuration from {0}", url);
+      LOGGER.log(Level.INFO, "Load configuration from {0}", url);
       conf = new ZeppelinConfiguration(url);
     } catch (ConfigurationException e) {
-      LOGGGER.log(Level.INFO, "Failed to load configuration from " + url
-              + " proceeding with a default", e);
+      LOGGER.log(Level.INFO, "Failed to load configuration from " + url + " proceeding with a default", e);
       conf = new ZeppelinConfiguration();
     } catch (MalformedURLException ex) {
-      LOGGGER.log(Level.INFO, "Malformed URL failed to load configuration from "
-              + url
-              + " proceeding with a default", ex);
+      LOGGER.
+          log(Level.INFO, "Malformed URL failed to load configuration from " + url + " proceeding with a default", ex);
       conf = new ZeppelinConfiguration();
     }
     return conf;
+  }
+
+  /**
+   * Check if interpreter json is valid.
+   *
+   */
+  public void checkInterpreterJsonValidity() {
+    String json = ConfigFileGenerator.getZeppelinDefaultInterpreterJson();
+    if (json == null || json.isEmpty()) {
+      LOGGER.log(Level.SEVERE, "Could not read Zeppelin default interpreter json.");
+      throw new IllegalStateException("Could not read default interpreter json.");
+    }
+    if (!zeppelinResource.isJSONValid(json)) {
+      LOGGER.log(Level.SEVERE, "Zeppelin Default interpreter json not valid.");
+      throw new IllegalStateException("Default interpreter json not valid.");
+    }
   }
 
 }

@@ -30,7 +30,18 @@ angular.module('hopsWorksApp')
             ];
             self.selected = self.dirs[1];
 
+            self.log_levels = [
+              {id: 1, name: 'FINE'},
+              {id: 2, name: 'DEBUG'},
+              {id: 3, name: 'INFO'},
+              {id: 4, name: 'WARN'},
+              {id: 5, name: 'ERROR'}
+            ];
+            self.logLevelSelected;
 
+            self.changeLogLevel = function () {
+              self.val.logLevel = self.logLevelSelected.name;
+            };
 
             self.changeBaseDir = function () {
               self.val.baseDir = self.selected.name;
@@ -45,18 +56,18 @@ angular.module('hopsWorksApp')
                       function (success) {
                         $scope.sessions = success.data;
                       }, function (error) {
-                        // nothing to do
+                // nothing to do
 //                        console.info("No livy sessions running.");
-                        $scope.sessions = null;
+                $scope.sessions = null;
               }
               );
 
             };
-            
+
             self.showLivyUI = function (appId) {
               $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
             };
-            
+
             self.sliderVisible = false;
 
             self.sliderOptions = {
@@ -64,12 +75,11 @@ angular.module('hopsWorksApp')
               max: 10,
               options: {
                 floor: 0,
-                ceil: 500
+                ceil: 1500
               },
               getPointerColor: function (value) {
                 return '#4b91ea';
               }
-
             };
 
             self.refreshSlider = function () {
@@ -250,6 +260,19 @@ angular.module('hopsWorksApp')
                         self.sliderOptions.max = self.val.dynamicMaxExecutors;
                         self.toggleValue = true;
                         self.val.mode = "sparkDynamic";
+                        if (self.val.logLevel === "FINE") {
+                          self.logLevelSelected = self.log_levels[0];
+                        } else if (self.val.logLevel === "DEBUG") {
+                          self.logLevelSelected = self.log_levels[1];
+                        } else if  (self.val.logLevel === "INFO") {
+                          self.logLevelSelected = self.log_levels[2];
+                        } else if  (self.val.logLevel === "WARN") {
+                          self.logLevelSelected = self.log_levels[3];
+                        } else if (self.val.logLevel === "ERROR") {
+                          self.logLevelSelected = self.log_levels[4];
+                        } else {
+                          self.logLevelSelected = self.log_levels[2];                          
+                        }
                       }, function (error) {
                 growl.error("Could not get Jupyter Notebook Server Settings.");
               }
@@ -330,6 +353,7 @@ angular.module('hopsWorksApp')
             self.start = function () {
               startLoading("Connecting to Jupyter...");
               $scope.tgState = true;
+              self.setInitExecs();
 
               JupyterService.start(projectId, self.val).then(
                       function (success) {

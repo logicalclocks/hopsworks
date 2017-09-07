@@ -41,8 +41,7 @@ import org.sonatype.aether.RepositoryException;
 
 public class ZeppelinConfig {
 
-  private static final Logger LOGGER = Logger.getLogger(ZeppelinConfig.class.
-          getName());
+  private static final Logger LOGGER = Logger.getLogger(ZeppelinConfig.class.getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
@@ -89,20 +88,16 @@ public class ZeppelinConfig {
     this.projectId = projectId;
     this.owner = owner;
     this.settings = settings;
-    this.projectDirPath = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator
-            + this.projectName;
+    this.projectDirPath = settings.getZeppelinDir() + File.separator + Settings.DIR_ROOT + File.separator
+        + this.projectName;
     this.runDirPath = this.projectDirPath + File.separator + "run";
     this.binDirPath = this.projectDirPath + File.separator + "bin";
     this.logDirPath = this.projectDirPath + File.separator + "logs";
     this.libDirPath = this.projectDirPath + File.separator + "lib";
     this.confDirPath = this.projectDirPath + File.separator + "conf";
-    this.interpreterDirPath = this.projectDirPath + File.separator
-            + "interpreter";
-    this.notebookDirPath = this.projectDirPath + File.separator + COMMON_CONF.
-            getNotebookDir();
-    this.repoDirPath = this.projectDirPath + File.separator + COMMON_CONF.
-            getInterpreterLocalRepoPath();
+    this.interpreterDirPath = this.projectDirPath + File.separator + "interpreter";
+    this.notebookDirPath = this.projectDirPath + File.separator + COMMON_CONF.getNotebookDir();
+    this.repoDirPath = this.projectDirPath + File.separator + COMMON_CONF.getInterpreterLocalRepoPath();
 
     boolean newDir = false;
     boolean newFile = false;
@@ -120,45 +115,35 @@ public class ZeppelinConfig {
               ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_OUTPUT_LIMIT);
       this.heliumApplicationFactory = new HeliumApplicationFactory();
       this.heliumBundleFactory = new HeliumBundleFactory(conf, null,
-              new File(conf.getRelativeDir(
-                      ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-              new File(conf.
-                      getRelativeDir("lib/node_modules/zeppelin-tabledata")),
+              new File(conf.getRelativeDir(ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO)),
+              new File(conf.getRelativeDir("lib/node_modules/zeppelin-tabledata")),
               new File(conf.getRelativeDir("lib/node_modules/zeppelin-vis")),
               new File(conf.getRelativeDir("lib/node_modules/zeppelin-spell")));
 
-      this.helium = new Helium(conf.getHeliumConfPath(), conf.
-              getHeliumRegistry(),
-              new File(conf.getRelativeDir(
-                      ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO),
-                      "helium-registry-cache"), heliumBundleFactory,
-              heliumApplicationFactory);
+      this.helium = new Helium(conf.getHeliumConfPath(), conf.getHeliumRegistry(), new File(conf.getRelativeDir(
+          ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO), "helium-registry-cache"), heliumBundleFactory,
+          heliumApplicationFactory);
       // create bundle
       try {
-        this.heliumBundleFactory.buildAllPackages(helium.
-                getBundlePackagesToBundle());
+        this.heliumBundleFactory.buildAllPackages(helium.getBundlePackagesToBundle());
       } catch (Exception e) {
         LOGGER.log(Level.INFO, e.getMessage(), e);
       }
 
       this.schedulerFactory = SchedulerFactory.singleton();
-      this.interpreterSettingManager = new InterpreterSettingManager(conf,
-              depResolver, new InterpreterOption(true));
+      this.interpreterSettingManager = new InterpreterSettingManager(conf, depResolver, new InterpreterOption(true));
       this.notebookRepo = getNotebookRepo(owner);
       this.noteSearchService = new LuceneSearch();
       this.notebookAuthorization = NotebookAuthorization.init(conf);
-      this.credentials = new Credentials(conf.credentialsPersist(), conf.
-              getCredentialsPath());
+      this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
     } catch (Exception e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
         removeProjectConfFiles();
       }
-      LOGGER.log(Level.SEVERE,
-              "Error in initializing ZeppelinConfig for project: {0}. {1}",
-              new Object[]{
-                this.projectName, e});
+      LOGGER.log(Level.SEVERE, "Error in initializing ZeppelinConfig for project: {0}. {1}",
+              new Object[]{this.projectName, e});
     }
   }
 
@@ -190,8 +175,7 @@ public class ZeppelinConfig {
   }
 
   private NotebookRepoSync getNotebookRepo(String owner) {
-    String notebookStorage = conf.getString(
-            ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE);
+    String notebookStorage = conf.getString(ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE);
     LOGGER.log(Level.INFO, "Using notebook Repo class {0}", notebookStorage);
     boolean notebookInHdfs = notebookStorage.contains("HDFSNotebookRepo");
     if (!notebookInHdfs) {
@@ -200,10 +184,8 @@ public class ZeppelinConfig {
     NotebookRepoSync nbRepo = null;
     UserGroupInformation ugi;
     try {
-      ugi = UserGroupInformation.createProxyUser(owner, UserGroupInformation.
-              getLoginUser());
-      nbRepo = ugi.doAs((PrivilegedExceptionAction<NotebookRepoSync>) ()
-              -> new NotebookRepoSync(conf));
+      ugi = UserGroupInformation.createProxyUser(owner, UserGroupInformation.getLoginUser());
+      nbRepo = ugi.doAs((PrivilegedExceptionAction<NotebookRepoSync>) () -> new NotebookRepoSync(conf));
     } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create proxy user.", ex);
     } catch (InterruptedException ex) {
@@ -235,20 +217,16 @@ public class ZeppelinConfig {
       // to update notebook from application event from remote process.
       this.heliumApplicationFactory.setNotebook(notebook);
       // to update fire websocket event on application event.
-      this.heliumApplicationFactory.setApplicationEventListener(
-              this.notebookServer);
+      this.heliumApplicationFactory.setApplicationEventListener(this.notebookServer);
       this.notebook.addNotebookEventListener(heliumApplicationFactory);
-      this.notebook.addNotebookEventListener(this.notebookServer.
-              getNotebookInformationListener());
-    } catch (InterpreterException | IOException | RepositoryException |
-            SchedulerException ex) {
+      this.notebook.addNotebookEventListener(this.notebookServer.getNotebookInformationListener());
+    } catch (InterpreterException | IOException | RepositoryException | SchedulerException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }
 
   public boolean isClosed() {
-    return this.replFactory == null || this.notebook == null
-            || this.notebookServer == null;
+    return this.replFactory == null || this.notebook == null || this.notebookServer == null;
   }
 
   public InterpreterSettingManager getInterpreterSettingManager() {
@@ -380,17 +358,14 @@ public class ZeppelinConfig {
     Path destinationPath;
     for (File file : sourceDir.listFiles()) {
       destinationPath = Paths.get(binDirPath + File.separator + file.getName());
-      Files.copy(file.toPath(), destinationPath,
-              StandardCopyOption.REPLACE_EXISTING);
+      Files.copy(file.toPath(), destinationPath, StandardCopyOption.REPLACE_EXISTING);
     }
-
     return binDir.list().length == sourceDir.list().length;
   }
 
   //creates symlink to interpreters and libs
   private void createSymLinks() throws IOException {
-    File target = new File(settings.getZeppelinDir() + File.separator
-            + "interpreter");
+    File target = new File(settings.getZeppelinDir() + File.separator + "interpreter");
     File newLink = new File(interpreterDirPath);
     if (!newLink.exists()) {
       Files.createSymbolicLink(newLink.toPath(), target.toPath());
@@ -403,12 +378,9 @@ public class ZeppelinConfig {
   }
 
   private void createVisCacheSymlink() throws IOException {
-    File target = new File(settings.getZeppelinDir() + File.separator
-            + "local-repo/vis");
+    File target = new File(settings.getZeppelinDir() + File.separator + "local-repo/vis");
     if (!target.exists()) {
-      LOGGER.log(Level.SEVERE,
-              "Node and npm not cached at {0}. Zeppelin will try to download "
-              + "this for every project.",
+      LOGGER.log(Level.SEVERE, "Node and npm not cached at {0}. Zeppelin will try to download this for every project.",
               target.toURI());
       return;
     }
@@ -419,31 +391,23 @@ public class ZeppelinConfig {
   }
 
   // returns true if one of the conf files were created anew
-  private boolean createZeppelinConfFiles(String interpreterConf) throws
-          IOException {
+  private boolean createZeppelinConfFiles(String interpreterConf) throws IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
     File log4j_file = new File(confDirPath + LOG4J_PROPS);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
-    String home = settings.getZeppelinDir() + File.separator
-            + Settings.DIR_ROOT + File.separator + this.projectName;
-    String notebookDir = File.separator + Settings.DIR_ROOT + File.separator
-            + this.projectName;
-    String resourceDir = File.separator + Settings.DIR_ROOT + File.separator
-            + this.projectName + File.separator
+    String home = settings.getZeppelinDir() + File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
+    String notebookDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
+    String resourceDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName + File.separator
             + Settings.BaseDataset.RESOURCES.getName();
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
     if (!log4j_file.exists()) {
-      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(
-              ConfigFileGenerator.LOG4J_TEMPLATE);
-      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.
-              toString());
+      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.LOG4J_TEMPLATE);
+      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
     }
-    //String metricsPath = Settings.getProjectSparkMetricsPath(this.projectName);
-    String metricsPath = Settings.getSparkMetricsPath(settings.
-            getHdfsSuperUser());
+    String metricsPath = Settings.getSparkMetricsPath(settings.getSparkUser());
     String log4jPath = Settings.getSparkLog4JPath(settings.getHdfsSuperUser());
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
             + File.separator + "bin" + File.separator + "python";
@@ -470,7 +434,7 @@ public class ZeppelinConfig {
               "ld_library_path", ldLibraryPath,
               "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.
                       getHadoopDir() + "/bin/hadoop", "classpath", "--glob"),
-              "spark_options", "--files " + metricsPath + "," + log4jPath
+              "spark_options", "--files " +  log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
               zeppelin_env.
@@ -546,8 +510,7 @@ public class ZeppelinConfig {
                       "projectName", this.projectName,
                       "zeppelin_home_dir", home,
                       "livy_url", settings.getLivyUrl(),
-                      "metrics-properties_local_path", "./metrics.properties",
-                      "metrics-properties_path", metricsPath + "," + log4jPath
+                      "metrics-properties_path", log4jPath
                       + "," +livySparkDistFiles.toString(),
                       "extra_spark_java_options", extraSparkJavaOptions,
                       "spark.sql.warehouse.dir", hdfsResourceDir
@@ -561,8 +524,7 @@ public class ZeppelinConfig {
               );
       interpreterConf = interpreter_json.toString();
     }
-    createdXml = ConfigFileGenerator.createConfigFile(interpreter_file,
-            interpreterConf);
+    createdXml = ConfigFileGenerator.createConfigFile(interpreter_file, interpreterConf);
 
     return createdSh || createdXml || createdLog4j;
   }

@@ -1,5 +1,7 @@
 package io.hops.hopsworks.api.zeppelin.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -155,7 +157,7 @@ public class ZeppelinResource {
     }
     return project;
   }
-  
+
   public Project getProject(String projectId) {
     Integer pId;
     Project proj;
@@ -166,6 +168,16 @@ public class ZeppelinResource {
       return null;
     }
     return proj;
+  }
+
+  public boolean isJSONValid(String jsonInString) {
+    Gson gson = new Gson();
+    try {
+      gson.fromJson(jsonInString, Object.class);
+      return true;
+    } catch (JsonSyntaxException ex) {
+      return false;
+    }
   }
 
   private boolean isProccessAlive(String pid) {
@@ -232,7 +244,7 @@ public class ZeppelinResource {
     }
     return s;
   }
-  
+
   public void persistToDB(Project project) {
     if (project == null) {
       logger.log(Level.SEVERE, "Can not persist interpreter json for null project.");
@@ -245,6 +257,10 @@ public class ZeppelinResource {
     }
     try {
       String s = readConfigFile(new File(zeppelinConf.getConfDirPath() + ZeppelinConfig.INTERPRETER_JSON));
+      if (!isJSONValid(s)) {
+        logger.log(Level.SEVERE, "Zeppelin interpreter json not valid. For project {0}", project.getName() );
+        throw new IllegalStateException("Zeppelin interpreter json not valid.");
+      }
       zeppelinInterpreterConfFacade.create(project.getName(), s);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, ex.getMessage());
@@ -252,9 +268,9 @@ public class ZeppelinResource {
   }
 
   private String readConfigFile(File path) throws IOException {
-    // write contents to file as text, not binary data
+    // read contents from file
     if (!path.exists()) {
-      throw new IOException("Problem creating file: " + path);
+      throw new IOException("File not found: " + path);
     }
     return new String(Files.readAllBytes(path.toPath()));
   }

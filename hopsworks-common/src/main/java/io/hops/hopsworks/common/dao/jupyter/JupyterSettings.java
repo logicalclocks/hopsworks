@@ -142,6 +142,12 @@ public class JupyterSettings implements Serializable {
   @Column(name = "secret")
   private String secret;
 
+  @Basic(optional = true)
+  @Size(min = 3,
+          max = 15)
+  @Column(name = "log_level")
+  private String logLevel = "INFO";
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 0,
@@ -299,6 +305,14 @@ public class JupyterSettings implements Serializable {
 
   public void setSecret(String secret) {
     this.secret = secret;
+  }
+
+  public String getLogLevel() {
+    return logLevel;
+  }
+
+  public void setLogLevel(String logLevel) {
+    this.logLevel = logLevel;
   }
 
   public Users getUsers() {
