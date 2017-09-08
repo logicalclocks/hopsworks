@@ -7,7 +7,6 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
@@ -105,7 +104,7 @@ public class JupyterConfigFactory {
   public String getHadoopClasspath() throws IOException,
       InterruptedException {
     if (this.hadoopClasspath == null) {
-      ProcessBuilder ps = new ProcessBuilder(settings.getHadoopDir()
+      ProcessBuilder ps = new ProcessBuilder(settings.getHadoopSymbolicLinkDir()
           + "/bin/hadoop", "classpath", "--glob");
       ps.redirectErrorStream(true);
       Process pr = ps.start();
@@ -175,7 +174,7 @@ public class JupyterConfigFactory {
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
           = {"/usr/bin/sudo", prog, "start", jc.getNotebookPath(),
-            jc.getSettings().getHadoopDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
+            jc.getSettings().getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
             settings.getAnacondaProjectDir(project.getName()), port.
             toString(),
             hdfsUser + "-" + port + ".log", secretDir};
@@ -270,22 +269,52 @@ public class JupyterConfigFactory {
    * @param hdfsUser
    * @throws AppException
    */
+//  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+//  public void stopServerJupyterUser(String hdfsUser)
+//      throws AppException {
+//    if (hdfsUser == null) {
+//      throw new AppException(Response.Status.BAD_REQUEST.
+//          getStatusCode(),
+//          "Null hdfsUsername when stopping the Jupyter Server.");
+//    }
+//    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+//    int exitValue;
+//    Integer id = 1;
+//    String[] command = {"/usr/bin/sudo", prog, "stop", hdfsUser};
+//    logger.log(Level.INFO, Arrays.toString(command));
+//    ProcessBuilder pb = new ProcessBuilder(command);
+//    try {
+//      Process process = pb.start();
+//
+//      BufferedReader br = new BufferedReader(new InputStreamReader(
+//          process.getInputStream(), Charset.forName("UTF8")));
+//      String line;
+//      while ((line = br.readLine()) != null) {
+//        logger.info(line);
+//      }
+//      process.waitFor(10l, TimeUnit.SECONDS);
+//      exitValue = process.exitValue();
+//    } catch (IOException | InterruptedException ex) {
+//      logger.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
+//          toString());
+//      exitValue = -2;
+//    }
+//
+//    if (exitValue != 0) {
+//      throw new AppException(Response.Status.REQUEST_TIMEOUT.getStatusCode(),
+//          "Couldn't stop Jupyter Notebook Server.");
+//    }
+//
+//  }
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopServerJupyterUser(String hdfsUser)
-      throws AppException {
-    if (hdfsUser == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.
-          getStatusCode(),
-          "Null hdfsUsername when stopping the Jupyter Server.");
-    }
+  public int killHardJupyterWithPid(Long pid) {
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
     int exitValue;
     Integer id = 1;
-    String[] command = {"/usr/bin/sudo", prog, "stop", hdfsUser};
+    String[] command = {"/usr/bin/sudo", prog, "killhard", pid.toString()};
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-
       BufferedReader br = new BufferedReader(new InputStreamReader(
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
@@ -299,12 +328,7 @@ public class JupyterConfigFactory {
           toString());
       exitValue = -2;
     }
-
-    if (exitValue != 0) {
-      throw new AppException(Response.Status.REQUEST_TIMEOUT.getStatusCode(),
-          "Couldn't stop Jupyter Notebook Server.");
-    }
-
+    return exitValue;
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -364,21 +388,32 @@ public class JupyterConfigFactory {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopProject(Project project)
-      throws AppException {
-    Collection<ProjectTeam> team = project.getProjectTeamCollection();
-    for (ProjectTeam pt : team) {
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
-          getUser());
+  public void stopProject(Project project) //      throws AppException 
+  {
+    Collection<JupyterSettings> jupyterSettings = project.getJupyterSettingsCollection();
+    String path = "";
+    for (JupyterProject jp : project.getJupyterProjectCollection()) {
+      HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
+      for (JupyterSettings js : jupyterSettings) {
+        if (hdfsUser.getName().compareTo(js.getJupyterSettingsPK().getTeamMember()) == 0) {
+          path = hdfsUser.getName();
+          break;
+        }
+      }
+      if (path.isEmpty()) {
+//        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Couldnt find path for user: "
+//            + jp.
+//                getHdfsUserId());
+        logger.severe("Couldnt delete project for user: " + hdfsUser.getUsername());
+      }
       try {
-        stopServerJupyterUser(hdfsUsername);
+        killServerJupyterUser(path, jp.getPid(), jp.getPort());
       } catch (AppException ex) {
-        // continue
+        logger.warning("When removing a project, could not shutdown the jupyter notebook server.");
       }
     }
 
-    String prog = settings.getHopsworksDomainDir()
-        + "/bin/jupyter-project-cleanup.sh";
+    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
     int exitValue;
     String[] command = {"/usr/bin/sudo", prog, project.getName()};
     ProcessBuilder pb = new ProcessBuilder(command);

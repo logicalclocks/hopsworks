@@ -21,7 +21,9 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -35,7 +37,7 @@ import io.hops.hopsworks.common.util.Settings;
 public class HdfsUsersController {
 
   private static final Logger LOGGER = Logger.getLogger(
-          HdfsUsersController.class.
+      HdfsUsersController.class.
           getName());
   public static final String USER_NAME_DELIMITER = "__";
 
@@ -57,6 +59,8 @@ public class HdfsUsersController {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private JupyterConfigFactory jupyterConfigFactory;
+  @EJB
+  private JupyterFacade jupyterFacade;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -69,15 +73,15 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void addProjectFolderOwner(Project project,
-          DistributedFileSystemOps dfso) throws IOException {
+      DistributedFileSystemOps dfso) throws IOException {
     String owner = getHdfsUserName(project, project.getOwner());
     String projectPath = File.separator + Settings.DIR_ROOT + File.separator
-            + project.getName();
+        + project.getName();
     Path location = new Path(projectPath);
     //FsPermission(FsAction u, FsAction g, FsAction o) 555
     //We prohibit a user from creating top-level datasets bypassing Hopsworks UI (i.e. from as Spark app)
     FsPermission fsPermission = new FsPermission(FsAction.READ_EXECUTE,
-            FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);// 555
+        FsAction.READ_EXECUTE, FsAction.READ_EXECUTE);// 555
     dfso.setOwner(location, owner, project.getName());
     dfso.setPermission(location, fsPermission);
   }
@@ -93,7 +97,7 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void addNewProjectMember(Project project, ProjectTeam member) throws
-          IOException {
+      IOException {
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
     if (hdfsGroup == null) {
       throw new IllegalArgumentException("No group found for project in HDFS.");
@@ -101,7 +105,7 @@ public class HdfsUsersController {
     String hdfsUsername;
     HdfsUsers memberHdfsUser;
     Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
-            getTeamMember());
+        getTeamMember());
     hdfsUsername = getHdfsUserName(project, newMember);
     memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
     if (memberHdfsUser == null) {
@@ -151,7 +155,7 @@ public class HdfsUsersController {
     String hdfsUsername;
     HdfsUsers memberHdfsUser;
     Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
-            getTeamMember());
+        getTeamMember());
     hdfsUsername = getHdfsUserName(project, newMember);
     memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
     if (memberHdfsUser == null) {
@@ -184,9 +188,9 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void addDatasetUsersGroups(Users owner, Project project,
-          Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
+      Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
     if (owner == null || project == null || project.getProjectTeamCollection()
-            == null || dataset == null) {
+        == null || dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
     String datasetGroup = getHdfsGroupName(project, dataset);
@@ -200,7 +204,7 @@ public class HdfsUsersController {
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
     if (hdfsGroup == null) {
       throw new IllegalArgumentException(
-              "Could not create dataset group in HDFS.");
+          "Could not create dataset group in HDFS.");
     }
     if (hdfsGroup.getHdfsUsersCollection() == null) {
       hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
@@ -248,7 +252,7 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void removeProjectMember(Users user, Project project) throws
-          IOException {
+      IOException {
     if (user == null || project == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
@@ -256,13 +260,14 @@ public class HdfsUsersController {
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(userName);
     dfsService.removeDfsOps(userName);
     removeHdfsUser(hdfsUser);
-        
+    JupyterProject jp = jupyterFacade.findByUser(userName);
+
     try {
       // stop any jupyter notebooks running for this user, if any
-      jupyterConfigFactory.stopServerJupyterUser(userName);
+      jupyterConfigFactory.killServerJupyterUser(userName, jp.getPid(), jp.getPort());
     } catch (AppException ex) {
       Logger.getLogger(HdfsUsersController.class.getName()).
-              log(Level.SEVERE, null, ex);
+          log(Level.SEVERE, null, ex);
     }
   }
 
@@ -276,7 +281,7 @@ public class HdfsUsersController {
    */
   public void modifyProjectMembership(Users user, Project project) {
     if (user == null || project == null || project.getProjectTeamCollection()
-            == null) {
+        == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
     String userName = getHdfsUserName(project, user);
@@ -284,7 +289,7 @@ public class HdfsUsersController {
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(userName);
     if (hdfsUser == null || hdfsGroup == null) {
       throw new IllegalArgumentException(
-              "Hdfs user not found or not in project group.");
+          "Hdfs user not found or not in project group.");
     }
     hdfsUser.getHdfsGroupsCollection().remove(hdfsGroup);
     hdfsUsersFacade.merge(hdfsUser);
@@ -313,7 +318,7 @@ public class HdfsUsersController {
     HdfsUsers hdfsUser;
 
     List<String> hdfsUsersToFlush = new ArrayList<>();
-    
+
     hdfsUser = hdfsUsersFacade.findByName(project.getName());
     if (hdfsUser == null) {
       hdfsUser = new HdfsUsers(project.getName());
@@ -325,7 +330,7 @@ public class HdfsUsersController {
     }
 
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
-            findMembersByProject(project);
+        findMembersByProject(project);
 
     //every member of the project the ds is going to be shard with is
     //added to the dataset group.
@@ -407,7 +412,7 @@ public class HdfsUsersController {
       }
     }
   }
-  
+
   /**
    * Deletes the project group from HDFS
    * <p>
@@ -430,7 +435,7 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void deleteProjectGroupsRecursive(Project project,
-          List<Dataset> dsInProject) throws IOException {
+      List<Dataset> dsInProject) throws IOException {
     if (project == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
@@ -446,7 +451,7 @@ public class HdfsUsersController {
     }
   }
 
-   /**
+  /**
    * Deletes the project group and all associated groups from HDFS
    * <p>
    * @param project
@@ -454,12 +459,12 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void deleteGroups(List<HdfsGroups> hdfsDsGroups) throws
-          IOException {
+      IOException {
     for (HdfsGroups hdfsDsGroup : hdfsDsGroups) {
       removeHdfsGroup(hdfsDsGroup);
     }
   }
-  
+
   /**
    * Deletes all users associated with this project from HDFS
    * <p>
@@ -468,7 +473,7 @@ public class HdfsUsersController {
    * @throws java.io.IOException
    */
   public void deleteProjectUsers(Project project,
-          Collection<ProjectTeam> projectTeam) throws IOException {
+      Collection<ProjectTeam> projectTeam) throws IOException {
     if (project == null || projectTeam == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
@@ -483,7 +488,7 @@ public class HdfsUsersController {
       removeHdfsUser(hdfsUser);
     }
   }
-  
+
   /**
    * Deletes all users associated with this project from HDFS
    * <p>
@@ -532,7 +537,7 @@ public class HdfsUsersController {
       throw new IllegalArgumentException("The dataset group have no members.");
     }
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
-            findMembersByProject(project);
+        findMembersByProject(project);
     String hdfsUsername;
     HdfsUsers hdfsUser;
     hdfsUser = hdfsUsersFacade.findByName(project.getName());
@@ -550,7 +555,7 @@ public class HdfsUsersController {
         } catch (IOException ex) {
           //FIXME: take an action?
           LOGGER.log(Level.WARNING,
-                  "Error while trying flush the cash", ex);
+              "Error while trying flush the cash", ex);
         }
         hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
       }
@@ -591,7 +596,7 @@ public class HdfsUsersController {
     }
     return projectGroups;
   }
-  
+
   /**
    * Returns the hdfs username for the user in this project
    * <p>
@@ -639,7 +644,7 @@ public class HdfsUsersController {
       return null;
     }
     return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().
-            getName();
+        getName();
   }
 
   /**
@@ -670,7 +675,7 @@ public class HdfsUsersController {
     }
     Project owningProject = datasetController.getOwningProject(dataset);
     return owningProject.getName() + USER_NAME_DELIMITER
-            + dataset.getInode().getInodePK().getName();
+        + dataset.getInode().getInodePK().getName();
 
   }
 

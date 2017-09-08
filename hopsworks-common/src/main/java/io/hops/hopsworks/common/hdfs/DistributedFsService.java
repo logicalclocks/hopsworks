@@ -63,7 +63,7 @@ public class DistributedFsService {
   
   @PostConstruct
   public void init() {
-    System.setProperty("hadoop.home.dir", settings.getHadoopDir());
+    System.setProperty("hadoop.home.dir", settings.getHadoopSymbolicLinkDir());
     hadoopConfDir = settings.getHadoopConfDir();
     //Get the configuration file at found path
     File hadoopConfFile = new File(hadoopConfDir, "core-site.xml");

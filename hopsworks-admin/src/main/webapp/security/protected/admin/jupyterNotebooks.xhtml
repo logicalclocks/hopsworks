@@ -84,6 +84,14 @@
                             style=" font-size: 12px; text-align: left;">
                     <h:outputText value="#{notebookServer.getLastAccessed()}" />
                   </p:column>
+                  <p:column id="jupyterPid"
+                            filterBy="#{notebookServer.getPid()}"
+                            sortBy="#{notebookServer.getPid()}"
+                            filterMatchMode="contains"
+                            headerText="PID"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{notebookServer.getPid()}" />
+                  </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 

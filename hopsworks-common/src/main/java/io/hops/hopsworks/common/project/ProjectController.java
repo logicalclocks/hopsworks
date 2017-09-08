@@ -972,7 +972,7 @@ public class ProjectController {
               }
             });
             try {
-              rt.exec(settings.getHadoopDir() + "/bin/yarn application -kill "
+              rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
                   + jobExecs.get(0).getAppId());
             } catch (IOException ex) {
               Logger.getLogger(ProjectController.class.getName()).

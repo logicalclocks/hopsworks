@@ -7,7 +7,6 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.exception.AppException;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -79,12 +78,12 @@ public class JupyterNotebookCleaner {
           int hdfsUserId = jp.getHdfsUserId();
           HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
           if (hdfsUser != null) {
-            try {
-              jupyterConfigFactory.stopServerJupyterUser(hdfsUser.getUsername());
-            } catch (AppException ex) {
-              Logger.getLogger(JupyterNotebookCleaner.class.getName()).
-                      log(Level.SEVERE, null, ex);
-            }
+//            try {
+//              jupyterConfigFactory.stopServerJupyterUser(hdfsUser.getUsername());
+//            } catch (AppException ex) {
+//              Logger.getLogger(JupyterNotebookCleaner.class.getName()).
+//                      log(Level.SEVERE, null, ex);
+//            }
           }
 
         }
