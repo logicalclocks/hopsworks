@@ -113,7 +113,7 @@
         <div ng-if="clusterUtilCtrl.allocatedGPUs!==0 || clusterUtilCtrl.availableGPUs!==0">
           <small style="color: #ddd; font-size: 80%;">
             <em>Allocated GPUs: {{clusterUtilCtrl.allocatedGPUs}}<br>Available GPUs: {{clusterUtilCtrl.availableGPUs}}
-              <br>Num Queued GPU Requests: {{clusterUtilCtrl.allocatedGPUs}}</em></small>
+              <br>Queued GPU Requests: {{clusterUtilCtrl.reservedGPUs}}</em></small>
           <div class="progress" style="height: 10px;"
                uib-tooltip="If this bar is orange, a job requesting a small number of GPUs may succeed.
                If this bar is red, there are no GPUs available currently for running jobs."

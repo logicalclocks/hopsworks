@@ -78,7 +78,7 @@ public class AdamController {
       adamJob = proxyUser.doAs(new PrivilegedExceptionAction<AdamJob>() {
         @Override
         public AdamJob run() throws Exception {
-          return new AdamJob(job, submitter, user, settings.getHadoopDir(),
+          return new AdamJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
                   settings.getSparkDir(), settings.getAdamUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
@@ -118,7 +118,7 @@ public class AdamController {
               "Job configuration is not a Spark job configuration.");
     }
 
-    AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopDir(),
+    AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
             settings.
             getSparkDir(), settings.getAdamUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.

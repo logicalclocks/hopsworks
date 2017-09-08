@@ -1230,7 +1230,7 @@ public class DataSetService {
             ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
-            settings.getHadoopDir(), jobsMonitor);
+            settings.getHadoopSymbolicLinkDir(), jobsMonitor);
     //persist a job execution instance in the database and get its id
     Execution exec = encodeJob.requestExecutionId();
     if (exec != null) {

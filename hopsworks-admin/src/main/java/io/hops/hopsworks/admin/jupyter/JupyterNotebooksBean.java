@@ -24,11 +24,23 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.Settings;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
 
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
@@ -38,6 +50,8 @@ import javax.faces.context.FacesContext;
 @ViewScoped
 public class JupyterNotebooksBean {
 
+  private static final Logger LOGGER = Logger.getLogger(JupyterNotebooksBean.class.getName());
+
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
@@ -46,6 +60,8 @@ public class JupyterNotebooksBean {
   private JupyterConfigFactory jupyterConfigFactory;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private Settings settings;
 
   public String action;
 
@@ -67,6 +83,69 @@ public class JupyterNotebooksBean {
 
   public List<JupyterProject> getAllNotebooks() {
     allNotebooks = jupyterFacade.getAllNotebookServers();
+
+    // Look for all notebooks running that do not have a PID in jupypter_projects
+    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+
+    int exitValue = -1;
+    String[] command = {"/usr/bin/sudo", prog, "list"};
+    ProcessBuilder pb = new ProcessBuilder(command);
+    try {
+      Process process = pb.start();
+
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+          process.getInputStream(), Charset.forName("UTF8")));
+      String line;
+      while ((line = br.readLine()) != null) {
+        LOGGER.info(line);
+      }
+
+      process.waitFor(10l, TimeUnit.SECONDS);
+      exitValue = process.exitValue();
+    } catch (IOException | InterruptedException ex) {
+      LOGGER.log(Level.SEVERE, "Problem starting a backup: {0}", ex.
+          toString());
+      exitValue = -2;
+    }
+
+    File file = new File(Settings.JUPYTER_PIDS);
+
+    List<Long> pidsRunning = new ArrayList<>();
+    try {
+      Scanner scanner = new Scanner(file);
+      while (scanner.hasNextLine()) {
+        String line = scanner.nextLine();
+        pidsRunning.add(Long.parseLong(line));
+      }
+    } catch (FileNotFoundException e) {
+      LOGGER.warning("Invalid pids in file: " + Settings.JUPYTER_PIDS);
+    }
+
+    List<Long> pidsOrphaned = new ArrayList<>();
+    pidsOrphaned.addAll(pidsRunning);
+
+    for (Long pid : pidsRunning) {
+      boolean foundPid = false;
+      for (JupyterProject jp : allNotebooks) {
+        if (pid == jp.getPid()) {
+          foundPid = true;
+        }
+        if (foundPid) {
+          pidsOrphaned.remove(pid);
+        }
+      }
+    }
+
+    for (Long pid : pidsOrphaned) {
+      JupyterProject jp = new JupyterProject();
+      jp.setPid(pid);
+      jp.setPort(-1);
+      jp.setLastAccessed(Date.from(Instant.now()));
+      jp.setHdfsUserId(-1);
+      allNotebooks.add(jp);
+    }
+    file.deleteOnExit();
+
     return allNotebooks;
   }
 
@@ -80,7 +159,10 @@ public class JupyterNotebooksBean {
 
   public String getHdfsUser(JupyterProject notebook) {
     int hdfsId = notebook.getHdfsUserId();
-    HdfsUsers hdfsUser = hdfsUsersFacade.find(notebook.getHdfsUserId());
+    if (hdfsId == -1) {
+      return "Orphaned";
+    }
+    HdfsUsers hdfsUser = hdfsUsersFacade.find(hdfsId);
     return hdfsUser.getName();
   }
 
@@ -88,17 +170,23 @@ public class JupyterNotebooksBean {
 
     String projectPath;
     String hdfsUser = getHdfsUser(notebook);
-    try {
-      projectPath = jupyterConfigFactory.getJupyterHome(hdfsUser, notebook);
-      jupyterConfigFactory.killServerJupyterUser(projectPath, notebook.getPid(), notebook.getPort());
-      jupyterFacade.removeNotebookServer(hdfsUser);
-      FacesContext context = FacesContext.getCurrentInstance();
-      context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
-    } catch (AppException ex) {
-      Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
-      FacesContext context = FacesContext.getCurrentInstance();
-      context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));
-      return "KILL_NOTEBOOK_FAILED";
+    if (hdfsUser.compareTo("Orphaned") == 0) {
+      if (jupyterConfigFactory.killHardJupyterWithPid(notebook.getPid()) == -1) {
+        return "KILL_NOTEBOOK_FAILED";
+      }
+    } else {
+      try {
+        projectPath = jupyterConfigFactory.getJupyterHome(hdfsUser, notebook);
+        jupyterConfigFactory.killServerJupyterUser(projectPath, notebook.getPid(), notebook.getPort());
+        jupyterFacade.removeNotebookServer(hdfsUser);
+        FacesContext context = FacesContext.getCurrentInstance();
+        context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
+      } catch (AppException ex) {
+        Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
+        FacesContext context = FacesContext.getCurrentInstance();
+        context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));
+        return "KILL_NOTEBOOK_FAILED";
+      }
     }
     return "KILL_NOTEBOOK_SUCCESS";
   }

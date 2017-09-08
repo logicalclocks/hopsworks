@@ -82,7 +82,7 @@ public class CertSigningService {
       }
     }
 
-    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
+    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert, settings.getHadoopVersionedDir());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dto).build();
   }
@@ -112,7 +112,7 @@ public class CertSigningService {
       }
     }
 
-    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert);
+    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert, settings.getHadoopVersionedDir());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             dto).build();
   }

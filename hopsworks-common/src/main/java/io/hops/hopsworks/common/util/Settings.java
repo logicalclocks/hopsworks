@@ -528,9 +528,17 @@ public class Settings implements Serializable {
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
-  public synchronized String getHadoopDir() {
+  // This returns the unversioned base installation directory for hops-hadoop
+  // For example, "/srv/hops/hadoop" - it does not return "/srv/hops/hadoop-2.8.2"
+  public synchronized String getHadoopSymbolicLinkDir() {
     checkCache();
     return HADOOP_DIR;
+  }
+  
+   
+  public synchronized String getHadoopVersionedDir() {
+    checkCache();
+    return HADOOP_DIR + "-" + getHadoopVersion();
   }
 
   private String HOPSWORKS_EXTERNAL_IP = "127.0.0.1";
@@ -682,7 +690,7 @@ public class Settings implements Serializable {
   
   //Hadoop locations
   public synchronized String getHadoopConfDir() {
-    return hadoopConfDir(getHadoopDir());
+    return hadoopConfDir(getHadoopSymbolicLinkDir());
   }
 
   private static String hadoopConfDir(String hadoopDir) {
@@ -1502,7 +1510,7 @@ public class Settings implements Serializable {
 
   public Configuration getConfiguration() throws IllegalStateException {
     if (conf == null) {
-      String hadoopDir = getHadoopDir();
+      String hadoopDir = getHadoopSymbolicLinkDir();
       //Get the path to the Yarn configuration file from environment variables
       String yarnConfDir = System.getenv(Settings.ENV_KEY_YARN_CONF_DIR);
       //If not found in environment variables: warn and use default,

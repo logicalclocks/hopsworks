@@ -66,7 +66,7 @@ public class TensorFlowController {
         @Override
         public TensorFlowJob run() throws Exception {
           return new TensorFlowJob(job, submitter, user,
-              settings.getHadoopDir(),
+              settings.getHadoopSymbolicLinkDir(),
               settings.getHdfsSuperUser(),
               hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
               jobsMonitor, settings);
@@ -105,7 +105,7 @@ public class TensorFlowController {
     }
 
     TensorFlowJob tfJob = new TensorFlowJob(job, submitter, user,
-        settings.getHadoopDir(),
+        settings.getHadoopSymbolicLinkDir(),
         settings.getHdfsSuperUser(),
         hdfsUsersBean.getHdfsUserName(job.getProject(), 
                 job.getCreator()), jobsMonitor, settings);

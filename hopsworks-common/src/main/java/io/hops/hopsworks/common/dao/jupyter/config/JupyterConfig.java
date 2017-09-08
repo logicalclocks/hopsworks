@@ -251,8 +251,8 @@ public class JupyterConfig {
               "hdfs_user", this.hdfsUser,
               "port", port.toString(),
               "python-kernel", pythonKernel,
-              "hadoop_home", this.settings.getHadoopDir(),
-              "hdfs_home", this.settings.getHadoopDir(),
+              "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
+              "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
               "secret_dir", this.settings.getStagingDir()
               + Settings.PRIVATE_DIRS + js.getSecret()
           );
@@ -325,7 +325,7 @@ public class JupyterConfig {
                   "nn_endpoint", this.nameNodeEndpoint,
                   "spark_user", this.settings.getSparkUser(),
                   "java_home", this.settings.getJavaHome(),
-                  "hadoop_home", this.settings.getHadoopDir(),
+                  "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
                   "pyspark_bin", this.settings.
                       getAnacondaProjectDir(
                           project.getName()) + "/bin/python",
@@ -349,7 +349,7 @@ public class JupyterConfig {
       StringBuilder custom_js_sb = ConfigFileGenerator.
           instantiateFromTemplate(
               ConfigFileGenerator.JUPYTER_CUSTOM_TEMPLATE,
-              "hadoop_home", this.settings.getHadoopDir()
+              "hadoop_home", this.settings.getHadoopSymbolicLinkDir()
           );
       createdCustomJs = ConfigFileGenerator.createConfigFile(
           custom_js, custom_js_sb.toString());
