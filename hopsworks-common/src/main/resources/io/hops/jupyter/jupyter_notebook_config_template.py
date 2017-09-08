@@ -47,7 +47,8 @@ c.JupyterConsoleApp.kernel_name="PySpark"
 
 #c.KernelSpecManager.whitelist = {'python2'}
 #c.KernelSpecManager.whitelist = {}
-c.KernelSpecManager.whitelist = {'pysparkkernel', 'pyspark3kernel','sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22' 
+#c.KernelSpecManager.whitelist = {'pysparkkernel', 'pyspark3kernel','sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22' 
+c.KernelSpecManager.whitelist = {'pysparkkernel', 'sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22' 
 %%python-kernel%% }
 c.KernelSpecMAnager.ensure_native_kernel=False
 

@@ -96,11 +96,11 @@
                     <div class="text-right col-md-6">Base Directory <i class="fa fa-info-circle" 
                                                                        uib-tooltip="Root Directory for Jupyter Notebooks. If your Notebook is not stored in the '/Jupyter' Dataset, choose '/'." style="margin-left: 10px"></i>
                     </div>
-                    <div class="col-md-2 jupyter-left"  style="z-index: -1;">
+                    <div class="col-md-2 jupyter-left">
 
-                      <ui-select  style="z-index: -1;"
+                      <ui-select 
                                  ng-model="jupyterCtrl.selected" theme="bootstrap" on-select="jupyterCtrl.changeBaseDir()">
-                        <ui-select-match  style="z-index: -1;">
+                        <ui-select-match>
                           <span ng-bind="$select.selected.name"></span>
                         </ui-select-match>
                         <ui-select-choices repeat="dir in (jupyterCtrl.dirs | filter: $select.search) track by dir.name">
@@ -318,7 +318,7 @@
                                                                   style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
-                      <ui-select ng-model="jupyterCtrl.logLevelSelected" theme="bootstrap" style="z-index: -1;"
+                      <ui-select ng-model="jupyterCtrl.logLevelSelected" theme="bootstrap"
                                  on-select="jupyterCtrl.changeLogLevel()">
                         <ui-select-match >
                           <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
