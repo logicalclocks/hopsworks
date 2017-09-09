@@ -911,11 +911,6 @@ public class Settings implements Serializable {
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_RESULTS = "Results";
   public static final String DIR_CONSENTS = "consents";
-  public static final String DIR_BAM = "bam";
-  public static final String DIR_SAM = "sam";
-  public static final String DIR_FASTQ = "fastq";
-  public static final String DIR_FASTA = "fasta";
-  public static final String DIR_VCF = "vcf";
   public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT +
       File.separator + "Uploads" + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";

@@ -78,6 +78,7 @@
             "spark.dynamicAllocation.initialExecutors" : "%%initial_executors%%",
             "spark.dynamicAllocation.minExecutors" : "%%min_executors%%",
             "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%",
+            "spark.sql.warehouse.dir": "%%warehouse_dir%%",
             "spark.files" : "%%spark_files%%",
             "spark.metrics.conf": "%%metrics_path%%"
         }

@@ -509,15 +509,14 @@ public class ZeppelinConfig {
               ConfigFileGenerator.INTERPRETER_TEMPLATE,
               "projectName", this.projectName,
               "zeppelin_home_dir", home,
+              "hdfs_user", this.owner,
+              "hadoop_home", settings.getHadoopSymbolicLinkDir(),
               "livy_url", settings.getLivyUrl(),
-              "metrics-properties_path", log4jPath
-              + "," + livySparkDistFiles.toString(),
+              "metrics-properties_path", log4jPath + "," + livySparkDistFiles.toString(),
               "extra_spark_java_options", extraSparkJavaOptions,
-              "spark.sql.warehouse.dir", hdfsResourceDir
-              + "spark-warehouse",
+              "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
               "spark.yarn.stagingDir", hdfsResourceDir,
-              "livy.spark.sql.warehouse.dir", hdfsResourceDir
-              + "spark-warehouse",
+              "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
               "livy.spark.yarn.stagingDir", hdfsResourceDir,
               "zeppelin.python_conda_path", zeppelinPythonPath,
               "spark.yarn.dist.files", sparkDistFiles.toString()
