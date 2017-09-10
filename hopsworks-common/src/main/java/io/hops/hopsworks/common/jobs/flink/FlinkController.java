@@ -86,7 +86,7 @@ public class FlinkController {
         @Override
         public FlinkJob run() throws Exception {
           return new FlinkJob(job, submitter, user,
-              settings.getHadoopDir(), settings.getFlinkDir(),
+              settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
               settings.getFlinkConfDir(),
               settings.getFlinkConfFile(),
               settings.getFlinkUser(),
@@ -130,7 +130,7 @@ public class FlinkController {
     }
 
     FlinkJob flinkJob = new FlinkJob(job, submitter, user,
-        settings.getHadoopDir(), settings.getFlinkDir(),
+        settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
         settings.getFlinkConfDir(), settings.getFlinkConfFile(),
         settings.getFlinkUser(),
         job.getProject().getName() + "__" + user.getUsername(),

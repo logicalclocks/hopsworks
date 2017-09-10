@@ -46,7 +46,6 @@ public class ZeppelinConfig {
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   public static final String INTERPRETER_JSON = "/interpreter.json";
-  public static final String METRICS_PROPERTIES = "/metrics.properties";
   private static final int DELETE_RETRY = 10;
 
   /**
@@ -83,7 +82,7 @@ public class ZeppelinConfig {
   private final String owner;
 
   public ZeppelinConfig(String projectName, Integer projectId, String owner, Settings settings,
-          String interpreterConf) {
+      String interpreterConf) {
     this.projectName = projectName;
     this.projectId = projectId;
     this.owner = owner;
@@ -110,15 +109,15 @@ public class ZeppelinConfig {
       newFile = createZeppelinConfFiles(interpreterConf);//create project specific configurations for zeppelin 
       this.conf = loadConfig();//load the newly created zeppelin-site.xml
       this.depResolver = new DependencyResolver(conf.getString(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
+          ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_LOCALREPO));
       InterpreterOutput.limit = conf.getInt(
-              ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_OUTPUT_LIMIT);
+          ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_OUTPUT_LIMIT);
       this.heliumApplicationFactory = new HeliumApplicationFactory();
       this.heliumBundleFactory = new HeliumBundleFactory(conf, null,
-              new File(conf.getRelativeDir(ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO)),
-              new File(conf.getRelativeDir("lib/node_modules/zeppelin-tabledata")),
-              new File(conf.getRelativeDir("lib/node_modules/zeppelin-vis")),
-              new File(conf.getRelativeDir("lib/node_modules/zeppelin-spell")));
+          new File(conf.getRelativeDir(ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO)),
+          new File(conf.getRelativeDir("lib/node_modules/zeppelin-tabledata")),
+          new File(conf.getRelativeDir("lib/node_modules/zeppelin-vis")),
+          new File(conf.getRelativeDir("lib/node_modules/zeppelin-spell")));
 
       this.helium = new Helium(conf.getHeliumConfPath(), conf.getHeliumRegistry(), new File(conf.getRelativeDir(
           ZeppelinConfiguration.ConfVars.ZEPPELIN_DEP_LOCALREPO), "helium-registry-cache"), heliumBundleFactory,
@@ -143,7 +142,7 @@ public class ZeppelinConfig {
         removeProjectConfFiles();
       }
       LOGGER.log(Level.SEVERE, "Error in initializing ZeppelinConfig for project: {0}. {1}",
-              new Object[]{this.projectName, e});
+          new Object[]{this.projectName, e});
     }
   }
 
@@ -206,14 +205,14 @@ public class ZeppelinConfig {
     this.notebookServer = nbs;
     try {
       this.replFactory = new InterpreterFactory(this.conf, this.notebookServer,
-              this.notebookServer, this.heliumApplicationFactory,
-              this.depResolver, SecurityUtils.isAuthenticated(),
-              this.interpreterSettingManager);
+          this.notebookServer, this.heliumApplicationFactory,
+          this.depResolver, SecurityUtils.isAuthenticated(),
+          this.interpreterSettingManager);
       this.notebook = new Notebook(this.conf, this.notebookRepo,
-              this.schedulerFactory, this.replFactory, interpreterSettingManager,
-              this.notebookServer,
-              this.noteSearchService, this.notebookAuthorization,
-              this.credentials);
+          this.schedulerFactory, this.replFactory, interpreterSettingManager,
+          this.notebookServer,
+          this.noteSearchService, this.notebookAuthorization,
+          this.credentials);
       // to update notebook from application event from remote process.
       this.heliumApplicationFactory.setNotebook(notebook);
       // to update fire websocket event on application event.
@@ -381,7 +380,7 @@ public class ZeppelinConfig {
     File target = new File(settings.getZeppelinDir() + File.separator + "local-repo/vis");
     if (!target.exists()) {
       LOGGER.log(Level.SEVERE, "Node and npm not cached at {0}. Zeppelin will try to download this for every project.",
-              target.toURI());
+          target.toURI());
       return;
     }
     File newLink = new File(repoDirPath + File.separator + "vis");
@@ -399,7 +398,7 @@ public class ZeppelinConfig {
     String home = settings.getZeppelinDir() + File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
     String notebookDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
     String resourceDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName + File.separator
-            + Settings.BaseDataset.RESOURCES.getName();
+        + Settings.BaseDataset.RESOURCES.getName();
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
@@ -410,7 +409,7 @@ public class ZeppelinConfig {
     String metricsPath = Settings.getSparkMetricsPath(settings.getSparkUser());
     String log4jPath = Settings.getSparkLog4JPath(settings.getHdfsSuperUser());
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
-            + File.separator + "bin" + File.separator + "python";
+        + File.separator + "bin" + File.separator + "python";
     if (!zeppelin_env_file.exists()) {
 
       String ldLibraryPath = "";
@@ -423,35 +422,36 @@ public class ZeppelinConfig {
       }
 
       StringBuilder zeppelin_env = ConfigFileGenerator.instantiateFromTemplate(
-              ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
-              "spark_dir", settings.getSparkDir(),
-              "hadoop_dir", settings.getHadoopDir(),
-              "anaconda_env_dir", settings.getAnacondaDir() + "/envs/"
-              + this.projectName,
-              // TODO: This should be the project__username, not just the projectname
-              "hadoop_username", this.projectName,
-              "java_home", javaHome,
-              "ld_library_path", ldLibraryPath,
-              "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.
-                      getHadoopDir() + "/bin/hadoop", "classpath", "--glob"),
-              "spark_options", "--files " +  log4jPath
+          ConfigFileGenerator.ZEPPELIN_ENV_TEMPLATE,
+          "spark_dir", settings.getSparkDir(),
+          "hadoop_dir", settings.getHadoopSymbolicLinkDir(),
+          "anaconda_env_dir", settings.getAnacondaDir() + "/envs/"
+          + this.projectName,
+          // TODO: This should be the project__username, not just the projectname
+          "hadoop_username", this.projectName,
+          "java_home", javaHome,
+          "cuda_dir", settings.getCudaDir(),
+          "ld_library_path", ldLibraryPath,
+          "hadoop_classpath", HopsUtils.getHadoopClasspathGlob(settings.getHadoopSymbolicLinkDir() + "/bin/hadoop",
+              "classpath", "--glob"),
+          "spark_options", "--files " + log4jPath
       );
       createdSh = ConfigFileGenerator.createConfigFile(zeppelin_env_file,
-              zeppelin_env.
+          zeppelin_env.
               toString());
     }
 
     if (!zeppelin_site_xml_file.exists()) {
       StringBuilder zeppelin_site_xml = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
-                      "zeppelin_home", home,
-                      "livy_url", settings.getLivyUrl(),
-                      "livy_master", settings.getLivyYarnMode(),
-                      "zeppelin_home_dir", home,
-                      "zeppelin_notebook_dir", notebookDir);
+          instantiateFromTemplate(
+              ConfigFileGenerator.ZEPPELIN_CONFIG_TEMPLATE,
+              "zeppelin_home", home,
+              "livy_url", settings.getLivyUrl(),
+              "livy_master", settings.getLivyYarnMode(),
+              "zeppelin_home_dir", home,
+              "zeppelin_notebook_dir", notebookDir);
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
-              zeppelin_site_xml.
+          zeppelin_site_xml.
               toString());
     }
 
@@ -490,7 +490,7 @@ public class ZeppelinConfig {
         .append(this.projectName).append(File.separator)
         .append(this.projectName).append("__tstore.jks#")
         .append(Settings.T_CERTIFICATE);
-    
+
     // Comma-separated files to be added as local resources to Livy interpreter
     StringBuilder livySparkDistFiles = new StringBuilder();
     livySparkDistFiles
@@ -502,26 +502,25 @@ public class ZeppelinConfig {
         .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
         .append(owner).append(File.separator).append(owner)
         .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
-    
+
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
-              instantiateFromTemplate(
-                      ConfigFileGenerator.INTERPRETER_TEMPLATE,
-                      "projectName", this.projectName,
-                      "zeppelin_home_dir", home,
-                      "livy_url", settings.getLivyUrl(),
-                      "metrics-properties_path", log4jPath
-                      + "," +livySparkDistFiles.toString(),
-                      "extra_spark_java_options", extraSparkJavaOptions,
-                      "spark.sql.warehouse.dir", hdfsResourceDir
-                      + "spark-warehouse",
-                      "spark.yarn.stagingDir", hdfsResourceDir,
-                      "livy.spark.sql.warehouse.dir", hdfsResourceDir
-                      + "spark-warehouse",
-                      "livy.spark.yarn.stagingDir", hdfsResourceDir,
-                      "zeppelin.python_conda_path", zeppelinPythonPath,
-                      "spark.yarn.dist.files", sparkDistFiles.toString()
-              );
+          instantiateFromTemplate(
+              ConfigFileGenerator.INTERPRETER_TEMPLATE,
+              "projectName", this.projectName,
+              "zeppelin_home_dir", home,
+              "hdfs_user", this.owner,
+              "hadoop_home", settings.getHadoopSymbolicLinkDir(),
+              "livy_url", settings.getLivyUrl(),
+              "metrics-properties_path", log4jPath + "," + livySparkDistFiles.toString(),
+              "extra_spark_java_options", extraSparkJavaOptions,
+              "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+              "spark.yarn.stagingDir", hdfsResourceDir,
+              "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
+              "livy.spark.yarn.stagingDir", hdfsResourceDir,
+              "zeppelin.python_conda_path", zeppelinPythonPath,
+              "spark.yarn.dist.files", sparkDistFiles.toString()
+          );
       interpreterConf = interpreter_json.toString();
     }
     createdXml = ConfigFileGenerator.createConfigFile(interpreter_file, interpreterConf);
@@ -539,12 +538,12 @@ public class ZeppelinConfig {
       conf = new ZeppelinConfiguration(url);
     } catch (ConfigurationException e) {
       LOGGER.log(Level.INFO, "Failed to load configuration from " + url
-              + " proceeding with a default", e);
+          + " proceeding with a default", e);
       conf = new ZeppelinConfiguration();
     } catch (MalformedURLException ex) {
       LOGGER.log(Level.INFO, "Malformed URL failed to load configuration from "
-              + url
-              + " proceeding with a default", ex);
+          + url
+          + " proceeding with a default", ex);
       conf = new ZeppelinConfiguration();
     }
     return conf;
@@ -618,7 +617,7 @@ public class ZeppelinConfig {
    */
   public void clean() {
     LOGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
-            this.projectName);
+        this.projectName);
     interpreterSettingManager.close();
     // will close repo and index
     if (this.notebook != null) {

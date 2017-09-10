@@ -315,7 +315,7 @@ public class YarnRunner {
             ex);
         //Kill the flink job here
         Runtime rt = Runtime.getRuntime();
-        rt.exec(services.getSettings().getHadoopDir() + "/bin/yarn application -kill " + appId.toString());
+        rt.exec(services.getSettings().getHadoopSymbolicLinkDir() + "/bin/yarn application -kill " + appId.toString());
         throw new IOException("Error while submitting Flink job to cluster:"+ex.getMessage());
       } finally {
         //Remove local flink app jar
@@ -597,7 +597,7 @@ public class YarnRunner {
       classPathEnv.append(':');
       classPathEnv.append(System.getProperty("java.class.path"));
     }
-    String hadoopDir = services.getSettings().getHadoopDir();
+    String hadoopDir = services.getSettings().getHadoopSymbolicLinkDir();
     classPathEnv.append(HopsUtils.getHadoopClasspathGlob(hadoopDir + "/bin/hadoop", "classpath", "--glob"));
     //Check whether a classpath variable was already set, and if so: merge them
     //TODO(Theofilos): clean this up so no doubles are found in the classpath.
