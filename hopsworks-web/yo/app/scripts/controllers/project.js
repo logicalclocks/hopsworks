@@ -266,17 +266,16 @@ angular.module('hopsWorksApp')
 
 //              http://localhost:8080/hopsworks/#!/project/1/settings
 
-
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then(
-                      function (success) {
-                        self.goToUrl('jupyter');
-                      }, function (error) {
-                      growl.info("Enable anaconda before running Jupyter.", 
-                      {title: 'Enable Anaconda First', ttl: 2000});
-                        $timeout(function () {
-                          self.goToUrl('settings');
-                        }, 2000); 
+              PythonDepsService.enabled(self.projectId).then(function (success) {
+                self.goToUrl('jupyter');
+              }, function (error) {
+                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable anaconda before running Jupyter!')
+                    .then(function (success) {
+                      self.goToUrl('settings');
+                    }, function (error) {
+                      self.goToUrl('jupyter');
+                    });
               });
             };
             
