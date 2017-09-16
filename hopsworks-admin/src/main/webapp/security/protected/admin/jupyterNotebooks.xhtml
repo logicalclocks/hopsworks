@@ -95,7 +95,7 @@
 
                 <p:column id="actionColumn" headerText="Action">
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{JupyterNotebooks.kill(notebookServer)}"
+                                   action="#{JupyterNotebooks.setKill(notebookServer)}"
                                    update="@form">
                       <p:confirm header="Kill Jupyter Notebook Server" 
                                  message="Are you sure you want to kill this Jupyter Notebook Server?" 

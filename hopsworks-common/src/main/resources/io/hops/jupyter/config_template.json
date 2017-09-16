@@ -51,7 +51,7 @@
         "jars": [%%jars%%],
         "pyFiles": [%%pyFiles%%],
         "conf" : {
-            "spark.yarn.stagingDir": "hdfs://%%nn_endpoint%%/Projects/%%project%%/Resources",
+       "spark.executorEnv.PATH" : "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "spark.yarn.appMasterEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
             "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON" : "%%pyspark_bin%%",
             "spark.yarn.appMasterEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
@@ -61,6 +61,7 @@
             "spark.yarn.appMasterEnv.HADOOP_HOME" : "%%hadoop_home%%",
             "spark.yarn.appMasterEnv.LIBHDFS_OPTS" : "-Xmx96m",
             "spark.yarn.dist.files": "%%spark_yarn_files%%",
+            "spark.yarn.stagingDir": "hdfs://%%nn_endpoint%%/Projects/%%project%%/Resources",
             "spark.driver.extraLibraryPath" : "%%cuda_dir%%/lib64",
             "spark.executorEnv.HDFS_USER" : "%%hdfs_user%%",
             "spark.executorEnv.HADOOP_HOME" : "%%hadoop_home%%",
@@ -68,6 +69,7 @@
             "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
             "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
             "spark.executorEnv.LD_LIBRARY_PATH" : "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
+            "spark.executorEnv.CUDA_VISIBLE_DEVICES" : "",
             "spark.pyspark.python" : "%%pyspark_bin%%",
             "spark.shuffle.service.enabled" : "true",
             "spark.submit.deployMode" : "cluster",
@@ -78,7 +80,6 @@
             "spark.dynamicAllocation.initialExecutors" : "%%initial_executors%%",
             "spark.dynamicAllocation.minExecutors" : "%%min_executors%%",
             "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%",
-            "spark.sql.warehouse.dir": "%%warehouse_dir%%",
             "spark.files" : "%%spark_files%%",
             "spark.metrics.conf": "%%metrics_path%%"
         }

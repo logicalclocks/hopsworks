@@ -125,6 +125,10 @@ public class MembraneServlet extends HttpServlet {
             new ServiceProxyKey(
                     externalIp, "*", "*", -1),
             "localhost", targetPort);
+//    ServiceProxy sp = new ServiceProxy(
+//            new ServiceProxyKey(
+//                    externalIp, "*", "*", -1),
+//            "localhost", targetPort);
     sp.setTargetURL(newQueryBuf.toString());
     // only set external hostname in case admin console is used
     try {

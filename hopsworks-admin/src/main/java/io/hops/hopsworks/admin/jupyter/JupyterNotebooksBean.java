@@ -157,7 +157,7 @@ public class JupyterNotebooksBean {
     this.action = action;
   }
 
-  public String getHdfsUser(JupyterProject notebook) {
+  private String getHdfsUser(JupyterProject notebook) {
     int hdfsId = notebook.getHdfsUserId();
     if (hdfsId == -1) {
       return "Orphaned";
@@ -167,7 +167,6 @@ public class JupyterNotebooksBean {
   }
 
   public String kill(JupyterProject notebook) {
-
     String projectPath;
     String hdfsUser = getHdfsUser(notebook);
     if (hdfsUser.compareTo("Orphaned") == 0) {
