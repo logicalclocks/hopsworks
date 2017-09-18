@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.upload.ResumableInfoStorage;
 import io.hops.hopsworks.common.upload.StagingManager;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.HopsUtils;
+import com.google.api.client.repackaged.com.google.common.base.Strings;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -80,6 +81,7 @@ public class UploadService {
 
   private String path;
   private String username;
+  private String role;
   private Inode fileParent;
   private boolean isTemplate;
   private int templateId;
@@ -97,7 +99,7 @@ public class UploadService {
    * is not valid
    */
   public void confFileUpload(DsPath dsPath, String username,
-                             int templateId) throws AppException {
+                             int templateId, String role) throws AppException {
     if (dsPath.getDsRelativePath() != null) {
       // We need to validate that each component of the path, either it exists
       // or it is a valid directory name
@@ -133,6 +135,7 @@ public class UploadService {
     }
 
     this.username = username;
+    this.role = role;
     this.templateId = templateId;
     this.isTemplate = false;
     this.path = dsPath.getFullPath().toString();
@@ -195,7 +198,13 @@ public class UploadService {
       if (this.username != null) {
         DistributedFileSystemOps udfso = null;
         try {
-          udfso = dfs.getDfsOps(username);
+          //If the user has a role in the owning project of the Dataset and that is Data Owner
+          //perform operation as superuser
+          if (!Strings.isNullOrEmpty(role) && role.equals(AllowedRoles.DATA_OWNER)) {
+            udfso = dfs.getDfsOps();
+          } else {
+            udfso = dfs.getDfsOps(username);
+          }
           udfso.touchz(new Path(this.path, fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException(
@@ -309,15 +318,20 @@ public class UploadService {
           }
 
         }
-
+        
         if (this.username != null) {
-          dfsOps = dfs.getDfsOps(username);
-        } else { // to accommodate previous implementations
-          dfsOps = dfs.getDfsOps();
+          //If the user has a role in the owning project of the Dataset and that is Data Owner
+          //perform operation as superuser
+          if (!Strings.isNullOrEmpty(role) && role.equals(AllowedRoles.DATA_OWNER)) {
+            dfsOps = dfs.getDfsOps();
+          } else {
+            dfsOps = dfs.getDfsOps(username);
+          }
         }
 
         dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));
+        dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
         logger.log(Level.INFO, "Copied to HDFS");
 
         if (templateid != 0 && templateid != -1) {

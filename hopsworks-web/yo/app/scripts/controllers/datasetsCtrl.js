@@ -805,11 +805,12 @@ This will make all its files unavailable to other projects unless you share it e
                           var downloadPathArray = self.pathArray.slice(0);
                           downloadPathArray.push(file.name);
                           var filePath = getPath(downloadPathArray);
+                          //growl.success("Asdfasdf", {title: 'asdfasd', ttl: 5000});
                           dataSetService.checkFileForDownload(filePath).then(
                                   function (success) {
                                     dataSetService.fileDownload(filePath);
                                   }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
                         }
                 );

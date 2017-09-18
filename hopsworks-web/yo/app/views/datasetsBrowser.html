@@ -134,8 +134,10 @@
                         <span class="glyphicon sort-icon" ng-show="sortKey == 'dir'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('name')">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'name'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('owner')">Owner
+                      <th ng-click="sort('owner')">Owner  
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'owner'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                      <th ng-click="sort('project')" ng-if="datasetsCtrl.isShared()">Project  
+                        <span class="glyphicon sort-icon" ng-show="sortKey === 'project'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('modification')">Last modified
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'modification'" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('size')">File size
@@ -183,6 +185,8 @@
                       <td ng-click="datasetsCtrl.openDir(file)">
                         <div>{{file.name}}</div></td>
                       <td ng-click="datasetsCtrl.openDir(file)">{{file.owner}} 
+                      </td>
+                      <td ng-click="datasetsCtrl.openDir(file)" ng-if="file.owningProjectName">{{file.owningProjectName}} 
                       </td>
                       <td ng-click="datasetsCtrl.openDir(file)">{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"></span>
                       </td>

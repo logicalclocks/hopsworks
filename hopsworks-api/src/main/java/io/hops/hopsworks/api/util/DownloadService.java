@@ -19,6 +19,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -31,7 +32,7 @@ public class DownloadService {
 
   @EJB
   private DistributedFsService dfs;
-
+ 
   private String path;
   private String username;
 
@@ -48,40 +49,38 @@ public class DownloadService {
 
   @GET
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFromHDFS() throws AppException, AccessControlException {
     FSDataInputStream stream;
-    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps udfso;
     try {
       if (username != null) {
         udfso = dfs.getDfsOps(username);
-        stream = udfso.open(new Path(this.path));
+        stream = udfso.open(new Path(path));
+        Response.ResponseBuilder response = Response.ok(buildOutputStream(stream, udfso, username));
+        response.header("Content-disposition", "attachment;");
+        return response.build();
       } else {
-        udfso = dfs.getDfsOps();
-        stream = udfso.open(new Path(this.path));
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+            ResponseMessages.DOWNLOAD_ERROR);
       }
-      Response.ResponseBuilder response = Response.ok(buildOutputStream(stream,
-              udfso, username));
-      response.header("Content-disposition", "attachment;");
 
-      return response.build();
     } catch (AccessControlException ex) {
       throw new AccessControlException(
-              "Permission denied: You can not download the file ");
+          "Permission denied: You can not download the file ");
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "File does not exist: " + this.path);
+          "File does not exist: " + this.path);
     }
   }
 
   private StreamingOutput buildOutputStream(final FSDataInputStream stream,
-          final DistributedFileSystemOps udfso, final String
-      projectSpecificUsername) {
+      final DistributedFileSystemOps udfso, final String projectSpecificUsername) {
     StreamingOutput output = new StreamingOutput() {
       @Override
       public void write(OutputStream out) throws IOException,
-              WebApplicationException {
+          WebApplicationException {
         try {
           int length;
           byte[] buffer = new byte[1024];
