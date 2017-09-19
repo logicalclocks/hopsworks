@@ -82,6 +82,7 @@ class HopsServletHandler extends AbstractHttpHandler {
         exchange.setRemoteAddr(Ip.getHost(request.getRequestURL().toString()));
         exchange.setRequest(srcReq);
         exchange.setOriginalRequestUri(request.getRequestURL().toString());
+//        exchange.setTargetConnection(con);
 
         invokeHandlers();
       } catch (AbortException e) {

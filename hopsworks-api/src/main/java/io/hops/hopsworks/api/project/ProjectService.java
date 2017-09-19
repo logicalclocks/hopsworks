@@ -9,7 +9,6 @@ import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
-import io.hops.hopsworks.api.workflow.WorkflowService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -97,8 +96,6 @@ public class ProjectService {
   @Inject
   private BiobankingService biobanking;
   @Inject
-  private WorkflowService workflowService;
-  @Inject
   private PythonDepsService pysparkService;
   @Inject
   private CertService certs;
@@ -147,9 +144,7 @@ public class ProjectService {
       @Context HttpServletRequest req) {
 
     List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(
-        list) {
-    };
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         projects).build();
@@ -820,19 +815,6 @@ public class ProjectService {
     this.jupyter.setProjectId(id);
 
     return this.jupyter;
-  }
-
-  @Path("{id}/workflows")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public WorkflowService workflows(@PathParam("id") Integer id) throws
-      AppException {
-    Project project = projectController.findProjectById(id);
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
-    this.workflowService.setProject(project);
-    return workflowService;
   }
 
   @Path("{id}/pythonDeps")

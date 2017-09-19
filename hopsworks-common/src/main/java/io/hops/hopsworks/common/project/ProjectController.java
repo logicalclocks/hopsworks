@@ -360,6 +360,7 @@ public class ProjectController {
       try {
         addElasticsearch(project.getName());
       } catch (IOException ex) {
+        LOGGER.log(Level.SEVERE, "Error while adding elasticsearch service for project:"+projectName, ex);
         cleanup(project, sessionId);
       }
       return project;
@@ -1238,6 +1239,7 @@ public class ProjectController {
             try {
               createCertificates(project, newMember, false);
             } catch (Exception ex) {
+              LOGGER.log(Level.SEVERE, "Adding  team member "+projectTeam.getProjectTeamPK()+" to members failed", ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
                 hdfsUsersBean.

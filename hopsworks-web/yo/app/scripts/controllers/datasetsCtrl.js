@@ -2,9 +2,9 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
-          'DataSetService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
+          'DataSetService', 'JupyterService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$showdown', '$rootScope',
-          function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, $routeParams,
+          function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, JupyterService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
                   $showdown, $rootScope) {
 
@@ -20,7 +20,6 @@ angular.module('hopsWorksApp')
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
-//            self.fileDetail = null; //The details about the currently selected file.
             self.sharedPath = null; //The details about the currently selected file.
             self.routeParamArray = [];
             $scope.readme = null;
@@ -169,7 +168,6 @@ angular.module('hopsWorksApp')
                         //Clear any selections
                         self.all_selected = false;
                         self.selectedFiles = {};
-                        self.selected = null;
                         //Reset the selected file
                         self.selected = null;
                         self.working = false;
@@ -369,20 +367,21 @@ This will make all its files unavailable to other projects unless you share it e
               return clippedPath;
             };
 
-            self.unzip = function () {
+            self.unzip = function (filename) {
               var pathArray = self.pathArray.slice(0);
-              pathArray.push(self.selected);
+//              pathArray.push(self.selected);
+              pathArray.push(filename);
               var filePath = getPath(pathArray);
 
-                growl.info("Started unzipping...", 
-                {title: 'Unzipping Started', ttl: 2000, referenceId: 4});
-                dataSetService.unzip(filePath).then(
+              growl.info("Started unzipping...",
+                      {title: 'Unzipping Started', ttl: 2000, referenceId: 4});
+              dataSetService.unzip(filePath).then(
                       function (success) {
-                growl.success("Refresh your browser when finished", 
-                {title: 'Unzipping in Background', ttl: 5000, referenceId: 4});
+                        growl.success("Refresh your browser when finished",
+                                {title: 'Unzipping in Background', ttl: 5000, referenceId: 4});
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error unzipping file', ttl: 5000, referenceId: 4});
-              }); 
+              });
             };
 
             self.isZippedfile = function () {
@@ -392,7 +391,7 @@ This will make all its files unavailable to other projects unless you share it e
               var ext = re.exec(self.selected)[1];
               switch (ext) {
                 case "zip":
-                  return true; 
+                  return true;
                 case "rar":
                   return true;
                 case "tar":
@@ -410,6 +409,41 @@ This will make all its files unavailable to other projects unless you share it e
               return false;
             };
 
+            self.convertIPythonNotebook = function (filename) {
+              var pathArray = self.pathArray.slice(0);
+              pathArray.push(filename); //self.selected
+              var filePath = getPath(pathArray);
+
+              growl.info("Converting...",
+                      {title: 'Conversion Started', ttl: 2000, referenceId: 4});
+              JupyterService.convertIPythonNotebook(self.projectId, filePath).then(
+                      function (success) {
+                        growl.success("Finished - refresh your browser",
+                                {title: 'Converting in Background', ttl: 3000, referenceId: 4});
+                        getDirContents();
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error converting notebook', ttl: 5000, referenceId: 4});
+              });
+            };
+
+            self.isIPythonNotebook = function () {
+              if (self.selected === null || self.selected === undefined) {
+                return false;
+              }
+              if (self.selected.indexOf('.') == -1) {
+                return false;
+              }
+              
+              var ext =  self.selected.split('.').pop();
+              if (ext === null || ext === undefined) {
+                return false;
+              }
+              switch (ext) {
+                case "ipynb":
+                  return true;
+              }
+              return false;
+            };
 
             /**
              * Preview the requested file in a Modal. If the file is README.md
@@ -771,11 +805,12 @@ This will make all its files unavailable to other projects unless you share it e
                           var downloadPathArray = self.pathArray.slice(0);
                           downloadPathArray.push(file.name);
                           var filePath = getPath(downloadPathArray);
+                          //growl.success("Asdfasdf", {title: 'asdfasd', ttl: 5000});
                           dataSetService.checkFileForDownload(filePath).then(
                                   function (success) {
                                     dataSetService.fileDownload(filePath);
                                   }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                           });
                         }
                 );
@@ -949,8 +984,9 @@ This will make all its files unavailable to other projects unless you share it e
                         });
               }, 300);
               return debounceFn;
-            };
-            
+            }
+            ;
+
             self.getSelectedPath = function (selectedFile) {
               if (self.isSelectedFiles() !== 1) {
                 return "";

@@ -173,6 +173,8 @@ public class ResponseMessages {
       = "Requested path is a directory";
   public final static String DOWNLOAD_ERROR
       = "You cannot download from a non public shared dataset";
+  public final static String DOWNLOAD_PERMISSION_ERROR
+      = "Your role does not allow to download this file";
   public final static String COMPRESS_ERROR
       = "You cannot compress files in a shared dataset";
   public final static String DATASET_OWNER_ERROR

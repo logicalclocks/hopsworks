@@ -264,14 +264,14 @@ angular.module('hopsWorksApp')
                           self.logLevelSelected = self.log_levels[0];
                         } else if (self.val.logLevel === "DEBUG") {
                           self.logLevelSelected = self.log_levels[1];
-                        } else if  (self.val.logLevel === "INFO") {
+                        } else if (self.val.logLevel === "INFO") {
                           self.logLevelSelected = self.log_levels[2];
-                        } else if  (self.val.logLevel === "WARN") {
+                        } else if (self.val.logLevel === "WARN") {
                           self.logLevelSelected = self.log_levels[3];
                         } else if (self.val.logLevel === "ERROR") {
                           self.logLevelSelected = self.log_levels[4];
                         } else {
-                          self.logLevelSelected = self.log_levels[2];                          
+                          self.logLevelSelected = self.log_levels[2];
                         }
                       }, function (error) {
                 growl.error("Could not get Jupyter Notebook Server Settings.");
@@ -365,10 +365,16 @@ angular.module('hopsWorksApp')
                         $timeout(stopLoading(), 5000);
 
                       }, function (error) {
-                growl.error("Could not start Jupyter.");
-                stopLoading();
-                self.toggleValue = true;
-              }
+                        if (error.data !== undefined && error.status === 404) {
+                          growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");
+                        } else if (error.data !== undefined && error.status === 400) {
+                          growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");
+                        } else {
+                          growl.error("Could not start Jupyter.");
+                        }
+                        stopLoading();
+                        self.toggleValue = true;
+                    }
               );
 
             };

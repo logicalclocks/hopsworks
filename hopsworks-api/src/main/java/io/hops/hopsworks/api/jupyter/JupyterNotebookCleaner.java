@@ -2,7 +2,6 @@ package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFactory;
@@ -75,16 +74,16 @@ public class JupyterNotebookCleaner {
         // If notebook hasn't been used in the last 2 hours, kill it.
         if (jp.getLastAccessed().before(
                 new Date(System.currentTimeMillis() - (2 * 60 * 60 * 1000)))) {
-          int hdfsUserId = jp.getHdfsUserId();
-          HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-          if (hdfsUser != null) {
+//          int hdfsUserId = jp.getHdfsUserId();
+//          HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
+//          if (hdfsUser != null) {
 //            try {
 //              jupyterConfigFactory.stopServerJupyterUser(hdfsUser.getUsername());
 //            } catch (AppException ex) {
 //              Logger.getLogger(JupyterNotebookCleaner.class.getName()).
 //                      log(Level.SEVERE, null, ex);
 //            }
-          }
+//          }
 
         }
 

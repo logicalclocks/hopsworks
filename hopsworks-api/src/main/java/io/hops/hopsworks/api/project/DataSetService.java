@@ -53,12 +53,12 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -127,11 +127,11 @@ public class DataSetService {
   @EJB
   private YarnJobsMonitor jobsMonitor;
   @EJB
-  private JupyterFacade jupyterFacade;
-  @EJB
   private PathValidator pathValidator;
   @EJB
   private DsDTOValidator dtoValidator;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   private Integer projectId;
   private Project project;
@@ -281,6 +281,10 @@ public class DataSetService {
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
+      if (dsPath.getDs().isShared()) {
+        //Get project of project__user the inode is owned by
+        inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
+      }
       inodeView.setUnzippingState(settings.getUnzippingState(
               fullPath + "/" + i.getInodePK().getName()));
       Users user = userFacade.findByUsername(inodeView.getOwner());
@@ -690,11 +694,17 @@ public class DataSetService {
   /**
    * This function is used only for deletion of dataset directories
    * as it does not accept a path
+   * @param fileName
+   * @param sc
+   * @param req
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException 
+   * @throws org.apache.hadoop.security.AccessControlException
    */
   @DELETE
   @Path("/{fileName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc,
@@ -719,7 +729,19 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      dfso = dfs.getDfsOps();// do it as super user
+      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
+      Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
+      //Find project of dataset as it might be shared
+      Project owning = datasetController.getOwningProject(ds);
+      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+      if (isMember && projectTeamFacade.findCurrentRole(owning, user).equals(AllowedRoles.DATA_OWNER) && owning.equals(
+          project)) {
+        dfso = dfs.getDfsOps();// do it as super user
+      } else {
+        dfso = dfs.getDfsOps(username);// do it as project user
+      }
       success = datasetController.
               deleteDatasetDir(ds, fullPath, dfso);
     } catch (AccessControlException ex) {
@@ -730,7 +752,7 @@ public class DataSetService {
               "Could not delete the file at " + fullPath.toString());
     } finally {
       if (dfso != null) {
-        dfso.close();
+        dfs.closeDfsClient(dfso);
       }
     }
 
@@ -756,6 +778,12 @@ public class DataSetService {
    * Differently from the previous function, this accepts a path.
    * If it is used to delete a dataset directory it will throw an exception
    * (line 779)
+   * @param fileName
+   * @param req
+   * @param sc
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
+   * @throws org.apache.hadoop.security.AccessControlException
    */
   @DELETE
   @Path("file/{fileName: .+}")
@@ -772,6 +800,7 @@ public class DataSetService {
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
+    
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     org.apache.hadoop.fs.Path dsRelativePath = dsPath.getDsRelativePath();
 
@@ -782,11 +811,20 @@ public class DataSetService {
           ResponseMessages.INTERNAL_SERVER_ERROR);
     }
 
-    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
-      udfso = dfs.getDfsOps(username);
-      success = datasetController.deleteDatasetDir(ds, fullPath, udfso);
+      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
+      //Find project of dataset as it might be shared
+      Project owning = datasetController.getOwningProject(ds);
+      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+      if (isMember && projectTeamFacade.findCurrentRole(owning, user).equals(AllowedRoles.DATA_OWNER) && owning.equals(
+          project)) {
+        dfso = dfs.getDfsOps();// do it as super user
+      } else {
+        dfso = dfs.getDfsOps(username);// do it as project user
+      }
+      success = datasetController.deleteDatasetDir(ds, fullPath, dfso);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + fullPath);
@@ -794,8 +832,8 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + fullPath);
     } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
+      if (dfso != null) {
+        dfs.closeDfsClient(dfso);
       }
     }
     if (!success) {
@@ -852,10 +890,19 @@ public class DataSetService {
     org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
 
     DistributedFileSystemOps udfso = null;
-    //We need super-user(glassfish) to change owner 
+    //We need super-user to change owner 
     DistributedFileSystemOps dfso = null;
     try {
-      udfso = dfs.getDfsOps(username);
+      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
+      //Find project of dataset as it might be shared
+      Project owning = datasetController.getOwningProject(sourceDataset);
+      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+      if (isMember && projectTeamFacade.findCurrentRole(owning, user).equals(AllowedRoles.DATA_OWNER) && owning.equals(
+          project)) {
+        udfso = dfs.getDfsOps();// do it as super user
+      } else {
+        udfso = dfs.getDfsOps(username);// do it as project user
+      }
       dfso = dfs.getDfsOps();
       if (udfso.exists(destPath.toString())) {
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -1021,11 +1068,22 @@ public class DataSetService {
   @GET
   @Path("checkFileForDownload/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response checkFileForDownload(@PathParam("path") String path,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
-    return checkFileExists(path, sc);
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    DsPath dsPath = pathValidator.validatePath(this.project, path);
+    Project owningProject = datasetController.getOwningProject(dsPath.getDs());
+    //User must be accessing a dataset directly, not by being shared with another project.
+    //For example, DS1 of project1 is shared with project2. User must be a member of project1 to download files
+    if (owningProject.equals(project) && datasetController.isDownloadAllowed(project, user, dsPath.getFullPath().
+        toString())) {
+      return checkFileExists(path, sc);
+    }
+    JsonResponse response = new JsonResponse();
+    response.setErrorMsg(ResponseMessages.DOWNLOAD_PERMISSION_ERROR);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.FORBIDDEN).entity(response).build();
   }
 
   @GET
@@ -1185,10 +1243,10 @@ public class DataSetService {
   }
 
   @Path("fileDownload/{path: .+}")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public DownloadService downloadDS(@PathParam("path") String path,
-          @Context SecurityContext sc) throws
-          AppException {
+      @Context SecurityContext sc) throws
+      AppException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
@@ -1199,7 +1257,7 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DOWNLOAD_ERROR);
     }
-
+    
     this.downloader.setPath(fullPath);
     this.downloader.setUsername(username);
     return downloader;
@@ -1264,8 +1322,16 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_EDITABLE);
     }
-
-    this.uploader.confFileUpload(dsPath, username, templateId);
+    
+    Project owning = datasetController.getOwningProject(dsPath.getDs());
+    //Is user a member of this project? If so get their role
+    boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+    String role = null;
+    if(isMember){
+      role = projectTeamFacade.findCurrentRole(owning, user);
+    }
+     
+    this.uploader.confFileUpload(dsPath, username, templateId, role);
     return this.uploader;
   }
 

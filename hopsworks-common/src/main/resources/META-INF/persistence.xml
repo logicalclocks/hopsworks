@@ -77,21 +77,7 @@
     <class>io.hops.hopsworks.common.dao.user.security.audit.Userlogins</class>
     <class>io.hops.hopsworks.common.dao.user.sshkey.AuthorizedSshkeys</class>
     <class>io.hops.hopsworks.common.dao.user.sshkey.SshKeys</class>
-    <class>io.hops.hopsworks.common.dao.workflow.Edge</class>
-    <class>io.hops.hopsworks.common.dao.workflow.Node</class>
-    <class>io.hops.hopsworks.common.dao.workflow.Workflow</class>
-    <class>io.hops.hopsworks.common.dao.workflow.WorkflowAction</class>
-    <class>io.hops.hopsworks.common.dao.workflow.WorkflowExecution</class>
-    <class>io.hops.hopsworks.common.dao.workflow.WorkflowJob</class>
     <class>io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfs</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.BlankNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.DecisionNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.EmailNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.EndNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.ForkNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.JoinNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.RootNode</class>
-    <class>io.hops.hopsworks.common.workflows.nodes.SparkCustomNode</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>

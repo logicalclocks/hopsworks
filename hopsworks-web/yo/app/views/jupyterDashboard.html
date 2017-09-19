@@ -130,8 +130,11 @@
                              ng-model="jupyterCtrl.val.numTfPs" class="form-control" min="1">
                     </div>
                   </div>
+                </div>
+                <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorflow' || jupyterCtrl.val.mode === 'tensorflow'">
+
                   <div class="row clusterparams">
-                    <div class="text-right col-md-6">Number of GPUs per worker<i class="fa fa-info-circle" 
+                    <div class="text-right col-md-6">Number of GPUs per executor<i class="fa fa-info-circle" 
                                                                                  uib-tooltip="The number of GPUs used for training/inference." 
                                                                                  style="margin-left: 10px"></i>
                     </div>
@@ -218,20 +221,10 @@
                   </div>
                 </div>
 
-                <div class="row clusterparams"  ng-if="jupyterCtrl.val.mode === 'tensorflow'">
-                  <div class="row">
-                    <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle" 
-                                                                            uib-tooltip="The number of executors is fixed as '1' for single-server Tensorflow." style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left"><input type="number" ng-init="1" ng-disabled="true" ng-model="jupyterCtrl.val.numExecutors" class="form-control"></div>
-                  </div>
-                </div>
-
-
 
 
                 <div class="row clusterparams"  ng-if="jupyterCtrl.val.mode !== 'sparkDynamic'">
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row">
                     <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle" 
                                                                             uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
                     </div>
@@ -294,7 +287,7 @@
                              type="text" class="form-control" id="files" ng-model="jupyterCtrl.val.files">
                     </div>
                   </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row">
                     <div class="text-right col-md-6">
                       <label for="pyFiles">
                         <button uib-tooltip='Select a .py file' id="selectPyFileButton" class="btn btn-default" 
@@ -373,12 +366,12 @@
                   {{jupyterCtrl.val.privateDir}}
                 </div>
               </div>   
-              <div class="row top-buffer">
+<!--              <div class="row top-buffer">
                 <div class="text-right col-md-2"></div>
                 <i class="fa fa-info" aria-hidden="true" uib-tooltip="Info: You cannot create notebooks in the '/' (root) folder of your project as you cannot store files in the project root directory. Notebooks are stored as files in HDFS, and files must be stored in datasets in Hopsworks. So, in Jupyter, navigate to a dataset from where you can create/save a new Notebook :)">
                 </i> Jupyter Kernels (pyspark, python2) cannot be opened in the root folder - open within a dataset 
                 (e.g., 'Resources' or 'Jupyter').
-              </div>
+              </div>-->
 
             </div>
           </div>

@@ -37,7 +37,7 @@ basedir=/srv/hops/domains/domain1
 scp ${usr}@${SERVER}:/home/${usr}/.vagrant.d/${key} .
 
 #echo "ssh -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} \"cd ${basedir} && sudo chmod -R 775 *\""
-ssh -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "sudo chown -R ${vagrant_user} ~/.config && cd ${basedir} && sudo chown -R ${vagrant_user}:${vagrant_user} docroot && sudo chmod -R 775 * && sudo chown -R ${vagrant_user}:${vagrant_user} ~/.local"
+ssh -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd ${basedir} && sudo chown -R ${vagrant_user}:${vagrant_user} docroot && sudo chmod -R 775 * && sudo chown -R ${vagrant_user}:${vagrant_user} ~/.local"
 
 
 scp -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -P ${PORT} -r ../hopsworks-web/yo/app/ vagrant@${SERVER}:${basedir}/docroot

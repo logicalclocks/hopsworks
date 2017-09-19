@@ -167,7 +167,6 @@ public class JupyterNotebooksBean {
   }
 
   public String kill(JupyterProject notebook) {
-
     String projectPath;
     String hdfsUser = getHdfsUser(notebook);
     if (hdfsUser.compareTo("Orphaned") == 0) {

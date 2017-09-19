@@ -36,7 +36,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
-import io.hops.hopsworks.common.dao.workflow.Workflow;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 
@@ -88,10 +87,6 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<Dataset> datasetCollection;
-
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
-  private Collection<Workflow> workflowCollection;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "projectId")
@@ -367,16 +362,6 @@ public class Project implements Serializable {
 
   public void setDatasetCollection(Collection<Dataset> datasetCollection) {
     this.datasetCollection = datasetCollection;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<Workflow> getWorkflowCollection() {
-    return workflowCollection;
-  }
-
-  public void setWorkflowCollection(Collection<Workflow> workflowCollection) {
-    this.workflowCollection = workflowCollection;
   }
 
   @XmlTransient

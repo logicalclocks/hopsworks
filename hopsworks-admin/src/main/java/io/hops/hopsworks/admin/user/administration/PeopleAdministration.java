@@ -68,8 +68,7 @@ public class PeopleAdministration implements Serializable {
   @Resource
   private UserTransaction userTransaction;
 
-  private Users user;
-
+//  private Users user;
   private String secAnswer;
 
   private List<Users> filteredUsers;
@@ -134,7 +133,7 @@ public class PeopleAdministration implements Serializable {
     }
 
     this.eStatus
-            = PeopleAccountStatus.values()[this.editingUser.getStatus() - 1].
+        = PeopleAccountStatus.values()[this.editingUser.getStatus() - 1].
             name();
     return this.eStatus;
   }
@@ -174,7 +173,7 @@ public class PeopleAdministration implements Serializable {
 
   public String getChanged_Status(Users p) {
     return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
-            getStatus() - 1].name();
+        getStatus() - 1].name();
   }
 
   public List<String> getActGroups() {
@@ -186,14 +185,13 @@ public class PeopleAdministration implements Serializable {
     this.actGroups = actGroups;
   }
 
-  public Users getUser() {
-    return user;
-  }
-
-  public void setUser(Users user) {
-    this.user = user;
-  }
-
+//  public Users getUser() {
+//    return user;
+//  }
+//
+//  public void setUser(Users user) {
+//    this.user = user;
+//  }
   /**
    * Filter the current groups
    *
@@ -282,14 +280,14 @@ public class PeopleAdministration implements Serializable {
   public List<String> getGroups() {
     return groups;
   }
-
-  public Users getSelectedUser() {
-    return user;
-  }
-
-  public void setSelectedUser(Users user) {
-    this.user = user;
-  }
+//
+//  public Users getSelectedUser() {
+//    return user;
+//  }
+//
+//  public void setSelectedUser(Users user) {
+//    this.user = user;
+//  }
 
   /**
    * Reject users that are not validated.
@@ -300,7 +298,7 @@ public class PeopleAdministration implements Serializable {
 
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
 
     if (user1 == null) {
       MessagesController.addErrorMessage("Error", "No user found!");
@@ -308,26 +306,26 @@ public class PeopleAdministration implements Serializable {
     }
     try {
       userManager.changeAccountStatus(user1.getUid(), "",
-              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+          PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
       spamUsers.add(user1);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Rejection failed. " + ex.
-              getMessage());
+          getMessage());
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not reject user.", ex);
+          "Could not reject user.", ex);
     }
     try {
       // Send rejection email
       emailBean.sendEmail(user1.getEmail(), RecipientType.TO,
-              UserAccountsEmailMessages.ACCOUNT_REJECT,
-              UserAccountsEmailMessages.accountRejectedMessage());
+          UserAccountsEmailMessages.ACCOUNT_REJECT,
+          UserAccountsEmailMessages.accountRejectedMessage());
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to "
-              + user1.getEmail());
+          + user1.getEmail());
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
-                e});
+          "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
+            e});
     }
   }
 
@@ -348,9 +346,9 @@ public class PeopleAdministration implements Serializable {
       spamUsers.remove(user);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
-              getMessage());
+          getMessage());
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not remove user.", ex);
+          "Could not remove user.", ex);
     }
   }
 
@@ -366,29 +364,29 @@ public class PeopleAdministration implements Serializable {
     }
     try {
       userManager.changeAccountStatus(user.getUid(), "",
-              PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
+          PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
       MessagesController.addInfoMessage(user.getEmail()
-              + " was removed from spam list.");
+          + " was removed from spam list.");
       spamUsers.remove(user);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
-              getMessage());
+          getMessage());
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not remove user from spam list.", ex);
+          "Could not remove user from spam list.", ex);
     }
   }
 
   public void confirmMessage(ActionEvent actionEvent) {
 
     FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-            "Deletion Successful!", null);
+        "Deletion Successful!", null);
     FacesContext.getCurrentInstance().addMessage(null, message);
   }
 
   public String getLoginName() throws IOException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
 
     Principal principal = request.getUserPrincipal();
 
@@ -401,7 +399,7 @@ public class PeopleAdministration implements Serializable {
       }
     } catch (Exception ex) {
       ExternalContext extContext = FacesContext.getCurrentInstance().
-              getExternalContext();
+          getExternalContext();
       extContext.redirect(extContext.getRequestContextPath());
       return null;
     }
@@ -457,59 +455,57 @@ public class PeopleAdministration implements Serializable {
       if (bbcGroup != null) {
         userManager.registerGroup(user1, bbcGroup.getGid());
         auditManager.registerRoleChange(sessionState.getLoggedInUser(),
-                RolesAuditActions.ADDROLE.name(),
-                RolesAuditActions.SUCCESS.name(), bbcGroup.getGroupName(),
-                user1);
+            RolesAuditActions.ADDROLE.name(),
+            RolesAuditActions.SUCCESS.name(), bbcGroup.getGroupName(),
+            user1);
       } else {
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
-                RolesAuditActions.FAILED.name(), "Role could not be granted.",
-                user1);
+            PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+            RolesAuditActions.FAILED.name(), "Role could not be granted.",
+            user1);
         MessagesController.addSecurityErrorMessage("Role could not be granted.");
         return;
       }
 
       try {
         userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
-                getValue());
+            getValue());
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
-                UserAuditActions.SUCCESS.name(), "", user1);
+            PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+            UserAuditActions.SUCCESS.name(), "", user1);
       } catch (ApplicationException | IllegalArgumentException ex) {
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-                PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
-                RolesAuditActions.FAILED.name(), "User could not be activated.",
-                user1);
+            PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+            RolesAuditActions.FAILED.name(), "User could not be activated.",
+            user1);
         MessagesController.addSecurityErrorMessage(
-                "Account activation problem not be granted.");
+            "Account activation problem not be granted.");
       }
 
       userTransaction.commit();
 
-    } catch (NotSupportedException | SystemException |
-            RollbackException | HeuristicMixedException |
-            HeuristicRollbackException | SecurityException |
-            IllegalStateException e) {
+    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
+        | HeuristicRollbackException | SecurityException | IllegalStateException e) {
       MessagesController.addSecurityErrorMessage("Could not activate user. "
-              + e.getMessage());
+          + e.getMessage());
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
-              UserAuditActions.FAILED.name(), "", user1);
+          PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
+          UserAuditActions.FAILED.name(), "", user1);
       return;
     }
 
     try {
       //send confirmation email
       emailBean.sendEmail(user1.getEmail(), RecipientType.TO,
-              UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-              UserAccountsEmailMessages.
+          UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+          UserAccountsEmailMessages.
               accountActivatedMessage(user1.getEmail()));
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to "
-              + user1.getEmail() + ". " + e.getMessage());
+          + user1.getEmail() + ". " + e.getMessage());
       Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
-              "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
-                e});
+          "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
+            e});
     }
 
     requests.remove(user1);
@@ -517,7 +513,7 @@ public class PeopleAdministration implements Serializable {
 
   public boolean notVerified(Users user) {
     if (user == null || user.getBbcGroupCollection() == null || user.
-            getBbcGroupCollection().isEmpty() == false) {
+        getBbcGroupCollection().isEmpty() == false) {
       return false;
     }
     if (user.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
@@ -527,37 +523,35 @@ public class PeopleAdministration implements Serializable {
   }
 
   public void resendAccountVerificationEmail(Users user) throws
-          MessagingException {
+      MessagingException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
 
     String activationKey = SecurityUtils.getRandomPassword(64);
     emailBean.sendEmail(user.getEmail(), RecipientType.TO,
-            UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-            UserAccountsEmailMessages.buildMobileRequestMessage(
-                    AuditUtil.getUserURL(request), user.getUsername()
-                    + activationKey));
+        UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
+        UserAccountsEmailMessages.buildMobileRequestMessage(
+            AuditUtil.getUserURL(request), user.getUsername()
+            + activationKey));
     user.setValidationKey(activationKey);
     userManager.updatePeople(user);
 
   }
 
   public String modifyUser(Users user1) {
-    // Get the latest status
-    Users newStatus = userManager.getUserByEmail(user1.getEmail());
+
     FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().put("editinguser", newStatus);
+            .getSessionMap().put("editinguser", user1);
 
     Userlogins login = auditManager.getLastUserLogin(user1.getUid());
     FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().put("editinguser_logins", login);
+        .getSessionMap().put("editinguser_logins", login);
 
     MessagesController.addInfoMessage("User successfully modified for " + user1.getEmail());
-
     return "admin_profile";
   }
-
+//
   public List<Users> getSpamUsers() {
     return spamUsers = userManager.findSPAMAccounts();
   }
@@ -580,7 +574,7 @@ public class PeopleAdministration implements Serializable {
 
   public String activateYubikeyUser(Users u) {
     FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put(
-            "yUser", u);
+        "yUser", u);
     return "activate_yubikey";
   }
 

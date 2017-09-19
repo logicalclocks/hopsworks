@@ -21,7 +21,7 @@
     </div>
     <div class="col-md-offset-5 col-md-2">
       <button type="button"
-              title="New members"
+              title="Add member(s)"
               data-toggle="collapse"
               data-target="#collapseAddMember"
               aria-expanded="false"
@@ -29,7 +29,7 @@
               ng-disabled="memberCtrl.teamRole!=='Data owner'"
               class="btn btn-sm btn-success pull-right">
         <i class="fa fa-user-plus fa-2x"></i>
-        New members
+        Add member(s)
       </button>
     </div>
   </div>
@@ -46,7 +46,7 @@
                    theme="select2" class="form-control" 
                    style="min-width: 300px;">
 
-          <ui-select-match placeholder="Add members..."  style="height:24px;">{{$select.selected.email}}</ui-select-match>
+          <ui-select-match placeholder="Select member..."  style="height:24px;">{{$select.selected.email}}</ui-select-match>
           <ui-select-choices
             repeat="card in memberCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
 
