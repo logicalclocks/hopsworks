@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name
           = "HdfsLeDescriptors.findByHost.jpql.parser.IdentificationVariablname",
           query
-          = "SELECT h FROM HdfsLeDescriptors h WHERE h.hostname = :hostname"),
+          = "SELECT h FROM HdfsLeDescriptors h WHERE h.rpcAddresses = :rpcAddresses"),
   @NamedQuery(name = "HdfsLeDescriptors.findByHttpAddress",
           query
           = "SELECT h FROM HdfsLeDescriptors h WHERE h.httpAddress = :httpAddress"),
@@ -49,10 +49,10 @@ public class HdfsLeDescriptors implements Serializable {
   @NotNull
   @Size(min = 1,
           max = 25)
-  @Column(name = "hostname")
-  private String hostname;
+  @Column(name = "rpc_addresses")
+  private String rpcAddresses;
   @Size(max = 100)
-  @Column(name = "httpAddress")
+  @Column(name = "http_address")
   private String httpAddress;
 
   public HdfsLeDescriptors() {
@@ -63,10 +63,10 @@ public class HdfsLeDescriptors implements Serializable {
   }
 
   public HdfsLeDescriptors(HdfsLeDescriptorsPK hdfsLeDescriptorsPK, long counter,
-          String hostname) {
+          String rpcAddresses) {
     this.hdfsLeDescriptorsPK = hdfsLeDescriptorsPK;
     this.counter = counter;
-    this.hostname = hostname;
+    this.rpcAddresses = rpcAddresses;
   }
 
   public HdfsLeDescriptors(long id, int partitionVal) {
@@ -90,11 +90,22 @@ public class HdfsLeDescriptors implements Serializable {
   }
 
   public String getHostname() {
-    return hostname;
+    if (rpcAddresses == null) {
+      return "";
+    }
+    int pos = rpcAddresses.indexOf(",");
+    if (pos == -1) {
+      return "";
+    }
+    return rpcAddresses.substring(0, pos);
+  }
+  
+  public String getRpcAddresses() {
+    return rpcAddresses;
   }
 
-  public void setHostname(String hostname) {
-    this.hostname = hostname;
+  public void setRpcAddresses(String rpcAddresses) {
+    this.rpcAddresses = rpcAddresses;
   }
 
   public String getHttpAddress() {
