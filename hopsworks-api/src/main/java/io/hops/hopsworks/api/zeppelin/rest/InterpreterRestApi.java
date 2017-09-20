@@ -565,4 +565,34 @@ public class InterpreterRestApi {
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }
 
+  /**
+   * Restarts zeppelin by cleaning the cache for the user
+   * and project
+   *
+   * @return
+   * @throws AppException
+   */
+  @GET
+  @Path("restart/{user}")
+  public Response restart(String message, @PathParam("user") String user) throws AppException {
+
+    Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
+    InterpreterDTO interpreterDTO;
+    for (String key : interpreterDTOMap.keySet()) {
+      interpreterDTO = interpreterDTOMap.get(key);
+      if (!interpreterDTO.isNotRunning()) {
+        if (interpreterDTO.getName().equalsIgnoreCase("livy")) {
+          for (LivyMsg.Session session : interpreterDTO.getSessions()) {
+            if (session.getOwner().equals(user)) {
+              stopSession(interpreterDTO.getId(), session.getId());
+            }
+          }
+        }
+      }
+    }
+
+    zeppelinConfFactory.removeHdfsUserFromCache(user);
+
+    return new JsonResponse(Status.OK, "Cache cleared.").build();
+  }
 }
