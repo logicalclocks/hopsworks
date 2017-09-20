@@ -1239,11 +1239,11 @@ public class ProjectController {
             try {
               createCertificates(project, newMember, false);
             } catch (Exception ex) {
-              LOGGER.log(Level.SEVERE, "Adding  team member "+projectTeam.getProjectTeamPK()+" to members failed", ex);
+              LOGGER.log(Level.SEVERE, "error while creating certificats: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
                 hdfsUsersBean.
-                    removeProjectMember(projectTeam.getUser(), project);
+                    removeProjectMember(newMember, project);
               } catch (IOException ex1) {
                 LOGGER.log(Level.SEVERE, null, ex1);
                 throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -1445,7 +1445,7 @@ public class ProjectController {
    * @throws AppException
    */
   public void removeMemberFromTeam(Project project, String email,
-      String toRemoveEmail) throws AppException, Exception {
+      String toRemoveEmail, String sessionId) throws AppException, Exception {
     Users userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -1460,15 +1460,93 @@ public class ProjectController {
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     Users user = userBean.getUserByEmail(email);
-    //remove the user name from HDFS
-    hdfsUsersBean.removeProjectMember(projectTeam.getUser(), project);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, userToBeRemoved);
+
+    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
+        .getConfiguration());
+    YarnClient client = yarnClientWrapper.getYarnClient();
+    try {
+      Set<String> hdfsUsers = new HashSet<>();
+      hdfsUsers.add(hdfsUser);
+      List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
+          YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+          YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+      //kill jupitter for this user
+      jupyterConfigFactory.stopCleanly(hdfsUser);
+      //kill zeppelin for this user
+      Response resp = ClientBuilder.newClient()
+          .target(settings.getRestEndpoint()
+              + "/hopsworks-api/api/zeppelin/" + project.getId()
+              + "/interpreter/check")
+          .request()
+          .cookie("SESSION", sessionId)
+          .method("GET");
+      LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
+      if (resp.getStatus() == 200) {
+        resp = ClientBuilder.newClient()
+            .target(settings.getRestEndpoint()
+                + "/hopsworks-api/api/zeppelin/" + project.getId()
+                + "/interpreter/restart/" + hdfsUser)
+            .request()
+            .cookie("SESSION", sessionId)
+            .method("GET");
+        LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
+        if (resp.getStatus() != 200) {
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+        }
+      }
+      //kill all jobs run by this user.
+      //kill jobs
+      List<JobDescription> running = jobFacade.getUserRunningJobs(project, hdfsUser);
+      if (running != null && !running.isEmpty()) {
+        Runtime rt = Runtime.getRuntime();
+        for (JobDescription job : running) {
+          //Get the appId of the running app
+          List<Execution> jobExecs = execFacade.findForJob(job);
+          //Sort descending based on jobId because there might be two 
+          // jobs with the same name and we want the latest
+          Collections.sort(jobExecs, new Comparator<Execution>() {
+            @Override
+            public int compare(Execution lhs, Execution rhs) {
+              return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
+                  getId()) ? 1 : 0;
+            }
+          });
+          try {
+            rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
+                + jobExecs.get(0).getAppId());
+          } catch (IOException ex) {
+            Logger.getLogger(ProjectController.class.getName()).
+                log(Level.SEVERE, null, ex);
+          }
+        }
+      }
+
+      //wait that log aggregation for the jobs finish
+      for (ApplicationReport appReport : projectsApps) {
+        FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
+        while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
+          client.killApplication(appReport.getApplicationId());
+          appReport = client.getApplicationReport(appReport.getApplicationId());
+          finalState = appReport.getFinalApplicationStatus();
+        }
+        LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
+        while (!YarnLogUtil.isFinal(logAggregationState)) {
+          Thread.sleep(500);
+          appReport = client.getApplicationReport(appReport.getApplicationId());
+          logAggregationState = appReport.getLogAggregationStatus();
+        }
+      }
+    } finally {
+      ycs.closeYarnClient(yarnClientWrapper);
+    }
+
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
 
-    String projectSpecificUsername = hdfsUsersBean.getHdfsUserName(project,
-        userToBeRemoved);
-    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
-        projectSpecificUsername);
+    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(), hdfsUser);
     userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved.getUsername());
 
   }

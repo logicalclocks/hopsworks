@@ -169,6 +169,15 @@ public class ZeppelinConfigFactory {
       return;
     }
     String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
+    removeHdfsUserFromCache(hdfsUser);
+  }
+
+  /**
+   * Remove hdfs user configuration from cache.
+   *
+   * @param hdfsUser
+   */
+  public void removeHdfsUserFromCache(String hdfsUser) {
     ZeppelinConfig config = projectUserConfCache.remove(hdfsUser);
     if (config != null) {
       config.clean();

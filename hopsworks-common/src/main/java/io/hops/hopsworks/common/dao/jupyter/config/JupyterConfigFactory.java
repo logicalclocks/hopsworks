@@ -370,21 +370,20 @@ public class JupyterConfigFactory {
 
   }
 
-  private void stopCleanly(String hdfsUser) throws AppException {
+  public void stopCleanly(String hdfsUser) throws AppException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-    if (jp == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Could not find Jupyter entry for user: " + hdfsUser);
-    }
-    String projectPath = getJupyterHome(hdfsUser, jp);
+    if (jp != null) {
 
-    // stop the server, remove the user in this project's local dirs
-    killServerJupyterUser(projectPath, jp.getPid(), jp.
-        getPort());
-    // remove the reference to th e server in the DB.
-    jupyterFacade.removeNotebookServer(hdfsUser);
+      String projectPath = getJupyterHome(hdfsUser, jp);
+
+      // stop the server, remove the user in this project's local dirs
+      killServerJupyterUser(projectPath, jp.getPid(), jp.
+          getPort());
+      // remove the reference to th e server in the DB.
+      jupyterFacade.removeNotebookServer(hdfsUser);
+    }
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
