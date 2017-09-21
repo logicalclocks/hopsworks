@@ -14,7 +14,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
@@ -199,7 +199,7 @@ public class JobsHistory implements Serializable {
   }
 
   public JobsHistory(int executionId, int jobId, String jarFile, String appId,
-          JobDescription jobDesc,
+          Jobs jobDesc,
           String inputBlocksInHdfs, SparkJobConfiguration configuration,
           String userEmail) {
     this.executionId = executionId;

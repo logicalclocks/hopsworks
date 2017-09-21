@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -48,9 +48,9 @@ public class ExecutionService {
   @EJB
   private ExecutionController executionController;
   
-  private JobDescription job;
+  private Jobs job;
 
-  ExecutionService setJob(JobDescription job) {
+  ExecutionService setJob(Jobs job) {
     this.job = job;
     return this;
   }

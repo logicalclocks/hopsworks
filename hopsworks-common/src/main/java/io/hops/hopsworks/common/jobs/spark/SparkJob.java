@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.jobs.spark;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -40,7 +40,7 @@ public class SparkJob extends YarnJob {
    * @param settings
    * @param sessionId
    */
-  public SparkJob(JobDescription job, AsynchronousJobExecutor services,
+  public SparkJob(Jobs job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String sparkDir, String sparkUser,
       String jobUser, YarnJobsMonitor jobsMonitor, Settings settings, String sessionId) {
@@ -57,7 +57,7 @@ public class SparkJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     super.setupJob(dfso, yarnClient);
-    SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobDescription.getJobConfig();
+    SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobs.getJobConfig();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
       jobconfig.setAppName("Untitled Spark Job");
@@ -65,7 +65,7 @@ public class SparkJob extends YarnJob {
     //If runnerbuilder is not null, it has been instantiated by child class,
     //i.e. AdamJob
     if (runnerbuilder == null) {
-      runnerbuilder = new SparkYarnRunnerBuilder(jobDescription);
+      runnerbuilder = new SparkYarnRunnerBuilder(jobs);
       runnerbuilder.setJobName(jobconfig.getAppName());
       //Check if the user provided application arguments
       if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
@@ -110,16 +110,16 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobs.getProject().getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobs.getProject().getName())
         + Settings.SPARK_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
       runner = runnerbuilder.
-          getYarnRunner(jobDescription.getProject().getName(),
+          getYarnRunner(jobs.getProject().getName(),
               sparkUser, jobUser, sparkDir, services, services
                   .getFileOperations(hdfsUser.getUserName()), yarnClient,
               settings);

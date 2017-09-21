@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.jobs;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO.TimeUnit;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -29,7 +29,7 @@ public class JobScheduler {
           getName());
 
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private ExecutionController executionController;
   @Resource
@@ -50,7 +50,7 @@ public class JobScheduler {
       return;
     }
     //Valid job?
-    JobDescription job = jobFacade.findById((Integer) jobId);
+    Jobs job = jobFacade.findById((Integer) jobId);
     if (job == null) {
       logger.log(Level.WARNING, "Trying to run a job with non-existing id.");
       return;
@@ -72,7 +72,7 @@ public class JobScheduler {
    * @param numberOfUnits
    * @param timeUnit
    */
-  public void scheduleJobPeriodic(JobDescription job, int numberOfUnits,
+  public void scheduleJobPeriodic(Jobs job, int numberOfUnits,
           TimeUnit timeUnit) {
     long interval = numberOfUnits * timeUnit.getDuration();
     timerService.createTimer(new Date().getTime() + interval, interval, job.
@@ -85,7 +85,7 @@ public class JobScheduler {
    * @param job
    * @param when
    */
-  public void scheduleJobOnce(JobDescription job, Date when) {
+  public void scheduleJobOnce(Jobs job, Date when) {
     TimerConfig config = new TimerConfig();
     config.setInfo(job.getId());
     timerService.createSingleActionTimer(when, config);
@@ -97,7 +97,7 @@ public class JobScheduler {
    * @param job
    * @param when The ScheduleExpression dictating when the job should be run.
    */
-  public void scheduleJobOnCalendar(JobDescription job, ScheduleExpression when) {
+  public void scheduleJobOnCalendar(Jobs job, ScheduleExpression when) {
     TimerConfig config = new TimerConfig();
     config.setInfo(job.getId());
     timerService.createCalendarTimer(when, config);
@@ -110,7 +110,7 @@ public class JobScheduler {
    * @param job
    * @throws NullPointerException If the job or its contained schedule are null.
    */
-  public void scheduleJobPeriodic(JobDescription job) {
+  public void scheduleJobPeriodic(Jobs job) {
     //First: parameter checking
     if (job == null) {
       throw new NullPointerException("Cannot schedule null job.");

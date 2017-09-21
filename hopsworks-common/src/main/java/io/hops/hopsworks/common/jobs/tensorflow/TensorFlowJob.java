@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.jobs.tensorflow;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -25,7 +25,7 @@ public class TensorFlowJob extends YarnJob {
   private final String tfUser;
   protected TensorFlowYarnRunnerBuilder runnerbuilder;
 
-  public TensorFlowJob(JobDescription job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
+  public TensorFlowJob(Jobs job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
       String tfUser, String jobUser, YarnJobsMonitor jobsMonitor, Settings settings) {
     super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof TensorFlowJobConfiguration)) {
@@ -39,9 +39,9 @@ public class TensorFlowJob extends YarnJob {
   @Override
   protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     super.setupJob(dfso, yarnClient);
-    TensorFlowJobConfiguration jobconfig = (TensorFlowJobConfiguration) jobDescription.getJobConfig();
+    TensorFlowJobConfiguration jobconfig = (TensorFlowJobConfiguration) jobs.getJobConfig();
 
-    runnerbuilder = new TensorFlowYarnRunnerBuilder(jobDescription);
+    runnerbuilder = new TensorFlowYarnRunnerBuilder(jobs);
     runnerbuilder.setJobName(jobconfig.getAppName());
     //Check if the user provided application arguments
     if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
@@ -66,15 +66,15 @@ public class TensorFlowJob extends YarnJob {
     //Set project specific resources, i.e. Kafka certificates
     runnerbuilder.addExtraFiles(projectLocalResources);
 
-    String stdOutFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
+    String stdOutFinalDestination = Utils.getHdfsRootPath(jobs.getProject().getName())
         + Settings.TENSORFLOW_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getHdfsRootPath(jobDescription.getProject().getName())
+    String stdErrFinalDestination = Utils.getHdfsRootPath(jobs.getProject().getName())
         + Settings.TENSORFLOW_DEFAULT_OUTPUT_PATH;
     setStdOutFinalDestination(stdOutFinalDestination);
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
-      runner = runnerbuilder.getYarnRunner(jobDescription.getProject().getName(), tfUser, jobUser, hadoopDir,
+      runner = runnerbuilder.getYarnRunner(jobs.getProject().getName(), tfUser, jobUser, hadoopDir,
           services.getFileOperations(hdfsUser.getUserName()), yarnClient,
           services);
 

@@ -26,8 +26,8 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
@@ -160,7 +160,7 @@ public class ProjectController {
   @EJB
   private JupyterConfigFactory jupyterConfigFactory;
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
@@ -957,10 +957,10 @@ public class ProjectController {
         jupyterConfigFactory.stopProject(project);
 
         //kill jobs
-        List<JobDescription> running = jobFacade.getRunningJobs(project);
+        List<Jobs> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
           Runtime rt = Runtime.getRuntime();
-          for (JobDescription job : running) {
+          for (Jobs job : running) {
             //Get the appId of the running app
             List<Execution> jobExecs = execFacade.findForJob(job);
             //Sort descending based on jobId because therie might be two 
@@ -1499,10 +1499,10 @@ public class ProjectController {
       }
       //kill all jobs run by this user.
       //kill jobs
-      List<JobDescription> running = jobFacade.getUserRunningJobs(project, hdfsUser);
+      List<Jobs> running = jobFacade.getUserRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
         Runtime rt = Runtime.getRuntime();
-        for (JobDescription job : running) {
+        for (Jobs job : running) {
           //Get the appId of the running app
           List<Execution> jobExecs = execFacade.findForJob(job);
           //Sort descending based on jobId because there might be two 
@@ -1722,7 +1722,7 @@ public class ProjectController {
           break;
         case KAFKA: {
           // Get the JAR from /user/<super user>
-          String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/"
+          String kafkaExampleSrc = "/user/" + settings.getHopsworksUser() + "/"
               + settings.getKafkaTourFilename();
           String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
               + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getKafkaTourFilename();

@@ -42,7 +42,7 @@ import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
@@ -102,7 +102,7 @@ public class HistoryService {
   @Inject
   private JobService jobs;
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private JobsHistoryFacade jobsHistoryFacade;
   @EJB

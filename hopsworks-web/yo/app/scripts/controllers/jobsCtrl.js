@@ -55,9 +55,6 @@ angular.module('hopsWorksApp')
             self.buttonClickedToggle = function (id, display) {
               self.buttonArray[id] = display;
               self.workingArray[id] = "true";
-//              StorageService.store(self.projectId + "_jobstopclicked_"+id, self.workingArray[id]);
-//              var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
-//              console.log("status: "+status);
             };
 
             self.stopbuttonClickedToggle = function (id, display) {
@@ -486,7 +483,6 @@ angular.module('hopsWorksApp')
             var init = function () {
               var stored = StorageService.contains(self.projectId + "_newjob");
               if (stored) {
-//                self.newJob();
                   $location.path('project/' + self.projectId + '/newjob');
               }
             };

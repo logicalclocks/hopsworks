@@ -44,27 +44,27 @@ import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
 @Table(name = "hopsworks.jobs")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "JobDescription.findAll",
-          query = "SELECT j FROM JobDescription j"),
-  @NamedQuery(name = "JobDescription.findById",
+  @NamedQuery(name = "Jobs.findAll",
+          query = "SELECT j FROM Jobs j"),
+  @NamedQuery(name = "Jobs.findById",
           query
-          = "SELECT j FROM JobDescription j WHERE j.id = :id"),
-  @NamedQuery(name = "JobDescription.findByName",
+          = "SELECT j FROM Jobs j WHERE j.id = :id"),
+  @NamedQuery(name = "Jobs.findByName",
           query
-          = "SELECT j FROM JobDescription j WHERE j.name = :name"),
-  @NamedQuery(name = "JobDescription.findByCreationTime",
+          = "SELECT j FROM Jobs j WHERE j.name = :name"),
+  @NamedQuery(name = "Jobs.findByCreationTime",
           query
-          = "SELECT j FROM JobDescription j WHERE j.creationTime = :creationTime"),
-  @NamedQuery(name = "JobDescription.findByProject",
+          = "SELECT j FROM Jobs j WHERE j.creationTime = :creationTime"),
+  @NamedQuery(name = "Jobs.findByProject",
           query
-          = "SELECT j FROM JobDescription j WHERE j.project = :project"),
-  @NamedQuery(name = "JobDescription.updateConfig",
+          = "SELECT j FROM Jobs j WHERE j.project = :project"),
+  @NamedQuery(name = "Jobs.updateConfig",
           query
-          = "UPDATE JobDescription j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
-  @NamedQuery(name = "JobDescription.findByProjectAndType",
+          = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),
+  @NamedQuery(name = "Jobs.findByProjectAndType",
           query
-          = "SELECT j FROM JobDescription j WHERE j.project = :project AND j.type = :type")})
-public class JobDescription implements Serializable {
+          = "SELECT j FROM Jobs j WHERE j.project = :project AND j.type = :type")})
+public class Jobs implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -106,26 +106,26 @@ public class JobDescription implements Serializable {
           mappedBy = "job")
   private Collection<Execution> executionCollection;
 
-  protected JobDescription() {
+  protected Jobs() {
     this.name = "Hopsworks job";
   }
 
-  public JobDescription(JobConfiguration config, Project project,
+  public Jobs(JobConfiguration config, Project project,
           Users creator) {
     this(config, project, creator, new Date());
   }
 
-  public JobDescription(JobConfiguration config, Project project,
+  public Jobs(JobConfiguration config, Project project,
           Users creator, Date creationTime) {
     this(config, project, creator, null, creationTime);
   }
 
-  public JobDescription(JobConfiguration config, Project project,
+  public Jobs(JobConfiguration config, Project project,
           Users creator, String jobname) {
     this(config, project, creator, jobname, new Date());
   }
 
-  protected JobDescription(JobConfiguration config, Project project,
+  protected Jobs(JobConfiguration config, Project project,
           Users creator, String jobname, Date creationTime) {
     if (Strings.isNullOrEmpty(jobname)) {
       this.name = "Hopsworks job";
@@ -202,10 +202,10 @@ public class JobDescription implements Serializable {
   @Override
   public final boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof JobDescription)) {
+    if (!(object instanceof Jobs)) {
       return false;
     }
-    JobDescription other = (JobDescription) object;
+    Jobs other = (Jobs) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;

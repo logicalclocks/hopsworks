@@ -19,20 +19,19 @@ import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 /**
- * Facade for management of persistent JobDescription objects.
+ * Facade for management of persistent Jobs objects.
  */
 @Stateless
-public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
+public class JobFacade extends AbstractFacade<Jobs> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  private static final Logger logger = Logger.getLogger(
-          JobDescriptionFacade.class.
+  private static final Logger logger = Logger.getLogger(JobFacade.class.
           getName());
 
-  public JobDescriptionFacade() {
-    super(JobDescription.class);
+  public JobFacade() {
+    super(Jobs.class);
   }
 
   @Override
@@ -47,11 +46,10 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * @param type
    * @return
    */
-  public List<JobDescription> findJobsForProjectAndType(
+  public List<Jobs> findJobsForProjectAndType(
           Project project, JobType type) {
-    TypedQuery<JobDescription> q = em.createNamedQuery(
-            "JobDescription.findByProjectAndType",
-            JobDescription.class);
+    TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProjectAndType",
+            Jobs.class);
     q.setParameter("project", project);
     q.setParameter("type", type);
     return q.getResultList();
@@ -63,15 +61,14 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
    * @param project
    * @return
    */
-  public List<JobDescription> findForProject(Project project) {
-    TypedQuery<JobDescription> q = em.createNamedQuery(
-            "JobDescription.findByProject", JobDescription.class);
+  public List<Jobs> findForProject(Project project) {
+    TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProject", Jobs.class);
     q.setParameter("project", project);
     return q.getResultList();
   }
 
   /**
-   * Create a new JobDescription instance.
+   * Create a new Jobs instance.
    * <p/>
    * @param creator The creator of the job.
    * @param project The project in which this job is defined.
@@ -85,7 +82,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
   //This seems to ensure that the entity is actually created and can later 
   //be found using em.find().
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public JobDescription create(Users creator, Project project,
+  public Jobs create(Users creator, Project project,
           JobConfiguration config) throws
           IllegalArgumentException, NullPointerException {
     //Argument checking
@@ -94,7 +91,7 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
               "Owner, project and config must be non-null.");
     }
     //First: create a job object
-    JobDescription job = new JobDescription(config, project, creator, config.
+    Jobs job = new Jobs(config, project, creator, config.
             getAppName());
     //Finally: persist it, getting the assigned id.
     em.persist(job);
@@ -103,18 +100,18 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
   }
 
   /**
-   * Find the JobDescription with given id.
+   * Find the Jobs with given id.
    * <p/>
    * @param id
    * @return The found entity or null if no such exists.
    */
-  public JobDescription findById(Integer id) {
-    return em.find(JobDescription.class, id);
+  public Jobs findById(Integer id) {
+    return em.find(Jobs.class, id);
   }
 
-  public void removeJob(JobDescription job) throws DatabaseException {
+  public void removeJob(Jobs job) throws DatabaseException {
     try {
-      JobDescription managedJob = em.find(JobDescription.class, job.getId());
+      Jobs managedJob = em.find(Jobs.class, job.getId());
       em.remove(em.merge(managedJob));
       em.flush();
     } catch (SecurityException | IllegalStateException ex) {
@@ -127,11 +124,10 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
           DatabaseException {
     boolean status = false;
     try {
-      JobDescription managedJob = em.find(JobDescription.class, jobId);
+      Jobs managedJob = em.find(Jobs.class, jobId);
       JobConfiguration config = managedJob.getJobConfig();
       config.setSchedule(schedule);
-      TypedQuery<JobDescription> q = em.createNamedQuery(
-              "JobDescription.updateConfig", JobDescription.class);
+      TypedQuery<Jobs> q = em.createNamedQuery("Jobs.updateConfig", Jobs.class);
       q.setParameter("id", jobId);
       q.setParameter("jobconfig", config);
       int result = q.executeUpdate();
@@ -145,17 +141,15 @@ public class JobDescriptionFacade extends AbstractFacade<JobDescription> {
     return status;
   }
 
-  public List<JobDescription> getRunningJobs(Project project) {
-    TypedQuery<JobDescription> q = em.createNamedQuery(
-            "Execution.findJobsForExecutionInState", JobDescription.class);
+  public List<Jobs> getRunningJobs(Project project) {
+    TypedQuery<Jobs> q = em.createNamedQuery("Execution.findJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
     q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
 
-  public List<JobDescription> getUserRunningJobs(Project project, String hdfsUser) {
-    TypedQuery<JobDescription> q = em.createNamedQuery(
-        "Execution.findUserJobsForExecutionInState", JobDescription.class);
+  public List<Jobs> getUserRunningJobs(Project project, String hdfsUser) {
+    TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
     q.setParameter("hdfsUser", hdfsUser);
     q.setParameter("stateCollection", JobState.getRunningStates());

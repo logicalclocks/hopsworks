@@ -10,7 +10,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
@@ -47,7 +47,7 @@ public abstract class HopsJob {
   //Service provider providing access to facades
   protected final AsynchronousJobExecutor services;
   protected ServiceProperties serviceProps;
-  protected final JobDescription jobDescription;
+  protected final Jobs jobs;
   protected final Users user;
   protected final String hadoopDir;
   protected final UserGroupInformation hdfsUser;
@@ -55,7 +55,7 @@ public abstract class HopsJob {
   /**
    * Create a HopsJob instance.
    * <p/>
-   * @param jobDescription The JobDescription to be executed.
+   * @param jobs The Jobs to be executed.
    * @param services A service provider giving access to several execution
    * services.
    * @param user The user executing this job.
@@ -63,20 +63,20 @@ public abstract class HopsJob {
    * @param jobsMonitor
    * @throws NullPointerException If either of the given arguments is null.
    */
-  protected HopsJob(JobDescription jobDescription,
+  protected HopsJob(Jobs jobs,
           AsynchronousJobExecutor services, Users user, String hadoopDir,
           YarnJobsMonitor jobsMonitor) throws
           NullPointerException {
     //Check validity
-    if (jobDescription == null) {
-      throw new NullPointerException("Cannot run a null JobDescription.");
+    if (jobs == null) {
+      throw new NullPointerException("Cannot run a null Job.");
     } else if (services == null) {
       throw new NullPointerException("Cannot run without a service provider.");
     } else if (user == null) {
       throw new NullPointerException("A job cannot be run by a null user!");
     }
     //We can safely proceed
-    this.jobDescription = jobDescription;
+    this.jobs = jobs;
     this.services = services;
     this.user = user;
     this.hadoopDir = hadoopDir;
@@ -209,7 +209,7 @@ public abstract class HopsJob {
    * @return Unique Execution object associated with this job.
    */
   public final Execution requestExecutionId() {
-    execution = services.getExecutionFacade().create(jobDescription, user, null, null, null, null, 0, hdfsUser.
+    execution = services.getExecutionFacade().create(jobs, user, null, null, null, null, 0, hdfsUser.
         getUserName());
     initialized = (execution.getId() != null);
     return execution;

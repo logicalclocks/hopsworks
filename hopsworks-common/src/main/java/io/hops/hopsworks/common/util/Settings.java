@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +62,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
+  private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
@@ -246,6 +247,7 @@ public class Settings implements Serializable {
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
+      HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
@@ -596,19 +598,25 @@ public class Settings implements Serializable {
   }
 
   //User under which yarn is run
-  private String YARN_SUPERUSER = "glassfish";
+  private String YARN_SUPERUSER = "rmyarn";
 
   public synchronized String getYarnSuperUser() {
     checkCache();
     return YARN_SUPERUSER;
   }
-  private String HDFS_SUPERUSER = "glassfish";
+  private String HOPSWORKS_USER = "glassfish";
+
+  public synchronized String getHopsworksUser() {
+    checkCache();
+    return HOPSWORKS_USER;
+  }
+  private String HDFS_SUPERUSER = "hdfs";
 
   public synchronized String getHdfsSuperUser() {
     checkCache();
     return HDFS_SUPERUSER;
   }
-  private String SPARK_USER = "glassfish";
+  private String SPARK_USER = "spark";
 
   public synchronized String getSparkUser() {
     checkCache();
@@ -622,14 +630,14 @@ public class Settings implements Serializable {
     return JAVA_HOME;
   }
 
-  private String FLINK_USER = "glassfish";
+  private String FLINK_USER = "flink";
 
   public synchronized String getFlinkUser() {
     checkCache();
     return FLINK_USER;
   }
 
-  private String ZEPPELIN_USER = "glassfish";
+  private String ZEPPELIN_USER = "spark";
 
   public synchronized String getZeppelinUser() {
     checkCache();
@@ -880,7 +888,7 @@ public class Settings implements Serializable {
    * @param appId
    * @return
    */
-  public static String getJobMarkerFile(JobDescription job, String appId) {
+  public static String getJobMarkerFile(Jobs job, String appId) {
     return getHdfsRootPath(job.getProject().getName()) + "/Resources/.marker-"
             + job.getJobType().getName().toLowerCase()
             + "-" + job.getName()

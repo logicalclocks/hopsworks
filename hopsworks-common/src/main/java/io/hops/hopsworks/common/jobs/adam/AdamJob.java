@@ -11,7 +11,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.spark.SparkJob;
 import io.hops.hopsworks.common.jobs.spark.SparkYarnRunnerBuilder;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -24,7 +24,7 @@ public class AdamJob extends SparkJob {
   private static final Logger LOG = Logger.getLogger(AdamJob.class.getName());
 
   private final AdamJobConfiguration jobconfig;
-  private final JobDescription jobDescription;
+  private final Jobs jobDescription;
   private final String sparkDir;
   private final String adamJarPath;
   private final String adamUser; //must be glassfish
@@ -42,7 +42,7 @@ public class AdamJob extends SparkJob {
    * @param jobsMonitor
    * @param settings
    */
-  public AdamJob(JobDescription job,
+  public AdamJob(Jobs job,
       AsynchronousJobExecutor services, Users user, String hadoopDir,
       String sparkDir, String adamUser, String jobUser,
       String adamJarPath, YarnJobsMonitor jobsMonitor, Settings settings) {

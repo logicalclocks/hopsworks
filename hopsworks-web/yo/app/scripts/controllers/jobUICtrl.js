@@ -35,20 +35,20 @@ angular.module('hopsWorksApp')
             };
 
             var getAppId = function (callback) {
-              if(self.appId==undefined || self.appId==false || self.appId==""){
-                  JobService.getAppId(self.projectId, self.job.id).then(
-                          function(success) {
-                            self.appId=success.data
-                            callback();
-                          }, function (error){
-                            growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
-                              stopLoading();
-                          });
-                }else{
-                  callback();
-                }
+              if (self.appId == undefined || self.appId == false || self.appId == "") {
+                JobService.getAppId(self.projectId, self.job.id).then(
+                        function (success) {
+                          self.appId = success.data
+                          callback();
+                        }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                  stopLoading();
+                });
+              } else {
+                callback();
+              }
             };
-            
+
             var getAppIds = function () {
               if (self.job) {
                 JobService.getAppIds(self.projectId, self.job.id).then(
@@ -60,11 +60,11 @@ angular.module('hopsWorksApp')
                 });
               }
             };
-            
+
             var getJobUI = function () {
 
               startLoading("Loading Job Details...");
-              if(self.jobName!= undefined && self.jobName!= false && self.jobName!=""){
+              if (self.jobName != undefined && self.jobName != false && self.jobName != "") {
                 self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
               }
@@ -72,33 +72,33 @@ angular.module('hopsWorksApp')
                 console.log("Job object found was: ");
                 console.log(self.job);
                 getAppIds();
-                  getAppId(getJobUIInt);
+                getAppId(getJobUIInt);
               }
             };
 
-            var getJobUIInt = function(){
+            var getJobUIInt = function () {
               JobService.getExecutionUI(self.projectId, self.appId).then(
-                        function (success) {
-                          self.ui = success.data;
-                          if(self.job != undefined && self.job.jobType === "TENSORFLOW"){
-                            self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/?jobType="+self.job.jobType;
+                      function (success) {
+                        self.ui = success.data;
+                        if (self.job != undefined && self.job.jobType === "TENSORFLOW") {
+                          self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/?jobType=" + self.job.jobType;
+                        }
+                        self.current = "jobUI";
+                        if (self.ui !== "") {
+                          var iframe = document.getElementById('ui_iframe');
+                          if (iframe) {
+                            iframe.src = $sce.trustAsResourceUrl(self.ui);
                           }
-                          self.current = "jobUI";
-                          if (self.ui !== "") {
-                            var iframe = document.getElementById('ui_iframe');
-                            if (iframe) {
-                              iframe.src = $sce.trustAsResourceUrl(self.ui);
-                            }
-                            $timeout(stopLoading(), 10000);
+                          $timeout(stopLoading(), 10000);
 
-                          }
-                        }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
-                  stopLoading();
+                        }
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error fetching ui.', ttl: 15000});
+                stopLoading();
 
-                });
+              });
             };
-            
+
 
             self.jobUI = function () {
               if (self.job == undefined || self.job == false) {
@@ -111,7 +111,7 @@ angular.module('hopsWorksApp')
               startLoading("Loading Job UI...");
               getAppId(getJobUIInt);
             };
-            
+
             self.yarnUI = function () {
 
               if (self.job == undefined || self.job == false) {
@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
                 stopLoading();
               });
             };
-            
+
             self.kibanaUI = function () {
               getAppId(kibanaUIInt);
             };
@@ -155,7 +155,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                           var projectName = success.data;
                           //if not zeppelin we should have a job
-                          self.ui = "/hopsworks-api/kibana/app/kibana?projectId="+self.projectId+"#/discover?_g=(refreshInterval:" +
+                          self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/discover?_g=(refreshInterval:" +
                                   "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
                                   "&_a=(columns:!(%27timestamp%27,priority,application,logger_name,thread,message,host),index:" +
                                   projectName.toLowerCase() +
@@ -174,7 +174,7 @@ angular.module('hopsWorksApp')
                 });
 
               } else {
-                self.ui = "/hopsworks-api/kibana/app/kibana?projectId="+self.projectId+"#/discover?_g=(refreshInterval:" +
+                self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/discover?_g=(refreshInterval:" +
                         "(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))" +
                         "&_a=(columns:!(%27timestamp%27,priority,application,logger_name,thread,message,host),index:" +
                         self.job.project.name.toLowerCase() +
@@ -193,10 +193,10 @@ angular.module('hopsWorksApp')
             self.grafanaUI = function () {
               startLoading("Loading Grafana UI...");
               getAppId(grafanaUIInt);
-              
+
             };
 
-            var grafanaUIInt = function() {
+            var grafanaUIInt = function () {
               JobService.getAppInfo(self.projectId, self.appId).then(
                       function (success) {
                         var info = success.data;
@@ -235,28 +235,30 @@ angular.module('hopsWorksApp')
             };
 
             var vizopsInt = function () {
-                self.ui = "vizz";
-                self.current = "vizopsUI";
-                VizopsService.init(self.projectId, self.appId);
-                // The rest of the logic is handled by vizopsCtrl.js
-                stopLoading();
+              self.ui = "vizz";
+              self.current = "vizopsUI";
+              VizopsService.init(self.projectId, self.appId);
+              // The rest of the logic is handled by vizopsCtrl.js
+              stopLoading();
             };
-            
-            self.tfUI = function() {
+
+            self.tfUI = function () {
               startLoading("Loading Tensorboard...");
               getAppId(tensorboardInt);
             };
-            
-            var tensorboardInt = function() {
-              self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/?jobType="+self.job.jobType;
+
+            var tensorboardInt = function () {
+              self.ui = "/hopsworks-api/tensorboard/" + self.appId + "/?jobType=" + self.job.jobType;
               self.current = "tensorboard";
               var iframe = document.getElementById('ui_iframe');
-              iframe.onload = function(){stopLoading();};
+              iframe.onload = function () {
+                stopLoading();
+              };
               if (iframe !== null) {
                 iframe.src = $sce.trustAsResourceUrl(self.ui);
               }
             };
-            
+
             getJobUI();
 
 
@@ -273,15 +275,15 @@ angular.module('hopsWorksApp')
                 self.grafanaUI();
               } else if (self.current === "vizopsUI") {
                 self.vizopsUI();
-              }else if(self.current==="jobUI") {
+              } else if (self.current === "jobUI") {
                 self.jobUI();
-              }else if(self.current==="yarnUI") {
+              } else if (self.current === "yarnUI") {
                 self.yarnUI();
-              }else if(self.current==="kibanaUI") {
+              } else if (self.current === "kibanaUI") {
                 self.kibanaUI();
-              }else if(self.current==="tensorboard") {
+              } else if (self.current === "tensorboard") {
                 self.tfUI();
-              }else if (ifram !== null) {
+              } else if (ifram !== null) {
                 ifram.contentWindow.location.reload();
               }
             };

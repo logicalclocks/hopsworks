@@ -24,8 +24,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -56,7 +56,7 @@ public class SparkService {
   @EJB
   private SparkController sparkController;
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -82,7 +82,7 @@ public class SparkService {
    * <p/>
    * @param sc
    * @param req
-   * @return A list of all JobDescription objects of type Spark in this project.
+   * @return A list of all Jobs objects of type Spark in this project.
    * @throws AppException
    */
   @GET
@@ -91,10 +91,10 @@ public class SparkService {
   public Response findAllSparkJobs(@Context SecurityContext sc,
       @Context HttpServletRequest req)
       throws AppException {
-    List<JobDescription> jobs = jobFacade.findJobsForProjectAndType(project,
+    List<Jobs> jobs = jobFacade.findJobsForProjectAndType(project,
         JobType.SPARK);
-    GenericEntity<List<JobDescription>> jobList
-        = new GenericEntity<List<JobDescription>>(jobs) {};
+    GenericEntity<List<Jobs>> jobList
+        = new GenericEntity<List<Jobs>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
         entity(jobList).build();
   }
@@ -187,7 +187,7 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
-      JobDescription created = jobController.createJob(user, project, config);
+      Jobs created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
           getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).

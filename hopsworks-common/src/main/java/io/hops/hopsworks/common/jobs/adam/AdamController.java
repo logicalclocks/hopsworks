@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.jobs.adam;
 
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
@@ -48,12 +48,12 @@ public class AdamController {
    * @param user
    * @return
    * @throws IllegalStateException If Adam is not set up properly.
-   * @throws IllegalArgumentException If the JobDescription is not set up
-   * properly.
+   * @throws IllegalArgumentException If the Jobs is not set up
+ properly.
    * @throws IOException If starting the job fails.
    * @throws NullPointerException If job or user is null.
    */
-  public Execution startJob(final JobDescription job, final Users user) throws
+  public Execution startJob(final Jobs job, final Users user) throws
           IllegalStateException,
           IllegalArgumentException, IOException, NullPointerException {
     //First: do some parameter checking.
@@ -105,7 +105,7 @@ public class AdamController {
     return jh;
   }
 
-  public void stopJob(JobDescription job, Users user, String appid) throws
+  public void stopJob(Jobs job, Users user, String appid) throws
           IllegalStateException,
           IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
