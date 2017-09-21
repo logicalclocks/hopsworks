@@ -114,7 +114,6 @@ public class SparkYarnRunnerBuilder {
 
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
-    String metricsPath = Settings.getSparkMetricsPath(sparkUser);
     StringBuilder pythonPath = null;
     StringBuilder pythonPathExecs = null;
     //Create a builder
@@ -145,11 +144,11 @@ public class SparkYarnRunnerBuilder {
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
-    //Add metrics
-//    builder.addLocalResource(new LocalResourceDTO(
-//        Settings.SPARK_METRICS_PROPERTIES, metricsPath,
-//        LocalResourceVisibility.PRIVATE.toString(),
-//        LocalResourceType.FILE.toString(), null), false);
+    //Add metrics 
+    builder.addLocalResource(new LocalResourceDTO(
+        Settings.SPARK_METRICS_PROPERTIES, settings.getSparkConfDir() + "/metrics.properties",
+        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
 
     //Add app file
     String appExecName = null;
@@ -240,7 +239,6 @@ public class SparkYarnRunnerBuilder {
         + File.pathSeparator + Settings.SPARK_LOCALIZED_LIB_DIR + "/*"
         + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
         + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
-        + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
     );
 
     //Add extra files to local resources, use filename as key
