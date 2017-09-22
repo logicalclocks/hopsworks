@@ -462,18 +462,14 @@ public class Settings implements Serializable {
     return SPARK_DIR;
   }
 
-  private final String SPARK_CONF_DIR = SPARK_DIR + "/conf";
-
   public synchronized String getSparkConfDir() {
-    checkCache();
-    return SPARK_CONF_DIR;
+    return getSparkDir() + "/conf";
   }
 
-  private final String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
+  private final String SPARK_CONF_FILE = "/spark-defaults.conf";
 
   public synchronized String getSparkConfFile() {
-    //checkCache();
-    return SPARK_CONF_FILE;
+    return getSparkConfDir() + SPARK_CONF_FILE;
   }
 
   private String ADAM_USER = "glassfish";
