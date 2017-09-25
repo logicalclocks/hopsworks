@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 /**
  * Takes care of booting the execution of a job.
@@ -60,6 +62,7 @@ public class ExecutionController {
 
   private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Execution start(Jobs job, Users user, String sessionId) throws IOException {
     Execution exec = null;
 
