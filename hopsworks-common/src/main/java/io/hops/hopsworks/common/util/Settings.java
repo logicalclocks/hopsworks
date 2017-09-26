@@ -137,6 +137,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
+  private static final String VARIABLE_WHITELIST_USERS_LOGIN =
+      "whitelist_users";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -341,6 +343,8 @@ public class Settings implements Serializable {
       HOPS_RPC_TLS = setStrVar(VARIABLE_HOPS_RPC_TLS, HOPS_RPC_TLS);
       CERTIFICATE_MATERIALIZER_DELAY = setStrVar(VARIABLE_CERT_MATER_DELAY,
           CERTIFICATE_MATERIALIZER_DELAY);
+      WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
+          WHITELIST_USERS_LOGIN);
       
       cached = true;
     }
@@ -1086,6 +1090,19 @@ public class Settings implements Serializable {
     return ZK_USER;
   }
 
+  
+  /*
+  Comma-separated list of user emails that should not be persisted in the
+  userlogins table for auditing.
+  kagent -> agent@hops.io
+   */
+  private String WHITELIST_USERS_LOGIN = "agent@hops.io";
+  
+  public synchronized String getWhitelistUsersLogin() {
+    checkCache();
+    return WHITELIST_USERS_LOGIN;
+  }
+  
   // Zeppelin
   private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
 

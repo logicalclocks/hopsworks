@@ -4,21 +4,40 @@ import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.dao.user.consent.Consents;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.Settings;
 
 @Stateless
 public class AuditManager {
 
+  @EJB
+  private Settings settings;
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
+  private Set<String> whitelistUserLogins;
+  
+  @PostConstruct
+  private void init() {
+    whitelistUserLogins = new HashSet<>();
+    String whitelist = settings.getWhitelistUsersLogin();
+    String[] whitelistTokens = whitelist.split(",");
+    Collections.addAll(whitelistUserLogins, whitelistTokens);
+  }
+  
   /**
    * Get the user last login info.
    *
@@ -381,17 +400,19 @@ public class AuditManager {
   public void registerLoginInfo(Users u, String action, String ip,
           String browser, String os, String mac, String outcome) {
 
-    Userlogins l = new Userlogins();
-    l.setUid(u.getUid());
-    l.setBrowser(browser);
-    l.setIp(ip);
-    l.setOs(os);
-    l.setAction(action);
-    l.setOutcome(outcome);
-    l.setLoginDate(new Timestamp(new Date().getTime()));
-    l.setEmail(u.getEmail());
-    l.setMac(mac);
-    em.persist(l);
+    if (!whitelistUserLogins.contains(u.getEmail())) {
+      Userlogins l = new Userlogins();
+      l.setUid(u.getUid());
+      l.setBrowser(browser);
+      l.setIp(ip);
+      l.setOs(os);
+      l.setAction(action);
+      l.setOutcome(outcome);
+      l.setLoginDate(new Timestamp(new Date().getTime()));
+      l.setEmail(u.getEmail());
+      l.setMac(mac);
+      em.persist(l);
+    }
   }
 
   /**
@@ -405,17 +426,19 @@ public class AuditManager {
   public void registerLoginInfo(Users user, String action, String outcome,
           HttpServletRequest req) {
 
-    Userlogins login = new Userlogins();
-    login.setUid(user.getUid());
-    login.setEmail(user.getEmail());
-    login.setBrowser(AuditUtil.getBrowserInfo(req));
-    login.setIp(AuditUtil.getIPAddress(req));
-    login.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
-    login.setAction(action);
-    login.setOs(AuditUtil.getOSInfo(req));
-    login.setOutcome(outcome);
-    login.setLoginDate(new Date());
-    em.persist(login);
+    if (!whitelistUserLogins.contains(user.getEmail())) {
+      Userlogins login = new Userlogins();
+      login.setUid(user.getUid());
+      login.setEmail(user.getEmail());
+      login.setBrowser(AuditUtil.getBrowserInfo(req));
+      login.setIp(AuditUtil.getIPAddress(req));
+      login.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
+      login.setAction(action);
+      login.setOs(AuditUtil.getOSInfo(req));
+      login.setOutcome(outcome);
+      login.setLoginDate(new Date());
+      em.persist(login);
+    }
   }
 
   /**
