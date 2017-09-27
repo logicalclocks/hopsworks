@@ -617,7 +617,9 @@ public class ZeppelinConfig {
   public void clean() {
     LOGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
         this.projectName);
-    interpreterSettingManager.close();
+    if (interpreterSettingManager != null) {
+      interpreterSettingManager.close();
+    }
     // will close repo and index
     if (this.notebook != null) {
       this.notebook.close();
