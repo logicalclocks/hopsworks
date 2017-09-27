@@ -889,7 +889,7 @@ public class ProjectController {
 
     cleanup(project, sessionId);
     certificateMaterializer.forceRemoveCertificates(user.getUsername(),
-        project.getName());
+        project.getName(), true);
   }
 
   public void cleanup(Project project, String sessionId) throws AppException {
@@ -1546,6 +1546,8 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
 
+    certificateMaterializer.forceRemoveCertificates(userToBeRemoved
+        .getUsername(), project.getName(), false);
     LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(), hdfsUser);
     userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved.getUsername());
 
