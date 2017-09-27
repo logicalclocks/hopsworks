@@ -126,6 +126,25 @@ public class PythonDepsService {
      
     project.setPythonVersion(version);
     projectFacade.update(project);
+    
+    //For tensorflow tour project, install numpy as well
+    //Wait for env to be enabled
+//    if (project.getName().startsWith("demo_tensorflow")) {
+//      List<OpStatus> opStatuses = pythonDepsFacade.opStatus(project);
+//      int counter = 0;
+//      while ((opStatuses != null && !opStatuses.isEmpty()) && counter < 10) {
+//        try {
+//          Thread.sleep(500);
+//        } catch (InterruptedException ex) {
+//          logger.log(Level.SEVERE, "Error enabled anaconda for demo project", ex);
+//        }
+//        opStatuses = pythonDepsFacade.opStatus(project);
+//        counter++;
+//      }
+
+//      PythonDepJson numpyLib = new PythonDepJson("default", "numpy", "1.13.1", "false");
+//      pythonDepsFacade.addLibrary(project, numpyLib.getChannelUrl(), numpyLib.getLib(), numpyLib.getVersion());
+//    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -175,6 +194,19 @@ public class PythonDepsService {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
+    if (project.getName().startsWith("demo_tensorflow")) {
+      List<OpStatus> opStatuses = pythonDepsFacade.opStatus(project);
+      int counter = 0;
+      while ((opStatuses != null && !opStatuses.isEmpty()) && counter < 10) {
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+          logger.log(Level.SEVERE, "Error enabled anaconda for demo project", ex);
+        }
+        opStatuses = pythonDepsFacade.opStatus(project);
+        counter++;
+      }
+    }
     pythonDepsFacade.addLibrary(project, library.getChannelUrl(), library.
             getLib(), library.getVersion());
 

@@ -199,7 +199,7 @@ angular.module('hopsWorksApp')
                 return;
               }
               self.searching = true;
-              self.resultsMsg = "Conda searching can take a good few seconds......bear with us."
+              self.resultsMsg = "Conda searching can take a good few seconds......bear with us.";
               self.resultsMessageShowing = true;
 
               PythonDepsService.search(self.projectId, self.selectedLib).then(

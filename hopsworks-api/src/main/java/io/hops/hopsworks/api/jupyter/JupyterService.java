@@ -173,7 +173,9 @@ public class JupyterService {
     String loggedinemail = sc.getUserPrincipal().getName();
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId,
         loggedinemail);
-
+    if(js.getProject()==null){
+      js.setProject(project);
+    }
     if (settings.isPythonKernelEnabled()) {
       js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.
           getSecret());

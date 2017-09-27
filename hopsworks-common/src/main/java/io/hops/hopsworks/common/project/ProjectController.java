@@ -1714,15 +1714,14 @@ public class ProjectController {
             udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
             udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
-
+            
           } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        case KAFKA: {
+          } break;
+        case KAFKA:
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getHopsworksUser() + "/"
               + settings.getKafkaTourFilename();
@@ -1734,16 +1733,16 @@ public class ProjectController {
             String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
             udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
-
+            
           } catch (IOException ex) {
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        }
-        case TENSORFLOW: {
+          } break;
+        case TENSORFLOW:
+        case DISTRIBUTED_TENSORFLOW:
           // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
+          //Depending on tour type, copy files
           String tensorflowDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_TENSORFLOW_TOUR_DATA
               + "/*";
           String tensorflowDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
@@ -1762,12 +1761,30 @@ public class ProjectController {
                 udfso.setOwner(path, userHdfsName, datasetGroup);
               }
             }
+            //Move notebooks to Jupyter Dataset
+            if (projectType == TourProjectType.TENSORFLOW) {
+              String tensorflowNotebooksSrc = tensorflowDataDst + "/notebooks";
+              String tensorflowNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+                  + Settings.HOPS_TOUR_DATASET_JUPYTER;
+              udfso.copyInHdfs(new Path(tensorflowNotebooksSrc + "/*"), new Path(tensorflowNotebooksDst));
+              datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+              Inode parentJupyterDs = inodes.getInodeAtPath(tensorflowNotebooksDst);
+              List<Inode> childrenJupyterDs = new ArrayList<>();
+              inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
+              for (Inode child : childrenJupyterDs) {
+                if (child.getHdfsUser() != null) {
+                  Path path = new Path(inodes.getPath(child));
+                  udfso.setPermission(path, udfso.getParentPermission(path));
+                  udfso.setOwner(path, userHdfsName, datasetGroup);
+                }
+              }
+              udfso.rm(new Path(tensorflowNotebooksSrc), true);
+            }
           } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        }
+          } break;
         default:
           break;
       }
@@ -1811,7 +1828,7 @@ public class ProjectController {
       AppException {
     pythonDepsFacade.cloneProject(srcProj, destProj.getName());
   }
-
+  
   /**
    * Handles Kibana related indices and templates for projects.
    *

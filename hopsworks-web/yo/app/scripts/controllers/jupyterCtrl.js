@@ -2,9 +2,9 @@
 
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-          'growl', 'ModalService', 'JupyterService', 'TensorFlowService', 'SparkService', '$location', '$timeout', '$window', '$sce',
+          'growl', 'ModalService', 'JupyterService', 'TensorFlowService', 'SparkService', '$location', '$timeout', '$window', '$sce','PythonDepsService','TourService',
           function ($scope, $routeParams, $route, growl, ModalService, JupyterService, TensorFlowService, SparkService,
-                  $location, $timeout, $window, $sce) {
+                  $location, $timeout, $window, $sce, PythonDepsService, TourService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -13,8 +13,10 @@ angular.module('hopsWorksApp')
             self.details = true;
             self.loadingText = "";
             self.jupyterServer;
+            self.projectName;
             self.toggleValue = false;
-            var projectId = $routeParams.projectID;
+            self.tourService = TourService;
+            self.projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             self.ui = "";
             self.sparkStatic = false;
@@ -26,7 +28,7 @@ angular.module('hopsWorksApp')
             self.config = {};
             self.dirs = [
               {id: 1, name: '/'},
-              {id: 2, name: '/Jupyter/'},
+              {id: 2, name: '/Jupyter/'}
             ];
             self.selected = self.dirs[1];
 
@@ -56,8 +58,6 @@ angular.module('hopsWorksApp')
                       function (success) {
                         $scope.sessions = success.data;
                       }, function (error) {
-                // nothing to do
-//                        console.info("No livy sessions running.");
                 $scope.sessions = null;
               }
               );
@@ -65,7 +65,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showLivyUI = function (appId) {
-              $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
+              $location.path('project/' + self.projectId + '/jobMonitor-app/' + appId + "/true");
             };
 
             self.sliderVisible = false;
@@ -123,13 +123,8 @@ angular.module('hopsWorksApp')
               "*": "Please select a folder."
             };
 
-//, parameter
+
             this.selectFile = function (reason) {
-//              if (reason.toUpperCase() === "ZIP") {
-//              } else if (reason.toUpperCase() === "JAR") {
-//              } else if (reason.toUpperCase() === "*") {
-//              } else if (reason.toUpperCase() === "PY") {
-//              }
 
               ModalService.selectFile('lg', self.selectFileRegexes[reason.toUpperCase()],
                       self.selectFileErrorMsgs[reason.toUpperCase()]).then(
@@ -139,22 +134,6 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-
-//            this.selectDir = function (reason, parameter) {
-//              if (reason.toUpperCase() === reason) {
-//                self.adamState.processparameter = parameter;
-//              }
-//              ModalService.selectDir('lg', self.selectFileRegexes[reason],
-//                      self.selectFileErrorMsgs[reason]).then(
-//                      function (success) {
-//                        self.onFileSelected(reason, "hdfs://" + success);
-//                        if (reason.toUpperCase() === reason) {
-//                          growl.info("Insert output file name", {title: 'Required', ttl: 5000});
-//                        }
-//                      }, function (error) {
-//                //The user changed their mind.
-//              });
-//            };
 
 
             /**
@@ -221,27 +200,38 @@ angular.module('hopsWorksApp')
 
             $window.uploadDone = function () {
               stopLoading();
-            }
+            };
 
             $scope.trustSrc = function (src) {
               return $sce.trustAsResourceUrl(self.ui);
             };
 
             self.tensorflow = function () {
-              $scope.mode = "tensorflow"
-            }
+              $scope.mode = "tensorflow";
+            };
+            
             self.spark = function () {
-              $scope.mode = "spark"
-            }
+              $scope.mode = "spark";
+            };
 
             self.restart = function () {
               $location.path('/#!/project/' + self.projectId + '/jupyter');
-            }
+            };
 
 
-
+            var installTourLibs = function(){
+              //Install numpy
+              var data = {"channelUrl": "default", "lib": "numpy", "version": "1.13.1"};
+              PythonDepsService.install(self.projectId, data).then(
+                      function (success) {
+                        console.log("success numpy");
+                        growl.info("Preparing Python Anaconda environment, please wait...", {ttl: 10000});
+                      }, function (error) {
+                        console.log("failure numpy");
+              });
+            };
             var init = function () {
-              JupyterService.running(projectId).then(
+              JupyterService.running(self.projectId).then(
                       function (success) {
                         self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
@@ -250,16 +240,37 @@ angular.module('hopsWorksApp')
                 // nothing to do
               }
               );
-              JupyterService.settings(projectId).then(
+              JupyterService.settings(self.projectId).then(
                       function (success) {
                         self.val = success.data;
+                        self.projectName = self.val.project.name;
                         if (self.val.dynamicMinExecutors < 1) {
                           self.val.dynamicMinExecutors = 1;
                         }
                         self.sliderOptions.min = self.val.dynamicMinExecutors;
                         self.sliderOptions.max = self.val.dynamicMaxExecutors;
                         self.toggleValue = true;
-                        self.val.mode = "sparkDynamic";
+                        if(self.val.project.name.startsWith("demo_tensorflow")){
+                          self.tensorflow();
+                          self.val.mode = "tensorflow";
+                          self.advanced = true;
+                          //Activate anaconda
+                          PythonDepsService.enabled(self.projectId).then(
+                                  function (success) {
+                                  }, function (error) {
+                                    growl.info("Preparing Python Anaconda environment, please wait...", {ttl: 20000});
+                                    PythonDepsService.enable(self.projectId, "2.7", "true").then(
+                                      function (success) {
+                                      setTimeout(installTourLibs,20000);
+                                      
+                                      }, function (error) {
+                                    growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
+                            });
+                          });
+                          
+                        } else {
+                          self.val.mode = "sparkDynamic";
+                        }
                         if (self.val.logLevel === "FINE") {
                           self.logLevelSelected = self.log_levels[0];
                         } else if (self.val.logLevel === "DEBUG") {
@@ -277,7 +288,7 @@ angular.module('hopsWorksApp')
                 growl.error("Could not get Jupyter Notebook Server Settings.");
               }
               );
-              self.livySessions(projectId);
+              self.livySessions(self.projectId);
 
             };
 
@@ -302,7 +313,7 @@ angular.module('hopsWorksApp')
             self.stop = function () {
               startLoading("Stopping Jupyter...");
 
-              JupyterService.stop(projectId).then(
+              JupyterService.stop(self.projectId).then(
                       function (success) {
                         self.ui = "";
                         stopLoading();
@@ -319,7 +330,7 @@ angular.module('hopsWorksApp')
 
             self.stopDataOwner = function (hdfsUsername) {
               startLoading("Stopping Jupyter...");
-              JupyterService.stopDataOwner(projectId, hdfsUsername).then(
+              JupyterService.stopDataOwner(self.projectId, hdfsUsername).then(
                       function (success) {
                         self.ui = ""
                         stopLoading();
@@ -331,7 +342,7 @@ angular.module('hopsWorksApp')
             };
             self.stopAdmin = function (hdfsUsername) {
               startLoading("Stopping Jupyter...");
-              JupyterService.stopAdmin(projectId, hdfsUsername).then(
+              JupyterService.stopAdmin(self.projectId, hdfsUsername).then(
                       function (success) {
                         self.ui = ""
                         stopLoading();
@@ -355,7 +366,7 @@ angular.module('hopsWorksApp')
               $scope.tgState = true;
               self.setInitExecs();
 
-              JupyterService.start(projectId, self.val).then(
+              JupyterService.start(self.projectId, self.val).then(
                       function (success) {
                         self.toggleValue = true;
                         self.config = success.data;

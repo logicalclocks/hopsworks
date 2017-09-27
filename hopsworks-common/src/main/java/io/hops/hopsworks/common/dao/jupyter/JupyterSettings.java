@@ -98,7 +98,7 @@ public class JupyterSettings implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "appmaster_memory")
-  private int appmasterMemory = 512;
+  private int appmasterMemory = 1024;
   @Basic(optional = false)
   @NotNull
   @Column(name = "num_executors")
@@ -110,7 +110,7 @@ public class JupyterSettings implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "executor_memory")
-  private int executorMemory = 512;
+  private int executorMemory = 1024;
   @Basic(optional = false)
   @NotNull
   @Column(name = "dynamic_initial_executors")

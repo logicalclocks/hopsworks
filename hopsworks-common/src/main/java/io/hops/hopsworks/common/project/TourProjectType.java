@@ -22,7 +22,9 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 public enum TourProjectType {
   SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
   KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.KAFKA}),
-  TENSORFLOW("tensorflow", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS});
+  DISTRIBUTED_TENSORFLOW("distributed tensorflow", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
+  TENSORFLOW("tensorflow", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
+    ProjectServiceEnum.ZEPPELIN});
 
   private final String tourName;
   private final ProjectServiceEnum[] activeServices;

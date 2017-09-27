@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
                 tourService.kafkaProjectPrefix = "demo_kafka";
                 tourService.sparkProjectPrefix = "demo_spark";
                 tourService.tensorflowProjectPrefix = "demo_tensorflow";
+                tourService.distributedtensorflowProjectPrefix = "demo_distributed_tensorflow";
                 tourService.tensorflowRunTip = "";
                 tourService.informAndTips = true;
                 tourService.tipsOnly = false;
