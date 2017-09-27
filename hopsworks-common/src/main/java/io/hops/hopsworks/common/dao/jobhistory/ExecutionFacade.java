@@ -20,6 +20,8 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import java.util.Arrays;
+import java.util.Date;
+import javax.persistence.NonUniqueResultException;
 
 /**
  * Facade for management of persistent Execution objects.
@@ -96,6 +98,21 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("jobid", jobId);
     q.setParameter("project", project);
     return q.getResultList();
+  }
+  
+  public Execution findByJobIdAndSubmissionTime(Date submissionTime, Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobIdAndSubmissionTime", Execution.class);
+    q.setParameter("job", job);
+    q.setParameter("submissionTime", submissionTime);
+    try {
+      return q.getSingleResult();
+    } catch (NonUniqueResultException ex) {
+      // if more than one exc found for the same submissionTime return the first. 
+      // this will ignore other results.
+      return q.getResultList().get(0);
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   /**

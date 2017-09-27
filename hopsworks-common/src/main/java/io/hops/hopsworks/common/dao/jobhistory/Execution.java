@@ -49,6 +49,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findBySubmissionTime",
           query
           = "SELECT e FROM Execution e WHERE e.submissionTime = :submissionTime"),
+  @NamedQuery(name = "Execution.findByJobIdAndSubmissionTime",
+          query
+          = "SELECT e FROM Execution e WHERE e.job = :job AND e.submissionTime = :submissionTime"),
   @NamedQuery(name = "Execution.findByState",
           query
           = "SELECT e FROM Execution e WHERE e.state = :state"),

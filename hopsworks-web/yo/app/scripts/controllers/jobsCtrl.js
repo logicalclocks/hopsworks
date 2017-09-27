@@ -338,26 +338,51 @@ angular.module('hopsWorksApp')
                 return;
               }
               self.loadingLog = 1;
-              JobService.getLog(self.projectId, job.appId, type).then(
-                  function (success) {
-                    var logContent = success.data;
-                    if (logContent[type] !== undefined) {
-                      job[type] = logContent[type];
-                    }
-                    if (logContent[type + 'Path'] !== undefined) {
-                      job[type + 'Path'] = logContent[type + 'Path'];
-                    }
-                    if (logContent['retriableErr'] !== undefined) {
-                      job['retriableErr'] = logContent['retriableErr'];
-                    }
-                    if (logContent['retriableOut'] !== undefined) {
-                      job['retriableOut'] = logContent['retriableOut'];
-                    }
-                    self.loadingLog = 0;
-                  }, function (error) {
-                    self.loadingLog = 0;
-                    growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
-              });
+              if (job.appId !== "") {
+                JobService.getLog(self.projectId, job.appId, type).then(
+                    function (success) {
+                      var logContent = success.data;
+                      if (logContent[type] !== undefined) {
+                        job[type] = logContent[type];
+                      }
+                      if (logContent[type + 'Path'] !== undefined) {
+                        job[type + 'Path'] = logContent[type + 'Path'];
+                      }
+                      if (logContent['retriableErr'] !== undefined) {
+                        job['retriableErr'] = logContent['retriableErr'];
+                      }
+                      if (logContent['retriableOut'] !== undefined) {
+                        job['retriableOut'] = logContent['retriableOut'];
+                      }
+                      self.loadingLog = 0;
+                    }, function (error) {
+                      self.loadingLog = 0;
+                      growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+                });
+            } else if(job.jobId !== "") {
+              //getLogByJobIdAndSubmissionTime
+                JobService.getLogByJobIdAndSubmissionTime(self.projectId, job.jobId, job.time, type).then(
+                    function (success) {
+                      var logContent = success.data;
+                      if (logContent[type] !== undefined) {
+                        job[type] = logContent[type];
+                      }
+                      if (logContent[type + 'Path'] !== undefined) {
+                        job[type + 'Path'] = logContent[type + 'Path'];
+                      }
+                      if (logContent['retriableErr'] !== undefined) {
+                        job['retriableErr'] = logContent['retriableErr'];
+                      }
+                      if (logContent['retriableOut'] !== undefined) {
+                        job['retriableOut'] = logContent['retriableOut'];
+                      }
+                      self.loadingLog = 0;
+                    }, function (error) {
+                      self.loadingLog = 0;
+                      growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
+                });
+            }
+              
             };
 
             self.retryLogs = function (appId, type) {

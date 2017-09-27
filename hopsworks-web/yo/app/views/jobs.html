@@ -352,14 +352,18 @@
                   </div>
                 </div>
                 <div id="errs" class="tab-pane fade">
-                  <div uib-accordion
-                       close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
+                  <div uib-accordion close-others="true" infinite-scroll="jobsCtrl.loadMore()" infinite-scroll-distance='2'>
                     <div uib-accordion-group class="panel-default" ng-repeat="item in jobsCtrl.logset" heading="{{item.time}}">
-                      <uib-accordion-heading ng-if="item.appId !== ''">
+                      <uib-accordion-heading>
                         <div ng-click="jobsCtrl.getLog(item, 'err')">
-                          Application Id = {{item.appId}}
-                          <div class="pull-right">
-                            {{item.time}}
+                          <div ng-if="item.appId !== ''">
+                            Application Id = {{item.appId}}
+                            <div class="pull-right">
+                              {{item.time}}
+                            </div>
+                          </div>
+                          <div ng-if="item.appId === ''">
+                              {{item.time}}
                           </div>
                         </div>
                       </uib-accordion-heading>

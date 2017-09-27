@@ -81,6 +81,9 @@ import javax.ws.rs.core.StreamingOutput;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -933,21 +936,21 @@ public class JobService {
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-    List<Execution> executionHistory = exeFacade.
-        findbyProjectAndJobId(project, jobId);
+    List<Execution> executionHistory = exeFacade.findbyProjectAndJobId(project, jobId);
     JsonObjectBuilder arrayObjectBuilder;
     if (executionHistory != null && !executionHistory.isEmpty()) {
       for (Execution e : executionHistory) {
         arrayObjectBuilder = Json.createObjectBuilder();
-        arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
-            getAppId());
+        arrayObjectBuilder.add("jobId", e.getJob().getId());
+        arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.getAppId());
         arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
         arrayBuilder.add(arrayObjectBuilder);
       }
     } else {
       arrayObjectBuilder = Json.createObjectBuilder();
+      arrayObjectBuilder.add("jobId", "");
       arrayObjectBuilder.add("appId", "");
-      arrayObjectBuilder.add("time", "No log available");
+      arrayObjectBuilder.add("time", "Not available");
       arrayObjectBuilder.add("log", "No log available");
       arrayObjectBuilder.add("err", "No log available");
       arrayBuilder.add(arrayObjectBuilder);
@@ -1028,6 +1031,56 @@ public class JobService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         arrayObjectBuilder.build()).build();
+  }
+  
+  @GET
+  @Path("/getLogByJobId/{jobId}/{submissionTime}/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getLogByJobId(@PathParam("jobId") Integer jobId, @PathParam("submissionTime") String submissionTime,
+          @PathParam("type") String type) throws AppException {
+    if (jobId == null || jobId <= 0) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. No JobId.");
+    }
+    if (submissionTime == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. With no submission time.");
+    }
+    Jobs job = jobFacade.find(jobId);
+    if (job == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. Job not found.");
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
+    Date date;
+    try {
+      date = sdf.parse(submissionTime);
+    } catch (ParseException ex) {
+      LOGGER.log(Level.SEVERE, "Can not get log. Incorrect submission time. ", ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can't get log. Incorrect submission time.");
+    }
+    Execution execution = exeFacade.findByJobIdAndSubmissionTime(date, job);
+    if (execution == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "No excution for jobId " + jobId);
+    }
+    if (!execution.getState().isFinalState()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Job still running.");
+    }
+    if (!execution.getJob().getProject().equals(this.project)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "No excution for jobId " + jobId + ".");
+    }
+
+    JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      readLog(execution, type, dfso, arrayObjectBuilder);
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(arrayObjectBuilder.build()).build();
   }
 
   @GET
