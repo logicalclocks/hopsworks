@@ -41,11 +41,11 @@ angular.module('hopsWorksApp')
                         self.availableGPUs = success.data.clusterMetrics.availableGPUs;
                         var totalGpus = self.availableGPUs + self.allocatedGPUs;
                         if (self.availableGPUs > 0 && self.reservedGPUs == 0) {
-                          self.progressBarClass = 'progress-bar-success';
+                          self.gpuBarClass = 'progress-bar-success';
                         } else if (self.availableGPUs > 0 ) {
-                          self.progressBarClass = 'progress-bar-warning';
+                          self.gpuBarClass = 'progress-bar-warning';
                         } else {
-                          self.progressBarClass = 'progress-bar-danger';
+                          self.gpuBarClass = 'progress-bar-danger';
                         }
                         self.gpusPercent = (self.allocatedGPUs/totalGpus);
 
