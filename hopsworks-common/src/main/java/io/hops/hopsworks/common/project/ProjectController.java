@@ -199,7 +199,7 @@ public class ProjectController {
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
     try {
-      FolderNameValidator.isValidName(projectName);
+      FolderNameValidator.isValidName(projectName, false);
     } catch (ValidationException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.INVALID_PROJECT_NAME);
@@ -640,7 +640,7 @@ public class ProjectController {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
-              getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, true, dfso);
 
       // create subdirectories for the resource dataset
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
@@ -780,6 +780,8 @@ public class ProjectController {
    * @param project the project to change
    * @param projectDescr the description
    * @param user the user making the change
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectDescription(Project project, String projectDescr,
           Users user) throws AppException {
@@ -801,6 +803,8 @@ public class ProjectController {
    * @param project the project to change
    * @param projectRetention the retention period
    * @param user the user making the change
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectRetention(Project project, Date projectRetention,
           Users user) throws AppException {

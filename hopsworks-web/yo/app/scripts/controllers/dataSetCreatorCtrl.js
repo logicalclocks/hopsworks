@@ -46,7 +46,7 @@ angular.module('hopsWorksApp')
                       },
                               function (error) {
                                 self.working = false;
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                               });
             };
 
@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
                       },
                               function (error) {
                                 self.working = false;
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                               });
             };
 

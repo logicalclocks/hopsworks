@@ -634,7 +634,6 @@ public class DataSetService {
             json).build();
   }
 
-  //TODO: put this in DatasetController.
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
@@ -675,9 +674,6 @@ public class DataSetService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while creating directory: " + e.
               getLocalizedMessage());
-    } catch (IllegalArgumentException | NullPointerException e) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid directory: " + e.getLocalizedMessage());
     } finally {
       if (dfso != null) {
         dfso.close();

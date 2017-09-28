@@ -117,7 +117,7 @@ public class DatasetController {
           "A valid DataSet name must be passed upon DataSet creation. Received null.");
     }
     try {
-      FolderNameValidator.isValidName(dataSetName);
+      FolderNameValidator.isValidName(dataSetName, false);
     } catch (ValidationException e) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Invalid folder name for DataSet: " + e.getMessage());
@@ -199,6 +199,7 @@ public class DatasetController {
    * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
+   * @throws io.hops.hopsworks.common.exception.AppException
    * @throws IllegalArgumentException If:
    * <ul>
    * <li>Any of the folder names on the given path does not have a valid name or
@@ -212,7 +213,7 @@ public class DatasetController {
    */
   public void createSubDirectory(Project project, Path dirPath,
       int templateId, String description, boolean searchable,
-      DistributedFileSystemOps udfso) throws IOException {
+      DistributedFileSystemOps udfso) throws IOException, AppException {
 
     if (project == null) {
       throw new NullPointerException(
@@ -225,10 +226,9 @@ public class DatasetController {
     String folderName = dirPath.getName();
     String parentPath = dirPath.getParent().toString();
     try {
-      FolderNameValidator.isValidName(folderName);
+      FolderNameValidator.isValidName(folderName, true);
     } catch (ValidationException e) {
-      throw new IllegalArgumentException("Invalid folder name on the path: "
-          + dirPath.getName() + "Reason: " + e.getLocalizedMessage());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.getLocalizedMessage());
     }
 
     //Check if the given folder already exists
