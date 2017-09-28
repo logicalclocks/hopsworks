@@ -384,6 +384,8 @@ angular.module('hopsWorksApp')
                   templateUrl: 'views/fileUpload.html',
                   controller: 'FileUploadCtrl as fileUploadCtrl',
                   size: size,
+                  backdrop: 'static', //prevent user interaction with the background
+                  keyboard: false,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
                       function ($q, $location, AuthService) {

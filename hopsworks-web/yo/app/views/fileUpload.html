@@ -11,9 +11,11 @@
        flow-drag-leave="style={}"
        ng-style="style">
     <div class="container" style="width: 900px;">
+      <button class="close" ng-click="fileUploadCtrl.closeModal($flow)" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
       <h1>Upload</h1>
       <hr class="soften"/>
-
+      
       <div class="row" style="margin-left: 0px;">
         <div class="span6">
           <span class="btn btn-small btn-info" flow-btn>
@@ -28,15 +30,15 @@
       </div>
       <hr class="soften">
       <p>
-        <a class="btn btn-small btn-success" ng-click="$flow.resume()">
+        <a class="btn btn-small btn-success" ng-click="$flow.resume()" ng-show="!$flow.isUploading()">
           <i class="glyphicon glyphicon-cloud-upload"></i>
           Upload all</a>
-        <a class="btn btn-small btn-warning" ng-click="$flow.pause()">
+        <a class="btn btn-small btn-warning" ng-click="$flow.pause()" ng-show="$flow.isUploading()">
           <i class="glyphicon glyphicon-pause"></i>
           Pause all</a>
-        <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
+<!--        <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
           <i class="glyphicon glyphicon-remove-circle"></i>
-          Cancel all</a>
+          Cancel all</a>-->
         <span class="label label-info">Total Size: {{fileUploadCtrl.size($flow.getSize())}}</span>
         <!--span class="label label-info">Is Uploading: {{$flow.isUploading()}}</span-->
       </p>
@@ -74,15 +76,15 @@
             </td>
             <td>
               <div class="">
-                <a class="btn btn-mini btn-warning btn-circle" ng-click="file.pause()" ng-hide="file.paused">
+                <a class="btn btn-mini btn-warning btn-circle" ng-click="file.pause()" ng-show="file.isUploading()">
                   <i class="glyphicon glyphicon-pause"></i>
                 </a>
-                <a class="btn btn-mini btn-warning btn-circle" ng-click="file.resume()" ng-show="file.paused">
+                <a class="btn btn-mini btn-success btn-circle" ng-click="file.resume()" ng-show="!file.isUploading()">
                   <i class="glyphicon glyphicon-play"></i>
                 </a>
-                <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
+<!--                <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
                   <i class="glyphicon glyphicon-remove-circle"></i>
-                </a>
+                </a>-->
                 <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error">
                   <i class="glyphicon glyphicon-repeat round"></i>
                 </a>

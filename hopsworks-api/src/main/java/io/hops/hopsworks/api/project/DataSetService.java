@@ -82,6 +82,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.fs.FileStatus;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -768,6 +769,76 @@ public class DataSetService {
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
+  }
+  
+  /**
+   * Removes corrupted files from incomplete downloads.
+   * 
+   * @param fileName
+   * @param req
+   * @param sc
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
+   * @throws org.apache.hadoop.security.AccessControlException
+   */
+  @DELETE
+  @Path("corrupted/{fileName: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response removeCorrupted(
+      @PathParam("fileName") String fileName,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
+    JsonResponse json = new JsonResponse();
+    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+
+    DsPath dsPath = pathValidator.validatePath(this.project, fileName);
+    Dataset ds = dsPath.getDs();
+
+    org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
+    org.apache.hadoop.fs.Path dsRelativePath = dsPath.getDsRelativePath();
+
+    if (dsRelativePath.depth() == 0) {
+      logger.log(Level.SEVERE,
+          "Use DELETE /{datasetName} to delete top level dataset.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.INTERNAL_SERVER_ERROR);
+    }
+
+    DistributedFileSystemOps dfso = null;
+    try {
+      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
+      //Find project of dataset as it might be shared
+      Project owning = datasetController.getOwningProject(ds);
+      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+      if (isMember && owning.equals(project)) {
+        dfso = dfs.getDfsOps();// do it as super user
+        FileStatus fs = dfso.getFileStatus(fullPath);
+        String owner = fs.getOwner();
+        long len = fs.getLen();
+        if (owner.equals(settings.getHopsworksUser()) && len == 0) {
+          dfso.rm(fullPath, true);
+          json.setSuccessMessage(ResponseMessages.FILE_CORRUPTED_REMOVED_FROM_HDFS);
+          return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+              json).build();
+        }
+      }
+    } catch (AccessControlException ex) {
+      throw new AccessControlException(
+          "Permission denied: You can not delete the file " + fullPath);
+    } catch (IOException ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Could not delete the file at " + fullPath);
+    } finally {
+      if (dfso != null) {
+        dfs.closeDfsClient(dfso);
+      }
+    }
+
+    throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+        "Could not delete the file at " + fullPath);
+
   }
 
   /**

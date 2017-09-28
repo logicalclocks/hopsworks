@@ -151,6 +151,8 @@ public class ResponseMessages {
   //DataSet
   public final static String DATASET_NAME_EMPTY
           = "DataSet name cannot be empty.";
+  public final static String FILE_CORRUPTED_REMOVED_FROM_HDFS
+          = "Corrupted file removed from hdfs.";
   public final static String DATASET_REMOVED_FROM_HDFS
           = "DataSet removed from hdfs.";
   public final static String SHARED_DATASET_REMOVED
