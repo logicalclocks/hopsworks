@@ -8,8 +8,11 @@ import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.DependsOn;
@@ -47,7 +50,8 @@ public class YarnJobsMonitor {
   Map<String, YarnMonitor> monitors = new HashMap<>();
   Map<String, Integer> failures = new HashMap<>();
   boolean init = true;
-
+  private List<CopyLogsFutureResult> copyLogsFutures = new ArrayList<>();
+  
   /**
    * Add an execution and its monitor to the applications that need to be monitored.
    * <p/>
@@ -105,8 +109,22 @@ public class YarnJobsMonitor {
       failures.remove(appID);
       monitors.remove(appID);
     }
+  
+    Iterator<CopyLogsFutureResult> futureResultIter = copyLogsFutures.iterator();
+    while (futureResultIter.hasNext() ){
+      CopyLogsFutureResult futureResult = futureResultIter.next();
+      if (futureResult.execFuture.isDone()) {
+        try {
+          execFinalizer.finalize(futureResult.execFuture.get(),
+              futureResult.jobState);
+        } catch (ExecutionException | InterruptedException ex) {
+          LOG.log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        futureResultIter.remove();
+      }
+    }
   }
-
+  
   private Execution internalMonitor(Execution exec, YarnMonitor monitor) {
     try {
       YarnApplicationState appState = monitor.getApplicationState();
@@ -118,7 +136,12 @@ public class YarnJobsMonitor {
 
       if (appState == YarnApplicationState.FAILED || appState == YarnApplicationState.FINISHED || appState
           == YarnApplicationState.KILLED) {
-        execFinalizer.copyLogsAndFinalize(exec, appState);
+        exec = executionFacade.updateState(exec, JobState.AGGREGATING_LOGS);
+        // Async call
+        Future<Execution> futureResult = execFinalizer.copyLogs(exec);
+        copyLogsFutures.add(new CopyLogsFutureResult(futureResult,
+            JobState.getJobState(appState)));
+        
         return null;
       }
     } catch (IOException | YarnException ex) {
@@ -162,5 +185,15 @@ public class YarnJobsMonitor {
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
     return executionFacade.updateFinalStatus(execution, finalStatus);
   }
-
+  
+  private class CopyLogsFutureResult {
+    private final Future<Execution> execFuture;
+    private final JobState jobState;
+    
+    private CopyLogsFutureResult(Future<Execution> execFuture,
+        JobState jobState) {
+      this.execFuture = execFuture;
+      this.jobState = jobState;
+    }
+  }
 }
