@@ -302,7 +302,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.newJob = function () {
-              StorageService.clear();
+              StorageService.remove(self.projectId + '_newjob');
               $location.path('project/' + self.projectId + '/newjob');
               if (self.tourService.currentStep_TourThree > -1) {
                 self.tourService.resetTours();

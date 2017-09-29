@@ -6,9 +6,10 @@
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-          'UserService', 'TourService', 'PythonDepsService',
+          'UserService', 'TourService', 'PythonDepsService', 'StorageService',
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
-                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService) {
+                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService, 
+                  StorageService) {
 
             var self = this;
             self.loadedView = false;
@@ -516,6 +517,14 @@ angular.module('hopsWorksApp')
               var multiplicator = Math.pow(10, digits);
               n = parseFloat((n * multiplicator).toFixed(11));
               return Math.round(n) / multiplicator;
+            };
+            
+            self.tourDone = function(tour){
+              StorageService.store("hopsworks-tourdone-"+tour,true);
+            };
+            
+            self.isTourDone = function(tour){
+              var isDone = StorageService.get("hopsworks-tourdone-"+tour);
             };
 
           }]);
