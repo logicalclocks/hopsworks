@@ -168,7 +168,7 @@ public class CertificateMaterializer {
           // Force deletion of material to avoid corrupted data
           LOG.log(Level.FINEST, "Could not cancel delayed removal, " +
               "materializing again for " + key.getProjectSpecificUsername());
-          forceRemoveCertificates(key.username, key.projectName);
+          forceRemoveCertificates(key.username, key.projectName, false);
           materialize(key);
         }
       } else {
@@ -251,7 +251,8 @@ public class CertificateMaterializer {
   
   @Lock(LockType.WRITE)
   @AccessTimeout(value=100)
-  public void forceRemoveCertificates(String username, String projectName) {
+  public void forceRemoveCertificates(String username, String projectName,
+      boolean bothUserAndProject) {
     // Remove project specific certificates, if any
     MaterialKey key = new MaterialKey(username, projectName);
     FileRemover scheduledRemover = scheduledFileRemovers.remove(key);
@@ -261,14 +262,16 @@ public class CertificateMaterializer {
     deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
     materialMap.remove(key);
     
-    // Remove project generic certificates, if any
-    key = new MaterialKey(null, projectName);
-    scheduledRemover = scheduledFileRemovers.remove(key);
-    if (null != scheduledRemover) {
-      scheduledRemover.scheduledFuture.cancel(true);
+    if (bothUserAndProject) {
+      // Remove project generic certificates, if any
+      key = new MaterialKey(null, projectName);
+      scheduledRemover = scheduledFileRemovers.remove(key);
+      if (null != scheduledRemover) {
+        scheduledRemover.scheduledFuture.cancel(true);
+      }
+      deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
+      materialMap.remove(key);
     }
-    deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
-    materialMap.remove(key);
   }
   
   private void scheduleFileRemover(MaterialKey key, FileRemover fileRemover) {

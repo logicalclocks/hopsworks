@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -56,7 +56,7 @@ public class FlinkJob extends YarnJob {
    * @param settings
    * @param sessionId
    */
-  public FlinkJob(JobDescription job, AsynchronousJobExecutor services,
+  public FlinkJob(Jobs job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
       final String flinkDir, final String flinkConfDir,
       final String flinkConfFile, String flinkUser,
@@ -65,7 +65,7 @@ public class FlinkJob extends YarnJob {
     super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings, sessionId);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
-          "JobDescription must contain a FlinkJobConfiguration object. Received: "
+          "Job must contain a FlinkJobConfiguration object. Received: "
           + job.getJobConfig().getClass());
     }
     this.jobconfig = (FlinkJobConfiguration) job.getJobConfig();
@@ -132,7 +132,7 @@ public class FlinkJob extends YarnJob {
     }
     try {
       runner = flinkBuilder.
-          getYarnRunner(jobDescription.getProject().getName(),
+          getYarnRunner(jobs.getProject().getName(),
               flinkUser, jobUser, hadoopDir, flinkDir, flinkConfDir,
               flinkConfFile, services.getFileOperations
                   (hdfsUser.getUserName()), yarnClient, glassfishDomainDir +
@@ -150,12 +150,12 @@ public class FlinkJob extends YarnJob {
     }
 
     String stdOutFinalDestination = Utils.getHdfsRootPath(
-        jobDescription.
+        jobs.
             getProject().
             getName())
         + Settings.FLINK_DEFAULT_OUTPUT_PATH;
     String stdErrFinalDestination = Utils.getHdfsRootPath(
-        jobDescription.
+        jobs.
             getProject().
             getName())
         + Settings.FLINK_DEFAULT_OUTPUT_PATH;
@@ -175,7 +175,7 @@ public class FlinkJob extends YarnJob {
     //Search for other jobs using Kafka in the same project. If any active
     //ones are found
 
-    Collection<ProjectServices> projectServices = jobDescription.getProject().
+    Collection<ProjectServices> projectServices = jobs.getProject().
         getProjectServicesCollection();
     Iterator<ProjectServices> iter = projectServices.iterator();
     boolean removeKafkaCerts = true;
@@ -185,10 +185,10 @@ public class FlinkJob extends YarnJob {
       if (projectService.getProjectServicesPK().getService()
           == ProjectServiceEnum.KAFKA) {
         List<Execution> execs = services.getExecutionFacade().
-            findForProjectByType(jobDescription.getProject(), JobType.FLINK);
+            findForProjectByType(jobs.getProject(), JobType.FLINK);
         if (execs != null) {
           execs.addAll(services.getExecutionFacade().
-              findForProjectByType(jobDescription.getProject(),
+              findForProjectByType(jobs.getProject(),
                   JobType.SPARK));
         }
         //Find if this project has running jobs
@@ -203,11 +203,11 @@ public class FlinkJob extends YarnJob {
       }
     }
     if (removeKafkaCerts) {
-      String k_certName = jobDescription.getProject().getName() + "__"
-          + jobDescription.getProject().getOwner().getUsername()
+      String k_certName = jobs.getProject().getName() + "__"
+          + jobs.getProject().getOwner().getUsername()
           + "__kstore.jks";
-      String t_certName = jobDescription.getProject().getName() + "__"
-          + jobDescription.getProject().getOwner().getUsername()
+      String t_certName = jobs.getProject().getName() + "__"
+          + jobs.getProject().getOwner().getUsername()
           + "__tstore.jks";
       File k_cert = new File(glassfishDomainDir + "/domain1/config/"
           + k_certName);

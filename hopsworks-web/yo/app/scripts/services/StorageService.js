@@ -58,8 +58,24 @@ angular.module('hopsWorksApp')
                 try {
                   if ($window.Storage) {
                     var retval = $window.localStorage.getItem(key);
-//                    console.log("LocalStorage: retrieved for key: " + key + " --- " + retval);
                     $window.localStorage.removeItem(key);
+                    if (retval) {
+                      return $window.JSON.parse(retval);
+                    } else {
+                      return false;
+                    }
+                  } else {
+                    return false;
+                  }
+                } catch (error) {
+                  console.error(error, error.message);
+                }
+                return false;
+              },
+              get: function (key) {
+                try {
+                  if ($window.Storage) {
+                    var retval = $window.localStorage.getItem(key);
                     if (retval) {
                       return $window.JSON.parse(retval);
                     } else {

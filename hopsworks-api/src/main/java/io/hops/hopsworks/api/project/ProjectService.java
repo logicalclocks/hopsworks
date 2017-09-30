@@ -487,12 +487,18 @@ public class ProjectService {
       projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.KAFKA);
       readMeMessage = "jar file to demonstrate Kafka streaming";
+    } else if (TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName().replace("_", " ").equalsIgnoreCase(type)) {
+      // It's a Distributed TensorFlow guide
+      demoType = TourProjectType.DISTRIBUTED_TENSORFLOW;
+      projectDTO.setProjectName("demo_" + TourProjectType.DISTRIBUTED_TENSORFLOW.getTourName() + "_" + username);
+      populateActiveServices(projectServices, TourProjectType.DISTRIBUTED_TENSORFLOW);
+      readMeMessage = "Mnist data to demonstrate the creation of a distributed TensorFlow job";
     } else if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)) {
       // It's a TensorFlow guide
       demoType = TourProjectType.TENSORFLOW;
       projectDTO.setProjectName("demo_" + TourProjectType.TENSORFLOW.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.TENSORFLOW);
-      readMeMessage = "Mnist data and python files to demonstrate the creation of a TensorFlow job";
+      readMeMessage = "Mnist data and python files to demonstrate running TensorFlow noteooks";
     } else {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.STARTER_PROJECT_BAD_REQUEST);
@@ -509,6 +515,10 @@ public class ProjectService {
       projectController.addTourFilesToProject(owner, project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
+      //Activate Anaconda and install numppy
+//      if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)){
+//        projectController.initAnacondaForTFDemo(project, req.getSession().getId());
+//      }
     } catch (Exception ex) {
       projectController.cleanup(project, req.getSession().getId());
       throw ex;

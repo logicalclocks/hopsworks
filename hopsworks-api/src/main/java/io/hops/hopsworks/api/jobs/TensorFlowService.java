@@ -21,7 +21,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TfResourceCluster;
@@ -228,7 +228,7 @@ public class TensorFlowService {
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
-      JobDescription created = jobController.createJob(user, project, config);
+      Jobs created = jobController.createJob(user, project, config);
       activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(created).build();

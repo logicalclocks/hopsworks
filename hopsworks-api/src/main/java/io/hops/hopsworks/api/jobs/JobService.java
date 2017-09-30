@@ -10,8 +10,8 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.AppIdDTO;
 import io.hops.hopsworks.common.dao.jobs.description.AppInfoDTO;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -81,6 +81,9 @@ import javax.ws.rs.core.StreamingOutput;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -111,7 +114,7 @@ public class JobService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private ExecutionFacade exeFacade;
   @Inject
@@ -173,9 +176,9 @@ public class JobService {
   public Response findAllJobs(@Context SecurityContext sc,
       @Context HttpServletRequest req)
       throws AppException {
-    List<JobDescription> jobs = jobFacade.findForProject(project);
-    GenericEntity<List<JobDescription>> jobList
-        = new GenericEntity<List<JobDescription>>(jobs) {};
+    List<Jobs> jobs = jobFacade.findForProject(project);
+    GenericEntity<List<Jobs>> jobList
+        = new GenericEntity<List<Jobs>>(jobs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         jobList).build();
   }
@@ -196,7 +199,7 @@ public class JobService {
   public Response getJob(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -213,12 +216,12 @@ public class JobService {
 
   /**
    * Get the JobConfiguration object for the specified job. The sole reason of
-   * existence of this method is the dodginess
-   * of polymorphism in JAXB/JAXRS. As such, the jobConfig field is always empty
-   * when a JobDescription object is
-   * returned. This method must therefore be called explicitly to get the job
-   * configuration.
-   * <p>
+ existence of this method is the dodginess
+ of polymorphism in JAXB/JAXRS. As such, the jobConfig field is always empty
+ when a Jobs object is
+ returned. This method must therefore be called explicitly to get the job
+ configuration.
+ <p>
    * @param jobId
    * @param sc
    * @param req
@@ -232,7 +235,7 @@ public class JobService {
   public Response getJobConfiguration(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -263,7 +266,7 @@ public class JobService {
   public Response getAppId(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -315,7 +318,7 @@ public class JobService {
   public Response getAppIds(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -850,10 +853,10 @@ public class JobService {
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplate(@Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    List<JobDescription> running = jobFacade.getRunningJobs(project);
-    List<JobDescription> allJobs = jobFacade.findForProject(project);
+    List<Jobs> running = jobFacade.getRunningJobs(project);
+    List<Jobs> allJobs = jobFacade.findForProject(project);
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    for (JobDescription desc : allJobs) {
+    for (Jobs desc : allJobs) {
       try {
         List<Execution> jobExecutions = exeFacade.findForJob(desc);
         if (jobExecutions != null && jobExecutions.isEmpty() == false) {
@@ -873,7 +876,7 @@ public class JobService {
             .getMessage());
       }
     }
-    for (JobDescription desc : running) {
+    for (Jobs desc : running) {
       try {
         Execution execution = exeFacade.findForJob(desc).get(0);
         Execution updatedExecution = exeFacade.getExecution(execution.getJob().
@@ -933,21 +936,21 @@ public class JobService {
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-    List<Execution> executionHistory = exeFacade.
-        findbyProjectAndJobId(project, jobId);
+    List<Execution> executionHistory = exeFacade.findbyProjectAndJobId(project, jobId);
     JsonObjectBuilder arrayObjectBuilder;
     if (executionHistory != null && !executionHistory.isEmpty()) {
       for (Execution e : executionHistory) {
         arrayObjectBuilder = Json.createObjectBuilder();
-        arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.
-            getAppId());
+        arrayObjectBuilder.add("jobId", e.getJob().getId());
+        arrayObjectBuilder.add("appId", e.getAppId() == null ? "" : e.getAppId());
         arrayObjectBuilder.add("time", e.getSubmissionTime().toString());
         arrayBuilder.add(arrayObjectBuilder);
       }
     } else {
       arrayObjectBuilder = Json.createObjectBuilder();
+      arrayObjectBuilder.add("jobId", "");
       arrayObjectBuilder.add("appId", "");
-      arrayObjectBuilder.add("time", "No log available");
+      arrayObjectBuilder.add("time", "Not available");
       arrayObjectBuilder.add("log", "No log available");
       arrayObjectBuilder.add("err", "No log available");
       arrayBuilder.add(arrayObjectBuilder);
@@ -1028,6 +1031,56 @@ public class JobService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         arrayObjectBuilder.build()).build();
+  }
+  
+  @GET
+  @Path("/getLogByJobId/{jobId}/{submissionTime}/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public Response getLogByJobId(@PathParam("jobId") Integer jobId, @PathParam("submissionTime") String submissionTime,
+          @PathParam("type") String type) throws AppException {
+    if (jobId == null || jobId <= 0) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. No JobId.");
+    }
+    if (submissionTime == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. With no submission time.");
+    }
+    Jobs job = jobFacade.find(jobId);
+    if (job == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can not get log. Job not found.");
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss Z yyyy");
+    Date date;
+    try {
+      date = sdf.parse(submissionTime);
+    } catch (ParseException ex) {
+      LOGGER.log(Level.SEVERE, "Can not get log. Incorrect submission time. ", ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Can't get log. Incorrect submission time.");
+    }
+    Execution execution = exeFacade.findByJobIdAndSubmissionTime(date, job);
+    if (execution == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "No excution for jobId " + jobId);
+    }
+    if (!execution.getState().isFinalState()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Job still running.");
+    }
+    if (!execution.getJob().getProject().equals(this.project)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "No excution for jobId " + jobId + ".");
+    }
+
+    JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      readLog(execution, type, dfso, arrayObjectBuilder);
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(arrayObjectBuilder.build()).build();
   }
 
   @GET
@@ -1171,7 +1224,7 @@ public class JobService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
@@ -1221,7 +1274,7 @@ public class JobService {
   @Path("/{jobId}/executions")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return null;
     } else if (!job.getProject().equals(project)) {
@@ -1243,7 +1296,7 @@ public class JobService {
       @PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    JobDescription job = jobFacade.findById(jobId);
+    Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.
           getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();

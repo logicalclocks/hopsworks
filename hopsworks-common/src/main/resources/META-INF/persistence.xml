@@ -17,7 +17,6 @@
     <class>io.hops.hopsworks.common.dao.jobs.JobOutputFile</class>
     <class>io.hops.hopsworks.common.dao.jobs.FilesToRemove</class>
     <class>io.hops.hopsworks.common.dao.jobs.JobsHistory</class>
-    <class>io.hops.hopsworks.common.dao.jobs.description.JobDescription</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsDailyCost</class>
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota</class>
@@ -88,6 +87,7 @@
     <!-- Converters -->
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
+    <class>io.hops.hopsworks.common.dao.jobs.description.Jobs</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory',
-          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory) {
+        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory', 'DataSetService',
+          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory, DataSetService) {
 
             var self = this;
             self.model = {};
@@ -20,7 +20,7 @@ angular.module('hopsWorksApp')
             self.temps = [{'temp': "temp"}];
 
             self.target = getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path;
-
+            var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             self.size = function (fileSizeInBytes) {
               return convertSize (fileSizeInBytes);
             };
@@ -68,4 +68,22 @@ angular.module('hopsWorksApp')
               }
               $uibModalInstance.close("All files uploaded successfully");
             };
+            
+            self.closeModal = function (flow) {
+              var uploading = flow.isUploading();
+              if (uploading) {
+                growl.info("Upload in progress, pause or cancel transfers first...", {ttl: 5000, referenceId: 1});
+              } else {
+                //Check if files were uploaded successfully and delete wrong ones
+                for (var file in self.files) {
+                  var remPath = 'corrupted/' + self.path + "/" + file;
+                  dataSetService.removeDataSetDir(remPath).then(
+                          function (success) {
+                          }, function (error) {
+                  });
+                }
+                $uibModalInstance.close();
+              }
+            };
+            
           }]);

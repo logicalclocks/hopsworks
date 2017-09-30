@@ -191,6 +191,17 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/getLog/' + jobId + '/' + type);
               },
               /**
+               * Get log by job id and submission time if app id not available.
+               * @param {type} projectId
+               * @param {type} jobId
+               * @param {type} submissionTime
+               * @param {type} type
+               * @returns {unresolved}
+               */
+              getLogByJobIdAndSubmissionTime: function (projectId, jobId, submissionTime, type) {
+                return $http.get('/api/project/' + projectId + '/jobs/getLogByJobId/' + jobId + '/' + submissionTime + '/' + type);
+              },
+              /**
                * Retrieve the logs associated to a certain job.
                * @param {type} projectId
                * @param {type} jobId

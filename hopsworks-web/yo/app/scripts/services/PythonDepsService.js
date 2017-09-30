@@ -11,16 +11,16 @@ angular.module('hopsWorksApp')
         .factory('PythonDepsService', ['$http', function ($http) {
             return {
               index: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps')
+                return $http.get('/api/project/' + projectId + '/pythonDeps');
               },
               enable: function (projectId, version, pythonKernel) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/enable/' + version + "/" + pythonKernel)
+                return $http.get('/api/project/' + projectId + '/pythonDeps/enable/' + version + "/" + pythonKernel);
               },
               enabled: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/enabled')
+                return $http.get('/api/project/' + projectId + '/pythonDeps/enabled');
               },
               installed: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/installed')
+                return $http.get('/api/project/' + projectId + '/pythonDeps/installed');
               },
               install: function (projectId, data) {
                 var regReq = {
@@ -29,8 +29,8 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               installOneHost: function (projectId, host, data) {
                 var regReq = {
@@ -39,8 +39,8 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               uninstall: function (projectId, data) {
                 var regReq = {
@@ -49,8 +49,8 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               upgrade: function (projectId, data) {
                 var regReq = {
@@ -59,8 +59,8 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               search: function (projectId, data) {
                 var regReq = {
@@ -69,8 +69,8 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               status: function (projectId, data) {
                 var regReq = {
@@ -79,11 +79,11 @@ angular.module('hopsWorksApp')
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
-                }
-                return $http(regReq)
+                };
+                return $http(regReq);
               },
               clone: function (projectId, projName) {
-                return $http.get('/api/project/' + projectId + '/pythonDeps/clone/' + projName)
+                return $http.get('/api/project/' + projectId + '/pythonDeps/clone/' + projName);
               }
-            }
+            };
           }]);

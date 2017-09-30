@@ -11,7 +11,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 /**
  * Takes care of booting the execution of a job.
@@ -60,7 +62,8 @@ public class ExecutionController {
 
   private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
-  public Execution start(JobDescription job, Users user, String sessionId) throws IOException {
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public Execution start(Jobs job, Users user, String sessionId) throws IOException {
     Execution exec = null;
 
     switch (job.getJobType()) {
@@ -127,7 +130,7 @@ public class ExecutionController {
     return exec;
   }
 
-  public void kill(JobDescription job, Users user) throws IOException {
+  public void kill(Jobs job, Users user) throws IOException {
     //Get the lastest appId for the job, a job cannot have to concurrent application running.
     List<Execution> jobExecs = execFacade.findForJob(job);
     //Sort descending based on jobId
@@ -160,7 +163,7 @@ public class ExecutionController {
     }
   }
   
-  public void stop(JobDescription job, Users user, String appid) throws
+  public void stop(Jobs job, Users user, String appid) throws
           IOException {
     switch (job.getJobType()) {
       case ADAM:

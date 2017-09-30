@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.util.Variables;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
-  private static final String VARIABLE_JAVA_HOME = "java_home";
+  private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_HOPSWORKS_PORT = "hopsworks_port";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
@@ -62,6 +62,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
+  private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_ZEPPELIN_DIR = "zeppelin_dir";
   private static final String VARIABLE_ZEPPELIN_PROJECTS_DIR
@@ -136,6 +137,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_VAGRANT_ENABLED = "vagrant_enabled";
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
+  private static final String VARIABLE_WHITELIST_USERS_LOGIN =
+      "whitelist_users";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -246,6 +249,7 @@ public class Settings implements Serializable {
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
+      HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
       YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
@@ -339,6 +343,8 @@ public class Settings implements Serializable {
       HOPS_RPC_TLS = setStrVar(VARIABLE_HOPS_RPC_TLS, HOPS_RPC_TLS);
       CERTIFICATE_MATERIALIZER_DELAY = setStrVar(VARIABLE_CERT_MATER_DELAY,
           CERTIFICATE_MATERIALIZER_DELAY);
+      WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
+          WHITELIST_USERS_LOGIN);
       
       cached = true;
     }
@@ -460,18 +466,14 @@ public class Settings implements Serializable {
     return SPARK_DIR;
   }
 
-  private final String SPARK_CONF_DIR = SPARK_DIR + "/conf";
-
   public synchronized String getSparkConfDir() {
-    checkCache();
-    return SPARK_CONF_DIR;
+    return getSparkDir() + "/conf";
   }
 
-  private final String SPARK_CONF_FILE = SPARK_CONF_DIR + "/spark-defaults.conf";
+  private final String SPARK_CONF_FILE = "/spark-defaults.conf";
 
   public synchronized String getSparkConfFile() {
-    //checkCache();
-    return SPARK_CONF_FILE;
+    return getSparkConfDir() + SPARK_CONF_FILE;
   }
 
   private String ADAM_USER = "glassfish";
@@ -596,19 +598,25 @@ public class Settings implements Serializable {
   }
 
   //User under which yarn is run
-  private String YARN_SUPERUSER = "glassfish";
+  private String YARN_SUPERUSER = "rmyarn";
 
   public synchronized String getYarnSuperUser() {
     checkCache();
     return YARN_SUPERUSER;
   }
-  private String HDFS_SUPERUSER = "glassfish";
+  private String HOPSWORKS_USER = "glassfish";
+
+  public synchronized String getHopsworksUser() {
+    checkCache();
+    return HOPSWORKS_USER;
+  }
+  private String HDFS_SUPERUSER = "hdfs";
 
   public synchronized String getHdfsSuperUser() {
     checkCache();
     return HDFS_SUPERUSER;
   }
-  private String SPARK_USER = "glassfish";
+  private String SPARK_USER = "spark";
 
   public synchronized String getSparkUser() {
     checkCache();
@@ -622,14 +630,14 @@ public class Settings implements Serializable {
     return JAVA_HOME;
   }
 
-  private String FLINK_USER = "glassfish";
+  private String FLINK_USER = "flink";
 
   public synchronized String getFlinkUser() {
     checkCache();
     return FLINK_USER;
   }
 
-  private String ZEPPELIN_USER = "glassfish";
+  private String ZEPPELIN_USER = "spark";
 
   public synchronized String getZeppelinUser() {
     checkCache();
@@ -750,6 +758,7 @@ public class Settings implements Serializable {
   public static final String HOPS_KAFKA_TOUR_JAR = "hops-spark.jar";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
+  public static final String HOPS_TOUR_DATASET_JUPYTER = "Jupyter";
   // Distribution-defined classpath to add to processes
   public static final String ENV_DIST_CLASSPATH = "SPARK_DIST_CLASSPATH";
   public static final String SPARK_AM_MAIN
@@ -880,7 +889,7 @@ public class Settings implements Serializable {
    * @param appId
    * @return
    */
-  public static String getJobMarkerFile(JobDescription job, String appId) {
+  public static String getJobMarkerFile(Jobs job, String appId) {
     return getHdfsRootPath(job.getProject().getName()) + "/Resources/.marker-"
             + job.getJobType().getName().toLowerCase()
             + "-" + job.getName()
@@ -1082,6 +1091,19 @@ public class Settings implements Serializable {
     return ZK_USER;
   }
 
+  
+  /*
+  Comma-separated list of user emails that should not be persisted in the
+  userlogins table for auditing.
+  kagent -> agent@hops.io
+   */
+  private String WHITELIST_USERS_LOGIN = "agent@hops.io";
+  
+  public synchronized String getWhitelistUsersLogin() {
+    checkCache();
+    return WHITELIST_USERS_LOGIN;
+  }
+  
   // Zeppelin
   private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
 
@@ -1301,6 +1323,8 @@ public class Settings implements Serializable {
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS
           = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
+  public static final String SUBDIR_DISALLOWED_CHARS
+          = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
           = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
   public static final String SHARED_FILE_SEPARATOR = "::";

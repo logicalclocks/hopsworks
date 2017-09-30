@@ -26,8 +26,8 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescriptionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
@@ -160,7 +160,7 @@ public class ProjectController {
   @EJB
   private JupyterConfigFactory jupyterConfigFactory;
   @EJB
-  private JobDescriptionFacade jobFacade;
+  private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
@@ -199,7 +199,7 @@ public class ProjectController {
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
     try {
-      FolderNameValidator.isValidName(projectName);
+      FolderNameValidator.isValidName(projectName, false);
     } catch (ValidationException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.INVALID_PROJECT_NAME);
@@ -640,7 +640,7 @@ public class ProjectController {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
-              getDescription(), -1, false, true, dfso);
+          getDescription(), -1, false, true, dfso);
 
       // create subdirectories for the resource dataset
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
@@ -780,6 +780,8 @@ public class ProjectController {
    * @param project the project to change
    * @param projectDescr the description
    * @param user the user making the change
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectDescription(Project project, String projectDescr,
           Users user) throws AppException {
@@ -801,6 +803,8 @@ public class ProjectController {
    * @param project the project to change
    * @param projectRetention the retention period
    * @param user the user making the change
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectRetention(Project project, Date projectRetention,
           Users user) throws AppException {
@@ -889,7 +893,7 @@ public class ProjectController {
 
     cleanup(project, sessionId);
     certificateMaterializer.forceRemoveCertificates(user.getUsername(),
-        project.getName());
+        project.getName(), true);
   }
 
   public void cleanup(Project project, String sessionId) throws AppException {
@@ -957,10 +961,10 @@ public class ProjectController {
         jupyterConfigFactory.stopProject(project);
 
         //kill jobs
-        List<JobDescription> running = jobFacade.getRunningJobs(project);
+        List<Jobs> running = jobFacade.getRunningJobs(project);
         if (running != null && !running.isEmpty()) {
           Runtime rt = Runtime.getRuntime();
-          for (JobDescription job : running) {
+          for (Jobs job : running) {
             //Get the appId of the running app
             List<Execution> jobExecs = execFacade.findForJob(job);
             //Sort descending based on jobId because therie might be two 
@@ -1499,10 +1503,10 @@ public class ProjectController {
       }
       //kill all jobs run by this user.
       //kill jobs
-      List<JobDescription> running = jobFacade.getUserRunningJobs(project, hdfsUser);
+      List<Jobs> running = jobFacade.getUserRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
         Runtime rt = Runtime.getRuntime();
-        for (JobDescription job : running) {
+        for (Jobs job : running) {
           //Get the appId of the running app
           List<Execution> jobExecs = execFacade.findForJob(job);
           //Sort descending based on jobId because there might be two 
@@ -1546,6 +1550,8 @@ public class ProjectController {
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
 
+    certificateMaterializer.forceRemoveCertificates(userToBeRemoved
+        .getUsername(), project.getName(), false);
     LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(), hdfsUser);
     userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved.getUsername());
 
@@ -1712,17 +1718,16 @@ public class ProjectController {
             udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
             udfso.setOwner(new Path("/" + Settings.DIR_ROOT + "/" + project.getName() + "/" + Settings.HOPS_TOUR_DATASET
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
-
+            
           } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        case KAFKA: {
+          } break;
+        case KAFKA:
           // Get the JAR from /user/<super user>
-          String kafkaExampleSrc = "/user/" + settings.getHdfsSuperUser() + "/"
+          String kafkaExampleSrc = "/user/" + settings.getHopsworksUser() + "/"
               + settings.getKafkaTourFilename();
           String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
               + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getKafkaTourFilename();
@@ -1732,16 +1737,16 @@ public class ProjectController {
             String userHdfsName = hdfsUsersBean.getHdfsUserName(project, user);
             udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
-
+            
           } catch (IOException ex) {
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        }
-        case TENSORFLOW: {
+          } break;
+        case TENSORFLOW:
+        case DISTRIBUTED_TENSORFLOW:
           // Get the mnist.py and tfr records from /user/<super user>/tensorflow_demo
+          //Depending on tour type, copy files
           String tensorflowDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_TENSORFLOW_TOUR_DATA
               + "/*";
           String tensorflowDataDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
@@ -1760,12 +1765,30 @@ public class ProjectController {
                 udfso.setOwner(path, userHdfsName, datasetGroup);
               }
             }
+            //Move notebooks to Jupyter Dataset
+            if (projectType == TourProjectType.TENSORFLOW) {
+              String tensorflowNotebooksSrc = tensorflowDataDst + "/notebooks";
+              String tensorflowNotebooksDst = "/" + Settings.DIR_ROOT + "/" + project.getName() + "/"
+                  + Settings.HOPS_TOUR_DATASET_JUPYTER;
+              udfso.copyInHdfs(new Path(tensorflowNotebooksSrc + "/*"), new Path(tensorflowNotebooksDst));
+              datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+              Inode parentJupyterDs = inodes.getInodeAtPath(tensorflowNotebooksDst);
+              List<Inode> childrenJupyterDs = new ArrayList<>();
+              inodes.getAllChildren(parentJupyterDs, childrenJupyterDs);
+              for (Inode child : childrenJupyterDs) {
+                if (child.getHdfsUser() != null) {
+                  Path path = new Path(inodes.getPath(child));
+                  udfso.setPermission(path, udfso.getParentPermission(path));
+                  udfso.setOwner(path, userHdfsName, datasetGroup);
+                }
+              }
+              udfso.rm(new Path(tensorflowNotebooksSrc), true);
+            }
           } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), "Something went wrong when adding the tour files to the project");
-          }
-          break;
-        }
+          } break;
         default:
           break;
       }
@@ -1809,7 +1832,7 @@ public class ProjectController {
       AppException {
     pythonDepsFacade.cloneProject(srcProj, destProj.getName());
   }
-
+  
   /**
    * Handles Kibana related indices and templates for projects.
    *

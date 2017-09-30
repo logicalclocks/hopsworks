@@ -95,6 +95,7 @@ public class UploadService {
    * @param dsPath the dsPath object built by the DatasetService.java
    * @param username the username of the user uploading the file
    * @param templateId the template to associate the the uploaded file
+   * @param role
    * @throws AppException if new directories need to be created and the name
    * is not valid
    */
@@ -119,7 +120,7 @@ public class UploadService {
           parent = inodes.findByInodePK(parent, dirName, partitionId);
           depth += 1;
         } else {
-          FolderNameValidator.isValidName(dirName);
+          FolderNameValidator.isValidName(dirName, true);
           exist = false;
         }
       }
@@ -319,15 +320,14 @@ public class UploadService {
 
         }
         
-        if (this.username != null) {
-          //If the user has a role in the owning project of the Dataset and that is Data Owner
-          //perform operation as superuser
-          if (!Strings.isNullOrEmpty(role) && role.equals(AllowedRoles.DATA_OWNER)) {
-            dfsOps = dfs.getDfsOps();
-          } else {
-            dfsOps = dfs.getDfsOps(username);
-          }
-        }
+        
+        //If the user has a role in the owning project of the Dataset and that is Data Owner
+        //perform operation as superuser
+        if (!Strings.isNullOrEmpty(role) && role.equals(AllowedRoles.DATA_OWNER)) {
+          dfsOps = dfs.getDfsOps();
+        } else {
+          dfsOps = dfs.getDfsOps(username);
+        } 
 
         dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));

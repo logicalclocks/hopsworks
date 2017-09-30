@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -38,7 +38,7 @@ public class SparkYarnRunnerBuilder {
       SparkYarnRunnerBuilder.class.getName());
 
   //Necessary parameters
-  private final JobDescription jobDescription;
+  private final Jobs job;
 
   //Optional parameters
   private final List<String> jobArgs = new ArrayList<>();
@@ -64,9 +64,9 @@ public class SparkYarnRunnerBuilder {
   private String sessionId;
   final private Set<String> blacklistedProps = new HashSet<>();
 
-  public SparkYarnRunnerBuilder(JobDescription jobDescription) {
-    this.jobDescription = jobDescription;
-    SparkJobConfiguration jobConfig = (SparkJobConfiguration) jobDescription.
+  public SparkYarnRunnerBuilder(Jobs job) {
+    this.job = job;
+    SparkJobConfiguration jobConfig = (SparkJobConfiguration) job.
         getJobConfig();
 
     if (jobConfig.getAppPath() == null || jobConfig.getAppPath().isEmpty()) {
@@ -107,14 +107,13 @@ public class SparkYarnRunnerBuilder {
       blacklistedProps.addAll(Arrays.asList(content.split("\n")));
     }
 
-    JobType jobType = ((SparkJobConfiguration) jobDescription.getJobConfig()).
+    JobType jobType = ((SparkJobConfiguration) job.getJobConfig()).
         getType();
-    String appPath = ((SparkJobConfiguration) jobDescription.getJobConfig()).
+    String appPath = ((SparkJobConfiguration) job.getJobConfig()).
         getAppPath();
 
     String hdfsSparkJarPath = Settings.getHdfsSparkJarPath(sparkUser);
     String log4jPath = Settings.getSparkLog4JPath(sparkUser);
-    String metricsPath = Settings.getSparkMetricsPath(sparkUser);
     StringBuilder pythonPath = null;
     StringBuilder pythonPathExecs = null;
     //Create a builder
@@ -145,11 +144,11 @@ public class SparkYarnRunnerBuilder {
         Settings.SPARK_LOG4J_PROPERTIES, log4jPath,
         LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
-    //Add metrics
-//    builder.addLocalResource(new LocalResourceDTO(
-//        Settings.SPARK_METRICS_PROPERTIES, metricsPath,
-//        LocalResourceVisibility.PRIVATE.toString(),
-//        LocalResourceType.FILE.toString(), null), false);
+    //Add metrics 
+    builder.addLocalResource(new LocalResourceDTO(
+        Settings.SPARK_METRICS_PROPERTIES, settings.getSparkConfDir() + "/metrics.properties",
+        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceType.FILE.toString(), null), false);
 
     //Add app file
     String appExecName = null;
@@ -240,7 +239,6 @@ public class SparkYarnRunnerBuilder {
         + File.pathSeparator + Settings.SPARK_LOCALIZED_LIB_DIR + "/*"
         + File.pathSeparator + Settings.SPARK_LOCRSC_APP_JAR
         + File.pathSeparator + Settings.SPARK_LOG4J_PROPERTIES
-        + File.pathSeparator + Settings.SPARK_METRICS_PROPERTIES
     );
 
     //Add extra files to local resources, use filename as key
@@ -363,7 +361,7 @@ public class SparkYarnRunnerBuilder {
     //Comma-separated list of attributes sent to Logstash
     addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + ","
         + jobName + ","
-        + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
+        + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.HOPSWORKS_APPID_PROPERTY,
         YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopSymbolicLinkDir()
@@ -377,7 +375,7 @@ public class SparkYarnRunnerBuilder {
         append(" ").
         append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(
         project.toLowerCase()).append(",").
-        append(jobName).append(",").append(jobDescription.getId()).append(
+        append(jobName).append(",").append(job.getId()).append(
         ",").append(YarnRunner.APPID_PLACEHOLDER).
         append(" ").
         append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
@@ -472,7 +470,7 @@ public class SparkYarnRunnerBuilder {
 
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
-    amargs.append(((SparkJobConfiguration) jobDescription.getJobConfig()).
+    amargs.append(((SparkJobConfiguration) job.getJobConfig()).
         getMainClass());
     //TODO(set app file from path)
 

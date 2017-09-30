@@ -17,7 +17,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -85,7 +85,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
    * @param executionId
    * @param appId
    */
-  public void persist(Users user, JobDescription jobDesc, int executionId,
+  public void persist(Users user, Jobs jobDesc, int executionId,
           String appId) {
     SparkJobConfiguration configuration = (SparkJobConfiguration) jobDesc.
             getJobConfig();
@@ -105,7 +105,7 @@ public class JobsHistoryFacade extends AbstractFacade<JobsHistory> {
   }
 
   public void persist(int jobId, String jarFile, int executionId, String appId,
-          JobDescription jobDesc, String inputBlocksInHdfs,
+          Jobs jobDesc, String inputBlocksInHdfs,
           SparkJobConfiguration configuration, String userEmail) {
     JobsHistory exist = em.find(JobsHistory.class, executionId);
     if (exist == null) {

@@ -22,7 +22,6 @@
               </div>  
             </div> 
 
-            <!--<div class="row" resizable r-directions="['bottom']">-->
             <div class="row" style="margin-left: 10px; height: 100%; overflow-y: auto;">
 
               <div style="padding-bottom: 10px">
@@ -31,7 +30,7 @@
                           ng-click="jobUICtrl.jobUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-bolt"
-                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW' && jobUICtrl.job.jobType !== 'FLINK'" > Spark
+                          ng-if="jobUICtrl.job.jobType !== 'FLINK'" > Spark
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show YARN App UI" style="padding-top: 5px;padding-left:3px">
@@ -45,16 +44,14 @@
                   <button style=""
                           ng-click="jobUICtrl.kibanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-files-o"
-                          ng-if="!jobUICtrl.isLivy && jobUICtrl.job.jobType !== 'TENSORFLOW'" > Logs
+                          class="btn btn-primary btn-md fa fa-files-o" > Logs
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.grafanaUI();
                                     $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-bar-chart"
-                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW'"> Metrics
+                          class="btn btn-primary btn-md fa fa-bar-chart"> Metrics
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show Vizops" style="padding-top: 5px;padding-left:3px">

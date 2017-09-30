@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
@@ -58,7 +58,7 @@ public class SparkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(final JobDescription job, final Users user, String sessionId) throws
+  public Execution startJob(final Jobs job, final Users user, String sessionId) throws
       IllegalStateException,
       IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
@@ -104,7 +104,7 @@ public class SparkController {
     return jh;
   }
 
-  public void stopJob(JobDescription job, Users user, String appid) throws
+  public void stopJob(Jobs job, Users user, String appid) throws
       IllegalStateException,
       IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.

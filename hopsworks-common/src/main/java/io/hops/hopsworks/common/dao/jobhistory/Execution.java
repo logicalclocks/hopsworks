@@ -28,13 +28,13 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An Execution is an instance of execution of a specific JobDescription.
+ * An Execution is an instance of execution of a specific Jobs.
  */
 @Entity
 @Table(name = "hopsworks.executions")
@@ -49,6 +49,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findBySubmissionTime",
           query
           = "SELECT e FROM Execution e WHERE e.submissionTime = :submissionTime"),
+  @NamedQuery(name = "Execution.findByJobIdAndSubmissionTime",
+          query
+          = "SELECT e FROM Execution e WHERE e.job = :job AND e.submissionTime = :submissionTime"),
   @NamedQuery(name = "Execution.findByState",
           query
           = "SELECT e FROM Execution e WHERE e.state = :state"),
@@ -141,7 +144,7 @@ public class Execution implements Serializable {
   @JoinColumn(name = "job_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private JobDescription job;
+  private Jobs job;
 
   @JoinColumn(name = "user",
           referencedColumnName = "email")
@@ -162,28 +165,28 @@ public class Execution implements Serializable {
   public Execution() {
   }
 
-  public Execution(JobState state, JobDescription job, Users user, String hdfsUser) {
+  public Execution(JobState state, Jobs job, Users user, String hdfsUser) {
     this(state, job, user, new Date(), hdfsUser);
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           Date submissionTime, String hdfsUser) {
     this(state, job, user, submissionTime, null, null, hdfsUser);
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           String stdoutPath,
           String stderrPath, String hdfsUser) {
     this(state, job, user, new Date(), stdoutPath, stderrPath, hdfsUser);
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           Date submissionTime,
           String stdoutPath, String stderrPath, String hdfsUser) {
     this(state, job, user, submissionTime, stdoutPath, stderrPath, null,hdfsUser);
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
           JobFinalStatus finalStatus, float progress, String hdfsUser) {
@@ -202,7 +205,7 @@ public class Execution implements Serializable {
     this.filesToRemove = t.filesToRemove;
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input, String hdfsUser) {
     this.submissionTime = submissionTime;
@@ -216,7 +219,7 @@ public class Execution implements Serializable {
     this.executionStart = -1;
   }
 
-  public Execution(JobState state, JobDescription job, Users user,
+  public Execution(JobState state, Jobs job, Users user,
           Date submissionTime,
           String stdoutPath, String stderrPath, Collection<JobInputFile> input,
           JobFinalStatus finalStatus, float progress, String hdfsUser) {
@@ -317,11 +320,11 @@ public class Execution implements Serializable {
     this.appId = appId;
   }
 
-  public JobDescription getJob() {
+  public Jobs getJob() {
     return job;
   }
 
-  public void setJob(JobDescription job) {
+  public void setJob(Jobs job) {
     this.job = job;
   }
 

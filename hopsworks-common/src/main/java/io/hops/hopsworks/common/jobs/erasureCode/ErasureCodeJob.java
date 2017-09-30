@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.jobs.erasureCode;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +18,7 @@ public class ErasureCodeJob extends HopsJob {
           getName());
   private ErasureCodeJobConfiguration jobConfig;
 
-  public ErasureCodeJob(JobDescription job, AsynchronousJobExecutor services,
+  public ErasureCodeJob(Jobs job, AsynchronousJobExecutor services,
           Users user, String hadoopDir, YarnJobsMonitor jobsMonitor) {
 
     super(job, services, user, hadoopDir, jobsMonitor);

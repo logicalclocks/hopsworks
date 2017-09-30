@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             ////////////////////////////////////////////////////////////////////
             //Kafka topics for this project
             self.topics = [];
+            self.outputTopics = [];
             self.kafkaSelected = false;
             self.settingsSelected = false;
             self.consumerGroups = [{id: 'group1', "name": "default"}];
@@ -45,13 +46,14 @@ angular.module('hopsWorksApp')
                         typeof self.runConfig.kafka.topics !== "undefined") {
                   self.selectedTopics = self.runConfig.kafka.topics;
                 }
-                self.topics = [];
+                
                 return KafkaService.getProjectAndSharedTopics(self.projectId)
                 .then(
                         function (success) {
+                          self.topics = [];
                           var topics = success.data;
                           for (var i = 0; i < topics.length; i++) {
-                            if (self.selectedTopics.length > 0) {
+                            if (self.selectedTopics!== "undefined" && self.selectedTopics.length > 0) {
                               var found = false;
                               for (var j = 0; j < self.selectedTopics.length; j++) {
                                 if (self.selectedTopics[j]['name'] === topics[i]['name']) {
@@ -335,7 +337,10 @@ angular.module('hopsWorksApp')
             self.createJob = function () {
               if (self.kafkaSelected) {
                 if (self.projectIsGuide) {
-                  self.runConfig.kafka.topics = self.guideKafkaTopics;
+                  //If it is the first time the job is created topics will be empty
+                  if(self.runConfig.kafka.topics.length === 0){
+                    self.runConfig.kafka.topics = self.guideKafkaTopics;
+                  }
                   if (angular.equals('producer', self.tourService
                   .kafkaJobCreationState)) {
                     // Go through again for the consumer. The state is
@@ -569,31 +574,34 @@ angular.module('hopsWorksApp')
               } else if (angular.equals('consumer', jobState)) {
                 self.runConfig.args = "consumer";
               } else {
-                self.runConfig.args = "Internal error, something went wrong. Select manually!"
+                self.runConfig.args = "Internal error, something went wrong. Select manually!";
               }
             };
 
             self.guideKafkaTopics = [];
 
             self.populateKafkaTopic = function () {
-              self.accordion5.isOpen = true;
-              self.accordion5.visible = true;
+              var tipsEnabled = StorageService.get("hopsworks-showtourtips");
+              if(tipsEnabled){
+                self.accordion5.isOpen = true;
+                self.accordion5.visible = true;
 
-              self.kafkaSelected = true;
-              self.getAllTopics(self.projectId).then(
-                function(success) {
-                  for (var i = 0; i < self.topics.length; i++) {
-                    if (angular.equals(self.tourService.kafkaTopicName + "_"
-                        + self.projectId, self.topics[i]['name'])) {
-                      self.guideKafkaTopics.push(self.topics[i]);
-                      break;
+                self.kafkaSelected = true;
+                self.getAllTopics(self.projectId).then(
+                  function(success) {
+                    for (var i = 0; i < self.topics.length; i++) {
+                      if (angular.equals(self.tourService.kafkaTopicName + "_"
+                          + self.projectId, self.topics[i]['name'])) {
+                        self.guideKafkaTopics.push(self.topics[i]);
+                        break;
+                      }
+
                     }
-
+                  }, function(error) {
+                    console.log(">>> Something bad happened:"+error.data.errorMsg);
                   }
-                }, function(error) {
-                  console.log(">>> Something bad happened:"+error.data.errorMsg);
-                }
-              );
+                );
+              }
             };
 
             /**

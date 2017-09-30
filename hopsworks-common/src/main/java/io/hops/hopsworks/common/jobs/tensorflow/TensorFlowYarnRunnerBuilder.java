@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.jobs.tensorflow;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -24,7 +24,7 @@ import java.util.List;
 public class TensorFlowYarnRunnerBuilder {
 
   //Necessary parameters
-  private final JobDescription jobDescription;
+  private final Jobs job;
   private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled TensorFlow Job";
   private int numOfWorkers;
@@ -41,9 +41,9 @@ public class TensorFlowYarnRunnerBuilder {
 
   private List<LocalResourceDTO> extraFiles = new ArrayList<>();
 
-  public TensorFlowYarnRunnerBuilder(JobDescription jobDescription) {
-    this.jobDescription = jobDescription;
-    TensorFlowJobConfiguration jobConfig = (TensorFlowJobConfiguration) jobDescription.getJobConfig();
+  public TensorFlowYarnRunnerBuilder(Jobs job) {
+    this.job = job;
+    TensorFlowJobConfiguration jobConfig = (TensorFlowJobConfiguration) job.getJobConfig();
 
     if (jobConfig.getAppPath() == null || jobConfig.getAppPath().isEmpty()) {
       throw new IllegalArgumentException(
@@ -61,7 +61,7 @@ public class TensorFlowYarnRunnerBuilder {
 //      throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
 //    }
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
-    JobType jobType = ((TensorFlowJobConfiguration) jobDescription.getJobConfig()).getType();
+    JobType jobType = ((TensorFlowJobConfiguration) job.getJobConfig()).getType();
     builder.setJobType(jobType);
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
@@ -93,11 +93,11 @@ public class TensorFlowYarnRunnerBuilder {
     client.setTensorboard(true);
     client.addEnvironmentVariable(Settings.HADOOP_USER_NAME, jobUser);
     client.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
-        + jobDescription.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
+        + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     client.addEnvironmentVariable(Settings.YARNTF_HOME_DIR,
         "hdfs:///Projects/" + project
         + "/" + Settings.PROJECT_STAGING_DIR + "/" + Settings.YARNTF_STAGING_DIR);
-    String appPath = ((TensorFlowJobConfiguration) jobDescription.getJobConfig()).getAppPath();
+    String appPath = ((TensorFlowJobConfiguration) job.getJobConfig()).getAppPath();
     appPath = appPath.replaceFirst("hdfs:/*Projects",
         "hdfs:///Projects");
     client.setMain(appPath);

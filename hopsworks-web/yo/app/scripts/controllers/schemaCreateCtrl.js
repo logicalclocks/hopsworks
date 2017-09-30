@@ -34,7 +34,7 @@ angular.module('hopsWorksApp')
               demoSchema.name = "myrecord";
               demoSchema.type = "record";
 
-              var jsonStr = JSON.stringify(demoSchema);
+              var jsonStr = JSON.stringify(demoSchema, null, '\t');
               self.content = jsonStr;
               self.version = 1;
             };

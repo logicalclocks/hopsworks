@@ -16,10 +16,12 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.JobInputFile;
 import io.hops.hopsworks.common.dao.jobs.JobOutputFile;
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import java.util.Arrays;
+import java.util.Date;
+import javax.persistence.NonUniqueResultException;
 
 /**
  * Facade for management of persistent Execution objects.
@@ -62,12 +64,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   }
 
   /**
-   * Get all the executions for a given JobDescription.
+   * Get all the executions for a given Jobs.
    * <p/>
    * @param job
    * @return
    */
-  public List<Execution> findForJob(JobDescription job) {
+  public List<Execution> findForJob(Jobs job) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
             Execution.class);
     q.setParameter("job", job);
@@ -97,6 +99,21 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("project", project);
     return q.getResultList();
   }
+  
+  public Execution findByJobIdAndSubmissionTime(Date submissionTime, Jobs job) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobIdAndSubmissionTime", Execution.class);
+    q.setParameter("job", job);
+    q.setParameter("submissionTime", submissionTime);
+    try {
+      return q.getSingleResult();
+    } catch (NonUniqueResultException ex) {
+      // if more than one exc found for the same submissionTime return the first. 
+      // this will ignore other results.
+      return q.getResultList().get(0);
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
 
   /**
    * Get all executions that are not in a final state.
@@ -124,14 +141,14 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return em.find(Execution.class, id);
   }
 
-  public Execution create(JobDescription job, Users user, String stdoutPath,
+  public Execution create(Jobs job, Users user, String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
           JobFinalStatus finalStatus, float progress, String hdfsUser) {
     return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath,
             input, finalStatus, progress, hdfsUser);
   }
 
-  public Execution create(JobDescription job, Users user, JobState state,
+  public Execution create(Jobs job, Users user, JobState state,
           String stdoutPath,
           String stderrPath, Collection<JobInputFile> input,
           JobFinalStatus finalStatus, float progress, String hdfsUser) {

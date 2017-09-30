@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.jobs.yarn;
 
-import io.hops.hopsworks.common.dao.jobs.description.JobDescription;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -61,15 +61,15 @@ public abstract class YarnJob extends HopsJob {
    * @param jobsMonitor
    * @param settings
    * @param sessionId
-   * @throws IllegalArgumentException If the JobDescription does not contain a
-   * YarnJobConfiguration object.
+   * @throws IllegalArgumentException If the Jobs does not contain a
+ YarnJobConfiguration object.
    */
-  public YarnJob(JobDescription job, AsynchronousJobExecutor services,
+  public YarnJob(Jobs job, AsynchronousJobExecutor services,
       Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor, Settings settings, String sessionId) {
     super(job, services, user, hadoopDir, jobsMonitor);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
-          "JobDescription must be a YarnJobConfiguration object. Received class: "
+          "Job must be a YarnJobConfiguration object. Received class: "
           + job.getJobConfig().getClass());
     }
     LOG.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
@@ -90,16 +90,16 @@ public abstract class YarnJob extends HopsJob {
    * @param hadoopDir
    * @param jobsMonitor
    * @param settings
-   * @throws IllegalArgumentException If the JobDescription does not contain a
-   * YarnJobConfiguration object.
+   * @throws IllegalArgumentException If the Jobs does not contain a
+ YarnJobConfiguration object.
    */
-  public YarnJob(JobDescription job, AsynchronousJobExecutor services,
+  public YarnJob(Jobs job, AsynchronousJobExecutor services,
       Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor,
       Settings settings) {
     super(job, services, user, hadoopDir, jobsMonitor);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
-          "JobDescription must be a YarnJobConfiguration object. Received class: "
+          "Job must be a YarnJobConfiguration object. Received class: "
           + job.getJobConfig().getClass());
     }
     LOG.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
@@ -142,7 +142,7 @@ public abstract class YarnJob extends HopsJob {
     try {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster(services.getYarnClientService(),
-          hdfsUser.getUserName(), jobDescription.getProject(), dfso,
+          hdfsUser.getUserName(), jobs.getProject(), dfso,
           user.getUsername());
       execution = services.getExecutionFacade().updateFilesToRemove(execution, runner.getFilesToRemove());
       execution = services.getExecutionFacade().updateAppId(execution, monitor.getApplicationId().toString());
@@ -170,15 +170,15 @@ public abstract class YarnJob extends HopsJob {
   protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
     //Check if this job is using Kakfa, and include certificate
     //in local resources
-    serviceProps = new ServiceProperties(jobDescription.getProject().getId(), jobDescription.getProject().getName(),
-        services.getSettings().getRestEndpoint(), jobDescription.getName(), new ElasticProperties(
+    serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
+        services.getSettings().getRestEndpoint(), jobs.getName(), new ElasticProperties(
         services.getSettings().getElasticRESTEndpoint()));
 
-    if (jobDescription.getProject().getConda()) {
-      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobDescription.getProject().getName())
+    if (jobs.getProject().getConda()) {
+      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject().getName())
           + File.separator + "bin" + File.separator + "python");
     }
-    Collection<ProjectServices> projectServices = jobDescription.getProject().
+    Collection<ProjectServices> projectServices = jobs.getProject().
         getProjectServicesCollection();
     if (projectServices != null && !projectServices.isEmpty()) {
       Iterator<ProjectServices> iter = projectServices.iterator();
@@ -186,19 +186,19 @@ public abstract class YarnJob extends HopsJob {
         ProjectServices projectService = iter.next();
         //If the project is of type KAFKA
         if (projectService.getProjectServicesPK().getService()
-            == ProjectServiceEnum.KAFKA && (jobDescription.getJobType()
-            == JobType.FLINK || jobDescription.getJobType() == JobType.SPARK)
-            && jobDescription.getJobConfig() instanceof YarnJobConfiguration
-            && jobDescription.getJobConfig().getKafka() != null) {
+            == ProjectServiceEnum.KAFKA && (jobs.getJobType()
+            == JobType.FLINK || jobs.getJobType() == JobType.SPARK)
+            && jobs.getJobConfig() instanceof YarnJobConfiguration
+            && jobs.getJobConfig().getKafka() != null) {
           serviceProps.initKafka();
           //Set sessionId to be used by HopsUtil
           serviceProps.getKafka().setSessionId(sessionId);
           //Set Kafka specific properties to serviceProps
           serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaConnectStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().getRestEndpoint());
-          serviceProps.getKafka().setTopics(jobDescription.getJobConfig().getKafka().getTopics());
-          serviceProps.getKafka().setProjectConsumerGroups(jobDescription.getProject().getName(),
-              jobDescription.getJobConfig().getKafka().getConsumergroups());
+          serviceProps.getKafka().setTopics(jobs.getJobConfig().getKafka().getTopics());
+          serviceProps.getKafka().setProjectConsumerGroups(jobs.getProject().getName(),
+              jobs.getJobConfig().getKafka().getConsumergroups());
           return true;
         }
       }
@@ -215,7 +215,7 @@ public abstract class YarnJob extends HopsJob {
     Date date = new Date();
     String dateString = date.toString();
     dateString = dateString.replace(" ", "_").replace(":", "-");
-    stdErrFinalDestination = stdErrFinalDestination + jobDescription.getName() + dateString + "/stderr.log";
+    stdErrFinalDestination = stdErrFinalDestination + jobs.getName() + dateString + "/stderr.log";
     YarnLogUtil.writeLog(udfso, stdErrFinalDestination, message, exception);
     services.getExecutionFacade().updateStdErrPath(execution, stdErrFinalDestination);
   }
