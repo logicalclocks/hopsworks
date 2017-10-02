@@ -17,8 +17,10 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
@@ -28,9 +30,7 @@ import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 @Stateless
 @DependsOn("Settings")
@@ -49,20 +49,6 @@ public class YarnExecutionFinalizer {
   @EJB
   private YarnClientService ycs;
 
-  @Asynchronous
-  public void copyLogsAndFinalize(Execution exec, YarnApplicationState appState) {
-    ApplicationId applicationId = ConverterUtils.toApplicationId(exec.getAppId());
-    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
-        .getConfiguration());
-    YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper,
-        ycs);
-    exec = updateState(JobState.AGGREGATING_LOGS, exec);
-    copyLogs(exec, monitor);
-    monitor.close();
-    finalize(exec, JobState.getJobState(appState));
-
-  }
-
   /**
    * Update the current state of the Execution entity to the given state.
    * <p/>
@@ -71,10 +57,15 @@ public class YarnExecutionFinalizer {
   private Execution updateState(JobState newState, Execution execution) {
     return executionFacade.updateState(execution, newState);
   }
-
-  private void copyLogs(Execution exec, YarnMonitor monitor) {
+  
+  @Asynchronous
+  public Future<Execution> copyLogs(Execution exec) {
     DistributedFileSystemOps udfso = dfs.getDfsOps(exec.getHdfsUser());
-
+    ApplicationId applicationId = ApplicationId.fromString(exec.getAppId());
+    YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
+        .getConfiguration());
+    YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper,
+        ycs);
     try {
       String defaultOutputPath;
       switch (exec.getJob().getJobType()) {
@@ -127,19 +118,20 @@ public class YarnExecutionFinalizer {
       } catch (IOException | InterruptedException | YarnException ex) {
         LOG.severe("error while aggregation logs" + ex.toString());
       }
-      updateExecutionSTDPaths(stdOutFinalDestination, stdErrFinalDestination,
-          exec);
+      Execution execution = updateExecutionSTDPaths(stdOutFinalDestination,
+          stdErrFinalDestination, exec);
+      return new AsyncResult<>(execution);
     } finally {
       dfs.closeDfsClient(udfso);
+      monitor.close();
     }
   }
 
   /**
    * Removes the marker file for streaming jobs if it exists, after a non FINISHED/SUCCEEDED job.
    */
-  private void removeMarkerFile(Execution exec) {
+  private void removeMarkerFile(Execution exec, DistributedFileSystemOps dfso) {
     String marker = Settings.getJobMarkerFile(exec.getJob(), exec.getAppId());
-    DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
       if (dfso.exists(marker)) {
         dfso.rm(new org.apache.hadoop.fs.Path(marker), false);
@@ -147,16 +139,17 @@ public class YarnExecutionFinalizer {
     } catch (IOException ex) {
       LOG.log(Level.WARNING, "Could not remove marker file for job:{0}, with appId:{1}, {2}", new Object[]{
         exec.getJob().getName(), exec.getAppId(), ex.getMessage()});
-    } finally {
-      dfs.closeDfsClient(dfso);
     }
   }
 
+  @Asynchronous
   public void finalize(Execution exec, JobState jobState) {
     long executionStop = System.currentTimeMillis();
     exec = executionFacade.updateExecutionStop(exec, executionStop);
     updateJobHistoryApp(exec.getExecutionDuration(), exec);
     try {
+      // TODO(Antonis) In the future this call should be async as well
+      // Network traffic in a transaction is not good
       removeAllNecessary(exec);
     } catch (IOException ex) {
       LOG.log(Level.WARNING,
@@ -199,7 +192,7 @@ public class YarnExecutionFinalizer {
           org.apache.commons.io.FileUtils.deleteQuietly(new File(s));
         }
       }
-      removeMarkerFile(exec);
+      removeMarkerFile(exec, dfso);
     } finally {
       dfs.closeDfsClient(dfso);
     }
