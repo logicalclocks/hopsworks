@@ -150,6 +150,34 @@ public class UserAccountsEmailMessages {
     return message;
   }
 
+  public static String buildDeactivatedMessage() {
+
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n"
+        + "A password reset has been requested on your behalf.\n\n After too many fail at answering the "
+        + "security question, your account has been deactivated\n\n";
+
+    String l3 = "To reactivate you account please contact "
+        + HOPSWORKS_SUPPORT_EMAIL;
+
+    message = l1 + l3;
+    return message;
+  }
+
+  public static String buildWrongAnswerMessage() {
+
+    String message;
+    String l1 = GREETINGS_HEADER + ",\n\n"
+        + "A password reset has been requested on your behalf.\n\n "
+        + "You have provided the wrong answer to the security question. Please, try again.\n\n";
+
+    String l3 = "If you have any questions please contact "
+        + HOPSWORKS_SUPPORT_EMAIL;
+
+    message = l1 + l3;
+    return message;
+  }
+
   public static String buildSecResetMessage() {
 
     String message;

@@ -144,69 +144,66 @@ public class RecoverySelector implements Serializable {
 
     people = um.getUserByEmail(this.uname);
 
-    if (people == null) {
-      MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.USER_NOT_FOUND);
-      return "";
-    }
-
-    // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
-      MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
-      am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.FAILED.name(), "", people);
-
-      return "";
-    }
-
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
-      MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-      am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.FAILED.name(), "", people);
-      return "";
-    }
-
-    if (people.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
-      MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.USER_NOT_FOUND);
-      am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.FAILED.name(), "", people);
-
-      return "";
-    }
-
     try {
 
-      if (people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
+      if (people != null && people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
+
+        // Check the status to see if user is not blocked or deactivate
+        if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
+          MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.FAILED.name(), "", people);
+
+          return "";
+        }
+
+        if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+          MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.FAILED.name(), "", people);
+          return "";
+        }
+
+        if (people.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
+          MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.YUBIKEY);
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.FAILED.name(), "", people);
+
+          return "";
+        }
 
         // generate a randome secret of legth 6
         String random = SecurityUtils.getRandomPassword(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
         email.sendEmail(people.getEmail(), RecipientType.TO,
-                UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
+            UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-                AccountsAuditActions.SUCCESS.name(), "Reset QR code.", people);
+            AccountsAuditActions.SUCCESS.name(), "Reset QR code.", people);
 
         return "validate_code";
       } else {
         MessagesController.addSecurityErrorMessage(
-                AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-        am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-                AccountsAuditActions.FAILED.name(), "", people);
-
+            AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        if (people != null) {
+          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
+              AccountsAuditActions.FAILED.name(), "", people);
+        }
         return "";
       }
     } catch (MessagingException ex) {
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
-              AccountsAuditActions.FAILED.name(), "", people);
+          AccountsAuditActions.FAILED.name(), "", people);
 
     }
 
+    MessagesController.addSecurityErrorMessage(
+        AccountStatusErrorMessages.INTERNAL_ERROR);
     return "";
   }
 

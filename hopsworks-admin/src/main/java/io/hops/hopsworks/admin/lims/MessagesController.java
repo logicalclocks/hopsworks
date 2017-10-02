@@ -50,7 +50,7 @@ public class MessagesController {
   public static void addSecurityErrorMessage(String message) {
     FacesContext context = FacesContext.getCurrentInstance();
     context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR,
-            message, "null"));
+        message, "null"));
 
   }
 

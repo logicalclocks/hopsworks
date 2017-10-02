@@ -5,7 +5,10 @@ public class AccountStatusErrorMessages {
   public final static String INCCORCT_CREDENTIALS
           = "The email or password is incorrect.";
 
+  public final static String INTERNAL_ERROR = "Internal servor error.";
   public final static String USER_NOT_FOUND = "No account found.";
+
+  public final static String YUBIKEY = "You are using a Yubikey Not a QRCode";
 
   public final static String BLOCKED_ACCOUNT = "This account has been blocked.";
 
