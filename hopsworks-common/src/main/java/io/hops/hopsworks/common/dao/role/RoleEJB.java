@@ -1,5 +1,10 @@
 package io.hops.hopsworks.common.dao.role;
 
+import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.WebCommunication;
+import java.util.Arrays;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -7,10 +12,17 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.persistence.NonUniqueResultException;
+import javax.ws.rs.core.Response;
 
 @Stateless
 public class RoleEJB {
+
+  @EJB
+  private WebCommunication web;
+  @EJB
+  private HostEJB hostEJB;
 
   final static Logger logger = Logger.getLogger(RoleEJB.class.getName());
 
@@ -18,6 +30,23 @@ public class RoleEJB {
   private EntityManager em;
 
   public RoleEJB() {
+  }
+
+  public List<Role> findAll() {
+    TypedQuery<Role> query = em.createNamedQuery("Role.findAll", Role.class);
+    return query.getResultList();
+  }
+
+  public List<Role> findServiceRoles(String serviceName) {
+    TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Service", Role.class).
+        setParameter("service", serviceName);
+    return query.getResultList();
+  }
+
+  public List<Role> findRoles(String service, String role) {
+    TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Service-Role", Role.class)
+        .setParameter("service", service).setParameter("role", role);
+    return query.getResultList();
   }
 
   public List<String> findClusters() {
@@ -36,6 +65,13 @@ public class RoleEJB {
   public List<String> findServices() {
     TypedQuery<String> query = em.createNamedQuery("Role.findServices",
             String.class);
+    return query.getResultList();
+  }
+
+  public List<Role> findRoleOnHost(String hostId, String service, String role) {
+
+    TypedQuery<Role> query = em.createNamedQuery("Role.findOnHost", Role.class)
+        .setParameter("hostId", hostId).setParameter("service", service).setParameter("role", role);
     return query.getResultList();
   }
 
@@ -193,6 +229,65 @@ public class RoleEJB {
   public void deleteRolesByHostId(String hostId) {
     em.createNamedQuery("Role.DeleteBy-HostId").setParameter("hostId", hostId).
             executeUpdate();
+  }
+
+  public String roleOp(String service, String roleName, Action action) throws AppException {
+    return webOp(action, findRoles(service, roleName));
+  }
+
+  public String serviceOp(String service, Action action) throws AppException {
+    return webOp(action, findServiceRoles(service));
+  }
+
+  public String roleOnHostOp(String service, String roleName, String hostId,
+          Action action) throws AppException {
+    return webOp(action, findRoleOnHost(hostId, service, roleName));
+  }
+
+  private String webOp(Action operation, List<Role> roles) throws AppException {
+    if (operation == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "The action is not valid, valid action are " + Arrays.toString(
+                      Action.values()));
+    }
+    if (roles == null || roles.isEmpty()) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "role not found");
+    }
+    String result = "";
+    boolean success = false;
+    int exception = Response.Status.BAD_REQUEST.getStatusCode();
+    for (Role role : roles) {
+      Host h = findHostById(role.getHostId());
+      if (h != null) {
+        String ip = h.getPublicOrPrivateIp();
+        String agentPassword = h.getAgentPassword();
+        try {
+          result += role.toString() + " " + web.roleOp(operation.value(), ip, agentPassword,
+              role.getCluster(), role.getService(), role.getRole());
+          success = true;
+        } catch (AppException ex) {
+          if (roles.size() == 1) {
+            throw ex;
+          } else {
+            exception = ex.getStatus();
+            result += role.toString() + " " + ex.getStatus() + " " + ex.getMessage();
+          }
+        }
+      } else {
+        result += role.toString() + " " + "host not found: " + role.getHostId();
+      }
+      result += "\n";
+    }
+    if (!success) {
+      throw new AppException(exception, result);
+    }
+    return result;
+  }
+
+  private Host findHostById(String hostId) {
+    Host host = hostEJB.findByHostId(hostId);
+    return host;
   }
 
 }
