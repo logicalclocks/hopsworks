@@ -284,10 +284,9 @@ public class JupyterConfig {
           .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
           .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
-      
-      
+
       String projectPath = "/Projects/" + this.project.getName();
- 
+
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
@@ -299,7 +298,7 @@ public class JupyterConfig {
                   "num_executors", Integer.toString(js.getNumExecutors()),
                   "executor_cores", Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(js.getMode().compareToIgnoreCase("sparkDynamic")== 0),
+                  "dynamic_executors", Boolean.toString(js.getMode().compareToIgnoreCase("sparkDynamic") == 0),
                   "min_executors", Integer.toString(js.getDynamicMinExecutors()),
                   "initial_executors", Integer.toString(js.getDynamicInitialExecutors()),
                   "max_executors", Integer.toString(js.getDynamicMaxExecutors()),
@@ -314,15 +313,17 @@ public class JupyterConfig {
                       startsWith("tensorflow")),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
+                  "mode", js.getMode(),
                   "nn_endpoint", this.nameNodeEndpoint,
                   "spark_user", this.settings.getSparkUser(),
                   "java_home", this.settings.getJavaHome(),
                   "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
+                  "hadoop_version", this.settings.getHadoopVersion(),
                   "pyspark_bin", this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python",
                   "anaconda_dir", this.settings.getAnacondaDir(),
                   "cuda_dir", this.settings.getCudaDir(),
-//                  "warehouse_dir", projectPath + "/Resources/spark-warehouse",
-//                 "spark.sql.warehouse.dir": "%%warehouse_dir%%",
+                  //                  "warehouse_dir", projectPath + "/Resources/spark-warehouse",
+                  //                 "spark.sql.warehouse.dir": "%%warehouse_dir%%",
                   "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
                   "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
                   "metrics_path", settings.getSparkMetricsPath(),

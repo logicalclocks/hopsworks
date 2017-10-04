@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.exception.AppException;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -94,51 +95,50 @@ public class WebCommunication {
    * @return
    */
   public String roleOp(String operation, String hostAddress,
-          String agentPassword, String cluster, String service, String role) {
+      String agentPassword, String cluster, String service, String role) throws AppException {
     String url = createUrl(operation, hostAddress, cluster, service, role);
     return fetchContent(url, agentPassword);
   }
 
   @Asynchronous
   public Future<String> asyncRoleOp(String operation, String hostAddress,
-          String agentPassword, String cluster, String service, String role) {
+      String agentPassword, String cluster, String service, String role) throws AppException {
     String url = createUrl(operation, hostAddress, cluster, service, role);
     return new AsyncResult<String>(fetchContent(url, agentPassword));
   }
   
   public String getConfig(String hostAddress, String agentPassword,
-          String cluster, String service, String role) {
+      String cluster, String service, String role) throws AppException {
     String url = createUrl("config", hostAddress, cluster, service, role);
     return fetchContent(url, agentPassword);
   }
 
   public String getRoleLog(String hostAddress, String agentPassword,
-          String cluster, String service, String role, int lines) {
+      String cluster, String service, String role, int lines) throws AppException {
     String url = createUrl("log", hostAddress, cluster, service, role, String.
             valueOf(lines));
     return fetchLog(url, agentPassword);
   }
 
   public String getServiceLog(String hostAddress, String agentPassword,
-          String cluster, String service, int lines) {
+      String cluster, String service, int lines) throws AppException {
     String url = createUrl("log", hostAddress, cluster, service, String.valueOf(
             lines));
     return fetchLog(url, agentPassword);
   }
 
-  public String getAgentLog(String hostAddress, String agentPassword, int lines) {
+  public String getAgentLog(String hostAddress, String agentPassword, int lines) throws AppException {
     String url = createUrl("agentlog", hostAddress, String.valueOf(lines));
     return fetchLog(url, agentPassword);
   }
 
   public List<NodesTableItem> getNdbinfoNodesTable(String hostAddress,
-          String agentPassword) {
+      String agentPassword) throws AppException {
     List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
 
     String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
     String jsonString = fetchContent(url, agentPassword);
-    InputStream stream = new ByteArrayInputStream(jsonString.getBytes(
-            StandardCharsets.UTF_8));
+    InputStream stream = new ByteArrayInputStream(jsonString.getBytes(          StandardCharsets.UTF_8));
     try {
       JsonArray json = Json.createReader(stream).readArray();
       if (json.get(0).equals("Error")) {
@@ -225,7 +225,7 @@ public class WebCommunication {
     return url;
   }
 
-  private String fetchContent(String url, String agentPassword) {
+  private String fetchContent(String url, String agentPassword) throws AppException {
     String content = NOT_AVAILABLE;
     try {
       Response response = getWebResource(url, agentPassword);
@@ -233,28 +233,30 @@ public class WebCommunication {
       Family res = Response.Status.Family.familyOf(code);
       if (res == Response.Status.Family.SUCCESSFUL) {
         content = response.readEntity(String.class);
+      } else {
+        throw new AppException(response.getStatus(), response.getStatusInfo().getReasonPhrase());
       }
-    } catch (Exception e) {
+    } catch (KeyManagementException | NoSuchAlgorithmException e) {
       logger.log(Level.SEVERE, null, e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getCause().getMessage());
     }
     return content;
   }
 
-  private String fetchLog(String url, String agentPassword) {
+  private String fetchLog(String url, String agentPassword) throws AppException {
     String log = fetchContent(url, agentPassword);
 //        log = log.replaceAll("\n", "<br>");
     log = FormatUtils.stdoutToHtml(log);
     return log;
   }
 
-  private Response getWebResource(String url, String agentPassword) throws
-          Exception {
+  private Response getWebResource(String url, String agentPassword) throws NoSuchAlgorithmException,
+      KeyManagementException {
     return getWebResource(url, agentPassword, null);
   }
 
-  private Response getWebResource(String url, String agentPassword,
-          Map<String, String> args) throws
-          Exception {
+  private Response getWebResource(String url, String agentPassword, Map<String, String> args) throws
+      NoSuchAlgorithmException, KeyManagementException {
 
     Client client = getClient();
     WebTarget webResource = client.target(url);
@@ -278,7 +280,7 @@ public class WebCommunication {
     return response;
   }
   
-  private Client getClient() throws Exception {
+  private Client getClient() throws NoSuchAlgorithmException, KeyManagementException {
     Client client = availableClientPool.poll();
     if (null == client) {
       client = createClient();

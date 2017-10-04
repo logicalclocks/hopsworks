@@ -142,15 +142,6 @@
                       <input type="number"  ng-model="jupyterCtrl.val.numTfGpus" min="1" class="form-control">
                     </div>
                   </div>
-                  <div class="row clusterparams" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
-                    <div class="text-right col-md-6">Number of GPUs<i class="fa fa-info-circle" 
-                                                                      uib-tooltip="The number of GPUs used for training/inference." 
-                                                                      style="margin-left: 10px"></i>
-                    </div>
-                    <div class="col-md-2 jupyter-left">
-                      <input type="number"  ng-model="jupyterCtrl.val.numTfGpus" class="form-control">
-                    </div>
-                  </div>
                 </div>
 
                 <div class="row"  ng-if="jupyterCtrl.val.mode === 'tensorflow' || jupyterCtrl.val.mode === 'sparkStatic'">

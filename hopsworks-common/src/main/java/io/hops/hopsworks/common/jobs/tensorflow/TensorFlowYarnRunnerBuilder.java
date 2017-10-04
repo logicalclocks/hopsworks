@@ -54,7 +54,7 @@ public class TensorFlowYarnRunnerBuilder {
   public YarnRunner getYarnRunner(String project, String tfUser,
       String jobUser, final String hadoopDir,
       final DistributedFileSystemOps dfsClient, YarnClient yarnClient,
-      AsynchronousJobExecutor services) throws IOException, Exception {
+      AsynchronousJobExecutor services, Settings settings) throws IOException, Exception {
 
 //    if (!serviceProps.isAnacondaEnabled()) {
 //      //Throw error in Hopswors UI to notify user to enable Anaconda
@@ -80,7 +80,7 @@ public class TensorFlowYarnRunnerBuilder {
             getVisibility(), dto.getType(), dto.getPattern()));
       }
     }
-    
+
     client.setAmMemory(amMemory);
     client.setAmVCores(amVCores);
     client.setMemory(workerMemory);
@@ -92,6 +92,8 @@ public class TensorFlowYarnRunnerBuilder {
     client.setNumWorkers(numOfWorkers);
     client.setTensorboard(true);
     client.addEnvironmentVariable(Settings.HADOOP_USER_NAME, jobUser);
+    client.addEnvironmentVariable("HADOOP_HOME", settings.getHadoopSymbolicLinkDir());
+    client.addEnvironmentVariable("HADOOP_VERSION", settings.getHadoopVersion());
     client.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + ","
         + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
     client.addEnvironmentVariable(Settings.YARNTF_HOME_DIR,

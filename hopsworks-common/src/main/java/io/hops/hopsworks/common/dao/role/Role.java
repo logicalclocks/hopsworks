@@ -16,6 +16,8 @@ import io.hops.hopsworks.common.dao.host.Status;
 @Entity
 @Table(name = "hopsworks.roles")
 @NamedQueries({
+  @NamedQuery(name = "Role.findAll",
+      query = "SELECT r from Role r"),
   @NamedQuery(name = "Role.findClusters",
           query = "SELECT DISTINCT r.cluster FROM Role r"),
   @NamedQuery(name = "Role.findServicesBy-Cluster",
@@ -24,14 +26,22 @@ import io.hops.hopsworks.common.dao.host.Status;
   @NamedQuery(name = "Role.find",
           query
           = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service "
-          + "AND r.role = :role AND r.hostId = :hostId"),
+      + "AND r.role = :role AND r.hostId = :hostId"),
+  @NamedQuery(name = "Role.findOnHost",
+      query
+      = "SELECT r FROM Role r WHERE r.service = :service "
+      + "AND r.role = :role AND r.hostId = :hostId"),
   @NamedQuery(name = "Role.findBy-HostId",
           query
           = "SELECT r FROM Role r WHERE r.hostId = :hostId ORDER BY r.cluster, r.service, r.role"),
   @NamedQuery(name = "Role.findBy-Cluster-Service-Role",
           query
           = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service "
-          + "AND r.role = :role"),
+      + "AND r.role = :role"),
+  @NamedQuery(name = "Role.findBy-Service",
+      query = "SELECT r FROM Role r WHERE r.service = :service "),
+  @NamedQuery(name = "Role.findBy-Service-Role",
+      query = "SELECT r FROM Role r WHERE r.service = :service AND r.role = :role"),
   @NamedQuery(name = "Role.findBy-Role",
           query
           = "SELECT r FROM Role r WHERE r.role = :role"),

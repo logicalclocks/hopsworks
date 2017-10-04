@@ -57,7 +57,8 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.SecurityRestApi.class);
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
-    
+    register(io.hops.hopsworks.api.cluster.Monitor.class);
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     
     //swagger

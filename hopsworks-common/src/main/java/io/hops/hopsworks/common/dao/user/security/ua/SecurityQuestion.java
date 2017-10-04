@@ -1,5 +1,10 @@
 package io.hops.hopsworks.common.dao.user.security.ua;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 public enum SecurityQuestion {
 
   MAIDEN_NAME("Mother's maiden name?"),
@@ -30,5 +35,13 @@ public enum SecurityQuestion {
   @Override
   public String toString() {
     return value;
+  }
+
+  private static final List<SecurityQuestion> VALUES = Collections.unmodifiableList(Arrays.asList(values()));
+  private static final int SIZE = VALUES.size();
+  private static final Random RANDOM = new Random();
+
+  public static SecurityQuestion randomQuestion() {
+    return VALUES.get(RANDOM.nextInt(SIZE));
   }
 }

@@ -1,96 +1,100 @@
 {
-"kernel_python_credentials" : {
-"username": "",
+  "kernel_python_credentials": {
+    "username": "",
     "password": "",
     "url": "http://%%livy_ip%%:8998"
-    },
-    "kernel_scala_credentials" : {
+  },
+  "kernel_scala_credentials": {
     "username": "",
-        "password": "",
-        "url": "http://%%livy_ip%%:8998"
-        },
-    "logging_config": {
+    "password": "",
+    "url": "http://%%livy_ip%%:8998"
+  },
+  "logging_config": {
     "version": 1,
-        "formatters": {
-        "magicsFormatter": {
+    "formatters": {
+      "magicsFormatter": {
         "format": "%(asctime)s\t%(levelname)s\t%(message)s",
-            "datefmt": ""
-            }
-        },
-        "handlers": {
-        "magicsHandler": {
+        "datefmt": ""
+      }
+    },
+    "handlers": {
+      "magicsHandler": {
         "class": "hdijupyterutils.filehandler.MagicsFileHandler",
-            "formatter": "magicsFormatter",
-            "home_path": "%%jupyter_home%%/.sparkmagic"
-            }
-        },
-        "loggers": {
-        "magicsLogger": {
+        "formatter": "magicsFormatter",
+        "home_path": "%%jupyter_home%%/.sparkmagic"
+      }
+    },
+    "loggers": {
+      "magicsLogger": {
         "handlers": ["magicsHandler"],
-            "level": "DEBUG",
-            "propagate": 0
-            }
-        }
-    },
-    "wait_for_idle_timeout_seconds": 15,
-    "status_sleep_seconds": 2,
-    "statement_sleep_seconds": 2,
-    "livy_session_startup_timeout_seconds": 120,
-    "fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
-    "ignore_ssl_errors": false,
-    "session_configs": {
-    "driverCores": %%driver_cores%%,
-        "driverMemory": "%%driver_memory%%",
-        "numExecutors": %%num_executors%%,
-        "executorCores": %%executor_cores%%,
-        "executorMemory": "%%executor_memory%%",
-        "proxyUser": "%%hdfs_user%%",
-        "name":"remotesparkmagics-jupyter",
-        "queue": "%%yarn_queue%%",
-        "archives": [%%archives%%],
-        "jars": [%%jars%%],
-        "pyFiles": [%%pyFiles%%],
-        "conf" : {
-       "spark.executorEnv.PATH" : "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "spark.yarn.appMasterEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
-            "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON" : "%%pyspark_bin%%",
-            "spark.yarn.appMasterEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
-            "spark.yarn.appMasterEnv.LD_LIBRARY_PATH" : "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
-            "spark.yarn.appMasterEnv.CUDA_VISIBLE_DEVICES" : "",
-            "spark.yarn.appMasterEnv.HDFS_USER" : "%%hdfs_user%%",
-            "spark.yarn.appMasterEnv.HADOOP_PROXY_USER" : "%%hdfs_user%%",
-            "spark.yarn.appMasterEnv.HADOOP_HOME" : "%%hadoop_home%%",
-            "spark.yarn.appMasterEnv.LIBHDFS_OPTS" : "-Xmx96m",
-            "spark.yarn.dist.files": "%%spark_yarn_files%%",
-            "spark.yarn.stagingDir": "hdfs:///Projects/%%project%%/Resources",
-            "spark.driver.extraLibraryPath" : "%%cuda_dir%%/lib64",
-            "spark.executorEnv.HDFS_USER" : "%%hdfs_user%%",
-            "spark.executorEnv.HADOOP_PROXY_USER" : "%%hdfs_user%%",
-            "spark.executorEnv.HADOOP_HOME" : "%%hadoop_home%%",
-            "spark.executorEnv.LIBHDFS_OPTS" : "-Xmx96m",
-            "spark.executorEnv.PYSPARK_PYTHON" : "%%pyspark_bin%%",
-            "spark.executorEnv.PYSPARK3_PYTHON" : "%%pyspark_bin%%",
-            "spark.executorEnv.LD_LIBRARY_PATH" : "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
-            "spark.pyspark.python" : "%%pyspark_bin%%",
-            "spark.shuffle.service.enabled" : "true",
-            "spark.submit.deployMode" : "cluster",
-            "spark.tensorflow.application" : "%%tensorflow%%",
-            "spark.tensorflow.num.ps" : "%%num_ps%%",
-            "spark.executor.gpus" : "%%num_gpus%%",
-            "spark.dynamicAllocation.enabled" : "%%dynamic_executors%%",
-            "spark.dynamicAllocation.initialExecutors" : "%%initial_executors%%",
-            "spark.dynamicAllocation.minExecutors" : "%%min_executors%%",
-            "spark.dynamicAllocation.maxExecutors" : "%%max_executors%%",
-            "spark.files" : "%%spark_files%%",
-            "spark.metrics.conf": "%%metrics_path%%"
-        }
-    },
-    "use_auto_viz": true,
-    "max_results_sql": 2500,
-    "pyspark_dataframe_encoding": "utf-8",
-    "heartbeat_refresh_seconds": 30,
-    "livy_server_heartbeat_timeout_seconds": 0,
-    "heartbeat_retry_seconds": 10,
-    "server_extension_default_kernel_name": "pysparkkernel"
+        "level": "DEBUG",
+        "propagate": 0
+      }
     }
+  },
+  "wait_for_idle_timeout_seconds": 15,
+  "status_sleep_seconds": 2,
+  "statement_sleep_seconds": 2,
+  "livy_session_startup_timeout_seconds": 120,
+  "fatal_error_suggestion": "The code failed because of a fatal error:\n\t{}.\n\nSome things to try:\na) Make sure Spark has enough available resources for Jupyter to create a Spark context.\nb) Contact your Jupyter administrator to make sure the Spark magics library is configured correctly.\nc) Restart the kernel.",
+  "ignore_ssl_errors": false,
+  "session_configs": {
+    "driverCores": %%driver_cores%%,
+    "driverMemory": "%%driver_memory%%",
+    "numExecutors": %%num_executors%%,
+    "executorCores": %%executor_cores%%,
+    "executorMemory": "%%executor_memory%%",
+    "proxyUser": "%%hdfs_user%%",
+    "name": "remotesparkmagics-jupyter-%%mode%%",
+    "queue": "%%yarn_queue%%",
+    "archives": [%%archives%%],
+    "jars": [%%jars%%],
+    "pyFiles": [%%pyFiles%%],
+    "conf": {
+      "spark.executorEnv.PATH": "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%pyspark_bin%%",
+      "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON": "%%pyspark_bin%%",
+      "spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%pyspark_bin%%",
+      "spark.yarn.appMasterEnv.LD_LIBRARY_PATH": "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
+      "spark.yarn.appMasterEnv.CUDA_VISIBLE_DEVICES": "",
+      "spark.yarn.appMasterEnv.HDFS_USER": "%%hdfs_user%%",
+      "spark.yarn.appMasterEnv.HADOOP_PROXY_USER": "%%hdfs_user%%",
+      "spark.yarn.appMasterEnv.HADOOP_HOME": "%%hadoop_home%%",
+      "spark.yarn.appMasterEnv.LIBHDFS_OPTS": "-Xmx96m",
+      "spark.yarn.appMasterEnv.HADOOP_HDFS_HOME": "%%hadoop_home%%",
+      "spark.yarn.appMasterEnv.HADOOP_VERSION": "%%hadoop_version%%",
+      "spark.yarn.dist.files": "%%spark_yarn_files%%",
+      "spark.yarn.stagingDir": "hdfs:///Projects/%%project%%/Resources",
+      "spark.driver.extraLibraryPath": "%%cuda_dir%%/lib64",
+      "spark.executorEnv.HDFS_USER": "%%hdfs_user%%",
+      "spark.executorEnv.HADOOP_PROXY_USER": "%%hdfs_user%%",
+      "spark.executorEnv.HADOOP_HOME": "%%hadoop_home%%",
+      "spark.executorEnv.LIBHDFS_OPTS": "-Xmx96m",
+      "spark.executorEnv.PYSPARK_PYTHON": "%%pyspark_bin%%",
+      "spark.executorEnv.PYSPARK3_PYTHON": "%%pyspark_bin%%",
+      "spark.executorEnv.LD_LIBRARY_PATH": "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
+      "spark.executorEnv.HADOOP_HDFS_HOME": "%%hadoop_home%%",
+      "spark.executorEnv.HADOOP_VERSION": "%%hadoop_version%%",
+      "spark.pyspark.python": "%%pyspark_bin%%",
+      "spark.shuffle.service.enabled": "true",
+      "spark.submit.deployMode": "cluster",
+      "spark.tensorflow.application": "%%tensorflow%%",
+      "spark.tensorflow.num.ps": "%%num_ps%%",
+      "spark.executor.gpus": "%%num_gpus%%",
+      "spark.dynamicAllocation.enabled": "%%dynamic_executors%%",
+      "spark.dynamicAllocation.initialExecutors": "%%initial_executors%%",
+      "spark.dynamicAllocation.minExecutors": "%%min_executors%%",
+      "spark.dynamicAllocation.maxExecutors": "%%max_executors%%",
+      "spark.files": "%%spark_files%%",
+      "spark.metrics.conf": "%%metrics_path%%"
+    }
+  },
+  "use_auto_viz": true,
+  "max_results_sql": 2500,
+  "pyspark_dataframe_encoding": "utf-8",
+  "heartbeat_refresh_seconds": 30,
+  "livy_server_heartbeat_timeout_seconds": 0,
+  "heartbeat_retry_seconds": 10,
+  "server_extension_default_kernel_name": "pysparkkernel"
+}
 
