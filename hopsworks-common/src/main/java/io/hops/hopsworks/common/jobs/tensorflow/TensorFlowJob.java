@@ -76,7 +76,7 @@ public class TensorFlowJob extends YarnJob {
     try {
       runner = runnerbuilder.getYarnRunner(jobs.getProject().getName(), tfUser, jobUser, hadoopDir,
           services.getFileOperations(hdfsUser.getUserName()), yarnClient,
-          services);
+          services, settings);
 
     } catch (Exception e) {
       LOG.log(Level.WARNING,

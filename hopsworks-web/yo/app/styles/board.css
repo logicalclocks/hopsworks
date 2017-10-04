@@ -260,3 +260,13 @@ div.story h3, div.task h3 {
     right: 1em;
   }
 }
+
+
+.select2-container {
+  .ui-select-match > span {
+    width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+  }
+}

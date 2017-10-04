@@ -517,6 +517,7 @@ public class ZeppelinConfig {
               "spark.yarn.stagingDir", hdfsResourceDir,
               "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
               "livy.spark.yarn.stagingDir", hdfsResourceDir,
+              "hadoop_version", settings.getHadoopVersion(),
               "zeppelin.python_conda_path", zeppelinPythonPath,
               "spark.yarn.dist.files", sparkDistFiles.toString()
           );

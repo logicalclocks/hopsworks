@@ -173,7 +173,7 @@ public class JupyterService {
     String loggedinemail = sc.getUserPrincipal().getName();
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId,
         loggedinemail);
-    if(js.getProject()==null){
+    if (js.getProject() == null) {
       js.setProject(project);
     }
     if (settings.isPythonKernelEnabled()) {
@@ -269,6 +269,11 @@ public class JupyterService {
 
         dto = jupyterConfigFactory.startServerAsJupyterUser(project,
             configSecret, hdfsUser, jupyterSettings);
+
+        if (dto == null) {
+          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Incomplete request!");
+        }
 
         HopsUtils.materializeCertificatesForUser(project.getName(),
             project_user[1], settings.getHopsworksTmpCertDir(), settings

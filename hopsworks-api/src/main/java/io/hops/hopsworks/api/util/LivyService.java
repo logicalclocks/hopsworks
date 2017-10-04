@@ -79,10 +79,10 @@ public class LivyService {
       for (LivyMsg.Session s : sessionList.getSessions()) {
         if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
           appStates = appStateBean.findByAppId(s.getAppId());
-          if (!jupyter && (appStates == null || appStates.getAppname().equals(JUPYTER_SESSION_NAME))) {
+          if (!jupyter && (appStates == null || appStates.getAppname().startsWith(JUPYTER_SESSION_NAME))) {
             continue;
           }
-          if (jupyter && (appStates == null || !appStates.getAppname().equals(JUPYTER_SESSION_NAME))) {
+          if (jupyter && (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME))) {
             continue;
           }
           s.setOwner(member.getUser().getEmail());
@@ -128,10 +128,10 @@ public class LivyService {
 //      LOGGER.log(Level.INFO, "Found Livy session: {0}", s.getAppId());
       if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
         appStates = appStateBean.findByAppId(s.getAppId());
-        if (!jupyter && (appStates == null || appStates.getAppname().equals(JUPYTER_SESSION_NAME))) {
+        if (!jupyter && (appStates == null || appStates.getAppname().startsWith(JUPYTER_SESSION_NAME))) {
           continue;
         }
-        if (jupyter && (appStates == null || !appStates.getAppname().equals(JUPYTER_SESSION_NAME))) {
+        if (jupyter && (appStates == null || !appStates.getAppname().startsWith(JUPYTER_SESSION_NAME))) {
           continue;
         }
         s.setOwner(user.getEmail());

@@ -322,6 +322,7 @@ angular.module('hopsWorksApp')
 
             self.createExampleProject = function (tourName) {
               $scope.creating[tourName] = true;
+              self.showTourTips = true;
               ProjectService.example({type: tourName}).$promise.then(
                       function (success) {
                         $scope.creating[tourName] = false;
