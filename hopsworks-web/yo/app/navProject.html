@@ -50,11 +50,14 @@
       <li ng-click="projectCtrl.goToKafka()"
           ng-show="projectCtrl.showKafka()">
         <a>
-          Kafka<img class="pull-right" style="margin-right:15px" height="25"
-                    src="images/kafka_logo.png" id="kafkaTab"/>
+          Kafka<img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
         </a>
       </li>
-
+      <li ng-click="projectCtrl.goToService('DELA')" ng-show="projectCtrl.showDela()">
+          <a>
+             Dela<img class="pull-right" style="margin-right:15px" height="25" src="images/dela-green.png">
+          </a>
+      </li>
 
       <li ng-click="projectCtrl.goToTensorflow()" ng-show="projectCtrl.showTensorflow()">
         <a>
@@ -63,7 +66,6 @@
           <img ng-show="projectCtrl.activeService === 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200.png"/>
         </a>
       </li>
-
 
       <li ng-click="projectCtrl.goToWorklows()" style="margin-top:40px;"  ng-show="projectCtrl.showWorkflows()">
         <a>

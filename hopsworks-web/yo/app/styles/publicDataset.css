@@ -1,0 +1,214 @@
+.publicdataset-nav {
+  background: #f7f7f7;
+  float: left;
+  margin-right: 40px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-top: 10px;
+  padding-bottom: 25px;
+  width: 256px;
+  min-height: 90%;
+  max-height: 90%;
+  position: fixed;
+}
+
+.publicdataset-nav > ul {
+  list-style: none;
+  margin-left: -25px;
+}
+
+.publicdataset-nav .publicdataset-heading {
+  font-size: 16px;
+  padding-left: 0px;
+  font-weight: bold;
+}
+
+.publicdataset-nav > ul .dropdown > a {
+  color: #262626;
+  text-decoration: none;
+}
+
+.publicdataset-nav .dropdown-menu {
+  position: relative;
+  width: 100%;
+  border-radius: 0;
+  border: none;
+  background-color: #f7f7f7;
+  box-shadow: none;
+}
+
+.publicdataset-nav > ul > li {
+  padding-left: 10px;
+}
+
+.publicdataset-nav-item {
+  cursor: pointer;
+}
+
+.publicdataset-nav-selectedItem {
+  font-weight: bold;
+}
+
+.publicdataset-nav .dropdown-menu > form > li {
+  padding-left: 15px !important;
+}
+.publicdataset-nav .dropdown-menu > form > li > span > a {
+  cursor: pointer;
+  color: #262626;
+  text-decoration: none;
+}
+
+.publicdataset-nav .dropdown-menu > form > li > span > a:hover {
+  cursor: pointer;
+  color: #039be5;
+  text-decoration: none;
+}
+
+.publicdataset-nav-text {
+  display: inline-block;
+  max-width: calc(100% - 10px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  padding-top: 8px;
+}
+
+.publicdataset-nav-item::before {
+  content: "\f0da";
+  font-family: FontAwesome;
+  color: #bdbdbd;
+  padding-right: 0.5em;
+}
+
+.open > a.publicdataset-nav-item::before {
+  content: "\f0d7";
+  font-family: FontAwesome;
+  color: #bdbdbd;
+  padding-right: 0.35em;
+}
+
+.publicdataset-view {
+  margin-left: 295px;
+  position: relative;
+}
+
+.publicdataset-view-heading {
+  float: left;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.publicdataset-view-rating {
+  float: right;
+  padding-top: 12px;
+  max-width: 30%;
+}
+
+.publicdataset-view-rating > div > span {
+  float: right;
+}
+
+.publicdataset-view-rating > div > a {
+  float: right;
+  cursor: pointer;
+}
+
+.publicdataset-view-rating > div > a:hover {
+  float: right;
+  text-decoration: none;
+  color: rgb(3, 155, 229);
+}
+
+.publicdataset-view-content {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.ds-panel-heading > a {
+  cursor: pointer;
+  color: rgb(38, 38, 38);
+}
+
+.ds-panel-heading > a:hover {
+  cursor: pointer;
+  color: rgb(3, 155, 229);
+}
+
+.ds-panel-footer {
+  padding: 0px 15px;
+  background-color: #fff;
+  border-top: 0px solid #ddd; 
+}
+
+.ds-health > span {
+  margin: 0px 10px;
+}
+
+.publicdataset-comment-img {
+  padding-right: 10px;
+}
+
+.publicdataset-comment-msg {
+  padding-left: 40px;
+  margin-top: 10px;
+}
+
+.publicdataset-comment > textarea{
+  resize: vertical;
+  width: 95%;
+}
+
+.publicdataset-comment > button{
+  margin-top: 10px;
+}
+
+.publicdataset-issue {
+  cursor: pointer;
+}
+
+.publicdataset-issue:hover {
+  cursor: pointer;
+  text-decoration: none;
+  color: #337ab7 !important;
+}
+
+.highlighted {
+  font-weight: normal;
+  font-style: italic;
+  color: #337ab7;
+}
+
+#publicdataset::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  background-color: #F5F5F5;
+}
+
+#publicdataset::-webkit-scrollbar {
+  width: 4px;
+  background-color: #F5F5F5;
+}
+
+#publicdataset::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,.26);
+}
+
+#publicdataset .dropdown {
+  z-index: unset;
+}
+
+#publicdataset-article .panel{
+  margin-bottom: 20px;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+#publicdataset-article .panel-default {
+  border-color: #ddd;
+}
+
+
+
+

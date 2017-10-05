@@ -50,6 +50,7 @@
     <link rel="stylesheet" href="styles/cards.css">
     <link rel="stylesheet" href="styles/search-result.css">
     <link rel="stylesheet" href="styles/select2.css">
+    <link rel="stylesheet" href="styles/publicDataset.css">
     <!-- endbuild -->
   </head>
   <body  ng-app="hopsWorksApp">
@@ -57,7 +58,7 @@
        <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
-    <div class="hw-wrapper">
+    <div class="hw-wrapper" id="hwWrapper">
       <div ng-view=""></div>
     </div>
     <!-- build:js(.) scripts/jquery.js -->
@@ -142,7 +143,9 @@
     <script src="scripts/directives/switch.js"></script>
     <script src="scripts/directives/modal.js"></script>
     <script src="scripts/directives/passwordMatch.js"></script>
+    <script src="scripts/directives/focus.js"></script>
     <script src="scripts/directives/hwcard.js"></script>
+    <script src="scripts/directives/hwPanel.js"></script>
 
     <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
     <script src="scripts/controllers/datasetsCtrl.js"></script>
@@ -204,11 +207,17 @@
     <script src="scripts/controllers/schemaCreateCtrl.js"></script>
     <script src="scripts/controllers/schemaViewContentCtrl.js"></script>
     <script src="scripts/controllers/schemaUpdateContentCtrl.js"></script>
+    <script src="scripts/controllers/delaCtrl.js"></script>
+    <script src="scripts/controllers/setupDownload.js"></script>
+    <script src="scripts/controllers/json.js"></script> 
     <script src="scripts/controllers/filePreviewCtrl.js"></script>
     <script src="scripts/controllers/clusterUtilisationCtrl.js"></script>
     <script src="scripts/controllers/cardCtrl.js"></script>
     <script src="scripts/controllers/jupyterCtrl.js"></script>
     <script src="scripts/controllers/noteCreateCtrl.js"></script>
+    <script src="scripts/controllers/searchResultCtrl.js"></script>
+    <script src="scripts/controllers/publicDatasetCtrl.js"></script>
+    <script src="scripts/controllers/publicDSPanelCtrl.js"></script>
     <script src="scripts/controllers/workflowexecutionCtrl.js"></script>
     <script src="scripts/controllers/workflowjobCtrl.js"></script>
 
@@ -251,12 +260,14 @@
     <script src="scripts/services/WorkflowExecutionService.js"></script>
     <script src="scripts/services/WorkflowJobService.js"></script>
     <script src="scripts/services/KafkaService.js"></script>
+    <script src="scripts/services/DelaService.js"></script>
+    <script src="scripts/services/DelaProjectService.js"></script>
+    <script src="scripts/services/HopssiteService.js"></script>
     <script src="scripts/services/ClusterUtilService.js"></script>
     <script src="scripts/services/PythonDepsService.js"></script>
     <script src="scripts/services/KibanaService.js"></script>
     <script src="scripts/services/JupyterService.js"></script>
     <!-- endbuild -->
-
 
   </body>
 </html>

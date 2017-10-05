@@ -13,7 +13,7 @@
     </init-param>
     <init-param>
       <param-name>swagger.api.basepath</param-name>
-      <param-value>/hopsworks-ca/api</param-value>
+      <param-value>/hopsworks-ca/ca</param-value>
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>

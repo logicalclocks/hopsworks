@@ -1,8 +1,14 @@
 package io.hops.hopsworks.api.elastic;
 
-import io.hops.hopsworks.common.elastic.ElasticHit;
+import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.elastic.ElasticHit;
+import io.hops.hopsworks.common.exception.AppException;
+import io.swagger.annotations.Api;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -18,10 +24,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import io.hops.hopsworks.api.filter.AllowedRoles;
-import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.exception.AppException;
-import io.swagger.annotations.Api;
 
 @Path("/elastic")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -31,9 +33,10 @@ import io.swagger.annotations.Api;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
+  private final static Logger logger = Logger.getLogger(ElasticService.class.
+          getName());
   @EJB
   private NoCacheResponse noCacheResponse;
-
   @EJB
   private ElasticController elasticController;
 
@@ -52,19 +55,22 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response globalSearch(
-      @PathParam("searchTerm") String searchTerm,
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+          @PathParam("searchTerm") String searchTerm,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
 
     if (searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
+              "Incomplete request!");
     }
 
+    logger.log(Level.INFO, "Local content path {0}", 
+            req.getRequestURL().toString());
     GenericEntity<List<ElasticHit>> searchResults
-        = new GenericEntity<List<ElasticHit>>(elasticController.globalSearch(searchTerm)) {};
+            = new GenericEntity<List<ElasticHit>>(elasticController.
+                    globalSearch(searchTerm)) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(searchResults).build();
+            entity(searchResults).build();
   }
 
   /**
@@ -121,13 +127,14 @@ public class ElasticService {
 
     if (datasetName == null || searchTerm == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
+              "Incomplete request!");
     }
 
     GenericEntity<List<ElasticHit>> searchResults
-        = new GenericEntity<List<ElasticHit>>(elasticController.datasetSearch(projectId, datasetName, searchTerm)) {};
+            = new GenericEntity<List<ElasticHit>>(elasticController.
+                    datasetSearch(projectId, datasetName, searchTerm)) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(searchResults).build();
+            entity(searchResults).build();
   }
 
 }

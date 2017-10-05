@@ -3,10 +3,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
           'DataSetService', 'JupyterService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$showdown', '$rootScope',
+          'MetadataHelperService', '$showdown', '$rootScope', 'DelaProjectService',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, JupyterService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
-                  $showdown, $rootScope) {
+                  $showdown, $rootScope, DelaProjectService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -17,6 +17,8 @@ angular.module('hopsWorksApp')
             self.pathArray; //An array containing all the path components of the current path. If empty: project root directory.
             self.sharedPathArray; //An array containing all the path components of a path in a shared dataset 
             self.highlighted;
+            self.parentDS = $rootScope.parentDS;
+            
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.
@@ -24,7 +26,8 @@ angular.module('hopsWorksApp')
             self.routeParamArray = [];
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
-
+            var delaService = DelaProjectService(self.projectId);
+            
             $scope.all_selected = false;
             self.selectedFiles = {}; //Selected files
 
@@ -319,7 +322,13 @@ angular.module('hopsWorksApp')
               removeInode(getPath(removePathArray));
             };
 
-
+//            self.deleteSelected = function () {
+//              var removePathArray = self.pathArray.slice(0);
+//              for(var fileName in self.selectedFiles){
+//                removePathArray.push(fileName);
+//                removeInode(getPath(removePathArray));
+//              }
+//            };
 
             /**
              * Makes the dataset public for anybody within the local cluster or any outside cluster.
@@ -330,27 +339,34 @@ angular.module('hopsWorksApp')
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
 This will make all its files available for any registered user to download and process.').then(
                       function (success) {
-                        dataSetService.makePublic(id).then(
+                        delaService.publishByInodeId(id).then(
                                 function (success) {
-                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public.', ttl: 1500});
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public(Hops Site).', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
+                                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
 
                       }
               );
-
+            };
+            
+            self.showManifest = function(publicDSId){
+                delaService.getManifest(publicDSId).then(function(success){
+                    var manifest = success.data;
+                    ModalService.json('md','Manifest', manifest).then(function(){
+                        
+                    });
+                });
             };
 
-            self.removePublic = function (id) {
+            self.removePublic = function (publicDSId) {
 
-              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\
-This will make all its files unavailable to other projects unless you share it explicitly.').then(
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet internet_private? ').then(
                       function (success) {
-                        dataSetService.removePublic(id).then(
+                        delaService.cancel(publicDSId, false).then(
                                 function (success) {
-                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Private.', ttl: 1500});
+                                  growl.success(success.data.successMessage, {title: 'The DataSet is not internet_public(internet) anymore.', ttl: 1500});
                                   getDirContents();
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 4});
@@ -532,7 +548,7 @@ This will make all its files unavailable to other projects unless you share it e
                             names[i] = name;
                             i++;
                           }
-
+                          var errorMsg = '';
                           for (var name in self.selectedFiles) {
                             dataSetService.copy(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
@@ -545,9 +561,13 @@ This will make all its files unavailable to other projects unless you share it e
                                         self.all_selected = false;
                                       }
                                       //growl.success('',{title: 'Copied successfully', ttl: 5000, referenceId: 4});
-                                    }, function (error) {
-                              growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000, referenceId: 4});
+                                    }, function (error) {                                      
+                                       growl.error(error.data.errorMsg, {title: name + ' was not copied', ttl: 5000});
+                                       errorMsg = error.data.errorMsg;
                             });
+                            if (errorMsg === 'Can not copy/move to a public dataset.') {
+                              break;
+                            }
                           }
                         }, function (error) {
                   //The user changed their mind.
@@ -571,7 +591,7 @@ This will make all its files unavailable to other projects unless you share it e
                                   getDirContents();
                                   growl.success(success.data.successMessage, {title: 'Moved successfully. Opened dest dir: ' + relPath, ttl: 2000});
                                 }, function (error) {
-                          growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000, referenceId: 4});
+                                  growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000});
                         });
                       }, function (error) {
               });
@@ -607,6 +627,7 @@ This will make all its files unavailable to other projects unless you share it e
                             i++;
                           }
 
+                          var errorMsg = '';
                           for (var name in self.selectedFiles) {
                             dataSetService.move(self.selectedFiles[name].id, relPath + "/" + name).then(
                                     function (success) {
@@ -619,8 +640,12 @@ This will make all its files unavailable to other projects unless you share it e
                                         self.all_selected = false;
                                       }
                                     }, function (error) {
-                              growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000, referenceId: 4});
+                                        growl.error(error.data.errorMsg, {title: name + ' was not moved', ttl: 5000});
+                                        errorMsg = error.data.errorMsg;
                             });
+                            if (errorMsg === 'Can not copy/move to a public dataset.') {
+                              break;
+                            }
                           }
                         }, function (error) {
                   //The user changed their mind.

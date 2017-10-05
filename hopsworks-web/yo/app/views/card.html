@@ -1,33 +1,54 @@
 <div id="card-{{pageNo}}-{{cardIndex}}" class="card-item">
   <div class="card-item-content 
-       {{content.type === 'ds'? 'red': ''}} 
-       {{content.type === 'proj'? 'blue': ''}}
-       {{content.type === 'nb'? 'green': ''}}">
+       {{content.type === 'proj'? 'red': ''}}
+       {{content.type === 'ds' && !content.public_ds ? 'green': ''}} 
+       {{content.type === 'ds' && content.public_ds && content.localDataset ? 'blue': ''}}
+       {{content.type === 'ds' && content.public_ds && !content.localDataset ? 'darkblue': ''}}">
     <div class="header">
-      <label>{{content.type === 'ds'? 'dataset': ''}} 
+      <label>
         {{content.type === 'proj'? 'project': ''}}
-        {{content.type === 'nb'? 'notebook': ''}}
+        {{content.type === 'ds' && !content.public_ds ? 'dataset': ''}} 
+        {{content.type === 'ds' && content.public_ds && content.localDataset ? 'public dataset in cluster': ''}}
+        {{content.type === 'ds' && content.public_ds && !content.localDataset ? 'public dataset': ''}}
       </label>
       <h3>{{content.name}}</h3>
     </div>
     <div class="card-body">
       <div class="details">
-        <div class="desc">{{content.details.description| limitTo: limit}}
-          {{content.details.description.length > limit ? '...':''}}</div>
-        <div>
-          <label>owner</label>
-          <div class="value">{{content.details.user|| '--'}}</div>            
+        <div class="desc">{{content.description | limitTo: limit}}
+          {{content.description.length > limit ? '...':''}}</div>
+        
+        <div class="row">
+          <div class="col-sm-6 col-md-6">
+            <label>owner</label>
+            <div class="value">{{content.user || '--'}}</div>            
+          </div>
+          <div ng-show="!content.localDataset" class="col-sm-4 col-md-4">
+            <label>organization</label>
+            <div class="value">{{content.organization || '--'}}</div>            
+          </div>
         </div>
         <div class="row">
-          <div class="col-sm-5 col-md-5">
-            <label>Date created</label>
-            <div class="value">{{content.details.createDate| date:'short'}}</div>        
+          <div class="col-sm-6 col-md-6">
+            <label>Date published</label>
+            <div class="value">{{content.createDate| date:'short'}}</div>        
           </div>
           <div class="col-sm-4 col-md-4">
             <label ng-show="content.type === 'ds'">Size</label>
-            <div class="value" ng-show="content.type === 'ds'">{{cardCtrl.sizeOnDisk(content.details.size)}}</div> 
+            <div class="value" ng-show="content.type === 'ds'">{{cardCtrl.sizeOnDisk(content.size)}}</div> 
           </div>
         </div> 
+        <div class="row" ng-if="!content.localDataset">
+          <div class="col-sm-4 col-md-4">
+            <label ng-show="content.public_ds">Seeders</label>
+            <div class="value">{{content.datasetHealth.seeders}}</div> 
+          </div>
+          <div class="col-sm-4 col-md-4">
+            <label ng-show="content.public_ds">Leechers</label>
+            <div class="value">{{content.datasetHealth.leechers}}</div> 
+          </div>
+        </div>
+        
       </div>
     </div>
     <div class="card-footer">
@@ -35,15 +56,22 @@
         <!--span data-placement="bottom" data-toggle="tooltip" title="Reviews">
           <i class="card-footer-icon fa fa-heart" aria-hidden="true"
              data-toggle="collapse" data-target="#carddropdown"></i>
-        </span>      
-        <span data-placement="bottom" data-toggle="tooltip" title="Share">
-          <i class="card-footer-icon fa fa-share" aria-hidden="true"
-             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>  
-        </span-->
-        <span ng-if="content.localDataset === false"
-              data-placement="bottom" data-toggle="tooltip" title="Download">
-          <i class="card-footer-icon fa fa-download" aria-hidden="true"
+        </span>-->    
+        <span ng-if="content.type === 'ds' && content.public_ds"
+              data-placement="bottom" data-toggle="tooltip" title="GoTo public dataset view"  
+              ng-click="cardCtrl.gotoPublicDataset(content)">
+          <i class="card-footer-icon fa fa-arrow-right" aria-hidden="true"></i>
+        </span>
+        <span ng-if="content.localDataset === false && !content.downloading && !content.downloaded"
+              data-placement="bottom" data-toggle="tooltip" title="Download"
+              ng-click="downloadFn(content)">
+          <i class="card-footer-icon fa fa-cloud-download" aria-hidden="true"
              data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i> 
+        </span> 
+        <span ng-if="content.localDataset === false && !content.downloading && content.downloaded"
+              data-placement="bottom" data-toggle="tooltip" title="Downloaded">
+          <i class="card-footer-icon fa fa-cloud-download" aria-hidden="true"
+             data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}" style="color: green;"></i> 
         </span> 
         <span data-placement="bottom" data-toggle="tooltip" title="Detail"
               ng-click="detailsFn(content)">
@@ -51,12 +79,11 @@
              data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
         </span>
       </div>
-      <div class="progress pull-left" ng-if="content.localDataset === false"
-           uib-tooltip="Download progress: 45%"
-           tooltip-placement="bottom">
-        <div class="progress-bar progress-bar-info progress-bar-striped" style="opacity: 0.7; width:45%;">
-        </div>
-      </div>
+      <span class="pull-right icon-stack text-muted" ng-if="content.localDataset === false && content.downloading"
+           data-placement="bottom" title="Downloading...">
+           <i class="card-footer-icon fa fa-cloud icon-stack-2x" aria-hidden="true"></i>
+           <i class="card-footer-icon fa fa-arrow-down fa-bounce icon-stack-1x" aria-hidden="true" style="color: white;"></i>
+      </span>
     </div>
   </div>
 </div>

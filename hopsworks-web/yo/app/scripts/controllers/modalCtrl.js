@@ -7,9 +7,10 @@ angular.module('hopsWorksApp')
             var self = this;
             self.title = title;
             self.msg = msg;
+            self.content;
             
             self.ok = function () {
-              $uibModalInstance.close();
+              $uibModalInstance.close(self.content);
             };
 
             self.cancel = function () {

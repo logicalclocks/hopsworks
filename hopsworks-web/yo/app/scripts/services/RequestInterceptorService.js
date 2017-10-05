@@ -12,8 +12,9 @@ angular.module('hopsWorksApp')
 
                 var isApi = config.url.indexOf(RESOURCE_NAME);
                 var isKibana = config.url.startsWith("/"+KIBANA_NAME);
+                var isCross = config.url.indexOf('http');
                 
-                if (isApi !== -1 || isKibana) {
+                if ((isApi !== -1 || isKibana) && isCross === -1) {
                   config.url = RESOURCE_SERVER + config.url;
                   return config || $q.when(config);
                 } else {

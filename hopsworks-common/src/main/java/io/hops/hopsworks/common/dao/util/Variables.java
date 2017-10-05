@@ -88,7 +88,7 @@ public class Variables implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.rest.application.config.Variables[ id=" + id + " ]";
+    return "io.hops.hopsworks.common.dao.util.Variables[ id=" + id + " ]";
   }
 
 }

@@ -1,7 +1,9 @@
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
@@ -38,10 +40,9 @@ import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -116,6 +117,9 @@ public class ProjectService {
   private UserManager userManager;
   @EJB
   private DistributedFsService dfs;
+  
+  @Inject
+  private DelaProjectService delaService;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
       getName());
@@ -209,28 +213,25 @@ public class ProjectService {
   }
   
   @GET
-  @Path("/readme/{path: .+}")
+  @Path("/readme/byInodeId/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getReadme(@PathParam("path") String path) throws AppException {
-    if (path == null) {
+  public Response getReadmeByInodeId(@PathParam("inodeId") Integer inodeId) throws AppException {
+    if (inodeId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "No path given.");
     }
-    String[] parts = path.split(File.separator);
-    if (parts.length < 5) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Should specify full path.");
-    }
-    Project proj = projectFacade.findByName(parts[2]);
-    Dataset ds = datasetFacade.findByNameAndProjectId(proj, parts[3]);
+    Inode inode = inodes.findById(inodeId);
+    Inode parent = inodes.findParent(inode);
+    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
     if (ds != null && !ds.isSearchable()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Readme not accessable.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Readme not accessable.");
     }
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO filePreviewDTO;
+    String path = inodes.getPath(inode);
     try {
-      filePreviewDTO = datasetController.getReadme(path, dfso);
+      filePreviewDTO = datasetController.getReadme(path + "/README.md", dfso);
     } catch (IOException ex) {
       filePreviewDTO = new FilePreviewDTO();
       filePreviewDTO.setContent("No README file found for this dataset.");
@@ -714,16 +715,21 @@ public class ProjectService {
   @Path("getPublicDatasets")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getPublicDatasets(
-      @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
-
-    List<DataSetDTO> publicDatasets = datasetFacade.findPublicDatasets();
-    GenericEntity<List<DataSetDTO>> datasets
-        = new GenericEntity<List<DataSetDTO>>(publicDatasets) {};
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        datasets).build();
+  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+    List<Dataset> publicDatasets = datasetFacade.findAllPublicDatasets();
+    List<LocalDatasetDTO> localDS = new ArrayList<>();
+    Date date;
+    long size;
+    for (Dataset d : publicDatasets) {
+      if (!d.isShared()) {
+        date = new Date(d.getInode().getModificationTime().longValue());
+        size = inodes.getSize(d.getInode());
+        localDS.add(new LocalDatasetDTO(d.getInodeId(), d.getName(), d.getDescription(), d.getProject().getName(), date,
+                date, size));
+      }
+    }
+    GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
   }
 
   @GET
@@ -840,4 +846,17 @@ public class ProjectService {
     return pysparkService;
   }
 
+  @Path("{id}/dela")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public DelaProjectService dela(
+    @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+        ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.delaService.setProjectId(id);
+
+    return this.delaService;
+  }
 }

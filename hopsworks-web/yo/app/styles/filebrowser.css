@@ -110,11 +110,11 @@
   text-overflow: ellipsis;
 }
 
-@supports (-webkit-appearance:none) {
+/*@supports (-webkit-appearance:none) {
   .file .file-name {
     white-space: nowrap;
   }
-}
+}*/
 
 .file .file-name .selected {
   background-color: #ffffff;
@@ -359,7 +359,9 @@ md-backdrop.md-sidenav-backdrop {
   border-left: 3px solid #79aefe;
 }
 .dropdown-amore li:nth-child(3) {
-  border-top: 1px solid #f1f1f1;
+  border-left: 3px solid #7d5d81;
+}
+.dropdown-amore li:nth-child(4) {
   border-left: 3px solid #ec1b5a;
 }
 

@@ -6,7 +6,7 @@
     box-shadow: 1px 2px 7px 1px rgba(0, 0, 0, 0.1);
     display: inline-block;
     float: left;
-    height: 165px;
+    height: 175px;
     margin-bottom: 1rem;
     margin-right: 1rem;
     min-width: 285px;
@@ -18,14 +18,14 @@
     background: #FFFFFF;
     display: flex;
     flex-direction: column;
-    height: 165px;
-    max-height: 165px;
+    height: 175px;
+    max-height: 175px;
     padding: 10px 15px 15px;
     position: relative;
 }
 
 .col-sm-4.col-md-3 .card-item-content {
-      border-top: 2px solid;
+    border-top: 2px solid;
 }
 
 .card-modal .card-item-content {
@@ -65,6 +65,10 @@
 
 .card-item-content.yellow {
     border-color: #FFFF00 !important;
+}
+
+.card-item-content.darkblue {
+    border-color: #00008B !important;
 }
 
 .card-item-content .header > label {

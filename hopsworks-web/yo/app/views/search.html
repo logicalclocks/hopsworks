@@ -39,7 +39,7 @@
                  ng-click="searchTypePub=undefined; searchType=undefined;">all</a></li>
           <li><a class="filter-menu-uppercase"
                  data-toggle="collapse" data-target="#filterdropdown"
-                 style="color: #5DA51D;"
+                 style="color: #FC5120;"
                  ng-click="searchType=undefined; searchTypePub='true'">public</a></li>
           <li><a class="filter-menu-uppercase" 
                  data-toggle="collapse" data-target="#filterdropdown"
@@ -47,7 +47,7 @@
                  ng-click="searchTypePub=undefined; searchType='proj';">project</a></li>
           <li><a class="filter-menu-uppercase" 
                  data-toggle="collapse" data-target="#filterdropdown"
-                 style="color: #FC5120;"
+                 style="color: #5DA51D; "
                  ng-click="searchTypePub=undefined; searchType='ds';">dataset</a></li>
 <!--          <li class="divider"></li>
           <li class="dropdown-header">Tops</li>
@@ -152,11 +152,18 @@
         </div>
       </div>
     </div>
-    <div class="search-result-body row">
+    <div class="search-result-body row" ng-controller="SearchResultCtrl as searchResultCtrl">
       <div class="loader loader-md" ng-show="mainCtrl.searching"></div>
+      <div ng-if="!mainCtrl.searching" ng-init="searchResultCtrl.init(mainCtrl.searchResult)"></div>
       <div dir-paginate="result in mainCtrl.searchResult | orderBy:sortKey | filter: {public_ds: searchTypePub} | filter: {type: searchType} | filter: {user: searchOwner} | filter: {name: searchName} | itemsPerPage:mainCtrl.pageSize">
         <div id="cards-{{mainCtrl.currentPage}}-{{$index}}" class="col-xs-12" ng-class="{'col-sm-4 col-md-3': !listView, 'col-sm-12 col-md-12': listView}">
-          <hw-card id="{{mainCtrl.currentPage}}-{{$index}}" content="result" limit="listView ? 240:50" details-fn="mainCtrl.viewDelail(result)" page-no="mainCtrl.currentPage" card-index="$index"> </hw-card>
+          <hw-card id="{{mainCtrl.currentPage}}-{{$index}}" content="result" limit="listView ? 240:50" 
+                   details-fn="mainCtrl.viewDetail(result)" 
+                   download-fn="mainCtrl.downloadPublicDataset(result)"
+                   page-no="mainCtrl.currentPage" 
+                   card-index="$index"
+                   dela-enabled="mainCtrl.isDelaEnabled"> 
+          </hw-card>
         </div>
       </div>
     </div>

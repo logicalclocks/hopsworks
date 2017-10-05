@@ -19,7 +19,7 @@
     </div>
     <div class="row"></div>
     <hr />
-    <div class="row" style="padding-left: 30px">
+    <div class="row" style="padding-left: 30px; padding-bottom: 20px">
       <label class="control-label">Projects</label>
       <ui-select name="project_name" theme="select2" style="margin-left: 10px;min-width: 300px;"
                  ng-model="selectProjectCtrl.selectedProject"  required>
@@ -34,8 +34,7 @@
         </ui-select-choices>
 
       </ui-select><br>
-      <span ng-show="(pickProjectForm.$submitted || pickProjectForm.project_name.$dirty) & amp;
-          & amp;
+      <span ng-show="(pickProjectForm.$submitted || pickProjectForm.project_name.$dirty)&amp;&amp;
           pickProjectForm.project_name.$error.required"
             class="text-danger ng-hide">
         Choose a project.

@@ -21,7 +21,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 
@@ -30,8 +29,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Dataset.findAll",
-          query
-          = "SELECT d FROM Dataset d"),
+          query = "SELECT d FROM Dataset d"),
   @NamedQuery(name = "Dataset.findById",
           query
           = "SELECT d FROM Dataset d WHERE d.id = :id"),
@@ -39,8 +37,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query
           = "SELECT d FROM Dataset d WHERE d.InodeId = :inodeId"),
   @NamedQuery(name = "Dataset.findByInode",
-          query
-          = "SELECT d FROM Dataset d WHERE d.inode = :inode"),
+          query = "SELECT d FROM Dataset d WHERE d.inode = :inode"),
   @NamedQuery(name = "Dataset.findByProjectAndInode",
           query
           = "SELECT d FROM Dataset d WHERE d.project = :projectId AND d.inode = :inode"),
@@ -48,18 +45,22 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query
           = "SELECT d FROM Dataset d WHERE d.project = :projectId"),
   @NamedQuery(name = "Dataset.findAllPublic",
-          query
-          = "SELECT d FROM Dataset d WHERE d.publicDs = 1 AND d.shared = 0"),
+          query = "SELECT d FROM Dataset d WHERE d.publicDs = true"),//AND d.shared = 0
   @NamedQuery(name = "Dataset.findByDescription",
-          query
-          = "SELECT d FROM Dataset d WHERE d.description = :description"),
+          query = "SELECT d FROM Dataset d WHERE d.description = :description"),
+  @NamedQuery(name = "Dataset.findByPublicDsIdProject",
+          query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId AND d.project = :project"),
+  @NamedQuery(name = "Dataset.findByName",
+          query = "SELECT d FROM Dataset d WHERE d.name = :name"),
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
           = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :projectId"),
   @NamedQuery(name = "Dataset.findSharedWithProject",
           query
           = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "
-                  + "d.shared = true")})
+                  + "d.shared = true"),
+  @NamedQuery(name = "Dataset.findByPublicDsId",
+    query = "SELECT d FROM Dataset d WHERE d.publicDsId = :publicDsId")})
 public class Dataset implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -113,6 +114,9 @@ public class Dataset implements Serializable {
   @NotNull
   @Column(name = "public_ds")
   private boolean publicDs;
+  @Size(max = 1000)
+  @Column(name = "public_ds_id")
+  private String publicDsId;
   @Basic(optional = false)
   @NotNull
   @Column(name = "shared")
@@ -158,6 +162,10 @@ public class Dataset implements Serializable {
     this.editable = ds.isEditable();
     this.publicDs = ds.isPublicDs();
     this.type = ds.getType();
+  }
+  
+  public String getName() {
+    return name;
   }
 
   public Integer getId() {
@@ -222,6 +230,14 @@ public class Dataset implements Serializable {
 
   public void setPublicDs(boolean publicDs) {
     this.publicDs = publicDs;
+  }
+
+  public String getPublicDsId() {
+    return publicDsId;
+  }
+
+  public void setPublicDsId(String publicDsId) {
+    this.publicDsId = publicDsId;
   }
 
   public boolean isShared() {

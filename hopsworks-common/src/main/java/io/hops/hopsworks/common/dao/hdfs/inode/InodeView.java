@@ -1,11 +1,11 @@
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.util.Settings;
 import java.util.Date;
 import java.util.Objects;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.hadoop.fs.permission.FsPermission;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.util.Settings;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -37,6 +37,7 @@ public final class InodeView {
   private boolean searchable = false;
   // FSM states: STAGING, UNZIPPING, UPLOADING, CHOWNING, SUCCESS, FAILED
   private String unzippingState = "NONE";
+  private String publicId;
 
   public InodeView() {
   }
@@ -83,10 +84,11 @@ public final class InodeView {
     this.size = ds.getInode().getSize();
     this.template = ds.getInode().getTemplate();
     this.underConstruction = ds.getInode().isUnderConstruction();
+    this.publicId = ds.getPublicDsId();
     this.parent = false;
     this.path = path;
     this.modification
-            = new Date(ds.getInode().getModificationTime().longValue());
+      = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
     this.shared = ds.isShared();
     this.owningProjectName = parent.inodePK.getName();
@@ -108,9 +110,9 @@ public final class InodeView {
       this.owner = "";
     }
     this.permission = FsPermission.
-            createImmutable(ds.getInode().getPermission()).toString();
+      createImmutable(ds.getInode().getPermission()).toString();
     this.publicDs = ds.isPublicDs();
-    this.searchable=ds.isSearchable();
+    this.searchable = ds.isSearchable();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -307,6 +309,14 @@ public final class InodeView {
 
   public void setUnzippingState(String unzippingState) {
     this.unzippingState = unzippingState;
+  }
+    
+  public String getPublicId() {
+    return publicId;
+  }
+
+  public void setPublicId(String publicId) {
+    this.publicId = publicId;
   }
 
   @Override

@@ -84,6 +84,26 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/publicDataset', {
+                      templateUrl: 'views/publicDataset.html',
+                      controller: 'PublicDatasetCtrl as publicDataset',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                      $cookies.remove("email");
+                                      $cookies.remove("projectID");
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
                     .when('/login', {
                       templateUrl: 'views/login.html',
                       controller: 'LoginCtrl as loginCtrl',
@@ -490,6 +510,26 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/project/:projectID/dela', {
+                      templateUrl: 'views/dela.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                        resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                      $cookies.remove("email");
+                                      $cookies.remove("projectID");
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
                     .when('/project/:projectID/settings', {
                       templateUrl: 'views/projectSettings.html',
                       controller: 'ProjectSettingsCtrl as projectSettingsCtrl',
@@ -661,8 +701,17 @@ angular.module('hopsWorksApp', [
               return a[field];
             });
           };
+        })  
+        // Filter that highlight @username.
+        .filter('highlight', function () {
+          return function (text) {
+            var matches = text.match(/@\w+/g);
+            if (matches) {
+              text = text.replace(matches, '<span class="highlighted">' + matches + '</span>');
+            }
+            return text;
+          };
         })
-
         //restrict the number of displayed characters
         .filter('cut', function () {
           return function (value, wordwise, max, tail) {

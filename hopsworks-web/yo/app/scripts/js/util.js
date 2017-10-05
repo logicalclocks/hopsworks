@@ -150,4 +150,8 @@ function getZeppelinWsBaseURL() {
 
 function skipTrailingSlash(path) {
   return path.slice(-1) === "/" ? path.substring(0, path.length-1) : path;
-}
+};
+
+jQuery(document).on('click', '.mega-dropdown', function(e) {
+  e.stopPropagation();
+});

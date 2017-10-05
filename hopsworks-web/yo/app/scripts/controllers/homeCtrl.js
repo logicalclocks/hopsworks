@@ -16,12 +16,10 @@ angular.module('hopsWorksApp')
             self.projects = [];
             self.currentPage = 1;
             self.showTours = false;
-            self.showPublicDatasets = false;
             $scope.creating = {"spark" : false, "zeppelin" : false};
             self.exampleProjectID;
             self.tours = [];
             self.tutorials = [];
-            self.publicDatasets = [];
             self.working = [];
             self.user = {};
             self.showTourTips;
@@ -254,54 +252,6 @@ angular.module('hopsWorksApp')
                 }
               );
             };
-
-            self.addPublicDatasetModal = function (inodeId, name, description) {
-
-              var dsName = name;
-              var dsDescription = description;
-
-              ProjectService.getDatasetInfo({inodeId: inodeId}).$promise.then(
-                      function (response) {
-                        var datasetDto = response;
-                        var projects;
-                        //fetch the projects to pass them in the modal.
-                        ProjectService.query().$promise.then(
-                                function (success) {
-                                  projects = success;
-
-                                  //show dataset
-                                  ModalService.viewPublicDataset('md', projects, datasetDto)
-                                          .then(function (success) {
-                                            growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
-                                          }, function (error) {
-
-                                          });
-                                }, function (error) {
-                          console.log('Error: ' + error);
-                        });
-
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-              });
-
-
-            };
-
-
-
-            self.getPublicDatasets = function () {
-              ProjectService.getPublicDatasets().$promise.then(
-                      function (success) {
-                        self.publicDatasets = success;
-                      },
-                      function (error) {
-                        $scope.creating['spark'] = false;
-                        growl.info("Could not load Public Datasets", {title: 'Info', ttl: 5000});
-                      }
-
-              );
-            };
-
 
             self.showGettingStarted = function () {
               if (self.projects === undefined || self.projects === null || self.projects.length === 0) {

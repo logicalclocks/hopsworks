@@ -1,0 +1,30 @@
+<div>
+  <div class="panel panel-default">
+    <div class="panel-heading ds-panel-heading">
+      <a ng-click="detailsFn(content)">{{content.name | limitTo: 100}}
+      {{content.heading.length > 100 ? '...':''}}</a>
+      <p class="pull-right text-muted"><span uib-rating ng-model="content.rating" aria-labelledby="custom-icons-2" read-only="true"></span></p>
+    </div>
+    <div class="panel-body">{{content.description}}</div>
+    <div class="panel-footer ds-panel-footer text-muted">
+      <div class="row">
+         <div class="col-sm-4 col-md-4"><label>Published on:</label>  {{content.madePublicOn| date:'short'}}</div>
+          <div class="col-sm-2 col-md-2"><label>Size: </label> {{publicDSPanelCtrl.sizeOnDisk(content.dsSize)}}</div>
+          <div class="col-sm-4 col-md-4 ds-health">
+            <span title="Leechers"><i class="fa fa-download" aria-hidden="true"></i> {{content.leechers}}</span>
+            <span title="Seeders"><i class="fa fa-upload" aria-hidden="true"></i> {{content.seeders}}</span>
+          </div>
+          <div class="col-sm-2 col-md-2">
+            <span ng-if="content.localDataset" data-placement="bottom" data-toggle="tooltip" title="Add to project" ng-click="addFn(content)">
+              <i class="card-footer-icon fa fa-download fa-lg pull-right text-primary" style="margin-top: 7px;"
+              aria-hidden="true" data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
+            </span>
+            <span ng-if="!content.localDataset" data-placement="bottom" data-toggle="tooltip" title="Download" ng-click="downloadFn(content)">
+              <i class="card-footer-icon fa fa-cloud-download fa-lg pull-right text-primary" style="margin-top: 7px;"
+              aria-hidden="true" data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
+            </span>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>

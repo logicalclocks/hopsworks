@@ -1,0 +1,133 @@
+<!-- A file selection dialog. -->
+
+<div class="modal-header">
+    <h2 class="modal-title">Setup your download</h2>
+</div>
+<div class="modal-body">
+
+    <div class="content-wrapper">
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Choose a name ...</a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in">
+                    <div class="panel-body">
+                        <form class="form-inline" role="form">
+                            <div class="form-group">
+                                <label for="dsName">Name</label>
+                                <input type="text" ng-model="setupDownloadCtrl.datasetDestination" ng-change="setupDownloadCtrl.isNameOk()" id="dsName" ng-disabled="setupDownloadCtrl.manifestAvailable">
+                            </div>
+                            <button ng-show="setupDownloadCtrl.datasetNameOk" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" ng-click="setupDownloadCtrl.DownloadRequest()">
+                                Create Dataset Destination
+                                <i class="glyphicon glyphicon-forward" style="color:green;">
+                                </i>
+                            </button>
+                            <label ng-show="!setupDownloadCtrl.datasetNameOk" style="color:red;">name not allowed !</label>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a>Choose Download Type</a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="container-fluid" ng-show="setupDownloadCtrl.manifestAvailable" ng-disabled="setupDownloadCtrl.typeChosen">
+                            <div class="row">
+                                <div class="col-md-2" style="width: 20%">
+                                    <label class="control-label">Name:</label>
+                                    <label class="control-label">Date:</label>
+                                    <label class="control-label">Contact:</label>
+                                    <label class="control-label">Description:</label>
+                                </div>
+                                <div class="col-md-10" style="width: 80%">
+                                    <label class="control-label text-muted">{{setupDownloadCtrl.manifest.datasetDestination}}</label><br>
+                                    <label class="control-label text-muted">{{setupDownloadCtrl.manifest.creatorDate}}</label><br>
+                                    <label class="control-label text-muted">{{setupDownloadCtrl.manifest.creatorEmail}}</label><br>
+                                    <label class="control-label text-muted">{{setupDownloadCtrl.manifest.datasetDescription}}</label>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>FileName</th>
+                                            <th>Schema</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody ng-repeat="file in setupDownloadCtrl.manifest.fileInfos | limitTo:setupDownloadCtrl.limit">
+                                        <tr>
+                                            <td>{{file.fileName}}</td>
+                                            <td><a ng-click="setupDownloadCtrl.showSchema(file.schema)" ng-show="file.schema !== ''"> {{file.fileName + '.avro'}}</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <a ng-click="setupDownloadCtrl.showMore()">show more</a>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button class="btn btn-default" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" ng-click="setupDownloadCtrl.downloadTypeHdfs()">
+                                        HDFS Download
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-default" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" ng-disabled="!setupDownloadCtrl.manifest.kafkaSupport" ng-click="setupDownloadCtrl.downloadTypeKafkaHdfs()">
+                                        Kafka and HDFS Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <i ng-show="!setupDownloadCtrl.manifestAvailable" class="fa fa-circle-o-notch fa-spin">
+
+                        </i>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a>Finalize Download</a>
+                    </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="container-fluid">
+                            <button class="btn btn-success" ng-click="setupDownloadCtrl.download()" ng-show="!setupDownloadCtrl.DownloadTypeKafka">
+                                Download HDFS
+                            </button>
+                            <div class="row" ng-show="setupDownloadCtrl.DownloadTypeKafka">
+                                <div ng-repeat="file in setupDownloadCtrl.manifest.fileInfos| filter: setupDownloadCtrl.myFilter ">
+                                    <div class="form-inline" ng-disabled="setupDownloadCtrl.topicDone[$index]">
+                                        <div class="form-group" ng-init="setupDownloadCtrl.initTopic($index, file.fileName)">
+                                            <label for="{{file.fileName}}">TopicName</label>
+                                            <input type="text" class="form-control" id="{{file.fileName}}" 
+                                                   ng-model="setupDownloadCtrl.topicValues[$index]"
+                                                   ng-change="setupDownloadCtrl.validTopicName(file.fileName, setupDownloadCtrl.topicValues[$index], file.schema);">
+                                        
+                                        <button class="btn btn-default" ng-click="setupDownloadCtrl.createTopic(setupDownloadCtrl.topicValues[$index], file.schema, file.fileName, $index)" ng-show="setupDownloadCtrl.showCreate[$index]">create Topic</button>
+                                        <i style="color:green;" class="glyphicon glyphicon-ok" ng-show="setupDownloadCtrl.topicDone[$index]"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <button class="btn btn-success" ng-click="setupDownloadCtrl.download();" ng-show="setupDownloadCtrl.showDownload" style="margin-top: 5px;">
+                                    Download Kafka and HDFS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

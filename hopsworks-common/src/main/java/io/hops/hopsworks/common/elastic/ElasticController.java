@@ -106,7 +106,15 @@ public class ElasticController {
         SearchHit[] hits = response.getHits().getHits();
 
         for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit));
+          ElasticHit eHit = new ElasticHit(hit);
+          eHit.setLocalDataset(true);
+          int inode_id = Integer.parseInt(hit.getId());
+          List<Dataset> dsl = datasetFacade.findByInodeId(inode_id);
+          if (!dsl.isEmpty() && dsl.get(0).isPublicDs()) {
+            Dataset ds = dsl.get(0);
+            eHit.setPublicId(ds.getPublicDsId());
+          }
+          elasticHits.add(eHit);
         }
       }
 
@@ -121,7 +129,7 @@ public class ElasticController {
           getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
     }
   }
-
+  
   public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException {
     Client client = getClient();
     //check if the index are up and running

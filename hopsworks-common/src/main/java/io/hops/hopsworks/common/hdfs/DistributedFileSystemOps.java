@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.hdfs;
 
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -22,7 +24,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.security.UserGroupInformation;
-import io.hops.hopsworks.common.util.Settings;
 
 public class DistributedFileSystemOps {
 
@@ -110,6 +111,10 @@ public class DistributedFileSystemOps {
   public String cat(String file) throws IOException {
     Path path = new Path(file);
     return cat(path);
+  }
+
+  public void copyFromHDFSToLocal(String src, String dest) throws IOException {
+    dfs.copyToLocalFile(new Path(src), new Path(dest));
   }
 
   /**
@@ -620,4 +625,17 @@ public class DistributedFileSystemOps {
     }
   }
 
+  public long getlength(String path) {
+    try {
+      return dfs.getLength(new Path(path));
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Error while getting length of file", ex);
+    }
+    return -1;
+  }
+
+  public long getDatasetSize(Path datasetPath) throws IOException {
+    ContentSummary cs = dfs.getContentSummary(datasetPath);
+    return cs.getLength();
+  }
 }
