@@ -2,6 +2,7 @@ package io.hops.hopsworks.common.dao.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -29,7 +30,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   @Override
   public List<Dataset> findAll() {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAll",
-            Dataset.class);
+      Dataset.class);
     return query.getResultList();
   }
 
@@ -52,22 +53,43 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
    */
   public List<Dataset> findByInode(Inode inode) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInode",
-            Dataset.class).setParameter(
-                    "inode", inode);
+      Dataset.class).setParameter(
+        "inode", inode);
     return query.getResultList();
   }
-  
+
   public List<Dataset> findByInodeId(int inodeId) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByInodeId",
-            Dataset.class).setParameter(
-                    "inodeId", inodeId);
+      Dataset.class).setParameter(
+        "inodeId", inodeId);
     return query.getResultList();
+  }
+
+  public Optional<Dataset> findByPublicDsIdProject(String publicDsId, Project project) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByPublicDsIdProject", Dataset.class)
+      .setParameter("publicDsId", publicDsId)
+      .setParameter("project", project);
+    try {
+      return Optional.of(query.getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
+  public Optional<Dataset> findByPublicDsId(String publicDsId) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByPublicDsId", Dataset.class)
+      .setParameter("publicDsId", publicDsId);
+    try {
+      return Optional.of(query.getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 
   public Dataset findByNameAndProjectId(Project project, String name) {
     TypedQuery<Dataset> query = em.createNamedQuery(
-            "Dataset.findByNameAndProjectId",
-            Dataset.class);
+      "Dataset.findByNameAndProjectId",
+      Dataset.class);
     query.setParameter("name", name).setParameter("projectId", project);
     try {
       return query.getSingleResult();
@@ -83,14 +105,14 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
 
     List<Project> projects = new ArrayList<>();
-    for(Dataset ds : datasets){
-      if(!ds.getProject().equals(project)){
+    for (Dataset ds : datasets) {
+      if (!ds.getProject().equals(project)) {
         projects.add(ds.getProject());
       }
     }
     return projects;
   }
-  
+
   /**
    * Find by project and dataset name
    * <p/>
@@ -101,8 +123,8 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   public Dataset findByProjectAndInode(Project project, Inode inode) {
     try {
       return em.createNamedQuery("Dataset.findByProjectAndInode", Dataset.class)
-              .setParameter("projectId", project).setParameter(
-              "inode", inode).getSingleResult();
+        .setParameter("projectId", project).setParameter(
+          "inode", inode).getSingleResult();
     } catch (Exception e) {
       return null;
     }
@@ -116,14 +138,14 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
    */
   public List<Dataset> findByProject(Project project) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findByProject",
-            Dataset.class).setParameter(
-                    "projectId", project);
+      Dataset.class).setParameter(
+        "projectId", project);
     return query.getResultList();
   }
 
   public List<DataSetDTO> findPublicDatasets() {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic",
-            Dataset.class);
+      Dataset.class);
     List<Dataset> datasets = query.getResultList();
 
     List<DataSetDTO> ds = new ArrayList<>();
@@ -136,6 +158,12 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     }
     return ds;
   }
+  
+  public List<Dataset> findAllPublicDatasets() {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic",
+      Dataset.class);
+    return query.getResultList();   
+  }
 
   /**
    * Finds all data sets shared with a project.
@@ -145,10 +173,10 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
    */
   public List<Dataset> findSharedWithProject(Project project) {
     TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findSharedWithProject", Dataset.class).setParameter(
-        "projectId", project);
+      "projectId", project);
     return query.getResultList();
   }
-    
+
   public void persistDataset(Dataset dataset) {
     em.persist(dataset);
   }

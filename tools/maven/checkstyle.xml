@@ -7,7 +7,7 @@
 <!--
   <module name="RegexpSingleline">
      <property name="format" value="((//.*)|(\*.*))TODO[^(]" />
-     <property name="message" value='All TODOs should be named.  e.g. "TODO(Ermias): Remove hardcoded string."' />
+     <property name="message" value='All TODOs should be named.  e.g. "TODO(Your name): Remove hardcoded string."' />
      <property name="severity" value="warning" />
   </module>
 -->

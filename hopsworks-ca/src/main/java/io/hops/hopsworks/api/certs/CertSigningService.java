@@ -2,12 +2,19 @@ package io.hops.hopsworks.api.certs;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import io.hops.hopsworks.api.annotation.AllowCORS;
 import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.kafka.CsrDTO;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.util.PKIUtils;
+import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.Api;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
@@ -19,15 +26,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
-import io.hops.hopsworks.common.util.PKIUtils;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.dao.kafka.CsrDTO;
-import io.hops.hopsworks.common.exception.AppException;
-import javax.annotation.security.RolesAllowed;
 
 @Path("/agentservice")
 @Stateless
 @RolesAllowed({"AGENT"})
+@Api(value = "/agentservice", description = "Agent service")
 public class CertSigningService {
 
   final static Logger logger = Logger.getLogger(CertSigningService.class.
@@ -89,6 +92,7 @@ public class CertSigningService {
 
   @POST
   @Path("/hopsworks")
+  @AllowCORS
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response hopsworks(@Context HttpServletRequest req, String jsonString)

@@ -71,13 +71,20 @@
         </exclusion>
         <exclusion>
           <groupId>com.sun.jersey</groupId>
-          <artifactId>*</artifactId>
+          <artifactId>jersey-core</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.flink</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions> 
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-dela</artifactId>
+      <version>0.1.0</version>
+      <type>ejb</type>
+      <scope>provided</scope>
     </dependency>
     <!--Zeppelin dependencies -->
     <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**

@@ -1,0 +1,183 @@
+<div class="container" ng-controller="MainCtrl as mainCtrl" id="publicdatasetWrapper" style="width: 1500px;">
+  <div ng-include="'nav.html'"></div>
+  <div ng-if="mainCtrl.searchTerm.length > 3" class="row" ng-init="publicDataset.overflowYAuto()">
+    <div id="projectSearchResults">
+      <div ng-include="'views/search.html'"></div>
+    </div>
+  </div>
+  <div growl reference="13" class="pull-right"></div>
+  <div ng-if="mainCtrl.searchTerm.length <= 3" class="row" ng-init="publicDataset.setupStyle()">
+    <nav class="publicdataset-nav" id="publicdataset">
+      <ul class=" keep-open">
+        <li class="publicdataset-heading">Public Datasets</li>
+        <div ng-if="publicDataset.loadingDisplayCategories" class="text-muted loading-dots"></div>
+        <li class="dropdown" ng-repeat="displayCategory in publicDataset.displayCategories track by $index">
+          <a id="dLabel" class="publicdataset-nav-item dropdown-toggle"
+             ng-click="publicDataset.selectDisplayCategory(displayCategory)"
+             ng-class="{'publicdataset-nav-selectedItem': isSelected(displayCategory.displayName)}"
+             data-toggle="dropdown"> {{displayCategory.displayName}}</a>
+          <ul class="dropdown-menu" role="menu">
+            <form>
+              <li ng-repeat="selectedItem in publicDataset.selectedCategoryMap[displayCategory.categoryName].selectedList">
+                <span class="publicdataset-nav-text">
+                  <a ng-click="publicDataset.selectItem(selectedItem)">{{selectedItem.name}}</a>
+                </span>
+              </li>
+            </form>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <article ng-if="isDelaEnabled" class="publicdataset-view" id="publicdataset-article">
+      <div ng-if="publicDataset.selectedDataset !== undefined">
+        <h4 class="publicdataset-view-heading">{{publicDataset.selectedDataset.name}}</h4>
+        <div class="publicdataset-view-rating">
+          <div class="text-muted">
+            <span ng-click="publicDataset.rate()" uib-rating ng-model="publicDataset.userRating" aria-labelledby="custom-icons-2"></span>
+            <br/>
+            <a ng-click="publicDataset.gotoComment()"><b>ADD COMMENT</b></a>
+          </div>
+        </div>
+      </div>
+      <div ng-if="publicDataset.selectedDataset === undefined">
+        <h4 class="publicdataset-view-heading">{{publicDataset.selectedCategory.displayName}}</h4>
+      </div>
+      <br>
+      <div ng-if="publicDataset.selectedDataset === undefined" class="publicdataset-view-content">
+        <div ng-if="publicDataset.loadingSelectedCategory" class="text-muted loading-dots">Loading</div>
+        <div ng-repeat="ds in publicDataset.selectedCategoryMap[publicDataset.selectedCategory.categoryName].selectedList">
+          <hw-panel id="{{$index}}" 
+                    content="ds" 
+                    details-fn="publicDataset.selectItem(ds)" 
+                    add-fn="publicDataset.addPublicDatasetModal(ds)"
+                    download-fn="mainCtrl.downloadPublicDataset(ds)"
+                    card-index="$index"> 
+          </hw-panel>
+        </div>
+      </div>
+      <div ng-if="publicDataset.selectedDataset !== undefined" class="publicdataset-view-content">
+        <div class="panel panel-default">
+          <div class="panel-heading">README.md 
+            <div class="pull-right text-muted">
+              <span ng-if="publicDataset.selectedDataset.localDataset" data-placement="bottom" data-toggle="tooltip" title="Add to project" style="padding: 10px;"
+                    ng-click="publicDataset.addPublicDatasetModal(publicDataset.selectedDataset)">
+                <i class="fa fa-download fa-lg text-primary" aria-hidden="true"></i>
+              </span>
+              <span ng-if="!publicDataset.selectedDataset.localDataset" data-placement="bottom" data-toggle="tooltip" title="Download" style="padding: 10px;"
+                    ng-click="mainCtrl.downloadPublicDataset(publicDataset.selectedDataset)">
+                <i class="fa fa-cloud-download fa-lg text-primary" aria-hidden="true"></i>
+              </span>             
+            </div>            
+          </div>
+          <div ng-if="publicDataset.readme === undefined && !publicDataset.loadingReadme" class="panel-body text-muted">No readme file.</div>
+          <div ng-if="publicDataset.readme !== undefined && !publicDataset.loadingReadme" class="panel-body" ng-bind-html="publicDataset.readme"></div>
+          <div ng-if="publicDataset.loadingReadme" class="panel-body text-muted" style="text-align: center;">
+            <span class="loading-dots">Loading</span>
+          </div>
+          <div class="panel-footer text-muted" >
+            <a class="publicdataset-issue text-muted"
+                 title="Report issues with licence, content of the dataset, or the documentation."
+                 ng-click="publicDataset.reportDataset()">Report issue</a> 
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">COMMENTS</div>
+          <div class="panel-body">            
+            <div ng-if="publicDataset.loadingComments" class="text-muted" style="text-align: center;">              
+              <span class="loading-dots"></span>
+            </div>
+            <div ng-if="!publicDataset.loadingComments && publicDataset.comments === undefined" class="text-muted" style="text-align: center;">No comments found.</div>
+            <div ng-repeat="comment in publicDataset.comments">
+              <img alt="" class="publicdataset-comment-img pull-left" src="https://gravatar.com/avatar/{{publicDataset.getEmailHash(comment.user.email)}}?d=retro&s=30">
+              <div class="publicdataset-comment">
+                <span class="text-muted"><b>{{comment.user.firstname }} {{comment.user.lastname}} @ {{comment.user.organization}}</b> commented | on {{comment.datePublished | date:'medium'}}</span>
+                <div id="commentdiv" class="publicdataset-comment-msg" 
+                     contenteditable="{{publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable}}" 
+                     ng-bind-html="comment.content | highlight"></div>
+                <div class="pull-right">
+                  <span title="Edit your comment" ng-if="publicDataset.myUserId === comment.user.userId && !publicDataset.commentEditable"
+                        class="publicdataset-issue text-muted"
+                        ng-click="publicDataset.commentMakeEditable()"><i class="fa fa-edit"></i></span>
+                  <span title="Save comment" ng-if="publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable"
+                        class="publicdataset-issue text-muted"
+                        ng-click="publicDataset.saveComment(comment.id)"><i class="fa fa-floppy-o"></i></span>
+                  <span title="Delete comment" ng-if="publicDataset.myUserId === comment.user.userId "
+                        class="publicdataset-issue text-muted"
+                        ng-click="publicDataset.deleteComment(comment.id)"><i class="fa fa-trash-o"></i></span>
+                  <span ng-if="publicDataset.myUserId !== comment.user.userId">
+                    <a title="You can report content that violate the law or our Terms and Conditions."
+                       class="publicdataset-issue text-muted"
+                       ng-click="publicDataset.reportAbuse(comment.id)">Report abuse</a>
+                  </span>
+                </div>
+              </div> <br>
+              <hr>
+            </div>
+            <div ng-if="publicDataset.comments === undefined" ><p>No comments found.</p><hr></div>
+            <div>
+              <img alt="" class="publicdataset-comment-img pull-left" src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=retro&s=30">
+              <div class="publicdataset-comment">
+                <textarea  placeholder="Add your comment... " class="form-control" ng-model="publicDataset.newComment"></textarea>
+                <button type="button" class="btn pull-right" id="commentbtn" ng-click="publicDataset.postComment()">ADD COMMENT</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    
+    <article ng-if="!isDelaEnabled" class="publicdataset-view" id="publicdataset-article">
+      <div ng-if="publicDataset.selectedDataset !== undefined">
+        <div><h4 class="publicdataset-view-heading">{{publicDataset.selectedDataset.name}}</h4></div>
+        <br>
+        <div class="publicdataset-view-rating"></div>
+        <br>
+        <div class="panel panel-default">
+          <div class="panel-heading">README.md
+            <div class="pull-right text-muted">
+              <span data-placement="bottom" data-toggle="tooltip" title="Add to project" style="padding: 10px;"
+                    ng-click="publicDataset.addPublicDatasetModal(publicDataset.selectedDataset)">
+                <i class="fa fa-download fa-lg text-primary" aria-hidden="true"></i>
+              </span>           
+            </div>   
+          </div>            
+          <div ng-if="publicDataset.readme === undefined && !publicDataset.loadingReadme" class="panel-body text-muted">No readme file.</div>
+          <div ng-if="publicDataset.readme !== undefined && !publicDataset.loadingReadme" class="panel-body" ng-bind-html="publicDataset.readme"></div>
+          <div ng-if="publicDataset.loadingReadme" class="panel-body text-muted" style="text-align: center;">
+            <span class="loading-dots">Loading</span>
+          </div>
+        </div>
+      </div>
+
+      <div ng-if="publicDataset.selectedDataset === undefined">
+        <div><h4 class="publicdataset-view-heading">{{publicDataset.selectedCategory.displayName}}</h4></div>
+        <br>
+        <div class="publicdataset-view-content">
+          <div ng-if="publicDataset.loadingSelectedCategory" class="text-muted loading-dots">Loading</div>
+          <div ng-repeat="ds in publicDataset.selectedCategoryMap[publicDataset.selectedCategory.categoryName].selectedList">
+            <div class="panel panel-default">
+              <div class="panel-heading ds-panel-heading">
+                <a ng-click="publicDataset.selectDataset(ds)">{{ds.name | limitTo: 100}}
+                  {{ds.heading.length > 100 ? '...':''}}</a>
+              </div>
+              <div class="panel-body">{{ds.description}}</div>
+              <div class="panel-footer ds-panel-footer text-muted">
+                <div class="row">
+                  <div class="col-sm-4 col-md-4"><label>Created on:</label>  {{ds.createDate| date:'short'}}</div>
+                  <div class="col-sm-4 col-md-4"><label>Size: </label> {{publicDataset.sizeOnDisk(ds.size)}}</div>                
+                  <div class="col-sm-4 col-md-4">
+                    <span data-placement="bottom" data-toggle="tooltip" title="Add to project" ng-click="publicDataset.addPublicDatasetModal(ds)">
+                      <i class="card-footer-icon fa fa-download fa-lg pull-right text-primary" style="margin-top: 7px;"
+                         aria-hidden="true" data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </article>
+  </div>
+

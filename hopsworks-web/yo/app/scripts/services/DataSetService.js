@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
                  * @returns {unresolved}
                  */
                 getAllDatasets: function () {
-                  return $http.get('/api/project/' + id + '/dataset/');
+                  return $http.get('/api/project/' + id + '/dataset/getContent/');
                 },
                 /**
                  * Get the contents of the folder to which the path points. 
@@ -33,6 +33,7 @@ angular.module('hopsWorksApp')
                 getContents: function (relativePath) {
                   return $http.get('/api/project/' + id + '/dataset/getContent/' + relativePath);
                 },
+                
                 /**
                  * Checks the existence of a file. Should be caled before fileDownload.
                  * @param {type} fileName is a path relative to the current ds to the file
@@ -232,17 +233,8 @@ angular.module('hopsWorksApp')
                 detachTemplate: function(inodeid, templateid){
                   return $http.get('/api/metadata/detachtemplate/' + inodeid + '/' + templateid);
                 },
-                makePublic: function (inodeId) {
-                  return $http.get('/api/project/' + id + '/dataset/makePublic/' + inodeId);
-                },             
-                removePublic: function (inodeId) {
-                  return $http.get('/api/project/' + id + '/dataset/removePublic/' + inodeId);
-                },             
                 fetchMetadata: function (inodePid, inodeName, tableId) {
                   return $http.get('/api/metadata/fetchmetadata/' + inodePid + '/' + inodeName + '/' + tableId);
-                },
-                getReadme: function(path) {
-                  return $http.get('/api/project/readme/' + path);
                 }
               };
               return services;

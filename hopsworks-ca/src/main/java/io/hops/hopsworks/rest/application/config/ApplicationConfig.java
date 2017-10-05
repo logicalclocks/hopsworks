@@ -1,5 +1,6 @@
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.filter.CORSFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -15,6 +16,9 @@ public class ApplicationConfig extends ResourceConfig {
     
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     
+    //response filters
+    register(CORSFilter.class);
+ 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);

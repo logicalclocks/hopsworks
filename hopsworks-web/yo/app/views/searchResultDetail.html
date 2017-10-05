@@ -1,12 +1,16 @@
 <div class="card-modal">
+  <div growl reference="21" class="pull-right"></div>
   <div class="card-item-content 
-       {{viewSearchResultCtrl.content.type === 'ds'? 'red': ''}} 
-       {{viewSearchResultCtrl.content.type === 'proj'? 'blue': ''}}
-       {{viewSearchResultCtrl.content.type === 'nb'? 'green': ''}}">
+       {{viewSearchResultCtrl.content.type === 'proj'? 'red': ''}}
+       {{viewSearchResultCtrl.content.type === 'ds' && !viewSearchResultCtrl.content.public_ds ? 'green': ''}} 
+       {{viewSearchResultCtrl.content.type === 'ds' && viewSearchResultCtrl.content.public_ds && viewSearchResultCtrl.content.localDataset ? 'blue': ''}}
+       {{viewSearchResultCtrl.content.type === 'ds' && viewSearchResultCtrl.content.public_ds && !viewSearchResultCtrl.content.localDataset ? 'darkblue': ''}}">
     <div class="header">
-      <label>{{viewSearchResultCtrl.content.type === 'ds'? 'dataset': ''}} 
+      <label>        
         {{viewSearchResultCtrl.content.type === 'proj'? 'project': ''}}
-        {{viewSearchResultCtrl.content.type === 'nb'? 'notebook': ''}}
+        {{viewSearchResultCtrl.content.type === 'ds' && !viewSearchResultCtrl.content.public_ds ? 'dataset': ''}} 
+        {{viewSearchResultCtrl.content.type === 'ds' && viewSearchResultCtrl.content.public_ds && viewSearchResultCtrl.content.localDataset ? 'public dataset in cluster': ''}}
+        {{viewSearchResultCtrl.content.type === 'ds' && viewSearchResultCtrl.content.public_ds && !viewSearchResultCtrl.content.localDataset ? 'public dataset': ''}}
       </label>
 
       <button class="close" ng-click="viewSearchResultCtrl.close()" data-dismiss="modal" aria-hidden="true"
@@ -16,7 +20,7 @@
 
     <div class="card-body" ng-init="viewSearchResultCtrl.initProjectsList()">
       <div class="details">
-        <div class="desc">{{viewSearchResultCtrl.content.details.description| limitTo: limit}}
+        <div class="desc">{{viewSearchResultCtrl.content.details.description | limitTo: limit}}
           {{viewSearchResultCtrl.content.details.description.length > limit ? '...':''}}</div>
         <div>
           <label>owner</label>
@@ -35,15 +39,15 @@
       </div>
     </div>
     <div class="card-footer">
-      <div class="card-footer-icons">
-        <!--span data-placement="bottom" data-toggle="tooltip" title="Reviews">
+<!--      <div class="card-footer-icons">
+        <span data-placement="bottom" data-toggle="tooltip" title="Reviews">
           <i class="card-footer-icon fa fa-heart" aria-hidden="true"
              data-toggle="collapse" data-target="#carddropdown"></i>
         </span>      
         <span data-placement="bottom" data-toggle="tooltip" title="Share">
           <i class="card-footer-icon fa fa-share" aria-hidden="true"
              data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>  
-        </span-->
+        </span>
         <span ng-if="viewSearchResultCtrl.content.localDataset === false"
               data-placement="bottom" data-toggle="tooltip" title="Download">
           <i class="card-footer-icon fa fa-download" aria-hidden="true"
@@ -55,7 +59,7 @@
            tooltip-placement="bottom">
         <div class="progress-bar progress-bar-info progress-bar-striped" style="opacity: 0.7; width:45%;">
         </div>
-      </div>
+      </div>-->
     </div>
   </div>
 </div>
@@ -64,7 +68,7 @@
         ng-submit="viewSearchResultCtrl.sendRequest()" novalidate
         class="form-validate">
     <div class="view-info">           
-      <div class="panel panel-default" id="panel1">
+      <div class="panel panel-default" id="panel1" ng-show="viewSearchResultCtrl.content.localDataset">
         <div class="panel-heading" style="background: #fff">
           <h4 class="panel-title" style="color: black">
             <a data-toggle="collapse" data-target="#moreInfo">
@@ -83,7 +87,7 @@
                       <span>Name : </span><span class="text-muted"> {{member.user.fname}} {{member.user.lname}} </span><br>
                       <span>Role :</span> <span class="text-muted"> {{member.teamRole}}</span><br>
                     </div>
-                    <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
+                    <div ng-show="viewSearchResultCtrl.type === 'Dataset' || viewSearchResultCtrl.type === 'Public Dataset'">
                       <span>Name : </span><span class="text-muted"> {{member.firstname}} {{member.lastname}} </span><br>
                     </div>
                   </li>
@@ -104,7 +108,7 @@
                   </ul>
                 </div>
               </div>
-              <div ng-show="viewSearchResultCtrl.type === 'Dataset'">
+              <div ng-show="viewSearchResultCtrl.type === 'Dataset' || viewSearchResultCtrl.type === 'Public Dataset'">
                 <label class="control-label">Shared with:</label>
                 <div class="scroll">
                   <ul type="none">
@@ -119,7 +123,8 @@
           </div>
         </div>
       </div>
-      <div ng-show="viewSearchResultCtrl.type === 'Dataset'" ng-if="viewSearchResultCtrl.content.type !== 'inode'" class="panel panel-default" id="panel3">
+      <div ng-show="viewSearchResultCtrl.type === 'Dataset' || viewSearchResultCtrl.type === 'Public Dataset'" 
+           ng-if="viewSearchResultCtrl.content.type !== 'inode'" class="panel panel-default" id="panel3">
         <div class="panel-heading" style="background: #fff" ng-click="viewSearchResultCtrl.getReadme()">
           <h4 class="panel-title" style="color: black">
             <a data-toggle="collapse" data-target="#readme">
@@ -132,16 +137,18 @@
             <div class="row" style="margin: 0px;">
               <div class="col-lg-12" style="border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
                 <!-- README.md is displayed here -->
-                <div class="col-lg-12" >
-                  <div class ="row" ng-bind-html="readme" style="overflow-y: auto; ">
+                <div class="col-lg-12">                
+                  <div class ="row" ng-bind-html="readme" style="overflow-y: auto; top:60%">
                   </div>
+                  <p ng-show="viewSearchResultCtrl.spinner" class="text-muted loading-dots">Loading</p>
                 </div>
               </div>
             </div>
           </div> 
         </div> 
       </div>
-      <div ng-if="viewSearchResultCtrl.type === 'Dataset' && viewSearchResultCtrl.content.type !== 'inode'" class="col-xs-9" style="padding-left: 0px; margin-top: -10px; ">
+      <div ng-if="(viewSearchResultCtrl.type === 'Dataset' || viewSearchResultCtrl.type === 'Public Dataset') && viewSearchResultCtrl.content.type !== 'inode'" 
+           class="col-xs-9" style="padding-left: 0px; margin-top: -10px; ">
         <label class="text-muted control-label">Projects</label>
         <ui-select name="project_name" theme="select2" style="min-width: 300px;" title="Choose a project"
                    ng-model="viewSearchResultCtrl.request.projectId"required>
@@ -156,19 +163,19 @@
           </ui-select-choices>
 
         </ui-select><br>
-        <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) & amp; & amp;
+        <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &&
             dataSetForm.project_name.$error.required"
               class="text-danger ng-hide">
           Choose a project this dataset will be shared with.
         </span>
       </div>
     </div>        
-    <br ng-show="viewSearchResultCtrl.type === 'Dataset'" style="margin:15px">
+    <br ng-show="viewSearchResultCtrl.type !== 'Project'" style="margin:15px">
     <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
       <button ng-show="viewSearchResultCtrl.content.details.project_id===viewSearchResultCtrl.thisProjectId" class="btn btn-default" type="button" ng-click="viewSearchResultCtrl.goto()">Go to</button>
       <button class="btn btn-default" type="button" ng-click="viewSearchResultCtrl.close()">Cancel</button>
-      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required" ng-if="viewSearchResultCtrl.content.type !== 'inode'">
-        Send {{viewSearchResultCtrl.requestType}} request
+      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.project_name.$error.required || viewSearchResultCtrl.content.downloading" ng-if="viewSearchResultCtrl.content.type !== 'inode'">
+        {{viewSearchResultCtrl.requestType}}
       </button>
 
     </div>

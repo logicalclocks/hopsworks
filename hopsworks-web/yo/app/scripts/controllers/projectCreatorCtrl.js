@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
-          function ($uibModalInstance, $scope, ProjectService, UserService, growl) {
+        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', '$rootScope', 'ProjectService', 'UserService', 'growl',
+          function ($uibModalInstance, $scope, $rootScope, ProjectService, UserService, growl) {
 
             var self = this;
 
@@ -15,25 +15,29 @@ angular.module('hopsWorksApp')
             self.projectTeam = [];
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
-            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
 //            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
 //            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
 //            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
-            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+            if ($rootScope.isDelaEnabled) {
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER','DELA'];
+              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER','DELA'];
+            } else {
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+            }
 
             self.projectName = '';
             self.projectDesc = '';
 
             self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#|.*?å|.*?Å|.*?ö|.*?Ö|.*?ä|.*?Ä|.*?ü|.*?Ü|.*?à|.*?á|.*?é|.*?è|.*?â|.*?ê|.*?î|.*?ï|.*?ë|.*?@|.*?\{|.*?\}|.*?\[|.*?\]|.*?\$|.*?\+|.*?~|.*?\`|.*?\^).*$/;
 
-
             UserService.profile().then(
                     function (success) {
-                      if (success.data.email != undefined) {
+                      if (success.data.email !== undefined) {
                         self.myCard.email = success.data.email;
-                        if (success.data.firstName != undefined) {
+                        if (success.data.firstName !== undefined) {
                           self.myCard.firstname = success.data.firstName;
-                          if (success.data.email != undefined) {
+                          if (success.data.email !== undefined) {
                             self.myCard.lastname = success.data.lastName;
                             UserService.allcards().then(
                                     function (success) {
@@ -69,7 +73,7 @@ angular.module('hopsWorksApp')
               var projectTeam = {'projectTeamPK': projectTeamPK};
               if (selected !== undefined) {
                 projectTeamPK.teamMember = selected.email;
-                if (self.projectMembers.indexOf(selected.email) == -1) {
+                if (self.projectMembers.indexOf(selected.email) === -1) {
                   self.projectMembers.push(selected.email);
                   self.projectTeam.push(projectTeam);
                 }
@@ -119,14 +123,12 @@ angular.module('hopsWorksApp')
                           success.fieldErrors.forEach(function (entry) {
                             growl.warning(entry + ' could not be added', {title: 'Error', ttl: 10000});
                           });
-
                         }
                         $uibModalInstance.close($scope.newProject);
                       }, function (error) {
                           self.working = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
-              }
-              );
+              });
             };
 
             self.close = function () {

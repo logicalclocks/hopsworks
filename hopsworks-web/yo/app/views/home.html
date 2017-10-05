@@ -1,12 +1,12 @@
 <div class="container" ng-controller="MainCtrl as mainCtrl" style="width: 1500px;">
   <div ng-include="'nav.html'"></div>
-  <div ng-show="mainCtrl.searchTerm.length > 3" class="row">
+  <div ng-if="mainCtrl.searchTerm.length > 3" class="row">
     <div id="projectSearchResults">
       <div ng-include="'views/search.html'"></div>
     </div>
   </div>
 
-  <div ng-show="mainCtrl.searchTerm.length <= 3" class="row" ng-controller="HomeCtrl as homeCtrl">
+  <div ng-if="mainCtrl.searchTerm.length <= 3" class="row" ng-controller="HomeCtrl as homeCtrl">
     <div class="col-sm-6 col-md-2 col-lg-2" id="toursBox">
       <div class="col-md-10 sidebar pull-left" style="min-width: 300px; max-width: 300px">
         <div class="list-group">
@@ -36,30 +36,16 @@
             </div>
 
           </a>
-          <a href="" ng-click="homeCtrl.showPublicDatasets = !homeCtrl.showPublicDatasets; homeCtrl.getPublicDatasets();" class="list-group-item">
-            <span class="glyphicon" ng-class="{'glyphicon-triangle-right':!homeCtrl.showPublicDatasets, 'glyphicon-triangle-bottom':homeCtrl.showPublicDatasets}"></span>
-            Public Data Sets
-            <span class="glyphicon glyphicon-globe pull-right" style="margin-right: 1px;"></span>
-            <div ng-show="homeCtrl.showPublicDatasets" ng-repeat="dataset in homeCtrl.publicDatasets">
-              <div>
-                <button style="padding-bottom: 2px; padding-top: 2px; padding-left: 0px; padding-right: 0px;"
-                        uib-popover="Add this public dataset to one of your projects."
-                        type="button" class="btn btn-default btn-block" ng-click="homeCtrl.addPublicDatasetModal(dataset.inodeId, dataset.name, dataset.description);">
-                  <span>{{dataset.name}}</span>
-                </button>
-              </div>
-              <div ng-show="homeCtrl.publicDatasets.length === 0" >
-                None available.
-              </div>
-            </div>
-          </a>
+          <a href="#!/publicDataset" class="list-group-item">
+            <span class="glyphicon glyphicon-globe"></span>
+            Public Datasets</a>
           <a href="https://groups.google.com/forum/#!forum/hopshadoop" class="list-group-item">
             <span class="glyphicon glyphicon-user"></span>
             Need support?
             <span class="glyphicon glyphicon-earphone pull-right" style="margin-right: 1px;"></span>
           </a>
+            </div>
         </div>
-      </div>
 
 
     </div>

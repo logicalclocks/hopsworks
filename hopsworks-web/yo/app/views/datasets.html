@@ -8,12 +8,12 @@
       <div ng-include="'navProject.html'"></div>
       <section>
         <div>
-          <div ng-show="mainCtrl.searchTerm.length > 3" class="content-wrapper">
+          <div ng-if="mainCtrl.searchTerm.length > 3" class="content-wrapper">
             <div id="projectSearchResults">
               <div ng-include="'views/search.html'"></div>
             </div>
           </div>
-          <div class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl" ng-show="mainCtrl.searchTerm.length <= 3">
+          <div class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl" ng-if="mainCtrl.searchTerm.length <= 3">
             <div growl reference="3" class="pull-right" ></div>
             <h3>               
               <div flex="65">
@@ -40,7 +40,7 @@
                 </hamburger-toggle>
               </div>
             </h3>            
-            <div class="row row-no-margin-left">
+            <div class="row row-no-margin-left" ng-controller="SearchResultCtrl as searchResultCtrl">
               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">                 
                 <div class="row" resizable r-directions="['bottom']" ng-class="{'rg-row-top-ds': readme !== null}">
                   <div class="col-lg-12 ds-box" style="margin-top: 15px;">                    
@@ -58,20 +58,23 @@
                       </div>
                     </div> 
                     <div class="loader loader-sm" ng-show="datasetsCtrl.working"></div>
-                    <div ng-repeat="dataset in datasetsCtrl.files| filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | filter:search  |  orderBy: 'name'">
-                      <div ng-init="(iscollapsed$index) = true"
-                           class="file-box"
+                    <div ng-if="!datasetsCtrl.working" ng-init="searchResultCtrl.init_ds(datasetsCtrl)"></div>
+                    <div ng-repeat="dataset in datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | filter:search | orderBy: 'name'">
+                      <div>
+                        <div ng-init="(iscollapsed$index) = true"
+                           class="file-box" ng-class="{disabled: dataset.downloading}"
                            context-menu
                            data-target="menu-{{ dataset.name}}">
                         <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name, 
                                   'notAccepted' : dataset.status === false}">
                           <a>
-                            <span class="corner" ng-if="dataset.permission !== 'rwxrwx--T'"></span>
+                             <span class="corner"></span>
                             <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="projectCtrl.browseDataset(dataset)">
                               <i class="glyphicon" ng-class="{'glyphicon-eye-open' : datasetsCtrl.selected !== dataset.name}"></i>
                             </div>
                             <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="projectCtrl.browseDataset(dataset)">
-                              <i class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
+                              <i ng-show="!dataset.downloading" class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
+                              <i ng-show="dataset.downloading"  class="glyphicon glyphicon-cloud-download"></i>
                             </div>
                             <div class="file-name" data-toggle="tooltip" title="Click on the bottom section to view metadata for this dataset." 
                                  ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
@@ -109,7 +112,7 @@
                           </a>
                         </div>
                       </div>  
-                      <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
+                        <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
                         <ul uib-dropdown-menu class="uib-dropdown-amore">
                           <li>
                             <a class="pointer"
@@ -157,7 +160,8 @@
                                 Unshare DataSet</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'" ng-show="projectCtrl.role === 'Data owner'">
+                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'" 
+                              ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
@@ -219,14 +223,23 @@
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"
-                               ng-click="datasetsCtrl.removePublic(dataset.id); $event.stopPropagation();">
+                               ng-click="datasetsCtrl.removePublic(dataset.publicId); $event.stopPropagation();">
                               <span><i class="fa fa-share-alt"></i>
                                 Remove Public</span>
                             </a>
                           </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="6"
+                               ng-click="datasetsCtrl.showManifest(dataset.publicId); $event.stopPropagation();">
+                              <span>Show Manifest</span>
+                            </a>
+                          </li>
                         </ul>
                       </div>
-                    </div> <!-- end repeat -->
+                      </div> <!-- end repeat -->
+                    </div>
                   </div>
                 </div>
                 <!--background-color: rgb(250, 251, 252);-->
@@ -247,7 +260,7 @@
             </div>
           </div><!--content wrapper -->
 
-          <div ng-show="mainCtrl.searchTerm.length <= 3">
+          <div ng-if="mainCtrl.searchTerm.length <= 3">
             <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 100%;">
                 <div class="file-manager" style="height: 100%;">

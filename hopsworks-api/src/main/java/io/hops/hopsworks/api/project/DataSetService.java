@@ -1,43 +1,10 @@
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-
 import io.hops.hopsworks.api.project.util.DsDTOValidator;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.AccessControlException;
-import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.FilePreviewImageTypes;
 import io.hops.hopsworks.api.util.JsonResponse;
@@ -53,7 +20,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -81,8 +47,40 @@ import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -955,7 +953,9 @@ public class DataSetService {
 
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
     org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
-
+    
+    checkIfDestinationPublic(destPath);
+    
     DistributedFileSystemOps udfso = null;
     //We need super-user to change owner 
     DistributedFileSystemOps dfso = null;
@@ -1052,6 +1052,8 @@ public class DataSetService {
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
     org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
 
+    checkIfDestinationPublic(destPath);
+    
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
@@ -1438,79 +1440,21 @@ public class DataSetService {
             json).build();
   }
 
-  @GET
-  @Path("/makePublic/{inodeId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response makePublic(@PathParam("inodeId") Integer inodeId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-    if (inodeId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+  private void checkIfDestinationPublic(org.apache.hadoop.fs.Path dest) throws AppException {
+    String[] pathParts = dest.toString().split("/");
+    if (pathParts.length < 4) {
+      throw new IllegalArgumentException("Destination path too short.");
     }
-    Inode inode = inodes.findById(inodeId);
-    if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+    String parentDs = pathParts[3];
+    String proj = pathParts[2];
+    Project p = projectFacade.findByName(proj);
+    if (p == null) {
+      throw new IllegalArgumentException("Project not found.");
     }
-
-    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    if (ds == null) {
+    Dataset ds = datasetFacade.findByNameAndProjectId(p, parentDs);
+    if (ds != null && ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
+        "Can not copy/move to a public dataset.");
     }
-    if (ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_ALREADY_PUBLIC);
-    }
-    if (ds.isShared()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_OWNER_ERROR);
-    }
-
-    ds.setPublicDs(true);
-    datasetFacade.merge(ds);
-    datasetController.logDataset(ds, OperationType.Update);
-    json.setSuccessMessage("The Dataset is now public.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
-
-  @GET
-  @Path("/removePublic/{inodeId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response removePublic(@PathParam("inodeId") Integer inodeId,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-    if (inodeId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-    Inode inode = inodes.findById(inodeId);
-    if (inode == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
-    }
-
-    Dataset ds = datasetFacade.findByProjectAndInode(this.project, inode);
-    if (ds == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_FOUND);
-    }
-    if (!ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.DATASET_NOT_PUBLIC);
-    }
-
-    ds.setPublicDs(false);
-    datasetFacade.merge(ds);
-    datasetController.logDataset(ds, OperationType.Update);
-    json.setSuccessMessage("The Dataset is no longer public.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
+  } 
 }

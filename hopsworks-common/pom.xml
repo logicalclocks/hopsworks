@@ -16,7 +16,17 @@
   <description>Hopsworks common</description>
   <name>hopsworks-common</name>
 
+  <properties>
+    <tuples.version>1.2</tuples.version>
+  </properties> 
+  
   <dependencies>
+    <dependency>
+      <groupId>org.javatuples</groupId>
+      <artifactId>javatuples</artifactId>
+      <version>${tuples.version}</version>
+    </dependency>
+    
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>

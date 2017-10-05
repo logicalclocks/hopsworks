@@ -1,0 +1,60 @@
+<div ng-controller="MainCtrl as mainCtrl">
+
+    <div ng-include="'nav.html'"></div>
+    <div id="wrapper" class="toggled"  ng-controller="DelaCtrl as delaCtrl">
+        <div class="overlay"></div>
+        <div ng-include="'navProject.html'"></div>
+        <section>
+          <div class="content-wrapper">
+            <div growl class="pull-right" ></div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Dataset</th>
+                        <th>Id</th>
+                        <th style="width: 21%;">Status</th>
+                        <th style="width: 35%;">Progress</th>
+                        <th style="width: 4%; ">Remove</th>
+                    </tr>
+                </thead>
+                <tbody ng-repeat="dataset in delaCtrl.preview track by dataset.torrentId">
+                    <tr>
+                        <td>{{dataset.fileName}}</td>
+                        <td>{{dataset.torrentId}}</td>
+                        <td ng-if="dataset.torrentStatus === 'DOWNLOADING'">{{dataset.torrentStatus}} : {{dataset.speed}} KB/s</td>
+                        <td ng-if="dataset.torrentStatus === 'UPLOADING'">{{dataset.torrentStatus}}</td>
+                        <td ng-if="dataset.torrentStatus === 'PREPARE_DOWNLOAD'">PREPARE DOWNLOAD</td>
+                        <td>
+                            <div class="progress" ng-if="dataset.torrentStatus === 'DOWNLOADING'" style="width:100%; margin-bottom: 0px;">
+                                <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                                     aria-valuenow="{{dataset.dynamic}}" aria-valuemin="0" aria-valuemax="100" style="width:{{dataset.dynamic}}%">
+                                    {{dataset.dynamic}}%
+                                </div>
+                            </div>
+                            <div class="progress" ng-if="dataset.torrentStatus === 'UPLOADING'" style="width:100%; margin-bottom: 0px;">
+                                <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                                     aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                                    100 %
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                          <button ng-if="dataset.torrentStatus === 'UPLOADING'" type="button" 
+                                  class="btn btn-sm btn-danger pull-right" title="Remove public"
+                                  ng-click="delaCtrl.remove(dataset)" ng-disabled="dataset.torrentStatus === 'DESTROYED'">
+                            <span class="fa fa-lg fa-ban"></span>
+                          </button>
+                          <button ng-if="dataset.torrentStatus !== 'UPLOADING'" type="button" 
+                                  class="btn btn-sm btn-danger pull-right" title="Cancel download"
+                                  ng-click="delaCtrl.remove(dataset)" ng-disabled="dataset.torrentStatus === 'DESTROYED'">
+                            <span class="fa fa-lg fa-ban"></span>
+                          </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </section>
+    </div>
+</div>
+

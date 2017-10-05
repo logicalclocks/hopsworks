@@ -19,6 +19,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              reportIssueModal: function (size, title, msg) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/reportIssue.html',
+                  controller: 'ModalCtrl as modalCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               uberPrice: function (size, title, msg, price) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/uberModal.html',
@@ -54,6 +70,24 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              
+              json: function (size, title, json) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/json.html',
+                  controller: 'JSONCtrl as jsonCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    json: function () {
+                      return json;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              
               confirmShare: function (size, title, msg) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/confirmShareModal.html',
@@ -282,7 +316,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },
+              }, 
               viewPublicDataset: function (size, projects, datasetDto) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/viewPublicDataset.html',
@@ -308,7 +342,7 @@ angular.module('hopsWorksApp')
                     }
                   }
                 });
-                return modalInstance.projects;
+                return modalInstance.result;
               },
               /**
                * Open a dialog to allow creating a new folder at the given path (excluding the new folder's name).
@@ -927,6 +961,42 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              
+              setupDownload: function (size, projectId, params) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/setupDownload.html',
+                  controller: 'SetupDownloadCtrl as setupDownloadCtrl',
+                  size: size,
+                  resolve: {
+                    
+                    projectId : function(){
+                        return projectId;
+                    },
+                    datasetId : function(){
+                        return params.publicId;
+                    },
+                    defaultDatasetName : function(){
+                        return params.name;
+                    },
+                    bootstrap : function(){
+                        return params.bootstrap;
+                    },
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                            function (success) {
+                            },
+                            function (err) {
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(err);
+                            });
+                      }]
+                  }
+                });
+                return modalInstance.result;
+              },
+              
               noteCreate: function (size, title, msg, val ) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/noteCreateModal.html',

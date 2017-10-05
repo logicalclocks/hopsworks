@@ -7,6 +7,9 @@ public enum ProjectServiceEnum {
   KAFKA("Kafka"),
   WORKFLOWS("Workflows"),
   HISTORY("History"),
+  //  BIOBANKING("Biobanking"),
+  //  CHARON("Charon"),
+  DELA("Dela"),
   JUPYTER("Jupyter"),
   JOBS("Jobs");
 
