@@ -206,7 +206,7 @@ public class DistributedFsService {
     if (null != udfso) {
       String[] tokens = udfso.getEffectiveUser().split(HdfsUsersController
           .USER_NAME_DELIMITER);
-      if (null != tokens && tokens.length == 2) {
+      if (null != tokens && tokens.length == 2 && settings.getHopsRpcTls()) {
         bhcs.removeNonSuperUserCertificate(tokens[1], tokens[0]);
       }
       udfso.close();
