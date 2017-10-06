@@ -38,7 +38,12 @@ import javax.ejb.Singleton;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -93,18 +98,65 @@ public class CertificateMaterializer {
   @PostConstruct
   public void init() {
     File tmpDir = new File(settings.getHopsworksTmpCertDir());
-    if (tmpDir.exists()) {
-      FileUtils.deleteQuietly(tmpDir);
-    }
     if (!tmpDir.exists()) {
-      tmpDir.setExecutable(false);
-      tmpDir.setReadable(true, true);
-      tmpDir.setWritable(true, true);
-      tmpDir.mkdir();
+      throw new IllegalStateException("Transient certificates directory <" +
+        tmpDir.getAbsolutePath() + "> does NOT exist!");
+    }
+  
+    try {
+      PosixFileAttributeView fileView = Files.getFileAttributeView(tmpDir
+          .toPath(), PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+      Set<PosixFilePermission> permissions = fileView.readAttributes()
+          .permissions();
+      boolean ownerRead = permissions.contains(PosixFilePermission.OWNER_READ);
+      boolean ownerWrite = permissions.contains(PosixFilePermission
+          .OWNER_WRITE);
+      boolean ownerExecute = permissions.contains(PosixFilePermission
+          .OWNER_EXECUTE);
+    
+      boolean groupRead = permissions.contains(PosixFilePermission.GROUP_READ);
+      boolean groupWrite = permissions.contains(PosixFilePermission
+          .GROUP_WRITE);
+      boolean groupExecute = permissions.contains(PosixFilePermission
+          .GROUP_EXECUTE);
+    
+      boolean othersRead = permissions.contains(PosixFilePermission
+          .OTHERS_READ);
+      boolean othersWrite = permissions.contains(PosixFilePermission
+          .OTHERS_WRITE);
+      boolean othersExecute = permissions.contains(PosixFilePermission
+          .OTHERS_EXECUTE);
+    
+      // Permissions should be 750
+      if ((ownerRead && ownerWrite && ownerExecute)
+          && (groupRead && !groupWrite && groupExecute)
+          && (!othersRead && !othersWrite & !othersExecute)) {
+        String owner = fileView.readAttributes().owner().getName();
+        String group = fileView.readAttributes().group().getName();
+        String permStr = PosixFilePermissions.toString(permissions);
+        LOG.log(Level.INFO, "Passed permissions check for " + tmpDir.getAbsolutePath()
+            + ". Owner: " + owner + " Group: " + group + " permissions: " + permStr);
+      } else {
+        throw new IllegalStateException("Wrong permissions for " +
+            tmpDir.getAbsolutePath() + ", it should be 0750");
+      }
+    } catch (UnsupportedOperationException ex) {
+      LOG.log(Level.WARNING, "Associated filesystem is not POSIX compliant. " +
+          "Continue without checking the permissions of " + tmpDir
+          .getAbsolutePath() + " This might be a security problem.");
+    } catch (IOException ex) {
+      throw new IllegalStateException("Error while getting filesystem " +
+          "permissions of " + tmpDir.getAbsolutePath(), ex);
     }
     
-    transientDir = settings.getHopsworksTmpCertDir();
-    
+    try {
+      FileUtils.cleanDirectory(tmpDir);
+    } catch (IOException ex) {
+      LOG.log(Level.WARNING, "Could not clean directory " + tmpDir
+          .getAbsolutePath() + " during startup, there might be stale " +
+          "certificates", ex);
+    }
+    transientDir = tmpDir.getAbsolutePath();
     String delayRaw = settings.getCertificateMaterializerDelay();
   
     Matcher matcher = Pattern.compile("([0-9]+)([a-z]+)?").matcher(delayRaw
@@ -124,7 +176,12 @@ public class CertificateMaterializer {
   
   @PreDestroy
   public void tearDown() {
-    FileUtils.deleteQuietly(new File(transientDir));
+    try {
+      FileUtils.cleanDirectory(new File(transientDir));
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, "Could not clean directory " + transientDir
+        + " Administrator should clean it manually!", ex);
+    }
   }
   
   public void materializeCertificates(String projectName) throws IOException {
