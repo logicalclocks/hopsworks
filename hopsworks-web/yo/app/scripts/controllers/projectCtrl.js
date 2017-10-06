@@ -30,7 +30,11 @@ angular.module('hopsWorksApp')
             self.endpoint = '...';
 
             // We could instead implement a service to get all the available types but this will do it for now
-            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER','DELA'];
+            if ($rootScope.isDelaEnabled) {
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER','DELA'];
+            } else {
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+            }
 
             $scope.activeService = "home";
 
