@@ -131,7 +131,7 @@ public class SparkYarnRunnerBuilder {
       throw new IOException(ex);
     }
 
-    String stagingPath = "/Projects/ " + project + "/"
+    String stagingPath = "/Projects/" + project + "/"
         + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";
     builder.localResourcesBasePath(stagingPath);
 
