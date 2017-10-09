@@ -1,0 +1,19 @@
+{
+  "display_name": "python-%%hdfs_user%%",
+  "language": "python",
+  "argv": [
+    "%%anaconda_home%%/bin/python",
+    "-m",
+    "ipykernel_launcher",
+    "-f",
+    "{connection_file}"
+  ],
+  "env": {
+    "HADOOP_HOME": "%%hadoop_home%%",
+    "LIBHDFS_OPTS": "-Xmx96m",
+    "PDIR": "%%secret_dir%%",
+    "HDFS_USER": "%%hdfs_user%%",     
+    "LIBHDFS_OPTS": "-Xmx96m",
+    "HADOOP_VERSION": "%%hadoop_version%%"
+  }
+}

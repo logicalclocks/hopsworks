@@ -2,7 +2,9 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
@@ -11,11 +13,15 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
+import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -67,6 +73,16 @@ public class PythonDepsService {
   private HostEJB hostsFacade;
 
   private Project project;
+  @EJB
+  private JupyterProcessFacade jupyterProcessFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private UserManager userBean;
 
   public void setProject(Project project) {
     this.project = project;
@@ -82,6 +98,7 @@ public class PythonDepsService {
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tensorflow", "1.3", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "pydoop", "0.4", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tfspark", "0.1.5", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tensorflow", "1.3.0", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hopsutil", "0.1.0", "true", "Installed"));
   }
 
@@ -107,6 +124,16 @@ public class PythonDepsService {
         deps).build();
   }
 
+  private String getHdfsUser(SecurityContext sc) throws AppException {
+    String loggedinemail = sc.getUserPrincipal().getName();
+    Users user = userFacade.findByEmail(loggedinemail);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "You are not authorized for this invocation.");
+    }
+    return hdfsUsersController.getHdfsUserName(project, user);
+  }
+
   @GET
   @Path("/enable/{version}/{pythonKernelEnable}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
@@ -125,24 +152,16 @@ public class PythonDepsService {
     project.setPythonVersion(version);
     projectFacade.update(project);
 
-    //For tensorflow tour project, install numpy as well
-    //Wait for env to be enabled
-//    if (project.getName().startsWith("demo_tensorflow")) {
-//      List<OpStatus> opStatuses = pythonDepsFacade.opStatus(project);
-//      int counter = 0;
-//      while ((opStatuses != null && !opStatuses.isEmpty()) && counter < 10) {
-//        try {
-//          Thread.sleep(500);
-//        } catch (InterruptedException ex) {
-//          logger.log(Level.SEVERE, "Error enabled anaconda for demo project", ex);
-//        }
-//        opStatuses = pythonDepsFacade.opStatus(project);
-//        counter++;
-//      }
-//      PythonDepJson numpyLib = new PythonDepJson("default", "numpy", "1.13.1", "false");
-//      pythonDepsFacade.addLibrary(project, numpyLib.getChannelUrl(), numpyLib.getLib(), numpyLib.getVersion());
-//    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  private Users getUser(String email) throws ThirdPartyException {
+    Users user = userBean.getUserByEmail(email);
+    if (user == null) {
+      throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
+          ThirdPartyException.Source.LOCAL, "exception");
+    }
+    return user;
   }
 
   @GET
