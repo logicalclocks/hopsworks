@@ -132,7 +132,7 @@ angular.module('hopsWorksApp')
               "JAR": /.jar\b/,
               "PY": /.py\b/,
               "*": /[^]*/,
-              "ZIP": /[^]*/
+              "ZIP": /.zip\b/,
             };
             self.selectFileErrorMsgs = {
               "JAR": "Please select a JAR file.",
@@ -177,17 +177,25 @@ angular.module('hopsWorksApp')
                   }
                   break;
                 case "PY":
-                  if (reason.toUpperCase() !== ".PY") {
+                  if (reason.toUpperCase() !== ".ZIP") {
                     growl.error("Invalid file type selected. Expecting " + reason + " - Found: " + ext);
                   } else {
-                    if (self.val.py === "") {
-                      self.val.py = path;
+                    if (self.val.pyFiles === "") {
+                      self.val.pyFiles = path;
                     } else {
-                      self.val.py = self.val.py.concat(",").concat(path);
+                      self.val.pyFiles = self.val.pyFiles.concat(",").concat(path);
                     }
                   }
                   break;
                 case "ZIP":
+                  if (reason.toUpperCase() === ".PY") {
+                    if (self.val.pyFiles === "") {
+                      self.val.pyFiles = path;
+                    } else {
+                      self.val.pyFiles = self.val.pyFiles.concat(",").concat(path);
+                    }
+                    break;
+                  }
                 case "TGZ":
                 case "TAR.GZ":
                 case "GZ":

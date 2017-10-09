@@ -139,7 +139,7 @@
                                                                                  style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
-                      <input type="number"  ng-model="jupyterCtrl.val.numTfGpus" min="1" class="form-control">
+                      <input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numTfGpus" min="0" class="form-control">
                     </div>
                   </div>
                 </div>
@@ -233,7 +233,7 @@
                     <div class="col-md-2 jupyter-left"><input type="number" min="0" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                   </div>
 
-                  <div class="row clusterparams" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row clusterparams">
                     <div class="text-right col-md-6">
                       <label for="archives">
                         <button uib-tooltip='Select a .zip file' id="selectArchiveButton" class="btn btn-default" ng-click="jupyterCtrl.selectFile('.zip')">
@@ -247,7 +247,7 @@
                              id="archives" ng-model="jupyterCtrl.val.archives">
                     </div>
                   </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row"  ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                     <div class="text-right col-md-6">
                       <label for="jars">
                         <button  id="selectJarButton" class="btn btn-default" 
@@ -263,7 +263,7 @@
                     </div>
                   </div>
 
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row"  ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                     <div class="text-right col-md-6">
                       <label for="jars">
                         <button uib-tooltip='Select a file' id="selectFileButton" class="btn btn-default" 
@@ -278,7 +278,7 @@
                              type="text" class="form-control" id="files" ng-model="jupyterCtrl.val.files">
                     </div>
                   </div>
-                  <div class="row">
+                  <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorflow' || jupyterCtrl.val.mode === 'tensorflow'">
                     <div class="text-right col-md-6">
                       <label for="pyFiles">
                         <button uib-tooltip='Select a .py file' id="selectPyFileButton" class="btn btn-default" 

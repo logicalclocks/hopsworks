@@ -319,7 +319,7 @@ public class JupyterConfig {
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
                   "files", js.getFiles(),
-                  "pyFiles", js.getPyFiles(),
+                  "pyFiles", "\""+js.getPyFiles()+"\"",
                   "yarn_queue", "default",
                   "num_ps", Integer.toString(js.getNumTfPs()),
                   "num_gpus", Integer.toString(js.getNumTfGpus()),
