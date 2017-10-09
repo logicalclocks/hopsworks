@@ -94,13 +94,15 @@ public class ZeppelinResource {
         }
       }
     }
-    zeppelinConfFactory.removeFromCache(project.getName());
   }
 
   private FileObject[] getPidFiles(Project project) throws URISyntaxException,
           FileSystemException {
-    ZeppelinConfiguration conf = zeppelinConfFactory.getprojectConf(
-            project.getName()).getConf();
+    ZeppelinConfig zepConf = zeppelinConfFactory.getProjectConf(project.getName());
+    if(zepConf==null){
+      return new FileObject[0];
+    }
+    ZeppelinConfiguration conf = zepConf.getConf();
     URI filesystemRoot;
     FileSystemManager fsManager;
     String runPath = conf.getRelativeDir("run");
@@ -250,7 +252,7 @@ public class ZeppelinResource {
       logger.log(Level.SEVERE, "Can not persist interpreter json for null project.");
       return;
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getprojectConf(project.getName());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
       logger.log(Level.SEVERE, "Can not persist interpreter json for project.");
       return;

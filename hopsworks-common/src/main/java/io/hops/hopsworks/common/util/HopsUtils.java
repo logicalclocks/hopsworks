@@ -174,10 +174,10 @@ public class HopsUtils {
       boolean isForZeppelin)
     throws IOException {
     
-    return checkMatCertsInHDFS(username, projectName, remoteFSDir, dfso, isForZeppelin);
+    return checkUserMatCertsInHDFS(username, projectName, remoteFSDir, dfso, isForZeppelin);
   }
   
-  private static boolean checkMatCertsInHDFS(String username, String
+  private static boolean checkUserMatCertsInHDFS(String username, String
       projectName, String remoteFSDir, DistributedFileSystemOps dfso, boolean
       isForZeppelin)
       throws IOException {
@@ -186,17 +186,23 @@ public class HopsUtils {
     Path tstoreU = new Path(remoteFSDir + Path.SEPARATOR +
         username + Path.SEPARATOR + username + "__tstore.jks");
     
-    if (isForZeppelin) {
-      Path kstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName +
-          Path.SEPARATOR + projectName + "__kstore.jks");
-      Path tstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName +
-          Path.SEPARATOR + projectName + "__tstore.jks");
-  
+    if (isForZeppelin) {  
       return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString())
-          && dfso.exists(kstoreP.toString()) && dfso.exists(tstoreP.toString());
+          && checkProjectMatCertsInHDFS(projectName, remoteFSDir, dfso);
     }
     
     return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString());
+  }
+  
+  private static boolean checkProjectMatCertsInHDFS(String projectName, String remoteFSDir,
+      DistributedFileSystemOps dfso)
+      throws IOException {
+
+    Path kstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName + Path.SEPARATOR + projectName + "__kstore.jks");
+    Path tstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName + Path.SEPARATOR + projectName + "__tstore.jks");
+
+    return dfso.exists(kstoreP.toString()) && dfso.exists(tstoreP.toString());
+
   }
   
   /**
@@ -275,7 +281,7 @@ public class HopsUtils {
     String projectSpecificUsername = projectName + "__" + userName;
     
     if (isForZeppelin) {
-      certificateMaterializer.materializeCertificates(projectName);
+      materializeCertificatesForProject(projectName, localFSDir, remoteFSDir, dfso, certificateMaterializer, settings);
     }
     certificateMaterializer.materializeCertificates(userName, projectName);
     
@@ -287,16 +293,7 @@ public class HopsUtils {
     
     String kStorePath, tStorePath;
     
-    if (isForZeppelin) {
-      kStorePath =
-          localFSDir + File.separator + projectName + "__kstore.jks";
-      tStorePath =
-          localFSDir + File.separator + projectName + "__tstore.jks";
-  
-      materializeCertsRemote(projectName, remoteFSDir, kStorePath, tStorePath,
-          dfso);
-  
-    }
+    
     kStorePath = localFSDir + File.separator + projectSpecificUsername + "__kstore.jks";
     tStorePath = localFSDir + File.separator + projectSpecificUsername + "__tstore.jks";
     materializeCertsRemote(projectSpecificUsername, remoteFSDir, kStorePath,
@@ -304,10 +301,43 @@ public class HopsUtils {
     
     // If RPC SSL is not enabled, we don't need them anymore in the local fs
     if (!settings.getHopsRpcTls()) {
-      if (isForZeppelin) {
-        certificateMaterializer.removeCertificate(projectName);
-      }
       certificateMaterializer.removeCertificate(userName, projectName);
+    }
+  }
+  
+  /**
+   * Utility method that materializes user certificates in the local
+   * filesystem and in HDFS
+   *
+   * @param projectName
+   * @param localFSDir
+   * @param remoteFSDir
+   * @param dfso
+   * @param certificateMaterializer
+   * @param settings
+   * @param isForZeppelin When it is set to true it will materialize also the
+   * project-wide certificates for the Spark interpreter
+   * in Zeppelin
+   * @throws IOException
+   */
+  public static void materializeCertificatesForProject(String projectName,
+      String localFSDir, String remoteFSDir,
+      DistributedFileSystemOps dfso, CertificateMaterializer certificateMaterializer, Settings settings) throws
+      IOException {
+    certificateMaterializer.materializeCertificates(projectName);
+
+    if (checkProjectMatCertsInHDFS(projectName,remoteFSDir, dfso)) {
+      return;
+    }
+    String kStorePath = localFSDir + File.separator + projectName + "__kstore.jks";
+    String tStorePath = localFSDir + File.separator + projectName + "__tstore.jks";
+
+    materializeCertsRemote(projectName, remoteFSDir, kStorePath, tStorePath,
+        dfso);
+
+    // If RPC SSL is not enabled, we don't need them anymore in the local fs
+    if (!settings.getHopsRpcTls()) {
+      certificateMaterializer.removeCertificate(projectName);
     }
   }
   

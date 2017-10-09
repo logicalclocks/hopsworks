@@ -1,13 +1,14 @@
 package io.hops.hopsworks.api.zeppelin.server;
 
-import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfFacade;
 import io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
@@ -27,6 +28,7 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.sonatype.aether.RepositoryException;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -36,7 +38,6 @@ public class ZeppelinConfigFactory {
   private static final String ZEPPELIN_SITE_XML = "/conf/zeppelin-site.xml";
   private final ConcurrentMap<String, ZeppelinConfig> projectConfCache = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, Long> projectCacheLastRestart = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, ZeppelinConfig> projectUserConfCache = new ConcurrentHashMap<>();
 
   @EJB
   private Settings settings;
@@ -50,7 +51,9 @@ public class ZeppelinConfigFactory {
   private ZeppelinResource zeppelinResource;
   @EJB
   private ZeppelinInterpreterConfFacade zeppelinInterpreterConfFacade;
-
+  @EJB
+  private NotebookServerImplFactory notebookServerImplFactory;
+  
   @PostConstruct
   public void init() {
     ZeppelinConfig.COMMON_CONF = loadConfig();
@@ -59,59 +62,15 @@ public class ZeppelinConfigFactory {
 
   @PreDestroy
   public void preDestroy() {
-    for (ZeppelinConfig conf : projectUserConfCache.values()) {
-      conf.clean();
-    }
     for (ZeppelinConfig conf : projectConfCache.values()) {
-      conf.clean();
+      conf.clean(notebookServerImplFactory);
     }
     projectConfCache.clear();
-    projectUserConfCache.clear();
     projectCacheLastRestart.clear();
   }
 
-  /**
-   * Returns a unique zeppelin configuration for the project user.
-   *
-   * @param projectName
-   * @param username
-   * @param nbs
-   * @return null if the project does not exist.
-   */
-  public ZeppelinConfig getZeppelinConfig(String projectName, String username, NotebookServer nbs) {
-    Project project = projectBean.findByName(projectName);
-    Users user = userFacade.findByEmail(username);
-    if (project == null || user == null) {
-      return null;
-    }
-    String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);
-    if (userConfig != null) {
-      return userConfig;
-    }
-    ZeppelinConfig config = getprojectConf(projectName);
-    userConfig = new ZeppelinConfig(config, nbs, hdfsUser);
-    projectUserConfCache.put(hdfsUser, userConfig);
-    return userConfig;
-  }
-
-  /**
-   * Returns a unique zeppelin configuration for the project user. Null is
-   * returned when the user is not connected to web socket.
-   *
-   * @param projectName
-   * @param username
-   * @return null if there is no configuration for the user
-   */
-  public ZeppelinConfig getZeppelinConfig(String projectName, String username) {
-    Project project = projectBean.findByName(projectName);
-    Users user = userFacade.findByEmail(username);
-    if (project == null || user == null) {
-      return null;
-    }
-    String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    ZeppelinConfig userConfig = projectUserConfCache.get(hdfsUser);
-    return userConfig;
+  public ZeppelinConfig getProjectConf(String projectName) {
+    return projectConfCache.get(projectName);
   }
 
   /**
@@ -123,24 +82,28 @@ public class ZeppelinConfigFactory {
    * @param projectName
    * @return
    */
-  public ZeppelinConfig getprojectConf(String projectName) {
+  public ZeppelinConfig getZeppelinConfig(String projectName, NotebookServerImpl nbs) throws IOException,
+      RepositoryException, TaskRunnerException {
+    // User is null when Hopsworks checks for running interpreters
     ZeppelinConfig config = projectConfCache.get(projectName);
-    if (config != null) {
-      return config;
+    if (config == null) {
+
+      Project project = projectBean.findByName(projectName);
+      if (project == null) {
+        return null;
+      }
+      String owner = hdfsUsername.getHdfsUserName(project, project.getOwner());
+      ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.findByName(projectName);
+      String conf = null;
+      if (interpreterConf != null) {
+        conf = interpreterConf.getIntrepeterConf();
+      }
+      config = new ZeppelinConfig(projectName, project.getId(),
+          owner, settings, conf, nbs);
+      projectConfCache.put(projectName, config);
     }
-    Project project = projectBean.findByName(projectName);
-    if (project == null) {
-      return null;
-    }
-    String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
-    ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.findByName(projectName);
-    String conf = null;
-    if (interpreterConf != null) {
-      conf = interpreterConf.getIntrepeterConf();
-    }
-    config = new ZeppelinConfig(projectName, project.getId(), hdfsUser, settings, conf);
-    projectConfCache.put(projectName, config);
-    return projectConfCache.get(projectName);
+    config.setNotebookServer(nbs);
+    return config;
   }
 
   /**
@@ -151,38 +114,11 @@ public class ZeppelinConfigFactory {
   public void removeFromCache(String projectName) {
     ZeppelinConfig config = projectConfCache.remove(projectName);
     if (config != null) {
-      config.clean();
+      config.clean(notebookServerImplFactory);
       projectCacheLastRestart.put(projectName, System.currentTimeMillis());
     }
   }
 
-  /**
-   * Remove user configuration from cache.
-   *
-   * @param projectName
-   * @param username
-   */
-  public void removeFromCache(String projectName, String username) {
-    Project project = projectBean.findByName(projectName);
-    Users user = userFacade.findByEmail(username);
-    if (project == null || user == null) {
-      return;
-    }
-    String hdfsUser = hdfsUsername.getHdfsUserName(project, user);
-    removeHdfsUserFromCache(hdfsUser);
-  }
-
-  /**
-   * Remove hdfs user configuration from cache.
-   *
-   * @param hdfsUser
-   */
-  public void removeHdfsUserFromCache(String hdfsUser) {
-    ZeppelinConfig config = projectUserConfCache.remove(hdfsUser);
-    if (config != null) {
-      config.clean();
-    }
-  }
 
   /**
    * Last restart time for the given project
@@ -200,18 +136,18 @@ public class ZeppelinConfigFactory {
    * @param project
    * @return
    */
-  public boolean deleteZeppelinConfDir(Project project) {
+  public boolean deleteZeppelinConfDir(Project project) throws IOException, RepositoryException, TaskRunnerException {
     ZeppelinConfig conf = projectConfCache.remove(project.getName());
     if (conf != null) {
-      return conf.cleanAndRemoveConfDirs();
+      return conf.cleanAndRemoveConfDirs(notebookServerImplFactory);
     }
     String projectDirPath = settings.getZeppelinDir() + File.separator
         + Settings.DIR_ROOT + File.separator + project.getName();
     File projectDir = new File(projectDirPath);
     String hdfsUser = hdfsUsername.getHdfsUserName(project, project.getOwner());
     if (projectDir.exists()) {
-      conf = new ZeppelinConfig(project.getName(), project.getId(), hdfsUser, settings, null);
-      return conf.cleanAndRemoveConfDirs();
+      conf = new ZeppelinConfig(project.getName(), project.getId(), hdfsUser, settings, null, null);
+      return conf.cleanAndRemoveConfDirs(notebookServerImplFactory);
     }
     return false;
   }

@@ -1,6 +1,8 @@
 package io.hops.hopsworks.api.zeppelin.server;
 
-import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -56,7 +58,7 @@ public class ZeppelinConfig {
   private SchedulerFactory schedulerFactory;
 
   private Notebook notebook;
-  private NotebookServer notebookServer;
+  private NotebookServerImpl notebookServer;
   private InterpreterFactory replFactory;
   private NotebookRepoSync notebookRepo;
   private DependencyResolver depResolver;
@@ -82,7 +84,7 @@ public class ZeppelinConfig {
   private final String owner;
 
   public ZeppelinConfig(String projectName, Integer projectId, String owner, Settings settings,
-      String interpreterConf) {
+      String interpreterConf, NotebookServerImpl nbs) throws IOException, RepositoryException, TaskRunnerException {
     this.projectName = projectName;
     this.projectId = projectId;
     this.owner = owner;
@@ -135,7 +137,10 @@ public class ZeppelinConfig {
       this.noteSearchService = new LuceneSearch();
       this.notebookAuthorization = NotebookAuthorization.init(conf);
       this.credentials = new Credentials(conf.credentialsPersist(), conf.getCredentialsPath());
-    } catch (Exception e) {
+      if(nbs!=null){
+        setNotebookServer(nbs);
+      }
+    } catch (IOException |RepositoryException|TaskRunnerException e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectDirRecursive();
       } else if (newFile) { // if the conf files were newly created delete them
@@ -143,10 +148,11 @@ public class ZeppelinConfig {
       }
       LOGGER.log(Level.SEVERE, "Error in initializing ZeppelinConfig for project: {0}. {1}",
           new Object[]{this.projectName, e});
+      throw e;
     }
   }
 
-  public ZeppelinConfig(ZeppelinConfig zConf, NotebookServer nbs, String owner) {
+  public ZeppelinConfig(ZeppelinConfig zConf, NotebookServerImpl nbs) {
     this.settings = zConf.getSettings();
     this.projectName = zConf.getProjectName();
     this.projectId = zConf.getProjectId();
@@ -174,6 +180,9 @@ public class ZeppelinConfig {
   }
 
   private NotebookRepoSync getNotebookRepo(String owner) {
+    if(owner==null){
+      return null;
+    }
     String notebookStorage = conf.getString(ZeppelinConfiguration.ConfVars.ZEPPELIN_NOTEBOOK_STORAGE);
     LOGGER.log(Level.INFO, "Using notebook Repo class {0}", notebookStorage);
     boolean notebookInHdfs = notebookStorage.contains("HDFSNotebookRepo");
@@ -201,7 +210,10 @@ public class ZeppelinConfig {
     return this.conf;
   }
 
-  private void setNotebookServer(NotebookServer nbs) {
+  public void setNotebookServer(NotebookServerImpl nbs) {
+    if(this.notebookServer!=null){
+      return;
+    }
     this.notebookServer = nbs;
     try {
       this.replFactory = new InterpreterFactory(this.conf, this.notebookServer,
@@ -252,7 +264,7 @@ public class ZeppelinConfig {
     return heliumApplicationFactory;
   }
 
-  public NotebookServer getNotebookServer() {
+  public NotebookServerImpl getNotebookServer() {
     return this.notebookServer;
   }
 
@@ -470,7 +482,7 @@ public class ZeppelinConfig {
         getElasticRESTEndpoint();
     String projectIdProp = " -D" + Settings.HOPSWORKS_PROJECTID_PROPERTY + "=" + this.projectId;
     String projectNameProp = " -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=" + this.projectName;
-    String userProp = " -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=" + this.owner;
+    String userProp = " -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=" + this.projectName;
     //String sessionIdProp =  " -D" + Settings.HOPSWORKS_SESSIONID_PROPERTY + "=" + this.sessionId;
     String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties "
         + logstashID + restEndpointProp + keystorePwProp + truststorePwProp + elasticEndpointProp + projectIdProp
@@ -490,17 +502,24 @@ public class ZeppelinConfig {
         .append(this.projectName).append("__tstore.jks#")
         .append(Settings.T_CERTIFICATE);
 
+    StringBuilder keyStoreSB = new StringBuilder();
+    keyStoreSB
+        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+        .append(this.projectName).append(File.separator).append(this.projectName)
+        .append("__kstore.jks#").append(Settings.K_CERTIFICATE);
+    StringBuilder trustStoreSB = new StringBuilder();
+    trustStoreSB
+        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+        .append(this.projectName).append(File.separator).append(this.projectName)
+        .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
+        
     // Comma-separated files to be added as local resources to Livy interpreter
     StringBuilder livySparkDistFiles = new StringBuilder();
     livySparkDistFiles
         // KeyStore
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(owner).append(File.separator).append(owner)
-        .append("__kstore.jks#").append(Settings.K_CERTIFICATE).append(",")
+        .append(keyStoreSB).append(",")
         // TrustStore
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(owner).append(File.separator).append(owner)
-        .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
+        .append(trustStoreSB);
 
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
@@ -508,7 +527,7 @@ public class ZeppelinConfig {
               ConfigFileGenerator.INTERPRETER_TEMPLATE,
               "projectName", this.projectName,
               "zeppelin_home_dir", home,
-              "hdfs_user", this.owner,
+              "hdfs_user", this.projectName,
               "hadoop_home", settings.getHadoopSymbolicLinkDir(),
               "livy_url", settings.getLivyUrl(),
               "metrics-properties_path", log4jPath + "," + livySparkDistFiles.toString(),
@@ -522,7 +541,7 @@ public class ZeppelinConfig {
               "spark.yarn.dist.files", sparkDistFiles.toString()
           );
       interpreterConf = interpreter_json.toString();
-    }
+    } 
     createdXml = ConfigFileGenerator.createConfigFile(interpreter_file, interpreterConf);
 
     return createdSh || createdXml || createdLog4j;
@@ -555,8 +574,8 @@ public class ZeppelinConfig {
    *
    * @return true if the dir is deleted
    */
-  public boolean cleanAndRemoveConfDirs() {
-    clean();
+  public boolean cleanAndRemoveConfDirs(NotebookServerImplFactory notebookServerImplFactory) {
+    clean(notebookServerImplFactory);
     return removeProjectDirRecursive();
   }
 
@@ -615,7 +634,7 @@ public class ZeppelinConfig {
    * closes notebook SearchService, Repo, InterpreterFactory, and
    * SchedulerFactory
    */
-  public void clean() {
+  public void clean(NotebookServerImplFactory notebookServerImplFactory) {
     LOGGER.log(Level.INFO, "Cleanup of zeppelin resources for project {0}",
         this.projectName);
     if (interpreterSettingManager != null) {
@@ -626,7 +645,7 @@ public class ZeppelinConfig {
       this.notebook.close();
     }
     if (this.notebookServer != null) {
-      this.notebookServer.closeConnection();
+      this.notebookServer.closeConnections(notebookServerImplFactory);
     }
     this.schedulerFactory = null;
     this.replFactory = null;

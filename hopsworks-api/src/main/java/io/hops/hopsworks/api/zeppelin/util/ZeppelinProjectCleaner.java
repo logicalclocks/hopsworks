@@ -1,10 +1,12 @@
 package io.hops.hopsworks.api.zeppelin.util;
 
+import com.github.eirslett.maven.plugins.frontend.lib.TaskRunnerException;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +18,7 @@ import javax.ejb.EJB;
 import javax.ejb.TimerService;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import org.sonatype.aether.RepositoryException;
 
 @Singleton
 @Startup
@@ -39,7 +42,7 @@ public class ZeppelinProjectCleaner {
   }
 
   @Timeout
-  public void synchronize(Timer timer) {
+  public void synchronize(Timer timer) throws IOException, RepositoryException, TaskRunnerException {
     //get list of existing project
     List<Project> projects = projectFacade.findAll();
     //check if their is a zeepeling project folder localy for these projects

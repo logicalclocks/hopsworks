@@ -77,7 +77,8 @@ public class LivyService {
     for (ProjectTeam member : projectTeam) {
       hdfsUsername = hdfsUserBean.getHdfsUserName(project, member.getUser());
       for (LivyMsg.Session s : sessionList.getSessions()) {
-        if (hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) {
+        if ((hdfsUsername != null && hdfsUsername.equals(s.getProxyUser())) 
+            || s.getProxyUser().equals(project.getName())) {
           appStates = appStateBean.findByAppId(s.getAppId());
           if (!jupyter && (appStates == null || appStates.getAppname().startsWith(JUPYTER_SESSION_NAME))) {
             continue;

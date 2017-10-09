@@ -49,7 +49,6 @@ import org.apache.zeppelin.interpreter.InterpreterException;
 import org.sonatype.aether.repository.RemoteRepository;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.LivyService;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
@@ -58,6 +57,8 @@ import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingReque
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImplFactory;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
@@ -114,6 +115,8 @@ public class InterpreterRestApi {
   private LivyService livyService;
   @EJB
   private Settings settings;
+  @EJB
+  private NotebookServerImplFactory notebookServerImplFactory;
 
   Gson gson = new Gson();
 
@@ -239,6 +242,7 @@ public class InterpreterRestApi {
       } else {
         interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
       }
+      
       cleanUserCertificates(project, settingId);
       
       zeppelinConf.getNotebookServer().clearParagraphRuntimeInfo(setting);
@@ -267,12 +271,13 @@ public class InterpreterRestApi {
   }
 
   private void cleanUserCertificates(Project project, String interpreterGroup) {
-    if (certificateMaterializer.closedInterpreter(project.getId(), interpreterGroup)) {
+    if (certificateMaterializer.closedInterpreter(project.getId(),
+        user.getUsername(), interpreterGroup)) {
       DistributedFileSystemOps dfso = null;
       dfso = dfsService.getDfsOps();
       try {
         HopsUtils
-            .cleanupCertificatesForUser(project.getOwner().getUsername(),
+            .cleanupCertificatesForUser(user.getUsername(),
                 project.getName(), settings.getHdfsTmpCertDir(), dfso,
                 certificateMaterializer, true);
       } catch (IOException ex) {
@@ -302,12 +307,9 @@ public class InterpreterRestApi {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
-    String username = hdfsUsersController.getUserName(session.getProxyUser());
+    
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
-    }
-    if (!this.user.getUsername().equals(username) && this.roleInProject.equals(AllowedRoles.DATA_SCIENTIST)) {
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You are not authorized to stop this session.");
     }
 
     List<YarnApplicationstate> appStates = appStateBean.findByAppname("livy-session-" + sessionId);
@@ -359,25 +361,14 @@ public class InterpreterRestApi {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
-    String username = hdfsUsersController.getUserName(session.getProxyUser());
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
-    }
-    if (!this.user.getUsername().equals(username) && this.roleInProject.equals(
-            AllowedRoles.DATA_SCIENTIST)) {
-      throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You are not authorized to stop this session.");
     }
     List<LivyMsg.Session> sessions = livyService.getZeppelinLivySessionsForProjectUser(this.project, this.user);
     try {
       livyService.deleteLivySession(sessionId);
-      if (this.user.getUsername().equals(username) && sessions.size() == 1) {
-        interpreterSettingManager.restart(settingId);
-      } else if (sessions.size() == 1) {
-        Users u = userFacade.findByUsername(username);
-        if (u == null) {
-          throw new AppException(Status.BAD_REQUEST.getStatusCode(), "The owner of the session was not found.");
-        }
-        ZeppelinConfig zConf = zeppelinConfFactory.getZeppelinConfig(this.project.getName(), u.getEmail());
+      if (sessions.size() > 0) {
+        ZeppelinConfig zConf = zeppelinConfFactory.getProjectConf(this.project.getName());
         if (zConf.getReplFactory() != null) {
           zConf.getInterpreterSettingManager().restart(settingId);
         }
@@ -413,7 +404,7 @@ public class InterpreterRestApi {
    * List all available interpreters by group
    */
   @GET
-  public Response listInterpreter(String message) {
+  public Response listInterpreter() {
     Map<String, InterpreterSetting> m = interpreterSettingManager.getAvailableInterpreterSettings();
     return new JsonResponse<>(Status.OK, "", m).build();
   }
@@ -554,11 +545,13 @@ public class InterpreterRestApi {
       }
     }
 
-    zeppelinConfFactory.removeFromCache(this.project.getName());
-    List<ProjectTeam> projectTeam;
-    projectTeam = teambean.findMembersByProject(this.project);
+    NotebookServerImpl notebookServerImpl = notebookServerImplFactory.getNotebookServerImpl(this.project.getName());
+    if(notebookServerImpl!=null){
+      notebookServerImpl.closeConnections(notebookServerImplFactory);
+    }
+    
+    List<ProjectTeam> projectTeam = teambean.findMembersByProject(this.project);
     for (ProjectTeam member : projectTeam) {
-      zeppelinConfFactory.removeFromCache(this.project.getName(), member.getUser().getEmail());
       TicketContainer.instance.invalidate(member.getUser().getEmail());
     }
 
@@ -574,7 +567,7 @@ public class InterpreterRestApi {
    */
   @GET
   @Path("restart/{user}")
-  public Response restart(String message, @PathParam("user") String user) throws AppException {
+  public Response restart(@PathParam("user") String user) throws AppException {
 
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
     InterpreterDTO interpreterDTO;
@@ -590,8 +583,6 @@ public class InterpreterRestApi {
         }
       }
     }
-
-    zeppelinConfFactory.removeHdfsUserFromCache(user);
 
     return new JsonResponse(Status.OK, "Cache cleared.").build();
   }

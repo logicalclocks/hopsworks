@@ -62,15 +62,6 @@ public class ZeppelinInterpreterConfs implements Serializable {
   public ZeppelinInterpreterConfs() {
   }
 
-  public ZeppelinInterpreterConfs(String projectName) {
-    this.projectName = projectName;
-  }
-
-  public ZeppelinInterpreterConfs(String projectName, Date lastUpdate) {
-    this.projectName = projectName;
-    this.lastUpdate = lastUpdate;
-  }
-
   public ZeppelinInterpreterConfs(String projectName, Date lastUpdate,
           String intrepeterConf) {
     this.projectName = projectName;

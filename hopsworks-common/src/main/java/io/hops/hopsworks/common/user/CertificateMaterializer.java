@@ -378,7 +378,8 @@ public class CertificateMaterializer {
    * and it is safe to remove the material. False when there still open
    * interpreters for either this interpreter group or other.
    */
-  public boolean closedInterpreter(Integer projectId, String interpreterGrp) {
+  public boolean closedInterpreter(Integer projectId, String username,
+      String interpreterGrp) {
     Set<String> openedGrps = openInterpreterGroupsPerProject.get(projectId);
     if (openedGrps == null) {
       return true;

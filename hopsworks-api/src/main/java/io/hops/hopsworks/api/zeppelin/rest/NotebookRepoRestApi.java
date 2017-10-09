@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonSyntaxException;
 import io.hops.hopsworks.api.zeppelin.rest.message.NotebookRepoSettingsRequest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
-import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.swagger.annotations.Api;
 import javax.annotation.security.RolesAllowed;
@@ -58,12 +58,12 @@ public class NotebookRepoRestApi {
           NotebookRepoRestApi.class);
 
   private NotebookRepoSync noteRepos;
-  private NotebookServer notebookWsServer;
+  private NotebookServerImpl notebookWsServer;
 
   public NotebookRepoRestApi() {
   }
 
-  public NotebookRepoRestApi(NotebookRepoSync noteRepos, NotebookServer notebookWsServer) {
+  public NotebookRepoRestApi(NotebookRepoSync noteRepos, NotebookServerImpl notebookWsServer) {
     this.noteRepos = noteRepos;
     this.notebookWsServer = notebookWsServer;
   }
