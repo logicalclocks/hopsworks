@@ -93,13 +93,12 @@ public class ZeppelinConfigFactory {
         return null;
       }
       String owner = hdfsUsername.getHdfsUserName(project, project.getOwner());
-      ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.findByName(projectName);
+      ZeppelinInterpreterConfs interpreterConf = zeppelinInterpreterConfFacade.findByProject(project);
       String conf = null;
       if (interpreterConf != null) {
-        conf = interpreterConf.getIntrepeterConf();
+        conf = interpreterConf.getInterpreterConf();
       }
-      config = new ZeppelinConfig(projectName, project.getId(),
-          owner, settings, conf, nbs);
+      config = new ZeppelinConfig(projectName, project.getId(), owner, settings, conf, nbs);
       projectConfCache.put(projectName, config);
     }
     config.setNotebookServer(nbs);

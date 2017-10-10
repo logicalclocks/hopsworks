@@ -263,7 +263,7 @@ public class ZeppelinResource {
         logger.log(Level.SEVERE, "Zeppelin interpreter json not valid. For project {0}", project.getName() );
         throw new IllegalStateException("Zeppelin interpreter json not valid.");
       }
-      zeppelinInterpreterConfFacade.create(project.getName(), s);
+      zeppelinInterpreterConfFacade.create(project, s);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, ex.getMessage());
     }
