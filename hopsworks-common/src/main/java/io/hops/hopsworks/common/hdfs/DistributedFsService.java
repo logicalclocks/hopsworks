@@ -92,8 +92,6 @@ public class DistributedFsService {
 //    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
 //    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
     if (settings.getHopsRpcTls()) {
-      bhcs.parseServerSSLConf(conf);
-      
       try {
         hostname = InetAddress.getLocalHost().getHostName();
         transientDir = settings.getHopsworksTmpCertDir();

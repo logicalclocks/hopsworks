@@ -29,11 +29,14 @@ import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.ssl.FileBasedKeyStoresFactory;
 import org.apache.hadoop.security.ssl.SSLFactory;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class BaseHadoopClientsService {
@@ -53,33 +56,40 @@ public class BaseHadoopClientsService {
   private String superTrustStorePath;
   private String superTrustStorePassword;
   
-  private volatile boolean isSSLConfParsed = false;
+  private final Logger LOG = Logger.getLogger(
+      BaseHadoopClientsService.class.getName());
   
   public BaseHadoopClientsService() {
   }
   
-  public synchronized void parseServerSSLConf(Configuration conf) {
-    if (!isSSLConfParsed) {
-      sslConf = new Configuration(false);
-      String hadoopConfDir = settings.getHadoopConfDir();
-      File serverSSLConf = new File(hadoopConfDir, conf.get(SSLFactory
-          .SSL_SERVER_CONF_KEY, "ssl-server.xml"));
-      sslConf.addResource(new Path(serverSSLConf.getAbsolutePath()));
-      superKeystorePath = sslConf.get(
-          FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-              FileBasedKeyStoresFactory.SSL_KEYSTORE_LOCATION_TPL_KEY));
-      superKeystorePassword = sslConf.get(
-          FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-              FileBasedKeyStoresFactory.SSL_KEYSTORE_PASSWORD_TPL_KEY));
-      superTrustStorePath = sslConf.get(
-          FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-              FileBasedKeyStoresFactory.SSL_TRUSTSTORE_LOCATION_TPL_KEY));
-      superTrustStorePassword = sslConf.get(
-          FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-              FileBasedKeyStoresFactory.SSL_TRUSTSTORE_PASSWORD_TPL_KEY));
-      
-      isSSLConfParsed = true;
+  @PostConstruct
+  public void init() {
+    String confDir = settings.getHadoopConfDir();
+    File coreSite = new File(confDir, "core-site.xml");
+    if (!coreSite.exists()) {
+      handleMissingConf("core-site.xml", confDir);
     }
+    
+    Configuration conf = new Configuration();
+    conf.addResource(new Path(coreSite.getAbsolutePath()));
+    
+    sslConf = new Configuration(false);
+    String hadoopConfDir = settings.getHadoopConfDir();
+    File serverSSLConf = new File(hadoopConfDir, conf.get(SSLFactory
+        .SSL_SERVER_CONF_KEY, "ssl-server.xml"));
+    sslConf.addResource(new Path(serverSSLConf.getAbsolutePath()));
+    superKeystorePath = sslConf.get(
+        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
+            FileBasedKeyStoresFactory.SSL_KEYSTORE_LOCATION_TPL_KEY));
+    superKeystorePassword = sslConf.get(
+        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
+            FileBasedKeyStoresFactory.SSL_KEYSTORE_PASSWORD_TPL_KEY));
+    superTrustStorePath = sslConf.get(
+        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
+            FileBasedKeyStoresFactory.SSL_TRUSTSTORE_LOCATION_TPL_KEY));
+    superTrustStorePassword = sslConf.get(
+        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
+            FileBasedKeyStoresFactory.SSL_TRUSTSTORE_PASSWORD_TPL_KEY));
   }
   
   public String getSuperKeystorePath() {
@@ -162,5 +172,13 @@ public class BaseHadoopClientsService {
     public CryptoPasswordNotFoundException(String message, Throwable cause) {
       super(message, cause);
     }
+  }
+  
+  private void handleMissingConf(String confName, String confDir)
+      throws IllegalStateException {
+    LOG.log(Level.SEVERE, "Unable to locate {0} in {1}",
+        new Object[]{confName, confDir});
+    throw new IllegalStateException(
+        "Unable to locate " + confName + " in " + confDir);
   }
 }
