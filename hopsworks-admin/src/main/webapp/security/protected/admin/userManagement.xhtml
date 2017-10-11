@@ -84,7 +84,9 @@
 
 
                   <p:column id="actionUserColumn" headerText="Modify" >                                                 
-                    <p:commandLink  action="#{peopleAdministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
+                    <p:commandLink  action="#{peopleAdministration.modifyUser}" update="@form" styleClass="fa fa-pencil-square-o" value="">
+                      <f:param name="userMail" value="#{muser.email}"/>
+                    </p:commandLink>
                   </p:column>
 
                 </p:dataTable>                                            

@@ -16,7 +16,6 @@ import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -43,9 +42,10 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.util.AuditUtil;
+import javax.faces.bean.RequestScoped;
 
 @ManagedBean
-@ViewScoped
+@RequestScoped
 public class PeopleAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -64,6 +64,8 @@ public class PeopleAdministration implements Serializable {
 
   @ManagedProperty("#{clientSessionState}")
   private ClientSessionState sessionState;
+  @ManagedProperty("#{param.userMail}")
+  private String userMail;
 
   @Resource
   private UserTransaction userTransaction;
@@ -117,6 +119,14 @@ public class PeopleAdministration implements Serializable {
 
   public PeopleAdministration() {
     // Default no-arg constructor
+  }
+
+  public String getUserMail() {
+    return userMail;
+  }
+
+  public void setUserMail(String userMail) {
+    this.userMail = userMail;
   }
 
   public String getRole() {
@@ -539,8 +549,8 @@ public class PeopleAdministration implements Serializable {
 
   }
 
-  public String modifyUser(Users user1) {
-
+  public String modifyUser() {
+    Users user1 = userManager.findByEmail(userMail);
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser", user1);
 
