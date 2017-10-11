@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -172,6 +174,8 @@ public class ProjectController {
 
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private CertificatesController certificatesController;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -256,35 +260,54 @@ public class ProjectController {
             getStatusCode(), "An error occured when creating the project");
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): " + (System.currentTimeMillis() - startTime));
-
+  
       verifyProject(project, dfso, sessionId);
-
+  
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): " + (System.currentTimeMillis() - startTime));
-
-      String username = hdfsUsersBean.getHdfsUserName(project, owner);
-      if (username == null || username.isEmpty()) {
-        cleanup(project, sessionId);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "wrong user name");
-      }
-
+      
       //create certificate for this user
       // User's certificates should be created before making any call to
       // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
+      // This is an async call
+      Future<CertificatesController.CertsResult> certsGenerationFuture = null;
       try {
-        //create certificate for this user
-        createCertificates(project, owner, true);
+        certsGenerationFuture = certificatesController.generateCertificates
+            (project, owner, true);
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Error while creating certificates: " + ex.getMessage(), ex);
-        cleanup(project, sessionId);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Error while creating certificates");
+        LOGGER.log(Level.SEVERE, "Error while creating certificates: "
+            + ex.getMessage(), ex);
+        cleanup(project, sessionId, certsGenerationFuture);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR
+            .getStatusCode(), "Error while generating certificates");
       }
+
+      String username = hdfsUsersBean.getHdfsUserName(project, owner);
+      if (username == null || username.isEmpty()) {
+        cleanup(project, sessionId, certsGenerationFuture);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(), "wrong user name");
+      }
+      
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): " + (System.currentTimeMillis() - startTime));
 
+      if (settings.getHopsRpcTls()) {
+        if (certsGenerationFuture != null) {
+          try {
+            certsGenerationFuture.get();
+          } catch (InterruptedException | ExecutionException ex) {
+            LOGGER.log(Level.SEVERE, "Error while waiting for certificates " +
+                "generation thread to finish. Will try to cleanup...");
+            cleanup(project, sessionId, certsGenerationFuture);
+            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR
+                .getStatusCode(), "Error while waiting for certificates " +
+                "generation thread to finish.");
+          }
+        }
+      }
+      
       udfso = dfs.getDfsOps(username);
       if (udfso == null) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "error geting access to the file system");
       }
@@ -295,13 +318,13 @@ public class ProjectController {
       try {
         projectPath = mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "problem creating project folder");
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): " + (System.currentTimeMillis() - startTime));
       if (projectPath == null) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "problem creating project folder");
       }
@@ -309,10 +332,10 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (AppException | EJBException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       } catch (IOException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         LOGGER.log(Level.SEVERE, "An error occured when creating the project: "
             + ex.getMessage(), ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -327,7 +350,7 @@ public class ProjectController {
             dfso, owner);
 
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "could not set folder quota");
       }
@@ -339,11 +362,11 @@ public class ProjectController {
       } catch (IOException | EJBException ex) {
         LOGGER.log(Level.SEVERE, "Error while creating project sub folders: "
             + ex.getMessage(), ex);
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "Error while creating project sub folders");
       } catch (AppException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): " + (System.currentTimeMillis() - startTime));
@@ -353,7 +376,7 @@ public class ProjectController {
         try {
           addService(project, service, owner, dfso, udfso);
         } catch (ServiceException sex) {
-          cleanup(project, sessionId);
+          cleanup(project, sessionId, certsGenerationFuture);
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while enabling the services");
         }
@@ -364,7 +387,7 @@ public class ProjectController {
         failedMembers = addMembers(project, owner.getEmail(), projectDTO.
             getProjectTeam());
       } catch (AppException | EJBException ex) {
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): " + (System.currentTimeMillis() - startTime));
@@ -374,9 +397,19 @@ public class ProjectController {
         addElasticsearch(project.getName());
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, "Error while adding elasticsearch service for project:" + projectName, ex);
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, certsGenerationFuture);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic): " + (System.currentTimeMillis() - startTime));
+      
+      try {
+        if (certsGenerationFuture != null) {
+          certsGenerationFuture.get();
+        }
+      } catch (InterruptedException | ExecutionException ex) {
+        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate " +
+            "generation thread to finish. Will try to cleanup...");
+        cleanup(project, sessionId, certsGenerationFuture);
+      }
       return project;
 
     } finally {
@@ -517,37 +550,6 @@ public class ProjectController {
     this.projectFacade.flushEm();
     Path dumy = new Path("/tmp/" + project.getName());
     dfso.rm(dumy, true);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void createCertificates(Project project, Users owner, boolean createProjectWideCerts) throws Exception {
-    //Generate and hash random password.
-    String userKeyPwd = HopsUtils.randomString(64);
-    String encryptedKey = HopsUtils.encrypt(owner.getPassword(), settings
-        .getHopsworksMasterPasswordSsl(), userKeyPwd);
-    LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(), project.
-        getName(), owner.getUsername(),
-        owner.getAddress().getCountry(),
-        owner.getAddress().getCity(),
-        owner.getOrganization().getOrgName(),
-        owner.getEmail(),
-        owner.getOrcid(),
-        userKeyPwd);
-    userCertsFacade.putUserCerts(project.getName(), owner.getUsername(), encryptedKey);
-
-    // Project-wide certificates are needed because Zeppelin submits
-    // requests as user: ProjectName
-    if (createProjectWideCerts) {
-      LocalhostServices.createServiceCertificates(settings
-          .getIntermediateCaDir(), project.getName(),
-          owner.getAddress().getCountry(),
-          owner.getAddress().getCity(),
-          owner.getOrganization().getOrgName(),
-          owner.getEmail(),
-          owner.getOrcid(),
-          userKeyPwd);
-      userCertsFacade.putServiceCerts(project.getName(), encryptedKey);
-    }
   }
 
   private boolean existingProjectFolder(Project project) {
@@ -914,6 +916,12 @@ public class ProjectController {
   }
 
   public void cleanup(Project project, String sessionId) throws AppException {
+    cleanup(project, sessionId, null);
+  }
+  
+  public void cleanup(Project project, String sessionId,
+      Future<CertificatesController.CertsResult> certsGenerationFuture)
+      throws AppException {
     if (project == null) {
       return;
     }
@@ -1020,7 +1028,7 @@ public class ProjectController {
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        removeProjectInt(project, usersToClean, groupsToClean);
+        removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture);
         return;
       } catch (Exception ex) {
         if (nbTry < 3) {
@@ -1040,8 +1048,10 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-      List<HdfsGroups> groupsToClean) throws IOException,
-      InterruptedException, AppException {
+      List<HdfsGroups> groupsToClean, Future<CertificatesController
+      .CertsResult> certsGenerationFuture)
+      throws IOException, InterruptedException, ExecutionException,
+      AppException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1068,10 +1078,11 @@ public class ProjectController {
 
       //remove user certificate from local node 
       //(they will be removed from db when the project folder is deleted)
-      LocalhostServices.deleteProjectCertificates(settings.
-          getIntermediateCaDir(),
-          project.getName());
-
+      if (certsGenerationFuture != null) {
+        certsGenerationFuture.get();
+      }
+      certificatesController.deleteProjectCertificates(project);
+      
       String logPath = getYarnAgregationLogPath();
 
       for (HdfsUsers hdfsUser : usersToClean) {
@@ -1122,11 +1133,6 @@ public class ProjectController {
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
-
-      // Remove project generic certificates used by Spark interpreter in
-      // Zeppelin. User specific certificates are removed by the foreign key
-      // constraint in the DB
-      userCertsFacade.removeProjectGenericCertificates(project.getName());
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
@@ -1256,12 +1262,28 @@ public class ProjectController {
               throw new EJBException("Could not add member to HDFS.");
             }
             // TODO: This should now be a REST call
+            Future<CertificatesController.CertsResult> certsResultFuture = null;
             try {
-              createCertificates(project, newMember, false);
+              certsResultFuture = certificatesController
+                  .generateCertificates(project, newMember, false);
+              certsResultFuture.get();
               if (settings.isPythonKernelEnabled()) {
                 jupyterProcessFacade.createPythonKernelForProjectUser(project, newMember);
               }
             } catch (Exception ex) {
+              try {
+                if (certsResultFuture != null) {
+                  certsResultFuture.get();
+                }
+                certificatesController.deleteUserSpecificCertificates(project,
+                    newMember);
+              } catch (IOException | InterruptedException | ExecutionException e) {
+                String hdfsUser = project.getName() + HdfsUsersController
+                    .USER_NAME_DELIMITER + user.getUsername();
+                LOGGER.log(Level.SEVERE,
+                    "Could not delete user certificates for user " +
+                        hdfsUser + ". Manual cleanup is needed!!!");
+              }
               LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
@@ -1303,6 +1325,7 @@ public class ProjectController {
 
       }
     }
+    
     return failedList;
   }
 
@@ -1575,9 +1598,7 @@ public class ProjectController {
 
     certificateMaterializer.forceRemoveCertificates(userToBeRemoved
         .getUsername(), project.getName(), false);
-    LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(), hdfsUser);
-    userCertsFacade.removeUserProjectCerts(project.getName(), userToBeRemoved.getUsername());
-
+    certificatesController.deleteUserSpecificCertificates(project, userToBeRemoved);
   }
 
   /**
