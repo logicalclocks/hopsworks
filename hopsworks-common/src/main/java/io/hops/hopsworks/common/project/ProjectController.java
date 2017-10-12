@@ -1784,7 +1784,7 @@ public class ProjectController {
             List<Inode> children = new ArrayList<>();
             inodes.getAllChildren(parent, children);
             for (Inode child : children) {
-              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getYarnSuperUser())) {
+              if (child.getHdfsUser() != null && child.getHdfsUser().getName().equals(settings.getHdfsSuperUser())) {
                 Path path = new Path(inodes.getPath(child));
                 udfso.setPermission(path, udfso.getParentPermission(path));
                 udfso.setOwner(path, userHdfsName, datasetGroup);
