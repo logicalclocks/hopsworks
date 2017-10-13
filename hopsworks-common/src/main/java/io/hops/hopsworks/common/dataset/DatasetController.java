@@ -401,7 +401,13 @@ public class DatasetController {
       String readmeFile, readMeFilePath;
       //Generate README.md for the Default Datasets
       readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
-      readMeFilePath = "/Projects/" + project + "/" + dsName + "/README.md";
+      StringBuilder readmeSb = new StringBuilder();
+      readmeSb.append(File.separator).append(Settings.DIR_ROOT)
+          .append(File.separator).append(project)
+          .append(File.separator).append(dsName)
+          .append(File.separator).append(Settings.README_FILE);
+      
+      readMeFilePath = readmeSb.toString();
 
       try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
         fsOut.writeBytes(readmeFile);
