@@ -4,7 +4,6 @@ import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
 import java.io.IOException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -71,16 +70,11 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -2121,48 +2115,34 @@ public class ProjectController {
    */
   public void validateCert(byte[] keyStore, char[] keyStorePwd, String projectUser, boolean isProjectSpecific)
       throws AppException {
-    try {
-      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-      ByteArrayInputStream stream = new ByteArrayInputStream(keyStore);
-
-      ks.load(stream, keyStorePwd);
-
-      X509Certificate certificate = (X509Certificate) ks
-          .getCertificate(projectUser.toLowerCase());
-      String subjectDN = certificate.getSubjectX500Principal()
-          .getName("RFC2253");
-      String[] dnTokens = subjectDN.split(",");
-      String[] cnTokens = dnTokens[0].split("=", 2);
-
-      if (!projectUser.equals(cnTokens[1])) {
+    String commonName = certificatesController.extractCNFromCertificate
+        (keyStore, keyStorePwd, projectUser);
+  
+    if (!projectUser.equals(commonName)) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "Certificate CN does not match the username provided");
+    }
+  
+    byte[] userKey;
+  
+    if (isProjectSpecific) {
+      userKey = userCertsFacade.findUserCert(hdfsUsersBean.
+              getProjectName(commonName),
+          hdfsUsersBean.getUserName(commonName)).getUserKey();
+    } else {
+      // In that case projectUser is the name of the Project, see Spark
+      // interpreter in Zeppelin
+      List<ServiceCerts> serviceCerts = userCertsFacade
+          .findServiceCertsByName(projectUser);
+      if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-            "Certificate CN does not match the username provided");
+            "Could not find exactly one certificate for " + projectUser);
       }
-
-      byte[] userKey;
-
-      if (isProjectSpecific) {
-        userKey = userCertsFacade.findUserCert(hdfsUsersBean.
-            getProjectName(cnTokens[1]),
-            hdfsUsersBean.getUserName(cnTokens[1])).getUserKey();
-      } else {
-        // In that case projectUser is the name of the Project, see Spark
-        // interpreter in Zeppelin
-        List<ServiceCerts> serviceCerts = userCertsFacade
-            .findServiceCertsByName(projectUser);
-        if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
-          throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              "Could not find exactly one certificate for " + projectUser);
-        }
-        userKey = serviceCerts.get(0).getServiceKey();
-      }
-
-      if (!Arrays.equals(userKey, keyStore)) {
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-            "Certificate error!");
-      }
-    } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+      userKey = serviceCerts.get(0).getServiceKey();
+    }
+  
+    if (!Arrays.equals(userKey, keyStore)) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "Certificate error!");
     }
   }

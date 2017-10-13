@@ -27,17 +27,11 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.project.CertificatesController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.swagger.annotations.Api;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.regex.Pattern;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -77,6 +71,8 @@ public class ApplicationService {
   private UserFacade userFacade;
   @EJB
   protected UserManager userManager;
+  @EJB
+  private CertificatesController certificatesController;
 
   @POST
   @Path("mail")
@@ -176,34 +172,17 @@ public class ApplicationService {
    */
   private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd)
       throws AppException {
-    try {
-      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-      ByteArrayInputStream stream = new ByteArrayInputStream(keyStore);
-
-      ks.load(stream, keyStorePwd);
-
-      String projectUser = "";
-      Enumeration<String> aliases = ks.aliases();
-      while (aliases.hasMoreElements()) {
-        String alias = aliases.nextElement();
-        if (!alias.equals("caroot")) {
-          projectUser = alias;
-          break;
-        }
-      }
-
-      UserCerts userCert = certificateBean.findUserCert(hdfsUserBean.
-          getProjectName(projectUser), hdfsUserBean.getUserName(projectUser));
-
-      if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-            "Certificate error!");
-      }
-      return projectUser;
-    } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+    String commonName = certificatesController.extractCNFromCertificate
+        (keyStore, keyStorePwd);
+  
+    UserCerts userCert = certificateBean.findUserCert(hdfsUserBean.
+        getProjectName(commonName), hdfsUserBean.getUserName(commonName));
+  
+    if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "Certificate error!");
     }
+    return commonName;
   }
 
   private void assertAdmin(String projectUser) throws AppException {
