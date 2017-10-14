@@ -26,8 +26,8 @@ public class JupyterConfig {
   private static final Logger LOGGER = Logger.getLogger(JupyterConfig.class.
       getName());
   private static final String LOG4J_PROPS = "/log4j.properties";
-  private static final String JUPYTER_NOTEBOOK_CONFIG
-      = "/jupyter_notebook_config.py";
+  private static final String JUPYTER_NOTEBOOK_CONFIG = "/jupyter_notebook_config.py";
+  private static final String JUPYTER_CUSTOM_KERNEL = "/kernel.json";
   private static final String JUPYTER_CUSTOM_JS = "/custom/custom.js";
   private static final String SPARKMAGIC_CONFIG = "/config.json";
   private static final int DELETE_RETRY = 10;
@@ -217,10 +217,12 @@ public class JupyterConfig {
       throws
       IOException {
     File jupyter_config_file = new File(confDirPath + JUPYTER_NOTEBOOK_CONFIG);
+    File jupyter_kernel_file = new File(confDirPath + JUPYTER_CUSTOM_KERNEL);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
     File log4j_file = new File(confDirPath + LOG4J_PROPS);
     boolean createdJupyter = false;
+    boolean createdKernel = false;
     boolean createdSparkmagic = false;
     boolean createdCustomJs = false;
 
@@ -237,7 +239,17 @@ public class JupyterConfig {
       String pythonKernel = "";
 
       if (settings.isPythonKernelEnabled() && project.getPythonVersion().contains("X") == false) {
-        pythonKernel = ", 'python-" + project.getName() + "'";
+        pythonKernel = ", 'python-" + hdfsUser + "'";
+        StringBuilder jupyter_kernel_config = ConfigFileGenerator.
+            instantiateFromTemplate(
+                ConfigFileGenerator.JUPYTER_CUSTOM_KERNEL,
+                "hdfs_user", this.hdfsUser,
+                "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
+                "hadoop_version", this.settings.getHadoopVersion(),
+                "anaconda_home", this.settings.getAnacondaProjectDir(this.project.getName()),
+                "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret()
+            );
+        createdKernel = ConfigFileGenerator.createConfigFile(jupyter_kernel_file, jupyter_kernel_config.toString());
       }
 
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
@@ -287,6 +299,8 @@ public class JupyterConfig {
 
       String projectPath = "/Projects/" + this.project.getName();
 
+      boolean isTensorflow = js.getMode().toLowerCase().contains("tensorflow");
+
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
@@ -305,12 +319,11 @@ public class JupyterConfig {
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
                   "files", js.getFiles(),
-                  "pyFiles", js.getPyFiles(),
+                  "pyFiles", "\""+js.getPyFiles()+"\"",
                   "yarn_queue", "default",
                   "num_ps", Integer.toString(js.getNumTfPs()),
                   "num_gpus", Integer.toString(js.getNumTfGpus()),
-                  "tensorflow", Boolean.toString(js.getMode().
-                      startsWith("tensorflow")),
+                  "tensorflow", Boolean.toString(isTensorflow),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
                   "mode", js.getMode(),

@@ -22,6 +22,7 @@ import javax.enterprise.context.RequestScoped;
 
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -45,7 +46,7 @@ import io.hops.hopsworks.api.zeppelin.rest.message.NewParagraphRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.RunParagraphWithParametersRequest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
-import io.hops.hopsworks.api.zeppelin.socket.NotebookServer;
+import io.hops.hopsworks.api.zeppelin.socket.NotebookServerImpl;
 import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
 import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
@@ -75,29 +76,27 @@ public class NotebookRestApi {
   private Settings settings;
   @EJB
   private ZeppelinResource zeppelinResource;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   
   private static final Logger LOG = LoggerFactory.getLogger(
           NotebookRestApi.class);
   
   Gson gson = new Gson();
   private Notebook notebook;
-  private NotebookServer notebookServer;
+  private NotebookServerImpl notebookServer;
   private SearchService noteSearchService;
   private NotebookAuthorization notebookAuthorization;
   private Project project;
-  private ZeppelinConfig zeppelinConf;
-  private String roleInProject;
   private String hdfsUserName;
 
   public NotebookRestApi() {
   }
 
-  public void setParms(Project project, String userRole, String hdfsUserName,
+  public void setParms(Project project, String hdfsUserName,
           ZeppelinConfig zeppelinConf) {
     this.project = project;
-    this.zeppelinConf = zeppelinConf;
     this.hdfsUserName = hdfsUserName;
-    this.roleInProject = userRole;
     this.notebook = zeppelinConf.getNotebook();
     this.notebookServer = zeppelinConf.getNotebookServer();
     this.noteSearchService = zeppelinConf.getNotebookIndex();
@@ -608,19 +607,19 @@ public class NotebookRestApi {
         if (null != interpreter) {
           String interpreterGroup = interpreter.getInterpreterGroup().getId()
               .split(":")[0];
-          if (certificateMaterializer.openedInterpreter(project.getId(),
-              interpreterGroup)) {
+          String username = hdfsUsersController.getUserName(hdfsUserName);
+          if (certificateMaterializer.openedInterpreter(project.getId(), interpreterGroup)) {
             try {
               HopsUtils.materializeCertificatesForUser(project.getName(),
-                  project.getOwner().getUsername(), settings
+                  username, settings
                       .getHopsworksTmpCertDir(), settings.getHdfsTmpCertDir(),
                   dfso, certificateMaterializer, settings, true);
             } catch (IOException ex) {
               LOG.warn("Could not materialize certificates for user: " +
-                  project.getName() + "__" + project.getOwner().getUsername());
-              HopsUtils.cleanupCertificatesForUser(project.getOwner()
-                  .getUsername(), project.getName(), settings
-                  .getHdfsTmpCertDir(), dfso, certificateMaterializer, true);
+                  project.getName() + "__" + username);
+              HopsUtils.cleanupCertificatesForUser(username,
+                  project.getName(), settings.getHdfsTmpCertDir(),
+                  dfso, certificateMaterializer, true);
               throw ex;
             }
           }

@@ -19,14 +19,14 @@ public class JupyterSettingsPK implements Serializable {
   @Size(min = 1,
           max = 150)
   @Column(name = "team_member")
-  private String teamMember;
+  private String email;
 
   public JupyterSettingsPK() {
   }
 
-  public JupyterSettingsPK(int projectId, String teamMember) {
+  public JupyterSettingsPK(int projectId, String email) {
     this.projectId = projectId;
-    this.teamMember = teamMember;
+    this.email = email;
   }
 
   public int getProjectId() {
@@ -37,19 +37,19 @@ public class JupyterSettingsPK implements Serializable {
     this.projectId = projectId;
   }
 
-  public String getTeamMember() {
-    return teamMember;
+  public String getEmail() {
+    return email;
   }
 
-  public void setTeamMember(String teamMember) {
-    this.teamMember = teamMember;
+  public void setEmail(String teamMember) {
+    this.email = teamMember;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
     hash += (int) projectId;
-    hash += (teamMember != null ? teamMember.hashCode() : 0);
+    hash += (email != null ? email.hashCode() : 0);
     return hash;
   }
 
@@ -63,8 +63,8 @@ public class JupyterSettingsPK implements Serializable {
     if (this.projectId != other.projectId) {
       return false;
     }
-    if ((this.teamMember == null && other.teamMember != null) ||
-            (this.teamMember != null && !this.teamMember.equals(other.teamMember))) {
+    if ((this.email == null && other.email != null) ||
+            (this.email != null && !this.email.equals(other.email))) {
       return false;
     }
     return true;
@@ -73,7 +73,7 @@ public class JupyterSettingsPK implements Serializable {
   @Override
   public String toString() {
     return "io.hops.hopsworks.common.dao.jupyter.JupyterSettingsPK[ projectId=" +
-            projectId + ", teamMember=" + teamMember + " ]";
+            projectId + ", teamMember=" + email + " ]";
   }
 
 }

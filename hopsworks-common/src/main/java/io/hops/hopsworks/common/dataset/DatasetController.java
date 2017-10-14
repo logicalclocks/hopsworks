@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.persistence.NonUniqueResultException;
 import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -172,6 +173,10 @@ public class DatasetController {
           dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
           throw failed;
         } catch (IOException ex) {
+          if(e.getCause() instanceof NonUniqueResultException){
+            throw new IOException(
+              "A shared Dataset with the same name already exists.", ex);
+          }
           throw new IOException(
               "Failed to clean up properly on dataset creation failure", ex);
         }
@@ -396,7 +401,13 @@ public class DatasetController {
       String readmeFile, readMeFilePath;
       //Generate README.md for the Default Datasets
       readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
-      readMeFilePath = "/Projects/" + project + "/" + dsName + "/README.md";
+      StringBuilder readmeSb = new StringBuilder();
+      readmeSb.append(File.separator).append(Settings.DIR_ROOT)
+          .append(File.separator).append(project)
+          .append(File.separator).append(dsName)
+          .append(File.separator).append(Settings.README_FILE);
+      
+      readMeFilePath = readmeSb.toString();
 
       try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
         fsOut.writeBytes(readmeFile);

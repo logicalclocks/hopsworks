@@ -70,7 +70,7 @@ public class InterpreterService {
       logger.error("User with no role in this project.");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "You curently have no role in this project!");
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName(), user.getEmail());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
       logger.error("Could not connect to web socket.");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Could not connect to web socket.");
@@ -100,7 +100,7 @@ public class InterpreterService {
       logger.error("User with no role in this project.");
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();
     }
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.getName(), user.getEmail());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
       logger.error("Zeppelin  not connect to web socket.");
       return new JsonResponse(Response.Status.NOT_FOUND, "").build();

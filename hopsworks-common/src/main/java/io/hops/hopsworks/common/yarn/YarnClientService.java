@@ -6,7 +6,6 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -49,15 +48,13 @@ public class YarnClientService {
       handleMissingConf("yarn-site.xml", confDir);
     }
     
-    conf = new YarnConfiguration();
+    conf = new Configuration();
     Path coreSitePath = new Path(coreSite.getAbsolutePath());
     Path yarnSitePath = new Path(yarnSite.getAbsolutePath());
     conf.addResource(coreSitePath);
     conf.addResource(yarnSitePath);
     
     if (settings.getHopsRpcTls()) {
-      bhcs.parseServerSSLConf(conf);
-      
       try {
         hostname = InetAddress.getLocalHost().getHostName();
         transientDir = settings.getHopsworksTmpCertDir();

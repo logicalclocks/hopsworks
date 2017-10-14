@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
   ,
   @NamedQuery(name = "JupyterSettings.findByTeamMember",
           query
-          = "SELECT j FROM JupyterSettings j WHERE j.jupyterSettingsPK.teamMember = :teamMember")
+          = "SELECT j FROM JupyterSettings j WHERE j.jupyterSettingsPK.email = :email")
   ,
   @NamedQuery(name = "JupyterSettings.findByNumTfPs",
           query
@@ -201,14 +201,14 @@ public class JupyterSettings implements Serializable {
   }
 
   public JupyterSettings(JupyterSettingsPK jupyterSettingsPK, String secret,
-          String framework) {
+          String mode) {
     this.jupyterSettingsPK = jupyterSettingsPK;
     this.secret = secret;
-    this.mode = framework;
+    this.mode = mode;
   }
 
-  public JupyterSettings(int projectId, String teamMember) {
-    this.jupyterSettingsPK = new JupyterSettingsPK(projectId, teamMember);
+  public JupyterSettings(int projectId, String email) {
+    this.jupyterSettingsPK = new JupyterSettingsPK(projectId, email);
   }
 
   public JupyterSettingsPK getJupyterSettingsPK() {

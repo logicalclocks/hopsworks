@@ -102,6 +102,14 @@ public class HdfsUsers implements Serializable {
     return this.name.substring(index);
   }
 
+  public String getProject() {
+    int index = this.name.indexOf("__");
+    if (index == -1) {
+      return "";
+    }
+    return this.name.substring(0, index);
+  }
+
   @XmlTransient
   @JsonIgnore
   public Collection<HdfsGroups> getHdfsGroupsCollection() {

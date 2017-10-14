@@ -453,6 +453,7 @@ public class JobService {
     return urls;
   }
 
+  
   /**
    * Get the Job UI url for the specified job
    * <p>
@@ -1057,8 +1058,10 @@ public class JobService {
     if (path != null && !path.isEmpty() && dfso.exists(hdfsPath)) {
       if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
         stdPath = path.split(this.project.getName())[1];
+        int fileIndex = stdPath.lastIndexOf("/");
+        String stdDirPath = stdPath.substring(0, fileIndex);
         arrayObjectBuilder.add(type, "Log is too big to display. Please retrieve it by clicking ");
-        arrayObjectBuilder.add(type + "Path", "/project/" + this.project.getId() + "/datasets" + stdPath);
+        arrayObjectBuilder.add(type + "Path", "/project/" + this.project.getId() + "/datasets" + stdDirPath);
       } else {
         try (InputStream input = dfso.open(hdfsPath)) {
           message = IOUtils.toString(input, "UTF-8");

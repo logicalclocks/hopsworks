@@ -62,8 +62,7 @@ public class HeliumService {
               "You curently have no role in this project!");
     }
 
-    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getZeppelinConfig(project.
-            getName(), user.getEmail());
+    ZeppelinConfig zeppelinConf = zeppelinConfFactory.getProjectConf(project.getName());
     if (zeppelinConf == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not connect to web socket.");

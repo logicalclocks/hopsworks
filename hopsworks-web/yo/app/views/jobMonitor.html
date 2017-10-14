@@ -14,13 +14,13 @@
 
         <section>
           <!-- Page Content -->
-          <div class="content" style="height:100%; overflow: hidden; margin-left: 2px;" ng-class="{'hide-border': projectCtrl.isClosed, 'expanded-job-monitor': !projectCtrl.isClosed}">	
+          <div class="content" style="height:100%; overflow: hidden; margin-left: 2px;" ng-class="{'hide-border': projectCtrl.isClosed, 'expanded-job-monitor': !projectCtrl.isClosed}">
             <div ng-if="jobUICtrl.loading" class="loadingwrap">
               <div class="loading-content">
                 <div class="loader-in-wrap"></div>
                 {{jobUICtrl.loadingText}}
-              </div>  
-            </div> 
+              </div>
+            </div>
 
             <div class="row" style="margin-left: 10px; height: 100%; overflow-y: auto;">
 
@@ -64,14 +64,16 @@
                                 </span>-->
                 <span ng-if="jobUICtrl.sessions.length === 2" class="field-info"  ng-repeat="tf in jobUICtrl.sessions" uib-tooltip="Show tensorboard"
                       style="padding-top: 5px;padding-left:3px">
-                  <button ng-if="$index > 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"  
+                  <button ng-if="$index > 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-cubes">
                     {{tf.name}}
                   </button>
                 </span>
-                <span ng-if="jobUICtrl.sessions.length >= 2" class="field-info" style="padding-top: 5px;padding-left:5px; padding-right: 5px;">
-                  <ui-select name="tfId" theme="select2"  ng-model="jobUICtrl.session" on-select="jobUICtrl.tfUI(jobUICtrl.session)">
-                    <ui-select-match placeholder="Select a Tensorboard Server"><span>{{$select.session.name}}</span>
+                <span ng-if="jobUICtrl.sessions.length > 2" class="field-info" style="padding-top: 5px;padding-left:5px; padding-right: 5px;">
+                  <ui-select name="tfId" theme="select2" ng-model="jobUICtrl.session" on-select="jobUICtrl.tfUI(jobUICtrl.session)" style="width: 400px">
+                    <ui-select-match>
+                      <span ng-if="jobUICtrl.current !== 'tensorboardUI'">Select a Tensorboard Server</span>
+                      <span ng-if="jobUICtrl.current === 'tensorboardUI'">{{$select.selected.name}}</span>
                     </ui-select-match>
                     <ui-select-choices repeat="id in jobUICtrl.sessions">
                       <div ng-bind-html="id.name | highlight: $select.search" ng-if="$index > 0"></div>
@@ -85,7 +87,7 @@
                           class="btn btn-success btn-md glyphicon glyphicon-refresh">
                   </button>
                 </span>
-                <span ng-if="jobUICtrl.isLivy !== 'true'"> 
+                <span ng-if="jobUICtrl.isLivy !== 'true'">
                   <ui-select name="appId" theme="select2"  ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
 
                     <ui-select-match placeholder="Select an appId">{{$select.selected.id}}</ui-select-match>
@@ -95,12 +97,12 @@
                     </ui-select-choices>
                   </ui-select>
                 </span>
-                <span class="pull-right" style="padding-right: 30px; padding-top: 10px;"> 
+                <span class="pull-right" style="padding-right: 30px; padding-top: 10px;">
                   <a ng-click="jobUICtrl.openUiInNewWindow()"><i class="glyphicon glyphicon-new-window"></i> New Window</a>
-                </span> 
+                </span>
               </div>
               <div ng-if="jobUICtrl.ui !== '' && jobUICtrl.current !== 'vizopsUI'">
-                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe> 
+                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe>
               </div>
               <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
               <div ng-if="jobUICtrl.current === 'vizopsUI'">
@@ -110,7 +112,7 @@
               </div>
 
               <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
-                No Job selected. 
+                No Job selected.
               </h3>
             </div>
 

@@ -7,18 +7,27 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -29,20 +38,26 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
 
+/**
+ * *
+ * This class wraps a bash script with sudo rights that can be executed by the node['hopsworks']['user'].
+ * /srv/hops/domains/domain1/bin/jupyter.sh
+ * The bash script has several commands with parameters that can be exceuted.
+ * This class provides a Java interface for executing the commands.
+ */
 @Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class JupyterConfigFactory {
+@ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
+@DependsOn("Settings")
+public class JupyterProcessFacade {
 
-  private static final Logger logger = Logger.getLogger(
-      JupyterConfigFactory.class.getName());
-  private static final String JUPYTER_NOTEBOOK_CONFIG
-      = "conf/jupyter_notebook_config.py";
+  private static final Logger logger = Logger.getLogger(JupyterProcessFacade.class.getName());
 
   @EJB
   private Settings settings;
@@ -55,25 +70,20 @@ public class JupyterConfigFactory {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
+  private ProjectFacade projectFacade;
+  @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
+  @EJB
+  private UserFacade userFacade;
 
   private String hadoopClasspath = null;
 
   @PostConstruct
   public void init() {
-    loadConfig();
   }
 
   @PreDestroy
   public void preDestroy() {
-
-  }
-
-  private void loadConfig() {
-
-  }
-
-  public void initNotebook(Project project, HdfsUsers user) {
 
   }
 
@@ -139,10 +149,8 @@ public class JupyterConfigFactory {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public JupyterDTO startServerAsJupyterUser(Project project,
-      String secretConfig,
-      String hdfsUser, JupyterSettings js) throws
-      AppException, IOException, InterruptedException {
+  public JupyterDTO startServerAsJupyterUser(Project project, String secretConfig, String hdfsUser, 
+      JupyterSettings js) throws AppException, IOException, InterruptedException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
 
@@ -171,6 +179,11 @@ public class JupyterConfigFactory {
           hdfsLeFacade.getSingleEndpoint(), settings, port, token, js);
 
       String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
+
+      if (settings.isPythonKernelEnabled()) {
+        createPythonKernelForProjectUser(jc.getNotebookPath(), hdfsUser);
+      }
+      
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
           = {"/usr/bin/sudo", prog, "start", jc.getNotebookPath(),
@@ -394,7 +407,7 @@ public class JupyterConfigFactory {
     for (JupyterProject jp : project.getJupyterProjectCollection()) {
       HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
       for (JupyterSettings js : jupyterSettings) {
-        if (hdfsUser.getName().compareTo(js.getJupyterSettingsPK().getTeamMember()) == 0) {
+        if (hdfsUser.getName().compareTo(js.getJupyterSettingsPK().getEmail()) == 0) {
           path = hdfsUser.getName();
           break;
         }
@@ -442,14 +455,121 @@ public class JupyterConfigFactory {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean pingServerJupyterUser(Long pid) {
+    int exitValue = executeJupyterCommand("ping", pid.toString());
+    return exitValue == 0;
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public int createPythonKernelForProjectUser(String hdfsUser) {
+    String secretPath = "";
+    String projectName = hdfsUsersController.getProjectName(hdfsUser);
+    Project project = projectFacade.findByName(projectName);
+    boolean notFound = true;
+    for (JupyterSettings js : project.getJupyterSettingsCollection()) {
+      if (js.getPrivateDir().contains(hdfsUser)) {
+        secretPath = js.getPrivateDir();
+        notFound = false;
+        break;
+      }
+    }
+    if (notFound) {
+      return -11;
+    }
+    String privateDir = this.settings.getJupyterDir()
+        + Settings.DIR_ROOT + File.separator + project.getName()
+        + File.separator + hdfsUser + File.separator + secretPath;
+
+    return createPythonKernelForProjectUser(privateDir, hdfsUser);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public int createPythonKernelForProjectUser(Project project, Users user) {
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+
+    String privateDir = this.settings.getJupyterDir()
+        + Settings.DIR_ROOT + File.separator + project.getName()
+        + File.separator + hdfsUser + File.separator + js.getSecret();
+
+    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+  }
+
+  private int createPythonKernelForProjectUser(String privateDir, String hdfsUser) {
+    return executeJupyterCommand("kernel-add", privateDir, hdfsUser);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public int removePythonKernelForProjectUser(String hdfsUser) {
+    return executeJupyterCommand("kernel-remove", hdfsUser);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public int removePythonKernelsForProject(String projectName) {
+    return executeJupyterCommand("kernel-remove", projectName + "*");
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public List<JupyterProject> getAllNotebooks() {
+    List<JupyterProject> allNotebooks = jupyterFacade.getAllNotebookServers();
+
+    executeJupyterCommand("list");
+
+    File file = new File(Settings.JUPYTER_PIDS);
+
+    List<Long> pidsRunning = new ArrayList<>();
+    try {
+      Scanner scanner = new Scanner(file);
+      while (scanner.hasNextLine()) {
+        String line = scanner.nextLine();
+        pidsRunning.add(Long.parseLong(line));
+      }
+    } catch (FileNotFoundException e) {
+      logger.warning("Invalid pids in file: " + Settings.JUPYTER_PIDS);
+    }
+
+    List<Long> pidsOrphaned = new ArrayList<>();
+    pidsOrphaned.addAll(pidsRunning);
+
+    for (Long pid : pidsRunning) {
+      boolean foundPid = false;
+      for (JupyterProject jp : allNotebooks) {
+        if (pid == jp.getPid()) {
+          foundPid = true;
+        }
+        if (foundPid) {
+          pidsOrphaned.remove(pid);
+        }
+      }
+    }
+
+    for (Long pid : pidsOrphaned) {
+      JupyterProject jp = new JupyterProject();
+      jp.setPid(pid);
+      jp.setPort(-1);
+      jp.setLastAccessed(Date.from(Instant.now()));
+      jp.setHdfsUserId(-1);
+      allNotebooks.add(jp);
+    }
+    file.deleteOnExit();
+
+    return allNotebooks;
+  }
+
+  private int executeJupyterCommand(String... args) {
+    if (args == null || args.length == 0) {
+      return -99;
+    }
     int exitValue;
     Integer id = 1;
-    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
-    String[] command = {"/usr/bin/sudo", prog, "ping", pid.toString()};
+    String prog = this.settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+    ArrayList<String> command = new ArrayList<>();
+    command.add("/usr/bin/sudo");
+    command.add(prog);
+    command.addAll(java.util.Arrays.asList(args));
+    logger.log(Level.INFO, Arrays.toString(command.toArray()));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-
       BufferedReader br = new BufferedReader(new InputStreamReader(
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
@@ -465,8 +585,7 @@ public class JupyterConfigFactory {
               toString());
       exitValue = -2;
     }
-
-    return exitValue == 0;
+    return exitValue;
   }
 
 }
