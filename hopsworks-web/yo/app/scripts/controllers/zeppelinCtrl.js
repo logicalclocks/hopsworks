@@ -170,7 +170,7 @@ angular.module('hopsWorksApp')
               ZeppelinService.getLivySessionAppId(sessionId)
                       .then(function (success) {
                         var appId = success.data;
-                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true");
+                        $location.path('project/' + projectId + '/jobMonitor-app/' + appId + "/true/zeppelin");
                       }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 10});
                       });

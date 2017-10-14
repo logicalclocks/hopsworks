@@ -236,7 +236,7 @@ angular.module('hopsWorksApp')
                 "flinkState": self.flinkState,
                 "tensorflowState" : self.tensorflowState,
                 "adamState": self.adamState,
-                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6],
+                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6]
               };
               self.undoneState = state;
               self.undoable = true;
@@ -540,6 +540,7 @@ angular.module('hopsWorksApp')
 
             /**
              * Used by tour.
+             * @param {type} jobType
              * @returns {undefined}
              */
             self.setTourJobType = function (jobType) {
@@ -693,7 +694,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "ADAM":
                   self.adamState.processparameter.value = path;
-                  if (typeof runConfig != 'undefined') {
+                  if (typeof runConfig !== 'undefined') {
                     self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
                     self.sliderOptions.options['ceil'] = self.runConfig.
                             maxExecutors;
@@ -788,7 +789,7 @@ angular.module('hopsWorksApp')
 
             /**
              * Remove the given entry from the localResources list.
-             * @param {type} lib
+             * @param {type} name
              * @returns {undefined}
              */
             this.removeLibrary = function (name) {
@@ -842,15 +843,31 @@ angular.module('hopsWorksApp')
                 }
                 self.jobname = stored.jobname;
                 self.localResources = stored.runConfig.localResources;
+                if(typeof self.localResources === "undefined"){
+                  self.localResources = [];
+                }
+                
                 self.phase = stored.phase;
                 self.runConfig = stored.runConfig;
                 if (self.runConfig) {
                   self.topics = [];
                   self.runConfig.schedule = null;
-                  self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
-                  self.sliderOptions.options['ceil'] = self.runConfig.maxExecutors;
-                  self.sliderOptions.min = self.runConfig.selectedMinExecutors;
-                  self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                  if(typeof self.runConfig.minExecutors !== "undefined") {
+                    self.sliderOptions.options['floor'] = self.runConfig.minExecutors;
+                  }
+                  if(typeof self.sliderOptions.options['ceil'] !== "undefined") {
+                    self.runConfig.maxExecutors;
+                  }
+                  if (typeof self.runConfig.selectedMinExecutors === "undefined") {
+                    self.runConfig.selectedMinExecutors = self.sliderOptions.min;
+                  } else {
+                    self.sliderOptions.min = self.runConfig.selectedMinExecutors;
+                  }
+                  if (typeof self.runConfig.selectedMaxExecutors === "undefined") {
+                    self.runConfig.selectedMaxExecutors = self.sliderOptions.max;
+                  } else {
+                    self.sliderOptions.max = self.runConfig.selectedMaxExecutors;
+                  }
                   //Load Kafka properties
                   if (typeof self.runConfig.kafka !== "undefined" && self.runConfig.kafka.topics.length > 0) {
                     self.kafkaSelected = true;
@@ -943,6 +960,7 @@ angular.module('hopsWorksApp')
              * Creates a jobDetails object with the arguments typed by the user and send  
              * these attributes to the server. The server responds with the results from the 
              * heuristic search.
+             * @param {type} filterValue
              * @returns {undefined}
              */
             this.autoConfig = function (filterValue) {

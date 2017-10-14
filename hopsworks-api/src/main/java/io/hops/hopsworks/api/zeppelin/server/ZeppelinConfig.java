@@ -405,7 +405,7 @@ public class ZeppelinConfig {
   private boolean createZeppelinConfFiles(String interpreterConf) throws IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
-    File log4j_file = new File(confDirPath + LOG4J_PROPS);
+//    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
     String notebookDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
@@ -414,11 +414,11 @@ public class ZeppelinConfig {
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
-    if (!log4j_file.exists()) {
-      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.LOG4J_TEMPLATE);
-      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
-    }
-    String log4jPath = Settings.getSparkLog4JPath(settings.getHdfsSuperUser());
+//    if (!log4j_file.exists()) {
+//      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.LOG4J_TEMPLATE);
+//      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
+//    }
+    String log4jPath = Settings.getSparkLog4JPath(settings.getSparkUser());
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
         + File.separator + "bin" + File.separator + "python";
     if (!zeppelin_env_file.exists()) {
@@ -472,9 +472,8 @@ public class ZeppelinConfig {
     }
 
     //Set Hopsworks properties to be available in Zeppelin
-    String jobName = this.projectName.toLowerCase() + "-zeppelin";
     String logstashID = "-D" + Settings.LOGSTASH_JOB_INFO + "="
-        + this.projectName.toLowerCase() + "," + jobName + "," + jobName;
+        + this.projectName.toLowerCase() + ",zeppelin,notebook,?";
     String restEndpointProp = " -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY + "=" + settings.getRestEndpoint();
     String keystorePwProp = " -D" + Settings.HOPSWORKS_KEYSTORE_PROPERTY + "=" + Settings.KEYSTORE_VAL_ENV_VAR;
     String truststorePwProp = " -D" + Settings.HOPSWORKS_TRUSTSTORE_PROPERTY + "=" + Settings.TRUSTSTORE_VAL_ENV_VAR;
