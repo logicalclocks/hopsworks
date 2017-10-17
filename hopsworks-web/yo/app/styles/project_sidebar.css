@@ -369,5 +369,18 @@
   margin-top: 0; }
 
 .sidebar-nav-static {
-  padding: 10px 15px 10px 15px;
+  padding: 2px 15px 2px 15px;
 }
+
+.status-success{
+  color: #91c78e;
+}
+
+.status-warning{
+  color: #eec089;
+}
+
+.status-danger{
+  color: #dd8484;
+}
+

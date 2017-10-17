@@ -103,7 +103,7 @@
           <small ng-show="clusterUtilCtrl.utilisation === 20" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization is low</em></small>
           <small ng-show="clusterUtilCtrl.utilisation > 1 && clusterUtilCtrl.utilisation !== 20" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization: {{clusterUtilCtrl.utilisation}}%</em></small>
           <small ng-show="clusterUtilCtrl.utilisation < 1" style="color: #ddd;"><em>Cluster Utilization is unknown</em></small>
-          <div class="progress" style="height: 10px;"
+          <div class="progress" style="height: 10px;margin-bottom: 1px"
                uib-tooltip="If this bar is orange (> 50%), consider allocating less resources for your application.
                If this bar is red (> 80%), consider running your jobs at a later time. "
                tooltip-placement="bottom">
@@ -114,6 +114,30 @@
             </div>
           </div>
           <br>
+        </div>
+        <div class="sidebar-nav-static">          
+          <small style="color: #ddd; font-size: 80%;"><em>HDFS status: </em></small>
+          <span class="fa fa-circle pull-right" 
+               uib-tooltip="If this indicator is orange, your job may encounter problems running.
+               If this bar is red your jobs will not be able to run. "
+               tooltip-placement="bottom" ng-class="clusterUtilCtrl.HdfsStatus">
+          </span>
+        </div>
+        <div class="sidebar-nav-static">          
+          <small style="color: #ddd; font-size: 80%;"><em>YARN status: </em></small>
+          <span class="fa fa-circle pull-right" 
+               uib-tooltip="If this indicator is orange, your job may encounter problems running.
+               If this bar is red your jobs will not be able to run. "
+               tooltip-placement="bottom" ng-class="clusterUtilCtrl.YarnStatus">
+          </span>
+        </div>
+        <div class="sidebar-nav-static" ng-show="projectCtrl.showKafka()">          
+          <small style="color: #ddd; font-size: 80%;"><em>Kafka status: </em></small>
+          <span class="fa fa-circle pull-right" 
+               uib-tooltip="If this indicator is orange, your job may encounter problems running.
+               If this bar is red your jobs will not be able to run. "
+               tooltip-placement="bottom" ng-class="clusterUtilCtrl.KafkaStatus">
+          </span>
         </div>
         <div class="sidebar-nav-static">
           <div ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
