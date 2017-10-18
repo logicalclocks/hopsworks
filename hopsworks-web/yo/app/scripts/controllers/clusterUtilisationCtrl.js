@@ -50,7 +50,7 @@ angular.module('hopsWorksApp')
                         } else {
                           self.gpuBarClass = 'progress-bar-danger';
                         }
-                        self.gpusPercent = (self.allocatedGPUs/totalGpus);
+                        self.gpusPercent = (self.allocatedGPUs/totalGpus)*100;
 
                       }, function (error) {
                         console.log("Problem getting GPU utilization");
