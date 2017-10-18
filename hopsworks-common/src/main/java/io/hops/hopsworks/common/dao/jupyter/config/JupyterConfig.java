@@ -319,8 +319,9 @@ public class JupyterConfig {
                   "files", js.getFiles(),
                   "pyFiles", "\"" + js.getPyFiles() + "\"",
                   "yarn_queue", "default",
-                  "num_ps", Integer.toString(js.getNumTfPs()),
-                  "num_gpus", Integer.toString(js.getNumTfGpus()),
+                  "num_ps", (js.getMode().compareToIgnoreCase("distributedtensorflow") == 0)
+                              ? Integer.toString(js.getNumTfPs()) : "0",
+                  "num_gpus", (isTensorflow) ? Integer.toString(js.getNumTfGpus()) : "0",
                   "tensorflow", Boolean.toString(isTensorflow),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
