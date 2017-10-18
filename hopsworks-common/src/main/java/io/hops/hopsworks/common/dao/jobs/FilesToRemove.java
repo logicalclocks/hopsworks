@@ -2,8 +2,6 @@ package io.hops.hopsworks.common.dao.jobs;
 
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -11,8 +9,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -29,20 +25,13 @@ import org.codehaus.jackson.annotate.JsonIgnore;
       = "SELECT j FROM FilesToRemove j WHERE j.filesToRemovePK.executionId = :executionId"),
   @NamedQuery(name = "FilesToRemove.findByPath",
       query
-      = "SELECT j FROM FilesToRemove j WHERE j.path = :path")})
+      = "SELECT j FROM FilesToRemove j WHERE j.filesToRemovePK.filepath = :filepath")})
 public class FilesToRemove implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
   @EmbeddedId
   protected FilesToRemovePK filesToRemovePK;
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-      max = 255)
-  @Column(name = "path")
-  private String path;
 
   @JoinColumn(name = "execution_id",
       referencedColumnName = "id",
@@ -68,14 +57,6 @@ public class FilesToRemove implements Serializable {
 
   public void setFilesToRemovePK(FilesToRemovePK filesToRemovePK) {
     this.filesToRemovePK = filesToRemovePK;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public void setPath(String path) {
-    this.path = path;
   }
 
   @XmlTransient
