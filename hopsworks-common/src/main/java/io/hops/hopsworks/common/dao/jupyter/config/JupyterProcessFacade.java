@@ -187,7 +187,7 @@ public class JupyterProcessFacade {
       String logfile = jc.getLogDirPath() + "/" + hdfsUser + "-" + port + ".log";
       String[] command
           = {"/usr/bin/sudo", prog, "start", jc.getNotebookPath(),
-            jc.getSettings().getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
+            jc.getSettings().getHadoopSymbolicLinkDir(), settings.getJavaHome(),
             settings.getAnacondaProjectDir(project.getName()), port.
             toString(),
             hdfsUser + "-" + port + ".log", secretDir};
