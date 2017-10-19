@@ -55,11 +55,6 @@ angular.module('hopsWorksApp')
                 url: '/api/project/:id/logs/enable',
                 'method': 'POST'
               },
-              "getPublicDatasets": {
-                url: '/api/project/getPublicDatasets',
-                'method': 'GET',
-                isArray: true           
-              },
               "getDatasetInfo": {
                 url: '/api/project/getDatasetInfo/:inodeId',
                 'method': 'GET'                  

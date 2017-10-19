@@ -313,8 +313,8 @@ angular.module('hopsWorksApp')
                   if (error.data && error.data.details) {
                     growl.error(error.data.details, {title: 'Error', ttl: 1000});
                   }
-                  self.delaService = new DelaProjectService(destProj);
-                  self.delaService.cancel(result.publicId, true).then(function (success) {
+                  self.delaHopsService = new DelaProjectService(destProj);
+                  self.delaHopsService.unshareFromHops(result.publicId, true).then(function (success) {
                     growl.info("Download cancelled.", {title: 'Info', ttl: 1000});
                   }, function (error) {
                     growl.warning(error, {title: 'Warning', ttl: 1000});

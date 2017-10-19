@@ -11,6 +11,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -34,24 +35,24 @@ public class DelaDatasetController {
   @EJB
   private DistributedFsService dfs;
 
-  public Dataset upload(Dataset dataset, String publicDSId) {
-    dataset.setPublicDs(true);
+  public Dataset uploadToHops(Dataset dataset, String publicDSId) {
+    dataset.setPublicDsState(Dataset.SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
     dataset.setEditable(false);
     datasetFacade.merge(dataset);
     datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;
   }
-
-  public Dataset cancel(Dataset dataset) {
-    dataset.setPublicDs(false);
+  
+  public Dataset unshareFromHops(Dataset dataset) {
+    dataset.setPublicDsState(Dataset.SharedState.PRIVATE);
     dataset.setPublicDsId(null);
     dataset.setEditable(true);
     datasetFacade.merge(dataset);
     datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;
   }
-
+  
   public Dataset download(Project project, Users user, String publicDSId, String name)
     throws ThirdPartyException {
     Dataset dataset;
@@ -61,7 +62,7 @@ public class DelaDatasetController {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), e.getMessage(),
         ThirdPartyException.Source.LOCAL, "");
     }
-    dataset.setPublicDs(true);
+    dataset.setPublicDsState(Dataset.SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
     dataset.setEditable(false);
     datasetFacade.merge(dataset);
@@ -106,5 +107,9 @@ public class DelaDatasetController {
       dfs.getDfsOps());
     Dataset dataset = datasetFacade.findByNameAndProjectId(project, name);
     return dataset;
+  }
+  
+  public List<Dataset> getLocalPublicDatasets() {
+    return datasetFacade.findAllDatasetsByState(Dataset.SharedState.HOPS.state, false);
   }
 }

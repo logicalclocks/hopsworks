@@ -118,12 +118,11 @@ public class DelaProjectService {
   @Path("/uploads")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response publish(@Context SecurityContext sc, InodeIdDTO inodeId)
-    throws ThirdPartyException {
+  public Response publish(@Context SecurityContext sc, InodeIdDTO inodeId) throws ThirdPartyException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     Users user = getUser(sc.getUserPrincipal().getName());
-    delaWorkerCtrl.publishDataset(project, dataset, user);
+    delaWorkerCtrl.shareDatasetWithHops(project, dataset, user);
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("Dataset transfer is started - published");
     return successResponse(json);
@@ -151,15 +150,15 @@ public class DelaProjectService {
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = getUser(sc.getUserPrincipal().getName());
     if (clean) {
-      delaWorkerCtrl.cancelAndClean(project, dataset, user);
+      delaWorkerCtrl.unshareFromHopsAndClean(project, dataset, user);
     } else {
-      delaWorkerCtrl.cancel(project, dataset, user);
+      delaWorkerCtrl.unshareFromHops(project, dataset, user);
     }
     JsonResponse json = new JsonResponse();
-    json.setSuccessMessage("Dataset transfer is now stopped - cancelled");
+    json.setSuccessMessage("Dataset is now private");
     return successResponse(json);
   }
-
+  
   @POST
   @Path("/downloads/{publicDSId}/manifest")
   @Produces(MediaType.APPLICATION_JSON)

@@ -1,9 +1,9 @@
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
@@ -42,7 +42,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,6 +119,8 @@ public class ProjectService {
   
   @Inject
   private DelaProjectService delaService;
+  @Inject
+  private DelaClusterProjectService delaclusterService;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
       getName());
@@ -712,27 +713,6 @@ public class ProjectService {
   }
 
   @GET
-  @Path("getPublicDatasets")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
-  public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    List<Dataset> publicDatasets = datasetFacade.findAllPublicDatasets();
-    List<LocalDatasetDTO> localDS = new ArrayList<>();
-    Date date;
-    long size;
-    for (Dataset d : publicDatasets) {
-      if (!d.isShared()) {
-        date = new Date(d.getInode().getModificationTime().longValue());
-        size = inodes.getSize(d.getInode());
-        localDS.add(new LocalDatasetDTO(d.getInodeId(), d.getName(), d.getDescription(), d.getProject().getName(), date,
-                date, size));
-      }
-    }
-    GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
-  }
-
-  @GET
   @Path("{id}/importPublicDataset/{projectName}/{inodeId}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response quotasByProjectID(
@@ -772,7 +752,7 @@ public class ProjectService {
       newDS.setDescription(ds.getDescription());
     }
     if (ds.isPublicDs()) {
-      newDS.setPublicDs(true);
+      newDS.setPublicDs(ds.getPublicDs());
     }
     newDS.setEditable(false);
     datasetFacade.persistDataset(newDS);
@@ -848,8 +828,7 @@ public class ProjectService {
 
   @Path("{id}/dela")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public DelaProjectService dela(
-    @PathParam("id") Integer id) throws AppException {
+  public DelaProjectService dela(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -858,5 +837,18 @@ public class ProjectService {
     this.delaService.setProjectId(id);
 
     return this.delaService;
+  }
+  
+  @Path("{id}/delacluster")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+        ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.delaclusterService.setProjectId(id);
+
+    return this.delaclusterService;
   }
 }

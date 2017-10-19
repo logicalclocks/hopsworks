@@ -5,7 +5,7 @@ angular.module('hopsWorksApp')
         .factory('DelaProjectService', ['$http', function ($http) {
             return function (id) {
               var service = {
-                publishByInodeId: function (inodeId) {
+                shareWithHopsByInodeId: function (inodeId) {
                   var payload = {"id": inodeId};
                   return $http({
                     method: 'POST',
@@ -16,7 +16,7 @@ angular.module('hopsWorksApp')
                     data: payload
                   });
                 },
-                cancel: function (publicDSId, cleanVal) {
+                unshareFromHops: function (publicDSId, cleanVal) {
                   return $http({
                     method: 'POST',
                     url: '/api/project/' + id + '/dela/transfers/' + publicDSId + '/cancel?clean=cleanVal'

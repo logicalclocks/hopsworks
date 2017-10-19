@@ -2,6 +2,12 @@
 angular.module('hopsWorksApp')
         .factory('DelaService', ['$http', function ($http) {
             var service = {
+              getLocalPublicDatasets: function() {
+                return $http({
+                  method: 'GET',
+                  url: '/api/dela',
+                  isArray: true});         
+              },
               search: function (searchTerm) {
                 return $http({
                   method: 'GET',

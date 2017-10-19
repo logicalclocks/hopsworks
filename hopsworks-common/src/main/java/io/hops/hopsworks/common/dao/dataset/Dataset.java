@@ -1,13 +1,15 @@
 package io.hops.hopsworks.common.dao.dataset;
 
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,8 +23,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 
 @Entity
 @Table(name = "hopsworks.dataset")
@@ -45,7 +45,9 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
           query
           = "SELECT d FROM Dataset d WHERE d.project = :projectId"),
   @NamedQuery(name = "Dataset.findAllPublic",
-          query = "SELECT d FROM Dataset d WHERE d.publicDs = true"),//AND d.shared = 0
+          query = "SELECT d FROM Dataset d WHERE d.publicDs in (1,2)"),//AND d.shared = 0
+  @NamedQuery(name = "Dataset.findAllByState",
+          query = "SELECT d FROM Dataset d WHERE d.publicDs = :state AND d.shared = :shared"),
   @NamedQuery(name = "Dataset.findByDescription",
           query = "SELECT d FROM Dataset d WHERE d.description = :description"),
   @NamedQuery(name = "Dataset.findByPublicDsIdProject",
@@ -113,7 +115,7 @@ public class Dataset implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "public_ds")
-  private boolean publicDs;
+  private int publicDs;
   @Size(max = 1000)
   @Column(name = "public_ds_id")
   private String publicDsId;
@@ -160,7 +162,7 @@ public class Dataset implements Serializable {
     this.searchable = ds.isSearchable();
     this.description = ds.getDescription();
     this.editable = ds.isEditable();
-    this.publicDs = ds.isPublicDs();
+    this.publicDs = ds.getPublicDs();
     this.type = ds.getType();
   }
   
@@ -225,11 +227,25 @@ public class Dataset implements Serializable {
   }
 
   public boolean isPublicDs() {
-    return publicDs;
+    if(publicDs == 0 ) {
+      return false;
+    }
+    return true;
   }
 
-  public void setPublicDs(boolean publicDs) {
-    this.publicDs = publicDs;
+  public int getPublicDs() {
+    return publicDs;
+  }
+  public void setPublicDs(int sharedState) {
+    this.publicDs = sharedState;
+  }
+  
+  public SharedState getPublicDsState() {
+    return SharedState.of(publicDs);
+  }
+  
+  public void setPublicDsState(SharedState sharedState) {
+    this.publicDs = sharedState.state;
   }
 
   public String getPublicDsId() {
@@ -299,4 +315,28 @@ public class Dataset implements Serializable {
     return "se.kth.hopsworks.dataset.Dataset[ id=" + id + " ]";
   }
 
+  public static enum SharedState {
+    PRIVATE((byte)0),
+    CLUSTER((byte)1),
+    HOPS((byte)2);
+    
+    public final int state;
+    
+    SharedState(byte state) {
+      this.state = state;
+    }
+    
+    public static SharedState of(int state) {
+      switch(state) {
+        case 0:
+          return SharedState.PRIVATE;
+        case 1:
+          return SharedState.CLUSTER;
+        case 2:
+          return SharedState.HOPS;
+        default:
+          throw new IllegalArgumentException("undefined state:" + state);
+      }
+    }
+  }
 }
