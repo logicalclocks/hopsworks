@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('PublicDatasetCtrl', ['$location', '$anchorScroll', '$scope', '$rootScope',
+        .controller('HopsDatasetCtrl', ['$location', '$anchorScroll', '$scope', '$rootScope',
           '$showdown', 'md5', 'ModalService', 'HopssiteService', 'DelaService', 'ProjectService', 'growl',
           function ($location, $anchorScroll, $scope, $rootScope, $showdown, md5, ModalService,
                   HopssiteService, DelaService, ProjectService, growl) {
@@ -97,12 +97,8 @@ angular.module('hopsWorksApp')
                 getDatasetFromLocal(self.publicDSId);
               }
             };
-            
-            if ($rootScope.isDelaEnabled) {
-              initCtrlDela();
-            } else {
-              initCtrl();
-            }
+
+            initCtrlDela();
             
             self.selectCategory = function (category) {
               console.log("selectDisplayCategory", category);
@@ -127,13 +123,9 @@ angular.module('hopsWorksApp')
             self.selectItem = function (selectItem) {
               self.selectedDataset = selectItem;
               self.selectedSubCategory = undefined;
-              if ($rootScope.isDelaEnabled) {
-                getBasicReadme(self.selectedDataset.publicId);
-                getComments(self.selectedDataset.publicId);
-                getUserRating(self.selectedDataset.publicId);
-              } else {
-                getReadMeLocal(selectItem.inodeId);
-              }
+              getBasicReadme(self.selectedDataset.publicId);
+              getComments(self.selectedDataset.publicId);
+              getUserRating(self.selectedDataset.publicId);
             };
             
             self.selectDataset = function (selectItem) {
@@ -147,7 +139,7 @@ angular.module('hopsWorksApp')
                 self.loadingSelectedCategory = true;
               }
               
-              ProjectService.getPublicDatasets().$promise.then(
+              DelaService.getLocalPublicDatasets().then(
                       function (success) {
                         category['selectedList'] = success;
                         category['selectedSubCategoryList'] = success.data;
@@ -353,30 +345,13 @@ angular.module('hopsWorksApp')
             self.addPublicDatasetModal = function (dataset) {
               var datasetDto = dataset;
               var projects;
-              if ($rootScope.isDelaEnabled) {
-                HopssiteService.getLocalDatasetByPublicId(dataset.publicId).then(function (response) {
-                  datasetDto = response.data;
-                  console.log('datasetDto: ', datasetDto);
-                  //fetch the projects to pass them in the modal.
-                  ProjectService.query().$promise.then(function (success) {
-                    projects = success;
-                    console.log('projects: ', projects);
-                    //show dataset
-                    ModalService.viewPublicDataset('md', projects, datasetDto).then(function (success) {
-                      growl.success(success.data.successMessage, {title: 'Success', ttl: 1000, referenceId: 13});
-                    }, function (error) {
-
-                    });
-                  }, function (error) {
-                    console.log('Error: ' + error);
-                  });
-
-                }, function (error) {
-                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000, referenceId: 13});
-                });
-              } else {
+              HopssiteService.getLocalDatasetByPublicId(dataset.publicId).then(function (response) {
+                datasetDto = response.data;
+                console.log('datasetDto: ', datasetDto);
+                //fetch the projects to pass them in the modal.
                 ProjectService.query().$promise.then(function (success) {
                   projects = success;
+                  console.log('projects: ', projects);
                   //show dataset
                   ModalService.viewPublicDataset('md', projects, datasetDto).then(function (success) {
                     growl.success(success.data.successMessage, {title: 'Success', ttl: 1000, referenceId: 13});
@@ -386,8 +361,10 @@ angular.module('hopsWorksApp')
                 }, function (error) {
                   console.log('Error: ' + error);
                 });
-              }
-              
+
+              }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000, referenceId: 13});
+              });
             };
 
 

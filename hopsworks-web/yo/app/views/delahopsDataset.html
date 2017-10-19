@@ -125,59 +125,5 @@
         </div>
       </div>
     </article>
-    
-    <article ng-if="!isDelaEnabled" class="publicdataset-view" id="publicdataset-article">
-      <div ng-if="publicDataset.selectedDataset !== undefined">
-        <div><h4 class="publicdataset-view-heading">{{publicDataset.selectedDataset.name}}</h4></div>
-        <br>
-        <div class="publicdataset-view-rating"></div>
-        <br>
-        <div class="panel panel-default">
-          <div class="panel-heading">README.md
-            <div class="pull-right text-muted">
-              <span data-placement="bottom" data-toggle="tooltip" title="Add to project" style="padding: 10px;"
-                    ng-click="publicDataset.addPublicDatasetModal(publicDataset.selectedDataset)">
-                <i class="fa fa-download fa-lg text-primary" aria-hidden="true"></i>
-              </span>           
-            </div>   
-          </div>            
-          <div ng-if="publicDataset.readme === undefined && !publicDataset.loadingReadme" class="panel-body text-muted">No readme file.</div>
-          <div ng-if="publicDataset.readme !== undefined && !publicDataset.loadingReadme" class="panel-body" ng-bind-html="publicDataset.readme"></div>
-          <div ng-if="publicDataset.loadingReadme" class="panel-body text-muted" style="text-align: center;">
-            <span class="loading-dots">Loading</span>
-          </div>
-        </div>
-      </div>
-
-      <div ng-if="publicDataset.selectedDataset === undefined">
-        <div><h4 class="publicdataset-view-heading">{{publicDataset.selectedCategory.displayName}}</h4></div>
-        <br>
-        <div class="publicdataset-view-content">
-          <div ng-if="publicDataset.loadingSelectedCategory" class="text-muted loading-dots">Loading</div>
-          <div ng-repeat="ds in publicDataset.selectedCategoryMap[publicDataset.selectedCategory.categoryName].selectedList">
-            <div class="panel panel-default">
-              <div class="panel-heading ds-panel-heading">
-                <a ng-click="publicDataset.selectDataset(ds)">{{ds.name | limitTo: 100}}
-                  {{ds.heading.length > 100 ? '...':''}}</a>
-              </div>
-              <div class="panel-body">{{ds.description}}</div>
-              <div class="panel-footer ds-panel-footer text-muted">
-                <div class="row">
-                  <div class="col-sm-4 col-md-4"><label>Created on:</label>  {{ds.createDate| date:'short'}}</div>
-                  <div class="col-sm-4 col-md-4"><label>Size: </label> {{publicDataset.sizeOnDisk(ds.size)}}</div>                
-                  <div class="col-sm-4 col-md-4">
-                    <span data-placement="bottom" data-toggle="tooltip" title="Add to project" ng-click="publicDataset.addPublicDatasetModal(ds)">
-                      <i class="card-footer-icon fa fa-download fa-lg pull-right text-primary" style="margin-top: 7px;"
-                         aria-hidden="true" data-toggle="collapse" data-target="#carddropdown-{{cardIndex}}"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </article>
   </div>
 

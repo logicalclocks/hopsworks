@@ -84,9 +84,33 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/publicDataset', {
-                      templateUrl: 'views/publicDataset.html',
-                      controller: 'PublicDatasetCtrl as publicDataset',
+                    .when('/delahopsDataset', {
+                      templateUrl: 'views/delahopsDataset.html',
+                      controller: 'HopsDatasetCtrl as publicDataset',
+                      resolve: {
+                        auth: ['$rootScope', '$q', '$location', 'AuthService', '$cookies',
+                          function ($rootScope, $q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      if($rootScope.isDelaEnabled) {
+                                        $cookies.put("email", success.data.data.value);
+                                      } else {
+                                        return $q.reject(err);
+                                      }
+                                    },
+                                    function (err) {
+                                      $cookies.remove("email");
+                                      $cookies.remove("projectID");
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
+                    .when('/delaclusterDataset', {
+                      templateUrl: 'views/delaclusterDataset.html',
+                      controller: 'ClusterDatasetCtrl as publicDataset',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',
                           function ($q, $location, AuthService, $cookies) {

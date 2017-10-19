@@ -1,5 +1,8 @@
 package io.hops.hopsworks.common.dao.dataset;
 
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.project.Project;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -8,9 +11,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless
 public class DatasetFacade extends AbstractFacade<Dataset> {
@@ -160,8 +160,14 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
   }
   
   public List<Dataset> findAllPublicDatasets() {
-    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic",
-      Dataset.class);
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllPublic", Dataset.class);
+    return query.getResultList();   
+  }
+  
+  public List<Dataset> findAllDatasetsByState(int state, boolean shared) {
+    TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findAllByState", Dataset.class)
+      .setParameter("state", state)
+      .setParameter("shared", shared);
     return query.getResultList();   
   }
 

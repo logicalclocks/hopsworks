@@ -19,11 +19,11 @@
               <div flex="65">
                 Filter: &nbsp;
                 <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
-                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Shared</a>
-                <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = false;" class="file-control">Exclusive</a>
-                <a ng-click="datasetsCtrl.isPublic = true; datasetsCtrl.status = true;" class="file-control">Public</a>
-                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = false;" class="file-control">Pending</a>
-                <!--<a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = false; datasetsCtrl.isPublic = true;" class="file-control">Public</a>-->
+                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0;" class="file-control">Shared</a>
+                <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 1; datasetsCtrl.status = true;" class="file-control">Public in Cluster</a>
+                <a ng-show="isDelaEnabled" ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 2; datasetsCtrl.status = true;" class="file-control">Public in Hops</a>
+                <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0;" class="file-control">Exclusive</a>
+                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = 0;" class="file-control">Pending</a>
               </div>
               <div style="margin-left: 450px" flex="20">
                 <div class="input-group" style="margin-top:-25px;">
@@ -91,10 +91,13 @@
                                   {{dataset.owner| cut:true:17:'...'}}
                                 </span>
                               </small>
-                              <span ng-if="dataset.publicDs === true" class="pull-right dataset-icon glyphicon glyphicon-globe"  data-toggle="tooltip"
-                                    title="Dataset is public (to the world)">
+                              <span ng-if="dataset.publicDs === 2" class="pull-right dataset-icon fa fa-globe"  data-toggle="tooltip"
+                                    title="Dataset is public (within hops)">
                               </span>
-                              <span ng-if="dataset.publicDs !== true && dataset.shared === false" 
+                              <span ng-if="dataset.publicDs === 1" class="pull-right dataset-icon fa fa-server"  data-toggle="tooltip"
+                                    title="Dataset is public (within cluster)">
+                              </span>
+                              <span ng-if="dataset.publicDs === 0 && dataset.shared === false" 
                                     class="pull-right dataset-icon"
                                     ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.status === true)}"
                                     data-toggle="tooltip"
@@ -123,7 +126,7 @@
                                 Browse files</span>
                             </a>
                           </li>
-                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
+                          <li ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
@@ -133,7 +136,7 @@
                             </a>
                           </li>
                           <!-- If this is an imported public dataset, allow it to be removed as well -->
-                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 1">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="1"
@@ -142,26 +145,8 @@
                                 Remove Dataset</span>
                             </a>
                           </li>                          
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="2"
-                               ng-click="datasetsCtrl.share(dataset.name)">
-                              <span><i class="fa fa-share"></i>
-                                Share DataSet</span>
-                            </a>
-                          </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.sharedWith > 0" ng-show="projectCtrl.role === 'Data owner'">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="2"
-                               ng-click="datasetsCtrl.unshare(dataset.name)">
-                              <span><i class="fa fa-undo"></i>
-                                Unshare DataSet</span>
-                            </a>
-                          </li>
                           <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'" 
-                              ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === false">
+                              ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="2"
@@ -180,7 +165,7 @@
                             </a>
                           </li>
                           <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="3"
@@ -189,7 +174,7 @@
                                 Add metadata</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="4"
@@ -198,43 +183,66 @@
                                 Remove metadata</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
                           <!--
-                                                    <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
-                                                      <a class="pointer"
-                                                         role="menuitem"
-                                                         tabindex="5"
-                                                         ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
-                                                        <span><i class="fa fa-file-archive-o"></i>
-                                                          Compress</span>
-                                                      </a>
-                                                    </li>
-                          -->
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === false">
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
-                               tabindex="6"
-                               ng-click="datasetsCtrl.makePublic(dataset.id); $event.stopPropagation();">
-                              <span><i class="fa fa-share-alt"></i>
-                                Make Public</span>
+                               tabindex="5"
+                               ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
+                              <span><i class="fa fa-file-archive-o"></i>
+                                Compress</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="6"
-                               ng-click="datasetsCtrl.removePublic(dataset.publicId); $event.stopPropagation();">
-                              <span><i class="fa fa-share-alt"></i>
-                                Remove Public</span>
-                            </a>
-                          </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === true">
+                          -->                         
+                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 2">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="6"
                                ng-click="datasetsCtrl.showManifest(dataset.publicId); $event.stopPropagation();">
                               <span>Show Manifest</span>
                             </a>
+                          </li>
+                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
+                            <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
+                            <ul class="dropdown-menu">
+                              <li ng-if="dataset.publicDs === 0">
+                                <a tabindex="-1" ng-click="datasetsCtrl.share(dataset.name)">
+                                  <span><i class="fa fa-book"></i> Project</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.publicDs === 0">
+                                <a tabindex="-1" ng-click="datasetsCtrl.shareWithCluster(dataset.id); $event.stopPropagation();">
+                                  <span><i class="fa fa-server"></i> Cluster</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.publicDs === 0 && isDelaEnabled">
+                                <a tabindex="-1" ng-click="datasetsCtrl.shareWithHops(dataset.id); $event.stopPropagation();">
+                                  <span><i class="fa fa-globe"></i> Hops</span>
+                                </a>
+                              </li>                              
+                            </ul>
+                          </li>
+                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)">
+                            <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
+                            <ul class="dropdown-menu">
+                              <li ng-if="dataset.sharedWith > 0">
+                                <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset.name)">
+                                  <span><i class="fa fa-book"></i> Project</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.publicDs === 1">
+                                <a tabindex="-1" ng-click="datasetsCtrl.unshareFromCluster(dataset.id); $event.stopPropagation();">
+                                  <span><i class="fa fa-server"></i> Cluster</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.publicDs === 2">
+                                <a tabindex="-1" ng-click="datasetsCtrl.unshareFromHops(dataset.publicId); $event.stopPropagation();">
+                                  <span><i class="fa fa-globe"></i> Hops</span>
+                                </a>
+                              </li>
+                            </ul>
                           </li>
                         </ul>
                       </div>
@@ -295,7 +303,7 @@
                             <td style="color: grey;">Owner</td>
                             <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].owner}}</td>
                           </tr>
-                          <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].publicDs" style="background-color: #fafafa">
+                          <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].publicDs !== 0" style="background-color: #fafafa">
                             <td style="color: #ff4081;">Public</td>
                             <td style="color: #ff4081;">This DataSet is public.</td>
                           </tr>

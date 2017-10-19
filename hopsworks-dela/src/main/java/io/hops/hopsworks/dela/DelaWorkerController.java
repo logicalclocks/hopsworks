@@ -56,8 +56,7 @@ public class DelaWorkerController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
 
-  public String publishDataset(Project project, Dataset dataset, Users user)
-    throws ThirdPartyException {
+  public String shareDatasetWithHops(Project project, Dataset dataset, Users user) throws ThirdPartyException {
 
     if (dataset.isPublicDs()) {
       return dataset.getPublicDsId();
@@ -66,31 +65,29 @@ public class DelaWorkerController {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(),
         "dataset shared - only owner can publish", ThirdPartyException.Source.LOCAL, "bad request");
     }
-
+    delaStateCtrl.checkDelaAvailable();
     delaHdfsCtrl.writeManifest(project, dataset, user);
     String publicDSId = createPublicDSId(project.getName(), dataset.getName());
 
-    if (delaStateCtrl.delaAvailable()) {
-      delaCtrlUpload(project, dataset, user, publicDSId);
-      long datasetSize = delaHdfsCtrl.datasetSize(project, dataset, user);
-      try {
-        hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
-          @Override
-          public String perform() throws ThirdPartyException {
-            return hopsSiteCtrl.publish(publicDSId, dataset.getName(), dataset.getDescription(), getCategories(),
-              datasetSize, user.getEmail());
-          }
-        });
-      } catch (ThirdPartyException tpe) {
-        if (ThirdPartyException.Source.HOPS_SITE.equals(tpe.getSource())
-          && ThirdPartyException.Error.DATASET_EXISTS.is(tpe.getMessage())) {
-          //TODO ask dela to checksum it;
+    delaCtrlUpload(project, dataset, user, publicDSId);
+    long datasetSize = delaHdfsCtrl.datasetSize(project, dataset, user);
+    try {
+      hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
+        @Override
+        public String perform() throws ThirdPartyException {
+          return hopsSiteCtrl.publish(publicDSId, dataset.getName(), dataset.getDescription(), getCategories(),
+            datasetSize, user.getEmail());
         }
-        throw tpe;
+      });
+    } catch (ThirdPartyException tpe) {
+      if (ThirdPartyException.Source.HOPS_SITE.equals(tpe.getSource())
+        && ThirdPartyException.Error.DATASET_EXISTS.is(tpe.getMessage())) {
+        //TODO ask dela to checksum it;
       }
+      throw tpe;
     }
-    delaDatasetCtrl.upload(dataset, publicDSId);
-    LOG.log(Level.INFO, "{0} published", publicDSId);
+    delaDatasetCtrl.uploadToHops(dataset, publicDSId);
+    LOG.log(Level.INFO, "{0} shared with hops", publicDSId);
     return publicDSId;
   }
 
@@ -104,29 +101,22 @@ public class DelaWorkerController {
     delaCtrl.upload(publicDSId, details, resource, endpoint);
   }
 
-  public void cancel(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+  public void unshareFromHops(Project project, Dataset dataset, Users user) throws ThirdPartyException {
     if (!dataset.isPublicDs()) {
       return;
     }
-    if (delaStateCtrl.delaAvailable()) {
-      delaCtrl.cancel(dataset.getPublicDsId());
-      hopsSiteCtrl.cancel(dataset.getPublicDsId());
-    }
+    delaStateCtrl.checkDelaAvailable();
+    delaCtrl.cancel(dataset.getPublicDsId());
+    hopsSiteCtrl.cancel(dataset.getPublicDsId());
     delaHdfsCtrl.deleteManifest(project, dataset, user);
-    delaDatasetCtrl.cancel(dataset);
+    delaDatasetCtrl.unshareFromHops(dataset);
   }
 
-  public void cancelAndClean(Project project, Dataset dataset, Users user) throws ThirdPartyException {
-    if (delaStateCtrl.delaEnabled()) {
-      if (!delaStateCtrl.delaAvailable()) {
-        throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dela not available",
-          ThirdPartyException.Source.LOCAL, "bad request");
-      }
-    }
-    cancel(project, dataset, user);
+  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws ThirdPartyException {
+    unshareFromHops(project, dataset, user);
     delaDatasetCtrl.delete(project, dataset);
   }
-
+  
   public ManifestJSON startDownload(Project project, Users user, HopsworksTransferDTO.Download downloadDTO)
     throws ThirdPartyException {
     delaStateCtrl.checkDelaAvailable();

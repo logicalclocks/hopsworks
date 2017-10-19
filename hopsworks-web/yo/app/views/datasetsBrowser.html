@@ -38,24 +38,24 @@
                           <button type="button" class="btn btn-default fa fa-level-up" title="Go to parent directory" 
                                   ng-click="datasetsCtrl.back()"></button>
                           <button type="button" class="btn btn-default fa fa-plus" title="New folder"
-                                  ng-disabled="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"
+                                  ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-click="datasetsCtrl.newDataSetModal()"></button>
                           <button type="button" class="btn btn-default fa fa-cloud-upload" title="Upload"
-                                  ng-disabled="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"
+                                  ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-click="datasetsCtrl.uploadFile()"></button>
                         </div>
                         <div class="btn-group" role="group" aria-label="Second group" ng-show="datasetsCtrl.isSelectedFiles() > 0">
                           <button type="button" class="btn btn-default fa fa-files-o" title="Copy"
                                   ng-click="datasetsCtrl.copySelected();"></button>
                           <button type="button" class="btn btn-default fa fa-arrows" title="Move" 
-                                  ng-disabled="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"
+                                  ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-click="datasetsCtrl.moveSelected();"></button>
                           <button type="button" class="btn btn-default fa fa-edit" title="Rename"
                                   ng-click="datasetsCtrl.renameSelected();" 
-                                  ng-disabled="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"
+                                  ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-if="datasetsCtrl.isSelectedFiles() === 1"></button>
                           <button type="button" class="btn btn-default fa fa-trash-o" title="Delete" 
-                                  ng-disabled="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"
+                                  ng-disabled="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"
                                   ng-click="datasetsCtrl.deleteSelected();"></button>
                           
                         </div>
@@ -244,8 +244,8 @@
                             </a>
                           </li>
                           <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1" 
-                              ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"></li>
-                          <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled">
+                              ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
+                          <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="3"
@@ -254,7 +254,7 @@
                                 Remove</span>
                             </a>
                           </li>
-                          <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled">
+                          <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="3"
@@ -264,8 +264,8 @@
                             </a>
                           </li>
                           <li class="divider" ng-show="datasetsCtrl.isSelectedFiles() <= 1" 
-                              ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled"></li>
-                          <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled">
+                              ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
+                          <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="4"
@@ -274,7 +274,7 @@
                                 Move</span>
                             </a>
                           </li>
-                          <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled">
+                          <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="4"
@@ -283,7 +283,7 @@
                                 Move</span>
                             </a>
                           </li>
-                          <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="datasetsCtrl.parentDS.publicDs === true && isDelaEnabled">
+                          <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="5"
