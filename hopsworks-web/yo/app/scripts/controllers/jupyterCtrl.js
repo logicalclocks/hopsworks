@@ -82,7 +82,7 @@ angular.module('hopsWorksApp')
               self.job.type = "TENSORFLOW";
               self.job.appId = appId;
               StorageService.store(self.projectId + "_jobui_TENSORFLOW", self.job);
-              $location.path('project/' + self.projectId + '/jobMonitor-app/' + appId + "/true");
+              $location.path('project/' + self.projectId + '/jobMonitor-app/' + appId + "/true/jupyter");
 
             };
 

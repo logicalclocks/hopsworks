@@ -55,8 +55,8 @@ angular.module('hopsWorksApp')
                * @param {type} projectId 
                * @param {type} type
                * @param {type} schedule
-               * @param {type} jobid.
-               * @returns {undefined}.
+               * @param {type} jobId
+               * @returns {undefined}
                */
               updateSchedule: function (projectId, type, schedule, jobId) {
                 var req = {
@@ -139,7 +139,8 @@ angular.module('hopsWorksApp')
               /**
                * Get the job ui of the given job.
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} appId
+               * @param {type} isLivy
                * @returns {unresolved} The address of the job ui.
                */
               getExecutionUI: function (projectId, appId, isLivy) {

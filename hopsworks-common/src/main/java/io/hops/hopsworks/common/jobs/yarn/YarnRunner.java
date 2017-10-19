@@ -422,6 +422,11 @@ public class YarnRunner {
     for (ListIterator<String> i = javaOptions.listIterator(); i.hasNext();) {
       i.set(i.next().replaceAll(APPID_REGEX, id));
     }
+    
+    //Loop through files to remove
+    for (ListIterator<String> i = filesToRemove.listIterator(); i.hasNext();) {
+      i.set(i.next().replaceAll(APPID_REGEX, id));
+    }
   }
 
   private void checkAmResourceRequest(GetNewApplicationResponse appResponse) {
@@ -996,6 +1001,10 @@ public class YarnRunner {
         filesToRemove.add(dto.getPath());
       }
       return this;
+    }
+    
+    public void addFileToRemove(String path){
+      filesToRemove.add(path);
     }
 
     public Builder addToAppMasterEnvironment(String key, String value) {

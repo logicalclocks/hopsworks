@@ -22,7 +22,7 @@ angular.module('hopsWorksApp')
             self.tutorials = [];
             self.working = [];
             self.user = {};
-            self.showTourTips = false;
+            self.showTourTips = true;
             self.getTours = function () {
               self.tours = [
                 {'name': 'Spark', 'tip': 'Take a tour of HopsWorks by creating a project and running a Spark job!'},
@@ -177,6 +177,7 @@ angular.module('hopsWorksApp')
                   } else {
                     self.showTourTips = false;
                   }
+                  StorageService.store("hopsworks-showtourtips",self.showTourTips);
                 }, function(error) {
                   console.log("error");
                 }

@@ -19,15 +19,15 @@ public class FilesToRemovePK implements Serializable {
   @NotNull
   @Size(min = 1,
       max = 255)
-  @Column(name = "path")
-  private String path;
+  @Column(name = "filepath")
+  private String filepath;
 
   public FilesToRemovePK() {
   }
 
   public FilesToRemovePK(long executionId, String path) {
     this.executionId = executionId;
-    this.path = path;
+    this.filepath = path;
   }
 
   public long getExecutionId() {
@@ -38,19 +38,19 @@ public class FilesToRemovePK implements Serializable {
     this.executionId = executionId;
   }
 
-  public String getPath() {
-    return path;
+  public String getFilepath() {
+    return filepath;
   }
 
-  public void setPath(String path) {
-    this.path = path;
+  public void setFilepath(String filepath) {
+    this.filepath = filepath;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
     hash += (int) executionId;
-    hash += (path != null ? path.hashCode() : 0);
+    hash += (filepath != null ? filepath.hashCode() : 0);
     return hash;
   }
 
@@ -64,12 +64,12 @@ public class FilesToRemovePK implements Serializable {
     if (this.executionId != other.executionId) {
       return false;
     }
-    return this.path.equals(other.path);
+    return this.filepath.equals(other.filepath);
   }
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.FilesToRemovePK[ jobId=" + executionId + ", path=" + path + " ]";
+    return "se.kth.bbc.job.FilesToRemovePK[ jobId=" + executionId + ", path=" + filepath + " ]";
   }
 
 }

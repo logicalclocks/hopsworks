@@ -284,7 +284,6 @@ public class JupyterConfig {
       ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
 
       StringBuilder executorFiles = new StringBuilder();
-//      executorFiles.append(log4j_file.toURI().toString());
 
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
@@ -295,12 +294,11 @@ public class JupyterConfig {
           // TrustStore
           .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
-
-      String projectPath = "/Projects/" + this.project.getName();
+          .append("__tstore.jks#").append(Settings.T_CERTIFICATE).append(",")
+          .append(Settings.getSparkLog4JPath(settings.getSparkUser()));
 
       boolean isTensorflow = js.getMode().toLowerCase().contains("tensorflow");
-
+      String extraJavaOptions = "-Dhopsworks.logstash.job.info="+project.getName()+",jupyter,notebook,?";
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
@@ -319,10 +317,11 @@ public class JupyterConfig {
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
                   "files", js.getFiles(),
-                  "pyFiles", "\""+js.getPyFiles()+"\"",
+                  "pyFiles", "\"" + js.getPyFiles() + "\"",
                   "yarn_queue", "default",
-                  "num_ps", Integer.toString(js.getNumTfPs()),
-                  "num_gpus", Integer.toString(js.getNumTfGpus()),
+                  "num_ps", (js.getMode().compareToIgnoreCase("distributedtensorflow") == 0)
+                              ? Integer.toString(js.getNumTfPs()) : "0",
+                  "num_gpus", (isTensorflow) ? Integer.toString(js.getNumTfGpus()) : "0",
                   "tensorflow", Boolean.toString(isTensorflow),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
@@ -335,13 +334,12 @@ public class JupyterConfig {
                   "pyspark_bin", this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python",
                   "anaconda_dir", this.settings.getAnacondaDir(),
                   "cuda_dir", this.settings.getCudaDir(),
-                  //                  "warehouse_dir", projectPath + "/Resources/spark-warehouse",
-                  //                 "spark.sql.warehouse.dir": "%%warehouse_dir%%",
                   "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
                   "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
                   "metrics_path", settings.getSparkMetricsPath(),
                   "spark_yarn_files", executorFiles.toString(),
-                  "spark_files", sparkFiles.toString()
+                  "spark_files", sparkFiles.toString(),
+                  "extra_java_options", extraJavaOptions
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
           sparkmagic_config_file,

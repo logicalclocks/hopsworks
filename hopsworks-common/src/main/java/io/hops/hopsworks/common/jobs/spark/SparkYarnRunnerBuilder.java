@@ -132,9 +132,10 @@ public class SparkYarnRunnerBuilder {
     }
 
     String stagingPath = "/Projects/" + project + "/"
-        + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging";
+        + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"+YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
-
+    //Add hdfs prefix so the monitor knows it should find it there
+    builder.addFileToRemove("hdfs://"+stagingPath);
     builder.addLocalResource(new LocalResourceDTO(
         Settings.SPARK_LOCALIZED_LIB_DIR, hdfsSparkJarPath,
         LocalResourceVisibility.PRIVATE.toString(),

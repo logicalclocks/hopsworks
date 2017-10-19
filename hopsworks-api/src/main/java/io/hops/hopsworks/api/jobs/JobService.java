@@ -478,7 +478,6 @@ public class JobService {
     }
     Response.Status response = Response.Status.OK;
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
-    YarnAppUrlsDTO ui = new YarnAppUrlsDTO();
     String hdfsUser = getHdfsUser(sc);
 
     try {

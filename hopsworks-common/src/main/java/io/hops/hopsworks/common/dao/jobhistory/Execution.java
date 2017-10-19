@@ -381,7 +381,7 @@ public class Execution implements Serializable {
   public List<String> getFilesToRemove(){
     List<String> toRemove = new ArrayList<>();
     for(FilesToRemove fileToRemove : filesToRemove){
-      toRemove.add(fileToRemove.getPath());
+      toRemove.add(fileToRemove.getFilesToRemovePK().getFilepath());
     }
     return toRemove;
   }
