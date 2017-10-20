@@ -62,9 +62,7 @@ public class CertSigningService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        pubAgentCert = PKIUtils.signCertificate(csr, settings.
-                getIntermediateCaDir(), settings.getHopsworksMasterPasswordSsl(),
-                true);
+        pubAgentCert = PKIUtils.signCertificate(settings, csr, true);
         caPubCert = Files.toString(new File(settings.getIntermediateCaDir()
                 + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
@@ -110,8 +108,7 @@ public class CertSigningService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
-        pubAgentCert = PKIUtils.signCertificate(csr, settings.
-                getCaDir(), settings.getHopsworksMasterPasswordSsl(), false);
+        pubAgentCert = PKIUtils.signCertificate(settings, csr, false);
         caPubCert = Files.toString(new File(settings.getCaDir() + "/certs/ca.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
         logger.log(Level.SEVERE,null,ex);

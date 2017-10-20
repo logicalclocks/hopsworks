@@ -14,19 +14,18 @@ public class PKIUtils {
 
   final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
 
-  public static String signCertificate(String csr, String caDir,
-          String hopsMasterPassword, boolean isIntermediate) throws
-          IOException, InterruptedException {
+  public static String signCertificate(Settings settings, String csr,
+      boolean isIntermediate) throws IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"),
-            ".csr");
+        ".csr");
     FileUtils.writeStringToFile(csrFile, csr);
 
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, caDir, hopsMasterPassword, isIntermediate);
+      return signCSR(settings, csrFile, isIntermediate);
     }
     return null;
   }
-  
+
   public static void revokeCert(String certFile, String caDir, String hopsMasterPassword, boolean intermediate) throws
       IOException, InterruptedException {
     logger.info("Revoking certificate...");
@@ -44,7 +43,7 @@ public class PKIUtils {
     cmds.add("pass:" + hopsMasterPassword);
     cmds.add("-revoke");
     cmds.add(certFile);
-    
+
     StringBuilder sb = new StringBuilder("/usr/bin/");
     for (String s : cmds) {
       sb.append(s).append(" ");
@@ -60,15 +59,16 @@ public class PKIUtils {
     process.waitFor();
     int exitValue = process.exitValue();
     if (exitValue != 0) {
-      throw new RuntimeException("Failed to revoke certificate. Exit value: " + exitValue);
+      throw new RuntimeException("Failed to revoke certificate. Exit value: "
+          + exitValue);
     }
-    logger.info("Revoked certificate."); 
+    logger.info("Revoked certificate.");
     //update the crl
     createCRL(caDir, hopsMasterPassword, intermediate);
   }
 
   private static boolean verifyCSR(File csr) throws IOException,
-          InterruptedException {
+      InterruptedException {
 
     logger.info("Verifying CSR...");
     List<String> cmds = new ArrayList<>();
@@ -84,10 +84,8 @@ public class PKIUtils {
       sb.append(s).append(" ");
     }
     logger.info(sb.toString());
-    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
-            redirectErrorStream(true).start();
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            process.getInputStream(), Charset.forName("UTF8")));
+    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).redirectErrorStream(true).start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF8")));
     String line;
     while ((line = br.readLine()) != null) {
       if (line.equalsIgnoreCase("verify failure")) {
@@ -105,53 +103,46 @@ public class PKIUtils {
     return false;
   }
 
-  private static String signCSR(File csr, String caDir,
-          String hopsMasterPassword, boolean intermediate) throws IOException,
-          InterruptedException {
+  private static String signCSR(Settings settings, File csr,
+      boolean intermediate) throws IOException, InterruptedException {
+
+    String caFile;
+    String extension;
+    if (intermediate) {
+      caFile = settings.getIntermediateCaDir() + "/openssl-intermediate.cnf";
+      extension = "usr_cert";
+    } else {
+      caFile = settings.getCaDir() + "/openssl-ca.cnf";
+      extension = "v3_intermediate_ca";
+    }
+    String hopsMasterPassword = settings.getHopsworksMasterPasswordSsl();
+
+    String prog = settings.getHopsworksDomainDir()
+        + "/bin/global-ca-sign-csr.sh";
+
+    String csrPath = csr.getAbsolutePath();
 
     File generatedCertFile = File.createTempFile(System.getProperty(
-            "java.io.tmpdir"), ".cert.pem");
+        "java.io.tmpdir"), ".cert.pem");
 
     logger.info("Signing CSR...");
-    List<String> cmds = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
+    commands.add("/usr/bin/sudo");
+    commands.add(prog);
+    commands.add(caFile);
+    commands.add(hopsMasterPassword);
+    commands.add(extension);
+    commands.add(csrPath);
+    commands.add(generatedCertFile.getAbsolutePath());
 
-    cmds.add("openssl");
-    cmds.add("ca");
-//    cmds.add("-policy policy_loose");
-    cmds.add("-batch");
-    cmds.add("-config");
-    if (intermediate) {
-      cmds.add(caDir + "/openssl-intermediate.cnf");
-    } else {
-      cmds.add(caDir + "/openssl-ca.cnf");
-    }
-    cmds.add("-passin");
-    cmds.add("pass:" + hopsMasterPassword);
-    cmds.add("-extensions");
-    if (intermediate) {
-      cmds.add("usr_cert");
-    } else {
-      cmds.add("v3_intermediate_ca");
-    }
-    cmds.add("-days");
-    cmds.add("3650");
-    cmds.add("-notext");
-    cmds.add("-md");
-    cmds.add("sha256");
-    cmds.add("-in");
-    cmds.add(csr.getAbsolutePath());
-    cmds.add("-out");
-    cmds.add(generatedCertFile.getAbsolutePath());
-    StringBuilder sb = new StringBuilder("/usr/bin/");
-    for (String s : cmds) {
+    StringBuilder sb = new StringBuilder();
+    for (String s : commands) {
       sb.append(s).append(" ");
     }
     logger.info(sb.toString());
 
-    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
-            redirectErrorStream(true).start();
-    BufferedReader br = new BufferedReader(new InputStreamReader(
-            process.getInputStream(), Charset.forName("UTF8")));
+    Process process = new ProcessBuilder(commands).redirectErrorStream(true).start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF8")));
     String line;
     while ((line = br.readLine()) != null) {
       logger.info(line);
@@ -160,13 +151,13 @@ public class PKIUtils {
     int exitValue = process.exitValue();
     if (exitValue != 0) {
       throw new RuntimeException("Failed to sign certificate. Exit value: "
-              + exitValue);
+          + exitValue);
     }
-    logger.info("Signed certificate. Verifying....");    
-    
+    logger.info("Signed certificate. Verifying....");
+
     return FileUtils.readFileToString(generatedCertFile);
   }
-  
+
   public static String createCRL(String caDir, String hopsMasterPassword, boolean intermediate) throws IOException,
       InterruptedException {
     logger.info("Creating crl...");
@@ -209,12 +200,14 @@ public class PKIUtils {
     logger.info("Created crl.");
     return FileUtils.readFileToString(new File(generatedCrlFile));
   }
-  
+
   public static String verifyCertificate(String cert, String caDir, String hopsMasterPassword, boolean intermediate)
       throws IOException, InterruptedException {
-    File certFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
+    File certFile = File.createTempFile(System.getProperty("java.io.tmpdir"),
+        ".pem");
     FileUtils.writeStringToFile(certFile, cert);
-    String crlFile = intermediate ? caDir + "/intermediate/crl/intermediate.crl.pem" : caDir + "/crl/crl.pem";
+    String crlFile = intermediate ? caDir
+        + "/intermediate/crl/intermediate.crl.pem" : caDir + "/crl/crl.pem";
     //update the crl
     createCRL(caDir, hopsMasterPassword, intermediate);
     logger.info("Checking certificate...");
