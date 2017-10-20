@@ -6,11 +6,14 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
+import io.hops.hopsworks.util.CertificateHelper;
 import io.hops.hopsworks.util.SettingsHelper;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.KeyStore;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -26,6 +29,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Session;
 import org.javatuples.Pair;
+import org.javatuples.Triplet;
 
 @Startup
 @Singleton
@@ -53,9 +57,8 @@ public class DelaHeartbeatWorker {
   @PostConstruct
   private void init() {
     if (delaStateCtrl.delaEnabled()) {
-      state = state.DELA_VERSION;
-      timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for version retrieve.");
-
+      state = State.SETTINGS;
+      timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela settings check.");
       LOG.log(Level.INFO, "state:{0}", state);
     }
   }
@@ -70,8 +73,11 @@ public class DelaHeartbeatWorker {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private void timeout(Timer timer) {
-    LOG.log(Level.FINE, "timeout occured.");
+    LOG.log(Level.INFO, "state timeout:{0}", new Object[]{state});
     switch (state) {
+      case SETTINGS:
+        settings(timer);
+        break;
       case DELA_VERSION:
         delaVersion(timer);
         break;
@@ -92,6 +98,18 @@ public class DelaHeartbeatWorker {
     }
   }
 
+  //********************************************************************************************************************
+  private void settings(Timer timer) {
+    Optional<Triplet<KeyStore, KeyStore, String>> certSetup = CertificateHelper.initKeystore(settings);
+    if (certSetup.isPresent()) {
+      delaStateCtrl.delaCertsAvailable(certSetup.get().getValue0(), certSetup.get().getValue1(), 
+        certSetup.get().getValue2());
+      delaVersion(resetToDelaVersion(timer));
+    } else {
+      LOG.log(Level.WARNING, "dela certificates not ready. waiting...");
+    }
+  }
+
   private String delaVersion;
   private void delaVersion(Timer timer) {
     LOG.log(Level.INFO, "retrieving hops-site dela_version");
@@ -101,7 +119,7 @@ public class DelaHeartbeatWorker {
       delaContact(resetToDelaContact(timer));
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       //try again later - maybe it works
     }
   }
@@ -119,7 +137,7 @@ public class DelaHeartbeatWorker {
         hopsSiteRegister(resetToRegister(timer), delaTransferEndpoint);
       } catch (ThirdPartyException tpe2) {
         LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-                new Object[]{tpe2.getSource(), tpe2.getSourceDetails(), tpe2.getMessage()});
+          new Object[]{tpe2.getSource(), tpe2.getSourceDetails(), tpe2.getMessage()});
         //try again later - maybe it works
       }
     }
@@ -139,7 +157,7 @@ public class DelaHeartbeatWorker {
       hopsSiteRegister(timer, delaTransferEndpoint);
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       //try again later - maybe it works
     }
   }
@@ -150,10 +168,10 @@ public class DelaHeartbeatWorker {
   }
 
   private void hopsSiteRegister(Timer timer, String delaClusterAddress, AddressJSON delaTransferAddress)
-          throws ThirdPartyException {
+    throws ThirdPartyException {
 
     String publicCId = hopsSiteProxy.registerCluster(delaClusterAddress, new Gson().toJson(delaTransferAddress),
-            mailSession.getProperty("mail.from"));
+      mailSession.getProperty("mail.from"));
     settings.setDELA_CLUSTER_ID(publicCId);
     heavyPing(resetToHeavyPing(timer));
   }
@@ -165,7 +183,7 @@ public class DelaHeartbeatWorker {
       datasets = delaCtrl.getContents();
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
         resetToDelaContact(timer);
       } else {
@@ -178,7 +196,7 @@ public class DelaHeartbeatWorker {
       ping(resetToPing(timer));
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       if (ThirdPartyException.Error.CLUSTER_NOT_REGISTERED.is(tpe.getMessage())) {
         resetToRegister(timer);
       } else if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
@@ -196,7 +214,7 @@ public class DelaHeartbeatWorker {
       datasets = delaCtrl.getContents();
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       if (ThirdPartyException.Source.SETTINGS.equals(tpe.getSource())) {
         resetToDelaContact(timer);
       } else {
@@ -208,7 +226,7 @@ public class DelaHeartbeatWorker {
       hopsSiteProxy.ping(new ClusterServiceDTO.Ping(datasets.getValue0().size(), datasets.getValue1().size()));
     } catch (ThirdPartyException tpe) {
       LOG.log(Level.WARNING, "source:<{0}:{1}>:{2}",
-              new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
+        new Object[]{tpe.getSource(), tpe.getSourceDetails(), tpe.getMessage()});
       if (ThirdPartyException.Error.CLUSTER_NOT_REGISTERED.is(tpe.getMessage())) {
         resetToRegister(timer);
       } else if (ThirdPartyException.Error.HEAVY_PING.is(tpe.getMessage())) {
@@ -221,6 +239,18 @@ public class DelaHeartbeatWorker {
     }
   }
 
+  private Timer resetToSettings(Timer timer) {
+    timer.cancel();
+    state = State.SETTINGS;
+    return timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela settings.");
+  }
+
+  private Timer resetToDelaVersion(Timer timer) {
+    timer.cancel();
+    state = State.DELA_VERSION;
+    return timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela version.");
+  }
+  
   private Timer resetToDelaContact(Timer timer) {
     timer.cancel();
     state = State.DELA_CONTACT;
@@ -282,6 +312,7 @@ public class DelaHeartbeatWorker {
 
   private static enum State {
 
+    SETTINGS,
     DELA_VERSION,
     DELA_CONTACT,
     REGISTER,

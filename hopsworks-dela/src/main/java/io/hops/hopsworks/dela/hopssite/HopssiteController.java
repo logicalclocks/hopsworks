@@ -19,15 +19,11 @@ import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import io.hops.hopsworks.dela.hopssite.util.HopsSiteEndpoints;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
 import io.hops.hopsworks.dela.old_hopssite_dto.PopularDatasetJSON;
-import io.hops.hopsworks.util.CertificateHelper;
 import io.hops.hopsworks.util.SettingsHelper;
-import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -35,19 +31,12 @@ import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.core.Response;
-import org.javatuples.Triplet;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopssiteController {
 
   private final static Logger LOG = Logger.getLogger(HopssiteController.class.getName());
-
-  private static String hopsSiteHost;
-  private boolean delaEnabled = false;
-  private KeyStore keystore;
-  private KeyStore truststore;
-  private String keystorePassword;
 
   @EJB
   private Settings settings;
@@ -56,35 +45,33 @@ public class HopssiteController {
   @EJB
   private UserFacade userFacade;
 
-  @PostConstruct
-  public void init() {
-    hopsSiteHost = settings.getHOPSSITE_HOST();
-    if (delaStateCtrl.delaEnabled()) {
-      Optional<Triplet<KeyStore, KeyStore, String>> certSetup = CertificateHelper.initKeystore(settings);
-      if (certSetup.isPresent()) {
-        delaStateCtrl.delaCertsAvailable();
-        keystore = certSetup.get().getValue0();
-        truststore = certSetup.get().getValue1();
-        keystorePassword = certSetup.get().getValue2();
-      }
-    }
+  private void checkSetupReady() throws ThirdPartyException {
+    delaStateCtrl.checkHopsworksDelaSetup();
   }
 
-  private ClientWrapper getClient(String path, Class resultClass) {
+  private void checkHopssiteReady() throws ThirdPartyException {
+    checkSetupReady();
+    delaStateCtrl.checkHopssiteAvailable();
+  }
+  //********************************************************************************************************************
+
+  private ClientWrapper getClient(String path, Class resultClass) throws ThirdPartyException {
     String hopsSite = settings.getHOPSSITE();
-    return ClientWrapper.httpsInstance(keystore, truststore, keystorePassword, HopsSiteHostnameVerifier.INSTANCE,
-      resultClass).setTarget(hopsSite).setPath(path);
+    return ClientWrapper.httpsInstance(delaStateCtrl.getKeystore(), delaStateCtrl.getTruststore(), 
+      delaStateCtrl.getKeystorePassword(), new HopsSiteHostnameVerifier(settings), resultClass)
+      .setTarget(hopsSite).setPath(path);
   }
 
   // cluster services
   public String getRole() throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     ClientWrapper client = getClient(HopsSiteEndpoints.CLUSTER_SERVICE_ROLE, String.class);
     return (String) client.doGet();
   }
 
   //*************************************************HEARTBEAT**********************************************************
   public String delaVersion() throws ThirdPartyException {
+    checkSetupReady();
     try {
       ClientWrapper client = getClient(HopsSite.ClusterService.delaVersion(), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - {0}", client.getFullPath());
@@ -99,7 +86,7 @@ public class HopssiteController {
 
   public String registerCluster(String delaClusterAddress, String delaTransferAddress, String email)
     throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClusterServiceDTO.Register req = new ClusterServiceDTO.Register(delaTransferAddress, delaClusterAddress, email);
       ClientWrapper client = getClient(HopsSite.ClusterService.registerCluster(), String.class);
@@ -115,7 +102,7 @@ public class HopssiteController {
   }
 
   public void heavyPing(List<String> upldDSIds, List<String> dwnlDSIds) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       ClientWrapper client = getClient(HopsSite.ClusterService.heavyPing(publicCId), String.class);
@@ -132,7 +119,7 @@ public class HopssiteController {
   }
 
   public void ping(ClusterServiceDTO.Ping ping) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       ClientWrapper client = getClient(HopsSite.ClusterService.ping(publicCId), String.class);
@@ -150,7 +137,7 @@ public class HopssiteController {
   //*****************************************************USER***********************************************************
   public int registerUser(String publicCId, String firstname, String lastname, String userEmail)
     throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       UserDTO.Publish user = new UserDTO.Publish(firstname, lastname, userEmail);
       ClientWrapper client = getClient(HopsSite.UserService.registerUser(publicCId), String.class);
@@ -166,7 +153,7 @@ public class HopssiteController {
   }
 
   public UserDTO.Complete getUser(String email) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       ClientWrapper client = getClient(HopsSite.UserService.getUser(publicCId, email), UserDTO.Complete.class);
@@ -181,7 +168,7 @@ public class HopssiteController {
   }
 
   public Integer getUserId(String email) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       ClientWrapper client = getClient(HopsSite.UserService.getUser(publicCId, email), UserDTO.Complete.class);
@@ -195,8 +182,8 @@ public class HopssiteController {
     }
   }
 
-  public <C extends Object> C performAsUser(Users user, HopsSite.UserFunc<C> func)
-    throws ThirdPartyException {
+  public <C extends Object> C performAsUser(Users user, HopsSite.UserFunc<C> func) throws ThirdPartyException {
+    checkHopssiteReady();
     C result;
     String publicCId = SettingsHelper.clusterId(settings);
     try {
@@ -222,7 +209,7 @@ public class HopssiteController {
   //****************************************************TRACKER********************************************************
   public String publish(String publicDSId, String name, String description, Collection<String> categories, long size,
     String userEmail) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
       DatasetDTO.Proto msg = new DatasetDTO.Proto(name, description, categories, size, userEmail);
@@ -239,7 +226,7 @@ public class HopssiteController {
   }
 
   public void download(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
 
     try {
@@ -254,7 +241,7 @@ public class HopssiteController {
   }
 
   public void complete(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
 
     String publicCId = SettingsHelper.clusterId(settings);
 
@@ -270,7 +257,7 @@ public class HopssiteController {
   }
 
   public void cancel(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
 
     String publicCId = SettingsHelper.clusterId(settings);
 
@@ -287,7 +274,7 @@ public class HopssiteController {
 
   //*****************************************************SEARCH*********************************************************
   public SearchServiceDTO.SearchResult search(String searchTerm) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       SearchServiceDTO.Params req = new SearchServiceDTO.Params(searchTerm);
       ClientWrapper client = getClient(HopsSite.DatasetService.search(), SearchServiceDTO.SearchResult.class);
@@ -303,7 +290,7 @@ public class HopssiteController {
   }
 
   public SearchServiceDTO.Item[] page(String sessionId, int startItem, int nrItems) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.searchPage(sessionId, startItem, nrItems),
         String.class);
@@ -319,7 +306,7 @@ public class HopssiteController {
   }
 
   public SearchServiceDTO.ItemDetails details(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.DatasetService.details(publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
@@ -335,7 +322,7 @@ public class HopssiteController {
 
   //*************************************************SETTINGS CHECK*****************************************************
   public boolean updateUser(UserDTO.Publish userDTO) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.USER_SERVICE, String.class);
       client.setPayload(userDTO);
@@ -348,7 +335,7 @@ public class HopssiteController {
   }
 
   public boolean deleteUser(Integer uId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.USER_SERVICE + "/" + uId, String.class);
       String res = (String) client.doDelete();
@@ -361,7 +348,7 @@ public class HopssiteController {
 
   //***********************************************COMMENT PUBLIC*******************************************************
   public List<CommentDTO.RetrieveComment> getDatasetAllComments(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.getDatasetAllComments(publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all {0}", client.getFullPath());
@@ -375,9 +362,8 @@ public class HopssiteController {
     }
   }
 
-  public void addComment(String publicCId, String publicDSId, CommentDTO.Publish comment)
-    throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+  public void addComment(String publicCId, String publicDSId, CommentDTO.Publish comment) throws ThirdPartyException {
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.addComment(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add {0}", client.getFullPath());
@@ -392,7 +378,7 @@ public class HopssiteController {
 
   public void updateComment(String publicCId, String publicDSId, Integer commentId, CommentDTO.Publish comment)
     throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.updateComment(publicCId, publicDSId, commentId),
         String.class);
@@ -408,7 +394,7 @@ public class HopssiteController {
 
   public void removeComment(String publicCId, String publicDSId, Integer commentId, String userEmail)
     throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.removeComment(publicCId, publicDSId, commentId),
         String.class)
@@ -424,7 +410,7 @@ public class HopssiteController {
 
   public void reportComment(String publicCId, String publicDSId, Integer commentId, CommentIssueDTO commentIssue)
     throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.CommentService.reportComment(publicCId, publicDSId, commentId),
         String.class);
@@ -440,7 +426,7 @@ public class HopssiteController {
 
   //**************************************************RATING PUBLIC*****************************************************
   public RatingDTO getDatasetAllRating(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.getDatasetAllRating(publicDSId), RatingDTO.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:get:all - {0}", client.getFullPath());
@@ -455,7 +441,7 @@ public class HopssiteController {
 
   //**************************************************RATING CLUSTER****************************************************
   public RatingDTO getDatasetUserRating(String publicCId, String publicDSId, String email) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client
         = getClient(HopsSite.RatingService.getDatasetUserRating(publicCId, publicDSId), RatingDTO.class)
@@ -471,7 +457,7 @@ public class HopssiteController {
   }
 
   public boolean addRating(String publicCId, String publicDSId, RateDTO datasetRating) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSite.RatingService.addRating(publicCId, publicDSId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:rating:add - {0}", client.getFullPath());
@@ -487,7 +473,7 @@ public class HopssiteController {
 
   //************************************************RATING FUTURE*******************************************************
   public List<RateDTO> getAllRatingsByPublicId(String publicId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client
         = getClient(HopsSiteEndpoints.RATING_SERVICE_ALL_BY_PUBLICID + "/" + publicId, RateDTO.class);
@@ -499,7 +485,7 @@ public class HopssiteController {
   }
 
   public boolean updateRating(RateDTO datasetRating) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.RATING_SERVICE, String.class);
       client.setPayload(datasetRating);
@@ -512,7 +498,7 @@ public class HopssiteController {
   }
 
   public boolean deleteRating(Integer ratingId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.RATING_SERVICE + "/" + ratingId, String.class);
       String res = (String) client.doDelete();
@@ -525,7 +511,7 @@ public class HopssiteController {
 
   // dataset services
   public List<HopsSiteDatasetDTO> getAll() throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_GET, HopsSiteDatasetDTO.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
@@ -539,7 +525,7 @@ public class HopssiteController {
   }
 
   public DatasetDTO.Complete getDataset(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_GET_BY_PUBLIC_ID + "/" + publicDSId,
         DatasetDTO.Complete.class);
@@ -551,7 +537,7 @@ public class HopssiteController {
   }
 
   public SearchServiceDTO.ItemDetails getDatasetDetails(String publicDSId) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_GET + "/" + publicDSId + "/details",
         SearchServiceDTO.ItemDetails.class);
@@ -563,7 +549,7 @@ public class HopssiteController {
   }
 
   public boolean addDatasetIssue(DatasetIssueDTO datasetIssue) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_ISSUE, String.class);
       client.setPayload(datasetIssue);
@@ -576,7 +562,7 @@ public class HopssiteController {
   }
 
   public boolean addCategory(DatasetDTO dataset) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_ADD_CATEGORY, String.class);
       client.setPayload(dataset);
@@ -589,7 +575,7 @@ public class HopssiteController {
   }
 
   public List<PopularDatasetJSON> getPopularDatasets() throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_POPULAR, PopularDatasetJSON.class);
       return (List<PopularDatasetJSON>) client.doGetGenericType();
@@ -600,7 +586,7 @@ public class HopssiteController {
   }
 
   public boolean addPopularDatasets(PopularDatasetJSON popularDatasetsJson) throws ThirdPartyException {
-    delaStateCtrl.checkHopssiteState();
+    checkHopssiteReady();
     try {
       ClientWrapper client = getClient(HopsSiteEndpoints.DATASET_SERVICE_POPULAR, String.class);
       client.setPayload(popularDatasetsJson);
@@ -618,14 +604,19 @@ public class HopssiteController {
 
   public static class HopsSiteHostnameVerifier implements HostnameVerifier {
 
-    public static HopsSiteHostnameVerifier INSTANCE = new HopsSiteHostnameVerifier();
+    private final Settings settings;
 
-    private HopsSiteHostnameVerifier() {
+    public HopsSiteHostnameVerifier(Settings settings) {
+      this.settings = settings;
     }
 
     @Override
     public boolean verify(String host, SSLSession ssls) {
-      return hopsSiteHost == null || hopsSiteHost.equals(host); // if hops-site host name not set or == host
+      String hopssite = settings.getHOPSSITE_HOST();
+      if(hopssite != null) {
+        return hopssite.equals(host);
+      }
+      return true; //TODO Alex - should return false; but test it - we always set the hopssite though
     }
   }
 }
