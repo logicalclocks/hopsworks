@@ -15,6 +15,7 @@
     <module>hopsworks-kmon</module>
     <module>hopsworks-admin</module>
     <module>hopsworks-api</module>
+    <module>hopsworks-cluster</module>
     <module>hopsworks-ear</module>
     <module>hopsworks-ca</module>
     <module>hopsworks-dela</module>

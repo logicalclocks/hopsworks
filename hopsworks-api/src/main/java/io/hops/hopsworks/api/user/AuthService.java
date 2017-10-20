@@ -95,14 +95,13 @@ public class AuthService {
     req.getServletContext().log("email: " + email);
     req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
     req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
-    req.getServletContext().log("SecurityContext in user role: " + sc.
-            isUserInRole("HOPS_USER"));
-    req.getServletContext().log("SecurityContext in sysadmin role: " + sc.
-            isUserInRole("HOPS_ADMIN"));
+    req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("HOPS_USER"));
+    req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("HOPS_ADMIN"));
+    req.getServletContext().log("SecurityContext in agent role: " + sc.isUserInRole("AGENT"));
+    req.getServletContext().log("SecurityContext in cluster_agent role: " + sc.isUserInRole("CLUSTER_AGENT"));
     JsonResponse json = new JsonResponse();
     if (email == null || email.isEmpty()) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              "Email address field cannot be empty");
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),"Email address field cannot be empty");
     }
     Users user = userBean.findByEmail(email);
     if (user == null) {
@@ -114,23 +113,18 @@ public class AuthService {
     Variables varExclude = settings.findById("twofactor-excluded-groups");
     String twoFactorMode = (varTwoFactor != null ? varTwoFactor.getValue() : "");
     String excludes = (varExclude != null ? varExclude.getValue() : null);
-    String[] groups = (excludes != null && !excludes.isEmpty() ? excludes.split(
-            ";") : null);
+    String[] groups = (excludes != null && !excludes.isEmpty() ? excludes.split(";") : null);
     if (!isInGroup(user, groups)) {
-      if ((twoFactorMode.equals("mandatory") || (twoFactorMode.equals("true")
-              && user.getTwoFactor()))) {
-        if (otp == null || otp.isEmpty() && user.getMode()
-                == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
+      if ((twoFactorMode.equals("mandatory") || (twoFactorMode.equals("true") && user.getTwoFactor()))) {
+        if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
           if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "Second factor required.");
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Second factor required.");
           }
         }
       }
     }
     // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty() && user.getMode()
-            == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
+    if (otp == null || otp.isEmpty() && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()) {
       otp = AuthenticationConstants.MOBILE_OTP_PADDING;
     }
     if (otp.length() == AuthenticationConstants.MOBILE_OTP_PADDING.length()
@@ -145,42 +139,38 @@ public class AuthService {
               getStatusCode(),
               "Could not recognize the account type. Report a bug.");
     }
-    //only login if not already logged in...
+    // logout any user already loggedin if a new user tries to login 
+    if (sc.getUserPrincipal() != null && !sc.getUserPrincipal().getName().equals(email)) {
+      am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(), UserAuditActions.FAILED.name(), req);
+      userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
+      try {
+        req.getServletContext().log("logging out. User: " + sc.getUserPrincipal().getName());
+        req.logout();
+      } catch (ServletException e) {
+        userController.registerFalseLogin(user);
+        am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+      }
+    }
+    //only login if not already logged...
     if (sc.getUserPrincipal() == null) {
       if (statusValidator.checkStatus(user.getStatus())) {
         try {
-          req.getServletContext().log("going to login. User status: " + user.
-                  getStatus());
+          req.getServletContext().log("going to login. User status: " + user.getStatus());
           req.login(email, newPassword);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
-          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
-                  UserAuditActions.SUCCESS.name(), req);
-          //if the logedin user has no supported role logout
-          if (!sc.isUserInRole("HOPS_USER") && !sc.isUserInRole("HOPS_ADMIN")
-                  && !sc.isUserInRole("AGENT")) {
-            am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(),
-                    UserAuditActions.FAILED.name(), req);
-            userController.setUserIsOnline(user,
-                    AuthenticationConstants.IS_OFFLINE);
-            req.logout();
-            throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                    "No valid role found for this user");
-          }
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
-          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(),
-                  UserAuditActions.FAILED.name(), req);
-          throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                  ResponseMessages.AUTHENTICATION_FAILURE);
+          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+          throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
         }
       } else { // if user == null
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-                ResponseMessages.AUTHENTICATION_FAILURE);
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
       }
     } else {
-      req.getServletContext().log("Skip logged because already logged in: "
-              + email);
+      req.getServletContext().log("Skip logged because already logged in: " + email);
     }
 
     userController.setUserIsOnline(user, AuthenticationConstants.IS_ONLINE);

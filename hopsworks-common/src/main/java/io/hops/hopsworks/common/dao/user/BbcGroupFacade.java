@@ -6,6 +6,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import javax.persistence.Query;
 
 @Stateless
 public class BbcGroupFacade extends AbstractFacade<BbcGroup> {
@@ -43,6 +44,12 @@ public class BbcGroupFacade extends AbstractFacade<BbcGroup> {
       }
     }
     return updated;
+  }
+  
+  public Integer lastGroupID() {
+    Query query = em.createNativeQuery("SELECT MAX(b.gid) FROM hopsworks.bbc_group b");
+    Object obj = query.getSingleResult();
+    return (Integer) obj;
   }
 
 }

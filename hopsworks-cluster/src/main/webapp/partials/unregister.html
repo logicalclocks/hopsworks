@@ -1,0 +1,61 @@
+<div class="center"><h3>{{title}}</h3></div>
+<div>
+  <div class="row">
+    <div class="center-block" style="width: 320px;">
+      <div class="panel">
+        <div class="panel-heading text-center">
+          
+        </div>
+        <div class="panel-body">
+          <form name="loginForm" ng-submit="unregister()" role="form">
+            <div class="form-group">
+              <input id="login_inputEmail" class="form-control" type="email" required autofocus
+                     ng-model="user.email"
+                     autocomplete="on"
+                     placeholder="Email"
+                     name="user_email">
+            </div>
+            <div class="form-group">
+              <input id="login_inputPassword" class="form-control" type="password" required
+                     ng-model="user.chosenPassword"
+                     autocomplete="off"
+                     placeholder="Password"
+                     name="user_password">
+            </div>            
+            <button class="btn btn-block btn-danger" type="submit" data-ng-disabled="working">Unregister</button>
+          </form>
+          <br/>
+          <a data-toggle="collapse" data-target="#collapseValidation" aria-expanded="false" aria-controls="collapseValidation"
+             style="text-decoration: none;"> 
+            Want to verify unregistration?</a>
+          <div class="collapse" id="collapseValidation">
+            <br/>
+            <div class="card card-body input-group">
+              <input name="validation_key" ng-model="validationKey" placeholder="Enter validation key" class="form-control" required>
+              <span class="input-group-btn">
+                <button class="btn btn-danger" type="button" ng-click="confirmUnregister()">Send</button>
+              </span>
+            </div>
+          </div>
+          <br/>
+          <div style="text-align: center" class="text-muted" ng-show="working">
+            <i class="fa fa-spinner fa-spin"></i> 
+            Unregistering your cluster...
+          </div>
+          <div class="alert alert-success" role="alert" ng-show="successMessage">
+            <button type="button" class="close" aria-label="Close" ng-click="successMessage = ''">
+              <span aria-hidden="true">&times;</span>
+            </button>{{successMessage}}
+          </div>
+          <div class="alert alert-danger" role="alert" ng-show="errorMessage">
+            <button type="button" class="close" aria-label="Close" ng-click="errorMessage = ''">
+                <span aria-hidden="true">&times;</span>
+              </button>{{errorMessage}}
+          </div>
+          <p></p>
+          <a class="btn btn-block btn-default" href="#!/">Back to home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

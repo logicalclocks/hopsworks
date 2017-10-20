@@ -26,6 +26,46 @@ public class PKIUtils {
     }
     return null;
   }
+  
+  public static void revokeCert(String certFile, String caDir, String hopsMasterPassword, boolean intermediate) throws
+      IOException, InterruptedException {
+    logger.info("Revoking certificate...");
+    List<String> cmds = new ArrayList<>();
+    cmds.add("openssl");
+    cmds.add("ca");
+    cmds.add("-batch");
+    cmds.add("-config");
+    if (intermediate) {
+      cmds.add(caDir + "/openssl-intermediate.cnf");
+    } else {
+      cmds.add(caDir + "/openssl-ca.cnf");
+    }
+    cmds.add("-passin");
+    cmds.add("pass:" + hopsMasterPassword);
+    cmds.add("-revoke");
+    cmds.add(certFile);
+    
+    StringBuilder sb = new StringBuilder("/usr/bin/");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
+
+    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).redirectErrorStream(true).start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF8")));
+    String line;
+    while ((line = br.readLine()) != null) {
+      logger.info(line);
+    }
+    process.waitFor();
+    int exitValue = process.exitValue();
+    if (exitValue != 0) {
+      throw new RuntimeException("Failed to revoke certificate. Exit value: " + exitValue);
+    }
+    logger.info("Revoked certificate."); 
+    //update the crl
+    createCRL(caDir, hopsMasterPassword, intermediate);
+  }
 
   private static boolean verifyCSR(File csr) throws IOException,
           InterruptedException {
@@ -125,5 +165,86 @@ public class PKIUtils {
     logger.info("Signed certificate. Verifying....");    
     
     return FileUtils.readFileToString(generatedCertFile);
+  }
+  
+  public static String createCRL(String caDir, String hopsMasterPassword, boolean intermediate) throws IOException,
+      InterruptedException {
+    logger.info("Creating crl...");
+    String generatedCrlFile;
+    List<String> cmds = new ArrayList<>();
+    cmds.add("openssl");
+    cmds.add("ca");
+    cmds.add("-batch");
+    cmds.add("-config");
+    if (intermediate) {
+      cmds.add(caDir + "/openssl-intermediate.cnf");
+      generatedCrlFile = caDir + "/intermediate/crl/intermediate.crl.pem";
+    } else {
+      cmds.add(caDir + "/openssl-ca.cnf");
+      generatedCrlFile = caDir + "/crl/crl.pem";
+    }
+    cmds.add("-passin");
+    cmds.add("pass:" + hopsMasterPassword);
+    cmds.add("-gencrl");
+    cmds.add("-out");
+    cmds.add(generatedCrlFile);
+
+    StringBuilder sb = new StringBuilder("/usr/bin/");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
+
+    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).redirectErrorStream(true).start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF8")));
+    String line;
+    while ((line = br.readLine()) != null) {
+      logger.info(line);
+    }
+    process.waitFor();
+    int exitValue = process.exitValue();
+    if (exitValue != 0) {
+      throw new RuntimeException("Failed to create crl. Exit value: " + exitValue);
+    }
+    logger.info("Created crl.");
+    return FileUtils.readFileToString(new File(generatedCrlFile));
+  }
+  
+  public static String verifyCertificate(String cert, String caDir, String hopsMasterPassword, boolean intermediate)
+      throws IOException, InterruptedException {
+    File certFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
+    FileUtils.writeStringToFile(certFile, cert);
+    String crlFile = intermediate ? caDir + "/intermediate/crl/intermediate.crl.pem" : caDir + "/crl/crl.pem";
+    //update the crl
+    createCRL(caDir, hopsMasterPassword, intermediate);
+    logger.info("Checking certificate...");
+    List<String> cmds = new ArrayList<>();
+    cmds.add("openssl");
+    cmds.add("verify");
+    cmds.add("-crl_check");
+    cmds.add("-CAfile");
+    cmds.add("<(cat " + caDir + "/certs/ca.cert.pem " + crlFile + ")");
+    cmds.add(certFile.getAbsolutePath());
+    StringBuilder sb = new StringBuilder("/usr/bin/");
+    for (String s : cmds) {
+      sb.append(s).append(" ");
+    }
+    logger.info(sb.toString());
+
+    Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).redirectErrorStream(true).start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("UTF8")));
+    String line;
+    StringBuilder lines = new StringBuilder("");
+    while ((line = br.readLine()) != null) {
+      logger.info(line);
+      lines.append(line);
+    }
+    process.waitFor();
+    int exitValue = process.exitValue();
+    if (exitValue != 0) {
+      throw new RuntimeException("Failed cert check. Exit value: " + exitValue);
+    }
+    logger.info("Done cert check.");
+    return lines.toString();
   }
 }

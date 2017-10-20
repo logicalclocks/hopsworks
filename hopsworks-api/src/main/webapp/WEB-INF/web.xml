@@ -182,6 +182,9 @@
         <role-name>HOPS_USER</role-name>
     </security-role>
     <security-role>
+        <role-name>CLUSTER_AGENT</role-name>
+    </security-role>
+    <security-role>
         <role-name>AUDITOR</role-name>
     </security-role>
     <security-role>

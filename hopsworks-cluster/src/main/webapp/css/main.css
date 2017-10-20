@@ -1,0 +1,13 @@
+body {
+    background-image: url("../img/network.png");
+    background-color: #8ec3eb;
+    overflow-x: hidden;
+}
+
+.center {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+    text-align: center;
+    color: #fff;
+}

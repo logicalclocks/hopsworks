@@ -2,7 +2,6 @@
 <!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
 <glassfish-web-app error-url="">
   <property name="allowLinking" value="true"/>
-  <context-root>/hopsworks-ca</context-root>
   <security-role-mapping>
     <role-name>HOPS_ADMIN</role-name>
     <group-name>HOPS_ADMIN</group-name>
@@ -14,6 +13,10 @@
   <security-role-mapping>
     <role-name>AGENT</role-name>
     <group-name>AGENT</group-name>
+  </security-role-mapping>
+  <security-role-mapping>
+    <role-name>CLUSTER_AGENT</role-name>
+    <group-name>CLUSTER_AGENT</group-name>
   </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
   <security-role-mapping>
