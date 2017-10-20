@@ -6,15 +6,10 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.common.ClusterAddressDTO;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
-import io.hops.hopsworks.util.CertificateHelper;
-import java.security.KeyStore;
-import java.util.Optional;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
-import org.javatuples.Triplet;
 
 @Stateless
 public class RemoteDelaController {
@@ -24,27 +19,15 @@ public class RemoteDelaController {
   @EJB
   private Settings settings;
   @EJB
-  private DelaStateController delaStateController;
+  private DelaStateController delaStateCtrl;
 
-  private KeyStore keystore;
-  private KeyStore truststore;
-  private String keystorePassword;
-
-  @PostConstruct
-  public void init() {
-    if (delaStateController.delaEnabled()) {
-      Optional<Triplet<KeyStore, KeyStore, String>> certSetup = CertificateHelper.initKeystore(settings);
-      if (certSetup.isPresent()) {
-        delaStateController.delaCertsAvailable();
-        keystore = certSetup.get().getValue0();
-        truststore = certSetup.get().getValue1();
-        keystorePassword = certSetup.get().getValue2();
-      }
-    }
+  private void checkReady() throws ThirdPartyException {
+    delaStateCtrl.checkHopsworksDelaSetup();
   }
-  
+
+  //********************************************************************************************************************
   public FilePreviewDTO readme(String publicDSId, ClusterAddressDTO source) throws ThirdPartyException {
-    delaStateController.checkRemoteDelaAvaileble();
+    checkReady();
     try {
       ClientWrapper client = getClient(source.getDelaClusterAddress(), Path.readme(publicDSId), FilePreviewDTO.class);
       LOG.log(Settings.DELA_DEBUG, "dela:cross:readme {0}", client.getFullPath());
@@ -57,9 +40,11 @@ public class RemoteDelaController {
     }
   }
 
-  private ClientWrapper getClient(String delaClusterAddress, String path, Class resultClass) {
-    return ClientWrapper.httpsInstance(keystore, truststore, keystorePassword,
-      HopssiteController.HopsSiteHostnameVerifier.INSTANCE, resultClass).setTarget(delaClusterAddress).setPath(path);
+  private ClientWrapper getClient(String delaClusterAddress, String path, Class resultClass) 
+    throws ThirdPartyException {
+    return ClientWrapper.httpsInstance(delaStateCtrl.getKeystore(), delaStateCtrl.getTruststore(), 
+      delaStateCtrl.getKeystorePassword(), new HopssiteController.HopsSiteHostnameVerifier(settings), resultClass)
+      .setTarget(delaClusterAddress).setPath(path);
   }
 
   public static class Path {

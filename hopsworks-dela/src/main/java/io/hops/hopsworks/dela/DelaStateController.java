@@ -2,6 +2,7 @@ package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import java.security.KeyStore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -23,7 +24,11 @@ public class DelaStateController {
   private boolean delaCertsAvailable = false;
   private boolean transferDelaAvailable = false;
   private boolean hopssiteAvailable = false;
-
+  
+  private KeyStore keystore;
+  private KeyStore truststore;
+  private String keystorePassword;
+      
   @PostConstruct
   private void init() {
     if (settings.isDelaEnabled()) {
@@ -37,9 +42,9 @@ public class DelaStateController {
   public boolean delaEnabled() {
     return delaEnabled;
   }
-
+  
   public boolean delaAvailable() {
-    return delaEnabled && delaCertsAvailable && transferDelaAvailable && hopssiteAvailable;
+    return hopsworksDelaSetup() && transferDelaAvailable && hopssiteAvailable;
   }
 
   public void checkDelaAvailable() throws ThirdPartyException {
@@ -50,33 +55,29 @@ public class DelaStateController {
   }
 
   public boolean transferDelaAvailable() {
-    return delaEnabled && transferDelaAvailable;
+    return hopsworksDelaSetup() && transferDelaAvailable;
   }
 
   public boolean hopssiteAvailable() {
-    return delaEnabled && delaCertsAvailable && hopssiteAvailable;
+    return hopsworksDelaSetup() && hopssiteAvailable;
   }
   
-  public void checkHopssiteState() throws ThirdPartyException {
+  public void checkHopssiteAvailable() throws ThirdPartyException {
     if (!hopssiteAvailable()) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "hopssite not available", 
         ThirdPartyException.Source.LOCAL, "bad request");
     }
   }
 
-  public boolean remoteDelaAvailable() {
+  public boolean hopsworksDelaSetup() {
     return delaEnabled && delaCertsAvailable;
   }
 
-  public void checkRemoteDelaAvaileble() throws ThirdPartyException {
-    if (!remoteDelaAvailable()) {
+  public void checkHopsworksDelaSetup() throws ThirdPartyException {
+    if (!hopsworksDelaSetup()) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "remote dela not available",
         ThirdPartyException.Source.LOCAL, "bad request");
     }
-  }
-
-  public void delaCertsAvailable() {
-    delaCertsAvailable = true;
   }
 
   public void transferDelaContacted() {
@@ -85,5 +86,24 @@ public class DelaStateController {
 
   public void hopssiteContacted() {
     hopssiteAvailable = true;
+  }
+  
+  public void delaCertsAvailable(KeyStore keystore, KeyStore truststore, String keystorePassword) {
+    delaCertsAvailable = true;
+    this.keystore = keystore;
+    this.truststore = truststore;
+    this.keystorePassword = keystorePassword;
+  }
+
+  public KeyStore getKeystore() {
+    return keystore;
+  }
+
+  public KeyStore getTruststore() {
+    return truststore;
+  }
+
+  public String getKeystorePassword() {
+    return keystorePassword;
   }
 }
