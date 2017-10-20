@@ -1,7 +1,7 @@
 <aside class="offsidebar">
   <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation" style="margin-top:50px;"  ng-cloak>
 
-    <ul class="nav sidebar-nav" ng-cloak>
+    <ul class="nav sidebar-nav" ng-cloak ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
       <li style="background: #1a1a1a;">
         <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="text-center">
@@ -14,18 +14,22 @@
         <a>
           Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"
                        id="jupyterTab"/>
+          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>          
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToZeppelin()" ng-show="projectCtrl.showZeppelin()">
         <a>
-          Zeppelin <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
+          Zeppelin 
+          <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
+          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
         <a>
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
+          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
       <!--
@@ -50,7 +54,8 @@
       <li ng-click="projectCtrl.goToKafka()"
           ng-show="projectCtrl.showKafka()">
         <a>
-          Kafka<img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
+          Kafka <img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
+          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
       <li ng-click="projectCtrl.goToService('DELA')" ng-show="projectCtrl.showDela()">
@@ -75,7 +80,8 @@
 
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
         <a>
-          Data Sets<span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+          Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
         </a>
       </li>
 
@@ -98,7 +104,7 @@
         </a>
       </li>
       <br>
-      <div  ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
+      <div>
         <div class="sidebar-nav-static">
           <small ng-show="clusterUtilCtrl.utilisation === 20" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization is low</em></small>
           <small ng-show="clusterUtilCtrl.utilisation > 1 && clusterUtilCtrl.utilisation !== 20" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization: {{clusterUtilCtrl.utilisation}}%</em></small>
@@ -114,30 +120,6 @@
             </div>
           </div>
           <br>
-        </div>
-        <div class="sidebar-nav-static">          
-          <small style="color: #ddd; font-size: 80%;"><em>HDFS status: </em></small>
-          <span class="fa fa-circle pull-right" 
-               uib-tooltip="If this indicator is orange, your job may encounter problems running.
-               If this bar is red your jobs will not be able to run. "
-               tooltip-placement="bottom" ng-class="clusterUtilCtrl.HdfsStatus">
-          </span>
-        </div>
-        <div class="sidebar-nav-static">          
-          <small style="color: #ddd; font-size: 80%;"><em>YARN status: </em></small>
-          <span class="fa fa-circle pull-right" 
-               uib-tooltip="If this indicator is orange, your job may encounter problems running.
-               If this bar is red your jobs will not be able to run. "
-               tooltip-placement="bottom" ng-class="clusterUtilCtrl.YarnStatus">
-          </span>
-        </div>
-        <div class="sidebar-nav-static" ng-show="projectCtrl.showKafka()">          
-          <small style="color: #ddd; font-size: 80%;"><em>Kafka status: </em></small>
-          <span class="fa fa-circle pull-right" 
-               uib-tooltip="If this indicator is orange, your job may encounter problems running.
-               If this bar is red your jobs will not be able to run. "
-               tooltip-placement="bottom" ng-class="clusterUtilCtrl.KafkaStatus">
-          </span>
         </div>
         <div class="sidebar-nav-static">
           <div ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">

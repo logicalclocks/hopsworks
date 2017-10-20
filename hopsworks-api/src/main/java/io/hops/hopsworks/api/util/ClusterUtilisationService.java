@@ -46,22 +46,21 @@ public class ClusterUtilisationService {
         multiplicator).build();
   }
 
-
   @GET
   @Path("/gpus")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getGpus() {
-
     Response response = null;
     String rmUrl = "http://" + settings.getRmIp() + ":" + settings.getRmPort() + "/ws/v1/cluster/metrics";
     Client client = ClientBuilder.newClient();
     WebTarget target = client.target(rmUrl);
     try {
       response = target.request().get();
+    } catch (Exception ex) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
     } finally {
       client.close();
     }
-//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
     return response;
   }
 
