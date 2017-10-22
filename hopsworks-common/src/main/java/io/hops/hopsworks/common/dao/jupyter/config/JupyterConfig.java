@@ -255,10 +255,10 @@ public class JupyterConfig {
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
           instantiateFromTemplate(
               ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
-              "project", this.project.getName(),
               "namenode_ip", nameNodeIp,
               "namenode_port", nameNodePort,
               "hopsworks_ip", settings.getHopsworksIp(),
+              "project", this.project.getName(),
               "base_dir", js.getBaseDir(),
               "hdfs_user", this.hdfsUser,
               "port", port.toString(),
@@ -303,6 +303,8 @@ public class JupyterConfig {
           = ConfigFileGenerator.
               instantiateFromTemplate(
                   ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
+                  "project", this.project.getName(),
+                  "base_dir", js.getBaseDir(),
                   "livy_ip", settings.getLivyIp(),
                   "hdfs_user", this.hdfsUser,
                   "driver_cores", Integer.toString(js.getAppmasterCores()),
