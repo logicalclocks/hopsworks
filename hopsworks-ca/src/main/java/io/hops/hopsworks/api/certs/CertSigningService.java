@@ -36,7 +36,7 @@ import org.json.JSONObject;
 
 @Path("/agentservice")
 @Stateless
-@Api(value = "/agentservice", description = "Agent service")
+@Api(value = "Certificate Signing", description = "Sign certificates for hosts or clusters")
 public class CertSigningService {
 
   final static Logger logger = Logger.getLogger(CertSigningService.class.
@@ -56,25 +56,27 @@ public class CertSigningService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response register(@Context HttpServletRequest req, String jsonString)
           throws AppException {
+    logger.info("Request to sign host certificate: \n" + jsonString);        
     JSONObject json = new JSONObject(jsonString);
     String pubAgentCert = "no certificate";
     String caPubCert = "no certificate";
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
+        
         pubAgentCert = PKIUtils.signCertificate(settings, csr, true);
+        logger.info("Signed host certificate.");        
         caPubCert = Files.toString(new File(settings.getIntermediateCaDir()
                 + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
-        Logger.getLogger(CertSigningService.class.getName()).log(Level.SEVERE,
-                null,
-                ex);
+        logger.log(Level.SEVERE, "Cert signing error: {0}", ex.getMessage());
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(), ex.toString());
       }
     }
 
     if (json.has("host-id") && json.has("agent-password")) {
+      
       String hostId = json.getString("host-id");
       Host host;
       try {
@@ -84,9 +86,7 @@ public class CertSigningService {
         host.setRegistered(true);
         hostEJB.storeHost(host, true);
       } catch (Exception ex) {
-        Logger.getLogger(CertSigningService.class.getName()).log(Level.SEVERE,
-                null,
-                ex);
+        logger.log(Level.SEVERE, "Host storing error while Cert signing: {0}", ex.getMessage());
       }
     }
 
