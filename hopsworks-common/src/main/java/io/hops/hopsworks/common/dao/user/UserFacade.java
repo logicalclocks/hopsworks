@@ -130,5 +130,12 @@ public class UserFacade extends AbstractFacade<Users> {
     query.setParameter("status", status);
     return query.getResultList();
   }
+  
+  public List<Integer> findAllInGroup(int gid) {
+    Query query = em.createNativeQuery(
+        "SELECT u.uid FROM hopsworks.users u JOIN hopsworks.people_group g ON u.uid = g.uid Where g.gid = ?");
+    query.setParameter(1, gid);
+    return (List<Integer>) query.getResultList();
+  }
 
 }

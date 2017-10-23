@@ -15,9 +15,13 @@ angular.module('hopsWorksApp')
             self.gpusPercent = 0;
             self.progressBarClass = 'progress-bar-success';
             self.gpuBarClass = 'progress-bar-success';
-            self.HdfsStatus = 'text-success';
-            self.YarnStatus = 'text-success';
-            self.KafkaStatus = 'text-success';
+            
+            self.HdfsBan = false;
+            self.HdfsWarn = false;
+            self.YarnBan = false;
+            self.YarnWarn = false;
+            self.KafkaBan = false;
+            self.KafkaWarn = false;
             
             var getClusterUtilisation = function () {
               ClusterUtilService.getYarnmultiplicator().then(
@@ -80,11 +84,14 @@ angular.module('hopsWorksApp')
                           }
                         });
                         if (nbRunningDataNodes > nbDataNodes * 2 / 3 && nbRunningNameNodes > nbNameNodes / 2) {
-                          self.HdfsStatus = 'status-success';
+                          self.HdfsBan = false;
+                          self.HdfsWarn = false;
                         } else if (nbRunningDataNodes > nbDataNodes * 1 / 3 && nbRunningNameNodes >= 1) {
-                          self.HdfsStatus = 'status-warning';
+                          self.HdfsBan = false;
+                          self.HdfsWarn = true;
                         } else {
-                          self.HdfsStatus = 'status-danger';
+                          self.HdfsBan = true;
+                          self.HdfsWarn = false;
                         }
 
                       }, function (error) {
@@ -114,11 +121,14 @@ angular.module('hopsWorksApp')
                           }
                         });
                         if (nbRunningNodeManagers > nbNodeManagers * 2 / 3 && nbRunningRMs > nbRMs / 2) {
-                          self.YarnStatus = 'status-success';
+                          self.YarnBan = false;
+                          self.YarnWarn = false;
                         } else if (nbRunningNodeManagers > nbNodeManagers * 1 / 3 && nbRunningRMs >= 1) {
-                          self.YarnStatus = 'status-warning';
+                          self.YarnBan = false;
+                          self.YarnWarn = true;
                         } else {
-                          self.YarnStatus = 'status-danger';
+                          self.YarnBan = true;
+                          self.YarnWarn = false;
                         }
 
                       }, function (error) {
@@ -138,11 +148,14 @@ angular.module('hopsWorksApp')
                           }
                         });
                         if (nbRunningInstances > nbInstances * 2 / 3) {
-                          self.KafkaStatus = 'status-success';
+                          self.KafkaBan = false;
+                          self.KafkaWarn = false;
                         } else if (nbRunningInstances > nbInstances * 1 / 3) {
-                          self.KafkaStatus = 'status-warning';
+                          self.KafkaBan = false;
+                          self.KafkaWarn = true;
                         } else {
-                          self.KafkaStatus = 'status-danger';
+                          self.KafkaBan = true;
+                          self.KafkaWarn = false;
                         }
 
                       }, function (error) {

@@ -29,6 +29,9 @@
   <security-role>
     <role-name>AGENT</role-name>
   </security-role>
+  <security-role>
+    <role-name>CLUSTER_AGENT</role-name>
+  </security-role>
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>Viewpoint Secure URLs</web-resource-name>

@@ -57,7 +57,6 @@
       <version>0.1.0</version>
       <type>war</type>
     </dependency>
-    
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-admin</artifactId>
@@ -250,6 +249,20 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>hops-site</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation> 
+      <dependencies>  
+        <dependency>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-cluster</artifactId>
+          <version>0.1.0</version>
+          <type>war</type>
+        </dependency>
+      </dependencies>
     </profile>
   </profiles>
   <repositories>

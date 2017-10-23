@@ -16,7 +16,7 @@ public enum AccountsAuditActions {
   CHANGEDSTATUS("CHANGED STATUS"),
   // to get registration audit logs
   REGISTRATION("REGISTRATION"),
-
+  UNREGISTRATION("UNREGISTRATION"),
   RECOVERY("RECOVERY"),
 
   QRCODE("QR CODE"),

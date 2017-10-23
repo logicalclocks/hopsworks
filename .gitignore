@@ -118,3 +118,5 @@ src/main/setup/glassfish-resources.xml
 */glassfish-resources.xml
 
 /hopsworks-web/yo/nbproject/private/
+/hopsworks-cluster/src/main/webapp/node_modules/
+/hopsworks-cluster/src/main/webapp/vendor/
