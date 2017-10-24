@@ -14,7 +14,9 @@
         <a>
           Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"
                        id="jupyterTab"/>
-          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>          
+          <i class="pull-left fa"  
+             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run." 
+             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>          
         </a>
       </li>
 
@@ -22,14 +24,18 @@
         <a>
           Zeppelin 
           <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
-          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
+          <i class=" pull-left fa " 
+             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run." 
+             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
         <a>
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
-          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
+          <i class=" pull-left fa " 
+             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run."              
+             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
       <!--
@@ -55,13 +61,15 @@
           ng-show="projectCtrl.showKafka()">
         <a>
           Kafka <img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
-          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
+          <i class=" pull-left fa " 
+             uib-tooltip="If this indicator is orange, Kafka is encountering problems. If this bar is red, Kafka is down."             
+             ng-class="{'fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
       <li ng-click="projectCtrl.goToService('DELA')" ng-show="projectCtrl.showDela()">
-          <a>
-             Dela<img class="pull-right" style="margin-right:15px" height="25" src="images/dela-green.png">
-          </a>
+        <a>
+          Dela<img class="pull-right" style="margin-right:15px" height="25" src="images/dela-green.png">
+        </a>
       </li>
 
       <li ng-click="projectCtrl.goToTensorflow()" ng-show="projectCtrl.showTensorflow()">
@@ -81,7 +89,9 @@
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
-          <i class=" pull-left fa " ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
+          <i class=" pull-left fa " 
+             uib-tooltip="If this indicator is orange, the filesystem (HopsFS) is encountering problems. If this bar is red, HopsFS is down."                          
+             ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
         </a>
       </li>
 
@@ -188,7 +198,7 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
-   <virtual-step
+  <virtual-step
     ng-if="projectCtrl.tourService.activeTour === 'distributed tensorflow'"
     id="TourTwo"
     class="ng-scope"
@@ -201,5 +211,5 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
-  
+
 </tour>

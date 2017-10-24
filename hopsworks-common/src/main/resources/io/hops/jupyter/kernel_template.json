@@ -13,6 +13,8 @@
     "LIBHDFS_OPTS": "-Xmx96m",
     "PDIR": "%%secret_dir%%",
     "HDFS_USER": "%%hdfs_user%%",     
+    "HADOOP_USER_NAME": "%%hdfs_user%%",     
+    "HADOOP_PROXY_USER": "%%hdfs_user%%",     
     "LIBHDFS_OPTS": "-Xmx96m",
     "HADOOP_VERSION": "%%hadoop_version%%"
   }
