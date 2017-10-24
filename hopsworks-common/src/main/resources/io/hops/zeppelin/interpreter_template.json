@@ -192,6 +192,7 @@
         "zeppelin.livy.spark.sql.field.truncate": "true",
         "zeppelin.livy.displayAppInfo": "false",
         "zeppelin.livy.url": "%%livy_url%%",
+        "livy.server.session.timeout":"%%livy_session_timeout%%",
         "livy.spark.dynamicAllocation.minExecutors": "",
         "livy.spark.jars.packages": "",
         "livy.spark.dynamicAllocation.enabled": "",
