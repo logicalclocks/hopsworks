@@ -1888,10 +1888,6 @@ public class Settings implements Serializable {
     return null;
   }
 
-  public static String getPublicDatasetId(String clusterId, String projectName,
-    String datasetName) {
-    return clusterId + "_" + projectName + "_" + datasetName;
-  }
   //************************************************CERTIFICATES********************************************************
   private static final String HOPS_SITE_CA_DIR = CA_DIR + "/hops-site-certs";
   public final static String HOPS_SITE_CERTFILE = "/pub.pem";

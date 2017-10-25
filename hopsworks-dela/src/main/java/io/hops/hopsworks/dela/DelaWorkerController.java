@@ -67,18 +67,19 @@ public class DelaWorkerController {
     }
     delaStateCtrl.checkDelaAvailable();
     delaHdfsCtrl.writeManifest(project, dataset, user);
-    String publicDSId = createPublicDSId(project.getName(), dataset.getName());
 
-    delaCtrlUpload(project, dataset, user, publicDSId);
     long datasetSize = delaHdfsCtrl.datasetSize(project, dataset, user);
+    String publicDSId = null; 
     try {
-      hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
+      publicDSId = hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
         @Override
         public String perform() throws ThirdPartyException {
-          return hopsSiteCtrl.publish(publicDSId, dataset.getName(), dataset.getDescription(), getCategories(),
+          return hopsSiteCtrl.publish(dataset.getName(), dataset.getDescription(), getCategories(), 
             datasetSize, user.getEmail());
+          
         }
       });
+      delaCtrlUpload(project, dataset, user, publicDSId);
     } catch (ThirdPartyException tpe) {
       if (ThirdPartyException.Source.HOPS_SITE.equals(tpe.getSource())
         && ThirdPartyException.Error.DATASET_EXISTS.is(tpe.getMessage())) {
@@ -180,9 +181,6 @@ public class DelaWorkerController {
   }
 
   //********************************************************************************************************************
-  private String createPublicDSId(String projectName, String datasetName) {
-    return Settings.getPublicDatasetId(settings.getDELA_CLUSTER_ID(), projectName, datasetName);
-  }
 
   private Collection<String> getCategories() {
     Set<String> categories = new HashSet<>();

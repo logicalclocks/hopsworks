@@ -31,7 +31,7 @@ public class CertificateHelper {
     try {
       KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
       KeyStore truststore = KeyStore.getInstance(KeyStore.getDefaultType());
-      String keystorePassword = "adminpw"; // get from settings or rest api
+      String keystorePassword = settings.getHopsworksMasterPasswordSsl();
       try (FileInputStream keyStoreIS = new FileInputStream(keystoreFile);
         FileInputStream trustStoreIS = new FileInputStream(truststoreFile)) {
         keystore.load(keyStoreIS, keystorePassword.toCharArray());

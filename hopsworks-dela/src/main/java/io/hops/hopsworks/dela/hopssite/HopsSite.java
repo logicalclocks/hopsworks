@@ -36,8 +36,8 @@ public class HopsSite {
 
   public static class DatasetService {
 
-    public static String publish(String publicCId, String publicDSId) {
-      return "dataset/publish/" + publicCId + "/" + publicDSId;
+    public static String publish(String publicCId) {
+      return "dataset/publish/" + publicCId;
     }
 
     public static String unpublish(String publicCId, String publicDSId) {

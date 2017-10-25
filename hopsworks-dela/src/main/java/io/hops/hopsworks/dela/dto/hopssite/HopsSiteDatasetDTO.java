@@ -8,6 +8,7 @@ public class HopsSiteDatasetDTO {
 
   private String publicId;
   private String name;
+  private int version;
   private String description;
   private Date madePublicOn;
   private long dsSize;
@@ -17,10 +18,11 @@ public class HopsSiteDatasetDTO {
   public HopsSiteDatasetDTO() {
   }
 
-  public HopsSiteDatasetDTO(String publicId, String name, String description, Date madePublicOn, long dsSize,
-          Integer rating) {
+  public HopsSiteDatasetDTO(String publicId, String name, int version, String description, Date madePublicOn, 
+    long dsSize, Integer rating) {
     this.publicId = publicId;
     this.name = name;
+    this.version = version;
     this.description = description;
     this.madePublicOn = madePublicOn;
     this.dsSize = dsSize;
@@ -41,6 +43,14 @@ public class HopsSiteDatasetDTO {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public int getVersion() {
+    return version;
+  }
+
+  public void setVersion(int version) {
+    this.version = version;
   }
 
   public String getDescription() {

@@ -1,8 +1,7 @@
 <div>
   <div class="panel panel-default">
     <div class="panel-heading ds-panel-heading">
-      <a ng-click="detailsFn(content)">{{content.name | limitTo: 100}}
-      {{content.heading.length > 100 ? '...':''}}</a>
+      <a ng-click="detailsFn(content)">{{content.name | limitTo: 100}} {{content.name.length > 100 ? '...':''}} &lt;v{{content.version}}&gt; </a>
       <p class="pull-right text-muted"><span uib-rating ng-model="content.rating" aria-labelledby="custom-icons-2" read-only="true"></span></p>
     </div>
     <div class="panel-body">{{content.description}}</div>

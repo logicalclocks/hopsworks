@@ -207,13 +207,13 @@ public class HopssiteController {
   }
 
   //****************************************************TRACKER********************************************************
-  public String publish(String publicDSId, String name, String description, Collection<String> categories, long size,
-    String userEmail) throws ThirdPartyException {
+  public String publish(String datasetName, String description, Collection<String> categories, 
+    long size, String userEmail) throws ThirdPartyException {
     checkHopssiteReady();
     String publicCId = SettingsHelper.clusterId(settings);
     try {
-      DatasetDTO.Proto msg = new DatasetDTO.Proto(name, description, categories, size, userEmail);
-      ClientWrapper client = getClient(HopsSite.DatasetService.publish(publicCId, publicDSId), String.class);
+      DatasetDTO.Proto msg = new DatasetDTO.Proto(datasetName, description, categories, size, userEmail);
+      ClientWrapper client = getClient(HopsSite.DatasetService.publish(publicCId), String.class);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - {0}", client.getFullPath());
       client.setPayload(msg);
       LOG.log(Settings.DELA_DEBUG, "hops-site:dataset - done {0}", client.getFullPath());
