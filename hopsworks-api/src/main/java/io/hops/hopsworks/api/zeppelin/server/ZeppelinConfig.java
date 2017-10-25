@@ -405,7 +405,6 @@ public class ZeppelinConfig {
   private boolean createZeppelinConfFiles(String interpreterConf) throws IOException {
     File zeppelin_env_file = new File(confDirPath + ZEPPELIN_ENV_SH);
     File zeppelin_site_xml_file = new File(confDirPath + ZEPPELIN_SITE_XML);
-//    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     File interpreter_file = new File(confDirPath + INTERPRETER_JSON);
     String home = settings.getZeppelinDir() + File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
     String notebookDir = File.separator + Settings.DIR_ROOT + File.separator + this.projectName;
@@ -414,10 +413,7 @@ public class ZeppelinConfig {
     boolean createdSh = false;
     boolean createdLog4j = false;
     boolean createdXml = false;
-//    if (!log4j_file.exists()) {
-//      StringBuilder log4j = ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.LOG4J_TEMPLATE);
-//      createdLog4j = ConfigFileGenerator.createConfigFile(log4j_file, log4j.toString());
-//    }
+
     String log4jPath = Settings.getSparkLog4JPath(settings.getSparkUser());
     String zeppelinPythonPath = settings.getAnacondaProjectDir(this.projectName)
         + File.separator + "bin" + File.separator + "python";
@@ -537,7 +533,8 @@ public class ZeppelinConfig {
               "livy.spark.yarn.stagingDir", hdfsResourceDir,
               "hadoop_version", settings.getHadoopVersion(),
               "zeppelin.python_conda_path", zeppelinPythonPath,
-              "spark.yarn.dist.files", sparkDistFiles.toString()
+              "spark.yarn.dist.files", sparkDistFiles.toString(),
+              "livy_session_timeout", settings.getLivyZeppelinSessionTimeout()
           );
       interpreterConf = interpreter_json.toString();
     } 
