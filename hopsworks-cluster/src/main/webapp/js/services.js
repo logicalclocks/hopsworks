@@ -18,7 +18,7 @@ services.factory("ClusterService", ['$http', function ($http) {
       },
       confirmRegister: function (validationKey) {
         var regReq = {
-          method: 'PUT',
+          method: 'GET',
           url: baseURL + '/cluster/register/confirm/' + validationKey
         };
         return $http(regReq);
@@ -36,7 +36,7 @@ services.factory("ClusterService", ['$http', function ($http) {
       },
       confirmUnregister: function (validationKey) {
         var regReq = {
-          method: 'PUT',
+          method: 'GET',
           url: baseURL + '/cluster/unregister/confirm/' + validationKey
         };
         return $http(regReq);

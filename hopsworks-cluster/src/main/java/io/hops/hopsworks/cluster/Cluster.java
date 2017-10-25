@@ -11,8 +11,8 @@ import javax.mail.MessagingException;
 import javax.security.cert.CertificateException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
@@ -54,7 +54,7 @@ public class Cluster {
     return Response.ok().entity(res).build();
   }
 
-  @PUT
+  @GET
   @Path("register/confirm/{validationKey}")
   public Response confirmRegister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
     JsonResponse res = new JsonResponse();
@@ -71,7 +71,7 @@ public class Cluster {
     return Response.ok().entity(res).build();
   }
 
-  @PUT
+  @GET
   @Path("unregister/confirm/{validationKey}")
   public Response confirmUnregister(@PathParam("validationKey") String validationKey, @Context HttpServletRequest req) {
     JsonResponse res = new JsonResponse();

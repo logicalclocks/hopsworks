@@ -9,6 +9,7 @@ public class HopsworksSearchDTO {
   public static class Item implements Serializable {
     
     private String name;
+    private int version;
     private String description;
     private String publicId;
     private String type;
@@ -28,6 +29,7 @@ public class HopsworksSearchDTO {
       
       this.publicId = item.getPublicDSId();
       this.name = item.getDataset().getName();
+      this.version = item.getDataset().getVersion();
       this.description = item.getDataset().getDescription();
       this.score = item.getScore();
     }
@@ -40,6 +42,14 @@ public class HopsworksSearchDTO {
       this.name = name;
     }
 
+    public int getVersion() {
+      return version;
+    }
+
+    public void setVersion(int version) {
+      this.version = version;
+    }
+    
     public String getDescription() {
       return description;
     }

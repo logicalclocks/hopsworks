@@ -9,7 +9,6 @@ public class DatasetDTO implements Serializable {
 
   @XmlRootElement
   public static class Proto {
-
     private String name;
     private String description;
     private Collection<String> categories;
@@ -19,7 +18,8 @@ public class DatasetDTO implements Serializable {
     public Proto() {
     }
 
-    public Proto(String name, String description, Collection<String> categories, long size, String userEmail) {
+    public Proto(String name, String description, Collection<String> categories, long size, 
+      String userEmail) {
       this.name = name;
       this.description = description;
       this.categories = categories;
@@ -72,13 +72,15 @@ public class DatasetDTO implements Serializable {
   public static class Search implements Serializable {
 
     private String name;
+    private int version;
     private String description;
 
     public Search() {
     }
 
-    public Search(String name, String description) {
+    public Search(String name, int version, String description) {
       this.name = name;
+      this.version = version;
       this.description = description;
     }
 
@@ -90,6 +92,14 @@ public class DatasetDTO implements Serializable {
       this.name = name;
     }
 
+    public int getVersion() {
+      return version;
+    }
+
+    public void setVersion(int version) {
+      this.version = version;
+    }
+    
     public String getDescription() {
       return description;
     }
