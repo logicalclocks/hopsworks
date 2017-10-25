@@ -21,7 +21,6 @@
                 ng-click="jobsCtrl.newJob()"
                 class="btn btn-success">
                 New job
-              </button>
             </div>
           </div>
           <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
@@ -96,7 +95,7 @@
                         <button style="border-color: #20AD28; min-width: 64px; width:60%;"
                                 ng-click="jobsCtrl.runJob(job, $index);$event.stopPropagation();"
                                 class="btn btn-default btn-sm" ng-hide="jobsCtrl.runningInfo['' + job.id].running || jobsCtrl.buttonArray[job.id]">
-                          <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span> 
+                          <span style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span>
                           Run
                         </button>
                         <button
@@ -106,7 +105,7 @@
                                                   jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
                           ng-click="jobsCtrl.toggle(job, $index);
                                           jobsCtrl.stopJob(job.id);
-                                          
+
                                           $event.stopPropagation();"
                           class="btn btn-danger btn-sm"
                            style="min-width: 64px; width: 60%;">
@@ -121,7 +120,7 @@
                                                   jobsCtrl.runningInfo['' + job.id].state === 'Initializing'"
                           ng-click="jobsCtrl.toggle(job, $index);
                                           jobsCtrl.killJob(job.id);
-                                          
+
                                           $event.stopPropagation();"
                           class="btn btn-danger btn-sm"
                           style="min-width: 64px; width: 60%;">
@@ -276,6 +275,9 @@
                                               jobsCtrl.showDetails(job);$event.stopPropagation();" >Job Details</a></li>
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.editAsNew(job); $event.stopPropagation();" >Edit as new</a></li>
+                              <li><a ng-href="{{ downloadLink }}" role="menuitem"
+                                     ng-click="jobsCtrl.toggle(job, $index);
+                                              jobsCtrl.exportJob(job); $event.stopPropagation();" >Export Job</a></li>
                               <li><a role="menuitem" ng-click="jobsCtrl.toggle(job, $index);
                                               jobsCtrl.showDetails(job); $event.stopPropagation();" >Schedule</a></li>
                             </ul>
@@ -392,8 +394,8 @@
     <!-- /#wrapper -->
   </div>
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
-        post-tour="closeTour()" 
-        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' || 
+        post-tour="closeTour()"
+        ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' ||
                   projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'tensorflow')
           && (projectCtrl.tourService.informAndTips
               || projectCtrl.tourService.tipsOnly)
