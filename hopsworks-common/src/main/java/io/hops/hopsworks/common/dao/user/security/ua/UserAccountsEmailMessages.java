@@ -41,6 +41,12 @@ public class UserAccountsEmailMessages {
           = "Your profile has been updated";
 
   /*
+   * Subject of password recovery
+   */
+  public final static String ACCOUNT_PASSWORD_RECOVERY_SUBJECT
+          = "You have requested to recover your password";
+
+  /*
    * Subject of password rest
    */
   public final static String ACCOUNT_PASSWORD_RESET
@@ -102,6 +108,7 @@ public class UserAccountsEmailMessages {
    * @param key
    * @return
    */
+  @Deprecated
   public static String buildMobileRequestMessage(String path, String key) {
 
     String message;
@@ -124,7 +131,64 @@ public class UserAccountsEmailMessages {
 
     return message;
   }
+  
+    /**
+   * Build an email message for mobile users upon registration.
+   *
+   * @param path
+   * @param key
+   * @return
+   */
+  public static String buildMobileRequestMessageRest(String path, String key) {
 
+    String message;
+
+    String l1 = GREETINGS_HEADER + ",\n\n"
+            + "We received an account request for HopsWorks on your behalf.\n\n";
+    String l2
+            = "Please click on the following link to verify your email address. We"
+            + " will activate your account within "
+            + ACCOUNT_ACITVATION_PERIOD
+            + " hours after validating your email address.\n\n\n";
+
+    String url = path + "?key=" + key;
+
+    String l3 = "To confirm your email click " + url + " \n\n";
+    String l4 = "If you have any questions please contact "
+            + HOPSWORKS_SUPPORT_EMAIL;
+
+    message = l1 + l2 + l3 + l4;
+
+    return message;
+  }
+
+  /**
+   * Build an email message for mobile users upon registration.
+   *
+   * @param path
+   * @param key
+   * @return
+   */
+  public static String buildPasswordRecoveryMessage(String path, String key) {
+
+    String message;
+
+    String l1 = GREETINGS_HEADER + ",\n\n"
+            + "We received a password recovery request for HopsWorks on your behalf.\n\n";
+    String l2
+            = "Please click on the following link to recover your password: \n";
+
+    String url = path + "?key=" + key;
+
+    String l3 = url + " \n\n";
+    String l4 = "If you have any questions please contact "
+            + HOPSWORKS_SUPPORT_EMAIL;
+
+    message = l1 + l2 + l3 + l4;
+
+    return message;
+  }
+  
   public static String accountBlockedMessage() {
     String message;
 

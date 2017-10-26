@@ -19,6 +19,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 @Entity
 @Table(name = "hopsworks.yubikey")
@@ -81,8 +84,9 @@ public class Yubikey implements Serializable {
   @Column(name = "accessed")
   @Temporal(TemporalType.TIMESTAMP)
   private Date accessed;
+  @Enumerated(EnumType.ORDINAL)
   @Column(name = "status")
-  private Integer status;
+  private PeopleAccountStatus status;
   @JoinColumn(name = "uid",
           referencedColumnName = "uid")
   @OneToOne(optional = false)
@@ -172,11 +176,11 @@ public class Yubikey implements Serializable {
     this.accessed = accessed;
   }
 
-  public Integer getStatus() {
+  public PeopleAccountStatus getStatus() {
     return status;
   }
 
-  public void setStatus(Integer status) {
+  public void setStatus(PeopleAccountStatus status) {
     this.status = status;
   }
 

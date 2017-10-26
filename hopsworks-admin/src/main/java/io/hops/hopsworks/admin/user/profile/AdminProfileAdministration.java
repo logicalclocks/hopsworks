@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
@@ -127,8 +128,7 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public boolean mobileAccount() {
-    return this.editingUser.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.
-            getValue();
+    return this.editingUser.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE);
   }
 
   public List<String> getUserRole(Users p) {
@@ -137,8 +137,7 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public String getChangedStatus(Users p) {
-    return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
-            getStatus() - 1].name();
+    return userManager.findByEmail(p.getEmail()).getStatus().name();
   }
 
   public Users getUser() {
@@ -198,9 +197,7 @@ public class AdminProfileAdministration implements Serializable {
 
   public String getEditStatus() {
 
-    int status = userManager.getUserByEmail(this.editingUser.getEmail()).
-            getStatus();
-    this.editStatus = PeopleAccountStatus.values()[status - 1].name();
+    this.editStatus = userManager.getUserByEmail(this.editingUser.getEmail()).getStatus().name();
     return this.editStatus;
   }
 
@@ -287,11 +284,10 @@ public class AdminProfileAdministration implements Serializable {
   public void updateStatusByAdmin() {
     // Update status
     if (!"#!".equals(selectedStatus)) {
-      editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).
-              getValue());
+      editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus));
       try {
         userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
-                selectedStatus).getValue());
+                selectedStatus));
         am.registerAccountChange(sessionState.getLoggedInUser(),
                 AccountsAuditActions.CHANGEDSTATUS.name(),
                 UserAuditActions.SUCCESS.
@@ -384,8 +380,7 @@ public class AdminProfileAdministration implements Serializable {
     if (editingUser.getBbcGroupCollection().isEmpty() == false) {
       return false;
     }
-    if (editingUser.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.
-            getValue()) {
+    if (editingUser.getStatus().equals(PeopleAccountStatus.VERIFIED_ACCOUNT)) {
       return false;
     }
     return true;

@@ -4,6 +4,8 @@ import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.Yubikey;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import java.io.Serializable;
 import java.util.Collection;
@@ -82,6 +84,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query = "SELECT u FROM Users u WHERE u.mobile = :mobile"),
   @NamedQuery(name = "Users.findByStatus",
           query = "SELECT u FROM Users u WHERE u.status = :status"),
+  @NamedQuery(name = "Users.findByStatusAndMode",
+          query = "SELECT u FROM Users u WHERE u.status = :status and u.mode = :mode"),
   @NamedQuery(name = "Users.findByTwoFactor",
           query
           = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
@@ -135,8 +139,9 @@ public class Users implements Serializable {
   private int falseLogin;
   @Basic(optional = false)
   @NotNull
+  @Enumerated(EnumType.ORDINAL)
   @Column(name = "status")
-  private int status;
+  private PeopleAccountStatus status;
   @Basic(optional = false)
   @NotNull
   @Column(name = "isonline")
@@ -155,8 +160,9 @@ public class Users implements Serializable {
   private String securityAnswer;
   @Basic(optional = false)
   @NotNull
+  @Enumerated(EnumType.ORDINAL)
   @Column(name = "mode")
-  private int mode;
+  private PeopleAccountType mode;
   @Basic(optional = false)
   @NotNull
   @Column(name = "password_changed")
@@ -212,7 +218,7 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int status, int isonline, int maxNumProjects) {
+          int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -228,8 +234,8 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int isonline, int mode,
-          Date passwordChanged, int status, int maxNumProjects) {
+          int falseLogin, int isonline, PeopleAccountType mode,
+          Date passwordChanged, PeopleAccountStatus status, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -402,13 +408,11 @@ public class Users implements Serializable {
     this.securityAnswer = securityAnswer;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public int getMode() {
+  public PeopleAccountType getMode() {
     return mode;
   }
 
-  public void setMode(int mode) {
+  public void setMode(PeopleAccountType mode) {
     this.mode = mode;
   }
 
@@ -436,18 +440,18 @@ public class Users implements Serializable {
     this.mobile = mobile;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public int getStatus() {
+  public PeopleAccountStatus getStatus() {
     return status;
   }
 
-  public void setStatus(int status) {
+  public String getStatusName(){
+    return status.name();
+  }
+  
+  public void setStatus(PeopleAccountStatus status) {
     this.status = status;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<BbcGroup> getBbcGroupCollection() {
     return bbcGroupCollection;
   }

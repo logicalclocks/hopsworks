@@ -136,7 +136,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN =
       "whitelist_users";
-
+  private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
+  private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
+  
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (userName.getValue().
@@ -340,6 +342,8 @@ public class Settings implements Serializable {
           CERTIFICATE_MATERIALIZER_DELAY);
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
+      RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
+      VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       populateDelaCache();
 
       cached = true;
@@ -1710,6 +1714,20 @@ public class Settings implements Serializable {
 //    return "hops-spark-" + HOPSUTIL_VERSION + ".jar";
     return "hops-spark.jar";
 
+  }
+  
+  private String RECOVERY_PATH = "hopsworks-api/api/auth/recover";
+
+  public synchronized String getRecoveryEndpoint() {
+    checkCache();
+    return  HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + RECOVERY_PATH;
+  }
+
+  private String VERIFICATION_PATH = "hopsworks-api/api/auth/verify";
+
+  public synchronized String getVerificationEndpoint() {
+    checkCache();
+    return HOPSWORKS_IP + ":" + HOPSWORKS_PORT + "/" + VERIFICATION_PATH;
   }
 
   //Dela START

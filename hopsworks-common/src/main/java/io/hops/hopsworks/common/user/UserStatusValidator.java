@@ -9,22 +9,21 @@ import io.hops.hopsworks.common.exception.AppException;
 @Stateless
 public class UserStatusValidator {
 
-  public boolean checkStatus(int status) throws AppException {
-    if (status == PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue() || status
-            == PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()) {
+  public boolean checkStatus(PeopleAccountStatus status) throws AppException {
+    if (status.equals(PeopleAccountStatus.NEW_MOBILE_ACCOUNT) || 
+        status.equals(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               AccountStatusErrorMessages.INACTIVE_ACCOUNT);
     }
-    if (status == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
+    if (status.equals(PeopleAccountStatus.BLOCKED_ACCOUNT)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
     }
-    if (status == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (status.equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
     }
-    if (status == PeopleAccountStatus.LOST_MOBILE.getValue() || status
-            == PeopleAccountStatus.LOST_YUBIKEY.getValue()) {
+    if (status.equals(PeopleAccountStatus.LOST_MOBILE) || status.equals(PeopleAccountStatus.LOST_YUBIKEY)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               AccountStatusErrorMessages.LOST_DEVICE);
     }

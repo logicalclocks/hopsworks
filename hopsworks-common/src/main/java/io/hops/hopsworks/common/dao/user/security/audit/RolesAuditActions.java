@@ -7,6 +7,8 @@ public enum RolesAuditActions {
   // for removing role by the admin
   REMOVEROLE("REMOVED ROLE"),
 
+  UPDATEROLES("UPDATED ROLES"),
+  
   SUCCESS("SUCCESS"),
 
   FAILED("FAILED"),

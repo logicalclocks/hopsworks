@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
@@ -126,8 +127,7 @@ public class YubikeyActivator implements Serializable {
     try {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-      if (this.selectedYubikyUser.getMode()
-              != PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()) {
+      if (!this.selectedYubikyUser.getMode().equals(PeopleAccountType.Y_ACCOUNT_TYPE)) {
         MessagesController.addSecurityErrorMessage(user.getEmail()
                 + " is not a Yubikey user");
         return "";
@@ -149,12 +149,10 @@ public class YubikeyActivator implements Serializable {
 
       userTransaction.begin();
 
-      if (this.selectedYubikyUser.getStatus()
-              == PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-              && this.selectedYubikyUser.getYubikey().getStatus()
-              != PeopleAccountStatus.LOST_YUBIKEY.getValue()) {
+      if (this.selectedYubikyUser.getStatus().equals(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT)
+              && !this.selectedYubikyUser.getYubikey().getStatus().equals(PeopleAccountStatus.LOST_YUBIKEY)) {
         // Set status to active
-        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
 
         userManager.updateYubikey(yubi);
 
@@ -178,13 +176,11 @@ public class YubikeyActivator implements Serializable {
       }
 
       // for lost yubikey devices there is no need for role assignment
-      if (this.selectedYubikyUser.getStatus()
-              == PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-              && this.selectedYubikyUser.getYubikey().getStatus()
-              == PeopleAccountStatus.LOST_YUBIKEY.getValue()) {
+      if (this.selectedYubikyUser.getStatus().equals(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT)
+              && this.selectedYubikyUser.getYubikey().getStatus().equals(PeopleAccountStatus.LOST_YUBIKEY)) {
 
         // Set status to active
-        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+        yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
         userManager.updateYubikey(yubi);
 
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
@@ -194,7 +190,7 @@ public class YubikeyActivator implements Serializable {
       }
 
       userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+              PeopleAccountStatus.ACTIVATED_ACCOUNT);
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),
