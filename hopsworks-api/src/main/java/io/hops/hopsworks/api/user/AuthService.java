@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.UserStatusValidator;
@@ -53,6 +54,8 @@ public class AuthService {
   @EJB
   private UserFacade userBean;
   @EJB
+  private UserManager userManager;
+  @EJB
   private UsersController userController;
   @EJB
   private UserStatusValidator statusValidator;
@@ -83,6 +86,19 @@ public class AuthService {
             json).build();
   }
 
+  @POST
+  @Path("validatePassword")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response validatePassword(@FormParam("password") String password, @Context SecurityContext sc,
+      @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
+      throws AppException, MessagingException {
+    Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());
+    if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
+  }
+  
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)

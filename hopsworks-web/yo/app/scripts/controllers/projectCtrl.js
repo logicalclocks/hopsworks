@@ -558,5 +558,9 @@ angular.module('hopsWorksApp')
             self.isTourDone = function(tour){
               var isDone = StorageService.get("hopsworks-tourdone-"+tour);
             };
+            
+            self.getCerts = function () {
+              ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId).then();
+            };
 
           }]);

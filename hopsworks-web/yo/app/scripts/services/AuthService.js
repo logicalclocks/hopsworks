@@ -16,6 +16,9 @@ angular.module('hopsWorksApp')
               login: function (user) {
                 return $http.post('/api/auth/login', TransformRequest.jQueryStyle(user));
               },
+              validatePassword: function (user) {
+                return $http.post('/api/auth/validatePassword', TransformRequest.jQueryStyle(user));
+              },
               logout: function () {
                 return $http.get('/api/auth/logout')
                         .then(function (response) {

@@ -46,6 +46,9 @@ public class ResponseMessages {
           = "You must agree to our terms of use.";
   public final static String EMPTY_PATH
           = "Empty path requested";
+  public static final String CERT_DOWNLOAD_DENIED
+          = "Admin is not allowed to download certificates";
+  
 
   //success response
   public final static String CREATED_ACCOUNT
