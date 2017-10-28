@@ -255,10 +255,10 @@ public class JupyterConfig {
       StringBuilder jupyter_notebook_config = ConfigFileGenerator.
           instantiateFromTemplate(
               ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
+              "project", this.project.getName(),
               "namenode_ip", nameNodeIp,
               "namenode_port", nameNodePort,
               "hopsworks_ip", settings.getHopsworksIp(),
-              "project", this.project.getName(),
               "base_dir", js.getBaseDir(),
               "hdfs_user", this.hdfsUser,
               "port", port.toString(),
@@ -283,48 +283,52 @@ public class JupyterConfig {
           );
       ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
 
-      StringBuilder executorFiles = new StringBuilder();
-
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
           // Keystore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append("\"hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__kstore.jks#").append(Settings.K_CERTIFICATE).append(",")
+          .append("__kstore.jks#").append(Settings.K_CERTIFICATE).append("\",")
           // TrustStore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append("\"hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__tstore.jks#").append(Settings.T_CERTIFICATE).append(",")
-          .append(Settings.getSparkLog4JPath(settings.getSparkUser()));
+          .append("__tstore.jks#").append(Settings.T_CERTIFICATE).append("\",")
+          .append("\""+Settings.getSparkLog4JPath(settings.getSparkUser()) + "\"");
+
+      if(!js.getFiles().equals("")) {
+        sparkFiles.append("," + js.getFiles());
+      }
 
       boolean isTensorflow = js.getMode().toLowerCase().contains("tensorflow");
+      boolean isHorovod = js.getMode().toLowerCase().contains("horovod");
+      boolean isDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
       String extraJavaOptions = "-Dhopsworks.logstash.job.info="+project.getName()+",jupyter,notebook,?";
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
                   ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
-                  "project", this.project.getName(),
-                  "base_dir", js.getBaseDir(),
                   "livy_ip", settings.getLivyIp(),
                   "hdfs_user", this.hdfsUser,
                   "driver_cores", Integer.toString(js.getAppmasterCores()),
                   "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
-                  "num_executors", Integer.toString(js.getNumExecutors()),
+                  "num_executors", (isDynamic) ? "0" : Integer.toString(js.getNumExecutors()),
                   "executor_cores", Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(js.getMode().compareToIgnoreCase("sparkDynamic") == 0),
+                  "dynamic_executors", Boolean.toString(isDynamic),
                   "min_executors", Integer.toString(js.getDynamicMinExecutors()),
                   "initial_executors", Integer.toString(js.getDynamicInitialExecutors()),
                   "max_executors", Integer.toString(js.getDynamicMaxExecutors()),
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
-                  "files", js.getFiles(),
-                  "pyFiles", "\"" + js.getPyFiles() + "\"",
+                  "files", sparkFiles.toString(),
+                  "pyFiles", js.getPyFiles(),
                   "yarn_queue", "default",
                   "num_ps", (js.getMode().compareToIgnoreCase("distributedtensorflow") == 0)
                               ? Integer.toString(js.getNumTfPs()) : "0",
-                  "num_gpus", (isTensorflow) ? Integer.toString(js.getNumTfGpus()) : "0",
-                  "tensorflow", Boolean.toString(isTensorflow),
+                  "num_gpus", (isTensorflow) ? Integer.toString(js.getNumTfGpus()):
+                              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumTfGpus()): "0",
+                  "mpi_np", (isHorovod) ? Integer.toString(js.getNumMpiNp()) : "",
+                  "tensorflow", Boolean.toString(isTensorflow || isHorovod),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
                   "mode", js.getMode(),
@@ -339,8 +343,6 @@ public class JupyterConfig {
                   "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
                   "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
                   "metrics_path", settings.getSparkMetricsPath(),
-                  "spark_yarn_files", executorFiles.toString(),
-                  "spark_files", sparkFiles.toString(),
                   "extra_java_options", extraJavaOptions
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
