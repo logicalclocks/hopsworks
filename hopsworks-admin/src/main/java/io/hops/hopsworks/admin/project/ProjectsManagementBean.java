@@ -116,18 +116,20 @@ public class ProjectsManagementBean {
     try {
       HdfsInodeAttributes quotas = projectsManagementController.getHDFSQuotas(
               projectname);
-      this.hdfsquota = quotas.getDsquotaInMBs();
+      if(quotas!=null){
+        this.hdfsquota = quotas.getDsquotaInMBs();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
     }
     DecimalFormat df = new DecimalFormat("##.##");
-    if(this.hdfsquota > 1000000){
-      float tbSize = this.hdfsquota / 1000000;
+    if(this.hdfsquota > 1048576){
+      float tbSize = this.hdfsquota / 1048576;
       return df.format(tbSize) + "TB";
     }
-    else if(this.hdfsquota > 1000){
-      float gbSize = this.hdfsquota / 1000;
+    else if(this.hdfsquota > 1024){
+      float gbSize = this.hdfsquota / 1024;
       return df.format(gbSize) + "GB";
     }else {
       return df.format(this.hdfsquota) + "MB";
@@ -139,8 +141,10 @@ public class ProjectsManagementBean {
     try {
       HdfsInodeAttributes quotas = projectsManagementController.getHDFSQuotas(
               projectname);
-      BigInteger sz = quotas.getNsquota();
-      this.hdfsNsquota = sz.longValue();
+      if(quotas!=null && quotas.getNsquota()!=null){
+        BigInteger sz = quotas.getNsquota();
+        this.hdfsNsquota = sz.longValue();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
@@ -153,8 +157,10 @@ public class ProjectsManagementBean {
     try {
       HdfsInodeAttributes quotas = projectsManagementController.getHDFSQuotas(
               projectname);
-      BigInteger sz = quotas.getNscount();
-      quota = sz.longValue();
+      if(quotas!=null && quotas.getNscount()!=null){
+        BigInteger sz = quotas.getNscount();
+        quota = sz.longValue();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
@@ -167,7 +173,9 @@ public class ProjectsManagementBean {
     try {
       HdfsInodeAttributes quotas = projectsManagementController.getHDFSQuotas(
               projectname);
-      quota = quotas.getDiskspaceInMBs();
+      if(quotas!=null){
+        quota = quotas.getDiskspaceInMBs();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
@@ -178,7 +186,9 @@ public class ProjectsManagementBean {
   public float getYarnQuota(String projectName) throws IOException {
     try {
       YarnProjectsQuota quotas = projectsManagementController.getYarnQuotas(projectName);
-      this.yarnquota = quotas.getQuotaRemaining();
+      if(quotas!=null){
+        this.yarnquota = quotas.getQuotaRemaining();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
@@ -189,7 +199,9 @@ public class ProjectsManagementBean {
   public float getTotalYarnQuota(String projectName) throws IOException {
     try {
       YarnProjectsQuota quotas = projectsManagementController.getYarnQuotas(projectName);
-      this.totalyarnquota = quotas.getTotal();
+      if(quotas!=null){
+        this.totalyarnquota = quotas.getTotal();
+      }
     } catch (AppException ex) {
       Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
               null, ex);
@@ -233,18 +245,17 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(row.getName(), this.yarnquota);
     if(this.hdfsquotastring!=null){
       convertHdfsQuotaString();
+      projectsManagementController.setHdfsSpaceQuota(row.getName(),this.hdfsquota);
     }
-    projectsManagementController.setHdfsSpaceQuota(row.getName(),
-            this.hdfsquota);
   }
 
   private void convertHdfsQuotaString(){
     if(this.hdfsquotastring.endsWith("TB")){
       Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
-      this.hdfsquota = value * 1000000;
+      this.hdfsquota = value * 1048576;
     }else if(this.hdfsquotastring.endsWith("GB")){
       Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
-      this.hdfsquota = value * 1000;
+      this.hdfsquota = value * 1024;
     }else if(this.hdfsquotastring.endsWith("MB")){
       Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
       this.hdfsquota = value;

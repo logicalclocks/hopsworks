@@ -31,6 +31,9 @@ public class LastPaymentFacade extends
             projectname);
     try {
       List<LastPayment> res = query.getResultList();
+      if(res==null){
+        return null;
+      }
       return res.get(0);
     } catch (NoResultException e) {
       return null;
