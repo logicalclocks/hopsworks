@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
@@ -35,11 +34,14 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.payment.LastPayment;
 import io.hops.hopsworks.common.dao.project.payment.LastPaymentFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import java.util.Date;
+import javax.ejb.Stateless;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -50,6 +52,9 @@ public class ProjectsManagementController {
 
   @EJB
   private ProjectFacade projectFacade;
+
+  @EJB
+  private PythonDepsFacade pythonDepsFacade;
 
   @EJB
   private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
@@ -68,6 +73,7 @@ public class ProjectsManagementController {
 
   @EJB
   private LastPaymentFacade lastPaymentFacade;
+
   /**
    *
    * @param name
@@ -88,7 +94,7 @@ public class ProjectsManagementController {
    * @throws IOException
    */
   public void setHdfsSpaceQuota(String projectname, long quotaInMBs) throws
-          IOException {
+      IOException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -119,17 +125,24 @@ public class ProjectsManagementController {
   public void changeYarnQuota(String projectname, float quota) {
     yarnProjectsQuotaFacade.changeYarnQuota(projectname, quota);
   }
- 
+
   public YarnProjectsQuota getYarnQuotas(String name) throws AppException {
     return yarnProjectsQuotaFacade.findByProjectName(name);
   }
-  
-  public Date getLastPaymentDate(String projectName){
+
+  public Date getLastPaymentDate(String projectName) {
     LastPayment lastPayment = lastPaymentFacade.findByProjectName(projectName);
-    if(lastPayment!=null){
+    if (lastPayment != null) {
       return lastPayment.getTransactionDate();
-    }else{
+    } else {
       return null;
     }
   }
+  
+  public List<OpStatus> getCondaCommands(String projectName) throws AppException {
+    Project proj = projectFacade.findByName(projectName);
+    return pythonDepsFacade.opStatus(proj);
+  }
+  
+  
 }

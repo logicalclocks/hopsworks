@@ -4,6 +4,6 @@
 //
 
 // custom.js file to set `Jupyter._target` to `_self`.prototype
- define(['base/js/namespace'], function(Jupyter){
-    Jupyter._target = '_self';
-});
+// define(['base/js/namespace'], function(Jupyter){
+//    Jupyter._target = '_self';
+//});

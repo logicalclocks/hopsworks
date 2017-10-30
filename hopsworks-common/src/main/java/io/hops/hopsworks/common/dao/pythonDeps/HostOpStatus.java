@@ -32,6 +32,13 @@ public class HostOpStatus {
     this.status = status;
   }
 
+  @Override
+  public String toString() {
+    return hostId + ":" + status;
+  }
+  
+  
+
   // Two versions are equal if they have the same 'name', status doesn't matter.
   @Override
   public boolean equals(Object o) {

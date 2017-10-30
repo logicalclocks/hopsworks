@@ -43,7 +43,7 @@ public class OpStatus {
   public void setHosts(List<HostOpStatus> hosts) {
     this.hosts = hosts;
   }
-  
+
   public void addHost(HostOpStatus host) {
     this.hosts.add(host);
   }
@@ -77,12 +77,28 @@ public class OpStatus {
   }
 
   @Override
+  public String toString() {
+    StringBuffer sb = new StringBuffer("[");
+    sb.append(channelUrl)
+        .append(",").append(lib)
+        .append(",").append(version)
+        .append(",").append(op)
+        .append(",").append(status)
+        .append(",(");
+    hosts.forEach((h) -> {
+        sb.append(h.toString());
+      });
+    sb.append(")]");
+    return sb.toString();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o instanceof OpStatus) {
       OpStatus pd = (OpStatus) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
-              && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion().compareTo(this.version) == 0) {
+          && pd.getLib().compareToIgnoreCase(this.lib) == 0
+          && pd.getVersion().compareTo(this.version) == 0) {
         return true;
       }
     }
@@ -92,6 +108,6 @@ public class OpStatus {
   @Override
   public int hashCode() {
     return (this.channelUrl.hashCode() / 3 + this.lib.hashCode()
-            + this.version.hashCode()) / 2;
+        + this.version.hashCode()) / 2;
   }
 }

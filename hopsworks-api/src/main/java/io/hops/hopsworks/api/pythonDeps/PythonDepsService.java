@@ -95,11 +95,14 @@ public class PythonDepsService {
   Collection<PythonDepJson> preInstalledPythonDeps = new ArrayList<>();
 
   public PythonDepsService() {
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tensorflow", "1.3", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "pydoop", "0.4", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tfspark", "0.1.5", "true", "Installed"));
     preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tensorflow", "1.3.0", "true", "Installed"));
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hopsutil", "0.1.0", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hops", "1.4.3", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hopsfacets", "0.0.1", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "protobuf", "3.4.0", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "numpy", "1.13.1", "true", "Installed"));
+    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "pandas", "0.20.3", "true", "Installed"));
   }
 
   @GET
