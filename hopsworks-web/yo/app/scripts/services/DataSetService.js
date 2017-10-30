@@ -65,8 +65,8 @@ angular.module('hopsWorksApp')
                 fileDownload: function (fileName) {
                   location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName;
                 },
-                getCerts: function () {
-                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/certs/projectUserCerts.zip';
+                getCerts: function (password) {
+                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/certs/projectUserCerts.zip?password='+password;
                 },
                 compressFile: function(fileName) {
                   return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);

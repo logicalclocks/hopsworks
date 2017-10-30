@@ -191,25 +191,6 @@ angular.module('hopsWorksApp')
               return self.projectTypes.length > 0;
             };
 
-            self.projectSettingModal = function () {
-              ModalService.projectSettings('md', self.pId).then(
-                      function (success) {
-                        getAllActivities();
-                        getCurrentProject();
-
-                      });
-            };
-
-//        self.projectSettingModal = function () {
-//          ModalService.projectSettings('md').then(
-//              function (success) {
-//                getAllActivities();
-//                getCurrentProject();
-//              }, function (error) {
-//            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
-//          });
-//        };
-
             self.membersModal = function () {
               ModalService.projectMembers('lg', self.projectId).then(
                       function (success) {
