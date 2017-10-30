@@ -982,6 +982,11 @@ public class ProjectController {
 
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
+        try {
+          removeAnacondaEnv(project);
+        } catch (AppException ex) {
+          LOGGER.log(Level.SEVERE, "Problem removing Anaconda Environment:{0}", project.getName());
+        }
 
         //kill jobs
         List<Jobs> running = jobFacade.getRunningJobs(project);

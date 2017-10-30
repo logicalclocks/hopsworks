@@ -80,7 +80,7 @@
                         <p:inputText value="#{projectsmanagement.yarnquota}" style="width:100%">
                           <f:validateLongRange
                             maximum="100000000"
-                            minimum="0" />
+                            minimum="-100000000" />
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
@@ -110,7 +110,7 @@
                       <f:facet name="input">
                         <p:inputText
                           value="#{projectsmanagement.hdfsquotastring}" style="width:100%">
-                          <f:validateRegex pattern = "([0-9]+([GMT]B)*)"/>
+                          <f:validateRegex pattern = "([0-9]{1,6}+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>

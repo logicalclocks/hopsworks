@@ -131,14 +131,16 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "JAR": /.jar\b/,
               "PY": /.py\b/,
-              "*": /[^]*/,
+              "FILES": /[^]*/,
               "ZIP": /.zip\b/,
+              "TGZ": /.zip\b/
             };
             self.selectFileErrorMsgs = {
               "JAR": "Please select a JAR file.",
               "PY": "Please select a Python file.",
-              "ZIP": "Please select a file.",
-              "*": "Please select a folder."
+              "ZIP": "Please select a zip file.",
+              "TGZ": "Please select a tgz file.",
+              "FILES": "Please select a file."
             };
 
 
@@ -159,70 +161,58 @@ angular.module('hopsWorksApp')
              * @param {String} reason
              * @param {String} path
              * @returns {undefined}
-             */
-            self.onFileSelected = function (reason, path) {
+                         */
+            self.onFileSelected = function(reason, path) {
               var re = /(?:\.([^.]+))?$/;
-              var ext = re.exec(path)[1];
-//              switch (reason.toUpperCase()) {
-              switch (ext.toUpperCase()) {
-                case "JAR":
-                  if (reason.toUpperCase() !== ".JAR") {
-                    growl.error("Invalid file type selected. Expecting " + reason + " - Found: " + ext);
+              var extension = re.exec(path)[1];
+              switch (reason.toUpperCase()) {
+                case "PYFILES":
+                  if (extension.toUpperCase() === "PY" ||
+                    extension.toUpperCase() === "ZIP" ||
+                    extension.toUpperCase() === "EGG") {
+                    if (self.val.pyFiles === "") {
+                      self.val.pyFiles = "\"" + path + "\"";
+                    } else {
+                      self.val.pyFiles = self.val.pyFiles.concat(",").concat(" \"" + path + "\"");
+                    }
                   } else {
+                    growl.error("Invalid file type selected. Expecting .py, .zip or .egg - Found: " + extension, {ttl: 10000});
+                  }
+                  break;
+                case "JARS":
+                  if (extension.toUpperCase() === "JAR") {
                     if (self.val.jars === "") {
-                      self.val.jars = path;
+                      self.val.jars = "\"" + path + "\"";
                     } else {
-                      self.val.jars = self.val.jars.concat(",").concat(path);
+                      self.val.jars = self.val.jars.concat(",").concat(" \"" + path + "\"");
                     }
+                  } else {
+                    growl.error("Invalid file type selected. Expecting .jar - Found: " + extension, {ttl: 10000});
                   }
                   break;
-                case "PY":
-                  if (reason.toUpperCase() !== ".ZIP") {
-                    growl.error("Invalid file type selected. Expecting " + reason + " - Found: " + ext);
-                  } else {
-                    if (self.val.pyFiles === "") {
-                      self.val.pyFiles = path;
-                    } else {
-                      self.val.pyFiles = self.val.pyFiles.concat(",").concat(path);
-                    }
-                  }
-                  break;
-                case "ZIP":
-                  if (reason.toUpperCase() === ".PY") {
-                    if (self.val.pyFiles === "") {
-                      self.val.pyFiles = path;
-                    } else {
-                      self.val.pyFiles = self.val.pyFiles.concat(",").concat(path);
-                    }
-                    break;
-                  }
-                case "TGZ":
-                case "TAR.GZ":
-                case "GZ":
-                case "BZIP":
-                  if (reason.toUpperCase() !== ".ZIP") {
-                    growl.error("Invalid file type selected. Found: " + ext);
-                  } else {
+                case "ARCHIVES":
+                  if (extension.toUpperCase() === "ZIP" || extension.toUpperCase() === "TGZ") {
                     if (self.val.archives === "") {
-                      self.val.archives = path;
+                      self.val.archives = "\"" + path + "\"";
                     } else {
-                      self.val.archives = self.val.archives.concat(",").concat(path);
+                        self.val.archives = self.val.archives.concat(",").concat(" \"" + path + "\"");
                     }
+                  } else {
+                    growl.error("Invalid file type selected. Expecting .zip Found: " + extension, {ttl: 10000});
                   }
                   break;
-                case "*":
+                case "FILES":
                   if (self.val.files === "") {
-                    self.val.files = path;
+                    self.val.files = " \"" + path + "\"";
                   } else {
-                    self.val.files = self.val.files.concat(",").concat(path);
+                    self.val.files = self.val.files.concat(",").concat(" \"" + path + "\"");
                   }
                   break;
                 default:
-                  growl.error("Invalid file type selected: " + reason);
+                  growl.error("Invalid file type selected: " + reason, {ttl: 10000});
                   break;
               }
             };
-
 
             $window.uploadDone = function () {
               stopLoading();

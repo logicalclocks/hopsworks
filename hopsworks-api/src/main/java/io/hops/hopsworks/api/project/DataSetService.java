@@ -1311,27 +1311,17 @@ public class DataSetService {
     }
   }
 
-  @Path("fileDownload/{path: .+}")
+  @Path("fileDownload")
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public DownloadService downloadDS(@PathParam("path") String path,
-      @Context SecurityContext sc) throws
+  public DownloadService downloadDS(@Context SecurityContext sc) throws
       AppException {
     Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
-
-    DsPath dsPath = pathValidator.validatePath(this.project, path);
-    String fullPath = dsPath.getFullPath().toString();
-    Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DOWNLOAD_ERROR);
-    }
-    
-    this.downloader.setPath(fullPath);
-    this.downloader.setUsername(username);
+    this.downloader.setProject(project);
+    this.downloader.setProjectUsername(hdfsUsersBean.getHdfsUserName(project, user));
+    this.downloader.setUser(user);
     return downloader;
   }
-
+  
   @Path("compressFile/{path: .+}")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response compressFile(@PathParam("path") String path,

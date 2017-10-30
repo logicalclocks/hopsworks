@@ -7,6 +7,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.util.AuditUtil;
@@ -79,8 +80,8 @@ public class ClusterController {
     agentUser.setFname(cluster.getFirstName());
     agentUser.setLname(CLUSTER_NAME_PREFIX);
     agentUser.setTitle("Mrs");
-    agentUser.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
-    agentUser.setMode(PeopleAccountStatus.M_ACCOUNT_TYPE.getValue());
+    agentUser.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT);
+    agentUser.setMode(PeopleAccountType.M_ACCOUNT_TYPE);
     agentUser.setPassword(DigestUtils.sha256Hex(cluster.getChosenPassword()));
     agentUser.setValidationKey(validationKey);
     agentUser.setMaxNumProjects(0);
@@ -145,7 +146,7 @@ public class ClusterController {
     }
     if (type.equals(OP_TYPE.REGISTER)) {
       agent.setValidationKey(null);
-      agent.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+      agent.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
       userBean.update(agent);
     } else {
       revokeCert(agent);
@@ -167,7 +168,7 @@ public class ClusterController {
     if (u == null || u.getValidationKey() == null) {
       return;
     }
-    if (u.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()) {
+    if (u.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT) {
       return;
     }
     if (!isOnlyClusterAgent(u)) {

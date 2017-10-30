@@ -14,6 +14,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 
 @ManagedBean
@@ -71,19 +72,18 @@ public class AccountVerification {
       return false;
     }
 
-    if ((user.getStatus() != PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            && user.getMode() == PeopleAccountStatus.M_ACCOUNT_TYPE.getValue())
-            || (user.getStatus() != PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.
-            getValue()
-            && user.getMode() == PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue())) {
+    if ((!user.getStatus().equals(PeopleAccountStatus.NEW_MOBILE_ACCOUNT)
+            && user.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE))
+            || (!user.getStatus().equals(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT)
+            && user.getMode().equals(PeopleAccountType.Y_ACCOUNT_TYPE))) {
       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.FAILED.name(),
               "Could not verify the account due to wrong status.", user);
 
-      if (user.getStatus() == PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue()) {
+      if (user.getStatus().equals(PeopleAccountStatus.ACTIVATED_ACCOUNT)) {
         this.alreadyRegistered = true;
       }
-      if (user.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
+      if (user.getStatus().equals(PeopleAccountStatus.VERIFIED_ACCOUNT)) {
         this.alreadyValidated = true;
       }
 
@@ -92,7 +92,7 @@ public class AccountVerification {
 
     if (key.equals(user.getValidationKey())) {
       mgr.changeAccountStatus(user.getUid(), "",
-              PeopleAccountStatus.VERIFIED_ACCOUNT.getValue());
+              PeopleAccountStatus.VERIFIED_ACCOUNT);
       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.SUCCESS.name(),
               "Verified account email address.", user);
@@ -107,7 +107,7 @@ public class AccountVerification {
     if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
       mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.
               toString(),
-              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+              PeopleAccountStatus.SPAM_ACCOUNT);
       mgr.resetKey(user.getUid());
       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.FAILED.name(),

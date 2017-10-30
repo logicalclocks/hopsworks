@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -143,8 +144,7 @@ public class PeopleAdministration implements Serializable {
     }
 
     this.eStatus
-        = PeopleAccountStatus.values()[this.editingUser.getStatus() - 1].
-            name();
+        = this.editingUser.getStatusName();
     return this.eStatus;
   }
 
@@ -182,8 +182,11 @@ public class PeopleAdministration implements Serializable {
   }
 
   public String getChanged_Status(Users p) {
-    return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).
-        getStatus() - 1].name();
+    return userManager.findByEmail(p.getEmail()).getStatusName();
+  }
+
+  public boolean mobileAccount(Users u) {
+    return u.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE);
   }
 
   public List<String> getActGroups() {
@@ -283,9 +286,6 @@ public class PeopleAdministration implements Serializable {
     return allUsers;
   }
 
-  public List<Users> getUsersNameList() {
-    return userManager.findAllUsers();
-  }
 
   public List<String> getGroups() {
     return groups;
@@ -316,7 +316,7 @@ public class PeopleAdministration implements Serializable {
     }
     try {
       userManager.changeAccountStatus(user1.getUid(), "",
-          PeopleAccountStatus.SPAM_ACCOUNT.getValue());
+          PeopleAccountStatus.SPAM_ACCOUNT);
       MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
       spamUsers.add(user1);
     } catch (RuntimeException ex) {
@@ -374,7 +374,7 @@ public class PeopleAdministration implements Serializable {
     }
     try {
       userManager.changeAccountStatus(user.getUid(), "",
-          PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
+          PeopleAccountStatus.NEW_MOBILE_ACCOUNT);
       MessagesController.addInfoMessage(user.getEmail()
           + " was removed from spam list.");
       spamUsers.remove(user);
@@ -478,8 +478,7 @@ public class PeopleAdministration implements Serializable {
       }
 
       try {
-        userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT.
-            getValue());
+        userManager.updateStatus(user1, PeopleAccountStatus.ACTIVATED_ACCOUNT);
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
             PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
             UserAuditActions.SUCCESS.name(), "", user1);
@@ -526,7 +525,7 @@ public class PeopleAdministration implements Serializable {
         getBbcGroupCollection().isEmpty() == false) {
       return false;
     }
-    if (user.getStatus() == PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()) {
+    if (user.getStatus().equals(PeopleAccountStatus.VERIFIED_ACCOUNT)) {
       return false;
     }
     return true;
@@ -546,6 +545,7 @@ public class PeopleAdministration implements Serializable {
             + activationKey));
     user.setValidationKey(activationKey);
     userManager.updatePeople(user);
+    MessagesController.addInfoMessage("Account verification Email Successfully Resent");
 
   }
 

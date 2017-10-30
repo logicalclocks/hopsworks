@@ -813,6 +813,7 @@ This will make all its files available for any cluster user to share and process
 
             /**
              * Opens a modal dialog to make dataset editable
+             * @param {type} name
              * @returns {undefined}
              */
             self.makeEditable = function (name) {
@@ -826,6 +827,7 @@ This will make all its files available for any cluster user to share and process
 
             /**
              * Opens a modal dialog to remove editable from the dataset 
+             * @param {type} name
              * @returns {undefined}
              */
             self.removeEditable = function (name) {
@@ -839,6 +841,7 @@ This will make all its files available for any cluster user to share and process
 
             /**
              * Opens a modal dialog for unsharing.
+             * @param {type} name
              * @returns {undefined}
              */
             self.unshare = function (name) {
@@ -917,6 +920,7 @@ This will make all its files available for any cluster user to share and process
              * Select an inode; updates details panel.
              * @param {type} selectedIndex
              * @param {type} file
+             * @param {type} event
              * @returns {undefined}
              */
             self.select = function (selectedIndex, file, event) {

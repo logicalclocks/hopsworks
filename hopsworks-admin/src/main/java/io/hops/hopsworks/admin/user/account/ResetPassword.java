@@ -143,7 +143,7 @@ public class ResetPassword implements Serializable {
 
     people = mgr.getUserByEmail(this.username);
 
-    if (people == null || people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (people == null || people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       return ("password_sent");
     }
     try {
@@ -156,7 +156,7 @@ public class ResetPassword implements Serializable {
         mgr.increaseLockNum(people.getUid(), val + 1);
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
           mgr.changeAccountStatus(people.getUid(), "",
-              PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue());
+              PeopleAccountStatus.DEACTIVATED_ACCOUNT);
           String mess = UserAccountsEmailMessages.buildDeactivatedMessage();
           emailBean.sendEmail(people.getEmail(), RecipientType.TO,
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
@@ -179,7 +179,7 @@ public class ResetPassword implements Serializable {
       // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
       // update the status of user to active
 
-      people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+      people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
 
       // reset the old password with a new one
       mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
@@ -223,7 +223,7 @@ public class ResetPassword implements Serializable {
     if (people == null) {
     }
 
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage("Inactive Account");
       return "";
     }
@@ -234,7 +234,7 @@ public class ResetPassword implements Serializable {
       mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
 
       try {
-        mgr.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT.getValue());
+        mgr.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT);
       } catch (ApplicationException ex) {
         Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null,
             ex);
@@ -306,7 +306,7 @@ public class ResetPassword implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
+    if (people.getStatus().equals(PeopleAccountStatus.BLOCKED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       auditManager.registerAccountChange(people,
@@ -317,7 +317,7 @@ public class ResetPassword implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
       auditManager.registerAccountChange(people,
@@ -378,7 +378,7 @@ public class ResetPassword implements Serializable {
       return ("reset_password");
     }
 
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       this.question = SecurityQuestion.randomQuestion();
       return ("reset_password");
     }
@@ -417,7 +417,7 @@ public class ResetPassword implements Serializable {
 
         // close the account
         mgr.changeAccountStatus(people.getUid(), this.notes,
-            PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue());
+            PeopleAccountStatus.DEACTIVATED_ACCOUNT);
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
         emailBean.sendEmail(people.getEmail(), RecipientType.TO,
@@ -467,7 +467,7 @@ public class ResetPassword implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
@@ -477,7 +477,7 @@ public class ResetPassword implements Serializable {
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT.getValue()) {
+    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
 

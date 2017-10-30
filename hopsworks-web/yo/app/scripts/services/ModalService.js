@@ -3,7 +3,7 @@
 angular.module('hopsWorksApp')
         .factory('ModalService', ['$uibModal', function ($uibModal) {
             return {
-              confirm: function (size, title, msg) {
+              confirm: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/confirmModal.html',
                   controller: 'ModalCtrl as modalCtrl',
@@ -14,12 +14,34 @@ angular.module('hopsWorksApp')
                     },
                     msg: function () {
                       return msg;
+                    },
+                    projectId: function () {
+                      return projectId;
                     }
                   }
                 });
                 return modalInstance.result;
               },
-              reportIssueModal: function (size, title, msg) {
+              certs: function (size, title, msg, projectId) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/certsModal.html',
+                  controller: 'ModalCtrl as modalCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
+              reportIssueModal: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/reportIssue.html',
                   controller: 'ModalCtrl as modalCtrl',
@@ -30,6 +52,9 @@ angular.module('hopsWorksApp')
                     },
                     msg: function () {
                       return msg;
+                    },
+                    projectId: function () {
+                      return projectId;
                     }
                   }
                 });
@@ -88,7 +113,7 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
               },
               
-              confirmShare: function (size, title, msg) {
+              confirmShare: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/confirmShareModal.html',
                   controller: 'ModalCtrl as modalCtrl',
@@ -99,6 +124,9 @@ angular.module('hopsWorksApp')
                     },
                     msg: function () {
                       return msg;
+                    },
+                    projectId: function () {
+                      return projectId;
                     }
                   }
                 });

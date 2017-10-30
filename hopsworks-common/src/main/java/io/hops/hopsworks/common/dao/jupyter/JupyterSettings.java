@@ -43,6 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT j FROM JupyterSettings j WHERE j.numTfGpus = :numTfGpus")
   ,
+  @NamedQuery(name = "JupyterSettings.findByNumMpiNp",
+          query
+          = "SELECT j FROM JupyterSettings j WHERE j.numMpiNp = :numMpiNp")
+  ,
   @NamedQuery(name = "JupyterSettings.findByAppmasterCores",
           query
           = "SELECT j FROM JupyterSettings j WHERE j.appmasterCores = :appmasterCores")
@@ -86,11 +90,15 @@ public class JupyterSettings implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "num_tf_ps")
-  private int numTfPs = 0;
+  private int numTfPs = 1;
   @Basic(optional = false)
   @NotNull
   @Column(name = "num_tf_gpus")
   private int numTfGpus = 0;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "num_mpi_np")
+  private int numMpiNp = 1;
   @Basic(optional = false)
   @NotNull
   @Column(name = "appmaster_cores")
@@ -233,6 +241,14 @@ public class JupyterSettings implements Serializable {
 
   public void setNumTfGpus(int numTfGpus) {
     this.numTfGpus = numTfGpus;
+  }
+
+  public int getNumMpiNp() {
+    return numMpiNp;
+  }
+
+  public void setNumMpiNp(int numMpiNp) {
+    this.numMpiNp = numMpiNp;
   }
 
   public int getAppmasterCores() {

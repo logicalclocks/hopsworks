@@ -64,7 +64,7 @@
                   </p:column>
 
                   <p:column id="unameCol"  filterBy="#{muser.mode}"  headerText="Type" >
-                    <h:outputText value="#{muser.mode eq '10'?' 10 (Mobile)':' 11 (Yubikey)'}" />
+                    <h:outputText value="#{peopleAdministration.mobileAccount(muser) ? 'Mobile Account' : 'Yubikey Account'}" />
                   </p:column>
 
                   <p:column id="statCol"  filterBy="#{muser.status}" 

@@ -9,6 +9,10 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.user.security.PeopleGroup;
+import io.hops.hopsworks.common.dao.user.security.PeopleGroupPK;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
@@ -44,6 +48,20 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
+  public List<Users> findAllMobileRequests() {
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.VERIFIED_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.M_ACCOUNT_TYPE);
+    List<Users> res = query.getResultList();
+    
+    query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.NEW_MOBILE_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.M_ACCOUNT_TYPE);
+    
+    res.addAll(query.getResultList());
+    return res;
+  }
+  
   public Users findByUsername(String username) {
     try {
       return em.createNamedQuery("Users.findByUsername", Users.class).
@@ -80,8 +98,8 @@ public class UserFacade extends AbstractFacade<Users> {
     return (Integer) obj;
   }
 
-  public void update(Users user) {
-    em.merge(user);
+  public Users update(Users user) {
+    return em.merge(user);
   }
 
   public void removeByEmail(String email) {
@@ -124,7 +142,7 @@ public class UserFacade extends AbstractFacade<Users> {
    * @param status
    * @return
    */
-  public List<Users> findAllByStatus(int status) {
+  public List<Users> findAllByStatus(PeopleAccountStatus status) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByStatus",
             Users.class);
     query.setParameter("status", status);
@@ -138,4 +156,42 @@ public class UserFacade extends AbstractFacade<Users> {
     return (List<Integer>) query.getResultList();
   }
 
+  /**
+   * Add a new group for a user.
+   *
+   * @param userMail 
+   * @param gidNumber
+   * @return
+   */
+  public void addGroup(String userMail, int gidNumber) {
+    BbcGroup bbcGroup = em.find(BbcGroup.class, gidNumber);
+    Users user = findByEmail(userMail);
+    user.getBbcGroupCollection().add(bbcGroup);
+    em.merge(user);
+  }
+
+  /**
+   * Remove user's group based on userMail/gid.
+   *
+   * @param userMail
+   * @param gid
+   */
+  public void removeGroup(String userMail, int gid) {
+    Users user = findByEmail(userMail);
+    PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(
+            new PeopleGroupPK(user.getUid(), gid)).getPeopleGroupPK());
+    em.remove(p);
+  }
+  
+  /**
+   * Update a user status 
+   *
+   * @param userMail 
+   * @param newStatus
+   */
+  public void updateStatus(String userMail, PeopleAccountStatus newStatus) {
+    Users user = findByEmail(userMail);
+    user.setStatus(newStatus);
+    em.merge(user);
+  }
 }

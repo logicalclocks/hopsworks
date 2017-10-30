@@ -69,8 +69,8 @@ public class YarnAppResultFacade extends AbstractFacade<YarnAppResult> {
     }
   }
 
-  public void update(YarnAppResult yarnApp) {
-    em.merge(yarnApp);
+  public YarnAppResult update(YarnAppResult yarnApp) {
+    return em.merge(yarnApp);
   }
 
 }

@@ -929,7 +929,7 @@ public class KafkaFacade {
     }
     try {
       HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(),
-              settings.getHopsworksTmpCertDir(), settings.getHdfsTmpCertDir(),
+              settings.getHopsworksTmpCertDir(), null,
           certificateMaterializer);
   
       String projectSpecificUser = hdfsUsersController.getHdfsUserName(project,

@@ -6,9 +6,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('JobsCtrl', ['$scope', '$routeParams', 'growl', 'JobService', '$location', 'ModalService', '$interval', 'StorageService',
-                    'TourService', 'ProjectService','$timeout',
-          function ($scope, $routeParams, growl, JobService, $location, ModalService, $interval, StorageService, TourService, ProjectService, $timeout) {
+        .controller('JobsCtrl', ['$scope', '$window', '$routeParams', 'growl',
+        'JobService', '$location', 'ModalService', '$interval', 'StorageService',
+                    'TourService', 'ProjectService','$timeout', '$route',
+          function ($scope, $window, $routeParams, growl, JobService, $location,
+          ModalService, $interval, StorageService, TourService, ProjectService,
+          $timeout, $route) {
 
             var self = this;
             self.tourService = TourService;
@@ -33,13 +36,12 @@ angular.module('hopsWorksApp')
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
 
-
             self.refreshSlider = function () {
               $timeout(function () {
                 $scope.$broadcast('rzSliderForceRender');
               });
             };
-            
+
             self.editAsNew = function (job) {
               JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
@@ -67,7 +69,7 @@ angular.module('hopsWorksApp')
                 StorageService.store(self.projectId + "_jobstopclicked_"+id, "stopping");
               }
             };
-            
+
             self.getJobClickStatus = function(id){
               var status = StorageService.recover(self.projectId + "_jobstopclicked_"+id);
               if(status === "stopping" || status === "killing"){
@@ -103,7 +105,7 @@ angular.module('hopsWorksApp')
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState, tensorflowState;
               if (jobType === 1 || jobType === 4 || jobType === 5 ) {
-                
+
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
@@ -192,7 +194,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            
+
             self.getNumOfExecution = function () {
               if (self.hasSelectJob) {
                 if (self.logset === undefined) {
@@ -289,7 +291,7 @@ angular.module('hopsWorksApp')
                           ' job', ttl: 15000});
               });
             };
-            
+
             self.killJob = function (jobId) {
               ModalService.confirm('sm', 'Confirm', 'Attemping to stop your job. For streaming jobs this operation can take a few minutes... Do you really want to kill this job and risk losing streaming events?').then(
                 function (success) {
@@ -315,6 +317,22 @@ angular.module('hopsWorksApp')
               ModalService.jobDetails('lg', job, self.projectId);
             };
 
+
+            self.exportJob = function (job) {
+              JobService.getConfiguration(self.projectId, job.id).then(
+                function (success) {
+                  var jobConfig = {"type": job.jobType, "config": success.data};
+                  var blob = new Blob([JSON.stringify(jobConfig)], {type:
+                  'application/json;charset=utf-8;'});
+                  var downloadLink = angular.element('<a></a>');
+                  downloadLink.attr('href', $window.URL.createObjectURL(blob));
+                  downloadLink.attr('download', success.data.appName + '_config.json');
+                  downloadLink[0].click();
+                }, function (error) {
+                  growl.error(error.data.errorMsg, {title: 'Failed to export job', ttl: 5000});
+                });
+            };
+
             self.showUI = function (job) {
               StorageService.store(self.projectId + "_jobui_" + job.name, job);
               $location.path('project/' + self.projectId + '/jobMonitor-job/' + job.name);
@@ -332,7 +350,7 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Failed to show logs', ttl: 15000});
               });
             };
-            
+
             self.getLog = function (job, type) {
               if (!(job[type] === undefined || job[type] === null)) {
                 return;
@@ -382,7 +400,7 @@ angular.module('hopsWorksApp')
                       growl.error(error.data.errorMsg, {title: 'Failed to get logs', ttl: 5000});
                 });
             }
-              
+
             };
 
             self.retryLogs = function (appId, type) {
@@ -436,7 +454,7 @@ angular.module('hopsWorksApp')
               StorageService.store(self.projectId + "_jobui_" + job.name, job)
 
             };
-            
+
             //untoggle is not used in the jobsCtrl
             ////////////////////////////////////////////////////////////////////
             self.untoggle = function (job, index) {
@@ -455,7 +473,7 @@ angular.module('hopsWorksApp')
               }
             };
             ////////////////////////////////////////////////////////////////////
-            
+
             /**
              * Check if the jobType filter is null, and set to empty string if it is.
              * @returns {undefined}
@@ -465,7 +483,7 @@ angular.module('hopsWorksApp')
                 self.jobFilter.jobType = "";
               }
             };
-            
+
             self.launchAppMasterUrl = function (trackingUrl) {
               window.open(trackingUrl);
             };
@@ -514,5 +532,3 @@ angular.module('hopsWorksApp')
 
             init();
           }]);
-
-

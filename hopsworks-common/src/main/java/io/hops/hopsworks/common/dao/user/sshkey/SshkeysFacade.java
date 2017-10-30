@@ -36,8 +36,8 @@ public class SshkeysFacade extends AbstractFacade<SshKeys> {
     em.persist(user);
   }
 
-  public void update(SshKeys user) {
-    em.merge(user);
+  public SshKeys update(SshKeys user) {
+    return em.merge(user);
   }
 
   public void removeByIdName(int uid, String name) {

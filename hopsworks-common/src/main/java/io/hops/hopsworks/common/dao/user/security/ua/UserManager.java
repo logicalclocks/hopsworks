@@ -89,7 +89,7 @@ public class UserManager {
 
   }
 
-  public void changeAccountStatus(int id, String note, int status) {
+  public void changeAccountStatus(int id, String note, PeopleAccountStatus status) {
     Users p = (Users) em.find(Users.class, id);
     if (p != null) {
       p.setNotes(note);
@@ -121,7 +121,7 @@ public class UserManager {
 
   }
 
-  public void updateStatus(Users id, int stat) throws ApplicationException {
+  public void updateStatus(Users id, PeopleAccountStatus stat) throws ApplicationException {
     id.setStatus(stat);
     try {
       em.merge(id);
@@ -136,13 +136,6 @@ public class UserManager {
     em.merge(p);
   }
 
-  public List<Users> findInactivateUsers() {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM hopsworks.users p WHERE p.active = "
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
-    List<Users> people = query.getResultList();
-    return people;
-  }
 
   /**
    * Find a user through email.
@@ -182,36 +175,30 @@ public class UserManager {
   }
 
   public List<Users> findMobileRequests() {
-
-    TypedQuery<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ="
-            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
-            + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()
-            + " )", Users.class);
-    TypedQuery<Users> query2 = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ="
-            + PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()
-            + "  AND p.mode = " + PeopleAccountStatus.M_ACCOUNT_TYPE.getValue()
-            + " )", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.VERIFIED_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.M_ACCOUNT_TYPE);
     List<Users> res = query.getResultList();
-    res.addAll(query2.getResultList());
+    
+    query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.NEW_MOBILE_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.M_ACCOUNT_TYPE);
+    
+    res.addAll(query.getResultList());
     return res;
   }
 
   public List<Users> findYubikeyRequests() {
-    TypedQuery<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status = "
-            + PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()
-            + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()
-            + " )", Users.class);
-    TypedQuery<Users> query2 = em.createQuery(
-            "SELECT p FROM Users p WHERE (p.status ="
-            + PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()
-            + "  AND p.mode = " + PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue()
-            + " )", Users.class);
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.VERIFIED_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.Y_ACCOUNT_TYPE);
     List<Users> res = query.getResultList();
-    res.addAll(query2.getResultList());
 
+    query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.Y_ACCOUNT_TYPE);
+
+    res.addAll(query.getResultList());
     return res;
   }
 
@@ -229,15 +216,13 @@ public class UserManager {
    * @return
    */
   public List<Users> findAllUsers() {
-    List<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status!="
-            + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class)
-            .getResultList();
+    List<Users> query = em.createQuery("SELECT p FROM Users p WHERE p.status != :status", Users.class).
+        setParameter("status", PeopleAccountStatus.SPAM_ACCOUNT).getResultList();
 
     return query;
   }
 
-  public List<Users> findAllByStatus(int status) {
+  public List<Users> findAllByStatus(PeopleAccountStatus status) {
     TypedQuery<Users> query = em.
             createNamedQuery("Users.findByStatus", Users.class);
     query.setParameter("status", status);
@@ -252,7 +237,7 @@ public class UserManager {
   public List<Users> findSPAMAccounts() {
     TypedQuery<Users> query = em.createQuery(
             "SELECT p FROM Users p WHERE p.status = "
-            + PeopleAccountStatus.SPAM_ACCOUNT.getValue(), Users.class);
+            + PeopleAccountStatus.SPAM_ACCOUNT, Users.class);
     return query.getResultList();
   }
 

@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.Yubikey;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -87,14 +88,14 @@ public class UsersController {
     user.setFname(newUser.getFirstName());
     user.setLname(newUser.getLastName());
     user.setMobile(newUser.getTelephoneNum());
-    user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue());
+    user.setStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT);
     user.setSecret(otpSecret);
     user.setTwoFactor(newUser.isTwoFactor());
     user.setToursState(newUser.getToursState());
     user.setOrcid("-");
     user.setMobile(newUser.getTelephoneNum());
     user.setTitle("-");
-    user.setMode(PeopleAccountStatus.M_ACCOUNT_TYPE.getValue());
+    user.setMode(PeopleAccountType.M_ACCOUNT_TYPE);
     user.setValidationKey(activationKey);
     user.setActivated(new Timestamp(new Date().getTime()));
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -178,13 +179,13 @@ public class UsersController {
     user.setFname(newUser.getFirstName());
     user.setLname(newUser.getLastName());
     user.setMobile(newUser.getTelephoneNum());
-    user.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
+    user.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
     user.setSecret(otpSecret);
     user.setTwoFactor(newUser.isTwoFactor());
     user.setOrcid("-");
     user.setMobile(newUser.getTelephoneNum());
     user.setTitle("-");
-    user.setMode(PeopleAccountStatus.Y_ACCOUNT_TYPE.getValue());
+    user.setMode(PeopleAccountType.Y_ACCOUNT_TYPE);
     user.setValidationKey(activationKey);
     user.setActivated(new Timestamp(new Date().getTime()));
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -220,7 +221,7 @@ public class UsersController {
 
     Yubikey yk = new Yubikey();
     yk.setUid(user);
-    yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue());
+    yk.setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
     user.setYubikey(yk);
     user.setOrganization(org);
 
@@ -392,7 +393,7 @@ public class UsersController {
 
       // block the user account if more than allowed false logins
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-        user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT.getValue());
+        user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT);
 
         emailBean.sendEmail(user.getEmail(), RecipientType.TO,
                 UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,

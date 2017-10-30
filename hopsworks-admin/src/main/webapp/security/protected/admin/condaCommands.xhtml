@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">
+
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container" style="max-width: 1600px;">
+            <div align="left">
+              <h2>Project Administration</h2>
+            </div>
+
+            <div class="content">
+              <h:form id="projectmodifyForm" >
+                <p:growl id="msgs" showDetail="true"/>
+
+                <p:dataTable id="projectsTable" var="project"
+                             value="#{projectsmanagement.allProjects}"
+                             filteredValue="#{projectsmanagement.filteredProjects}"
+                             widgetVar="projectsTable"
+                             emptyMessage="No projects found with given criteria"
+                             rowKey="#{project.name}"
+                             style="table-layout: fixed"
+                             sortMode="multiple"
+                             editable="true"
+                             scrollable="false"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="25,50,75,100,500">
+
+                  <p:column id="projectNameColumn"
+                            filterBy="#{project.name}"
+                            sortBy="#{project.name}"
+                            filterMatchMode="contains"
+                            headerText="Project"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{project.name}" />
+                  </p:column>
+
+                  <p:column id="condaColumn"
+                            filterBy="#{project.name}"
+                            sortBy="#{project.name}"
+                            filterMatchMode="contains"
+                            headerText="Outstanding Conda Commands"
+                            style=" font-size: 12px; text-align: center;">
+                                        <h:outputText
+                      value="#{projectsmanagement.getCondaCommands(project.name)}" />
+                  </p:column>
+
+                  <p:column headerText="Edit"
+                            style="width:32px">
+                    <p:rowEditor/>
+                  </p:column>
+                </p:dataTable>
+              </h:form>
+
+            </div>
+          </div>
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
+</html>

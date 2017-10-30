@@ -12,13 +12,25 @@
       <div class="content-wrapper">
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
 
-        <div class="panel-header">
+        <div class="row align-items-end">
+        <div class="panel-header col-md-9">
           <h2>New job definition
             <i class="fa fa-times-circle" uib-tooltip="Clear the current state." style="margin-left: 10px" ng-click="newJobCtrl.exitToJobs()"></i>
             <!--<i class="fa fa-times-circle" uib-tooltip="Clear the current state." style="margin-left: 10px" ng-click="newJobCtrl.clear()" ng-hide="newJobCtrl.undoable"></i>-->
             <!--<i class="fa fa-undo" uib-tooltip="Restore the previous state." style="margin-left: 10px" ng-click="newJobCtrl.undoClear()" ng-show="newJobCtrl.undoable"></i>-->
           </h2>
+          </div>
+          <div class="col-md">
+            <!--
+            ID of tags should not be changed. It is referenced in JobsCtr
+            -->
+            <label for="jobConfigFile" class="btn btn-success" style="margin-top: 1.1%;">
+              Import job
+            </label>
+            <input type="file" id="jobConfigFile" name="file" accept=".json" style="display: none" />
         </div>
+      </div>
+    </div>
         <div uib-accordion close-others="false" >
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion1.title}} {{newJobCtrl.accordion1.value}}" is-open="newJobCtrl.accordion1.isOpen">
             <md-input-container  class="md-block">

@@ -2,13 +2,11 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.util.Settings;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -35,11 +33,7 @@ public class CertService {
 
   private final static Logger LOGGER = Logger.getLogger(CertService.class.getName());
   @EJB
-  private CertsFacade certsFacade;
-  @EJB
   private UserFacade userFacade;
-  @EJB
-  private Settings settings;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB

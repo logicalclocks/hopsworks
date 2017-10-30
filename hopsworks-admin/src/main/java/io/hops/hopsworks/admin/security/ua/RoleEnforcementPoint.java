@@ -122,12 +122,12 @@ public class RoleEnforcementPoint implements Serializable {
     if (isAdmin()) {
       //return false if no requests
       open_requests = !(userManager.findAllByStatus(
-              PeopleAccountStatus.NEW_MOBILE_ACCOUNT.getValue()).isEmpty())
+              PeopleAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
               || !(userManager.findAllByStatus(
-                      PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT.getValue()).
+                      PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT).
               isEmpty()
               || !(userManager.findAllByStatus(
-              PeopleAccountStatus.VERIFIED_ACCOUNT.getValue()).isEmpty()));
+              PeopleAccountStatus.VERIFIED_ACCOUNT).isEmpty()));
     }
     return open_requests;
   }
