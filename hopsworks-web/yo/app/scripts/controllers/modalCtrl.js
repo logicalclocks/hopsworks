@@ -26,14 +26,12 @@ angular.module('hopsWorksApp')
             self.certs = function () {
               var user = {password: self.password};
 
-              //To avoid displaying the password in the URL if it is wrong
-              //We validate the password first and display a proper growl
               AuthService.validatePassword(user).then(
                       function (success) {
+                        self.password = "";
                         var dataSetService = DataSetService(self.projectId);
-                        dataSetService.getCerts(self.password).then(
+                        dataSetService.getCerts().then(
                                 function (success) {
-                                   self.password = "";
                                 }, function (error) {
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
