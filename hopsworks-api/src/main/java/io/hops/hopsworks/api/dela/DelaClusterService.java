@@ -5,8 +5,10 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
 import io.swagger.annotations.Api;
 import java.util.List;
@@ -36,22 +38,32 @@ import javax.ws.rs.core.SecurityContext;
 @Api(value = "Dela Cluster Service",
   description = "Dela Cluster Service")
 public class DelaClusterService {
+
   private final static Logger LOG = Logger.getLogger(DelaClusterService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private ClusterDatasetController datasetCtrl;
-  
+  private ClusterDatasetController clusterDatasetCtrl;
+
   @EJB
-  private InodeFacade inodes;
-  
+  private DatasetController datasetCtrl;
+  @EJB
+  private DistributedFsService dfs;
+
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    List<Dataset> clusterDatasets = datasetCtrl.getPublicDatasets();
-    List<LocalDatasetDTO> localDS = LocalDatasetHelper.parse(inodes, clusterDatasets);
-    GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {};
+    List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    List<LocalDatasetDTO> localDS;
+    try {
+      localDS = LocalDatasetHelper.parse(datasetCtrl, dfso, clusterDatasets);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+    GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
   }
 }
