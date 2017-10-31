@@ -7,10 +7,12 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaDatasetController;
@@ -75,17 +77,25 @@ public class DelaService {
   @EJB
   private RemoteDelaController remoteDelaCtrl;
   @EJB
-  private DelaDatasetController datasetCtrl;
+  private DelaDatasetController delaDatasetCtrl;
   
   @EJB
-  private InodeFacade inodes;
+  private DatasetController datasetCtrl;
+  @EJB
+  private DistributedFsService dfs;
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.ALL})
   public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    List<Dataset> clusterDatasets = datasetCtrl.getLocalPublicDatasets();
-    List<LocalDatasetDTO> localDS = LocalDatasetHelper.parse(inodes, clusterDatasets);
+    List<Dataset> clusterDatasets = delaDatasetCtrl.getLocalPublicDatasets();
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
+    List<LocalDatasetDTO> localDS;
+    try {
+      localDS = LocalDatasetHelper.parse(datasetCtrl, dfso, clusterDatasets);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
     GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
   }
