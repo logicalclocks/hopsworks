@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('ClusterDatasetCtrl', ['$location', '$anchorScroll', '$scope', '$rootScope',
-          '$showdown', 'md5', 'ModalService', 'HopssiteService', 'DelaService', 'DelaClusterService','ProjectService', 'growl',
-          function ($location, $anchorScroll, $scope, $rootScope, $showdown, md5, ModalService,
+          'showdown', 'md5', 'ModalService', 'HopssiteService', 'DelaService', 'DelaClusterService','ProjectService', 'growl',
+          function ($location, $anchorScroll, $scope, $rootScope, showdown, md5, ModalService,
                   HopssiteService, DelaService, DelaClusterService, ProjectService, growl) {
             var self = this;
             self.readme;
@@ -103,7 +103,8 @@ angular.module('hopsWorksApp')
               self.loadingReadme = true;
               HopssiteService.getReadmeByInode(inodeId).then(function (success) {
                 console.log("getReadMeLocal", success);
-                self.readme = $showdown.makeHtml(success.data.content);
+                var conv = new showdown.Converter({parseImgDimensions: true});
+                self.readme = conv.makeHtml(success.data.content);
                 self.loadingReadme = false;
               }, function (error) {
                 self.readme = "No readme found.";
