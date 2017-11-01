@@ -167,15 +167,20 @@ public class AuthService {
     }
     // logout any user already loggedin if a new user tries to login 
     if (sc.getUserPrincipal() != null && !sc.getUserPrincipal().getName().equals(email)) {
-      am.registerLoginInfo(user, UserAuditActions.UNAUTHORIZED.getValue(), UserAuditActions.FAILED.name(), req);
-      userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
+      Users userInReq = userBean.findByEmail(req.getRemoteUser());
       try {
         req.getServletContext().log("logging out. User: " + sc.getUserPrincipal().getName());
+        req.getSession().invalidate();
         req.logout();
+        if (userInReq != null) {
+          userController.setUserIsOnline(userInReq, AuthenticationConstants.IS_OFFLINE);
+          am.registerLoginInfo(userInReq, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
+          //remove zeppelin ticket for user
+          TicketContainer.instance.invalidate(userInReq.getEmail());
+        }
       } catch (ServletException e) {
-        userController.registerFalseLogin(user);
-        am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+        am.registerLoginInfo(userInReq, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Failed to logout previous user");
       }
     }
     //only login if not already logged...
