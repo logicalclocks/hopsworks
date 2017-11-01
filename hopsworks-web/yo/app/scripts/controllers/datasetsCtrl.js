@@ -3,10 +3,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$q', '$mdSidenav', '$mdUtil', '$log',
           'DataSetService', 'JupyterService', '$routeParams', '$route', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$showdown', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService',
+          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService',
           function ($scope, $q, $mdSidenav, $mdUtil, $log, DataSetService, JupyterService, $routeParams,
                   $route, ModalService, growl, $location, MetadataHelperService,
-                  $showdown, $rootScope, DelaProjectService, DelaClusterProjectService) {
+                  $rootScope, DelaProjectService, DelaClusterProjectService) {
 
             var self = this;
             self.itemsPerPage = 14;
@@ -528,7 +528,8 @@ This will make all its files available for any cluster user to share and process
                         function (success) {
                           var fileDetails = JSON.parse(success.data.data);
                           var content = fileDetails.filePreviewDTO[0].content;
-                          $scope.readme = $showdown.makeHtml(content);
+                          var conv = new showdown.Converter({parseImgDimensions: true});
+                          $scope.readme = conv.makeHtml(content);
                         }, function (error) {
                   //To hide README from UI
                   growl.error(error.data.errorMsg, {title: 'Error retrieving README file', ttl: 5000, referenceId: 4});

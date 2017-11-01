@@ -1,6 +1,6 @@
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$uibModalInstance', '$showdown','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
-          function ($uibModalInstance, $showdown, DataSetService, growl, fileName, filePath, projectId, mode) {
+        .controller('FilePreviewCtrl', ['$uibModalInstance','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
+          function ($uibModalInstance, DataSetService, growl, fileName, filePath, projectId, mode) {
             var self = this;
             self.modes = ['head','tail'];
             self.filePath = filePath;

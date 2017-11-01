@@ -188,7 +188,8 @@ angular.module('hopsWorksApp')
               self.loadingReadme = true;
               HopssiteService.getReadmeByInode(inodeId).then(function (success) {
                 console.log("getReadMeLocal", success);
-                self.readme = $showdown.makeHtml(success.data.content);
+                var conv = new showdown.Converter({parseImgDimensions: true});
+                self.readme =  conv.makeHtml(success.data.content);
                 self.loadingReadme = false;
               }, function (error) {
                 self.readme = "No readme found.";
@@ -202,7 +203,8 @@ angular.module('hopsWorksApp')
               self.loadingReadme = true;
               DelaService.getReadme(publicId, bootstrap).then(function (success) {
                 console.log("getreadme", success);
-                self.readme = $showdown.makeHtml(success.data.content);
+                var conv = new showdown.Converter({parseImgDimensions: true});
+                self.readme = conv.makeHtml(success.data.content);
                 self.loadingReadme = false;
               }, function (error) {
                 self.readme = "No readme found.";
