@@ -159,30 +159,37 @@ public class JupyterSettings implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 0,
-          max = 2500)
+          max = 1500)
   @Column(name = "archives")
   private String archives = "";
 
   @Basic(optional = false)
   @NotNull
   @Size(min = 0,
-          max = 2500)
+          max = 1500)
   @Column(name = "jars")
   private String jars = "";
 
   @Basic(optional = false)
   @NotNull
   @Size(min = 0,
-          max = 2500)
+          max = 1500)
   @Column(name = "files")
   private String files = "";
 
   @Basic(optional = false)
   @NotNull
   @Size(min = 0,
-          max = 2500)
+          max = 1500)
   @Column(name = "py_files")
   private String pyFiles = "";
+
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 0,
+          max = 7500)
+  @Column(name = "spark_params")
+  private String sparkParams = "";
 
   @Transient
   private String privateDir = "";
@@ -411,7 +418,14 @@ public class JupyterSettings implements Serializable {
     this.baseDir = baseDir;
   }
 
-  
+  public String getSparkParams() {
+    return sparkParams;
+  }
+
+  public void setSparkParams(String sparkParams) {
+    this.sparkParams = sparkParams;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;

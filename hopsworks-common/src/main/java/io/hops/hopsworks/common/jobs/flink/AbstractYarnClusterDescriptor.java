@@ -530,7 +530,7 @@ public abstract class AbstractYarnClusterDescriptor implements
         null, null, jobSystemProperties,
         services.getSettings().getFlinkKafkaCertDir(),
         appResponse.getApplicationId().toString(),
-        services.getCertificateMaterializer());
+        services.getCertificateMaterializer(), services.getSettings().getHopsRpcTls());
   
     StringBuilder tmpBuilder = new StringBuilder();
     for (Map.Entry<String, String> prop : jobSystemProperties.entrySet()) {

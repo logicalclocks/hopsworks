@@ -16,8 +16,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -142,19 +144,26 @@ public class HopsUtils {
   }
 
   public static String getProjectKeystoreName(String project, String user) {
-    return project + "__" + user + "__kstore.jks";
+    return project + HdfsUsersController.USER_NAME_DELIMITER + user +
+        "__kstore.jks";
   }
 
   public static String getProjectTruststoreName(String project, String user) {
-    return project + "__" + user + "__tstore.jks";
+    return project + HdfsUsersController.USER_NAME_DELIMITER + user +
+        "__tstore.jks";
   }
-
+  
+  public static String getProjectMaterialPasswordName(String project, String
+      user) {
+    return project + HdfsUsersController.USER_NAME_DELIMITER + user + "__cert.key";
+  }
+  
   public static void copyUserKafkaCerts(CertsFacade userCerts,
       Project project, String username,
       String localTmpDir, String remoteTmpDir, CertificateMaterializer
-      certMat) {
+      certMat, boolean isRpcTlsEnabled) {
     copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
-        null, null, null, null, null, null, certMat);
+        null, null, null, null, null, null, certMat, isRpcTlsEnabled);
   }
 
   public static void copyUserKafkaCerts(CertsFacade userCerts,
@@ -163,43 +172,55 @@ public class HopsUtils {
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
       Map<String, String> jobSystemProperties,
-      String applicationId, CertificateMaterializer certMat) {
+      String applicationId, CertificateMaterializer certMat,
+      boolean isRpcTlsEnabled) {
     copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
         jobType, dfso, projectLocalResources, jobSystemProperties,
-        null, applicationId, certMat);
+        null, applicationId, certMat, isRpcTlsEnabled);
   }
   
   private static boolean checkMaterializedCertificatesExist(String username,
-      String projectName, String remoteFSDir, DistributedFileSystemOps dfso,
-      boolean isForZeppelin)
+      String remoteFSDir, DistributedFileSystemOps dfso,
+      Settings settings)
     throws IOException {
     
-    return checkUserMatCertsInHDFS(username, projectName, remoteFSDir, dfso, isForZeppelin);
+    return checkUserMatCertsInHDFS(username, remoteFSDir, dfso,
+        settings);
   }
   
-  private static boolean checkUserMatCertsInHDFS(String username, String
-      projectName, String remoteFSDir, DistributedFileSystemOps dfso, boolean
-      isForZeppelin)
+  private static boolean checkUserMatCertsInHDFS(String username,
+      String remoteFSDir, DistributedFileSystemOps dfso, Settings settings)
       throws IOException {
     Path kstoreU = new Path(remoteFSDir + Path.SEPARATOR +
         username + Path.SEPARATOR + username + "__kstore.jks");
     Path tstoreU = new Path(remoteFSDir + Path.SEPARATOR +
         username + Path.SEPARATOR + username + "__tstore.jks");
+    Path passwdU = new Path(remoteFSDir + Path.SEPARATOR +
+        username + Path.SEPARATOR + username + "__cert.key");
     
-    if (isForZeppelin) {  
+    if (!settings.getHopsRpcTls()) {
       return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString())
-          && checkProjectMatCertsInHDFS(projectName, remoteFSDir, dfso);
+          && dfso.exists(passwdU.toString());
     }
     
     return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString());
   }
   
   private static boolean checkProjectMatCertsInHDFS(String projectName, String remoteFSDir,
-      DistributedFileSystemOps dfso)
+      DistributedFileSystemOps dfso, Settings settings)
       throws IOException {
 
     Path kstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName + Path.SEPARATOR + projectName + "__kstore.jks");
     Path tstoreP = new Path(remoteFSDir + Path.SEPARATOR + projectName + Path.SEPARATOR + projectName + "__tstore.jks");
+  
+    // If RPC TLS is enabled, password file would be injected by the
+    // NodeManagers. We don't need to add it as LocalResource
+    if (!settings.getHopsRpcTls()) {
+      Path passwdP = new Path(remoteFSDir + Path.SEPARATOR + projectName
+          + Path.SEPARATOR + projectName + "__cert.key");
+      return dfso.exists(kstoreP.toString()) && dfso.exists(tstoreP.toString())
+          && dfso.exists(passwdP.toString());
+    }
 
     return dfso.exists(kstoreP.toString()) && dfso.exists(tstoreP.toString());
 
@@ -286,18 +307,20 @@ public class HopsUtils {
     certificateMaterializer.materializeCertificates(userName, projectName);
     
     // If certificates exist in HDFS do not materialize them again
-    if (checkMaterializedCertificatesExist(projectSpecificUsername, projectName,
-        remoteFSDir, dfso, isForZeppelin)) {
+    if (checkMaterializedCertificatesExist(projectSpecificUsername,
+        remoteFSDir, dfso, settings)) {
       return;
     }
     
-    String kStorePath, tStorePath;
+    String kStorePath, tStorePath, passwdPath;
     
     
     kStorePath = localFSDir + File.separator + projectSpecificUsername + "__kstore.jks";
     tStorePath = localFSDir + File.separator + projectSpecificUsername + "__tstore.jks";
+    passwdPath = localFSDir + File.separator + projectSpecificUsername +
+        "__cert.key";
     materializeCertsRemote(projectSpecificUsername, remoteFSDir, kStorePath,
-        tStorePath, dfso);
+        tStorePath, passwdPath, dfso, settings);
     
     // If RPC SSL is not enabled, we don't need them anymore in the local fs
     if (!settings.getHopsRpcTls()) {
@@ -315,9 +338,6 @@ public class HopsUtils {
    * @param dfso
    * @param certificateMaterializer
    * @param settings
-   * @param isForZeppelin When it is set to true it will materialize also the
-   * project-wide certificates for the Spark interpreter
-   * in Zeppelin
    * @throws IOException
    */
   public static void materializeCertificatesForProject(String projectName,
@@ -326,14 +346,15 @@ public class HopsUtils {
       IOException {
     certificateMaterializer.materializeCertificates(projectName);
 
-    if (checkProjectMatCertsInHDFS(projectName,remoteFSDir, dfso)) {
+    if (checkProjectMatCertsInHDFS(projectName,remoteFSDir, dfso, settings)) {
       return;
     }
     String kStorePath = localFSDir + File.separator + projectName + "__kstore.jks";
     String tStorePath = localFSDir + File.separator + projectName + "__tstore.jks";
-
+    String passwdPath = localFSDir + File.separator + projectName + "__cert.key";
+    
     materializeCertsRemote(projectName, remoteFSDir, kStorePath, tStorePath,
-        dfso);
+        passwdPath, dfso, settings);
 
     // If RPC SSL is not enabled, we don't need them anymore in the local fs
     if (!settings.getHopsRpcTls()) {
@@ -342,8 +363,8 @@ public class HopsUtils {
   }
   
   private static void materializeCertsRemote(String prefix, String
-      remoteFSDir, String kStorePath, String tStorePath,
-      DistributedFileSystemOps dfso) throws IOException {
+      remoteFSDir, String kStorePath, String tStorePath, String passwdPath,
+      DistributedFileSystemOps dfso, Settings settings) throws IOException {
     
     if (!dfso.exists(remoteFSDir)) {
       Path remoteFSTarget = new Path(remoteFSDir);
@@ -358,9 +379,12 @@ public class HopsUtils {
         "__kstore.jks");
     Path remoteProjectTStore = new Path(projectRemoteFSDir, prefix +
         "__tstore.jks");
+    Path remoteProjectPasswd = new Path(projectRemoteFSDir, prefix +
+        "__cert.key");
     if (dfso.exists(projectRemoteFSDir.toString())) {
       dfso.rm(remoteProjectKStore, false);
       dfso.rm(remoteProjectTStore, false);
+      dfso.rm(remoteProjectPasswd, false);
     } else {
       dfso.mkdir(projectRemoteFSDir, new FsPermission(
           FsAction.ALL, FsAction.ALL, FsAction.NONE));
@@ -379,6 +403,13 @@ public class HopsUtils {
         remoteProjectTStore.toString());
     dfso.setPermission(remoteProjectTStore, materialPermissions);
     dfso.setOwner(remoteProjectTStore, prefix, prefix);
+  
+    if (!settings.getHopsRpcTls()) {
+      dfso.copyToHDFSFromLocal(false, passwdPath,
+          remoteProjectPasswd.toString());
+      dfso.setPermission(remoteProjectPasswd, materialPermissions);
+      dfso.setOwner(remoteProjectPasswd, prefix, prefix);
+    }
     
     // Cache should be flushed otherwise NN will raise permission exceptions
     dfso.flushCachedUser(prefix);
@@ -408,19 +439,18 @@ public class HopsUtils {
       List<LocalResourceDTO> projectLocalResources,
       Map<String, String> jobSystemProperties,
       String flinkCertsDir, String applicationId, CertificateMaterializer
-      certMat) {
+      certMat, boolean isRpcTlsEnabled) {
   
     // Let the Certificate Materializer handle the certificates
     UserCerts userCert = new UserCerts(project.getName(), username);
     try {
       certMat.materializeCertificates(username, project.getName());
-      byte[][] material = certMat.getUserMaterial(username, project.getName());
-      if (material == null) {
-        throw new IOException("User certificates are null");
-      }
-      userCert.setUserKey(material[0]);
-      userCert.setUserCert(material[1]);
-    } catch (IOException ex) {
+      CertificateMaterializer.CryptoMaterial material = certMat
+          .getUserMaterial(username, project.getName());
+      userCert.setUserKey(material.getKeyStore());
+      userCert.setUserCert(material.getTrustStore());
+      userCert.setUserKeyPwd(material.getPassword());
+    } catch (IOException | CryptoPasswordNotFoundException ex) {
       throw new RuntimeException("Could not materialize user certificates", ex);
     }
     
@@ -435,6 +465,7 @@ public class HopsUtils {
       Map<String, byte[]> kafkaCertFiles = new HashMap<>();
       kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
       kafkaCertFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
+      
       //Create tmp cert directory if not exists for certificates to be copied to hdfs.
       //Certificates will later be deleted from this directory when copied to HDFS.
       
@@ -456,7 +487,8 @@ public class HopsUtils {
             username);
         String tCertName = HopsUtils.getProjectTruststoreName(project.
             getName(), username);
-      
+        String passName = getProjectMaterialPasswordName(project.getName(),
+            username);
         // if file doesnt exists, then create it
         try {
           if (jobType == null) {
@@ -487,16 +519,32 @@ public class HopsUtils {
                 f_k_cert.setExecutable(false);
                 f_k_cert.setReadable(true, true);
                 f_k_cert.setWritable(false);
+                
                 File t_k_cert = new File(appDir.toString() + File.separator +
                     tCertName);
                 t_k_cert.setExecutable(false);
                 t_k_cert.setReadable(true, true);
                 t_k_cert.setWritable(false);
+                
                 if (!f_k_cert.exists()) {
                   Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
                       f_k_cert);
                   Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
                       t_k_cert);
+                }
+  
+                // If RPC TLS is enabled, password file would be injected by the
+                // NodeManagers. We don't need to add it as LocalResource
+                if (!isRpcTlsEnabled) {
+                  File certPass = new File(appDir.toString() + File.separator +
+                      passName);
+                  certPass.setExecutable(false);
+                  certPass.setReadable(true, true);
+                  certPass.setWritable(false);
+                  FileUtils.writeStringToFile(certPass, userCert
+                      .getUserKeyPwd(), false);
+                  jobSystemProperties.put(Settings.CRYPTO_MATERIAL_PASSWORD,
+                      certPass.toString());
                 }
                 jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
                 jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
@@ -509,6 +557,12 @@ public class HopsUtils {
                     localTmpDir + File.separator + kCertName));
                 kafkaCerts.put(Settings.T_CERTIFICATE, new File(
                     localTmpDir + File.separator + tCertName));
+                // If RPC TLS is enabled, password file would be injected by the
+                // NodeManagers. We don't need to add it as LocalResource
+                if (!isRpcTlsEnabled) {
+                  kafkaCerts.put(Settings.CRYPTO_MATERIAL_PASSWORD, new File(
+                      localTmpDir + File.separator + passName));
+                }
                 for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
                   /*if (!entry.getValue().exists()) {
                     entry.getValue().createNewFile();

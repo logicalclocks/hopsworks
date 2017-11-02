@@ -52,7 +52,7 @@
     "pyFiles": [%%pyFiles%%],
     "files": [%%files%%],
     "conf": {
-      "spark.executorEnv.PATH": "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      %%spark_params%%"spark.executorEnv.PATH": "%%anaconda_env%%/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
       "spark.yarn.appMasterEnv.PYSPARK_PYTHON": "%%pyspark_bin%%",
       "spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON": "%%pyspark_bin%%",
       "spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%pyspark_bin%%",
