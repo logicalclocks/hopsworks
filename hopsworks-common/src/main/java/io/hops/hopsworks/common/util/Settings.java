@@ -51,7 +51,6 @@ public class Settings implements Serializable {
   @PostConstruct
   private void init() {
     try {
-      logger.log(Level.INFO, "Trying-zk-init");
       setKafkaBrokers(getBrokerEndpoints());
     } catch (AppException ex) {
       logger.log(Level.SEVERE, null, ex);
@@ -1934,6 +1933,7 @@ public class Settings implements Serializable {
   //************************************************KAFKA********************************************************
   public static final String KAFKA_ACL_WILDCARD = "*";
   public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
+  public static final String KAFKA_BROKER_PROTOCOL = "INTERNAL";
   //These brokers are updated periodically by ZookeeperTimerThread
   public Set<String> kafkaBrokers = new HashSet<>();
 
@@ -1988,7 +1988,7 @@ public class Settings implements Serializable {
             false, null));
         String[] tokens = brokerInfo.split(DLIMITER);
         for (String str : tokens) {
-          if (str.contains(SLASH_SEPARATOR)) {
+          if (str.contains(SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
             brokerList.add(str);
           }
         }
