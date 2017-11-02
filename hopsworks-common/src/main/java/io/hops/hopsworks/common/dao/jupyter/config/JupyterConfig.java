@@ -294,7 +294,19 @@ public class JupyterConfig {
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
           .append("__tstore.jks#").append(Settings.T_CERTIFICATE).append("\",")
           .append("\""+Settings.getSparkLog4JPath(settings.getSparkUser()) + "\"");
-
+      
+      // If RPC TLS is enabled, password file would be injected by the
+      // NodeManagers. We don't need to add it as LocalResource
+      if (!settings.getHopsRpcTls()) {
+        sparkFiles
+            .append(",")
+            // File with crypto material password
+            .append("\"hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+            .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
+            .append("__cert.key#").append(Settings.CRYPTO_MATERIAL_PASSWORD)
+            .append("\"");
+      }
+      
       if(!js.getFiles().equals("")) {
         sparkFiles.append("," + js.getFiles());
       }

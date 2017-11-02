@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.yarn;
 
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
@@ -85,12 +86,11 @@ public class YarnClientService {
             newConf);
   
         return createYarnClient(username, newConf);
-      } catch (BaseHadoopClientsService.CryptoPasswordNotFoundException ex) {
+      } catch (CryptoPasswordNotFoundException ex) {
         LOG.log(Level.SEVERE, ex.getMessage(), ex);
         String[] project_username = username.split(HdfsUsersController
             .USER_NAME_DELIMITER);
-        bhcs.removeNonSuperUserCertificate(project_username[1],
-            project_username[0]);
+        bhcs.removeNonSuperUserCertificate(username);
         return null;
       }
     }
@@ -135,7 +135,9 @@ public class YarnClientService {
           String username = yarnClientWrapper.getUsername();
           String projectName = yarnClientWrapper.getProjectName();
           if (null != username && null != projectName) {
-            bhcs.removeNonSuperUserCertificate(username, projectName);
+            String projectSpecificUser = projectName + HdfsUsersController
+                .USER_NAME_DELIMITER + username;
+            bhcs.removeNonSuperUserCertificate(projectSpecificUser);
           }
         }
       }

@@ -20,6 +20,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.util.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
@@ -187,12 +188,9 @@ public class DistributedFsService {
             newConf);
   
         return new DistributedFileSystemOps(ugi, newConf);
-      } catch (BaseHadoopClientsService.CryptoPasswordNotFoundException ex) {
+      } catch (CryptoPasswordNotFoundException ex) {
         logger.log(Level.SEVERE, ex.getMessage(), ex);
-        String[] project_username = username.split(HdfsUsersController
-            .USER_NAME_DELIMITER);
-        bhcs.removeNonSuperUserCertificate(project_username[1],
-            project_username[0]);
+        bhcs.removeNonSuperUserCertificate(username);
         return null;
       }
     }
@@ -202,10 +200,8 @@ public class DistributedFsService {
 
   public void closeDfsClient(DistributedFileSystemOps udfso) {
     if (null != udfso) {
-      String[] tokens = udfso.getEffectiveUser().split(HdfsUsersController
-          .USER_NAME_DELIMITER);
-      if (null != tokens && tokens.length == 2 && settings.getHopsRpcTls()) {
-        bhcs.removeNonSuperUserCertificate(tokens[1], tokens[0]);
+      if (settings.getHopsRpcTls()) {
+        bhcs.removeNonSuperUserCertificate(udfso.getEffectiveUser());
       }
       udfso.close();
     }
@@ -245,12 +241,9 @@ public class DistributedFsService {
             newConf);
     
         return new DistributedFileSystemOps(ugi, newConf);
-      } catch (BaseHadoopClientsService.CryptoPasswordNotFoundException ex) {
+      } catch (CryptoPasswordNotFoundException ex) {
         logger.log(Level.SEVERE, ex.getMessage(), ex);
-        String[] project_username = username.split(HdfsUsersController
-            .USER_NAME_DELIMITER);
-        bhcs.removeNonSuperUserCertificate(project_username[1],
-            project_username[0]);
+        bhcs.removeNonSuperUserCertificate(username);
         return null;
       }
     }

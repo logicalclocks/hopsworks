@@ -20,7 +20,13 @@ package io.hops.hopsworks.common.user;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ServiceCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 
@@ -69,6 +75,12 @@ public class CertificateMaterializer {
   private CertsFacade certsFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private ProjectFacade projectFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   @Resource
   private ManagedScheduledExecutorService scheduler;
   
@@ -82,7 +94,9 @@ public class CertificateMaterializer {
     TIME_SUFFIXES.put("d", TimeUnit.DAYS);
   }
   
-  private final Map<MaterialKey, CryptoMaterial> materialMap =
+  private final String CERT_PASS_SUFFIX = "__cert.key";
+  
+  private final Map<MaterialKey, InternalCryptoMaterial> materialMap =
       new ConcurrentHashMap<>();
   private final Map<Integer, Set<String>> openInterpreterGroupsPerProject =
       new ConcurrentHashMap<>();
@@ -193,7 +207,7 @@ public class CertificateMaterializer {
   public void materializeCertificates(String username, String projectName)
     throws IOException {
     MaterialKey key = new MaterialKey(username, projectName);
-    CryptoMaterial material = materialMap.get(key);
+    InternalCryptoMaterial material = materialMap.get(key);
     FileRemover scheduledRemover = null;
     LOG.log(Level.FINEST, "Requested materialization for: " + key
         .getProjectSpecificUsername());
@@ -238,6 +252,7 @@ public class CertificateMaterializer {
   }
   
   private void materialize(MaterialKey key) throws IOException {
+    String decryptedPass;
     // Spark interpreter in Zeppelin runs as user PROJECTNAME and not as
     // PROJECTNAME__USERNAME
     if (key.isSparkInterpreter()) {
@@ -248,22 +263,64 @@ public class CertificateMaterializer {
             .getProjectSpecificUsername());
       }
       ServiceCerts storedMaterial = serviceCerts.get(0);
+      decryptedPass = decryptMaterialPassword(key
+          .getProjectSpecificUsername(), storedMaterial
+          .getCertificatePassword(), ServiceCerts.class);
       materializeInternal(key, storedMaterial.getServiceKey(),
-          storedMaterial.getServiceCert());
+          storedMaterial.getServiceCert(), decryptedPass);
     } else {
       UserCerts projectSpecificCerts = certsFacade.findUserCert(key.projectName,
           key.username);
-    
+      decryptedPass = decryptMaterialPassword(key
+          .getProjectSpecificUsername(), projectSpecificCerts.getUserKeyPwd(),
+          UserCerts.class);
       materializeInternal(key, projectSpecificCerts.getUserKey(),
-          projectSpecificCerts.getUserCert());
+          projectSpecificCerts.getUserCert(), decryptedPass);
+    }
+  }
+  
+  private <T> String decryptMaterialPassword(String certificateIdentifier,
+      String encryptedPassword, Class<T> cls) throws IOException {
+    String userPassword;
+    if (cls == ServiceCerts.class) {
+      // Project generic certificate
+      // Certificate identifier would be the project name
+      Project project = projectFacade.findByName(certificateIdentifier);
+      if (project == null) {
+        throw new IOException("Project with name " + certificateIdentifier +
+            " could not be found");
+      }
+      Users owner = project.getOwner();
+      userPassword = owner.getPassword();
+    } else if (cls == UserCerts.class) {
+      // Project specific certificate
+      // Certificate identifier would be the project specific username
+      String username = hdfsUsersController.getUserName(certificateIdentifier);
+      Users user = userFacade.findByUsername(username);
+      if (user == null) {
+        throw new IOException("Could not find user: " + username);
+      }
+      userPassword = user.getPassword();
+    } else {
+      throw new IllegalArgumentException("Certificate type " + cls.getName()
+          + " is unknown");
+    }
+    
+    try {
+      return HopsUtils.decrypt(userPassword, settings
+          .getHopsworksMasterPasswordSsl(), encryptedPassword);
+    } catch (Exception ex) {
+      throw new IOException(ex);
     }
   }
   
   private void materializeInternal(MaterialKey key, byte[] keyStore, byte[]
-      trustStore) throws IOException {
+      trustStore, String password) throws IOException {
     if (null != keyStore && null != trustStore) {
-      flushToLocalFs(key.getProjectSpecificUsername(), keyStore, trustStore);
-      materialMap.put(key, new CryptoMaterial(keyStore, trustStore));
+      flushToLocalFs(key.getProjectSpecificUsername(), keyStore, trustStore,
+          password);
+      materialMap.put(key, new InternalCryptoMaterial(keyStore, trustStore,
+          password));
       LOG.log(Level.FINEST, "User: " + key.getProjectSpecificUsername() + " " +
           "Material DOES NOT exist, flushing now!!!");
     } else {
@@ -273,18 +330,24 @@ public class CertificateMaterializer {
     }
   }
   
-  public byte[][] getUserMaterial(String projectName) {
+  public CryptoMaterial getUserMaterial(String projectName)
+    throws CryptoPasswordNotFoundException {
     return getUserMaterial(null, projectName);
   }
   
   @Lock(LockType.READ)
-  public byte[][] getUserMaterial(String username, String projectName) {
+  public CryptoMaterial getUserMaterial(String username, String projectName)
+    throws CryptoPasswordNotFoundException {
     MaterialKey key = new MaterialKey(username, projectName);
-    CryptoMaterial material = materialMap.get(key);
+    InternalCryptoMaterial material = materialMap.get(key);
     if (null != material) {
-      return new byte[][]{material.getKeyStore(), material.getTrustStore()};
+      return new CryptoMaterial(material.getKeyStore(), material
+          .getTrustStore(), material.getPassword());
     }
-    return null;
+    
+    throw new CryptoPasswordNotFoundException(
+        "Cryptographic material for user " + key.getProjectSpecificUsername() +
+            " does not exist!");
   }
   
   public void removeCertificate(String projectName) {
@@ -295,7 +358,7 @@ public class CertificateMaterializer {
   @AccessTimeout(value=100)
   public void removeCertificate(String username, String projectName) {
     MaterialKey key = new MaterialKey(username, projectName);
-    CryptoMaterial material = materialMap.get(key);
+    InternalCryptoMaterial material = materialMap.get(key);
     if (null != material) {
       LOG.log(Level.FINEST, "Requested removal of material for " + key
           .getProjectSpecificUsername() + " Ref: " + material.references);
@@ -398,25 +461,33 @@ public class CertificateMaterializer {
         + "__kstore.jks").toFile();
     File tstoreFile = Paths.get(transientDir, username
         + "__tstore.jks").toFile();
+    File certPassFile = Paths.get(transientDir, username
+        + CERT_PASS_SUFFIX).toFile();
     FileUtils.deleteQuietly(kstoreFile);
     FileUtils.deleteQuietly(tstoreFile);
+    FileUtils.deleteQuietly(certPassFile);
   }
   
-  private void flushToLocalFs(String username, byte[] kstore, byte[] tstore)
-      throws IOException {
-    File kstoreFile = Paths.get(transientDir, username + "__kstore.jks").toFile();
-    File tstoreFile = Paths.get(transientDir, username + "__tstore.jks").toFile();
+  private void flushToLocalFs(String username, byte[] kstore, byte[] tstore,
+      String password) throws IOException {
+    File kstoreFile = Paths.get(transientDir, username + "__kstore.jks")
+        .toFile();
+    File tstoreFile = Paths.get(transientDir, username + "__tstore.jks")
+        .toFile();
+    File certPassFile = Paths.get(transientDir, username + CERT_PASS_SUFFIX)
+        .toFile();
   
     FileUtils.writeByteArrayToFile(kstoreFile, kstore, false);
     FileUtils.writeByteArrayToFile(tstoreFile, tstore, false);
+    FileUtils.writeStringToFile(certPassFile, password, false);
   }
   
   private class FileRemover implements Runnable {
     private final MaterialKey key;
-    private final CryptoMaterial material;
+    private final InternalCryptoMaterial material;
     private ScheduledFuture scheduledFuture;
     
-    private FileRemover(MaterialKey key, CryptoMaterial material) {
+    private FileRemover(MaterialKey key, InternalCryptoMaterial material) {
       this.key = key;
       this.material = material;
     }
@@ -483,23 +554,37 @@ public class CertificateMaterializer {
     }
   }
   
-  private class CryptoMaterial {
-    private int references;
+  public class CryptoMaterial {
     private final byte[] keyStore;
     private final byte[] trustStore;
+    private final String password;
     
-    private CryptoMaterial(byte[] keystore, byte[] trustStore) {
-      this.keyStore = keystore;
+    public CryptoMaterial(byte[] keyStore, byte[] trustStore, String password) {
+      this.keyStore = keyStore;
       this.trustStore = trustStore;
-      references = 1;
+      this.password = password;
     }
     
-    private byte[] getKeyStore() {
+    public byte[] getKeyStore() {
       return keyStore;
     }
     
-    private byte[] getTrustStore() {
+    public byte[] getTrustStore() {
       return trustStore;
+    }
+    
+    public String getPassword() {
+      return password;
+    }
+  }
+  
+  private class InternalCryptoMaterial extends CryptoMaterial {
+    private int references;
+    
+    private InternalCryptoMaterial(byte[] keystore, byte[] trustStore,
+        String password) {
+      super(keystore, trustStore, password);
+      references = 1;
     }
     
     private boolean decrementReference() {

@@ -162,7 +162,8 @@ public class YarnRunner {
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), jobType,
         dfso, materialResources, systemProperties,
-        applicationId, services.getCertificateMaterializer());
+        applicationId, services.getCertificateMaterializer(),
+        services.getSettings().getHopsRpcTls());
 
     for (LocalResourceDTO materialDTO : materialResources) {
       amLocalResourcesOnHDFS.put(materialDTO.getName(), materialDTO);
@@ -249,8 +250,10 @@ public class YarnRunner {
       }
 
       // Set keystore and truststore passwords
-      appContext.setKeyStorePassword(keyStorePassword);
-      appContext.setTrustStorePassword(trustStorePassword);
+      if (services.getSettings().getHopsRpcTls()) {
+        appContext.setKeyStorePassword(keyStorePassword);
+        appContext.setTrustStorePassword(trustStorePassword);
+      }
       
       //And submit
       logger.log(Level.INFO,
@@ -352,14 +355,34 @@ public class YarnRunner {
         
         tfClient.addFile(kstore);
         tfClient.addFile(tstore);
+        
         tfClient.getFilesInfo().put(kstore, new LocalResourceInfo(Settings
             .K_CERTIFICATE, kstore, LocalResourceVisibility.PRIVATE.toString(),
             LocalResourceType.FILE.toString(), null));
         tfClient.getFilesInfo().put(tstore, new LocalResourceInfo(Settings
             .T_CERTIFICATE, tstore, LocalResourceVisibility.PRIVATE.toString(),
             LocalResourceType.FILE.toString(), null));
+  
+        // If RPC TLS is enabled, password file would be injected by the
+        // NodeManagers. We don't need to add it as LocalResource
+        if (!services.getSettings().getHopsRpcTls()) {
+          String passFile =
+              "hdfs://" + services.getSettings().getHdfsTmpCertDir()
+                  + File.separator + project.getName() + HdfsUsersController
+                  .USER_NAME_DELIMITER + username + File.separator +
+                  appId.toString()
+                  + File.separator + HopsUtils.getProjectMaterialPasswordName(
+                  project.getName(), username);
+          tfClient.addFile(passFile);
+          tfClient.getFilesInfo().put(passFile, new LocalResourceInfo(Settings
+              .CRYPTO_MATERIAL_PASSWORD, passFile, LocalResourceVisibility.PRIVATE
+              .toString(), LocalResourceType.FILE.toString(), null));
+          logger.log(Level.INFO, "Adding local resource {0}", passFile);
+        }
+        
         logger.log(Level.INFO, "Adding local resource {0}", kstore);
         logger.log(Level.INFO, "Adding local resource {0}", tstore);
+        
         
         tfClient.submitApplication(app);
 //        String logstashInfo = tfClient.getEnvironment().get(Settings.LOGSTASH_JOB_INFO);

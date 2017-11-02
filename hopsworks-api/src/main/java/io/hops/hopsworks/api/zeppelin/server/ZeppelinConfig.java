@@ -496,6 +496,18 @@ public class ZeppelinConfig {
         .append(this.projectName).append(File.separator)
         .append(this.projectName).append("__tstore.jks#")
         .append(Settings.T_CERTIFICATE);
+  
+    // If RPC TLS is enabled, password file would be injected by the
+    // NodeManagers. We don't need to add it as LocalResource
+    if (!settings.getHopsRpcTls()) {
+      sparkDistFiles
+          // File with crypto material password
+          .append(",")
+          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append(this.projectName).append(File.separator)
+          .append(this.projectName).append("__cert.key#")
+          .append(Settings.CRYPTO_MATERIAL_PASSWORD);
+    }
 
     StringBuilder keyStoreSB = new StringBuilder();
     keyStoreSB
@@ -507,7 +519,7 @@ public class ZeppelinConfig {
         .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
         .append(this.projectName).append(File.separator).append(this.projectName)
         .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
-        
+    
     // Comma-separated files to be added as local resources to Livy interpreter
     StringBuilder livySparkDistFiles = new StringBuilder();
     livySparkDistFiles
@@ -515,6 +527,19 @@ public class ZeppelinConfig {
         .append(keyStoreSB).append(",")
         // TrustStore
         .append(trustStoreSB);
+    
+    // If RPC TLS is enabled, password file would be injected by the
+    // NodeManagers. We don't need to add it as LocalResource
+    if (!settings.getHopsRpcTls()) {
+      StringBuilder materialPasswd = new StringBuilder();
+      materialPasswd
+          // File with crypto material password
+          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append(this.projectName).append(File.separator).append(this.projectName)
+          .append("__cert.key#").append(Settings.CRYPTO_MATERIAL_PASSWORD);
+      
+      livySparkDistFiles.append(",").append(materialPasswd);
+    }
 
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.

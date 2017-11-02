@@ -69,7 +69,9 @@ public class TensorFlowYarnRunnerBuilder {
 
     //Add extra files to local resources, use filename as key
     for (LocalResourceDTO dto : extraFiles) {
-      if (!dto.getName().equals(Settings.K_CERTIFICATE) && !dto.getName().equals(Settings.T_CERTIFICATE)) {
+      if (!dto.getName().equals(Settings.K_CERTIFICATE)
+          && !dto.getName().equals(Settings.T_CERTIFICATE)
+          && !dto.getName().equals(Settings.CRYPTO_MATERIAL_PASSWORD)) {
         String pathToResource = dto.getPath();
         pathToResource = pathToResource.replaceFirst("hdfs:/*Projects",
             "hdfs:///Projects");

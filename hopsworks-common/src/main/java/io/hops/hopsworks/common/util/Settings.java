@@ -1346,6 +1346,7 @@ public class Settings implements Serializable {
   public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
+  public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
   //Used to retrieve schema by HopsUtil
   public static final String HOPSWORKS_PROJECTID_PROPERTY
