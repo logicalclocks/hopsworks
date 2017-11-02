@@ -270,3 +270,21 @@ div.story h3, div.task h3 {
     position: absolute;
   }
 }
+
+
+.textarea {
+  height:auto;
+  width:100%;
+  min-height:155px;
+  color:#999;
+  font-weight:400;
+  font-size:30px;
+  font-family:'Ubuntu', Helvetica, Arial, sans-serif;
+  background:#fff;
+  border-radius:3px;
+  line-height:2em;
+  border:none;
+  box-shadow:0px 0px 5px 1px rgba(0,0,0,0.1);
+  padding:30px;
+}
+

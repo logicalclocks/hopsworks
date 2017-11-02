@@ -40,14 +40,15 @@ angular.module('hopsWorksApp')
               {id: 5, name: 'ERROR'}
             ];
             self.logLevelSelected;
+
             self.job = {'type': '',
-                        'name': '',
-                        'id': '',
-                        'project': 
-                                  { 'name': '',
-                                    'id': self.projectId
-                                  }
-                      };
+              'name': '',
+              'id': '',
+              'project':
+                      {'name': '',
+                        'id': self.projectId
+                      }
+            };
 
 
 
@@ -66,6 +67,17 @@ angular.module('hopsWorksApp')
             window.onfocus = function () {
               self.livySessions(self.projectId);
             };
+
+
+            $scope.autoExpand = function (e) {
+              var element = typeof e === 'object' ? e.target : document.getElementById(e);
+              var scrollHeight = element.scrollHeight; // replace 60 by the sum of padding-top and padding-bottom
+              element.style.height = scrollHeight + "px";
+            };
+
+            function expand() {
+              $scope.autoExpand('TextArea');
+            }
 
             self.livySessions = function (projectId) {
               JupyterService.livySessions(projectId).then(
@@ -161,15 +173,15 @@ angular.module('hopsWorksApp')
              * @param {String} reason
              * @param {String} path
              * @returns {undefined}
-                         */
-            self.onFileSelected = function(reason, path) {
+             */
+            self.onFileSelected = function (reason, path) {
               var re = /(?:\.([^.]+))?$/;
               var extension = re.exec(path)[1];
               switch (reason.toUpperCase()) {
                 case "PYFILES":
                   if (extension.toUpperCase() === "PY" ||
-                    extension.toUpperCase() === "ZIP" ||
-                    extension.toUpperCase() === "EGG") {
+                          extension.toUpperCase() === "ZIP" ||
+                          extension.toUpperCase() === "EGG") {
                     if (self.val.pyFiles === "") {
                       self.val.pyFiles = "\"" + path + "\"";
                     } else {
@@ -195,7 +207,7 @@ angular.module('hopsWorksApp')
                     if (self.val.archives === "") {
                       self.val.archives = "\"" + path + "\"";
                     } else {
-                        self.val.archives = self.val.archives.concat(",").concat(" \"" + path + "\"");
+                      self.val.archives = self.val.archives.concat(",").concat(" \"" + path + "\"");
                     }
                   } else {
                     growl.error("Invalid file type selected. Expecting .zip Found: " + extension, {ttl: 10000});
@@ -314,6 +326,7 @@ angular.module('hopsWorksApp')
 
 
             var startLoading = function (label) {
+              self.advanced = false;
               self.loading = true;
               self.loadingText = label;
             };
@@ -358,6 +371,7 @@ angular.module('hopsWorksApp')
             };
             self.stopAdmin = function (hdfsUsername) {
               startLoading("Stopping Jupyter...");
+              self.advanced = true;
               JupyterService.stopAdmin(self.projectId, hdfsUsername).then(
                       function (success) {
                         self.ui = ""

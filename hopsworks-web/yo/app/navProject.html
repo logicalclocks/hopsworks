@@ -15,7 +15,8 @@
           Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"
                        id="jupyterTab"/>
           <i class="pull-left fa"  
-             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run." 
+             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now." 
+             tooltip-placement="auto right"
              ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>          
         </a>
       </li>
@@ -25,7 +26,8 @@
           Zeppelin 
           <img class="pull-right" style="margin-right:5px" width="30" src="images/zeppelin_logo.png"/>
           <i class=" pull-left fa " 
-             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run." 
+             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now." 
+             tooltip-placement="auto right"
              ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
@@ -34,7 +36,8 @@
         <a>
           Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
           <i class=" pull-left fa " 
-             uib-tooltip="If this indicator is orange, your job may encounter problems running. If this bar is red, your jobs will not be able to run."              
+             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."              
+             tooltip-placement="auto right"
              ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
@@ -62,7 +65,8 @@
         <a>
           Kafka <img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
           <i class=" pull-left fa " 
-             uib-tooltip="If this indicator is orange, Kafka is encountering problems. If this bar is red, Kafka is down."             
+             uib-tooltip="Orange triangle: Kafka is encountering problems. Red means Kafka is down."             
+             tooltip-placement="auto right"
              ng-class="{'fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
         </a>
       </li>
@@ -90,8 +94,9 @@
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
           <i class=" pull-left fa " 
-             uib-tooltip="If this indicator is orange, the filesystem (HopsFS) is encountering problems. If this bar is red, HopsFS is down."                          
-             ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
+             uib-tooltip="Orange triangle: the filesystem is encountering problems. Red means the filesystem is down."                          
+             tooltip-placement="auto right"
+           ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
         </a>
       </li>
 
@@ -120,8 +125,8 @@
           <small ng-show="clusterUtilCtrl.utilisation > 1 && clusterUtilCtrl.utilisation !== 20" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization: {{clusterUtilCtrl.utilisation}}%</em></small>
           <small ng-show="clusterUtilCtrl.utilisation < 1" style="color: #ddd;"><em>Cluster Utilization is unknown</em></small>
           <div class="progress" style="height: 10px;margin-bottom: 1px"
-               uib-tooltip="If this bar is orange (> 50%), consider allocating less resources for your application.
-               If this bar is red (> 80%), consider running your jobs at a later time. "
+               uib-tooltip="Orange (> 50%): consider allocating less resources for your application.
+               Red (> 80%): the cluster is fully loaded. Consider scheduling your jobs to run at a later time. "
                tooltip-placement="bottom">
             <div class="progress-bar" style="opacity: 0.7;"
                  ng-class="clusterUtilCtrl.progressBarClass"
