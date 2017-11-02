@@ -198,8 +198,8 @@ public class DelaProjectService {
     Dataset dataset = getDatasetByPublicId(publicDSId);
 
     String certPath = kafkaController.getKafkaCertPaths(project);
-    String brokerEndpoint = settings.getKafkaConnectStr();
-    String restEndpoint = settings.getKafkaRestEndpoint();
+    String brokerEndpoint = settings.getRandomKafkaBroker();
+    String restEndpoint = settings.getRestEndpoint();
     String keyStore = certPath + "/keystore.jks";
     String trustStore = certPath + "/truststore.jks";
     KafkaEndpoint kafkaEndpoint = new KafkaEndpoint(brokerEndpoint, restEndpoint, settings.getDELA_DOMAIN(),

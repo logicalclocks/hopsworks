@@ -27,11 +27,15 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import io.hops.hopsworks.common.util.Settings;
 
+/**
+ * Periodically sync zookeeper with the database for
+ * <p>
+ */
 @Singleton
 public class ZookeeprTopicCleanerTimer {
 
   private final static Logger LOGGER = Logger.getLogger(
-          ZookeeprTopicCleanerTimer.class.getName());
+      ZookeeprTopicCleanerTimer.class.getName());
 
   public final int connectionTimeout = 90 * 1000;// 30 seconds
 
@@ -42,20 +46,17 @@ public class ZookeeprTopicCleanerTimer {
 
   @EJB
   Settings settings;
-
   @EJB
   KafkaFacade kafkaFacade;
 
   ZkClient zkClient = null;
-
   ZkConnection zkConnection = null;
-
   ZooKeeper zk = null;
 
-  // Run once per minute
+  // Run once per hour 
   @Schedule(persistent = false,
-          minute = "0",
-          hour = "*")
+      minute = "0",
+      hour = "*")
   public void execute(Timer timer) {
 
     Set<String> zkTopics = new HashSet<>();
@@ -65,21 +66,17 @@ public class ZookeeprTopicCleanerTimer {
           zk.close();
         }
         zk = new ZooKeeper(settings.getZkConnectStr(),
-                sessionTimeoutMs, new ZookeeperWatcher());
+            sessionTimeoutMs, new ZookeeperWatcher());
       }
       List<String> topics = zk.getChildren("/brokers/topics", false);
       zkTopics.addAll(topics);
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.
-              toString());
+      LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
     } catch (KeeperException | InterruptedException ex) {
-      LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex.
-              toString());
+      LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex);
     }
 
-    List<ProjectTopics> dbProjectTopics = em.createNamedQuery(
-            "ProjectTopics.findAll").getResultList();
-
+    List<ProjectTopics> dbProjectTopics = em.createNamedQuery("ProjectTopics.findAll").getResultList();
     Set<String> dbTopics = new HashSet<>();
 
     for (ProjectTopics pt : dbProjectTopics) {
@@ -95,24 +92,23 @@ public class ZookeeprTopicCleanerTimer {
      * situation
      * happens when a hopsworks project is deleted, because all the topics in
      * the project
-     * will be deleted (casecade delete) without deleting them from the Kafka
+     * will be deleted (cascade delete) without deleting them from the Kafka
      * cluster.
      * 1. get all topics from zookeeper
      * 2. get the topics which exist in zookeeper, but not in database
      * zkTopics.removeAll(dbTopics);
      * 3. remove those topics
      */
-    if (!zkTopics.isEmpty()) {
-      zkTopics.removeAll(dbTopics);
-      for (String topicName : zkTopics) {
-        try {
-          if (zkClient == null) {
-            zkClient = new ZkClient(kafkaFacade.
-                    getIp(settings.getZkConnectStr()).getHostName(),
-                    sessionTimeoutMs, connectionTimeout,
-                    ZKStringSerializer$.MODULE$);
-          }
-
+    try {
+      if (zkClient == null) {
+        zkClient = new ZkClient(kafkaFacade.
+            getIp(settings.getZkConnectStr()).getHostName(),
+            sessionTimeoutMs, connectionTimeout,
+            ZKStringSerializer$.MODULE$);
+      }
+      if (!zkTopics.isEmpty()) {
+        zkTopics.removeAll(dbTopics);
+        for (String topicName : zkTopics) {
           if (zkConnection == null) {
             zkConnection = new ZkConnection(settings.getZkConnectStr());
           }
@@ -121,27 +117,43 @@ public class ZookeeprTopicCleanerTimer {
           try {
             AdminUtils.deleteTopic(zkUtils, topicName);
             LOGGER.log(Level.INFO, "{0} is removed from Zookeeper",
-                    new Object[]{topicName});
+                new Object[]{topicName});
           } catch (TopicAlreadyMarkedForDeletionException ex) {
             LOGGER.log(Level.INFO, "{0} is already marked for deletion",
-                    new Object[]{topicName});
-          }
-        } catch (AppException ex) {
-          LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.
-                  toString());
-        } finally {
-          if (zkClient != null) {
-            zkClient.close();
-          }
-          try {
-            if (zkConnection != null) {
-              zkConnection.close();
-            }
-          } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+                new Object[]{topicName});
           }
         }
       }
+
+    } catch (AppException ex) {
+      LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex.
+          toString());
+    } finally {
+      if (zkClient != null) {
+        zkClient.close();
+      }
+      try {
+        if (zkConnection != null) {
+          zkConnection.close();
+        }
+      } catch (InterruptedException ex) {
+        LOGGER.log(Level.SEVERE, null, ex);
+      }
+    }
+  }
+
+  /**
+   * Get kafka broker endpoints and update them in Settings.
+   * These topics are used for passing broker endpoints to HopsUtil and to KafkaFacade.
+   */
+  @Schedule(persistent = false,
+      minute = "*/1",
+      hour = "*")
+  public void getBrokers() {
+    try {
+      settings.setKafkaBrokers(settings.getBrokerEndpoints());
+    } catch (AppException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
     }
   }
 

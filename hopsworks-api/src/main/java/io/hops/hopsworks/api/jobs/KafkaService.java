@@ -205,7 +205,7 @@ public class KafkaService {
     } catch (Exception ex) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
-              "Error while retrieving topic details. Is Kafka running?");
+              "Advanced option is currently not available. Please try again later.");
     }
 
     GenericEntity<List<PartitionDetailsDTO>> topics

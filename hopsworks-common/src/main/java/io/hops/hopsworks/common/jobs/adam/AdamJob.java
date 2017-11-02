@@ -47,7 +47,7 @@ public class AdamJob extends SparkJob {
       String sparkDir, String adamUser, String jobUser,
       String adamJarPath, YarnJobsMonitor jobsMonitor, Settings settings) {
     super(job, services, user, hadoopDir, sparkDir, adamUser,
-        jobUser, jobsMonitor, settings, null);
+        jobUser, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof AdamJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a AdamJobConfiguration object. Received: "
