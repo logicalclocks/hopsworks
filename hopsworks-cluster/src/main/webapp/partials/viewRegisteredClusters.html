@@ -1,0 +1,70 @@
+<div class="container">
+  <div  class="row" style="margin-top: 20px">
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <form name="getForm" ng-submit="getClusters()" role="form">
+            <div class="form-group has-feedback">
+              <label class="text-muted">Email address</label>
+              <input name="user_email" placeholder="Email" autocomplete="off"
+                     ng-model="user.email" required
+                     class="form-control"
+                     type="email">
+              <span class="fa fa-envelope form-control-feedback text-muted" style="top: 34px;"></span>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="text-muted">Password</label>
+              <input id="id-password" name="user_password" placeholder="Password"
+                     ng-model="user.chosenPassword"
+                     class="form-control"
+                     type="password" required>
+              <span class="fa fa-lock form-control-feedback text-muted" style="top: 34px;"></span>
+            </div>
+            <div>
+              <div>
+                <button type="submit" class="btn btn-block btn-primary mt-lg" data-ng-disabled="working">Get registered clusters
+                </button>
+              </div>
+            </div>
+          </form> 
+          <br/>
+          <div class="alert alert-danger" role="alert" ng-show="errorMessage">
+            <button type="button" class="close" aria-label="Close" ng-click="errorMessage = ''">
+              <span aria-hidden="true">&times;</span>
+            </button>{{errorMessage}}
+          </div>
+          <br/>
+          <a href="#!/" class="btn btn-block btn-default">Back to home</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div>
+        <div class="panel panel-default" ng-if="working && getForm.$submitted">
+          <div style="text-align: center" class="panel-body text-muted">
+            <i class="fa fa-spinner fa-spin  fa-2x"></i> 
+            <h4>Getting registered clusters ...</h4>
+          </div>
+        </div>
+        <div class="panel panel-default" ng-repeat="cluster in clusters">
+          <div class="panel-body" style="overflow-x: auto;">
+            <label><b class="text-muted">Common name:</b> <i>{{cluster.commonName}}</i></label> <br/>
+            <label><b class="text-muted">Organization Name:</b> <i>{{cluster.organizationName}}</i></label> <br/>
+            <label><b class="text-muted">Organization Unit Name:</b> <i>{{cluster.organizationalUnitName}}</i></label> <br/>
+            <label><b class="text-muted">Registered on:</b> <i>{{cluster.registrationDate| date:'medium'}}</i></label> <br/>
+            <label><b class="text-muted">Registration Status:</b> <i>{{cluster.registrationStatus}}</i></label> <br/>
+            <label><b class="text-muted">Certificate Status:</b> <i>{{certStatus(cluster.serialNumber)}}</i></label> <br/>
+          </div>
+        </div>               
+        <div class="panel panel-default" ng-if="!working && clusters.length === 0 && getForm.$submitted">
+          <div class="panel-body">
+            <label class="text-muted"> No registered cluster found for the given email.</label> <br/>
+          </div>
+        </div>
+        <div class="panel panel-default" ng-if="!working && !getForm.$submitted">
+          <div class="panel-body">
+            <label class="text-muted"> Enter email and password to see registered clusters.</label> <br/>
+          </div>
+        </div>
+      </div>
+    </div>

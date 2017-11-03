@@ -28,6 +28,8 @@ public class EJBExceptionMapper implements ExceptionMapper<EJBException> {
       return handleIllegalStateException((IllegalStateException) exception.getCause());
     } else if (exception.getCause() instanceof MessagingException) {
       return handleMessagingException((MessagingException) exception.getCause());
+    } else if (exception.getCause() instanceof SecurityException) {
+      return handleSecurityException((SecurityException) exception.getCause());
     }
 
     LOG.log(Level.INFO, "EJBException Caused by: {0}", exception.getCause().toString());
@@ -79,5 +81,14 @@ public class EJBExceptionMapper implements ExceptionMapper<EJBException> {
     jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
     jsonResponse.setErrorMsg(messagingException.getMessage());
     return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
+  }
+
+  private Response handleSecurityException(SecurityException securityException) {
+    LOG.log(Level.INFO, "SecurityException: {0}", securityException.getMessage());
+    JsonResponse jsonResponse = new JsonResponse();
+    jsonResponse.setStatus(Response.Status.FORBIDDEN.getReasonPhrase());
+    jsonResponse.setStatusCode(Response.Status.FORBIDDEN.getStatusCode());
+    jsonResponse.setErrorMsg(securityException.getMessage());
+    return Response.status(Response.Status.BAD_REQUEST).entity(jsonResponse).build();
   }
 }

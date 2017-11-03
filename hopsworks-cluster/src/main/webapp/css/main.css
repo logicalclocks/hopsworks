@@ -11,3 +11,7 @@ body {
     text-align: center;
     color: #fff;
 }
+
+.alert {
+  overflow-x: auto !important;
+}

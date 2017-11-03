@@ -5,7 +5,7 @@
       <!-- START panel-->
       <div class="panel">
         <div class="panel-body">
-          <form name="registerForm" ng-submit="register()" role="form">
+          <form name="registerForm" ng-submit="registerCluster()" role="form">
             <div class="form-group has-feedback">
               <label class="text-muted">Cluster Common Name</label>
               <input name="first_name" placeholder="Common Name" autocomplete="off"
@@ -45,26 +45,10 @@
             <div class="form-group has-feedback">
               <label class="text-muted">Password</label>
               <input id="id-password" name="user_password" placeholder="Password"
-                     ng-model="newUser.chosenPassword"
-                     pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" 
-                     title="Password must contain at least one number and one uppercase and lowercase letter, and be at least 8 or more characters"
+                     ng-model="newUser.chosenPassword"        
                      class="form-control"
                      type="password" required>
               <span class="fa fa-lock form-control-feedback text-muted" style="top: 34px;"></span>
-            </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Confirm Password</label>
-              <input id="confirm-pwd" name="user_password_confirm" placeholder="Confirm password"
-                     ng-model="newUser.repeatedPassword"
-                     pw-check="id-password"
-                     class="form-control" type="password" required>
-              <span class="fa fa-lock form-control-feedback text-muted" style="top: 34px;"></span>               
-            </div>
-            <div>
-              <span class="text-danger" 
-                    ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) && registerForm.user_password_confirm.$error.pwmatch">
-                Passwords don't match.
-              </span>
             </div>
             <div class="checkbox">
               <label class="text-muted">
@@ -288,4 +272,5 @@
 
   </div>
 </div>
+
 

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CsrDTO implements Serializable {
 
   private String caPubCert;
+  private String intermediateCaPubCert;
   private String pubAgentCert;
   private String hadoopHome;
 
@@ -19,6 +20,13 @@ public class CsrDTO implements Serializable {
     this.hadoopHome = hadoopHome;
   }
 
+  public CsrDTO(String caPubCert, String intermediateCaPubCert, String pubAgentCert, String hadoopHome) {
+    this.caPubCert = caPubCert;
+    this.intermediateCaPubCert = intermediateCaPubCert;
+    this.pubAgentCert = pubAgentCert;
+    this.hadoopHome = hadoopHome;
+  }
+
   public String getHadoopHome() {
     return hadoopHome;
   }
@@ -26,9 +34,17 @@ public class CsrDTO implements Serializable {
   public void setHadoopHome(String hadoopHome) {
     this.hadoopHome = hadoopHome;
   }
-  
+
   public String getCaPubCert() {
     return caPubCert;
+  }
+
+  public String getIntermediateCaPubCert() {
+    return intermediateCaPubCert;
+  }
+
+  public void setIntermediateCaPubCert(String intermediateCaPubCert) {
+    this.intermediateCaPubCert = intermediateCaPubCert;
   }
 
   public String getPubAgentCert() {
