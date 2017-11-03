@@ -333,9 +333,10 @@ public class JupyterConfig {
       }
       LOGGER.info("SparkProps are: " + System.lineSeparator() + sparkProps);
 
-      boolean isTensorflow = js.getMode().toLowerCase().contains("tensorflow");
-      boolean isHorovod = js.getMode().toLowerCase().contains("horovod");
-      boolean isDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
+      boolean isTensorFlow = js.getMode().compareToIgnoreCase("tensorflow") == 0;
+      boolean isTensorFlowOnSpark = js.getMode().compareToIgnoreCase("distributedtensorflow") == 0;
+      boolean isHorovod = js.getMode().compareToIgnoreCase("horovod") == 0;
+      boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
       String extraJavaOptions = "-Dhopsworks.logstash.job.info=" + project.getName() + ",jupyter,notebook,?";
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
@@ -346,24 +347,24 @@ public class JupyterConfig {
                   "hdfs_user", this.hdfsUser,
                   "driver_cores", Integer.toString(js.getAppmasterCores()),
                   "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
-                  "num_executors", (isDynamic) ? "0" : Integer.toString(js.getNumExecutors()),
+                  "num_executors", (isSparkDynamic || isTensorFlow) ? "0" : Integer.toString(js.getNumExecutors()),
                   "executor_cores", Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(isDynamic),
-                  "min_executors", Integer.toString(js.getDynamicMinExecutors()),
-                  "initial_executors", Integer.toString(js.getDynamicInitialExecutors()),
-                  "max_executors", Integer.toString(js.getDynamicMaxExecutors()),
+                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow),
+                  "min_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicMinExecutors()),
+                  "initial_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicInitialExecutors()),
+                  "max_executors", (isTensorFlow) ? Integer.toString(js.getNumExecutors()):
+                              Integer.toString(js.getDynamicMaxExecutors()),
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
                   "files", sparkFiles.toString(),
                   "pyFiles", js.getPyFiles(),
                   "yarn_queue", "default",
-                  "num_ps", (js.getMode().compareToIgnoreCase("distributedtensorflow") == 0)
-                  ? Integer.toString(js.getNumTfPs()) : "0",
-                  "num_gpus", (isTensorflow) ? Integer.toString(js.getNumTfGpus()) : (isHorovod) ? Integer.toString(js.
-                      getNumMpiNp() * js.getNumTfGpus()) : "0",
+                  "num_ps", (isTensorFlowOnSpark) ? Integer.toString(js.getNumTfPs()) : "0",
+                  "num_gpus", (isTensorFlow || isTensorFlowOnSpark) ? Integer.toString(js.getNumTfGpus()):
+                              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumTfGpus()): "0",
                   "mpi_np", (isHorovod) ? Integer.toString(js.getNumMpiNp()) : "",
-                  "tensorflow", Boolean.toString(isTensorflow || isHorovod),
+                  "tensorflow", Boolean.toString(isTensorFlow || isTensorFlowOnSpark || isHorovod),
                   "jupyter_home", this.confDirPath,
                   "project", this.project.getName(),
                   "mode", js.getMode(),
@@ -378,6 +379,7 @@ public class JupyterConfig {
                   "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
                   "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
                   "metrics_path", settings.getSparkMetricsPath(),
+                  "exec_timeout", (isTensorFlow) ? "5s" : "60s",
                   "extra_java_options", extraJavaOptions
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(

@@ -211,10 +211,17 @@
                   </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkDynamic' && jupyterCtrl.val.mode !== 'horovod'">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkDynamic' && jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'tensorflow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle"
                                                                             uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
+                  </div>
+                </div>
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
+                  <div class="row clusterparams">
+                    <div class="text-right col-md-6">Max parallel executions <i class="fa fa-info-circle" uib-tooltip="The maximum number of parallel tflauncher executions. If this configuration is less than the number of tflauncher jobs, the remaining jobs will be queued and executed once a previous job is finished." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -233,7 +240,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Executor GPUs<i class="fa fa-info-circle"
-                                                                     uib-tooltip="The number of GPUs accessible for each Spark executor in this job."
+                                                                     uib-tooltip="The number of GPUs allocated for each Spark executor in this job."
                                                                      style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numTfGpus" min="0" class="form-control"></div>
@@ -243,7 +250,7 @@
 
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">GPUs per worker<i class="fa fa-info-circle"
-                                                                       uib-tooltip="The number of GPUs accessible for each worker. Parameter servers do not have access to a GPU."
+                                                                       uib-tooltip="The number of GPUs allocated for each worker. Parameter servers do not have access to a GPU."
                                                                        style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
