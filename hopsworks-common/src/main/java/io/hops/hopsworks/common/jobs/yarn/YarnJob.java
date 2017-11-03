@@ -194,7 +194,7 @@ public abstract class YarnJob extends HopsJob {
           //Set sessionId to be used by HopsUtil
           serviceProps.getKafka().setSessionId(sessionId);
           //Set Kafka specific properties to serviceProps
-          serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaConnectStr());
+          serviceProps.getKafka().setBrokerAddresses(services.getSettings().getKafkaBrokersStr());
           serviceProps.getKafka().setRestEndpoint(services.getSettings().getRestEndpoint());
           serviceProps.getKafka().setTopics(jobs.getJobConfig().getKafka().getTopics());
           serviceProps.getKafka().setProjectConsumerGroups(jobs.getProject().getName(),

@@ -88,7 +88,7 @@ public class ExecutionController {
       case FLINK:
         return flinkController.startJob(job, user, sessionId);
       case SPARK:
-        exec = sparkController.startJob(job, user, sessionId);
+        exec = sparkController.startJob(job, user);
         if (exec == null) {
           throw new IllegalArgumentException(
                   "Problem getting execution object for: " + job.
@@ -114,7 +114,7 @@ public class ExecutionController {
         break;
       case PYSPARK:
       case TFSPARK:
-        exec = sparkController.startJob(job, user, sessionId);
+        exec = sparkController.startJob(job, user);
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }

@@ -58,7 +58,7 @@ public class SparkController {
    * @throws IllegalArgumentException If the given job does not represent a
    * Spark job.
    */
-  public Execution startJob(final Jobs job, final Users user, String sessionId) throws
+  public Execution startJob(final Jobs job, final Users user) throws
       IllegalStateException,
       IOException, NullPointerException, IllegalArgumentException {
     //First: some parameter checking.
@@ -81,7 +81,7 @@ public class SparkController {
         public SparkJob run() throws Exception {
           return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(), settings.getSparkDir(),
               settings.getSparkUser(), job.getProject().getName() + "__"
-              + user.getUsername(), jobsMonitor, settings, sessionId);
+              + user.getUsername(), jobsMonitor, settings);
         }
       });
     } catch (InterruptedException ex) {
@@ -119,7 +119,7 @@ public class SparkController {
 
     SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(), settings.getSparkDir(),
         settings.getSparkUser(),
-        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings, null);
+        hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings);
     submitter.stopExecution(sparkjob, appid);
 
   }

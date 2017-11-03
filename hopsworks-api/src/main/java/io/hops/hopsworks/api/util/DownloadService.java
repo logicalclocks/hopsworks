@@ -51,8 +51,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.mail.Message;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.net.util.Base64;
 
 @RequestScoped
@@ -144,12 +146,16 @@ public class DownloadService {
   @javax.ws.rs.Path("/certs/{path: .+}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response downloadCerts(@PathParam("path") String path, @Context SecurityContext sc) throws AppException,
+  public Response downloadCerts(
+      @PathParam("path") String path,
+      @QueryParam("password") String password,
+      @Context SecurityContext sc) throws AppException,
       AccessControlException {
-    if(user.getEmail().equals(Settings.SITE_EMAIL) || user.getEmail().equals(Settings.AGENT_EMAIL)){
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
+    if (user.getEmail().equals(Settings.SITE_EMAIL)
+        || user.getEmail().equals(Settings.AGENT_EMAIL)
+        || !user.getPassword().equals(DigestUtils.sha256Hex(password))) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     }
-    
     String zipName = settings.getHopsworksTmpCertDir() + File.separator + project.getName() + "-" + user.getUsername()
         + "-certs.zip";
     java.nio.file.Path zipPath = null;
@@ -174,15 +180,15 @@ public class DownloadService {
         Response.ResponseBuilder response = Response.ok(buildOutputStream(stream));
         response.header("Content-disposition", "attachment;");
         //Send email with decrypted password to user
-        String password = projectsController.getProjectSpecificCertPw(user, project.getName(),
+        String certPwd = projectsController.getProjectSpecificCertPw(user, project.getName(),
             Base64.encodeBase64String(certsFacade.findUserCert(project.getName(), user.getUsername()).getUserKey()))
             .getKeyPw();
         //Pop-up a message from admin
         messageController.send(user, userBean.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
             "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-                + "please check spam first and then contact the HopsWorks administrator.", "");
+            + "please check spam first and then contact the HopsWorks administrator.", "");
         email.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
-            "The password for keystore and truststore is:" + password);
+            "The password for keystore and truststore is:" + certPwd);
         return response.build();
       } catch (IOException ex) {
         LOG.log(Level.SEVERE, null, ex);
