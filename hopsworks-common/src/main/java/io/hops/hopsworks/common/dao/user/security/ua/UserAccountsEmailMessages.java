@@ -373,10 +373,9 @@ public class UserAccountsEmailMessages {
 
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received an account request for HopsWorks on your behalf.\n\n";
-    String l2 = "Please click on the following link to verify your email address. We"
-            + " will activate your account within "
+    String l2 = "Please click on the following link to verify your email address. Within"
             + ACCOUNT_ACITVATION_PERIOD
-            + " hours after validating your email address.\n\n\n";
+            + " hours of getting this email.\n\n\n";
 
     String url = path + "/hopsworks-cluster/api/cluster/register/confirm/" + key;
 
@@ -394,10 +393,9 @@ public class UserAccountsEmailMessages {
 
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received a cluster remove request for Hops.site on your behalf.\n\n";
-    String l2 = "Please click on the link below to verify your email address. We"
-            + " will remove your cluster within "
+    String l2 = "Please click on the link below to verify your email address. Within"
             + ACCOUNT_ACITVATION_PERIOD
-            + " hours after validating your email address.\n\n\n";
+            + " hours of getting this email.\n\n\n";
 
     String url = path + "/hopsworks-cluster/api/cluster/unregister/confirm/" + key;
 

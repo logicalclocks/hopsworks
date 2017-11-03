@@ -2,6 +2,15 @@
   <h1><i>{{title}}</i></h1>
   <h3>By registering your cluster you will get access to public datasets on other registered <strong><i>hopsworks</i></strong> clusters.</h3>
   <hr/>
-  <a class="btn btn-success btn-lg" href="#!/register">Register</a>
+  <div class="btn-group">
+    <button type="button" class="btn btn-success btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      Register new cluster <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+      <li><a class="dropdown-item" href="#!/register">Register with new user</a></li>
+      <li><a class="dropdown-item" href="#!/registerCluster">Register with existing user</a></li>
+    </ul>
+  </div>
+  <a class="btn btn-success btn-lg" href="#!/view">View Registered clusters</a>
   <a class="btn btn-warning btn-lg" href="#!/unregister">Unregister</a>
 </div>

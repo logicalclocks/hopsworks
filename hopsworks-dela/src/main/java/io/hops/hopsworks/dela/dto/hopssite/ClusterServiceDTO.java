@@ -9,15 +9,13 @@ public class ClusterServiceDTO {
 
     private String delaTransferAddress;
     private String delaClusterAddress;
-    private String email;
 
     public Register() {
     }
 
-    public Register(String delaTransferAddress, String delaClusterAddress, String email) {
+    public Register(String delaTransferAddress, String delaClusterAddress) {
       this.delaTransferAddress = delaTransferAddress;
       this.delaClusterAddress = delaClusterAddress;
-      this.email = email;
     }
 
     public String getDelaTransferAddress() {
@@ -34,14 +32,6 @@ public class ClusterServiceDTO {
 
     public void setDelaClusterAddress(String delaClusterAddress) {
       this.delaClusterAddress = delaClusterAddress;
-    }
-
-    public String getEmail() {
-      return email;
-    }
-
-    public void setEmail(String email) {
-      this.email = email;
     }
   }
   

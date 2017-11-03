@@ -84,11 +84,11 @@ public class HopssiteController {
     }
   }
 
-  public String registerCluster(String delaClusterAddress, String delaTransferAddress, String email)
+  public String registerCluster(String delaClusterAddress, String delaTransferAddress)
     throws ThirdPartyException {
     checkHopssiteReady();
     try {
-      ClusterServiceDTO.Register req = new ClusterServiceDTO.Register(delaTransferAddress, delaClusterAddress, email);
+      ClusterServiceDTO.Register req = new ClusterServiceDTO.Register(delaTransferAddress, delaClusterAddress);
       ClientWrapper client = getClient(HopsSite.ClusterService.registerCluster(), String.class);
       client.setPayload(req);
       LOG.log(Settings.DELA_DEBUG, "hops-site:cluster - {0}", client.getFullPath());

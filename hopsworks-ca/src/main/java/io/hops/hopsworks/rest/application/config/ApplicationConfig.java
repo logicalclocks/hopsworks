@@ -18,6 +18,9 @@ public class ApplicationConfig extends ResourceConfig {
     
     //response filters
     register(CORSFilter.class);
+    
+    //Exception mappers
+    register(io.hops.hopsworks.api.exception.mapper.EJBExceptionMapper.class);
  
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

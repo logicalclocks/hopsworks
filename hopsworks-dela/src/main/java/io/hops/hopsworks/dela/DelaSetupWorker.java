@@ -1,6 +1,7 @@
 package io.hops.hopsworks.dela;
 
 import com.google.gson.Gson;
+import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
@@ -27,24 +28,22 @@ import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.mail.Session;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 
 @Startup
 @Singleton
-public class DelaHeartbeatWorker {
+public class DelaSetupWorker {
 
-  private final static Logger LOG = Logger.getLogger(DelaHeartbeatWorker.class.getName());
+  private final static Logger LOG = Logger.getLogger(DelaSetupWorker.class.getName());
 
   @Resource
   TimerService timerService;
-
-  @Resource(lookup = "mail/BBCMail")
-  private Session mailSession;
-
   @EJB
   private Settings settings;
+  @EJB
+  private ClusterCertificateFacade clusterCertFacade;
   @EJB
   private DelaStateController delaStateCtrl;
   @EJB
@@ -57,7 +56,7 @@ public class DelaHeartbeatWorker {
   @PostConstruct
   private void init() {
     if (delaStateCtrl.delaEnabled()) {
-      state = State.SETTINGS;
+      state = State.SETUP;
       timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela settings check.");
       LOG.log(Level.INFO, "state:{0}", state);
     }
@@ -75,8 +74,8 @@ public class DelaHeartbeatWorker {
   private void timeout(Timer timer) {
     LOG.log(Level.INFO, "state timeout:{0}", new Object[]{state});
     switch (state) {
-      case SETTINGS:
-        settings(timer);
+      case SETUP:
+        setup(timer);
         break;
       case DELA_VERSION:
         delaVersion(timer);
@@ -99,18 +98,44 @@ public class DelaHeartbeatWorker {
   }
 
   //********************************************************************************************************************
-  private void settings(Timer timer) {
-    Optional<Triplet<KeyStore, KeyStore, String>> certSetup = CertificateHelper.initKeystore(settings);
-    if (certSetup.isPresent()) {
-      delaStateCtrl.delaCertsAvailable(certSetup.get().getValue0(), certSetup.get().getValue1(), 
-        certSetup.get().getValue2());
-      delaVersion(resetToDelaVersion(timer));
+  private void setup(Timer timer) {
+    Optional<String> masterPswd = settings.getHopsSiteClusterPswd();
+    if (!masterPswd.isPresent()) {
+      //TODO Alex - use the registration pswd hash once the admin UI is ready
+      String pswd = DigestUtils.sha256Hex(settings.getHopsSiteClusterPswdAux());
+      settings.setHopsSiteClusterPswd(pswd);
+      masterPswd = settings.getHopsSiteClusterPswd();
+    }
+    Optional<String> clusterName = settings.getHopsSiteClusterName();
+    
+    if (clusterName.isPresent()) {
+      Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
+        = CertificateHelper.loadKeystoreFromDB(masterPswd.get(), clusterName.get(), clusterCertFacade);
+      if (keystoreAux.isPresent()) {
+        setupComplete(keystoreAux.get(), timer);
+        return;
+      }
+    }
+    
+    Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
+      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade);
+    if (keystoreAux.isPresent()) {
+      setupComplete(keystoreAux.get(), timer);
     } else {
-      LOG.log(Level.WARNING, "dela certificates not ready. waiting...");
+      LOG.log(Level.WARNING, "dela setup not ready - certificates not ready");
     }
   }
 
+  private void setupComplete(Triplet<KeyStore, KeyStore, String> keystoreAux, Timer timer) {
+    KeyStore keystore = keystoreAux.getValue0();
+    KeyStore truststore = keystoreAux.getValue1();
+    String certPswd = keystoreAux.getValue2();
+    delaStateCtrl.hopssiteCertsAvailable(keystore, truststore, certPswd);
+    delaVersion(resetToDelaVersion(timer));
+  }
+
   private String delaVersion;
+
   private void delaVersion(Timer timer) {
     LOG.log(Level.INFO, "retrieving hops-site dela_version");
     try {
@@ -169,9 +194,7 @@ public class DelaHeartbeatWorker {
 
   private void hopsSiteRegister(Timer timer, String delaClusterAddress, AddressJSON delaTransferAddress)
     throws ThirdPartyException {
-
-    String publicCId = hopsSiteProxy.registerCluster(delaClusterAddress, new Gson().toJson(delaTransferAddress),
-      mailSession.getProperty("mail.from"));
+    String publicCId = hopsSiteProxy.registerCluster(delaClusterAddress, new Gson().toJson(delaTransferAddress));
     settings.setDELA_CLUSTER_ID(publicCId);
     heavyPing(resetToHeavyPing(timer));
   }
@@ -241,7 +264,7 @@ public class DelaHeartbeatWorker {
 
   private Timer resetToSettings(Timer timer) {
     timer.cancel();
-    state = State.SETTINGS;
+    state = State.SETUP;
     return timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela settings.");
   }
 
@@ -250,7 +273,7 @@ public class DelaHeartbeatWorker {
     state = State.DELA_VERSION;
     return timerService.createTimer(0, settings.getHOPSSITE_HEARTBEAT_RETRY(), "Timer for dela version.");
   }
-  
+
   private Timer resetToDelaContact(Timer timer) {
     timer.cancel();
     state = State.DELA_CONTACT;
@@ -312,7 +335,7 @@ public class DelaHeartbeatWorker {
 
   private static enum State {
 
-    SETTINGS,
+    SETUP,
     DELA_VERSION,
     DELA_CONTACT,
     REGISTER,

@@ -4,21 +4,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ClusterDTO {
-  private String firstName;
   private String email;
   private String chosenPassword;
   private String repeatedPassword;
+  private String commonName;
+  private String organizationName;
+  private String organizationalUnitName;
   private boolean tos;
 
   public ClusterDTO() {
-  }
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
   }
 
   public String getEmail() {
@@ -45,6 +39,30 @@ public class ClusterDTO {
     this.repeatedPassword = repeatedPassword;
   }
 
+  public String getCommonName() {
+    return commonName;
+  }
+
+  public void setCommonName(String commonName) {
+    this.commonName = commonName;
+  }
+
+  public String getOrganizationName() {
+    return organizationName;
+  }
+
+  public void setOrganizationName(String organizationName) {
+    this.organizationName = organizationName;
+  }
+
+  public String getOrganizationalUnitName() {
+    return organizationalUnitName;
+  }
+
+  public void setOrganizationalUnitName(String organizationalUnitName) {
+    this.organizationalUnitName = organizationalUnitName;
+  }
+
   public boolean isTos() {
     return tos;
   }
@@ -56,7 +74,8 @@ public class ClusterDTO {
   @Override
   public String toString() {
     return "ClusterDTO{" + "email=" + email + ", chosenPassword=" + chosenPassword + ", repeatedPassword=" +
-        repeatedPassword + ", tos=" + tos + '}';
+        repeatedPassword + ", commonName=" + commonName + ", organizationName=" + organizationName +
+        ", organizationalUnitName=" + organizationalUnitName + ", tos=" + tos + '}';
   }
   
 }

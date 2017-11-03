@@ -143,7 +143,7 @@ public class LocalhostServices {
     }
     return stdout;
   }
-
+  
   public static String deleteUserCertificates(String intermediateCaDir,
           String projectSpecificUsername) throws IOException {
 
@@ -236,5 +236,27 @@ public class LocalhostServices {
     }
     return stdout;
   }
-
+  
+  //Dela Certificates
+  public static void generateHopsSiteKeystore(Settings settings, String userKeyPwd) throws IOException {
+    List<String> commands = new ArrayList<>();
+    commands.add("/usr/bin/sudo");
+    commands.add(settings.getHopsSiteCaScript());
+    commands.add(userKeyPwd);
+    
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      // get the stdout and stderr from the command that was run
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result != 0) {
+        throw new IOException("stdout:" + stdout + "\nstderr:" + stderr);
+      }
+    } catch (InterruptedException e) {
+      throw new IOException("Interrupted. Could not generate the certificates: " + stderr);
+    }
+  }
+  //Dela Certificates end
 }

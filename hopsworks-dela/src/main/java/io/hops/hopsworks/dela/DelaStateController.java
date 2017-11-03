@@ -88,7 +88,7 @@ public class DelaStateController {
     hopssiteAvailable = true;
   }
   
-  public void delaCertsAvailable(KeyStore keystore, KeyStore truststore, String keystorePassword) {
+  public void hopssiteCertsAvailable(KeyStore keystore, KeyStore truststore, String keystorePassword) {
     delaCertsAvailable = true;
     this.keystore = keystore;
     this.truststore = truststore;
