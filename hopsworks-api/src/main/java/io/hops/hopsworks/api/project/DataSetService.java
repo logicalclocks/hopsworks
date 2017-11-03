@@ -889,7 +889,7 @@ public class DataSetService {
       } else {
         dfso = dfs.getDfsOps(username);// do it as project user
       }
-      success = datasetController.deleteDatasetDir(ds, fullPath, dfso);
+      success = dfso.rm(fullPath, true);
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + fullPath);
