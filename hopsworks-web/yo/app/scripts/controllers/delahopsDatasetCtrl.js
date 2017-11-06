@@ -2,8 +2,8 @@
 
 angular.module('hopsWorksApp')
         .controller('HopsDatasetCtrl', ['$location', '$anchorScroll', '$scope', '$rootScope',
-          '$showdown', 'md5', 'ModalService', 'HopssiteService', 'DelaService', 'ProjectService', 'growl',
-          function ($location, $anchorScroll, $scope, $rootScope, $showdown, md5, ModalService,
+          'md5', 'ModalService', 'HopssiteService', 'DelaService', 'ProjectService', 'growl',
+          function ($location, $anchorScroll, $scope, $rootScope, md5, ModalService,
                   HopssiteService, DelaService, ProjectService, growl) {
             var self = this;
             self.comments;

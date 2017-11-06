@@ -1,10 +1,10 @@
 angular.module('hopsWorksApp')
         .controller('ViewSearchResultCtrl', ['$scope', '$uibModalInstance',
           'RequestService', 'DataSetService', 'growl', 'response',
-          'result', 'projects', 'showdown', 'DelaProjectService', 'DelaService', 'HopssiteService',
+          'result', 'projects', 'DelaProjectService', 'DelaService', 'HopssiteService',
           'ProjectService', 'ModalService', '$routeParams', '$location', '$rootScope',
           function ($scope, $uibModalInstance, RequestService, DataSetService,
-                  growl, response, result, projects, showdown, DelaProjectService, DelaService, HopssiteService,
+                  growl, response, result, projects, DelaProjectService, DelaService, HopssiteService,
                   ProjectService, ModalService, $routeParams, $location, $rootScope) {
             var self = this;
             self.request = {'inodeId': "", 'projectId': "", 'message': ""};
