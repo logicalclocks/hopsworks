@@ -164,6 +164,7 @@ public class ProjectService {
       @Context HttpServletRequest req) throws AppException {
 
     ProjectDTO proj = projectController.getProjectByName(projectName);
+    
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         proj).build();
@@ -176,13 +177,28 @@ public class ProjectService {
       @PathParam("id") Integer id) throws AppException {
     MoreInfoDTO info = null;
     if (id != null) {
+      String errorMsg;
       switch (type){
         case "proj":
           Project proj = projectFacade.find(id);
+          if (proj == null) {
+            errorMsg = "Project with id <" + id
+                + "> could not be found";
+            logger.log(Level.WARNING, errorMsg);
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                errorMsg);
+          }
           info = new MoreInfoDTO(proj);
           break;
         case "ds":
           info = datasetInfo(id);
+          if (info == null) {
+            errorMsg = "Dataset with id <" + id
+              + "> could not be found";
+            logger.log(Level.WARNING, errorMsg);
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                errorMsg);
+          }
           break;
       }
     }
@@ -198,14 +214,29 @@ public class ProjectService {
       @PathParam("inodeId") Integer id) throws AppException {
     MoreInfoDTO info = null;
     if (id != null) {
+      String errorMsg;
       switch (type){
         case "proj":
           Project proj = projectFacade.find(id);
+          if (proj == null) {
+            errorMsg = "Project with id <" + id
+                + "> could not be found";
+            logger.log(Level.WARNING, errorMsg);
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "Project with id <" + id + "> could not be found");
+          }
           info = new MoreInfoDTO(proj);
           break;
         case "ds":
         case "inode":
           info = inodeInfo(id, projectId);
+          if (info == null) {
+            errorMsg = "Dataset/INode with id <" + id
+                + "> could not be found";
+            logger.log(Level.WARNING, errorMsg);
+            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                errorMsg);
+          }
           break;
       }
     }
