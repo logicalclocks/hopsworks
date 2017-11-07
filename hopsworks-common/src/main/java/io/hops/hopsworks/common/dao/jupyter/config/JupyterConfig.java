@@ -337,7 +337,8 @@ public class JupyterConfig {
       boolean isTensorFlowOnSpark = js.getMode().compareToIgnoreCase("distributedtensorflow") == 0;
       boolean isHorovod = js.getMode().compareToIgnoreCase("horovod") == 0;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
-      String extraJavaOptions = "-Dhopsworks.logstash.job.info=" + project.getName() + ",jupyter,notebook,?";
+      String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
+          + ",jupyter,notebook,?";
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
