@@ -43,8 +43,7 @@ import org.json.JSONObject;
 
 @Path("/agentservice")
 @Stateless
-@Api(value = "Certificate Signing",
-    description = "Sign certificates for hosts or clusters")
+@Api(value = "Certificate Signing", description = "Sign certificates for hosts or clusters")
 public class CertSigningService {
 
   final static Logger logger = Logger.getLogger(CertSigningService.class.
@@ -67,7 +66,7 @@ public class CertSigningService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response register(@Context HttpServletRequest req, String jsonString)
-      throws AppException {
+          throws AppException {
     logger.log(Level.INFO, "Request to sign host certificate: \n{0}", jsonString);
     JSONObject json = new JSONObject(jsonString);
     String pubAgentCert = "no certificate";
@@ -75,8 +74,9 @@ public class CertSigningService {
     if (json.has("csr")) {
       String csr = json.getString("csr");
       try {
+        
         pubAgentCert = PKIUtils.signCertificate(settings, csr, true);
-        logger.info("Signed host certificate.");
+        logger.info("Signed host certificate.");        
         caPubCert = Files.toString(new File(settings.getIntermediateCaDir()
             + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
       } catch (IOException | InterruptedException ex) {
@@ -87,7 +87,6 @@ public class CertSigningService {
     }
 
     if (json.has("host-id") && json.has("agent-password")) {
-
       String hostId = json.getString("host-id");
       Host host;
       try {

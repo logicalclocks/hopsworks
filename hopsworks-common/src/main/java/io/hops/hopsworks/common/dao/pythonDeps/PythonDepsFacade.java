@@ -64,6 +64,7 @@ public class PythonDepsFacade {
     LIST,
     INSTALL,
     UNINSTALL,
+    LIB_SYNC,
     UPGRADE;
 
     public static boolean isEnvOp(CondaOp arg) {

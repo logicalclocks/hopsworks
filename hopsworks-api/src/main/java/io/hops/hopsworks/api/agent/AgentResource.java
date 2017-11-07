@@ -48,12 +48,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
+import org.json.simple.JSONArray;
 
 @Path("/agentresource")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
 @Api(value = "Agent Service",
-        description = "Agent Service")
+    description = "Agent Service")
 public class AgentResource {
 
   @EJB
@@ -85,8 +86,8 @@ public class AgentResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response heartbeat(@Context SecurityContext sc,
-          @Context HttpServletRequest req,
-          @Context HttpHeaders httpHeaders, String jsonHb) {
+      @Context HttpServletRequest req,
+      @Context HttpHeaders httpHeaders, String jsonHb) {
     // Commands are sent back to the kagent as a response to this heartbeat.
     // Kagent then executes the commands received in order.
     List<CondaCommands> commands = new ArrayList<>();
@@ -94,7 +95,7 @@ public class AgentResource {
     try {
 
       InputStream stream = new ByteArrayInputStream(jsonHb.getBytes(
-              StandardCharsets.UTF_8));
+          StandardCharsets.UTF_8));
       JsonObject json = Json.createReader(stream).readObject();
       long agentTime = json.getJsonNumber("agent-time").longValue();
       String hostId = json.getString("host-id");
@@ -124,7 +125,7 @@ public class AgentResource {
         JsonObject s = roles.getJsonObject(i);
 
         if (!s.containsKey("cluster") || !s.containsKey("service") || !s.
-                containsKey("role")) {
+            containsKey("role")) {
           logger.warning("Badly formed JSON object describing a service.");
           continue;
         }
@@ -149,7 +150,7 @@ public class AgentResource {
         }
 
         String webPort = s.containsKey("web-port") ? s.getString("web-port")
-                : "0";
+            : "0";
         String pid = s.containsKey("pid") ? s.getString("pid") : "-1";
         try {
           role.setWebPort(Integer.parseInt(webPort));
@@ -160,7 +161,7 @@ public class AgentResource {
         }
         if (s.containsKey("status")) {
           if ((role.getStatus() == null || !role.getStatus().equals(Status.Started)) && Status.valueOf(s.getString(
-                  "status")).equals(Status.Started)) {
+              "status")).equals(Status.Started)) {
             role.setStartTime(agentTime);
           }
           role.setStatus(Status.valueOf(s.getString("status")));
@@ -191,20 +192,17 @@ public class AgentResource {
 
           String projName = entry.getString("proj");
           String op = entry.getString("op");
-          PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(
-                  op.toUpperCase());
+          PythonDepsFacade.CondaOp opType = PythonDepsFacade.CondaOp.valueOf(op.toUpperCase());
           String channelurl = entry.getString("channelurl");
           String lib = entry.containsKey("lib") ? entry.getString("lib") : "";
-          String version = entry.containsKey("version") ? entry.getString(
-                  "version") : "";
+          String version = entry.containsKey("version") ? entry.getString("version") : "";
           String arg = entry.containsKey("arg") ? entry.getString("arg") : "";
           String status = entry.getString("status");
-          PythonDepsFacade.CondaStatus agentStatus
-                  = PythonDepsFacade.CondaStatus.valueOf(status.toUpperCase());
+          PythonDepsFacade.CondaStatus agentStatus = PythonDepsFacade.CondaStatus.valueOf(status.toUpperCase());
           int commmandId = Integer.parseInt(entry.getString("id"));
 
           CondaCommands command = pythonDepsFacade.
-                  findCondaCommand(commmandId);
+              findCondaCommand(commmandId);
           // If the command object does not exist, then the project
           // has probably been removed. We needed to send a compensating action if
           // this action was successful.
@@ -212,12 +210,10 @@ public class AgentResource {
             if (agentStatus == PythonDepsFacade.CondaStatus.INSTALLED) {
               // remove command from the DB
               pythonDepsFacade.
-                      updateCondaComamandStatus(commmandId, agentStatus, arg,
-                              projName, opType, lib, version);
+                  updateCondaComamandStatus(commmandId, agentStatus, arg, projName, opType, lib, version);
             } else {
               pythonDepsFacade.
-                      updateCondaComamandStatus(commmandId, agentStatus, arg,
-                              projName, opType, lib, version);
+                  updateCondaComamandStatus(commmandId, agentStatus, arg, projName, opType, lib, version);
             }
           }
         }
@@ -226,6 +222,7 @@ public class AgentResource {
       List<CondaCommands> differenceList = new ArrayList<>();
 
       if (json.containsKey("block-report")) {
+        // Map<'project', 'installed-libs'>
         Map<String, BlockReport> mapReports = new HashMap<>();
 
         JsonObject envs = json.getJsonObject("block-report");
@@ -254,26 +251,24 @@ public class AgentResource {
         for (Project project : allProjs) {
 
           Collection<CondaCommands> allCcs = project.
-                  getCondaCommandsCollection();
+              getCondaCommandsCollection();
           logger.log(Level.INFO, "AnacondaReport: {0}", project.getName());
 
-          if ((!mapReports.containsKey(project.getName()))
-                  && (project.getName().compareToIgnoreCase(settings.
-                          getAnacondaEnv())) != 0) {
+          if ((!mapReports.containsKey(project.getName())) && (project.getName().compareToIgnoreCase(settings.
+              getAnacondaEnv())) != 0) {
             // project not a conda environment
             // check if a conda-command exists for creating the project and is valid.
 
             boolean noExistingCommandInDB = true;
             for (CondaCommands command : allCcs) {
               if (command.getOp() == CondaOp.CREATE && command.getProj().
-                      compareTo(project.getName()) == 0) {
+                  compareTo(project.getName()) == 0) {
                 noExistingCommandInDB = false; // command already exists
               }
             }
             if (noExistingCommandInDB) {
-              CondaCommands cc = new CondaCommands(host, settings.
-                      getSparkUser(), CondaOp.CREATE, CondaStatus.ONGOING,
-                      project, "", "", "", null, "");
+              CondaCommands cc = new CondaCommands(host, settings.getSparkUser(), CondaOp.CREATE, CondaStatus.ONGOING,
+                  project, "", "", "", null, "");
               // commandId == '-1' implies this is a block report command that
               // doesn't need to be acknowledged by the agent (no need to send as a
               // reponse a command-status). No need to persist this command to the DB either.
@@ -288,11 +283,11 @@ public class AgentResource {
               BlockReport.Lib blockLib = br.getLib(lib.getDependency());
               if (blockLib == null || blockLib.compareTo(lib) != 0) {
                 CondaCommands cc = new CondaCommands(host, settings.
-                        getAnacondaUser(),
-                        CondaOp.INSTALL, CondaStatus.ONGOING, project,
-                        lib.getDependency(),
-                        lib.getRepoUrl().getUrl(), lib.getVersion(),
-                        Date.from(Instant.now()), "");
+                    getAnacondaUser(),
+                    CondaOp.INSTALL, CondaStatus.ONGOING, project,
+                    lib.getDependency(),
+                    lib.getRepoUrl().getUrl(), lib.getVersion(),
+                    Date.from(Instant.now()), "");
                 cc.setId(-1);
                 differenceList.add(cc);
               }
@@ -305,16 +300,34 @@ public class AgentResource {
             // get removed from the conda env.
             for (BlockReport.Lib blockLib : br.getLibs()) {
               CondaCommands cc
-                      = new CondaCommands(host, settings.getAnacondaUser(),
-                              CondaOp.UNINSTALL, CondaStatus.ONGOING, project,
-                              blockLib.getLib(),
-                              blockLib.getChannelUrl(), blockLib.getVersion(),
-                              null, "");
+                  = new CondaCommands(host, settings.getAnacondaUser(),
+                      CondaOp.UNINSTALL, CondaStatus.ONGOING, project,
+                      blockLib.getLib(),
+                      blockLib.getChannelUrl(), blockLib.getVersion(),
+                      null, "");
               cc.setId(-1);
               differenceList.add(cc);
             }
             mapReports.remove(project.getName());
           }
+
+          // The LIB_SYNC command should come after all the environment conda_commands -
+          // the environments need to exist and be correct, before we can sync up their libraries.
+          // Kagent needs to execute these conda_commands in the correct order.
+          // Get all the 'libs' for this project. Send them down as a block-report
+          Collection<PythonDep> projectLibs = project.getPythonDepCollection();
+          JSONArray libs = new JSONArray();
+          for (PythonDep pd : projectLibs) {
+            libs.add("library : " + pd.getDependency() + "-" + pd.getVersion());
+          }
+          CondaCommands cc = new CondaCommands();
+          cc.setId(-1);
+          cc.setHostId(host);
+          cc.setUser(settings.getAnacondaUser());
+          cc.setProj(project.getName());
+          cc.setLib(libs.toJSONString());
+          cc.setOp(PythonDepsFacade.CondaOp.LIB_SYNC);
+          differenceList.add(cc);
         }
         // All the conda environments that weren't in the project list, remove them.
         for (BlockReport br : mapReports.values()) {
@@ -324,7 +337,7 @@ public class AgentResource {
             getProject(), br.getLibs().size()});
 
           if (br.getProject().compareToIgnoreCase(settings.getAnacondaEnv())
-                  == 0) {
+              == 0) {
             continue;
           }
           CondaCommands cc = new CondaCommands();
@@ -335,10 +348,11 @@ public class AgentResource {
           cc.setOp(PythonDepsFacade.CondaOp.REMOVE);
           differenceList.add(cc);
         }
+
       }
 
       Collection<CondaCommands> allCommands = host.
-              getCondaCommandsCollection();
+          getCondaCommandsCollection();
 
       Collection<CondaCommands> commandsToExec = new ArrayList<>();
       for (CondaCommands cc : allCommands) {
@@ -356,29 +370,26 @@ public class AgentResource {
     }
 
     GenericEntity<Collection<CondaCommands>> commandsForKagent
-            = new GenericEntity<Collection<CondaCommands>>(commands) {};
+        = new GenericEntity<Collection<CondaCommands>>(commands) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            commandsForKagent).build();
+        commandsForKagent).build();
   }
 
   @POST
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response alert(@Context SecurityContext sc,
-          @Context HttpServletRequest req,
-          @Context HttpHeaders httpHeaders, String jsonString
+      @Context HttpServletRequest req,
+      @Context HttpHeaders httpHeaders, String jsonString
   ) {
     // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
     try {
-      InputStream stream = new ByteArrayInputStream(jsonString.getBytes(
-              StandardCharsets.UTF_8));
+      InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
       JsonObject json = Json.createReader(stream).readObject();
       Alert alert = new Alert();
       alert.setAlertTime(new Date());
-      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")).
-              toString());
-      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).
-              toString());
+      alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")).toString());
+      alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
       alert.setAgentTime(json.getJsonNumber("Time").bigIntegerValue());
       alert.setMessage(json.getString("Message"));
       alert.setHostid(json.getString("host-id"));
@@ -396,8 +407,7 @@ public class AgentResource {
         alert.setDataSource(json.getString("DataSource"));
       }
       if (json.containsKey("CurrentValue")) {
-        alert.setCurrentValue(Boolean.
-                toString(json.getBoolean("CurrentValue")));
+        alert.setCurrentValue(Boolean.toString(json.getBoolean("CurrentValue")));
       }
       if (json.containsKey("WarningMin")) {
         alert.setWarningMin(json.getString("WarningMin"));
