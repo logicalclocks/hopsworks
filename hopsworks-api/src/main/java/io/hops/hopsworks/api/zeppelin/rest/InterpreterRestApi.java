@@ -274,12 +274,17 @@ public class InterpreterRestApi {
     if (certificateMaterializer.closedInterpreter(project.getId(),
         user.getUsername(), interpreterGroup)) {
       DistributedFileSystemOps dfso = null;
-      dfso = dfsService.getDfsOps();
       try {
-        HopsUtils
-            .cleanupCertificatesForUser(user.getUsername(),
-                project.getName(), settings.getHdfsTmpCertDir(), dfso,
-                certificateMaterializer, true);
+        if (interpreterGroup.equals(Settings.HOPSHIVE_INT_GROUP)) {
+          // In case we are stopping a HopsHive interpreter we just need to
+          // remove the certificates materialized on the local fs.
+          certificateMaterializer.removeCertificate(project.getName());
+        } else {
+          dfso = dfsService.getDfsOps();
+          HopsUtils
+              .cleanupCertificatesForProject(project.getName(),
+                  settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
+        }
       } catch (IOException ex) {
         logger.warn("Could not remove materialized certificates for user " +
             project.getOwner().getUsername(), ex);
@@ -541,6 +546,8 @@ public class InterpreterRestApi {
           }
         } else if (interpreterDTO.getName().equalsIgnoreCase("spark")) {
           restartSetting(null, interpreterDTO.getId());
+        } else if (interpreterDTO.getName().equalsIgnoreCase(Settings.HOPSHIVE_INT_NAME)) {
+          certificateMaterializer.removeCertificate(project.getName());
         }
       }
     }
@@ -580,6 +587,8 @@ public class InterpreterRestApi {
               stopSession(interpreterDTO.getId(), session.getId());
             }
           }
+        } else if (interpreterDTO.getName().equalsIgnoreCase(Settings.HOPSHIVE_INT_NAME)) {
+          certificateMaterializer.removeCertificate(project.getName());
         }
       }
     }

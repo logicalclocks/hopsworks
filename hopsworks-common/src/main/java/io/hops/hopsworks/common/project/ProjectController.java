@@ -4,6 +4,7 @@ import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,9 +17,10 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ServiceCerts;
+import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -67,6 +69,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -165,6 +168,8 @@ public class ProjectController {
   private ExecutionFacade execFacade;
   @EJB
   private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private HiveController hiveController;
 
   @EJB
   private HdfsUsersController hdfsUsersController;
@@ -736,6 +741,9 @@ public class ProjectController {
         toPersist = addServiceDataset(project, user,
             Settings.ServiceDataset.JUPYTER, dfso, udfso);
         break;
+      case HIVE:
+        toPersist = addServiceHive(project, user, dfso);
+        break;
       default:
         toPersist = true;
     }
@@ -783,6 +791,17 @@ public class ProjectController {
       return false;
     }
 
+    return true;
+  }
+
+  private boolean addServiceHive(Project project, Users user,
+        DistributedFileSystemOps dfso) {
+    try {
+      hiveController.createDatabase(project, user, dfso);
+    } catch (SQLException | IOException ex) {
+      LOGGER.log(Level.SEVERE, "Could not create Hive db:", ex);
+      return false;
+    }
     return true;
   }
 
@@ -1119,6 +1138,9 @@ public class ProjectController {
       //change owner for files in shared datasets
       fixSharedDatasets(project, dfso);
 
+      //Delete Hive database - will automatically cleanup all the Hive's metadata
+      hiveController.dropDatabase(project, dfso);
+
       //Delete elasticsearch template for this project
       removeElasticsearch(project.getName());
 
@@ -1360,15 +1382,9 @@ public class ProjectController {
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    String yarnQuota = getYarnQuota(project.getName());
-    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(inode.getId());
 
-    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
-    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
-    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
-    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
-    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
-        hdfsNsQuota, hdfsNsCount);
+    QuotasDTO quotas = getQuotasInternal(project);
+
     return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas);
   }
 
@@ -1467,22 +1483,44 @@ public class ProjectController {
 
   /**
    *
-   * @param id
+   * @param projectId
    * @return
    * @throws AppException
    */
-  public QuotasDTO getQuotas(Integer id) throws AppException {
-    ProjectDTO proj = getProjectByID(id);
-    String yarnQuota = getYarnQuota(proj.getProjectName());
-    HdfsInodeAttributes inodeAttrs = getHdfsQuotas(proj.getInodeid());
+  public QuotasDTO getQuotas(Integer projectId) throws AppException {
+    Project project = projectFacade.find(projectId);
+    return getQuotasInternal(project);
+  }
 
-    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
-    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
-    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
-    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
-    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
-        hdfsNsQuota, hdfsNsCount);
-    return quotas;
+  private QuotasDTO getQuotasInternal(Project project) throws AppException {
+    String yarnQuota = getYarnQuota(project.getName());
+
+    HdfsInodeAttributes projectInodeAttrs = getHdfsQuotas(project.getInode().getId());
+    Long hdfsQuota = projectInodeAttrs.getDsquota().longValue();
+    Long hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
+    Long hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
+    Long hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+
+    // If the Hive service is enabled, get the quota information for the db directory
+    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
+      List<Dataset> datasets = (List<Dataset>)project.getDatasetCollection();
+      for (Dataset ds : datasets) {
+        if (ds.getType() == DatasetType.HIVEDB) {
+          HdfsInodeAttributes dbInodeAttrs = getHdfsQuotas(ds.getInodeId());
+
+          Long dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
+          Long dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+          Long dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
+          Long dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
+
+          return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
+              dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
+        }
+      }
+    }
+
+    return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
+        hdfsNsQuota, hdfsNsCount, (long)0, (long)0, (long)0, (long)0);
   }
 
   /**
@@ -2094,18 +2132,20 @@ public class ProjectController {
     return respDTO;
   }
 
-  public CertPwDTO getProjectWideCertPw(Users user, String projectName,
+  public CertPwDTO getProjectWideCertPw(Users user, String projectGenericUsername,
       String keyStore) throws Exception {
-    List<ServiceCerts> serviceCerts = userCertsFacade.findServiceCertsByName(projectName);
-    if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
-      throw new Exception("Found more than one or none project-wide " + "certificates for project " + projectName);
+    ProjectGenericUserCerts projectGenericUserCerts =
+        userCertsFacade.findProjectGenericUserCerts(projectGenericUsername);
+    if (projectGenericUserCerts == null) {
+      throw new Exception("Found more than one or none project-wide " +
+          "certificates for project " + projectGenericUsername);
     }
 
     String keypw = HopsUtils.decrypt(user.getPassword(), settings
-        .getHopsworksMasterPasswordSsl(), serviceCerts.get(0)
+        .getHopsworksMasterPasswordSsl(), projectGenericUserCerts
             .getCertificatePassword());
     validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
-        projectName, false);
+        projectGenericUsername, false);
 
     CertPwDTO respDTO = new CertPwDTO();
     respDTO.setKeyPw(keypw);
@@ -2141,13 +2181,13 @@ public class ProjectController {
     } else {
       // In that case projectUser is the name of the Project, see Spark
       // interpreter in Zeppelin
-      List<ServiceCerts> serviceCerts = userCertsFacade
-          .findServiceCertsByName(projectUser);
-      if (serviceCerts.isEmpty() || serviceCerts.size() > 1) {
+      ProjectGenericUserCerts projectGenericUserCerts = userCertsFacade
+          .findProjectGenericUserCerts(projectUser);
+      if (projectGenericUserCerts == null) {
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
             "Could not find exactly one certificate for " + projectUser);
       }
-      userKey = serviceCerts.get(0).getServiceKey();
+      userKey = projectGenericUserCerts.getKey();
     }
   
     if (!Arrays.equals(userKey, keyStore)) {

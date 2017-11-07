@@ -207,11 +207,11 @@ public class HdfsUsersController {
       hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
     }
     /**
-     * ****** add project name as a user ********
+     * ****** add project generic user as a user ********
      */
-    hdfsUser = hdfsUsersFacade.findByName(project.getName());
+    hdfsUser = hdfsUsersFacade.findByName(project.getProjectGenericUser());
     if (hdfsUser == null) {
-      hdfsUser = new HdfsUsers(project.getName());
+      hdfsUser = new HdfsUsers(project.getProjectGenericUser());
       hdfsUsersFacade.persist(hdfsUser);
     }
     if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
@@ -303,13 +303,13 @@ public class HdfsUsersController {
       hdfsGroup.setHdfsUsersCollection(new ArrayList<>());
     }
     String hdfsUsername;
-    HdfsUsers hdfsUser;
 
     List<String> hdfsUsersToFlush = new ArrayList<>();
 
-    hdfsUser = hdfsUsersFacade.findByName(project.getName());
+    HdfsUsers hdfsUser = hdfsUsersFacade.
+        findByName(project.getProjectGenericUser());
     if (hdfsUser == null) {
-      hdfsUser = new HdfsUsers(project.getName());
+      hdfsUser = new HdfsUsers(project.getProjectGenericUser());
       hdfsUsersFacade.persist(hdfsUser);
     }
     if (!hdfsGroup.getHdfsUsersCollection().contains(hdfsUser)) {
@@ -525,11 +525,12 @@ public class HdfsUsersController {
     Collection<ProjectTeam> projectTeam = projectTeamFacade.
         findMembersByProject(project);
     String hdfsUsername;
-    HdfsUsers hdfsUser;
-    hdfsUser = hdfsUsersFacade.findByName(project.getName());
+    HdfsUsers hdfsUser = hdfsUsersFacade.
+        findByName(project.getProjectGenericUser());
     if (hdfsUser != null) {
       hdfsGroup.getHdfsUsersCollection().remove(hdfsUser);
     }
+
     //every member of the project the ds is going to be unshard from is
     //removed from the dataset group.
     for (ProjectTeam member : projectTeam) {
@@ -681,7 +682,7 @@ public class HdfsUsersController {
   /**
    * Removes HDFS group and flush all cache related data in all NameNodes
    *
-   * @param user
+   * @param group
    * @throws IOException
    */
   private void removeHdfsGroup(HdfsGroups group) throws IOException {

@@ -360,7 +360,7 @@ public class DataSetService {
     newDS.setShared(true);
 
     // if the dataset is not requested or is requested by a data scientist
-    // set status to pending. 
+    // set status to pending.
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(proj, ds);
     if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(
             AllowedRoles.DATA_SCIENTIST)) {
@@ -452,6 +452,7 @@ public class DataSetService {
           AccessControlException {
 
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
+
     JsonResponse json = new JsonResponse();
 
     DistributedFileSystemOps dfso = null;
@@ -606,8 +607,7 @@ public class DataSetService {
     try {
       datasetController.createDataset(user, project, dataSet.getName(),
           dataSet.getDescription(), dataSet.getTemplate(), dataSet.isSearchable(),
-          false, dfso); // both are dfso to create it as root user
-
+          false, dfso);
       //Generate README.md for the dataset if the user requested it
       if (dataSet.isGenerateReadme()) {
         //Persist README.md to hdfs
@@ -665,6 +665,7 @@ public class DataSetService {
       datasetController.createSubDirectory(this.project, fullPath,
           dataSetName.getTemplate(), dataSetName.getDescription(),
           dataSetName.isSearchable(), udfso);
+
     } catch (AccessControlException ex) {
       throw new AccessControlException(
               "Permission denied: You can not create a folder in "
@@ -943,19 +944,25 @@ public class DataSetService {
     DsPath destDsPath = pathValidator.validatePath(this.project, dto.getDestPath());
 
     Dataset sourceDataset = sourceDsPath.getDs();
+
+    // The destination dataset project is already the correct one, as the path is given
+    // (and parsed)
     Dataset destDataset = destDsPath.getDs();
 
     if (!datasetController.getOwningProject(sourceDataset).equals(
-        datasetController.getOwningProject(destDataset))) {
+        destDataset.getProject())) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Cannot copy file/folder from another project.");
     }
 
+    if (destDataset.isPublicDs()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Can not move to a public dataset.");
+    }
+
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
     org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
-    
-    checkIfDestinationPublic(destPath);
-    
+
     DistributedFileSystemOps udfso = null;
     //We need super-user to change owner 
     DistributedFileSystemOps dfso = null;
@@ -1041,19 +1048,24 @@ public class DataSetService {
     DsPath destDsPath = pathValidator.validatePath(this.project, dto.getDestPath());
 
     Dataset sourceDataset = sourceDsPath.getDs();
+    // The destination dataset project is already the correct one, as the
+    // full path is given in the MoveDTO object
     Dataset destDataset = destDsPath.getDs();
 
     if (!datasetController.getOwningProject(sourceDataset).equals(
-        datasetController.getOwningProject(destDataset))) {
+        destDataset.getProject())) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Cannot copy file/folder from another project.");
+    }
+
+    if (destDataset.isPublicDs()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Can not copy to a public dataset.");
     }
 
     org.apache.hadoop.fs.Path sourcePath = sourceDsPath.getFullPath();
     org.apache.hadoop.fs.Path destPath = destDsPath.getFullPath();
 
-    checkIfDestinationPublic(destPath);
-    
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
@@ -1429,22 +1441,4 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-
-  private void checkIfDestinationPublic(org.apache.hadoop.fs.Path dest) throws AppException {
-    String[] pathParts = dest.toString().split("/");
-    if (pathParts.length < 4) {
-      throw new IllegalArgumentException("Destination path too short.");
-    }
-    String parentDs = pathParts[3];
-    String proj = pathParts[2];
-    Project p = projectFacade.findByName(proj);
-    if (p == null) {
-      throw new IllegalArgumentException("Project not found.");
-    }
-    Dataset ds = datasetFacade.findByNameAndProjectId(p, parentDs);
-    if (ds != null && ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        "Can not copy/move to a public dataset.");
-    }
-  } 
 }

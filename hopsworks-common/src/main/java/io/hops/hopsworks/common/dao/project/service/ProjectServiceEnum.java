@@ -11,7 +11,8 @@ public enum ProjectServiceEnum {
   //  CHARON("Charon"),
   DELA("Dela"),
   JUPYTER("Jupyter"),
-  JOBS("Jobs");
+  JOBS("Jobs"),
+  HIVE("Hive");
 
   private final String readable;
 

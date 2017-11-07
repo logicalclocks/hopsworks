@@ -236,6 +236,11 @@
       <to-view-id>/security/protected/admin/jupyterNotebooks.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>llap</from-outcome>
+      <to-view-id>/security/protected/admin/llapManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
 
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>

@@ -137,6 +137,23 @@
         <servlet-name>HDFSUIProxyServlet</servlet-name>
         <url-pattern>/hdfsui</url-pattern>
     </servlet-mapping>
+    <!-- LLAP monitor proxy servlet -->
+    <servlet>
+        <servlet-name>LlapMonitorProxyServlet</servlet-name>
+        <servlet-class>io.hops.hopsworks.api.admin.LlapMonitorProxyServlet</servlet-class>
+        <init-param>
+            <param-name>targetUri</param-name>
+            <param-value>http://{host}:15002/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>log</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LlapMonitorProxyServlet</servlet-name>
+        <url-pattern>/llapmonitor/*</url-pattern>
+    </servlet-mapping>
     <!-- tensorboard proxy servlet -->
     <servlet>
         <servlet-name>TensorboardProxyServlet</servlet-name>

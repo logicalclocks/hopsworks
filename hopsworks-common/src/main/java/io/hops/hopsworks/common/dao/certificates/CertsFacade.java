@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.certificates;
 
 import com.google.common.io.ByteStreams;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -14,6 +15,7 @@ import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -90,32 +92,21 @@ public class CertsFacade {
     em.persist(uc);
   }
 
-  public List<ServiceCerts> findAllServiceCerts() {
-    TypedQuery<ServiceCerts> query = em.createNamedQuery(
-        "ServiceCerts.findAll", ServiceCerts.class);
+  public ProjectGenericUserCerts findProjectGenericUserCerts(String projectGenericUsername) {
+    TypedQuery<ProjectGenericUserCerts> query = em.createNamedQuery(
+        "ProjectGenericUserCerts.findByProjectGenericUsername",
+        ProjectGenericUserCerts.class);
+    query.setParameter("projectGenericUsername", projectGenericUsername);
+
     try {
-      List<ServiceCerts> res = query.getResultList();
-      return res;
+      return query.getSingleResult();
     } catch (EntityNotFoundException e) {
       Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
           e);
+    } catch ( NoResultException e ) {
+      // Safe to ignore
     }
-    return new ArrayList<>();
-  }
-
-  public List<ServiceCerts> findServiceCertsByName(String service) {
-    TypedQuery<ServiceCerts> query = em.createNamedQuery(
-        "ServiceCerts.findByServiceName", ServiceCerts.class);
-    query.setParameter("serviceName", service);
-
-    try {
-      List<ServiceCerts> res = query.getResultList();
-      return res;
-    } catch (EntityNotFoundException e) {
-      Logger.getLogger(CertsFacade.class.getName()).log(Level.SEVERE, null,
-          e);
-    }
-    return new ArrayList<>();
+    return null;
   }
 
   public void putUserCerts(String projectname, String username, String userKeyPwd)
@@ -141,18 +132,20 @@ public class CertsFacade {
     FileUtils.deleteQuietly(tFile);
   }
 
-  public void putServiceCerts(String service, String certificatePassword) {
-    File kFile = new File("/tmp/" + service + "__kstore.jks");
-    File tFile = new File("/tmp/" + service + "__tstore.jks");
+  public void putProjectGenericUserCerts(String projectGenericUsername,
+    String certificatePassword) {
+
+    File kFile = new File("/tmp/" + projectGenericUsername + "__kstore.jks");
+    File tFile = new File("/tmp/" + projectGenericUsername + "__tstore.jks");
     try (FileInputStream kfin = new FileInputStream(kFile);
             FileInputStream tfin = new FileInputStream(tFile)) {
 
       byte[] kStoreBlob = ByteStreams.toByteArray(kfin);
       byte[] tStoreBlob = ByteStreams.toByteArray(tfin);
 
-      ServiceCerts sc = new ServiceCerts(service);
-      sc.setServiceKey(kStoreBlob);
-      sc.setServiceCert(tStoreBlob);
+      ProjectGenericUserCerts sc = new ProjectGenericUserCerts(projectGenericUsername);
+      sc.setKey(kStoreBlob);
+      sc.setCert(tStoreBlob);
       sc.setCertificatePassword(certificatePassword);
       em.persist(sc);
       em.flush();
@@ -178,7 +171,9 @@ public class CertsFacade {
   }
 
   public <T> void remove(T uc) {
-    em.remove(uc);
+    if (uc != null) {
+      em.remove(uc);
+    }
   }
 
   public void removeUserProjectCerts(String projectname, String username) {
@@ -203,16 +198,12 @@ public class CertsFacade {
     List<UserCerts> items = findUserCertsByProjectId(projectname);
     removeCerts(items);
     
-    String[] tokens = projectname.split("__");
-    if (tokens.length == 2) {
-      removeProjectGenericCertificates(tokens[0]);
-    }
+    removeProjectGenericCertificates(projectname +
+          Settings.PROJECT_GENERIC_USER_SUFFIX);
   }
   
-  public void removeProjectGenericCertificates(String projectName) {
-    List<ServiceCerts> srvCerts = findServiceCertsByName(projectName);
-    
-    removeCerts(srvCerts);
+  public void removeProjectGenericCertificates(String projectGenericUser) {
+    remove(findProjectGenericUserCerts(projectGenericUser));
   }
   
   private <T> void removeCerts(List<T> items) {

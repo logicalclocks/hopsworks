@@ -22,7 +22,7 @@
     <class>io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota</class>
     <class>io.hops.hopsworks.common.dao.util.Variables</class>
     <class>io.hops.hopsworks.common.dao.alert.Alert</class>
-    <class>io.hops.hopsworks.common.dao.certificates.ServiceCerts</class>
+    <class>io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts</class>
     <class>io.hops.hopsworks.common.dao.certificates.UserCerts</class>
     <class>io.hops.hopsworks.common.dao.command.Command</class>
     <class>io.hops.hopsworks.common.dao.dataset.Dataset</class>

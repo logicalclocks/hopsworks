@@ -73,31 +73,59 @@
                           </div>
 
                           <div class="col-md-5">
-                            <label class="text-muted">Status</label>
-                            <div class="row" style="margin-left:15px; margin-bottom:0px">
-                              <fieldset ng-if="projectCtrl.hdfsQuota() != null">
+                            <label class="control-label">Status</label>
+                            <fieldset>
+                                <label class="text-muted">Datasets</label>
+                                <div class="row" style="margin-left:15px; margin-bottom:0px">
+                                  <fieldset ng-if="projectCtrl.hdfsQuota() != null">
+                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                      {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
+                                    </span>
+                                  </fieldset>
+                                </div>
+                                <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                                  <fieldset ng-if="projectCtrl.hdfsNsCount() != null">
+                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() === -1">
+                                      {{projectCtrl.hdfsNsCount()}} files
+                                    </span>
+                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !== -1">
+                                      {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
+                                    </span>
+                                  </fieldset>
+                                </div>
+                            </fieldset>
+                            <fieldset ng-if="projectCtrl.isServiceEnabled('HIVE')">
+                              <label class="text-muted">Hive Database</label>
+
+                              <div class="row" style="margin-left:15px; margin-bottom:0px">
+                              <fieldset ng-if="projectCtrl.hiveHdfsQuota() != null">
                                 <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                                  {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
-                                </span>          
+                                  {{projectCtrl.hiveHdfsUsage()}} of {{projectCtrl.hiveHdfsQuota()}} used
+                                </span>
                               </fieldset>
-                            </div>
-                            <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                              <fieldset ng-if="projectCtrl.hdfsNsCount() != null">
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() === -1">
-                                  {{projectCtrl.hdfsNsCount()}} files 
-                                </span>  
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !== -1">
-                                  {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
-                                </span>  
-                              </fieldset>
-                            </div>
-                            <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:10px">
-                              <fieldset ng-if="projectCtrl.yarnQuota() != null">
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
-                                  {{projectCtrl.yarnQuota()}} CPU hours
-                                </span>          
-                              </fieldset>    
-                            </div>
+                              </div>
+                              <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                                <fieldset ng-if="projectCtrl.hiveHdfsNsCount() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hiveHdfsNsQuota() === -1">
+                                    {{projectCtrl.hiveHdfsNsCount()}} files
+                                  </span>
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hiveHdfsNsQuota() !== -1">
+                                    {{projectCtrl.hiveHdfsNsCount()}} files of {{projectCtrl.hiveHdfsNsQuota()}} used
+                                  </span>
+                                </fieldset>
+                              </div>
+
+                            </fieldset>
+                            <fieldset>
+                                <label class="text-muted">CPU</label>
+                                <div class="row" style="margin-left:15px; margin-bottom:10px">
+                                  <fieldset ng-if="projectCtrl.yarnQuota() != null">
+                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
+                                      {{projectCtrl.yarnQuota()}} CPU hours
+                                    </span>
+                                  </fieldset>
+                                </div>
+                            </fieldset>
 
                             <fieldset>
                               <label class="text-muted" ng-show="projectCtrl.allServicesSelected()">Services</label>

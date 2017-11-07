@@ -138,7 +138,7 @@ public class NotebookServer {
       if (impl.getConf() == null) {
         impl.removeConnectedSockets(conn, notebookServerImplFactory);
         LOG.log(Level.INFO, "Could not create Zeppelin config for user: {0}, project: {1}", new Object[]{this.sender,
-          this.project.getName()});
+          project.getName()});
         return;
       }
       addUserConnection(this.hdfsUsername, conn);
@@ -190,7 +190,7 @@ public class NotebookServer {
         throw new Exception("Anonymous access not allowed ");
       }
 
-      messagereceived.principal = this.project.getName();
+      messagereceived.principal = this.project.getProjectGenericUser();
       HashSet<String> userAndRoles = new HashSet<>();
       userAndRoles.add(messagereceived.principal);
       if (!messagereceived.roles.equals("")) {

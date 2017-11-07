@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <h:head>
+        <title><ui:insert name="title">LLAP Management</ui:insert></title>
+            <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/component.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+        <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=/hopsworks/#!/login"/>
+    </h:head>
+
+
+    <h:body id="entirePage" style="height: 100%; width: 100%; position: absolute"
+            onload="waitForCluster();">
+
+        <p:growl id="messages" showDetail="true" sticky="true" />
+
+        <pe:blockUI target="entirePage" widgetVar="blockUIWidget">
+            <h:panelGrid columns="2">
+                <h:graphicImage library="images" name="ajax-loader1.gif"
+                    style="margin-right: 12px; vertical-align: middle;"/>
+                <h:outputText value="Please wait..." style="white-space: nowrap;"/>
+            </h:panelGrid>
+        </pe:blockUI>
+
+        <ui:insert name="titleBar" style="width=100%">
+            <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+        </ui:insert>
+
+        <h:form>
+            <p:remoteCommand name="waitForCluster"
+                             actionListener="#{LlapBean.waitForCluster()}"
+                             onstart="PF('blockUIWidget').block()"
+                             oncomplete="unblockOrReload(xhr, status, args)"
+                             />
+        </h:form>
+
+        <script type="text/javascript">
+            function unblockOrReload(xhr, status, args) {
+                if (args.alreadyUp === "true"){
+                    PF('blockUIWidget').unblock();
+                } else if (args.alreadyUp === "timeout") {
+                    PF('blockUIWidget').unblock();
+                    PF('messages').renderMessage({"summary":"Timeout",
+                        "detail":"Timeout starting the cluster, check the logs for more information.",
+                        "severity":"error"})
+                } else {
+                    location.reload(true);
+                }
+            }
+        </script>
+
+        <h:form style="width: 500px; margin: auto" >
+            <h:panelGrid columns="2">
+                <f:facet name="header">
+                    <p:column colspan="3">Settings</p:column>
+                </f:facet>
+                <p:column colspan="2">Number of daemons</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="nInstances" min="0" value="#{LlapBean.nInstances}" />
+                </p:column>
+
+                <p:column colspan="2">Executor Memory [mb]</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="execMemory" min="0" value="#{LlapBean.execMemory}"/>
+                </p:column>
+
+                <p:column colspan="2">Cache Memory [mb]</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="cacheMemory" min="0" value="#{LlapBean.cacheMemory}"/>
+                </p:column>
+
+                <p:column colspan="2">Number of Executors per daemon</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="nExecutors" min="0" value="#{LlapBean.nExecutors}"/>
+                </p:column>
+
+                <p:column colspan="2">Number of IO Threads per daemon</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="nIOThreads" min="0" value="#{LlapBean.nIOThreads}"/>
+                </p:column>
+
+                <p:row>
+                    <p:commandButton type="submit"
+                                     actionListener="#{LlapBean.startLLAP()}"
+                                     disabled="#{LlapBean.isClusterUp()}"
+                                     onstart="PF('blockUIWidget').block()"
+                                     oncomplete="location.reload(true)"
+                                     value="Start LLAP cluster" />
+
+                    <p:commandButton type="submit"
+                                     actionListener="#{LlapBean.stopLLAP()}"
+                                     disabled="#{!LlapBean.isClusterUp()}"
+                                     onstart="PF('blockUIWidget').block()"
+                                     oncomplete="location.reload(true)"
+                                     value="Stop LLAP cluster"/>
+                </p:row>
+            </h:panelGrid>
+        </h:form>
+
+
+        <c:if test="#{LlapBean.isClusterUp()}">
+            <h:outputText value="LLAP Monitoring" style="font-weight: bold;"/>
+            <br/>
+            <br/>
+
+            <c:if test="#{!LlapBean.areContainersRunning()}">
+                <h:outputText value="The LLAP cluster is up, but the containers are not yet running." />
+                <h:outputText value="Please wait a few seconds and reload the page." />
+            </c:if>
+            <c:if test="#{LlapBean.areContainersRunning()}">
+                <h:outputText value="Select the LLAP daemon:" />
+
+                <h:form>
+                    <h:selectOneMenu id="llapHosts" value="#{LlapBean.selectedHost}" >
+                        <f:selectItems value="#{LlapBean.llapHosts}"/>
+                        <f:ajax render=":monitor-holder" />
+                    </h:selectOneMenu>
+                </h:form>
+
+                <h:panelGroup id="monitor-holder" layout="block">
+                    <iframe src="/hopsworks-api/llapmonitor/#{LlapBean.selectedHost}/" width="98%" height="1100px" style="text-align: center;" />
+                </h:panelGroup>
+            </c:if>
+        </c:if>
+    </h:body>
+</html>

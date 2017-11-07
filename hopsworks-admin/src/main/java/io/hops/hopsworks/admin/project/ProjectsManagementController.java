@@ -17,10 +17,15 @@
  */
 package io.hops.hopsworks.admin.project;
 
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
+import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -57,6 +62,12 @@ public class ProjectsManagementController {
   private PythonDepsFacade pythonDepsFacade;
 
   @EJB
+  private ProjectServiceFacade projectServiceFacade;
+
+  @EJB
+  private HiveController hiveController;
+
+  @EJB
   private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
 
   @EJB
@@ -87,6 +98,27 @@ public class ProjectsManagementController {
   }
 
   /**
+   * Get the Hdfs quota information for the HiveDB directory of the project
+   * @param projectName
+   * @return
+   * @throws AppException
+   */
+  public HdfsInodeAttributes getHiveHDFSQuotas(String projectName) throws AppException {
+    Project project = projectFacade.findByName(projectName);
+
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
+      List<Dataset> datasets = (List<Dataset>)project.getDatasetCollection();
+      for (Dataset ds : datasets) {
+        if (ds.getType() == DatasetType.HIVEDB) {
+          return projectController.getHdfsQuotas(ds.getInodeId());
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
    *
    * @param projectname
    * @param quotaInMBs
@@ -102,6 +134,25 @@ public class ProjectsManagementController {
       projectController.setHdfsSpaceQuotaInMBs(projectname, quotaInMBs, dfso);
     } catch (Exception e) {
       // Do something
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+
+    }
+  }
+
+  /**
+   * Set the HopsFs quota for the Hive Database
+   * @param projectName
+   * @param quotaInMBs: size of quota for project subtree in HDFS in MBs
+   * @throws IOException
+   */
+  public void setHiveHdfsQuota(String projectName, long quotaInMBs) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(projectName), quotaInMBs);
     } finally {
       if (dfso != null) {
         dfso.close();

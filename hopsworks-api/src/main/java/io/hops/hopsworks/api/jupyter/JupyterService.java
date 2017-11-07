@@ -159,7 +159,6 @@ public class JupyterService {
   /**
    * Get livy session Yarn AppId
    *
-   * @param sessionId
    * @return
    * @throws AppException
    */
@@ -277,13 +276,13 @@ public class JupyterService {
         HopsUtils.materializeCertificatesForUser(project.getName(),
             project_user[1], settings.getHopsworksTmpCertDir(), settings
             .getHdfsTmpCertDir(), dfso, certificateMaterializer,
-            settings, false);
+            settings);
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null, ex);
         try {
           HopsUtils.cleanupCertificatesForUser(project_user[1], project
               .getName(), settings.getHdfsTmpCertDir(), dfso,
-              certificateMaterializer, false);
+              certificateMaterializer);
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
         }
@@ -375,7 +374,7 @@ public class JupyterService {
     try {
       HopsUtils.cleanupCertificatesForUser(project_user[1], project
           .getName(), settings.getHdfsTmpCertDir(), dfso,
-          certificateMaterializer, false);
+          certificateMaterializer);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {

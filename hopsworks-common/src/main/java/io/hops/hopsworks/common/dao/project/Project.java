@@ -25,6 +25,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import io.hops.hopsworks.common.util.Settings;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.service.ProjectServices;
@@ -407,7 +409,9 @@ public class Project implements Serializable {
     this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
   
-  
+  public String getProjectGenericUser() {
+    return name + Settings.PROJECT_GENERIC_USER_SUFFIX;
+  }
   
   @Override
   public String toString() {

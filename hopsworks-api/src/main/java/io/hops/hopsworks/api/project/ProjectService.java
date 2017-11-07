@@ -15,7 +15,6 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -451,6 +450,9 @@ public class ProjectService {
             case JUPYTER:
               error = ResponseMessages.JUPYTER_ADD_FAILURE + Settings.ServiceDataset.JUPYTER.getName();
               break;
+            case HIVE:
+              error = ResponseMessages.HIVE_ADD_FAILURE;
+              break;
             default:
               error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
           }
@@ -711,18 +713,7 @@ public class ProjectService {
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
 
-    ProjectDTO proj = projectController.getProjectByID(id);
-    String yarnQuota = projectController.getYarnQuota(proj.getProjectName());
-    HdfsInodeAttributes inodeAttrs = projectController.getHdfsQuotas(proj.
-        getInodeid());
-
-    Long hdfsQuota = inodeAttrs.getDsquota().longValue();
-    Long hdfsUsage = inodeAttrs.getDiskspace().longValue();
-    Long hdfsNsQuota = inodeAttrs.getNsquota().longValue();
-    Long hdfsNsCount = inodeAttrs.getNscount().longValue();
-    QuotasDTO quotas = new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
-        hdfsNsQuota, hdfsNsCount);
-
+    QuotasDTO quotas = projectController.getQuotas(id);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         quotas).build();
   }

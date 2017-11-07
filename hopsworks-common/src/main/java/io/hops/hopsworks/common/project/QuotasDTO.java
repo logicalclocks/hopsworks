@@ -9,6 +9,10 @@ public class QuotasDTO {
   private Long hdfsQuotaInBytes;
   private Long hdfsNsCount;
   private Long hdfsNsQuota;
+  private Long hiveHdfsUsageInBytes;
+  private Long hiveHdfsQuotaInBytes;
+  private Long hiveHdfsNsCount;
+  private Long hiveHdfsNsQuota;
   private String yarnQuotaInSecs;
 
   public QuotasDTO() {
@@ -16,12 +20,18 @@ public class QuotasDTO {
 
   public QuotasDTO(String yarnQuotaInMins,
       Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
-      Long hdfsNsQuota, Long hdfsNsCount) {
+      Long hdfsNsQuota, Long hdfsNsCount,
+      Long hiveHdfsQuotaInBytes, Long hiveHdfsUsageInBytes,
+      Long hiveHdfsNsQuota, Long hiveHdfsNsCount) {
     this.yarnQuotaInSecs = yarnQuotaInMins;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
     this.hdfsUsageInBytes = hdfsUsageInBytes;
     this.hdfsNsQuota = hdfsNsQuota;
     this.hdfsNsCount = hdfsNsCount;
+    this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
+    this.hiveHdfsUsageInBytes = hiveHdfsUsageInBytes;
+    this.hiveHdfsNsCount = hiveHdfsNsCount;
+    this.hiveHdfsNsQuota = hiveHdfsNsQuota;
   }
 
   public Long getHdfsQuotaInBytes() {
@@ -64,13 +74,42 @@ public class QuotasDTO {
     this.hdfsNsCount = hdfsNsCount;
   }
 
-  @Override
-  public String toString() {
-    return "QuotasDTO{"
-        + "hdfsUsage=" + hdfsUsageInBytes + ", hdfsQuota="
-        + hdfsQuotaInBytes
-        + "hdfsNsUsage=" + hdfsNsCount + ", hdfsNsQuota=" + hdfsNsQuota
-        + ", yarnQuota=" + yarnQuotaInSecs + '}';
+  public Long getHiveHdfsUsageInBytes() { return hiveHdfsUsageInBytes; }
+
+  public void setHiveHdfsUsageInBytes(Long hiveHdfsUsageInBytes) {
+    this.hiveHdfsUsageInBytes = hiveHdfsUsageInBytes;
   }
 
+  public Long getHiveHdfsQuotaInBytes() { return hiveHdfsQuotaInBytes; }
+
+  public void setHiveHdfsQuotaInBytes(Long hiveHdfsQuotaInBytes) {
+    this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
+  }
+
+  public Long getHiveHdfsNsCount() { return hiveHdfsNsCount; }
+
+  public void setHiveHdfsNsCount(Long hiveHdfsNsCount) {
+    this.hiveHdfsNsCount = hiveHdfsNsCount;
+  }
+
+  public Long getHiveHdfsNsQuota() { return hiveHdfsNsQuota; }
+
+  public void setHiveHdfsNsQuota(Long hiveHdfsNsQuota) {
+    this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+  }
+
+  @Override
+  public String toString() {
+    return "QuotasDTO{" +
+        "hdfsUsageInBytes=" + hdfsUsageInBytes +
+        ", hdfsQuotaInBytes=" + hdfsQuotaInBytes +
+        ", hdfsNsCount=" + hdfsNsCount +
+        ", hdfsNsQuota=" + hdfsNsQuota +
+        ", hiveHdfsUsageInBytes=" + hiveHdfsUsageInBytes +
+        ", hiveHdfsQuotaInBytes=" + hiveHdfsQuotaInBytes +
+        ", hiveHdfsNsCount=" + hiveHdfsNsCount +
+        ", hiveHdfsNsQuota=" + hiveHdfsNsQuota +
+        ", yarnQuotaInSecs='" + yarnQuotaInSecs + '\'' +
+        '}';
+  }
 }

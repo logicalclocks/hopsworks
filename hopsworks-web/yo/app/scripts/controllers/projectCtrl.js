@@ -8,7 +8,7 @@ angular.module('hopsWorksApp')
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService',
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
-                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService, 
+                  ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
                   StorageService) {
 
             var self = this;
@@ -31,9 +31,9 @@ angular.module('hopsWorksApp')
 
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER','DELA'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA'];
             } else {
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE'];
             }
 
             $scope.activeService = "home";
@@ -295,7 +295,7 @@ angular.module('hopsWorksApp')
 
 //              http://localhost:8080/hopsworks/#!/project/1/settings
 
-              
+
 //              if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
 //                self.goToUrl('jupyter');
 //              } else {
@@ -315,7 +315,7 @@ angular.module('hopsWorksApp')
                             }
                     });
             };
-            
+
             self.goToZeppelin = function () {
               self.enabling = true;
               PythonDepsService.enabled(self.projectId).then( function (success) {
@@ -446,7 +446,7 @@ angular.module('hopsWorksApp')
               }
               return showService("Dela");
             };
-              
+
             self.showTensorflow = function () {
               return showService("Tensorflow");
             };
@@ -502,6 +502,34 @@ angular.module('hopsWorksApp')
               return null;
             };
 
+            self.hiveHdfsUsage = function () {
+              if (self.projectFile.quotas !== null) {
+                return convertSize(self.projectFile.quotas.hiveHdfsUsageInBytes);
+              }
+              return null;
+            };
+
+            self.hiveHdfsQuota = function () {
+              if (self.projectFile.quotas !== null) {
+                return convertSize(self.projectFile.quotas.hiveHdfsQuotaInBytes);
+              }
+              return null;
+            };
+
+            self.hiveHdfsNsCount = function () {
+              if (self.projectFile.quotas !== null) {
+                return self.projectFile.quotas.hiveHdfsNsCount;
+              }
+              return null;
+            };
+
+            self.hiveHdfsNsQuota = function () {
+              if (self.projectFile.quotas !== null) {
+                return self.projectFile.quotas.hiveHdfsNsQuota;
+              }
+              return null;
+            };
+
             /**
              * Converts and returns quota to hours.
              * @returns {Window.projectFile.quotas.yarnQuotaInSecs|projectL#10.projectFile.quotas.yarnQuotaInSecs}
@@ -550,11 +578,11 @@ angular.module('hopsWorksApp')
               n = parseFloat((n * multiplicator).toFixed(11));
               return Math.round(n) / multiplicator;
             };
-            
+
             self.tourDone = function(tour){
               StorageService.store("hopsworks-tourdone-"+tour,true);
             };
-            
+
             self.isTourDone = function(tour){
               var isDone = StorageService.get("hopsworks-tourdone-"+tour);
             };
@@ -562,5 +590,10 @@ angular.module('hopsWorksApp')
             self.getCerts = function () {
               ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId).then();
             };
+
+            self.isServiceEnabled = function(service) {
+                var idx = self.projectTypes.indexOf(service);
+                return idx === -1
+            }
 
           }]);

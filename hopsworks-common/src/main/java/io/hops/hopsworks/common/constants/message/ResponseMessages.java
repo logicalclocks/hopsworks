@@ -223,4 +223,5 @@ public class ResponseMessages {
   public final static String JUPYTER_ADD_FAILURE = "Failed to create Jupyter notebook dir. "
       + "Jupyter will not work properly. "
       + "Try recreating the following dir manually:";
+  public final static String HIVE_ADD_FAILURE = "Failed to create the Hive database";
 }

@@ -75,6 +75,8 @@ public class DatasetController {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private Settings settings;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -492,7 +494,8 @@ public class DatasetController {
             ds.getInode().getInodePK().getName());
         break;
       case HIVEDB:
-      // TODO (Fabio) - add hive dataset path resolution here
+        path = new Path(settings.getHiveWarehouse(),
+            ds.getInode().getInodePK().getName());
     }
 
     return path;
@@ -510,19 +513,20 @@ public class DatasetController {
         Inode projectInode = inodes.findParent(ds.getInode());
         return projectFacade.findByName(projectInode.getInodePK().getName());
       case HIVEDB:
-        // TODO (Fabio) - add hive owner resolution here
-        return null;
+        // Project name is the same of database name
+        String dbName = ds.getInode().getInodePK().getName();
+        return projectFacade.findByName(dbName.substring(0, dbName.lastIndexOf(".")));
       default:
         return null;
     }
   }
 
   /**
-   * 
+   *
    * @param project
    * @param user
    * @param path
-   * @return 
+   * @return
    */
   public boolean isDownloadAllowed(Project project, Users user, String path) {
     //Data Scientists are allowed to download their own data

@@ -3,6 +3,8 @@ package io.hops.hopsworks.api.project.util;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -14,6 +16,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.util.List;
 
 @Stateless
 public class PathValidator {
@@ -24,6 +27,10 @@ public class PathValidator {
   private ProjectFacade projectFacade;
   @EJB
   private DatasetController datasetContoller;
+  @EJB
+  private InodeFacade inodeFacade;
+  @EJB
+  private Settings settings;
 
   /**
    * Validate a path received by a DatasetService.java REST API
@@ -46,7 +53,12 @@ public class PathValidator {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(project, pathComponents, dsPath);
+      buildProjectDsRelativePath(pathComponents, dsPath);
+    } else if (path.startsWith(this.settings.getHiveWarehouse())) {
+      // Case /apps/hive/warehouse/project1.db/dsRelativePath
+      dsPath.setFullPath(new Path(path));
+      String[] pathComponents = path.split("/");
+      buildHiveDsRelativePath(project, pathComponents, dsPath);
     } else {
       // Case ds/dsRelativePath
       buildFullPath(project, path, dsPath);
@@ -103,11 +115,10 @@ public class PathValidator {
     }
   }
 
-  private void buildProjectDsRelativePath(Project project,
-                                          String[] pathComponents,
+  private void buildProjectDsRelativePath(String[] pathComponents,
                                           DsPath dsPath) throws AppException {
     // Start by 1 as the first component is ""
-    project = projectFacade.findByName(pathComponents[2]);
+    Project project = projectFacade.findByName(pathComponents[2]);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_NOT_FOUND);
@@ -121,6 +132,36 @@ public class PathValidator {
     dsPath.setDs(ds);
 
     String dsRelativePathStr = buildRelativePath(pathComponents, 4,
+        pathComponents.length);
+    if (!dsRelativePathStr.isEmpty()) {
+      dsPath.setDsRelativePath(new Path(dsRelativePathStr));
+    }
+  }
+
+  private void buildHiveDsRelativePath(Project project,
+                                       String[] pathComponents,
+                                       DsPath dsPath) throws AppException {
+    String dsPathStr = File.separator + buildRelativePath(pathComponents, 1, 5);
+    Inode dsInode = inodeFacade.getInodeAtPath(dsPathStr);
+
+    if (dsInode == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PATH_NOT_FOUND);
+    }
+
+    List<Dataset> dss = datasetFacade.findByInode(dsInode);
+    if (dss == null || dss.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NOT_FOUND);
+    }
+
+    Project owningProject = datasetContoller.getOwningProject(dss.get(0));
+    Dataset originalDataset = datasetFacade.findByProjectAndInode(owningProject,
+        dss.get(0).getInode());
+
+    dsPath.setDs(originalDataset);
+
+    String dsRelativePathStr = buildRelativePath(pathComponents, 5,
         pathComponents.length);
     if (!dsRelativePathStr.isEmpty()) {
       dsPath.setDsRelativePath(new Path(dsRelativePathStr));

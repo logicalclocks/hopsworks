@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.CertificatesController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.util.Arrays;
 import java.util.regex.Pattern;
@@ -51,7 +52,11 @@ public class ApplicationService {
   final static Logger LOGGER = Logger.getLogger(ApplicationService.class.
       getName());
   
-  private final Pattern projectUserPattern = Pattern.compile("\\w*__\\w*");
+  private final Pattern projectGenericPattern = Pattern.compile("\\w*" +
+      Settings.PROJECT_GENERIC_USER_SUFFIX);
+
+  private final Pattern projectSpecificPattern = Pattern.compile("\\w*"+
+      HdfsUsersController.USER_NAME_DELIMITER + "\\w*");
 
   @EJB
   private NoCacheResponse noCacheResponse;
@@ -138,22 +143,26 @@ public class ApplicationService {
       @Context HttpServletRequest req) {
     
     try {
-      CertPwDTO respDTO;
+      CertPwDTO respDTO = null;
       Users user;
-      if (projectUserPattern.matcher(projectUser).matches()) {
+      if (projectGenericPattern.matcher(projectUser).matches()) {
+        // In that case projectUser is the projectName__PROJECTGENERICUSER.
+        // It is used by the Spark interpreter of Zeppelin which runs as user Project
+        String[] splits = projectUser.split(HdfsUsersController.USER_NAME_DELIMITER,2);
+        user = projectFacade.findByName(splits[0]).getOwner();
+        respDTO = projectController.getProjectWideCertPw(user, projectUser, keyStore);
+      } else if (projectSpecificPattern.matcher(projectUser).matches()){
         //Find user
         String username = hdfsUserBean.getUserName(projectUser);
         String projectName = hdfsUserBean.getProjectName(projectUser);
         user = userFacade.findByUsername(username);
         respDTO = projectController.getProjectSpecificCertPw(user, projectName, keyStore);
       } else {
-        // In that case projectUser is the project name. It is used by the Spark
-        // interpreter of Zeppelin which runs as user Project
-        user = projectFacade.findByName(projectUser).getOwner();
-        respDTO = projectController.getProjectWideCertPw(user,
-            projectUser, keyStore);
+        // Project user doesn't match any standard format.
+        // Something fishy is going on here. Throw an exception.
+        throw new Exception("Unrecognized format for project user");
       }
-    
+
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(respDTO).build();
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, "Could not retrieve certificate passwords for " +

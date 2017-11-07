@@ -14,6 +14,8 @@ import io.hops.hopsworks.api.zeppelin.types.InterpreterSettingsList;
 import io.hops.hopsworks.api.zeppelin.util.InterpreterBindingUtils;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -106,12 +108,19 @@ public class NotebookServerImpl implements
   private ZeppelinConfig conf;
   private Notebook notebook;
   private Project project;
+  private Settings settings;
+  private CertsFacade certsFacade;
 
-  public NotebookServerImpl(Project project, ZeppelinConfigFactory zeppelin) throws IOException, RepositoryException,
+  private String certPwd;
+
+  public NotebookServerImpl(Project project, ZeppelinConfigFactory zeppelin,
+      CertsFacade certsFacade, Settings settings) throws IOException, RepositoryException,
       TaskRunnerException {
     this.project = project;
     this.conf = zeppelin.getZeppelinConfig(project.getName(), this);
     this.notebook = this.conf.getNotebook();
+    this.settings = settings;
+    this.certsFacade = certsFacade;
   }
 
   public Notebook notebook() {
@@ -1363,6 +1372,14 @@ public class NotebookServerImpl implements
       Paragraph p = setParagraphUsingMessage(note, fromMessage,
           paragraphId, text, title, params, config);
 
+      // Hack: in case the interpreter is hopshive, put the keystore/truststore password in the ticket
+      // so that it can be retrieved from the zeppelin-hopshive interpreter
+      if ((p.getRequiredReplName() != null && p.getRequiredReplName().equals("hopshive")) ||
+          (p.getRequiredReplName() == null && notebook().getInterpreterSettingManager().
+              getDefaultInterpreterSetting(note.getId()).getName().equals("hopshive"))){
+        setCertificatePassword(p, fromMessage);
+      }
+
       persistAndExecuteSingleParagraph(conn, note, p, certificateMaterializer, settings, dfsService);
     }
   }
@@ -1455,7 +1472,33 @@ public class NotebookServerImpl implements
     Paragraph p = setParagraphUsingMessage(note, fromMessage, paragraphId,
         text, title, params, config);
 
+
+    // Hack: in case the interpreter is hopshive, put the keystore/truststore password in the ticket
+    // so that it can be retrieved from the zeppelin-hopshive interpreter
+    if ((p.getRequiredReplName() != null && p.getRequiredReplName().equals("hopshive")) ||
+        (p.getRequiredReplName() == null && notebook().getInterpreterSettingManager().
+            getDefaultInterpreterSetting(note.getId()).getName().equals("hopshive"))){
+      setCertificatePassword(p, fromMessage);
+    }
+
     persistAndExecuteSingleParagraph(conn, note, p, certificateMaterializer, settings, dfsService);
+  }
+
+  private void setCertificatePassword(Paragraph p, Message fromMessage) {
+    if (certPwd == null || certPwd.isEmpty()) {
+      Users user = project.getOwner();
+      try {
+        ProjectGenericUserCerts serviceCert =
+            certsFacade.findProjectGenericUserCerts(project.getProjectGenericUser());
+        certPwd = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(),
+            serviceCert.getCertificatePassword());
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Cannot retrieve user " + project.getName()  +
+            " keystore password. " + e);
+        certPwd = "";
+      }
+    }
+    p.setAuthenticationInfo(new AuthenticationInfo(fromMessage.principal, fromMessage.roles, certPwd));
   }
 
   private void addNewParagraphIfLastParagraphIsExecuted(Note note, Paragraph p) {
@@ -1498,6 +1541,7 @@ public class NotebookServerImpl implements
     // Interpreter group is in the form GROUP_ID:shared_process
     // GROUP_ID: 2CFZ6Q3A2 -> Spark group
     // GROUP_ID: 2CHUQQW33 -> Livy group
+    // GROUP_ID: 2CRSX9NDY -> Hive group
     String[] interpreterGrp = p.getCurrentRepl().getInterpreterGroup()
         .getId().split(":");
     String interpreterGroup;
@@ -1508,12 +1552,21 @@ public class NotebookServerImpl implements
     }
 
     if (certificateMaterializer.openedInterpreter(project.getId(), interpreterGroup)) {
-      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+
+      DistributedFileSystemOps dfso = null;
       try {
-        HopsUtils.materializeCertificatesForProject(project.getName(),
-            settings.getHopsworksTmpCertDir(),
-            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
-            settings);
+        if (interpreterGroup.equals(Settings.HOPSHIVE_INT_GROUP)) {
+          // Hive case
+          // Materialize the certificates for the project user on the local fs
+          certificateMaterializer.materializeCertificates(project.getName());
+        } else {
+          // Livy case
+          dfso = dfsService.getDfsOps();
+          HopsUtils.materializeCertificatesForProject(project.getName(),
+              settings.getHopsworksTmpCertDir(),
+              settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
+              settings);
+        }
       } catch (IOException ex) {
         throw ex;
       } finally {

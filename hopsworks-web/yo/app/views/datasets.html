@@ -15,7 +15,7 @@
           </div>
           <div class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl" ng-if="mainCtrl.searchTerm.length <= 3">
             <div growl reference="3" class="pull-right" ></div>
-            <h3>               
+            <h3>
               <div flex="65">
                 Filter: &nbsp;
                 <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
@@ -27,7 +27,7 @@
               </div>
               <div style="margin-left: 450px" flex="20">
                 <div class="input-group" style="margin-top:-25px;">
-                  <input type="text" class="form-control" 
+                  <input type="text" class="form-control"
                          ng-model="search" placeholder="Filter...">
                   <span class="input-group-btn">
                     <button class="btn btn-default fa fa-filter icon-resize-small" type="button" title="Filter"></button>
@@ -39,11 +39,11 @@
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
                 </hamburger-toggle>
               </div>
-            </h3>            
+            </h3>
             <div class="row row-no-margin-left" ng-controller="SearchResultCtrl as searchResultCtrl">
-              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">                 
+              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">
                 <div class="row" resizable r-directions="['bottom']" ng-class="{'rg-row-top-ds': readme !== null}">
-                  <div class="col-lg-12 ds-box thin-scrollbar" style="margin-top: 15px;">                    
+                  <div class="col-lg-12 ds-box thin-scrollbar" style="margin-top: 15px;">
                     <div class="file-box">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
@@ -56,7 +56,7 @@
                           <div class="row"> </div>
                         </div>
                       </div>
-                    </div> 
+                    </div>
                     <div class="loader loader-sm" ng-show="datasetsCtrl.working"></div>
                     <div ng-if="!datasetsCtrl.working" ng-init="searchResultCtrl.init_ds(datasetsCtrl)"></div>
                     <div ng-repeat="dataset in datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | filter:search | orderBy: 'name'">
@@ -65,7 +65,7 @@
                            class="file-box" ng-class="{disabled: dataset.downloading}"
                            context-menu
                            data-target="menu-{{ dataset.name}}">
-                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name, 
+                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name,
                                   'notAccepted' : dataset.status === false}">
                           <a>
                              <span class="corner"></span>
@@ -76,16 +76,16 @@
                               <i ng-show="!dataset.downloading" class="glyphicon" ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
                               <i ng-show="dataset.downloading"  class="glyphicon glyphicon-cloud-download"></i>
                             </div>
-                            <div class="file-name" data-toggle="tooltip" title="Click on the bottom section to view metadata for this dataset." 
+                            <div class="file-name" data-toggle="tooltip" title="Click on the bottom section to view metadata for this dataset."
                                  ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
                               <span data-toggle="tooltip"
                                     title="{{dataset.name.length > 17 ? dataset.name:''}}">
                                 {{dataset.name| cut:true:17:'...'}}
-                              </span>                          
+                              </span>
                               <span class="glyphicon glyphicon-edit pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
                                     title="This dataset is editable by all project members."></span>
                               <br/>
-                              <small><b>Owner:</b> 
+                              <small><b>Owner:</b>
                                 <span data-toggle="tooltip"
                                       title="{{dataset.owner.length > 17 ? dataset.owner:''}}">
                                   {{dataset.owner| cut:true:17:'...'}}
@@ -97,14 +97,14 @@
                               <span ng-if="dataset.publicDs === 1" class="pull-right dataset-icon fa fa-server"  data-toggle="tooltip"
                                     title="Dataset is public (within cluster)">
                               </span>
-                              <span ng-if="dataset.publicDs === 0 && dataset.shared === false" 
+                              <span ng-if="dataset.publicDs === 0 && dataset.shared === false"
                                     class="pull-right dataset-icon"
                                     ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.status === true)}"
                                     data-toggle="tooltip"
                                     title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"
                                     >
                               </span>
-                              <span ng-if="dataset.publicDs !== true && dataset.shared === true" 
+                              <span ng-if="dataset.publicDs !== true && dataset.shared === true"
                                     class="pull-right dataset-icon"
                                     ng-class="{'fa fa-users': (dataset.sharedWith > 0 && dataset.status === true)}"
                                     data-toggle="tooltip"
@@ -114,7 +114,7 @@
                             </div>
                           </a>
                         </div>
-                      </div>  
+                      </div>
                         <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
                         <ul uib-dropdown-menu class="uib-dropdown-amore">
                           <li>
@@ -144,8 +144,8 @@
                               <span><i class="fa fa-share-alt"></i>
                                 Remove Dataset</span>
                             </a>
-                          </li>                          
-                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'" 
+                          </li>
+                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'"
                               ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
@@ -193,7 +193,7 @@
                                 Compress</span>
                             </a>
                           </li>
-                          -->                         
+                          -->
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 2">
                             <a class="pointer"
                                role="menuitem"
@@ -220,7 +220,7 @@
                                 <a tabindex="-1" ng-click="datasetsCtrl.shareWithHops(dataset.id); $event.stopPropagation();">
                                   <span><i class="fa fa-globe"></i> Hops</span>
                                 </a>
-                              </li>                              
+                              </li>
                             </ul>
                           </li>
                           <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
@@ -279,9 +279,9 @@
                           <div class="file" style="text-align: center;">
                             <div class="icon">
                               <i class="glyphicon glyphicon-folder-open"></i>
-                            </div>  
+                            </div>
                             Select a DataSet to view its details.
-                          </div>           
+                          </div>
                         </div>
                         <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-bordred table-striped" style="margin-top: 16px;">
                           <tr style="background-color: #fafafa; border-top: none;">
@@ -291,7 +291,7 @@
 
                           <tr style="background-color: #fafafa">
                             <td style="color: grey;">Description</td>
-                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].description}}</td>
+                            <td style="color: grey;"><span ng-bind-html="datasetsCtrl.selectedFiles[datasetsCtrl.selected].description"></span></td>
                           </tr>
 
                           <tr style="background-color: #fafafa">
@@ -325,7 +325,7 @@
                         </table>
                         <!--METADATA PRESENTATION SECTION-->
                         <div id="board"  style="font-family: Times New Roman; height: 76%;"
-                             ng-include="'views/metadata/extendedMetadata.html'">                          
+                             ng-include="'views/metadata/extendedMetadata.html'">
                         </div>
                       </md-tab>
                     </md-tabs>

@@ -87,17 +87,17 @@ public class CertificatesController {
         + project.getName() + "__" + user.getUsername());
   
     // Project-wide certificates are needed because Zeppelin submits
-    // requests as user: ProjectName
+    // requests as user: ProjectName__PROJECTGENERICUSER
     if (generateProjectWideCerts) {
       LocalhostServices.createServiceCertificates(settings.getIntermediateCaDir(),
-          project.getName(),
+          project.getProjectGenericUser(),
           user.getAddress().getCountry(),
           user.getAddress().getCity(),
           user.getOrganization().getOrgName(),
           user.getEmail(),
           user.getOrcid(),
           userKeyPwd);
-      certsFacade.putServiceCerts(project.getName(), encryptedKey);
+      certsFacade.putProjectGenericUserCerts(project.getProjectGenericUser(), encryptedKey);
       LOG.log(Level.FINE, "Created project generic certificates for project: "
           + project.getName());
     }
@@ -116,7 +116,7 @@ public class CertificatesController {
     // Remove project generic certificates used by Spark interpreter in
     // Zeppelin. User specific certificates are removed by the foreign key
     // constraint in the DB
-    certsFacade.removeProjectGenericCertificates(projectName);
+    certsFacade.removeProjectGenericCertificates(project.getProjectGenericUser());
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

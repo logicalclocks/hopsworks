@@ -287,6 +287,43 @@
         "users": [],
         "isUserImpersonate": false
       }
+    },
+    "2CRSX9NDY": {
+      "id": "2CRSX9NDY",
+      "name": "hopshive",
+      "group": "hopshive",
+      "properties": {
+        "zeppelin.jdbc.concurrent.use": "true",
+        "default.completer.ttlInSeconds": "120",
+        "zeppelin.jdbc.concurrent.max_connection": "10",
+        "default.completer.schemaFilters": "",
+        "default.splitQueries": "false",
+        "default.url": "jdbc:hive2://%%hive.server%%/%%hive.db%%",
+        "common.max_count": "1000"
+      },
+      "status": "READY",
+      "interpreterGroup": [
+        {
+          "name": "hopshive",
+          "class": "org.apache.zeppelin.hopshive.HopsHiveInterpreter",
+          "defaultInterpreter": false,
+          "editor": {
+            "language": "sql",
+            "editOnDblClick": false
+          }
+        }
+      ],
+      "dependencies": [],
+      "option": {
+        "remote": true,
+        "port": -1,
+        "perNote": "shared",
+        "perUser": "scoped",
+        "isExistingProcess": false,
+        "setPermission": false,
+        "users": [],
+        "isUserImpersonate": false
+      }
     }
   },
   "interpreterBindings": {},

@@ -483,62 +483,43 @@ public class ZeppelinConfig {
         + logstashID + restEndpointProp + keystorePwProp + truststorePwProp + elasticEndpointProp + projectIdProp
         + projectNameProp + userProp;
     String hdfsResourceDir = "hdfs://" + resourceDir + File.separator;
-    // Comma-separated files to be added as local resources to Spark interpreter
-    StringBuilder sparkDistFiles = new StringBuilder();
-    sparkDistFiles
+    // Comma-separated files to be added as local resources to Spark/Livy interpreter
+
+    StringBuilder distFiles = new StringBuilder();
+    distFiles
         // KeyStore
         .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(this.projectName).append(File.separator)
-        .append(this.projectName).append("__kstore.jks#")
+        .append(projectName)
+        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+        .append(File.separator)
+        .append(projectName)
+        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+        .append("__kstore.jks#")
         .append(Settings.K_CERTIFICATE).append(",")
         // TrustStore
         .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(this.projectName).append(File.separator)
-        .append(this.projectName).append("__tstore.jks#")
+        .append(projectName)
+        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+        .append(File.separator)
+        .append(projectName)
+        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+        .append("__tstore.jks#")
         .append(Settings.T_CERTIFICATE);
   
     // If RPC TLS is enabled, password file would be injected by the
     // NodeManagers. We don't need to add it as LocalResource
     if (!settings.getHopsRpcTls()) {
-      sparkDistFiles
+      distFiles
           // File with crypto material password
           .append(",")
           .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.projectName).append(File.separator)
-          .append(this.projectName).append("__cert.key#")
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append(File.separator)
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append("__cert.key#")
           .append(Settings.CRYPTO_MATERIAL_PASSWORD);
-    }
-
-    StringBuilder keyStoreSB = new StringBuilder();
-    keyStoreSB
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(this.projectName).append(File.separator).append(this.projectName)
-        .append("__kstore.jks#").append(Settings.K_CERTIFICATE);
-    StringBuilder trustStoreSB = new StringBuilder();
-    trustStoreSB
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(this.projectName).append(File.separator).append(this.projectName)
-        .append("__tstore.jks#").append(Settings.T_CERTIFICATE);
-    
-    // Comma-separated files to be added as local resources to Livy interpreter
-    StringBuilder livySparkDistFiles = new StringBuilder();
-    livySparkDistFiles
-        // KeyStore
-        .append(keyStoreSB).append(",")
-        // TrustStore
-        .append(trustStoreSB);
-    
-    // If RPC TLS is enabled, password file would be injected by the
-    // NodeManagers. We don't need to add it as LocalResource
-    if (!settings.getHopsRpcTls()) {
-      StringBuilder materialPasswd = new StringBuilder();
-      materialPasswd
-          // File with crypto material password
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.projectName).append(File.separator).append(this.projectName)
-          .append("__cert.key#").append(Settings.CRYPTO_MATERIAL_PASSWORD);
-      
-      livySparkDistFiles.append(",").append(materialPasswd);
     }
 
     if (interpreterConf == null) {
@@ -550,7 +531,7 @@ public class ZeppelinConfig {
               "hdfs_user", this.projectName,
               "hadoop_home", settings.getHadoopSymbolicLinkDir(),
               "livy_url", settings.getLivyUrl(),
-              "metrics-properties_path", log4jPath + "," + livySparkDistFiles.toString(),
+              "metrics-properties_path", log4jPath + "," + distFiles.toString(),
               "extra_spark_java_options", extraSparkJavaOptions,
               "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
               "spark.yarn.stagingDir", hdfsResourceDir,
@@ -558,8 +539,10 @@ public class ZeppelinConfig {
               "livy.spark.yarn.stagingDir", hdfsResourceDir,
               "hadoop_version", settings.getHadoopVersion(),
               "zeppelin.python_conda_path", zeppelinPythonPath,
-              "spark.yarn.dist.files", sparkDistFiles.toString(),
-              "livy_session_timeout", settings.getLivyZeppelinSessionTimeout()
+              "livy_session_timeout", settings.getLivyZeppelinSessionTimeout(),
+              "spark.yarn.dist.files", distFiles.toString(),
+              "hive.server", settings.getHiveServerHostName(false),
+              "hive.db", this.projectName
           );
       interpreterConf = interpreter_json.toString();
     } 

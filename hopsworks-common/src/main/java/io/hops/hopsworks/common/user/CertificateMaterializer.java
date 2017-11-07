@@ -18,7 +18,7 @@
 package io.hops.hopsworks.common.user;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.ServiceCerts;
+import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -52,7 +52,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -201,7 +200,7 @@ public class CertificateMaterializer {
   public void materializeCertificates(String projectName) throws IOException {
     materializeCertificates(null, projectName);
   }
-  
+
   @Lock(LockType.WRITE)
   @AccessTimeout(value=500)
   public void materializeCertificates(String username, String projectName)
@@ -210,27 +209,27 @@ public class CertificateMaterializer {
     InternalCryptoMaterial material = materialMap.get(key);
     FileRemover scheduledRemover = null;
     LOG.log(Level.FINEST, "Requested materialization for: " + key
-        .getProjectSpecificUsername());
+        .getExtendedUsername());
     if (material != null) {
       // Crypto material already exists
       material.incrementReference();
-      LOG.log(Level.FINEST, "User: " + key.getProjectSpecificUsername() + " " +
+      LOG.log(Level.FINEST, "User: " + key.getExtendedUsername() + " " +
           "Material exist, ref " + material.references);
     } else {
       // Crypto material does not exist in cache
-      LOG.log(Level.FINEST, "Material for " + key.getProjectSpecificUsername()
+      LOG.log(Level.FINEST, "Material for " + key.getExtendedUsername()
           + " does not exist in cache");
       // But there might be scheduled a delayed removal from the local fs
       if ((scheduledRemover = scheduledFileRemovers.get(key)) != null) {
         LOG.log(Level.FINEST, "Exists scheduled removal for " + key
-            .getProjectSpecificUsername());
+            .getExtendedUsername());
         // Cancel the delayed removal
         boolean canceled = scheduledRemover.scheduledFuture.cancel(false);
         scheduledFileRemovers.remove(key);
         // If managed to cancel properly, just put back the reference
         if (canceled) {
           LOG.log(Level.FINEST, "Successfully canceled delayed removal for " +
-              key.getProjectSpecificUsername());
+              key.getExtendedUsername());
           
           scheduledRemover.material.references++;
           materialMap.put(key, scheduledRemover.material);
@@ -238,13 +237,13 @@ public class CertificateMaterializer {
           // Otherwise materialize
           // Force deletion of material to avoid corrupted data
           LOG.log(Level.FINEST, "Could not cancel delayed removal, " +
-              "materializing again for " + key.getProjectSpecificUsername());
+              "materializing again for " + key.getExtendedUsername());
           forceRemoveCertificates(key.username, key.projectName, false);
           materialize(key);
         }
       } else {
         // Otherwise the material has been wiped-out, so materialize it anyway
-        LOG.log(Level.FINEST, "Material for " + key.getProjectSpecificUsername()
+        LOG.log(Level.FINEST, "Material for " + key.getExtendedUsername()
             + " has been wiped out, materializing!");
         materialize(key);
       }
@@ -253,26 +252,25 @@ public class CertificateMaterializer {
   
   private void materialize(MaterialKey key) throws IOException {
     String decryptedPass;
-    // Spark interpreter in Zeppelin runs as user PROJECTNAME and not as
+    // Spark/Livy and Hive in Zeppelin runs as user PROJECTNAME__PROJECTGENERICUSER and not as
     // PROJECTNAME__USERNAME
-    if (key.isSparkInterpreter()) {
-      List<ServiceCerts> serviceCerts = certsFacade.findServiceCertsByName(key
-          .getProjectSpecificUsername());
-      if (null == serviceCerts || serviceCerts.isEmpty()) {
+    if (key.isProjectUser()) {
+      ProjectGenericUserCerts projectGenericUserCerts = certsFacade.findProjectGenericUserCerts(key
+          .getExtendedUsername());
+      if (null == projectGenericUserCerts) {
         throw new IOException("Could not find certificates for user " + key
-            .getProjectSpecificUsername());
+            .getExtendedUsername());
       }
-      ServiceCerts storedMaterial = serviceCerts.get(0);
-      decryptedPass = decryptMaterialPassword(key
-          .getProjectSpecificUsername(), storedMaterial
-          .getCertificatePassword(), ServiceCerts.class);
-      materializeInternal(key, storedMaterial.getServiceKey(),
-          storedMaterial.getServiceCert(), decryptedPass);
+      decryptedPass = decryptMaterialPassword(key.projectName,
+          projectGenericUserCerts.getCertificatePassword(),
+          ProjectGenericUserCerts.class);
+      materializeInternal(key, projectGenericUserCerts.getKey(),
+          projectGenericUserCerts.getCert(), decryptedPass);
     } else {
       UserCerts projectSpecificCerts = certsFacade.findUserCert(key.projectName,
           key.username);
       decryptedPass = decryptMaterialPassword(key
-          .getProjectSpecificUsername(), projectSpecificCerts.getUserKeyPwd(),
+          .getExtendedUsername(), projectSpecificCerts.getUserKeyPwd(),
           UserCerts.class);
       materializeInternal(key, projectSpecificCerts.getUserKey(),
           projectSpecificCerts.getUserCert(), decryptedPass);
@@ -282,7 +280,7 @@ public class CertificateMaterializer {
   private <T> String decryptMaterialPassword(String certificateIdentifier,
       String encryptedPassword, Class<T> cls) throws IOException {
     String userPassword;
-    if (cls == ServiceCerts.class) {
+    if (cls == ProjectGenericUserCerts.class) {
       // Project generic certificate
       // Certificate identifier would be the project name
       Project project = projectFacade.findByName(certificateIdentifier);
@@ -317,15 +315,15 @@ public class CertificateMaterializer {
   private void materializeInternal(MaterialKey key, byte[] keyStore, byte[]
       trustStore, String password) throws IOException {
     if (null != keyStore && null != trustStore) {
-      flushToLocalFs(key.getProjectSpecificUsername(), keyStore, trustStore,
+      flushToLocalFs(key.getExtendedUsername(), keyStore, trustStore,
           password);
       materialMap.put(key, new InternalCryptoMaterial(keyStore, trustStore,
           password));
-      LOG.log(Level.FINEST, "User: " + key.getProjectSpecificUsername() + " " +
+      LOG.log(Level.FINEST, "User: " + key.getExtendedUsername() + " " +
           "Material DOES NOT exist, flushing now!!!");
     } else {
       throw new IOException("Certificates for user " + key
-          .getProjectSpecificUsername() + " could not be found in the " +
+          .getExtendedUsername() + " could not be found in the " +
           "database");
     }
   }
@@ -346,7 +344,7 @@ public class CertificateMaterializer {
     }
     
     throw new CryptoPasswordNotFoundException(
-        "Cryptographic material for user " + key.getProjectSpecificUsername() +
+        "Cryptographic material for user " + key.getExtendedUsername() +
             " does not exist!");
   }
   
@@ -361,7 +359,7 @@ public class CertificateMaterializer {
     InternalCryptoMaterial material = materialMap.get(key);
     if (null != material) {
       LOG.log(Level.FINEST, "Requested removal of material for " + key
-          .getProjectSpecificUsername() + " Ref: " + material.references);
+          .getExtendedUsername() + " Ref: " + material.references);
     }
     if (null != material && material.decrementReference()) {
       materialMap.remove(key);
@@ -379,7 +377,7 @@ public class CertificateMaterializer {
     if (null != scheduledRemover) {
       scheduledRemover.scheduledFuture.cancel(true);
     }
-    deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
+    deleteMaterialFromLocalFs(key.getExtendedUsername());
     materialMap.remove(key);
     
     if (bothUserAndProject) {
@@ -389,7 +387,7 @@ public class CertificateMaterializer {
       if (null != scheduledRemover) {
         scheduledRemover.scheduledFuture.cancel(true);
       }
-      deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
+      deleteMaterialFromLocalFs(key.getExtendedUsername());
       materialMap.remove(key);
     }
   }
@@ -399,7 +397,7 @@ public class CertificateMaterializer {
         DELAY_TIMEUNIT);
     
     scheduledFileRemovers.put(key, fileRemover);
-    LOG.log(Level.FINEST, "Scheduled removal of material for " + key.getProjectSpecificUsername());
+    LOG.log(Level.FINEST, "Scheduled removal of material for " + key.getExtendedUsername());
   }
   
   /**
@@ -494,36 +492,41 @@ public class CertificateMaterializer {
     
     @Override
     public void run() {
-      deleteMaterialFromLocalFs(key.getProjectSpecificUsername());
+      deleteMaterialFromLocalFs(key.getExtendedUsername());
       scheduledFileRemovers.remove(key);
-      LOG.log(Level.FINEST, "Wiped out material for " + key.getProjectSpecificUsername());
+      LOG.log(Level.FINEST, "Wiped out material for " + key.getExtendedUsername());
     }
   }
-  
+
   private class MaterialKey {
     private final String username;
     private final String projectName;
-    private final boolean isSparkInterpreter;
+    private final boolean isProjectUser;
     
     private MaterialKey(String username, String projectName) {
       this.username = username;
-      this.projectName = projectName;
-      if (null != username) {
-        this.isSparkInterpreter = false;
+
+      if (username == null) {
+        // Project Generic User certificate
+        this.isProjectUser = true;
+        this.projectName = projectName;
       } else {
-        this.isSparkInterpreter = true;
+        // Project Specific User certificate
+        this.isProjectUser = false;
+        this.projectName = projectName;
       }
     }
     
-    private boolean isSparkInterpreter() {
-      return isSparkInterpreter;
+    private boolean isProjectUser() {
+      return isProjectUser;
     }
     
-    private String getProjectSpecificUsername() {
-      if (null != username) {
-        return projectName + HdfsUsersController.USER_NAME_DELIMITER + username;
+    private String getExtendedUsername() {
+      if (isProjectUser) {
+        return projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
       }
-      return projectName;
+
+      return projectName + HdfsUsersController.USER_NAME_DELIMITER + username;
     }
     
     @Override

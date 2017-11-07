@@ -51,8 +51,30 @@ public class ProjectsManagementBean {
   private long hdfsquota = -1;
   private float yarnquota = -1;
   private float totalyarnquota = -1;
-  private long hdfsNsquota = 01;
+  private long hdfsNsquota = 1;
   private String hdfsquotastring = "";
+  private long hiveHdfsquota = -1;
+  private long hiveHdfsNsquota = 1;
+  private String hiveHdfsquotastring = "";
+
+
+  public long getHiveHdfsquota() { return hiveHdfsquota; }
+
+  public void setHiveHdfsquota(long hiveHdfsquota) {
+    this.hiveHdfsquota = hiveHdfsquota;
+  }
+
+  public long getHiveHdfsNsquota() { return hiveHdfsNsquota; }
+
+  public void setHiveHdfsNsquota(long hiveHdfsNsquota) {
+    this.hiveHdfsNsquota = hiveHdfsNsquota;
+  }
+
+  public String getHiveHdfsquotastring() { return hiveHdfsquotastring; }
+
+  public void setHiveHdfsquotastring(String hiveHdfsquotastring) {
+    this.hiveHdfsquotastring = hiveHdfsquotastring;
+  }
 
   public long getHdfsNsquota() {
     return hdfsNsquota;
@@ -190,6 +212,77 @@ public class ProjectsManagementBean {
     return quota;
   }
 
+  public String getHiveHdfsQuota(String projectname) throws IOException {
+    try {
+      HdfsInodeAttributes quotas = projectsManagementController.getHiveHDFSQuotas(
+              projectname);
+      if (quotas != null) {
+        this.hiveHdfsquota = quotas.getDsquotaInMBs();
+      }
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+
+    DecimalFormat df = new DecimalFormat("##.##");
+    if(this.hiveHdfsquota > 1000000){
+      float tbSize = this.hiveHdfsquota / 1000000;
+      return df.format(tbSize) + "TB";
+    }
+    else if(this.hiveHdfsquota > 1000){
+      float gbSize = this.hiveHdfsquota / 1000;
+      return df.format(gbSize) + "GB";
+    }else {
+      return df.format(this.hiveHdfsquota) + "MB";
+    }
+  }
+
+  public long getHiveHdfsNsQuota(String projectname) throws IOException {
+    try {
+      HdfsInodeAttributes quotas = projectsManagementController.getHiveHDFSQuotas(
+              projectname);
+      if (quotas != null) {
+        BigInteger sz = quotas.getNsquota();
+        this.hiveHdfsNsquota = sz.longValue();
+      }
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+    return this.hiveHdfsNsquota;
+  }
+
+  public long getHiveHdfsNsUsed(String projectname) throws IOException {
+    long quota = -1l;
+    try {
+      HdfsInodeAttributes quotas = projectsManagementController.getHiveHDFSQuotas(
+              projectname);
+      if (quotas != null) {
+        BigInteger sz = quotas.getNscount();
+        quota = sz.longValue();
+      }
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+    return quota;
+  }
+
+  public long getHiveHdfsUsed(String projectname) throws IOException {
+    long quota = -1l;
+    try {
+      HdfsInodeAttributes quotas = projectsManagementController.getHiveHDFSQuotas(
+              projectname);
+      if (quotas != null) {
+        quota = quotas.getDiskspaceInMBs();
+      }
+    } catch (AppException ex) {
+      Logger.getLogger(ProjectsManagementBean.class.getName()).log(Level.SEVERE,
+              null, ex);
+    }
+    return quota;
+  }
+
   public float getYarnQuota(String projectName) throws IOException {
     try {
       YarnProjectsQuota quotas = projectsManagementController.getYarnQuotas(projectName);
@@ -240,9 +333,8 @@ public class ProjectsManagementBean {
     projectsManagementController.changeYarnQuota(projectname, quota);
   }
 
-//  , DistributedFileSystemOps dfso
-  public void onRowEdit(RowEditEvent event)
-      throws IOException {
+
+  public void onRowEdit(RowEditEvent event) throws IOException {
     Project row = (Project) event.getObject();
     if (row.getArchived()) {
       projectsManagementController.disableProject(row.getName());
@@ -250,26 +342,36 @@ public class ProjectsManagementBean {
       projectsManagementController.enableProject(row.getName());
     }
     projectsManagementController.changeYarnQuota(row.getName(), this.yarnquota);
-    if (this.hdfsquotastring != null) {
-      convertHdfsQuotaString();
-      projectsManagementController.setHdfsSpaceQuota(row.getName(),this.hdfsquota);
+
+    if(hdfsquotastring!=null){
+      hdfsquota = convertSpaceQuotaString(hdfsquotastring);
+    }
+
+    projectsManagementController.setHdfsSpaceQuota(row.getName(),
+            this.hdfsquota);
+
+    // If necessary set the quota for the Hive DB
+    if (hiveHdfsquotastring != null && !hiveHdfsquotastring.equals("")) {
+      hiveHdfsquota = convertSpaceQuotaString(hiveHdfsquotastring);
+      projectsManagementController.setHiveHdfsQuota(row.getName(), this.hiveHdfsquota);
     }
   }
 
-  private void convertHdfsQuotaString(){
-    if(this.hdfsquotastring.endsWith("TB")){
-      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
-      this.hdfsquota = value * 1048576;
-    }else if(this.hdfsquotastring.endsWith("GB")){
-      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
-      this.hdfsquota = value * 1024;
-    }else if(this.hdfsquotastring.endsWith("MB")){
-      Long value = Long.parseLong(this.hdfsquotastring.substring(0, this.hdfsquotastring.length()-2));
-      this.hdfsquota = value;
+  private long convertSpaceQuotaString(String quotaString){
+    long quota = -1l;
+    if (quotaString.endsWith("TB")) {
+      Long value = Long.parseLong(quotaString.substring(0, quotaString.length()-2));
+      quota = value * 1048576;
+    } else if (quotaString.endsWith("GB")) {
+      Long value = Long.parseLong(quotaString.substring(0, quotaString.length() - 2));
+      quota = value * 1024;
+    } else if (quotaString.endsWith("MB")) {
+      quota = Long.parseLong(quotaString.substring(0, quotaString.length()-2));
     } else {
-      Long value = Long.parseLong(this.hdfsquotastring);
-      this.hdfsquota = value;
+      quota = Long.parseLong(quotaString);
     }
+
+    return quota;
   }
 
   public void onRowCancel(RowEditEvent event) {

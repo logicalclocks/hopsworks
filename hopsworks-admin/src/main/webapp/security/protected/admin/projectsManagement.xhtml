@@ -28,7 +28,7 @@
 
         <p:layoutUnit id="centerLayout" position="center">
 
-          <div class="container" style="max-width: 1600px;">
+          <div class="container" style="max-width: 1650px; min-width: 1650px">
             <div align="left">
               <h2>Project Administration</h2>
             </div>
@@ -43,7 +43,7 @@
                              widgetVar="projectsTable"
                              emptyMessage="No projects found with given criteria"
                              rowKey="#{project.name}"
-                             style="table-layout: fixed"
+                             style="table-layout: auto"
                              sortMode="multiple"
                              editable="true"
                              scrollable="false"
@@ -152,6 +152,64 @@
                             headerText="Num Files Used"
                             style=" font-size: 12px; text-align: left;">
                     <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.name)}" />
+                  </p:column>
+
+                  <p:column id="hiveHdfsquotaColumn"
+                            filterBy="#{projectsmanagement.getHiveHdfsQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getHiveHdfsQuota(project.name)}"
+                            filterMatchMode="contains"
+                            headerText="HiveDB Disk Quota"
+                            style=" font-size: 12px; text-align: center;">
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText
+                          value="#{projectsmanagement.getHiveHdfsQuota(project.name)}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:inputText
+                          value="#{projectsmanagement.hiveHdfsquotastring}" style="width:100%">
+                          <f:validateRegex pattern = "([0-9]+([GMT]B)*)"/>
+                        </p:inputText>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+                  <p:column id="hiveDiskUsedColumn"
+                            filterBy="#{projectsmanagement.getHiveHdfsUsed(project.name)}"
+                            sortBy="#{projectsmanagement.getHiveHdfsUsed(project.name)}"
+                            filterMatchMode="contains"
+                            headerText="HiveDB Disk Used"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{projectsmanagement.getHiveHdfsUsed(project.name)}" />
+                  </p:column>
+
+                  <p:column id="hiveHdfsNsquotaColumn"
+                            filterBy="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}"
+                            sortBy="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}"
+                            filterMatchMode="contains"
+                            headerText="HiveDB Max # Files"
+                            style=" font-size: 12px; text-align: center;">
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText
+                          value="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:inputText
+                          value="#{projectsmanagement.hiveHdfsNsquota}" style="width:100%">
+                          <f:validateLongRange
+                            maximum="10000000000"
+                            minimum="-1" />
+                        </p:inputText>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+                  <p:column id="hiveNoFilesUsedColumn"
+                            filterBy="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}"
+                            sortBy="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}"
+                            filterMatchMode="contains"
+                            headerText="HiveDB # Files"
+                            style=" font-size: 12px; text-align: left;">
+                    <h:outputText value="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}" />
                   </p:column>
 
                   <p:column id="useremailColumn"
