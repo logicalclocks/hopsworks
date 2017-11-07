@@ -73,10 +73,10 @@ a:focus,
 .navbar-nav
 .open
 .dropdown-messages {
-    right: 5%;
-    min-width: 500px;
-    box-shadow:1px 1px 1px 1px #ccc;
+    right: 20%;
+    min-width: 340px;
     padding: 20px;
+    margin-top: 20px;
 }
 
 .navbar-nav
@@ -113,6 +113,10 @@ ul.dropdown-messages a:hover  {
     color: #006190;
 }
 
+nav.navbar-sics
+ul.dropdown-messages .dropdown-header {
+  padding: 0px !important;
+}
 
 .ds-namenode {
   font-weight: normal; 
@@ -148,6 +152,13 @@ ul.dropdown-messages a:hover  {
 }
 .ds-sidenav.open {
     width: 20%;
+    min-width: 380px;
+}
+
+.ds-sidenav-table > tbody > tr > td {
+  max-width: 230px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .row-no-margin-left {

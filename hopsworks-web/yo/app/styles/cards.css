@@ -24,8 +24,8 @@
     position: relative;
 }
 
-.col-sm-4.col-md-3 .card-item-content {
-    border-top: 2px solid;
+.col-sm-4.col-md-4 .card-item-content {
+  border-top: 2px solid;
 }
 
 .card-modal .card-item-content {
@@ -36,7 +36,7 @@
 }
 
 .col-sm-12.col-md-12 .card-item-content {
-      border-left: 2px solid;
+  border-left: 2px solid;
 }
 
 .card-item-content.red {

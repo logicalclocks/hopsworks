@@ -1,88 +1,87 @@
 <script>$(document).ready(hamburger);</script> 
 
 <nav class="navbar navbar-default navbar-sics navbar-fixed-top" id="header_nav">
-  <div class="container-fluid">
-
+  <div ng-class="{'container': !projectView, 'container-fluid': projectView}">
     <div growl class="pull-right"></div>
-
-    <div class="container-fluid" style="min-width: 300px">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="uib-collapse" data-target="#navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-      <div class="navbar-header" style="padding-right: 55px">
-
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <div style="padding-right: 55px">
         <a class="navbar-brand" href="#home" style="font-family: Lobster; font-size: 30px; color: #fff;">HopsWorks
           <img alt="hops icon" class="pull-right" style="margin-left:10px;" width="25" src="images/hops.png"/>
         </a>
         <div class="input-group" ng-show="showHamburger">
-          <button type="button" class="hamburger is-open" style="color:white;" data-toggle="offcanvas" ng-click="projectCtrl.isClosed=!projectCtrl.isClosed">
+          <button type="button" class="hamburger is-open" style="color:white;" data-toggle="offcanvas" ng-click="projectCtrl.isClosed = !projectCtrl.isClosed">
             <span class="hamb-top"></span>
             <span class="hamb-middle"></span>
             <span class="hamb-bottom"></span>
           </button>
         </div>
       </div>
-
-      <div class="uib-collapse navbar-collapse" id="navbar">
-        <ul class="nav navbar-nav navbar-right"
-            style="margin-right:10px;">
-          <li ng-click="mainCtrl.getMessages()" uib-dropdown>
-            <a uib-dropdown-toggle style="padding:5px 15px 0px 10px; margin-top: 13px; margin-bottom: -15px;" aria-expanded="false">
-              <i ng-if="mainCtrl.unreadMessages" class="fa fa-envelope fa-lg" title="Unread messages">
-                <span class="badge" style="background-color: #f89406; font-family: sans-serif; z-index: 100; position: absolute; top: -10px; right: -18px">{{mainCtrl.unreadMessages}}</span>
-              </i>
-              <i ng-if="!mainCtrl.unreadMessages" class="fa fa-envelope-o fa-lg" title="No unread message"></i>
-            </a>
-            <ul uib-dropdown-menu class="dropdown-menu dropdown-messages" >
-              <h3 ng-if="mainCtrl.messages.length" class="text-muted"> Latest messages</h3>
-              <h3 ng-if="!mainCtrl.messages.length" class="text-muted"> Inbox empty.</h3>
-              <li ng-repeat="msg in mainCtrl.messages | limitTo:5">
-                <div>
-                  <i ng-if="msg.unread" class="fa fa-circle pull-left" style="color:#f89406" title="Unread message"></i>
-                  <i ng-if="!msg.unread" class="fa fa-circle pull-left" style="color:grey" title="Read message"></i>
-                  <div ng-click="mainCtrl.openMessageModal(msg)">
-                    <div class="text-muted pull-right">{{msg.dateSent | date:'medium'}}</div>
-                    <div class="message-subject">{{msg.subject}}</div>
-                    <div class="message-from">{{msg.from.fname}} {{msg.from.lname}}</div>
-                  </div>
-                  <div ng-click="mainCtrl.openMessageModal(msg)" class="message-preview">{{msg.preview | limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
-                  <a ng-if="msg.path" href="#!/{{msg.path}}"> go to requested path.</a>
-                </div>
-              </li>
-              <a ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
-            </ul>
-          </li>
-          <li uib-dropdown>
-            <a uib-dropdown-toggle style="padding:7px 10px 8px 10px; text-decoration:none;"  aria-expanded="false" id="navbarProfile">
-              <img src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=retro&s=50" style="height: 35px; margin-right: 10px;border: 0.5px solid gray;" class="profile-image img-circle">
+    </div>
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="nav navbar-nav navbar-right" style="margin-right:10px;">
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" style="padding:7px 10px 8px 10px; text-decoration:none;"  aria-expanded="false" id="navbarProfile">
+              <img alt="" src="https://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=retro&s=50" style="height: 35px; margin-right: 10px;border: 0.5px solid gray;" class="profile-image img-circle">
               {{mainCtrl.email}} <b class="caret"></b>
             </a>
-            <ul uib-dropdown-menu class="dropdown-menu">
-              <li ng-show="mainCtrl.isAdmin()==='true'"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
+            <ul class="dropdown-menu">
+              <li ng-show="mainCtrl.isAdmin() === 'true'"><a ng-click="mainCtrl.goToAdminPage()"><i class="fa fa-user-secret"></i>Admin</a></li>
               <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <!--<li><a ng-click="mainCtrl.sshKeysModal()"><i class="fa fa-key"></i> Ssh Keys</a></li>-->
               <li><a href="#!/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
             </ul>
           </li>
         </ul>
-         <!--ng-show="showDatasets"-->
-          <form class="navbar-form" role="search">
-          <div class="col-md-offset-2 col-md-4 input-group">
-              <input type="text" class="form-control" style="height: 28px;margin-top: 3px;" placeholder="Search"
-                     name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-model-options="{debounce: 500}"
-                     ng-change="mainCtrl.keyTyped()" ng-keyup="mainCtrl.hitEnter($event)">
+        <ul class="nav navbar-nav navbar-right" style="margin-right:10px;">
+          <li class="dropdown" ng-click="mainCtrl.getMessages()">
+            <a class="dropdown-toggle" data-toggle="dropdown" style="padding:5px 15px 0px 20px; margin-top: 13px;" aria-expanded="false">
+              <i ng-if="mainCtrl.unreadMessages" class="fa fa-envelope fa-lg" title="Unread messages">
+                <span class="badge" style="background-color: #f89406; font-family: sans-serif; z-index: 100; position: absolute; top: -10px; right: -18px">{{mainCtrl.unreadMessages}}</span>
+              </i>
+              <i ng-if="!mainCtrl.unreadMessages" class="fa fa-envelope-o fa-lg" title="No unread message"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-messages" >
+              <li class="dropdown-header text-muted" ng-if="mainCtrl.messages.length"><h4>Latest messages</h4></li>
+              <li class="dropdown-header text-muted" ng-if="!mainCtrl.messages.length"><h4>Inbox empty.</h4></li>
+              <li ng-repeat="msg in mainCtrl.messages| limitTo:5">
+                <div>
+                  <div ng-click="mainCtrl.openMessageModal(msg)">                    
+                    <div class="message-subject text-muted">
+                      <i ng-if="msg.unread" class="fa fa-circle pull-left" style="color:#f89406; margin-top: 4px;" title="Unread message"></i>
+                      <i ng-if="!msg.unread" class="fa fa-circle pull-left" style="color:grey; margin-top: 4px;" title="Read message"></i>
+                      {{msg.subject}}</div>
+                    <div class="text-muted">{{msg.dateSent| date:'medium'}}</div>
+                  </div>
+                  <div ng-click="mainCtrl.openMessageModal(msg)" class="message-preview">{{msg.preview| limitTo:80}} {{msg.preview.length > 80 ? ' ...' : ''}}</div>
+                  <a ng-if="msg.path" href="#!/{{msg.path}}"> go to requested path.</a>
+                </div>
+              </li>
+              <a class="pull-right" ng-if="mainCtrl.messages.length" ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> See all messages</a>
+              <a class="pull-right" ng-if="!mainCtrl.messages.length" ng-click="mainCtrl.openMessageModal()" style="text-decoration:none;"> Goto messages</a>
+            </ul>
+          </li>          
+        </ul>
+        <!--ng-show="showDatasets"-->
+        <form class="navbar-form">
+          <div class="col-xs-12 col-sm-4 col-md-4 input-group" ng-class="{'col-md-offset-0': !projectView, 'col-md-offset-1': projectView}">
+            <input type="text" class="form-control" style="height: 28px;margin-top: 3px;" placeholder="Search"
+                   name="srch-term" id="srch-term" ng-model="mainCtrl.searchTerm" ng-model-options="{debounce: 500}"
+                   ng-change="mainCtrl.keyTyped()" ng-keyup="mainCtrl.hitEnter($event)">
 
-              <div class="input-group-btn" style="width: 54px;">
-                <button class="btn btn-default" style="color: #028e9b;margin-top: 3px; padding: 6px 12px;"
-                        ng-click="mainCtrl.search()"
-                        type="button">
-                  <i class="glyphicon glyphicon-search"></i></button>
-              </div>
+            <div class="input-group-btn" style="width: 54px;">
+              <button class="btn btn-default" style="color: #028e9b;margin-top: 3px; padding: 6px 12px;"
+                      ng-click="mainCtrl.search()"
+                      type="button">
+                <i class="glyphicon glyphicon-search"></i></button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
+    </div>
 </nav>

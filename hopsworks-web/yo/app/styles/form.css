@@ -138,12 +138,6 @@ textarea.form-control {
   border-top: 1px solid rgba(0, 0, 0, 0.15);
   margin-top: 50px;
   padding: 20px;
-  width: 100%;
-}
-.container {
-  margin-top: 50px;
-  padding: 20px;
-  width: 100%;
 }
 
 .content-wrapper > .unwrap {

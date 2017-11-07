@@ -141,10 +141,10 @@
                         </div>           
                       </div>
                       <md-content>
-                        <table class="table table-hover" style="width: 100%">
+                        <table class="table table-hover ds-sidenav-table" style="width: 100%">
                           <tbody ng-repeat="interpreter in zeppelinCtrl.interpreters track by $index">
                             <tr>
-                              <td><span>{{interpreter.interpreter.name}} Interpreter </span></td>
+                              <td>{{interpreter.interpreter.name}} Interpreter</td>
                               <td class="text-muted">{{interpreter.statusMsg}}</td>
                               <td style="text-align: right">                                      
                                 <button ng-if="interpreter.interpreter.group === 'spark' && !interpreter.interpreter.notRunning"
@@ -214,6 +214,4 @@
       </section>
     </div>
   </div>
-</div>
-</div>
 </div>

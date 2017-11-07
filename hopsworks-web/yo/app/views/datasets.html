@@ -43,7 +43,7 @@
             <div class="row row-no-margin-left" ng-controller="SearchResultCtrl as searchResultCtrl">
               <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">                 
                 <div class="row" resizable r-directions="['bottom']" ng-class="{'rg-row-top-ds': readme !== null}">
-                  <div class="col-lg-12 ds-box" style="margin-top: 15px;">                    
+                  <div class="col-lg-12 ds-box thin-scrollbar" style="margin-top: 15px;">                    
                     <div class="file-box">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
@@ -252,7 +252,7 @@
                 </div>
                 <!--background-color: rgb(250, 251, 252);-->
                 <div class="row rg-row-bottom-ds" ng-show="readme !== null">
-                  <div class="col-lg-12 ds-box-bottom">
+                  <div class="col-lg-12 ds-box-bottom thin-scrollbar">
                     <div class="col-lg-12" style="border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
                       <!-- README.md is displayed here -->
                       <div class="row" style="background: #eee; font-size:20px; font-weight: bold; border-radius: 10px 10px 0 0;">

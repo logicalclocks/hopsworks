@@ -1,33 +1,36 @@
-<div>
+<div class="container content-wrapper">
   <nav class="navbar navbar-default">
     <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" >Search results</a>
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#search-navbar" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" >Search results</a>
+      </div>
+      <div class="collapse navbar-collapse" id="search-navbar">
+        <ul class="nav navbar-nav navbar-right search-result-menu">
+          <li>
+            <a data-toggle="collapse" data-target="#filterdropdown" role="button" aria-haspopup="true" aria-expanded="false">
+              <span class="glyphicon glyphicon-filter" aria-hidden="true"></span> Filter</a>         
+          </li>
+          <li>
+            <a ng-click="listView =! listView; mainCtrl.viewType(listView)"
+               data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
+              <span class="glyphicon" ng-class="{'glyphicon-th-list' : !listView, 'glyphicon-th': listView}" 
+                    aria-hidden="true" style="font-size: 20px;"></span></a>
+          </li>
+          <li>
+            <a ng-click="mainCtrl.clearSearch()"
+               data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
+              <span class="glyphicon glyphicon-remove" aria-hidden="true" style="font-size: 20px;"></span></a>
+          </li>
+        </ul>
+      </div>
     </div>
-    <ul class="nav navbar-nav navbar-right search-result-menu">
-      <li>
-        <a data-toggle="collapse" data-target="#filterdropdown" role="button" aria-haspopup="true" aria-expanded="false">
-          <span class="glyphicon glyphicon-filter" aria-hidden="true"></span> Filter</a>         
-      </li>
-      <li>
-          <a ng-click="listView =! listView; mainCtrl.viewType(listView)"
-             data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
-            <span class="glyphicon" ng-class="{'glyphicon-th-list' : !listView, 'glyphicon-th': listView}" 
-                  aria-hidden="true" style="font-size: 20px;"></span></a>
-      </li>
-      <li>
-          <a ng-click="mainCtrl.clearSearch()"
-             data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true" style="font-size: 20px;"></span></a>
-      </li>
-    </ul>
   </nav>
   <section id="filterdropdown" class="collapse search-result-filter">
     <div class="row result-filter-body">
@@ -137,6 +140,7 @@
     </div>
   </section> 
   <section class="search-result">
+    
     <div class="row search-result-header">
       <div class="col-md-11 pull-left">
         <h3>{{mainCtrl.searchResult.length}} Results found for: {{mainCtrl.searchTerm | limitTo: 85 }}
@@ -152,11 +156,11 @@
         </div>
       </div>
     </div>
-    <div class="search-result-body row" ng-controller="SearchResultCtrl as searchResultCtrl">
+    <div class="search-result-body row thin-scrollbar" ng-controller="SearchResultCtrl as searchResultCtrl">
       <div class="loader loader-md" ng-show="mainCtrl.searching"></div>
       <div ng-if="!mainCtrl.searching" ng-init="searchResultCtrl.init(mainCtrl.searchResult)"></div>
       <div dir-paginate="result in mainCtrl.searchResult | orderBy:sortKey | filter: {public_ds: searchTypePub} | filter: {type: searchType} | filter: {user: searchOwner} | filter: {name: searchName} | itemsPerPage:mainCtrl.pageSize">
-        <div id="cards-{{mainCtrl.currentPage}}-{{$index}}" class="col-xs-12" ng-class="{'col-sm-4 col-md-3': !listView, 'col-sm-12 col-md-12': listView}">
+        <div id="cards-{{mainCtrl.currentPage}}-{{$index}}" class="col-xs-12" ng-class="{'col-sm-4 col-md-4': !listView, 'col-sm-12 col-md-12': listView}">
           <hw-card id="{{mainCtrl.currentPage}}-{{$index}}" content="result" limit="listView ? 240:50" 
                    details-fn="mainCtrl.viewDetail(result)" 
                    download-fn="mainCtrl.downloadPublicDataset(result)"
