@@ -25,9 +25,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class VariablesFacade extends AbstractFacade<Variables> {
+
+  private final static Logger logger = Logger.getLogger(VariablesFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -40,37 +44,25 @@ public class VariablesFacade extends AbstractFacade<Variables> {
   public VariablesFacade() { super(Variables.class); }
 
   public void storeVariable(String id, String value) {
-    // Check if the variable is already
-    Variables variable = getVariable(id);
-
-    if (variable == null) {
-      // The variable doesn't exist
-      variable = new Variables(id, value);
-      em.persist(variable);
-    } else {
-      // The variable already exists, update its value
-      variable.setValue(value);
-      em.merge(variable);
-    }
+    Variables variable = new Variables(id, value);
+    em.merge(variable);
+    em.flush();
   }
 
   public String getVariableValue(String id) {
-    Variables variable = getVariable(id);
-    if (variable == null) {
-      return null;
-    }
-    return variable.getValue();
-  }
-
-  private Variables getVariable(String id) {
     TypedQuery<Variables> query =
         em.createNamedQuery("Variables.findById", Variables.class)
         .setParameter("id", id);
 
     try {
-      return query.getSingleResult();
+      Variables var = query.getSingleResult();
+      if (var != null) {
+        return var.getValue();
+      }
     } catch (NoResultException e) {
-      return null;
+      logger.log(Level.INFO, "Variable " + id + " not found in the database");
     }
+
+    return null;
   }
 }

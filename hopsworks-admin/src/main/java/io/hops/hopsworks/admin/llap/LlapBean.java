@@ -22,7 +22,7 @@ import org.primefaces.context.RequestContext;
 
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean(name = "LlapBean")
-@SessionScoped
+@ViewScoped
 public class LlapBean implements Serializable {
 
   @EJB
@@ -55,6 +55,9 @@ public class LlapBean implements Serializable {
   private long cacheMemory = 4096;
   private int nExecutors = 4;
   private int nIOThreads = 4;
+
+  private Boolean isClusterUp = null;
+  private Boolean isClusterStarting = null;
 
   private List<String> llapHosts = new ArrayList<>();
   private String selectedHost = "";
@@ -145,7 +148,19 @@ public class LlapBean implements Serializable {
   }
 
   public boolean isClusterUp() {
-    return llapClusterFacade.isClusterUp();
+    if (isClusterUp == null) {
+      isClusterUp = llapClusterFacade.isClusterUp();
+    }
+
+    return isClusterUp;
+  }
+
+  public boolean isClusterStarting() {
+    if (isClusterStarting == null) {
+      isClusterStarting = llapClusterFacade.isClusterStarting();
+    }
+
+    return isClusterStarting;
   }
 
   public boolean areContainersRunning() {
@@ -153,8 +168,7 @@ public class LlapBean implements Serializable {
   }
 
   public void waitForCluster() {
-    if (llapClusterFacade.isClusterUp()
-        || (!llapClusterFacade.isClusterUp() && !llapClusterFacade.isClusterStarting())) {
+    if (isClusterUp() || (!isClusterUp() && !isClusterStarting())) {
       RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "true");
       return;
     }
