@@ -147,8 +147,8 @@ public class ResetPassword implements Serializable {
       return ("password_sent");
     }
     try {
-
-      if (!DigestUtils.sha256Hex(answer).equals(people.
+      
+      if (!DigestUtils.sha256Hex(answer.toLowerCase()).equals(people.
           getSecurityAnswer())) {
 
         // Lock the account if n tmies wrong answer  
@@ -334,7 +334,7 @@ public class ResetPassword implements Serializable {
 
         // update the security question
         mgr.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(
-            this.answer));
+            this.answer.toLowerCase()));
 
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
