@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.dela;
 
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
@@ -52,7 +52,7 @@ public class DelaClusterService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getPublicDatasets(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();

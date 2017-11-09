@@ -32,7 +32,7 @@ import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.notebook.Paragraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.common.collect.Sets;
@@ -1028,7 +1028,7 @@ public class NotebookRestApi {
   @POST
   @Path("/new")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response createNew(NewNotebookRequest newNote) throws AppException {
     Note note;
     NoteInfo noteInfo;

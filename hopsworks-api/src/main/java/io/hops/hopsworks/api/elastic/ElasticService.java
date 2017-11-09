@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.elastic;
 
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.elastic.ElasticHit;
@@ -53,7 +53,7 @@ public class ElasticService {
   @GET
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response globalSearch(
           @PathParam("searchTerm") String searchTerm,
           @Context SecurityContext sc,
@@ -86,7 +86,7 @@ public class ElasticService {
   @GET
   @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response projectSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("searchTerm") String searchTerm,
@@ -117,7 +117,7 @@ public class ElasticService {
   @GET
   @Path("datasetsearch/{projectId}/{datasetName}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,

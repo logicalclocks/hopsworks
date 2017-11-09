@@ -22,7 +22,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -58,7 +58,7 @@ public class ProjectMembersService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findMembersByProjectID(
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -74,7 +74,7 @@ public class ProjectMembersService {
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addMembers(
           MembersDTO members,
           @Context SecurityContext sc,
@@ -119,7 +119,7 @@ public class ProjectMembersService {
   @POST
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateRoleByEmail(
           @PathParam("email") String email,
           @FormParam("role") String role,
@@ -152,7 +152,7 @@ public class ProjectMembersService {
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeMembersByID(
           @PathParam("email") String email,
           @Context SecurityContext sc,
@@ -166,7 +166,7 @@ public class ProjectMembersService {
               ResponseMessages.EMAIL_EMPTY);
     }
     //Data Scientists are only allowed to remove themselves
-    if (sc.isUserInRole(AllowedRoles.DATA_SCIENTIST) && !owner.equals(email)) {
+    if (sc.isUserInRole(AllowedProjectRoles.DATA_SCIENTIST) && !owner.equals(email)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.MEMBER_REMOVAL_NOT_ALLOWED);
     }

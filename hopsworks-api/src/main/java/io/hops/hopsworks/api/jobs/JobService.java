@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
@@ -180,7 +180,7 @@ public class JobService {
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findAllJobs(@Context SecurityContext sc,
       @Context HttpServletRequest req)
       throws AppException {
@@ -203,7 +203,7 @@ public class JobService {
   @GET
   @Path("/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getJob(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -239,7 +239,7 @@ public class JobService {
   @GET
   @Path("/{jobId}/config")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getJobConfiguration(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -270,7 +270,7 @@ public class JobService {
   @GET
   @Path("/{jobId}/appId")
   @Produces(MediaType.TEXT_PLAIN)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getAppId(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -322,7 +322,7 @@ public class JobService {
   @GET
   @Path("/{jobId}/appIds")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getAppIds(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -390,7 +390,7 @@ public class JobService {
   @GET
   @Path("/projectName")
   @Produces(MediaType.TEXT_PLAIN)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getProjectName(
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -467,7 +467,7 @@ public class JobService {
   @GET
   @Path("/{appId}/ui/{isLivy}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getJobUI(@PathParam("appId") String appId,
       @PathParam("isLivy") String isLivy,
       @Context SecurityContext sc,
@@ -535,7 +535,7 @@ public class JobService {
   @GET
   @Path("/{appId}/yarnui")
   @Produces(MediaType.TEXT_PLAIN)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getYarnUI(@PathParam("appId") String appId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -574,7 +574,7 @@ public class JobService {
   @GET
   @Path("/{appId}/appinfo")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getAppInfo(@PathParam("appId") String appId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -700,7 +700,7 @@ public class JobService {
   @GET
   @Path("/{appId}/prox/{path: .+}")
   @Produces(MediaType.WILDCARD)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getProxy(@PathParam("appId")
       final String appId,
       @PathParam("path")
@@ -913,7 +913,7 @@ public class JobService {
   @GET
   @Path("/template/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplate(@PathParam("type") String type,
       @Context SecurityContext sc, @Context HttpServletRequest req) {
     JobConfiguration template = JobConfiguration.JobConfigurationFactory.
@@ -935,7 +935,7 @@ public class JobService {
   @GET
   @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getConfigurationTemplate(@Context SecurityContext sc,
       @Context HttpServletRequest req) {
     List<Jobs> running = jobFacade.getRunningJobs(project);
@@ -1014,7 +1014,7 @@ public class JobService {
   @GET
   @Path("/{jobId}/showlog")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getLogInformation(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) {
@@ -1081,7 +1081,7 @@ public class JobService {
   @GET
   @Path("/getLog/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getLog(@PathParam("appId") String appId,
       @PathParam("type") String type) throws AppException {
     if (appId == null || appId.isEmpty()) {
@@ -1125,7 +1125,7 @@ public class JobService {
   @GET
   @Path("/getLogByJobId/{jobId}/{submissionTime}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getLogByJobId(@PathParam("jobId") Integer jobId, @PathParam("submissionTime") String submissionTime,
       @PathParam("type") String type) throws AppException {
     if (jobId == null || jobId <= 0) {
@@ -1175,7 +1175,7 @@ public class JobService {
   @GET
   @Path("/retryLogAggregation/{appId}/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response retryLogAggregation(@PathParam("appId") String appId,
       @PathParam("type") String type,
       @Context HttpServletRequest req) throws AppException {
@@ -1302,7 +1302,7 @@ public class JobService {
   @DELETE
   @Path("/{jobId}/deleteJob")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response deleteJob(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -1362,7 +1362,7 @@ public class JobService {
    */
   @Path(
       "/{jobId}/executions")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public ExecutionService executions(@PathParam("jobId") int jobId) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
@@ -1381,7 +1381,7 @@ public class JobService {
   @Path("/updateschedule/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response updateSchedule(ScheduleDTO schedule,
       @PathParam("jobId") int jobId,
       @Context SecurityContext sc,
@@ -1431,43 +1431,43 @@ public class JobService {
 
   @Path(
       "/spark")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public SparkService spark() {
     return this.spark.setProject(project);
   }
 
   @Path("/pyspark")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public SparkService pyspark() {
     return this.spark.setProject(project);
   }
 
   @Path("/tfspark")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public SparkService tfspark() {
     return this.spark.setProject(project);
   }
 
   @Path("/tensorflow")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public TensorFlowService tensorflow() {
     return this.tensorflow.setProject(project);
   }
 
   @Path("/adam")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public AdamService adam() {
     return this.adam.setProject(project);
   }
 
   @Path("/flink")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public FlinkService flink() {
     return this.flink.setProject(project);
   }
 
   @Path("/{appId}/influxdb")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public InfluxDBService influxdb(@PathParam("appId") String appId) {
     return this.influxdb.setAppId(appId);
   }

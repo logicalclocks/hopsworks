@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import org.apache.commons.codec.binary.Base64;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -60,7 +60,7 @@ public class UserService {
   @GET
   @Path("allcards")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
 
@@ -219,7 +219,7 @@ public class UserService {
   @Path("addSshKey")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response addSshkey(SshKeyDTO sshkey,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -234,7 +234,7 @@ public class UserService {
   @POST
   @Path("removeSshKey")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response removeSshkey(@FormParam("name") String name,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -251,7 +251,7 @@ public class UserService {
   @GET
   @Path("getSshKeys")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getSshkeys(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());

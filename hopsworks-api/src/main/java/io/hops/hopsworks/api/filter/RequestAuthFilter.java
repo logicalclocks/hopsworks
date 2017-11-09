@@ -77,18 +77,18 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       log.log(Level.FINEST, "Filtering project request path: {0}", project.
               getName());
 
-      if (!method.isAnnotationPresent(AllowedRoles.class)) {
+      if (!method.isAnnotationPresent(AllowedProjectRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.
                 status(Response.Status.SERVICE_UNAVAILABLE).build());
         return;
       }
-      AllowedRoles rolesAnnotation = method.getAnnotation(AllowedRoles.class);
+      AllowedProjectRoles rolesAnnotation = method.getAnnotation(AllowedProjectRoles.class);
       Set<String> rolesSet;
-      rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.roles()));
+      rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.value()));
 
       //If the resource is allowed for all roles continue with the request. 
-      if (rolesSet.contains(AllowedRoles.ALL)) {
+      if (rolesSet.contains(AllowedProjectRoles.ANYONE)) {
         log.log(Level.FINEST, "Accessing resource that is allowed for all");
         return;
       }

@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -65,7 +65,7 @@ public class InfluxDBService {
   @GET
   @Path("/{database}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getMetrics(
           @PathParam("database") String database,
           @QueryParam("columns") String columns,
@@ -115,7 +115,7 @@ public class InfluxDBService {
   @GET
   @Path("/allexecutors")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getAllExecutorsMetrics(
           @QueryParam("filters") final String filters,
           @Context SecurityContext sc, @Context HttpServletRequest req) throws

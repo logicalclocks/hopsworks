@@ -18,7 +18,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
@@ -82,7 +82,7 @@ public class KafkaService {
   @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
@@ -101,7 +101,7 @@ public class KafkaService {
   @GET
   @Path("/sharedTopics")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getSharedTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
@@ -120,7 +120,7 @@ public class KafkaService {
   @GET
   @Path("/projectAndSharedTopics")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getProjectAndSharedTopics(@Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
@@ -141,7 +141,7 @@ public class KafkaService {
   @Path("/topic/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response createTopic(TopicDTO topicDto,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -168,7 +168,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeTopic(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -188,7 +188,7 @@ public class KafkaService {
   @GET
   @Path("/details/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopicDetails(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -218,7 +218,7 @@ public class KafkaService {
   @GET
   @Path("/topic/defaultValues")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response topicDefaultValues(
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -238,7 +238,7 @@ public class KafkaService {
   @GET
   @Path("/topic/{topic}/share/{projId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response shareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projId") int projectId,
@@ -271,7 +271,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projectId") int projectId,
@@ -288,7 +288,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopicFromProject(
           @PathParam("topic") String topicName,
           @Context SecurityContext sc,
@@ -304,7 +304,7 @@ public class KafkaService {
   @GET
   @Path("/{topic}/sharedwith")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response topicIsSharedTo(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -322,7 +322,7 @@ public class KafkaService {
   @GET
   @Path("/aclUsers/topic/{topicName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response aclUsers(@PathParam("topicName") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -346,7 +346,7 @@ public class KafkaService {
   @Path("/topic/{topic}/addAcl")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addAclsToTopic(@PathParam("topic") String topicName,
           AclDTO aclDto,
           @Context SecurityContext sc, @Context HttpServletRequest req)
@@ -380,7 +380,7 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/removeAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeAclsFromTopic(@PathParam("topic") String topicName,
           @PathParam("aclId") int aclId,
           @Context SecurityContext sc,
@@ -406,7 +406,7 @@ public class KafkaService {
   @GET
   @Path("/acls/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopicAcls(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -432,7 +432,7 @@ public class KafkaService {
   @PUT
   @Path("/topic/{topic}/updateAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateTopicAcls(@PathParam("topic") String topicName,
           @PathParam("aclId") String aclId, AclDTO aclDto,
           @Context SecurityContext sc,
@@ -467,7 +467,7 @@ public class KafkaService {
   @POST
   @Path("/schema/validate")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response ValidateSchemaForTopics(SchemaDTO schemaData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -501,7 +501,7 @@ public class KafkaService {
   @Path("/schema/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addTopicSchema(SchemaDTO schemaData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -539,7 +539,7 @@ public class KafkaService {
   @GET
   @Path("/schemas")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response listSchemasForTopics(
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -562,7 +562,7 @@ public class KafkaService {
   @GET
   @Path("/showSchema/{schemaName}/{schemaVersion}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getSchemaContent(@PathParam("schemaName") String schemaName,
           @PathParam("schemaVersion") Integer schemaVersion,
           @Context SecurityContext sc,
@@ -582,7 +582,7 @@ public class KafkaService {
   @DELETE
   @Path("/removeSchema/{schemaName}/{version}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response deleteSchema(@PathParam("schemaName") String schemaName,
           @PathParam("version") Integer version,
           @Context SecurityContext sc,

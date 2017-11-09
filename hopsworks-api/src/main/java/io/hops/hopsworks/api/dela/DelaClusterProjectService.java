@@ -1,7 +1,7 @@
 package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -56,7 +56,7 @@ public class DelaClusterProjectService {
   
   @POST
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response share(@Context SecurityContext sc, InodeIdDTO inodeId) throws ThirdPartyException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
@@ -69,7 +69,7 @@ public class DelaClusterProjectService {
   @DELETE
   @Path("/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removePublic(@Context SecurityContext sc, @PathParam("inodeId") Integer inodeId) 
     throws ThirdPartyException {
     Inode inode = getInode(inodeId);

@@ -36,7 +36,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.apache.hadoop.security.AccessControlException;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.metadata.wscomm.MetadataController;
 import io.hops.hopsworks.api.metadata.wscomm.MetadataProtocol;
 import io.hops.hopsworks.api.metadata.wscomm.message.ContentMessage;
@@ -122,7 +122,7 @@ public class MetadataService {
    * @throws AppException
    */
   @Path("upload")
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public UploadService upload() throws AppException {
     this.uploader.confUploadTemplate();
     return this.uploader;
@@ -140,7 +140,7 @@ public class MetadataService {
   @GET
   @Path("{inodepid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchMetadataCompact(
           @PathParam("inodepid") Integer inodePid,
           @Context SecurityContext sc,
@@ -207,7 +207,7 @@ public class MetadataService {
   @GET
   @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchMetadata(
           @PathParam("inodepid") Integer inodePid,
           @PathParam("inodename") String inodeName,
@@ -289,7 +289,7 @@ public class MetadataService {
   @GET
   @Path("fetchtemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchTemplatesforInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
@@ -327,7 +327,7 @@ public class MetadataService {
   @GET
   @Path("fetchavailabletemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchAvailableTemplatesForInode(
           @PathParam("inodeid") Integer inodeid,
           @Context SecurityContext sc,
@@ -377,7 +377,7 @@ public class MetadataService {
   @GET
   @Path("detachtemplate/{inodeid}/{templateid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response detachTemplateFromInode(
           @PathParam("inodeid") Integer inodeid,
           @PathParam("templateid") Integer templateid,
@@ -463,7 +463,7 @@ public class MetadataService {
   @GET
   @Path("fetchtemplate/{templateid}/{sender}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchTemplate(
           @PathParam("templateid") Integer templateid,
           @PathParam("sender") String sender,
@@ -496,7 +496,7 @@ public class MetadataService {
   @POST
   @Path("addWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response addMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
           String metaObj) throws
@@ -508,7 +508,7 @@ public class MetadataService {
   @POST
   @Path("updateWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response updateMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
           String metaObj) throws
@@ -521,7 +521,7 @@ public class MetadataService {
   @POST
   @Path("removeWithSchema")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response removeMetadataWithSchema(
           @Context SecurityContext sc, @Context HttpServletRequest req,
           String metaObj) throws
@@ -569,7 +569,7 @@ public class MetadataService {
     String userRole = projectTeamFacade.findCurrentRole(project, user);
 
     if (userRole != null && userRole.isEmpty() == false && userRole.
-            compareToIgnoreCase(AllowedRoles.DATA_OWNER) == 0) {
+            compareToIgnoreCase(AllowedProjectRoles.DATA_OWNER) == 0) {
       List<EntityIntf> composite = new ArrayList<>();
       composite.add(itc);
       try {
@@ -629,7 +629,7 @@ public class MetadataService {
   @POST
   @Path("attachSchemaless")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response attachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
           String metaObj) throws
@@ -643,7 +643,7 @@ public class MetadataService {
   @POST
   @Path("detachSchemaless")
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response detachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
           String metaObj) throws

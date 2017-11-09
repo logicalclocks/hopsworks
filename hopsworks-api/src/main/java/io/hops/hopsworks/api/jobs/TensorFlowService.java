@@ -19,7 +19,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -92,7 +92,7 @@ public class TensorFlowService {
   @GET
   @Path("/programs")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getPrograms(@Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException, Exception {
 
@@ -111,7 +111,7 @@ public class TensorFlowService {
   @Path("/cpu/allocate")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response allocateResources(TfResourceCluster resourceReq,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -129,7 +129,7 @@ public class TensorFlowService {
   @DELETE
   @Path("/cpu/{program}/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response freeResources(@PathParam("program") String topicName,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -158,7 +158,7 @@ public class TensorFlowService {
   @GET
   @Path("/inspect/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response inspectProgram(@PathParam("path") String path,
       @Context SecurityContext sc, @Context HttpServletRequest req) throws
       AppException, AccessControlException {
@@ -201,7 +201,7 @@ public class TensorFlowService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response createJob(TensorFlowJobConfiguration config,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {

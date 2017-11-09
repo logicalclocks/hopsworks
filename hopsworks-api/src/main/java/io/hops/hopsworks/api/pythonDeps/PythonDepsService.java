@@ -1,7 +1,7 @@
 package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
@@ -107,7 +107,7 @@ public class PythonDepsService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response index() throws AppException {
 
     Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
@@ -139,7 +139,7 @@ public class PythonDepsService {
 
   @GET
   @Path("/enable/{version}/{pythonKernelEnable}")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response enable(@PathParam("version") String version,
       @PathParam("pythonKernelEnable") String pythonKernelEnable,
       @Context SecurityContext sc,
@@ -169,7 +169,7 @@ public class PythonDepsService {
 
   @GET
   @Path("/installed")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response installed() throws AppException {
     Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
 
@@ -183,7 +183,7 @@ public class PythonDepsService {
 
   @GET
   @Path("/enabled")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response enabled() throws AppException {
     boolean enabled = project.getConda();
     if (enabled) {
@@ -197,7 +197,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/remove")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response remove(PythonDepJson library) throws AppException {
 
     pythonDepsFacade.removeLibrary(project,
@@ -209,7 +209,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/install")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
@@ -235,7 +235,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/installOneHost/{hostId}")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response installOneHost(
       @PathParam("hostId") String hostId,
@@ -249,7 +249,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/upgrade")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response upgrade(PythonDepJson library) throws AppException {
 
     pythonDepsFacade.upgradeLibrary(project,
@@ -262,7 +262,7 @@ public class PythonDepsService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/status")
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response status() throws AppException {
 
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
@@ -278,7 +278,7 @@ public class PythonDepsService {
   @GET
   @Path("/clone/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response doClone(
       @PathParam("projectName") String srcProject,
       @PathParam("projectName") String destProject,
@@ -295,7 +295,7 @@ public class PythonDepsService {
   @GET
   @Path("/createenv/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response createEnv(@PathParam("projectName") String projectName,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -309,7 +309,7 @@ public class PythonDepsService {
 
   @Path("/removeenv/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response removeEnv(@PathParam("projectName") String projectName,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -334,7 +334,7 @@ public class PythonDepsService {
   @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response search(@Context SecurityContext sc,
       @Context HttpServletRequest req,
       @Context HttpHeaders httpHeaders,

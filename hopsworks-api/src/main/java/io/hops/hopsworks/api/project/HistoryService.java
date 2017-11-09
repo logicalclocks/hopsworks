@@ -37,7 +37,7 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnAppResult;
 import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultDTO;
 import io.hops.hopsworks.common.dao.jobhistory.YarnAppResultFacade;
-import io.hops.hopsworks.api.filter.AllowedRoles;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -117,7 +117,7 @@ public class HistoryService {
   @GET
   @Path("all/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getAllProjects(@PathParam("projectId") int projectId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
@@ -149,7 +149,7 @@ public class HistoryService {
   @GET
   @Path("details/jobs/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getJob(@PathParam("jobId") String jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req,
@@ -164,7 +164,7 @@ public class HistoryService {
   @GET
   @Path("config/jobs/{jobId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.ALL})
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getConfig(@PathParam("jobId") String jobId,
           @Context SecurityContext sc,
           @Context HttpServletRequest req,
@@ -204,7 +204,7 @@ public class HistoryService {
   @Path("heuristics")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response Heuristics(JobDetailDTO jobDetailDTO,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
