@@ -434,8 +434,7 @@ public class ZeppelinConfig {
           "hadoop_dir", settings.getHadoopSymbolicLinkDir(),
           "anaconda_env_dir", settings.getAnacondaDir() + "/envs/"
           + this.projectName,
-          // TODO: This should be the project__username, not just the projectname
-          "hadoop_username", this.projectName,
+          "hadoop_username", this.projectName + Settings.PROJECT_GENERIC_USER_SUFFIX,
           "java_home", javaHome,
           "cuda_dir", settings.getCudaDir(),
           "ld_library_path", ldLibraryPath,
@@ -456,7 +455,8 @@ public class ZeppelinConfig {
               "livy_url", settings.getLivyUrl(),
               "livy_master", settings.getLivyYarnMode(),
               "zeppelin_home_dir", home,
-              "zeppelin_notebook_dir", notebookDir);
+              "zeppelin_notebook_dir", notebookDir,
+              "zeppelin_interpreters", settings.getZeppelinInterpreters());
       createdXml = ConfigFileGenerator.createConfigFile(zeppelin_site_xml_file,
           zeppelin_site_xml.
               toString());
@@ -477,7 +477,8 @@ public class ZeppelinConfig {
         getElasticRESTEndpoint();
     String projectIdProp = " -D" + Settings.HOPSWORKS_PROJECTID_PROPERTY + "=" + this.projectId;
     String projectNameProp = " -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=" + this.projectName;
-    String userProp = " -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=" + this.projectName;
+    String userProp = " -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=" + this.projectName
+        + Settings.PROJECT_GENERIC_USER_SUFFIX;
     //String sessionIdProp =  " -D" + Settings.HOPSWORKS_SESSIONID_PROPERTY + "=" + this.sessionId;
     String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties "
         + logstashID + restEndpointProp + keystorePwProp + truststorePwProp + elasticEndpointProp + projectIdProp
@@ -528,7 +529,7 @@ public class ZeppelinConfig {
               ConfigFileGenerator.INTERPRETER_TEMPLATE,
               "projectName", this.projectName,
               "zeppelin_home_dir", home,
-              "hdfs_user", this.projectName,
+              "hdfs_user", this.projectName + Settings.PROJECT_GENERIC_USER_SUFFIX,
               "hadoop_home", settings.getHadoopSymbolicLinkDir(),
               "livy_url", settings.getLivyUrl(),
               "metrics-properties_path", log4jPath + "," + distFiles.toString(),

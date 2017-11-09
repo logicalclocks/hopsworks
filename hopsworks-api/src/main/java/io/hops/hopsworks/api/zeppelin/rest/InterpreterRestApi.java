@@ -174,15 +174,15 @@ public class InterpreterRestApi {
       }
 
       InterpreterSetting interpreterSetting = interpreterSettingManager
-              .createNewSetting(request.getName(), request.getGroup(), request.getDependencies(),
-                      request.getOption(), request.getProperties());
+          .createNewSetting(request.getName(), request.getGroup(), request.getDependencies(),
+              request.getOption(), request.getProperties());
       zeppelinResource.persistToDB(this.project);
       logger.info("new setting created with {}", interpreterSetting.getId());
       return new JsonResponse<>(Status.OK, "", interpreterSetting).build();
     } catch (InterpreterException | IOException e) {
       logger.error("Exception in InterpreterRestApi while creating ", e);
       return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e))
-              .build();
+          .build();
     }
   }
 
@@ -194,11 +194,11 @@ public class InterpreterRestApi {
     try {
       UpdateInterpreterSettingRequest request = UpdateInterpreterSettingRequest.fromJson(message);
       interpreterSettingManager.setPropertyAndRestart(settingId, request.getOption(), request.getProperties(),
-              request.getDependencies());
+          request.getDependencies());
     } catch (InterpreterException e) {
       logger.error("Exception in InterpreterRestApi while updateSetting ", e);
       return new JsonResponse<>(Status.NOT_FOUND, e.getMessage(), ExceptionUtils.getStackTrace(e))
-              .build();
+          .build();
     } catch (IOException e) {
       logger.error("Exception in InterpreterRestApi while updateSetting ", e);
       return new JsonResponse<>(Status.INTERNAL_SERVER_ERROR, e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
@@ -242,9 +242,9 @@ public class InterpreterRestApi {
       } else {
         interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
       }
-      
+
       cleanUserCertificates(project, settingId);
-      
+
       zeppelinConf.getNotebookServer().clearParagraphRuntimeInfo(setting);
 
     } catch (InterpreterException e) {
@@ -286,8 +286,7 @@ public class InterpreterRestApi {
                   settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
         }
       } catch (IOException ex) {
-        logger.warn("Could not remove materialized certificates for user " +
-            project.getOwner().getUsername(), ex);
+        logger.warn("Could not remove materialized certificates for user " + project.getOwner().getUsername(), ex);
       } finally {
         if (null != dfso) {
           dfso.close();
@@ -295,7 +294,7 @@ public class InterpreterRestApi {
       }
     }
   }
-  
+
   /**
    * Get livy session Yarn AppId
    *
@@ -312,7 +311,7 @@ public class InterpreterRestApi {
       return new JsonResponse(Response.Status.NOT_FOUND, "Session '" + sessionId + "' not found.").build();
     }
     String projName = hdfsUsersController.getProjectName(session.getProxyUser());
-    
+
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
     }
@@ -323,7 +322,7 @@ public class InterpreterRestApi {
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(appStates.get(0).getApplicationid()).
-            build();
+        build();
 
   }
 
@@ -337,14 +336,14 @@ public class InterpreterRestApi {
   @Path("/spark/appId")
   @Produces(MediaType.TEXT_PLAIN)
   public Response getSparkSessionAppId()
-          throws AppException {
+      throws AppException {
     List<YarnApplicationstate> appStates = appStateBean.findByAppname(this.project.getName() + "-Zeppelin");
     if (appStates == null || appStates.isEmpty()) {
       return new JsonResponse(Response.Status.NOT_FOUND, "Zeppelin not running for project " + this.project.getName()).
-              build();
+          build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(appStates.get(0).getApplicationid()).
-            build();
+        build();
   }
 
   /**
@@ -358,7 +357,7 @@ public class InterpreterRestApi {
   @DELETE
   @Path("/livy/sessions/delete/{settingId}/{sessionId}")
   public Response stopSession(@PathParam("settingId") String settingId, @PathParam("sessionId") int sessionId) throws
-          AppException {
+      AppException {
     logger.info("Restart interpreterSetting {}", settingId);
     InterpreterSetting setting = interpreterSettingManager.get(settingId);
     LivyMsg.Session session = livyService.getLivySession(sessionId);
@@ -381,7 +380,7 @@ public class InterpreterRestApi {
     } catch (InterpreterException e) {
       logger.warn("Could not close interpreter.", e);
       throw new AppException(Status.BAD_REQUEST.getStatusCode(),
-              "Could not close interpreter. Make sure it is not running.");
+          "Could not close interpreter. Make sure it is not running.");
     }
 
     int timeout = zeppelinConf.getConf().getInt(ZeppelinConfiguration.ConfVars.ZEPPELIN_INTERPRETER_CONNECT_TIMEOUT);
@@ -395,13 +394,13 @@ public class InterpreterRestApi {
     }
     int res = livyService.deleteLivySession(sessionId);
     cleanUserCertificates(project, settingId);
-    
+
     if (res != Response.Status.NOT_FOUND.getStatusCode() && res != Response.Status.OK.getStatusCode()) {
       return new JsonResponse(Status.EXPECTATION_FAILED, "Could not stop session '" + sessionId + "'").build();
     }
-    
+
     InterpreterDTO interpreter = new InterpreterDTO(setting, !zeppelinResource.isInterpreterRunning(setting, project),
-            livyService.getZeppelinLivySessions(this.project));
+        livyService.getZeppelinLivySessions(this.project));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
@@ -435,13 +434,13 @@ public class InterpreterRestApi {
     try {
       Repository request = Repository.fromJson(message);
       interpreterSettingManager.addRepository(request.getId(), request.getUrl(),
-              request.isSnapshot(), request.getAuthentication(), request.getProxy());
+          request.isSnapshot(), request.getAuthentication(), request.getProxy());
       zeppelinResource.persistToDB(this.project);
       logger.info("New repository {} added", request.getId());
     } catch (Exception e) {
       logger.error("Exception in InterpreterRestApi while adding repository ", e);
       return new JsonResponse<>(Status.INTERNAL_SERVER_ERROR, e.getMessage(),
-              ExceptionUtils.getStackTrace(e)).build();
+          ExceptionUtils.getStackTrace(e)).build();
     }
     return new JsonResponse(Status.OK).build();
   }
@@ -464,6 +463,7 @@ public class InterpreterRestApi {
    * Delete repository
    *
    * @param repoId ID of repository
+   * @return 
    */
   @DELETE
   @Path("repository/{repoId}")
@@ -481,6 +481,7 @@ public class InterpreterRestApi {
 
   /**
    * Get available types for property
+   * @return 
    */
   @GET
   @Path("property/types")
@@ -512,6 +513,9 @@ public class InterpreterRestApi {
       if (interpreter.getName().contains("livy")) {
         interpreterDTO.setSessions(livyService.getZeppelinLivySessions(project));
       }
+      if (interpreter.getName().equalsIgnoreCase(settings.getZeppelinDefaultInterpreter())) {
+        interpreterDTO.setDefaultInterpreter(true);
+      }
     }
     return interpreterDTOs;
   }
@@ -532,7 +536,7 @@ public class InterpreterRestApi {
       timeSinceLastRestart = System.currentTimeMillis() - lastRestartTime;
       if (timeSinceLastRestart < 60000 * 1) {
         throw new AppException(Status.BAD_REQUEST.getStatusCode(), "This service has been restarted recently. "
-                + "Please wait a few minutes before trying again.");
+            + "Please wait a few minutes before trying again.");
       }
     }
     Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
@@ -553,10 +557,10 @@ public class InterpreterRestApi {
     }
 
     NotebookServerImpl notebookServerImpl = notebookServerImplFactory.getNotebookServerImpl(this.project.getName());
-    if(notebookServerImpl!=null){
+    if (notebookServerImpl != null) {
       notebookServerImpl.closeConnections(notebookServerImplFactory);
     }
-    
+
     List<ProjectTeam> projectTeam = teambean.findMembersByProject(this.project);
     for (ProjectTeam member : projectTeam) {
       TicketContainer.instance.invalidate(member.getUser().getEmail());
@@ -569,6 +573,7 @@ public class InterpreterRestApi {
    * Restarts zeppelin by cleaning the cache for the user
    * and project
    *
+   * @param user
    * @return
    * @throws AppException
    */

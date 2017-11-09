@@ -9,12 +9,18 @@ angular.module('hopsWorksApp')
             self.msg = msg;
             self.note = {};
             self.note.name = null;
-            self.note.defaultInterpreter = null;
+            self.note.defaultInterpreter =  null;
             self.interpreterSettings = [];
 
             var getInterpreters = function () {
               angular.forEach(val, function (value) {
                 self.interpreterSettings.push(value.interpreter);
+                if(value.interpreter.defaultInterpreter === true){
+                   self.note.defaultInterpreter = value.interpreter;
+                }
+//                if(value.interpreter.name === "livy"){
+//                   self.note.defaultInterpreter = value.interpreter;
+//                }
               });
             };
 

@@ -14,6 +14,7 @@ public class InterpreterDTO {
   private String group;
   private List<LivyMsg.Session> sessions;
   private boolean notRunning;
+  private boolean defaultInterpreter;
 
   public InterpreterDTO() {
   }
@@ -35,7 +36,7 @@ public class InterpreterDTO {
   }
 
   public InterpreterDTO(InterpreterSetting interpreter, boolean notRunning,
-          List<LivyMsg.Session> runningLivySessions) {
+      List<LivyMsg.Session> runningLivySessions) {
     this.id = interpreter.getId();
     this.name = interpreter.getName();
     this.group = null;
@@ -82,4 +83,13 @@ public class InterpreterDTO {
   public void setNotRunning(boolean notRunning) {
     this.notRunning = notRunning;
   }
+
+  public boolean isDefaultInterpreter() {
+    return defaultInterpreter;
+  }
+
+  public void setDefaultInterpreter(boolean defaultInterpreter) {
+    this.defaultInterpreter = defaultInterpreter;
+  }
+
 }
