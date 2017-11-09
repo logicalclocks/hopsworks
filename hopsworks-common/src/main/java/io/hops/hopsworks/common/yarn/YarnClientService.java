@@ -88,8 +88,6 @@ public class YarnClientService {
         return createYarnClient(username, newConf);
       } catch (CryptoPasswordNotFoundException ex) {
         LOG.log(Level.SEVERE, ex.getMessage(), ex);
-        String[] project_username = username.split(HdfsUsersController
-            .USER_NAME_DELIMITER);
         bhcs.removeNonSuperUserCertificate(username);
         return null;
       }
@@ -135,9 +133,9 @@ public class YarnClientService {
           String username = yarnClientWrapper.getUsername();
           String projectName = yarnClientWrapper.getProjectName();
           if (null != username && null != projectName) {
-            String projectSpecificUser = projectName + HdfsUsersController
+            String effectiveUsername = projectName + HdfsUsersController
                 .USER_NAME_DELIMITER + username;
-            bhcs.removeNonSuperUserCertificate(projectSpecificUser);
+            bhcs.removeNonSuperUserCertificate(effectiveUsername);
           }
         }
       }
