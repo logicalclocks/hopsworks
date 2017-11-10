@@ -44,7 +44,7 @@ public class LlapClusterLifecycle {
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void startCluster(int nInstances, long execMemory, long cacheMemory, int nExecutors,
-                                   int nIOThreads) {
+                           int nIOThreads) {
     // Check that the cluster isn't already up or that the cluster isn't already starting
     if (llapClusterFacade.isClusterUp()){
       return ;
@@ -57,7 +57,8 @@ public class LlapClusterLifecycle {
     Pattern appIdPattern = Pattern.compile("application_[0-9]*_[0-9]*");
     String llapAppId = null;
 
-    String[] command = {"/usr/bin/sudo", "-u", "hive", startScript,
+    String[] command = {"/usr/bin/sudo", "-u", settings.getHiveSuperUser(),
+        startScript,
         String.valueOf(nInstances),
         String.valueOf(execMemory),
         String.valueOf(cacheMemory),
@@ -88,6 +89,13 @@ public class LlapClusterLifecycle {
         if (matcher.find()){
           llapAppId = matcher.group();
         }
+      }
+
+      if (llapAppId == null) {
+        // For some reason the script failed to start the llap Cluster.
+        // Dump the output of the script in the logs.
+        logger.log(Level.SEVERE, "Could not start Hive LLAP cluster. Script output: " +
+            processOutput.toString());
       }
     } catch (Exception ex) {
       logger.log(Level.SEVERE, "Could not start Hive LLAP cluster. Script output: " +

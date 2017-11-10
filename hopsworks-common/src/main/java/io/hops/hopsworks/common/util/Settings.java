@@ -114,6 +114,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_SERVER_HOSTNAME = "hiveserver_ssl_hostname";
   private static final String VARIABLE_HIVE_SERVER_HOSTNAME_EXT
       = "hiveserver_ext_hostname";
+  private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
   private static final String VARIABLE_HIVE_WAREHOUSE = "hive_warehouse";
   private static final String VARIABLE_HIVE_SCRATCHDIR = "hive_scratchdir";
   private static final String VARIABLE_HIVE_DEFAULT_QUOTA = "hive_default_quota";
@@ -299,6 +300,7 @@ public class Settings implements Serializable {
               HIVE_SERVER_HOSTNAME);
       HIVE_SERVER_HOSTNAME_EXT = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME_EXT,
           HIVE_SERVER_HOSTNAME_EXT);
+      HIVE_SUPERUSER = setStrVar(VARIABLE_HIVE_SUPERUSER, HIVE_SUPERUSER);
       HIVE_WAREHOUSE = setStrVar(VARIABLE_HIVE_WAREHOUSE, HIVE_WAREHOUSE);
       HIVE_LLAP_SLIDER_DIR = setStrVar(VARIABLE_HIVE_LLAP_SLIDER_DIR, HIVE_LLAP_SLIDER_DIR);
       HIVE_LLAP_LOCAL_FS_DIR= setStrVar(VARIABLE_HIVE_LLAP_LOCAL_DIR, HIVE_LLAP_LOCAL_FS_DIR);
@@ -605,6 +607,12 @@ public class Settings implements Serializable {
       return HIVE_SERVER_HOSTNAME_EXT;
     }
     return HIVE_SERVER_HOSTNAME;
+  }
+
+  private String HIVE_SUPERUSER = "hive";
+  public synchronized String getHiveSuperUser() {
+    checkCache();
+    return HIVE_SUPERUSER;
   }
 
   private String HIVE_WAREHOUSE = "/apps/hive/warehouse";
