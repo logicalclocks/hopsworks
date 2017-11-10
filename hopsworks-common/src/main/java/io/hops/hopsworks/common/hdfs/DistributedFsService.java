@@ -200,7 +200,8 @@ public class DistributedFsService {
 
   public void closeDfsClient(DistributedFileSystemOps udfso) {
     if (null != udfso) {
-      if (settings.getHopsRpcTls()) {
+      if (settings.getHopsRpcTls()
+          && !udfso.getEffectiveUser().equals(settings.getHdfsSuperUser())) {
         bhcs.removeNonSuperUserCertificate(udfso.getEffectiveUser());
       }
       udfso.close();
