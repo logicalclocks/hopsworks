@@ -36,7 +36,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.yarn.YarnClientService;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.interpreter.InterpreterSetting;
@@ -50,7 +49,7 @@ import org.sonatype.aether.repository.RemoteRepository;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.util.LivyService;
+import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.rest.message.NewInterpreterSettingRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.RestartInterpreterRequest;
 import io.hops.hopsworks.api.zeppelin.rest.message.UpdateInterpreterSettingRequest;
@@ -64,9 +63,9 @@ import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -88,7 +87,6 @@ public class InterpreterRestApi {
   private InterpreterSettingManager interpreterSettingManager;
   private Project project;
   private ZeppelinConfig zeppelinConf;
-  private String roleInProject;
   private Users user;
 
   @EJB
@@ -102,17 +100,13 @@ public class InterpreterRestApi {
   @EJB
   private YarnApplicationstateFacade appStateBean;
   @EJB
-  private UserFacade userFacade;
-  @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private YarnClientService ycs;
   @EJB
   private DistributedFsService dfsService;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
-  private LivyService livyService;
+  private LivyController livyService;
   @EJB
   private Settings settings;
   @EJB
@@ -127,7 +121,6 @@ public class InterpreterRestApi {
     this.project = project;
     this.user = user;
     this.zeppelinConf = zeppelinConf;
-    this.roleInProject = userRole;
     this.interpreterSettingManager = zeppelinConf.getInterpreterSettingManager();
   }
 
@@ -368,7 +361,8 @@ public class InterpreterRestApi {
     if (!this.project.getName().equals(projName)) {
       throw new AppException(Status.BAD_REQUEST.getStatusCode(), "You can't stop sessions in another project.");
     }
-    List<LivyMsg.Session> sessions = livyService.getZeppelinLivySessionsForProjectUser(this.project, this.user);
+    List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, this.user,
+        ProjectServiceEnum.ZEPPELIN);
     try {
       livyService.deleteLivySession(sessionId);
       if (sessions.size() > 0) {
@@ -400,7 +394,7 @@ public class InterpreterRestApi {
     }
 
     InterpreterDTO interpreter = new InterpreterDTO(setting, !zeppelinResource.isInterpreterRunning(setting, project),
-        livyService.getZeppelinLivySessions(this.project));
+        livyService.getLivySessions(this.project, ProjectServiceEnum.ZEPPELIN));
     return new JsonResponse(Status.OK, "Deleted ", interpreter).build();
   }
 
@@ -511,7 +505,7 @@ public class InterpreterRestApi {
       interpreterDTO = new InterpreterDTO(interpreter, !zeppelinResource.isInterpreterRunning(interpreter, project));
       interpreterDTOs.put(interpreter.getName(), interpreterDTO);
       if (interpreter.getName().contains("livy")) {
-        interpreterDTO.setSessions(livyService.getZeppelinLivySessions(project));
+        interpreterDTO.setSessions(livyService.getLivySessions(project, ProjectServiceEnum.ZEPPELIN));
       }
       if (interpreter.getName().equalsIgnoreCase(settings.getZeppelinDefaultInterpreter())) {
         interpreterDTO.setDefaultInterpreter(true);

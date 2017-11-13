@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.zeppelin.rest;
 
-import io.hops.hopsworks.api.util.LivyService;
+import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
@@ -48,7 +48,7 @@ public class InterpreterService {
   @Inject
   private InterpreterRestApi interpreterRestApi;
   @EJB
-  private LivyService livyService;
+  private LivyController livyService;
 
   @Path("/")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})

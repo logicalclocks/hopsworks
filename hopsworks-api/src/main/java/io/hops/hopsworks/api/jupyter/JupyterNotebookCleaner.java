@@ -1,17 +1,16 @@
 package io.hops.hopsworks.api.jupyter;
 
-import io.hops.hopsworks.api.util.LivyService;
+import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
-import io.hops.hopsworks.common.util.Settings;
 import java.sql.Date;
 import java.util.List;
 
@@ -26,15 +25,11 @@ public class JupyterNotebookCleaner {
   public int sessionTimeoutMs = 30 * 1000;//30 seconds
 
   @EJB
-  private LivyService livyService;
-  @EJB
-  private Settings settings;
+  private LivyController livyService;
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
   private JupyterProcessFacade jupyterProcessFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
 
   public JupyterNotebookCleaner() {
   }
@@ -52,8 +47,7 @@ public class JupyterNotebookCleaner {
       // 2. For each running Notebook Server, get the project_user and
       // then get the Livy sessions for that project_user
       for (JupyterProject jp : servers) {
-        List<Session> sessions = livyService.getJupyterLivySessions(jp.
-            getProjectId());
+        List<Session> sessions = livyService.getLivySessions(jp.getProjectId(), ProjectServiceEnum.JUPYTER);
         // 3. If there is an active livy session, update the lastModified column
         if (!sessions.isEmpty()) {
           jp.setLastAccessed(new Date(System.currentTimeMillis()));

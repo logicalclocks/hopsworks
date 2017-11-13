@@ -14,11 +14,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.util.LivyService;
+import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -30,9 +29,9 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -69,8 +68,6 @@ public class JupyterService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserManager userManager;
-  @EJB
   private UserFacade userFacade;
   @EJB
   private JupyterProcessFacade jupyterProcessFacade;
@@ -85,13 +82,11 @@ public class JupyterService {
   @EJB
   private Settings settings;
   @EJB
-  private LivyService livyService;
+  private LivyController livyService;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private DistributedFsService dfsService;
-  @EJB
-  private YarnApplicationstateFacade appStateBean;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
 
@@ -155,7 +150,8 @@ public class JupyterService {
       @Context HttpServletRequest req) throws AppException {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    List<LivyMsg.Session> sessions = livyService.getJupyterLivySessionsForProjectUser(this.project, user);
+    List<LivyMsg.Session> sessions = livyService.getLivySessionsForProjectUser(this.project, user,
+        ProjectServiceEnum.JUPYTER);
     GenericEntity<List<LivyMsg.Session>> livyActive
         = new GenericEntity<List<LivyMsg.Session>>(sessions) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();
@@ -372,7 +368,7 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Could not find Jupyter entry for user: " + hdfsUser);
     }
-    livyService.deleteAllJupyterLivySessions(hdfsUser);
+    livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
     String projectPath = jupyterProcessFacade.getJupyterHome(hdfsUser, jp);
 
     // stop the server, remove the user in this project's local dirs

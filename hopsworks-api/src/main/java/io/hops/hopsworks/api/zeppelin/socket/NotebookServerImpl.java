@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1496,7 +1497,8 @@ public class NotebookServerImpl implements
     }
 
     String noteId = getOpenNoteId(conn);
-
+    Properties props = notebook.getInterpreterSettingManager().getInterpreterSettings(noteId).get(0).
+        getFlatProperties();
     if (!hasParagraphWriterPermission(conn, notebook, noteId,
         userAndRoles, fromMessage.principal, "write", user)) {
       return;
@@ -2319,7 +2321,7 @@ public class NotebookServerImpl implements
 
   public void sendMsg(Session conn, String msg) throws IOException {
     if (conn == null || !conn.isOpen()) {
-      LOG.log(Level.SEVERE, "Can't handle messag. The connection has been closed.");
+      LOG.log(Level.SEVERE, "Can't handle message. The connection has been closed.");
       return;
     }
     conn.getBasicRemote().sendText(msg);

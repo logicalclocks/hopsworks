@@ -172,10 +172,12 @@
                             <tr ng-if="interpreter.interpreter.name === 'livy' && interpreter.interpreter.sessions.length > 0"
                                 ng-hide="zeppelinCtrl.collapse"
                                 ng-repeat="session in interpreter.interpreter.sessions">
+                              
                               <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">
-                                {{session.owner + " : livy-session-" + session.id}}
+                                <i class="fa fa-info-circle" uib-tooltip="Type 'sc.applicationId' in the notebook to get its id!"></i> {{"applicationId-"+ session.appId}}
                               </td>
                               <td style=" border-bottom: 1px solid #e6e6e6; text-align: right;">
+                                
                                 <button ng-click="zeppelinCtrl.showLivyUI(session.id)"
                                         type="button" class="btn btn-info btn-sm" 
                                         ng-disabled="interpreter.interpreter.notRunning">
