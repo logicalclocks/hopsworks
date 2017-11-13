@@ -136,7 +136,11 @@ public class UserManager {
     em.merge(p);
   }
 
-
+  public void increaseNumCreatedProjects(int id){
+    Users u = (Users) em.find(Users.class, id);
+    u.setNumCreatedProjects(u.getNumCreatedProjects() + 1);
+    em.merge(u);
+  }
   /**
    * Find a user through email.
    *

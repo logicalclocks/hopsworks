@@ -60,7 +60,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              uberPrice: function (size, title, msg, price) {
+              uberPrice: function (size, title, msg, generalPrice, gpuPrice) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/uberModal.html',
                   controller: 'UberCtrl as uberCtrl',
@@ -72,8 +72,11 @@ angular.module('hopsWorksApp')
                     msg: function () {
                       return msg;
                     },
-                    price: function () {
-                      return price;
+                    generalPrice: function () {
+                      return generalPrice;
+                    },
+                    gpuPrice: function () {
+                      return gpuPrice;
                     }
                   }
                 });

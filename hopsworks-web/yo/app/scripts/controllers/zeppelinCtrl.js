@@ -342,6 +342,10 @@ angular.module('hopsWorksApp')
               if (event.code === 1012) {
                 startLoading("Restarting zeppelin...");
                 $route.reload();
+              } else if(event.code === 1000) {
+                growl.warning(event.reason,
+                            {title: 'Error', ttl: 5000, referenceId: 10});
+                self.loading = false;
               }
             });
 

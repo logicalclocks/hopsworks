@@ -178,6 +178,9 @@ public class Users implements Serializable {
   @Column(name = "max_num_projects")
   private Integer maxNumProjects;
   @Basic(optional = false)
+  @Column(name = "num_created_projects")
+  private Integer numCreatedProjects;
+  @Basic(optional = false)
   @NotNull
   @Column(name = "two_factor")
   private boolean twoFactor;
@@ -218,7 +221,7 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects) {
+          int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -227,6 +230,7 @@ public class Users implements Serializable {
     this.isonline = isonline;
     this.status = status;
     this.maxNumProjects = maxNumProjects;
+    this.numCreatedProjects = numCreatedProjects;
   }
 
   public Users(Integer uid) {
@@ -246,6 +250,7 @@ public class Users implements Serializable {
     this.passwordChanged = passwordChanged;
     this.status = status;
     this.maxNumProjects = maxNumProjects;
+    this.numCreatedProjects = 0;
   }
 
   public Yubikey getYubikey() {
@@ -468,6 +473,14 @@ public class Users implements Serializable {
     return maxNumProjects;
   }
 
+  public Integer getNumCreatedProjects() {
+    return numCreatedProjects;
+  }
+
+  public void setNumCreatedProjects(Integer numCreatedProjects) {
+    this.numCreatedProjects = numCreatedProjects;
+  }
+
   @XmlTransient
   @JsonIgnore
   public boolean getTwoFactor() {
@@ -526,6 +539,6 @@ public class Users implements Serializable {
 
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
-            isonline, maxNumProjects);
+            isonline, maxNumProjects, numCreatedProjects);
   }
 }

@@ -719,7 +719,7 @@ public class ProjectService {
   }
 
   @GET
-  @Path("{id}/multiplicator")
+  @Path("{id}/multiplicators")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getCurrentMultiplicator(
@@ -727,11 +727,12 @@ public class ProjectService {
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
 
-    YarnPriceMultiplicator multiplicator = projectController.
-        getYarnMultiplicator();
+    List<YarnPriceMultiplicator> multiplicatorsList = projectController.getYarnMultiplicators();
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        multiplicator).build();
+    GenericEntity<List<YarnPriceMultiplicator>> multiplicators = new GenericEntity<List<YarnPriceMultiplicator>>(
+        multiplicatorsList) {
+    };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(multiplicators).build();
   }
 
   @GET

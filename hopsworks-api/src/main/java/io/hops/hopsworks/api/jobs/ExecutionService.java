@@ -25,6 +25,9 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -47,6 +50,8 @@ public class ExecutionService {
   private UserFacade userFacade;
   @EJB
   private ExecutionController executionController;
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   
   private Jobs job;
 
@@ -94,6 +99,12 @@ public class ExecutionService {
     if (user == null) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
+    }
+    if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
+      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
+      if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "This project is out of credits.");
+      }
     }
     try {
       Execution exec = executionController.start(job, user, req.getSession().getId());

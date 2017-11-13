@@ -54,6 +54,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
@@ -119,6 +122,8 @@ public class NotebookServer {
   private DistributedFsService dfsService;
   @EJB
   private ZeppelinResource zeppelinResource;
+  @EJB
+  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   
   public NotebookServer() {
   }
@@ -133,6 +138,13 @@ public class NotebookServer {
       if (this.userRole == null) {
         LOG.log(Level.INFO, "User not authorized for Zeppelin Access: {0}", this.sender);
         return;
+      }
+      if (project.getPaymentType().equals(PaymentType.PREPAID)) {
+        YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
+        if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
+          session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "This project is out of credits."));
+          return;
+        }
       }
       this.impl = notebookServerImplFactory.getNotebookServerImps(project.getName(), conn);
       if (impl.getConf() == null) {

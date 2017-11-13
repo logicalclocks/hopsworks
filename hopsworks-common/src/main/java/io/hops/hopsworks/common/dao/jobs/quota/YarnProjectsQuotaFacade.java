@@ -18,6 +18,7 @@
 package io.hops.hopsworks.common.dao.jobs.quota;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.metadata.yarn.entity.quota.PriceMultiplicator;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -77,11 +78,11 @@ public class YarnProjectsQuotaFacade extends
     }
   }
 
-  public YarnPriceMultiplicator getMultiplicator() {
+  public YarnPriceMultiplicator getMultiplicator(PriceMultiplicator.MultiplicatorType multiplicatorType) {
     try {
       TypedQuery<YarnPriceMultiplicator> query = em.
-              createNamedQuery("YarnPriceMultiplicator.findAll",
-                      YarnPriceMultiplicator.class).setMaxResults(1);
+          createNamedQuery("YarnPriceMultiplicator.findById", YarnPriceMultiplicator.class).setParameter("id",
+          multiplicatorType.name());
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
@@ -89,4 +90,13 @@ public class YarnProjectsQuotaFacade extends
 
   }
 
+  public List<YarnPriceMultiplicator> getMultiplicators() {
+    try {
+      TypedQuery<YarnPriceMultiplicator> query = em.createNamedQuery("YarnPriceMultiplicator.findAll",
+          YarnPriceMultiplicator.class);
+      return query.getResultList();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
 }

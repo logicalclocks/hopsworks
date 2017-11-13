@@ -256,29 +256,44 @@ angular.module('hopsWorksApp')
 
             self.runJob = function (job, index) {
               var jobId = job.id;
-              ProjectService.uberPrice({id: self.projectId}).$promise.then(
+              JobService.getConfiguration(self.projectId, job.id).then(
                       function (success) {
-                        var price = success.multiplicator;
-                        price = Math.ceil(parseFloat(price).toFixed(4)*100)/100;
-                        ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', price).then(
+                        job.runConfig = success.data;
+                        ProjectService.uberPrice({id: self.projectId}).$promise.then(
                                 function (success) {
-                                  JobService.runJob(self.projectId, jobId).then(
+                                  var gpuPrice = 0;
+                                  var generalPrice = 0;
+                                  for (var i = 0; i < success.length; i++) {
+                                    var multiplicator = success[i];
+                                    if (multiplicator.id === "GPU") {
+                                      gpuPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
+                                    } else if (multiplicator.id === "GENERAL") {
+                                      generalPrice = Math.ceil(parseFloat(multiplicator.multiplicator).toFixed(4) * 100) / 100;
+                                    }
+                                  }
+                                  if (typeof job.runConfig.numOfGPUs === 'undefined' || job.runConfig.numOfGPUs === 0) {
+                                    gpuPrice = 0;
+                                  }
+                                  ModalService.uberPrice('sm', 'Confirm', 'Do you still want to run this job?', generalPrice, gpuPrice).then(
                                           function (success) {
-                                            self.toggle(job, index);
-                                            self.buttonClickedToggle(job.id, true);
-                                            StorageService.store(self.projectId + "_jobstopclicked_"+job.id, "running");
+                                            JobService.runJob(self.projectId, jobId).then(
+                                                    function (success) {
+                                                      self.toggle(job, index);
+                                                      self.buttonClickedToggle(job.id, true);
+                                                      StorageService.store(self.projectId + "_jobstopclicked_" + job.id, "running");
 //                                            self.stopbuttonClickedToggle(job.id, false);
-                                            self.getRunStatus();
-                                          }, function (error) {
-                                    growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 10000});
-                                  });
+                                                      self.getRunStatus();
+                                                    }, function (error) {
+                                              growl.error(error.data.errorMsg, {title: 'Failed to run job', ttl: 10000});
+                                            });
 
-                                }
-                        );
+                                          }
+                                  );
 
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
-              });
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Could not get the current YARN price.', ttl: 10000});
+                        });
+                      });
             };
 
             self.stopJob = function (jobId) {

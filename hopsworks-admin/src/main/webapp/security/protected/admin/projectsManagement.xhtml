@@ -77,7 +77,7 @@
                         <h:outputText value="#{projectsmanagement.getYarnQuota(project.name)}" />
                       </f:facet>
                       <f:facet name="input">
-                        <p:inputText value="#{projectsmanagement.yarnquota}" style="width:100%">
+                        <p:inputText value="#{projectsmanagement.yarnQuota}" style="width:100%">
                           <f:validateLongRange
                             maximum="100000000"
                             minimum="-100000000" />
@@ -109,7 +109,7 @@
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hdfsquotastring}" style="width:100%">
+                          value="#{projectsmanagement.hdfsquotaString}" style="width:100%">
                           <f:validateRegex pattern = "([0-9]{1,6}+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
@@ -137,7 +137,7 @@
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hdfsNsquota}" style="width:100%">
+                          value="#{projectsmanagement.hdfsNsQuota}" style="width:100%">
                           <f:validateLongRange
                             maximum="10000000000"
                             minimum="-1" />
@@ -167,8 +167,8 @@
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hiveHdfsquotastring}" style="width:100%">
-                          <f:validateRegex pattern = "([0-9]+([GMT]B)*)"/>
+                          value="#{projectsmanagement.hiveHdfsQuotaString}" style="width:100%">
+                          <f:validateRegex pattern = "(\-?[0-9]+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
@@ -195,7 +195,7 @@
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hiveHdfsNsquota}" style="width:100%">
+                          value="#{projectsmanagement.hiveHdfsNsQuota}" style="width:100%">
                           <f:validateLongRange
                             maximum="10000000000"
                             minimum="-1" />
@@ -238,6 +238,35 @@
                     </p:cellEditor>
                   </p:column>
 
+                  <p:column id="paymentTypeColumn"
+                            filterBy="#{project.paymentTypeString}"
+                            sortBy="#{project.paymentTypeString}"
+                            filterMatchMode="contains"
+                            headerText="Payment type"
+                            style=" font-size: 12px; text-align: center;">
+
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText value="#{projectsmanagement.getPaymentType(project.name)}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:selectOneMenu id="changePaymentType"
+                                         value="#{projectsmanagement.paymentType}" 
+                                         editable="false">
+                          <f:selectItem itemLabel="payment type"/>
+                          <f:selectItems value="#{projectsmanagement.paymentTypes}" />
+                        </p:selectOneMenu>
+                      </f:facet>
+<!--                      <p:selectOneMenu id="changePaymentType"
+                                       value="#{projectsmanagement.paymentType}" 
+                                       editable="false">
+                        <f:selectItem itemValue="#{project.paymentTypeString}"/>
+                        <f:selectItems value="#{projectsmanagement.paymentTypes}" />
+                      </p:selectOneMenu>-->
+                      
+                    </p:cellEditor>
+                  </p:column>
+                  
                   <p:column id="lastcreditpurchachedColumn"
                             filterBy="#{projectsmanagement.getLastPaymentDate(project.name)}"
                             sortBy="#{projectsmanagement.getLastPaymentDate(project.name)}"

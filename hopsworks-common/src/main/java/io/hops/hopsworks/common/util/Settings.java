@@ -791,7 +791,7 @@ public class Settings implements Serializable {
 
   
   private static String HADOOP_VERSION = "2.8.2";
-  private static String HADOOP_MINOR_VERSION = "2.8.2.1";
+  private static String HADOOP_MINOR_VERSION = "2.8.2.2-SNAPSHOT";
   
   public synchronized String getHadoopVersion() {
     checkCache();

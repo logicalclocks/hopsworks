@@ -1,13 +1,14 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('UberCtrl', ['$uibModalInstance',  'title', 'msg', 'price',
-          function ($uibModalInstance, title, msg, price) {
+        .controller('UberCtrl', ['$uibModalInstance',  'title', 'msg', 'generalPrice','gpuPrice',
+          function ($uibModalInstance, title, msg, generalPrice, gpuPrice) {
 
             var self = this;
             self.title = title;
             self.msg = msg;
-            self.price = price;
+            self.generalPrice = generalPrice;
+            self.gpuPrice = gpuPrice;
             
             self.ok = function () {
               $uibModalInstance.close();

@@ -4,9 +4,11 @@
 </div>
 <div class="modal-body">
    <div class="jumbotron" style="background-color: black; color: lightblue;">
-    <h1 style="text-align:center">{{uberCtrl.price}} X</h1>
+     <div><h1 style="text-align:center">{{uberCtrl.generalPrice}} X</h1></div>
+     <div><h3 ng-if="uberCtrl.gpuPrice !== 0" style="text-align:center">GPU: {{uberCtrl.gpuPrice}} X</h3></div>
    </div>
-  <h3 style="text-align:center">The current price is <b>{{uberCtrl.price}}</b> times the normal price.</h3>
+  <h4 style="text-align:center">The current base price is <b>{{uberCtrl.generalPrice}}</b> times the normal price.</h4>
+  <h4 ng-if="uberCtrl.gpuPrice !== 0" style="text-align:center">The GPU price is <b>{{uberCtrl.gpuPrice}}</b> times the normal price.</h4>
 </div>
 <div class="modal-footer">
   <button class="btn btn-default" ng-click="uberCtrl.cancel()">Cancel</button>
