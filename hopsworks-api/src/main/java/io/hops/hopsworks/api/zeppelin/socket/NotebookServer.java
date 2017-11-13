@@ -154,6 +154,7 @@ public class NotebookServer {
         return;
       }
       addUserConnection(this.hdfsUsername, conn);
+      addUserConnection(project.getProjectGenericUser(), conn);
       this.session.getUserProperties().put("projectID", this.project.getId());
       String httpHeader = (String) config.getUserProperties().get(WatcherSecurityKey.HTTP_HEADER);
       this.session.getUserProperties().put(WatcherSecurityKey.HTTP_HEADER, httpHeader);
@@ -380,6 +381,7 @@ public class NotebookServer {
     impl.removeConnectionFromAllNote(conn);
     impl.removeConnectedSockets(conn, notebookServerImplFactory);
     impl.removeUserConnection(this.hdfsUsername, conn);
+    impl.removeUserConnection(project.getProjectGenericUser(), conn);
   }
 
   @OnError
@@ -417,6 +419,7 @@ public class NotebookServer {
       impl.removeConnectionFromAllNote(this.session);
       impl.removeConnectedSockets(this.session, notebookServerImplFactory);
       impl.removeUserConnection(this.hdfsUsername, this.session);
+      impl.removeUserConnection(project.getProjectGenericUser(), this.session);
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, null, ex);
     }

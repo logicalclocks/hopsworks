@@ -249,7 +249,7 @@ public class NotebookServerImpl implements
 
   private void multicastToUser(String user, Message m) {
     if (!userConnectedSockets.containsKey(user)) {
-      LOG.log(Level.SEVERE, "Multicasting to user {} that is not in connections map", user);
+      LOG.log(Level.SEVERE, "Multicasting to user {0} that is not in connections map", user);
       return;
     }
 
@@ -2210,6 +2210,7 @@ public class NotebookServerImpl implements
     removeConnectionFromAllNote(conn);
     removeConnectedSockets(conn, notebookServerImplFactory);
     removeUserConnection(hdfsUsername, conn);
+    removeUserConnection(project.getProjectGenericUser(), conn);
   }
 
   public synchronized void addConnectedSocket(Session conn) {
@@ -2349,6 +2350,7 @@ public class NotebookServerImpl implements
       removeConnectionFromAllNote(session);
       removeConnectedSockets(session, notebookServerImplFactory);
       removeUserConnection(hdfsUsername, session);
+      removeUserConnection(project.getProjectGenericUser(), session);
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, null, ex);
     }
