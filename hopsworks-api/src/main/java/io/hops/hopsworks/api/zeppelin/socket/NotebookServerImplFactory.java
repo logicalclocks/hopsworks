@@ -14,6 +14,8 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.websocket.Session;
 
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.util.Settings;
 import org.sonatype.aether.RepositoryException;
 
@@ -29,6 +31,10 @@ public class NotebookServerImplFactory {
   private Settings settings;
   @EJB
   private CertsFacade certsFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private ActivityFacade activityFacade;
   
   private Map<String, NotebookServerImpl> notebookServerImpls = new HashMap<>();
 
@@ -45,7 +51,8 @@ public class NotebookServerImplFactory {
     }
     NotebookServerImpl impl = notebookServerImpls.get(projectName);
     if (impl == null) {
-      impl = new NotebookServerImpl(project, zeppelinConfigFactory, certsFacade, settings);
+      impl = new NotebookServerImpl(project, zeppelinConfigFactory, certsFacade,
+          settings, projectTeamFacade, activityFacade);
       notebookServerImpls.put(projectName, impl);
     }
     impl.addConnectedSocket(session);

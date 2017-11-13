@@ -32,7 +32,7 @@
                 <a class="fa fa-undo" aria-hidden="true" style="text-decoration: none" ng-click="zeppelinCtrl.restoreAll()"></a>
               </span>
               <span ng-if="zeppelinCtrl.pathArray.includes(zeppelinCtrl.TRASH_FOLDER_ID)" style=" margin-right: 10px;" title="Empty trash">
-                <a class="fa fa fa-times" aria-hidden="true" style="text-decoration: none" ng-click="zeppelinCtrl.emptyTrash()"></a>
+                <a class="fa fa-trash" aria-hidden="true" style="text-decoration: none" ng-click="zeppelinCtrl.emptyTrash()"></a>
               </span>
               <span ng-show="zeppelinCtrl.pathArray.length > 10">...</span>
               <span data-ng-repeat="path in zeppelinCtrl.pathArray.slice(zeppelinCtrl.pathArray.length - 1 - zeppelinCtrl.breadcrumbLen()) track by $index">

@@ -14,9 +14,13 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -55,6 +59,10 @@ public class HDFSNotebookRepo implements NotebookRepo {
   private final Configuration hdfsConf;
   private final DistributedFsService dfsService;
   private final UserGroupInformation superuser;
+  private final Pattern psuPattern = Pattern.compile("(\\w*)"
+      + HdfsUsersController.USER_NAME_DELIMITER + "\\w*");
+  private final Pattern pguPattern = Pattern.compile("(\\w*)" +
+      Settings.PROJECT_GENERIC_USER_SUFFIX);
 
   public HDFSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
@@ -357,24 +365,42 @@ public class HDFSNotebookRepo implements NotebookRepo {
   @Override
   public void remove(String noteId, AuthenticationInfo subject) throws
           IOException {
-    DistributedFileSystemOps udfso = null;
+    DistributedFileSystemOps dfso = null;
+    
     try {
-      udfso = getUserDfs(subject);
-      Path rootDir = getRootDir(udfso);
+      dfso = getDfs(superuser);
+      Path rootDir = getRootDir(dfso);
+      String hdfsOwner = dfso.getFileStatus(rootDir).getOwner();
+      
+      Matcher psuMatcher = psuPattern.matcher(hdfsOwner);
+      if (psuMatcher.matches()) {
+        String extractedPSUProjectname = psuMatcher.group(1);
+        Matcher pguMatcher = pguPattern.matcher(subject.getUser());
+        if (pguMatcher.matches()) {
+          String extractedPGUProjectname = pguMatcher.group(1);
+          if (!extractedPSUProjectname.equals(extractedPGUProjectname)) {
+            throw new IOException("User <" + subject.getUser() + "> does not " +
+                "belong to project");
+          }
+        }
+      }
+      
       Path noteDir = new Path(rootDir, noteId);
   
-      if (!udfso.getFilesystem().exists(noteDir)) {
+      if (!dfso.getFilesystem().exists(noteDir)) {
         // nothing to do
         return;
       }
   
-      if (!udfso.getFilesystem().isDirectory(noteDir)) {
+      if (!dfso.getFilesystem().isDirectory(noteDir)) {
         // it does not look like zeppelin note savings
         throw new IOException("Can not remove " + noteDir.toString());
       }
-      udfso.getFilesystem().delete(noteDir, true);
+      dfso.getFilesystem().delete(noteDir, true);
     } finally {
-      closeDfsClient(udfso);
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
+      }
     }
   }
 

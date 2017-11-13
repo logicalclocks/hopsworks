@@ -1055,6 +1055,13 @@ public class NotebookRestApi {
         noteName = "Note " + note.getId();
       }
       note.setName(noteName);
+      Set<String> owners = notebook.getNotebookAuthorization().getOwners(note
+          .getId());
+      String projectGenericUser = hdfsUsersController.getProjectName(hdfsUserName)
+          + Settings.PROJECT_GENERIC_USER_SUFFIX;
+      owners.add(projectGenericUser);
+      notebook.getNotebookAuthorization().setOwners(note.getId(), owners);
+      
       note.persist(subject);
       noteInfo = new NoteInfo(note);
       zeppelinResource.persistToDB(this.project);

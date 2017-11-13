@@ -365,7 +365,11 @@ public class NotebookServer {
           break;
       }
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Can't handle message", e);
+      Level logLevel = Level.SEVERE;
+      if (e.getMessage().contains("is not allowed to empty the Trash")) {
+        logLevel = Level.INFO;
+      }
+      LOG.log(logLevel, "Can't handle message", e);
     }
   }
 

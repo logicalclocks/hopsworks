@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.zeppelin.rest.exception.ForbiddenException;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfig;
 import io.hops.hopsworks.api.zeppelin.server.ZeppelinConfigFactory;
@@ -17,7 +18,10 @@ import io.hops.hopsworks.api.zeppelin.util.ZeppelinResource;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.Activity;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.user.CertificateMaterializer;
@@ -110,17 +114,23 @@ public class NotebookServerImpl implements
   private Project project;
   private Settings settings;
   private CertsFacade certsFacade;
+  private final ProjectTeamFacade projectTeamFacade;
+  private final ActivityFacade activityFacade;
 
   private String certPwd;
 
   public NotebookServerImpl(Project project, ZeppelinConfigFactory zeppelin,
-      CertsFacade certsFacade, Settings settings) throws IOException, RepositoryException,
+      CertsFacade certsFacade, Settings settings, ProjectTeamFacade projectTeamFacade,
+      ActivityFacade activityFacade)
+      throws IOException, RepositoryException,
       TaskRunnerException {
     this.project = project;
     this.conf = zeppelin.getZeppelinConfig(project.getName(), this);
     this.notebook = this.conf.getNotebook();
     this.settings = settings;
     this.certsFacade = certsFacade;
+    this.projectTeamFacade = projectTeamFacade;
+    this.activityFacade = activityFacade;
   }
 
   public Notebook notebook() {
@@ -778,6 +788,24 @@ public class NotebookServerImpl implements
       return;
     }
 
+    String hopsworksUserRole = projectTeamFacade.findCurrentRole(project, user);
+    if (hopsworksUserRole == null) {
+      String errorMsg = "Hopsworks role for user " + user.getUsername() +
+          " should not be null";
+      sendMsg(conn,
+          serializeMessage(new Message(Message.OP.ERROR_INFO).put
+              ("info", errorMsg)));
+      throw new IOException(errorMsg);
+    }
+    
+    if (!hopsworksUserRole.equals(AllowedProjectRoles.DATA_OWNER)) {
+      String errorMsg = "User " + user.getUsername() + " is not a DATA " +
+          "OWNER for this project and is not allowed to empty the Trash";
+      sendMsg(conn,
+          serializeMessage(new Message(Message.OP.ERROR_INFO).put
+              ("info", errorMsg)));
+      throw new IOException(errorMsg);
+    }
     List<Note> notes = notebook.getNotesUnderFolder(folderId);
     for (Note note : notes) {
       String noteId = note.getId();
@@ -795,7 +823,19 @@ public class NotebookServerImpl implements
     }
     broadcastNoteList(subject, userAndRoles);
   }
-
+  
+  
+  private void logTrashActivity(String activityMsg, Users user) {
+    Activity activity = new Activity();
+    Date now = new Date();
+    activity.setActivity(activityMsg);
+    activity.setFlag(ActivityFacade.FLAG_PROJECT);
+    activity.setProject(project);
+    activity.setTimestamp(now);
+    activity.setUser(user);
+    activityFacade.persistActivity(activity);
+  }
+  
   public void moveNoteToTrash(Session conn, HashSet<String> userAndRoles,
       Notebook notebook, Message fromMessage, Users user)
       throws SchedulerException, IOException {
@@ -806,9 +846,13 @@ public class NotebookServerImpl implements
 
     Note note = notebook.getNote(noteId);
     if (note != null && !note.isTrash()) {
+      String noteName = note.getName();
       fromMessage.put("name", Folder.TRASH_FOLDER_ID + "/" + note.getName());
       renameNote(conn, userAndRoles, notebook, fromMessage, "move", user);
       notebook.moveNoteToTrash(note.getId());
+      
+      logTrashActivity(ActivityFacade.TRASH_NOTEBOOK + "notebook " + noteName,
+          user);
     }
   }
 
@@ -831,6 +875,9 @@ public class NotebookServerImpl implements
 
       fromMessage.put("name", trashFolderId);
       renameFolder(conn, userAndRoles, notebook, fromMessage, "move", user);
+      
+      logTrashActivity(ActivityFacade.TRASH_NOTEBOOK + "notebook folder " +
+          folderId + "/", user);
     }
   }
 

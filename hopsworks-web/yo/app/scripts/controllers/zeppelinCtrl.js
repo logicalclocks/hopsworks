@@ -318,6 +318,8 @@ angular.module('hopsWorksApp')
               if (op === 'CREATED_SOCKET') {
                 load();
                 loaded = true;
+	      } else if (op === 'ERROR_INFO') {
+		growl.error(payload.data.info, {title: 'Error', ttl: 5000, referenceId: 10});
               } else if (loaded && op === 'NOTES_INFO') {
                 self.notes = payload.data.notes;
                 setNotes(self.notes);
