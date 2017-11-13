@@ -8,15 +8,17 @@ public class AddressJSON {
   private String ip;
   private int port;
   private String id;
+  private String nat;
 
   public AddressJSON() {
 
   }
 
-  public AddressJSON(String ip, int port, String id) {
+  public AddressJSON(String ip, int port, String id, String nat) {
     this.ip = ip;
     this.port = port;
     this.id = id;
+    this.nat = nat;
   }
 
   public String getIp() {
@@ -43,9 +45,16 @@ public class AddressJSON {
     this.id = id;
   }
 
-  @Override
-  public String toString() {
-    return "AddressJSON{" + "ip=" + ip + ", port=" + port + ", id=" + id + '}';
+  public String getNat() {
+    return nat;
   }
 
+  public void setNat(String nat) {
+    this.nat = nat;
+  }
+  
+  @Override
+  public String toString() {
+    return "AddressJSON{" + "ip=" + ip + ", port=" + port + ", id=" + id + ", nat=" + nat + '}';
+  }
 }
