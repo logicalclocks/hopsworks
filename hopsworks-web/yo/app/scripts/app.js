@@ -727,7 +727,7 @@ angular.module('hopsWorksApp', [
           };
         })  
         // Filter that highlight @username.
-        .filter('highlight', function () {
+        .filter('highlightUsername', function () {
           return function (text) {
             var matches = text.match(/@\w+/g);
             if (matches) {
