@@ -93,7 +93,7 @@
                 <span class="text-muted"><b>{{comment.user.firstname }} {{comment.user.lastname}} @ {{comment.user.organization}}</b> commented | on {{comment.datePublished | date:'medium'}}</span>
                 <div id="commentdiv" class="publicdataset-comment-msg" 
                      contenteditable="{{publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable}}" 
-                     ng-bind-html="comment.content | highlight"></div>
+                     ng-bind-html="comment.content | highlightUsername"></div>
                 <div class="pull-right">
                   <span title="Edit your comment" ng-if="publicDataset.myUserId === comment.user.userId && !publicDataset.commentEditable"
                         class="publicdataset-issue text-muted"
