@@ -180,7 +180,7 @@ public class Users implements Serializable {
   @Basic(optional = false)
   @Column(name = "num_created_projects")
   @NotNull
-  private Integer numCreatedProjects;
+  private Integer numCreatedProjects = 0;
   @Basic(optional = false)
   @NotNull
   @Column(name = "two_factor")
