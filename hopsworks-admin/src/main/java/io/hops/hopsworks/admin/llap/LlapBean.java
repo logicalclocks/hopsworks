@@ -17,6 +17,7 @@
  */
 package io.hops.hopsworks.admin.llap;
 
+import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.dao.util.VariablesFacade;
 import org.primefaces.context.RequestContext;
 
@@ -167,8 +168,9 @@ public class LlapBean implements Serializable {
     return !llapClusterFacade.getLlapHosts().isEmpty();
   }
 
-  public void waitForCluster() {
-    if (isClusterUp() || (!isClusterUp() && !isClusterStarting())) {
+  public void waitForCluster(boolean shouldBeStarting) {
+    if (!shouldBeStarting && (isClusterUp() ||
+        (!isClusterUp() && !isClusterStarting()))) {
       RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "true");
       return;
     }
@@ -176,7 +178,7 @@ public class LlapBean implements Serializable {
     // Wait for the cluster to come up.
     int counter = MAXWAITINGITERATIONS;
     try {
-      while (llapClusterFacade.isClusterStarting() && counter > 0 ) {
+      while (llapClusterFacade.isClusterStarting() && counter > 0) {
         Thread.sleep(1500);
         counter--;
       }
@@ -184,17 +186,21 @@ public class LlapBean implements Serializable {
       logger.log(Level.SEVERE, "Error on waiting for LLAP cluster to come up", e);
     }
 
-    if (counter > 0) {
+    if (counter > 0 && !llapClusterFacade.isClusterUp()) {
+      RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "error");
+      MessagesController.addErrorMessage("Error starting the cluster. Check the glassfish logs for more info.");
+    } else if (counter > 0) {
       RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "false");
     } else {
       RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "timeout");
+      MessagesController.addErrorMessage("Timeout while starting the cluster. Try again.");
     }
   }
 
   public void startLLAP() {
     llapClusterLifecycle.startCluster(nInstances, execMemory,
         cacheMemory, nExecutors, nIOThreads);
-    waitForCluster();
+    waitForCluster(true);
   }
 
   public void stopLLAP() {

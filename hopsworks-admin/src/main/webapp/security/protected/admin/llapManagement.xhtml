@@ -24,7 +24,7 @@
     <h:body id="entirePage" style="height: 100%; width: 100%; position: absolute"
             onload="waitForCluster();">
 
-        <p:growl id="messages" showDetail="true" sticky="true" />
+        <p:growl id="messages" showDetail="true" sticky="true" autoUpdate="true"/>
 
         <pe:blockUI target="entirePage" widgetVar="blockUIWidget">
             <h:panelGrid columns="2">
@@ -40,7 +40,7 @@
 
         <h:form>
             <p:remoteCommand name="waitForCluster"
-                             actionListener="#{LlapBean.waitForCluster()}"
+                             actionListener="#{LlapBean.waitForCluster(false)}"
                              onstart="PF('blockUIWidget').block()"
                              oncomplete="unblockOrReload(xhr, status, args)"
                              />
@@ -48,15 +48,10 @@
 
         <script type="text/javascript">
             function unblockOrReload(xhr, status, args) {
-                if (args.alreadyUp === "true"){
-                    PF('blockUIWidget').unblock();
-                } else if (args.alreadyUp === "timeout") {
-                    PF('blockUIWidget').unblock();
-                    PF('messages').renderMessage({"summary":"Timeout",
-                        "detail":"Timeout starting the cluster, check the logs for more information.",
-                        "severity":"error"})
-                } else {
+                if (args.alreadyUp === "false"){
                     location.reload(true);
+                } else {
+                    PF('blockUIWidget').unblock();
                 }
             }
         </script>
@@ -96,14 +91,14 @@
                                      actionListener="#{LlapBean.startLLAP()}"
                                      disabled="#{LlapBean.isClusterUp()}"
                                      onstart="PF('blockUIWidget').block()"
-                                     oncomplete="location.reload(true)"
+                                     oncomplete="unblockOrReload(xhr, status, args)"
                                      value="Start LLAP cluster" />
 
                     <p:commandButton type="submit"
                                      actionListener="#{LlapBean.stopLLAP()}"
                                      disabled="#{!LlapBean.isClusterUp()}"
                                      onstart="PF('blockUIWidget').block()"
-                                     oncomplete="location.reload(true)"
+                                     oncomplete="unblockOrReload(xhr, status, args)"
                                      value="Stop LLAP cluster"/>
                 </p:row>
             </h:panelGrid>
