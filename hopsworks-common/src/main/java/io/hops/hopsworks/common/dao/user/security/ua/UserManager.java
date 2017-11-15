@@ -239,10 +239,7 @@ public class UserManager {
    * @return
    */
   public List<Users> findSPAMAccounts() {
-    TypedQuery<Users> query = em.createQuery(
-            "SELECT p FROM Users p WHERE p.status = "
-            + PeopleAccountStatus.SPAM_ACCOUNT, Users.class);
-    return query.getResultList();
+    return findAllByStatus(PeopleAccountStatus.SPAM_ACCOUNT);
   }
 
   public Users findByEmail(String email) {
