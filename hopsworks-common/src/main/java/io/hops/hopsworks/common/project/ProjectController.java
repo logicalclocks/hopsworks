@@ -2118,8 +2118,7 @@ public class ProjectController {
     } catch (IOException ex) {
       if (ex.getMessage().contains("kibana")) {
         LOGGER.log(Level.WARNING, "error", ex);
-        LOGGER.log(Level.WARNING, "Kibana index could not be deleted for "
-            + params.get("project"));
+        LOGGER.log(Level.WARNING, "Kibana index could not be deleted for {0}", params.get("project"));
       } else {
         throw new IOException(ex);
       }
@@ -2130,8 +2129,8 @@ public class ProjectController {
   public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,
       String keyStore) throws Exception {
     //Compare the sent certificate with the one in the database
-    String keypw = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(), userCertsFacade.
-        findUserCert(projectName, user.getUsername()).getUserKeyPwd());
+    String keypw = HopsUtils.decrypt(user.getPassword(), userCertsFacade.findUserCert(projectName, user.getUsername()).
+        getUserKeyPwd());
     String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
         + user.getUsername();
     validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
@@ -2152,9 +2151,7 @@ public class ProjectController {
           "certificates for project " + projectGenericUsername);
     }
 
-    String keypw = HopsUtils.decrypt(user.getPassword(), settings
-        .getHopsworksMasterPasswordSsl(), projectGenericUserCerts
-            .getCertificatePassword());
+    String keypw = HopsUtils.decrypt(user.getPassword(), projectGenericUserCerts.getCertificatePassword());
     validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
         projectGenericUsername, false);
 

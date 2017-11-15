@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.Yubikey;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
+import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -56,6 +57,8 @@ public class UsersController {
           getName());
   @EJB
   private UserFacade userBean;
+  @EJB
+  private UserManager userManager;
   @EJB
   private SshkeysFacade sshKeysBean;
   @EJB
@@ -286,9 +289,9 @@ public class UsersController {
                   randomPassword);
           emailBean.sendEmail(email, RecipientType.TO,
                   UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-          user.setPassword(DigestUtils.sha256Hex(randomPassword));
-          //user.setStatus(PeopleAccountStatus.ACCOUNT_PENDING.getValue());
-          userBean.update(user);
+          //user.setPassword(DigestUtils.sha256Hex(randomPassword));
+          userManager.resetPassword(user, DigestUtils.sha256Hex(randomPassword));
+          //userBean.update(user);
           resetFalseLogin(user);
           am.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(),
                   UserAuditActions.SUCCESS.name(), "", user, req);
@@ -297,7 +300,10 @@ public class UsersController {
           LOGGER.log(Level.SEVERE, "Could not send email: ", ex);
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                   ResponseMessages.EMAIL_SENDING_FAILURE);
-
+        } catch (Exception ex) {
+          LOGGER.log(Level.SEVERE, "Error while recovering password: ", ex);
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+                  ResponseMessages.PASSWORD_RESET_UNSUCCESSFUL);
         }
       }
     }
@@ -321,8 +327,15 @@ public class UsersController {
 
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
-      user.setPassword(DigestUtils.sha256Hex(newPassword));
-      userBean.update(user);
+      try {
+        userManager.resetPassword(user, DigestUtils.sha256Hex(newPassword));
+        //user.setPassword(DigestUtils.sha256Hex(newPassword));
+        //userBean.update(user);
+      } catch (Exception ex) {
+        LOGGER.log(Level.SEVERE, "Error while changing password: ", ex);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PASSWORD_RESET_UNSUCCESSFUL);
+      }
 
       am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(),
               AccountsAuditActions.SUCCESS.name(), "", user, req);

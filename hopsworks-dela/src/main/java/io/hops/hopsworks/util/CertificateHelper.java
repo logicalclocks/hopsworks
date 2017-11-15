@@ -36,7 +36,7 @@ public class CertificateHelper {
     String truststorePath = settings.getHopsSiteTrustStorePath();
     try {
       String certPswd = HopsUtils.randomString(64);
-      String encryptedCertPswd = HopsUtils.encrypt(masterPswd, "", certPswd);
+      String encryptedCertPswd = HopsUtils.encrypt(masterPswd, certPswd);
       File certFile = readFile(certPath);
       File intermediateCertFile = readFile(intermediateCertPath);
       String clusterName = getClusterName(certFile);
@@ -73,7 +73,7 @@ public class CertificateHelper {
       if (!cert.isPresent()) {
         return Optional.empty();
       }
-      String certPswd = HopsUtils.decrypt(masterPswd, "", cert.get().getCertificatePassword());
+      String certPswd = HopsUtils.decrypt(masterPswd, cert.get().getCertificatePassword());
       KeyStore keystore, truststore;
       try (ByteArrayInputStream keystoreIS = new ByteArrayInputStream(cert.get().getClusterKey());
         ByteArrayInputStream truststoreIS = new ByteArrayInputStream(cert.get().getClusterCert())) {

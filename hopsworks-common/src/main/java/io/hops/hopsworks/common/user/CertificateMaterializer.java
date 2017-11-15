@@ -305,8 +305,7 @@ public class CertificateMaterializer {
     }
     
     try {
-      return HopsUtils.decrypt(userPassword, settings
-          .getHopsworksMasterPasswordSsl(), encryptedPassword);
+      return HopsUtils.decrypt(userPassword, encryptedPassword);
     } catch (Exception ex) {
       throw new IOException(ex);
     }
