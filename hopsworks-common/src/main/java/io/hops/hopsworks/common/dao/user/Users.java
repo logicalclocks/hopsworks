@@ -179,6 +179,7 @@ public class Users implements Serializable {
   private Integer maxNumProjects;
   @Basic(optional = false)
   @Column(name = "num_created_projects")
+  @NotNull
   private Integer numCreatedProjects;
   @Basic(optional = false)
   @NotNull
