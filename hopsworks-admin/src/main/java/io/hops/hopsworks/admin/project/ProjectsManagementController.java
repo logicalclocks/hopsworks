@@ -95,7 +95,11 @@ public class ProjectsManagementController {
   public HdfsInodeAttributes getHDFSQuotas(String name) throws AppException {
     String pathname = Settings.getProjectPath(name);
     Inode inode = inodes.getInodeAtPath(pathname);
-    return projectController.getHdfsQuotas(inode.getId());
+    if(inode!=null){
+      return projectController.getHdfsQuotas(inode.getId());
+    }else{
+      return null;
+    }
   }
 
   /**
