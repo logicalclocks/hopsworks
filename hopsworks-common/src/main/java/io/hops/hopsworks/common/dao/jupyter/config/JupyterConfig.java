@@ -346,10 +346,12 @@ public class JupyterConfig {
                   "spark_params", sparkProps,
                   "livy_ip", settings.getLivyIp(),
                   "hdfs_user", this.hdfsUser,
-                  "driver_cores", Integer.toString(js.getAppmasterCores()),
+                  "driver_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+                              Integer.toString(js.getAppmasterCores()),
                   "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
                   "num_executors", (isSparkDynamic || isTensorFlow) ? "0" : Integer.toString(js.getNumExecutors()),
-                  "executor_cores", Integer.toString(js.getNumExecutorCores()),
+                  "executor_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+                              Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
                   "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow),
                   "min_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicMinExecutors()),
