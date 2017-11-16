@@ -284,7 +284,7 @@ public class ProjectService {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
-    Users user = userFacade.findByEmail(info.getUser());
+    Users user = userFacade.findByUsername(info.getUser());
     info.setUser(user.getFname() + " " + user.getLname());
     info.setSize(inodes.getSize(inode));
     info.setPath(inodes.getPath(inode));
@@ -302,7 +302,7 @@ public class ProjectService {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
-    Users user = userFacade.findByEmail(info.getUser());
+    Users user = userFacade.findByUsername(info.getUser());
     info.setUser(user.getFname() + " " + user.getLname());
     info.setSize(inodes.getSize(inode));
     info.setPath(inodes.getPath(inode));
