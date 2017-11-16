@@ -1539,8 +1539,7 @@ public class NotebookServerImpl implements
       try {
         ProjectGenericUserCerts serviceCert =
             certsFacade.findProjectGenericUserCerts(project.getProjectGenericUser());
-        certPwd = HopsUtils.decrypt(user.getPassword(), settings.getHopsworksMasterPasswordSsl(),
-            serviceCert.getCertificatePassword());
+        certPwd = HopsUtils.decrypt(user.getPassword(), serviceCert.getCertificatePassword());
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Cannot retrieve user " + project.getName()  +
             " keystore password. " + e);

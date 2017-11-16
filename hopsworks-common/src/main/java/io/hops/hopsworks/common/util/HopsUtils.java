@@ -634,12 +634,11 @@ public class HopsUtils {
   /**
    *
    * @param key
-   * @param salt
    * @param plaintext
    * @return
    * @throws Exception
    */
-  public static String encrypt(String key, String salt, String plaintext) throws Exception {
+  public static String encrypt(String key, String plaintext) throws Exception {
     Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, aesKey);
@@ -650,12 +649,11 @@ public class HopsUtils {
   /**
    *
    * @param key
-   * @param salt
    * @param ciphertext
    * @return
    * @throws Exception
    */
-  public static String decrypt(String key, String salt, String ciphertext) throws Exception {
+  public static String decrypt(String key, String ciphertext) throws Exception {
     Cipher cipher = Cipher.getInstance("AES");
     Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
     cipher.init(Cipher.DECRYPT_MODE, aesKey);

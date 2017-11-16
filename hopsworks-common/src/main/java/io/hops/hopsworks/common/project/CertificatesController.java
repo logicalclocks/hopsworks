@@ -72,8 +72,7 @@ public class CertificatesController {
   public Future<CertsResult> generateCertificates(Project project, Users user,
       boolean generateProjectWideCerts) throws Exception {
     String userKeyPwd = HopsUtils.randomString(64);
-    String encryptedKey = HopsUtils.encrypt(user.getPassword(), settings
-        .getHopsworksMasterPasswordSsl(), userKeyPwd);
+    String encryptedKey = HopsUtils.encrypt(user.getPassword(), userKeyPwd);
     LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
         project.getName(),
         user.getUsername(),

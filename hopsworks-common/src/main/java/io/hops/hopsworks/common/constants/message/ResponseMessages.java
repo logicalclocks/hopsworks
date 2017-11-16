@@ -57,6 +57,8 @@ public class ResponseMessages {
           + "before you can login.";
   public final static String PASSWORD_RESET_SUCCESSFUL
           = "Your password was successfully reset, your new password have been sent to your email.";
+  public final static String PASSWORD_RESET_UNSUCCESSFUL
+          = "Your password could not be reset. Please try again later or contact support.";
   public final static String PASSWORD_CHANGED
           = "Your password was successfully changed.";
   public final static String SEC_QA_CHANGED

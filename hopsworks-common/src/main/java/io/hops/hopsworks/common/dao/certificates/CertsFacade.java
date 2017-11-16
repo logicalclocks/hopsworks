@@ -91,6 +91,15 @@ public class CertsFacade {
   public void persist(UserCerts uc) {
     em.persist(uc);
   }
+  
+  /**
+   * Persist ProjectGenericUser certificates.
+   *
+   * @param pgu
+   */
+  public void persistPGUCert(ProjectGenericUserCerts pgu) {
+    em.persist(pgu);
+  }
 
   public ProjectGenericUserCerts findProjectGenericUserCerts(String projectGenericUsername) {
     TypedQuery<ProjectGenericUserCerts> query = em.createNamedQuery(

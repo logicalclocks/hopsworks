@@ -201,6 +201,9 @@ public class ResetPassword implements Serializable {
         IllegalStateException | SystemException | NotSupportedException ex) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
+    } catch (Exception ex) {
+      Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+      return "";
     }
 
     return ("password_sent");
@@ -262,6 +265,9 @@ public class ResetPassword implements Serializable {
           people);
       return ("");
 
+    } catch (Exception ex) {
+      Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+      return "";
     }
   }
 
@@ -530,6 +536,9 @@ public class ResetPassword implements Serializable {
           name(), AccountsAuditActions.FAILED.name(), "",
           people);
 
+      return ("");
+    } catch (Exception ex) {
+      Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
       return ("");
     }
   }
