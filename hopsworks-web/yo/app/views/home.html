@@ -1,12 +1,12 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
-  <div ng-if="mainCtrl.searchTerm.length > 3" class="row">
+  <div ng-if="mainCtrl.showSearchPage" class="row">
     <div id="projectSearchResults">
       <div ng-include="'views/search.html'"></div>
     </div>
   </div>
 
-  <div class="container content-wrapper" ng-if="mainCtrl.searchTerm.length <= 3" ng-controller="HomeCtrl as homeCtrl">
+  <div class="container content-wrapper" ng-if="!mainCtrl.showSearchPage" ng-controller="HomeCtrl as homeCtrl">
     <div class="pull-left" id="toursBox">
       <div class="pull-left" style="min-width: 220px; max-width: 220px">
         <div class="list-group">

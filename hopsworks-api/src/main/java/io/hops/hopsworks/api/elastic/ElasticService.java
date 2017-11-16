@@ -60,17 +60,13 @@ public class ElasticService {
           @Context HttpServletRequest req) throws AppException {
 
     if (searchTerm == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incomplete request!");
     }
 
-    logger.log(Level.INFO, "Local content path {0}", 
-            req.getRequestURL().toString());
-    GenericEntity<List<ElasticHit>> searchResults
-            = new GenericEntity<List<ElasticHit>>(elasticController.
-                    globalSearch(searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(searchResults).build();
+    logger.log(Level.INFO, "Local content path {0}", req.getRequestURL().toString());
+    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.
+        globalSearch(searchTerm)) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(searchResults).build();
   }
 
   /**
@@ -93,14 +89,12 @@ public class ElasticService {
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
     if (projectId == null || searchTerm == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incomplete request!");
     }
 
-    GenericEntity<List<ElasticHit>> searchResults
-        = new GenericEntity<List<ElasticHit>>(elasticController.projectSearch(projectId, searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-        entity(searchResults).build();
+    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.projectSearch(
+        projectId, searchTerm)) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(searchResults).build();
   }
 
   /**
@@ -126,15 +120,12 @@ public class ElasticService {
       @Context HttpServletRequest req) throws AppException {
 
     if (datasetName == null || searchTerm == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),"Incomplete request!");
     }
 
-    GenericEntity<List<ElasticHit>> searchResults
-            = new GenericEntity<List<ElasticHit>>(elasticController.
+    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.
                     datasetSearch(projectId, datasetName, searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(searchResults).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK). entity(searchResults).build();
   }
 
 }

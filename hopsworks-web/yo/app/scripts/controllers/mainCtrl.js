@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
                   ElasticService, DelaProjectService, DelaService, md5, ModalService,
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService) {
-
+            const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
@@ -135,24 +135,27 @@ angular.module('hopsWorksApp')
             self.resultItems = 0;
             self.resultItemsPublicSearch = 0;
             self.currentPage = 1;
-            self.pageSize = 16;
+            self.pageSize = 9;
 
-            self.hitEnter = function (evt) {
-              if (angular.equals(evt.keyCode, 13) && !self.searching) {
+            self.hitEnter = function (event) {
+              var code = event.which || event.keyCode || event.charCode;
+              console.log("hitEnter", code);
+              if (angular.equals(code, 13) && !self.searching) {
                 self.searchResult = [];
                 self.search();
-              } else if (angular.equals(evt.keyCode, 27)) {
+              } else if (angular.equals(code, 27)) {
+                self.showSearchPage = false;
                 self.clearSearch();
               }
             };
 
             self.keyTyped = function (evt) {
-              if (self.searchTerm.length > 3
-                      || (self.searchResult.length > 0 && self.searchTerm.length > 0)) {
+              if (self.searchTerm.length >= MIN_SEARCH_TERM_LEN || (self.searchResult.length > 0 && self.searchTerm.length > 0)) {
                 self.searchReturned = "Searching for <b>" + self.searchTerm + "<b> ...";
                 self.searchResult = [];
                 self.search();
               } else {
+                self.showSearchPage = false;
                 self.searchResult = [];
                 self.searchReturned = "";
                 self.searchResultPublicSearch = [];
@@ -161,16 +164,16 @@ angular.module('hopsWorksApp')
             };
 
             self.clearSearch = function () {
+              self.showSearchPage = false;
               self.searchResult = [];
               self.searchReturned = "";
               self.searchTerm = "";
             };
 
             self.search = function () {
-              //ask for the project name when it is time to search
-              self.projectName = UtilsService.getProjectName();
+              self.showSearchPage = true;
               self.currentPage = 1;
-              self.pageSize = 16;
+              self.pageSize = 9;
               self.searchResult = [];
 
               if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
@@ -328,7 +331,7 @@ angular.module('hopsWorksApp')
               if (listView) {
                 self.pageSize = 4;
               } else {
-                self.pageSize = 16;
+                self.pageSize = 9;
               }
             };
 

@@ -9,13 +9,13 @@
           <div class="content-wrapper">
             <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
             <!-- Page Content -->
-        <div ng-if="mainCtrl.searchTerm.length > 3">
+        <div ng-if="mainCtrl.showSearchPage">
 
           <div id="projectSearchResults">
             <div ng-include="'views/search.html'"></div>
           </div>
         </div>
-            <div ng-if="mainCtrl.searchTerm.length <= 3">
+        <div ng-if="!mainCtrl.showSearchPage">
             <!--        <div class="col-lg-2" style="max-width: 250px">
 <div class="ibox float-e-margins">
 <div class="ibox-content" style="padding-left:0px; padding-right:0px;">

@@ -1,12 +1,12 @@
 <div class="container content-wrapper" ng-controller="MainCtrl as mainCtrl" id="publicdatasetWrapper" style="width: 1500px;">
   <div ng-include="'nav.html'"></div>
-  <div ng-if="mainCtrl.searchTerm.length > 3" class="row" ng-init="publicDataset.overflowYAuto()">
+  <div ng-if="mainCtrl.showSearchPage" class="row" ng-init="publicDataset.overflowYAuto()">
     <div id="projectSearchResults">
       <div ng-include="'views/search.html'"></div>
     </div>
   </div>
   <div growl reference="13" class="pull-right"></div>
-  <div ng-if="mainCtrl.searchTerm.length <= 3" class="row" ng-init="publicDataset.setupStyle()">
+  <div ng-if="!mainCtrl.showSearchPage" class="row" ng-init="publicDataset.setupStyle()">
     <nav class="publicdataset-nav" id="publicdataset">
       <ul class=" keep-open">
         <li class="publicdataset-heading">Public Datasets</li>
