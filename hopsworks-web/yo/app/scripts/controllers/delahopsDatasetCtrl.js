@@ -80,25 +80,7 @@ angular.module('hopsWorksApp')
                 }, function (error) {
                   console.log('getDatasetFromLocal Error: ', error);
               });
-            };
-
-            var initCtrlDela = function () {
-              getUser();
-              getClusterId();
-              getDisplayCategories();
-              if (self.publicDSId !== undefined) {
-                getDataset(self.publicDSId);
-              }
-            };
-            
-            var initCtrl = function () {
-              self.displayCategories = [{'categoryName': 'all', 'displayName': 'All'}];
-              if (self.publicDSId !== undefined) {
-                getDatasetFromLocal(self.publicDSId);
-              }
-            };
-
-            initCtrlDela();
+            };            
             
             self.selectCategory = function (category) {
               console.log("selectDisplayCategory", category);
@@ -368,6 +350,25 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000, referenceId: 13});
               });
             };
+            
+            var initCtrlDela = function () {
+              getUser();
+              getClusterId();
+              getDisplayCategories();
+              if (self.publicDSId !== undefined) {
+                getDataset(self.publicDSId);
+              }
+              self.selectDisplayCategory({'categoryName': 'ALL', 'displayName': 'All', 'parentCategory': false}); //open by default
+            };
+            
+            var initCtrl = function () {
+              self.displayCategories = [{'categoryName': 'all', 'displayName': 'All'}];
+              if (self.publicDSId !== undefined) {
+                getDatasetFromLocal(self.publicDSId);
+              }
+            };
+
+            initCtrlDela();
 
 
             var init = function () {

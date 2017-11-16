@@ -121,8 +121,7 @@ public class ElasticController {
       this.clientShutdown(client);
       return elasticHits;
     } else {
-      LOG.log(Level.WARNING, "Elasticsearch error code: {0}",
-          response.status().getStatus());
+      LOG.log(Level.WARNING, "Elasticsearch error code: {0}", response.status().getStatus());
       //something went wrong so throw an exception
       this.clientShutdown(client);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -158,9 +157,11 @@ public class ElasticController {
       List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
         SearchHit[] hits = response.getHits().getHits();
-
+        ElasticHit eHit;
         for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit));
+          eHit = new ElasticHit(hit);
+          eHit.setLocalDataset(true);
+          elasticHits.add(eHit);
         }
       }
 
@@ -218,9 +219,11 @@ public class ElasticController {
       List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
         SearchHit[] hits = response.getHits().getHits();
-
+        ElasticHit eHit;
         for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit));
+          eHit = new ElasticHit(hit);
+          eHit.setLocalDataset(true);
+          elasticHits.add(eHit);
         }
       }
 

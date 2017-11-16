@@ -335,20 +335,22 @@ angular.module('hopsWorksApp')
              * Makes the dataset public for anybody within the local cluster or any outside cluster.
              * @param id inodeId
              */
+            self.sharingDataset = {};
             self.shareWithHops = function (id) {
-
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
-This will make all its files available for any registered user to download and process.').then(
-                      function (success) {
-                        delaHopsService.shareWithHopsByInodeId(id).then(
-                                function (success) {
-                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public(Hops Site).', ttl: 1500});
-                                  getDirContents();
-                                }, function (error) {
-                                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-
-                      }
+                This will make all its files available for any registered user to download and process.').then(
+                function (success) {
+                  self.sharingDataset[id] = true;
+                  delaHopsService.shareWithHopsByInodeId(id).then(
+                    function (success) {
+                      self.sharingDataset[id] = false;
+                      growl.success(success.data.successMessage, {title: 'The DataSet is now Public(Hops Site).', ttl: 1500});
+                      getDirContents();
+                    }, function (error) {
+                      self.sharingDataset[id] = false;
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
+                }
               );
             };
             
@@ -359,17 +361,19 @@ This will make all its files available for any registered user to download and p
             self.shareWithCluster = function (id) {
 
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
-This will make all its files available for any cluster user to share and process.').then(
+                  This will make all its files available for any cluster user to share and process.').then(
+                  function (success) {
+                    self.sharingDataset[id] = true;
+                    delaClusterService.shareWithClusterByInodeId(id).then(
                       function (success) {
-                        delaClusterService.shareWithClusterByInodeId(id).then(
-                                function (success) {
-                                  growl.success(success.data.successMessage, {title: 'The DataSet is now Public(Cluster).', ttl: 1500});
-                                  getDirContents();
-                                }, function (error) {
-                                  growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-
-                      }
+                        self.sharingDataset[id] = false;
+                        growl.success(success.data.successMessage, {title: 'The DataSet is now Public(Cluster).', ttl: 1500});
+                        getDirContents();
+                      }, function (error) {
+                        self.sharingDataset[id] = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                    });
+                  }
               );
             };
             

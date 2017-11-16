@@ -8,12 +8,12 @@
       <div ng-include="'navProject.html'"></div>
       <section>
         <div>
-          <div ng-if="mainCtrl.searchTerm.length > 3" class="content-wrapper">
+          <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
             <div id="projectSearchResults">
               <div ng-include="'views/search.html'"></div>
             </div>
           </div>
-          <div class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl" ng-if="mainCtrl.searchTerm.length <= 3">
+          <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="ProjectCtrl as projectCtrl">
             <div growl reference="3" class="pull-right" ></div>
             <h3>
               <div flex="65">
@@ -110,6 +110,9 @@
                                     data-toggle="tooltip"
                                     title="Shared Dataset"
                                     >
+                              </span>
+                              <span class="pull-right dataset-icon"
+                                    ng-class="{'fa fa-cog fa-spin': (datasetsCtrl.sharingDataset && datasetsCtrl.sharingDataset[dataset.id])}">                                    
                               </span>
                             </div>
                           </a>
@@ -268,7 +271,7 @@
             </div>
           </div><!--content wrapper -->
 
-          <div ng-if="mainCtrl.searchTerm.length <= 3">
+          <div ng-if="!mainCtrl.showSearchPage">
             <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 100%;">
                 <div class="file-manager" style="height: 100%;">
