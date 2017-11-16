@@ -4,6 +4,7 @@ import com.google.zxing.WriterException;
 import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.EmailBean;
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,12 +23,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import org.primefaces.model.DefaultStreamedContent;
 
@@ -38,13 +39,15 @@ public class RecoverySelector implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @EJB
-  private UserManager um;
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
 
   @EJB
   private EmailBean email;
 
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
 
   private Users people;
 
@@ -143,7 +146,7 @@ public class RecoverySelector implements Serializable {
    */
   public String sendQrCode() throws SocketException {
 
-    people = um.getUserByEmail(this.uname);
+    people = userFacade.findByEmail(this.uname);
 
     try {
 
@@ -179,7 +182,7 @@ public class RecoverySelector implements Serializable {
 
         // generate a randome secret of legth 6
         String random = SecurityUtils.getRandomPassword(passwordLength);
-        um.updateSecret(people.getUid(), random);
+        usersController.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
         email.sendEmail(people.getEmail(), RecipientType.TO,
             UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
@@ -215,7 +218,7 @@ public class RecoverySelector implements Serializable {
    */
   public String validateTmpCode() {
     qrCode = null;
-    people = um.getUserByEmail(this.uname);
+    people = userFacade.findByEmail(this.uname);
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
@@ -242,7 +245,7 @@ public class RecoverySelector implements Serializable {
       try {
         String otpSecret = SecurityUtils.calculateSecretKey();
 
-        um.updateSecret(people.getUid(), otpSecret);
+        usersController.updateSecret(people.getUid(), otpSecret);
         qrCode = new DefaultStreamedContent(QRCodeGenerator.getQRCode(people.
                 getEmail(),
                 AuthenticationConstants.ISSUER, otpSecret), "image/png");
@@ -260,9 +263,9 @@ public class RecoverySelector implements Serializable {
 
     } else {
       int val = people.getFalseLogin();
-      um.increaseLockNum(people.getUid(), val + 1);
+      usersController.increaseLockNum(people.getUid(), val + 1);
       if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-        um.changeAccountStatus(people.getUid(), "",
+        usersController.changeAccountStatus(people.getUid(), "",
                 PeopleAccountStatus.BLOCKED_ACCOUNT);
         try {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
@@ -293,7 +296,7 @@ public class RecoverySelector implements Serializable {
    */
   public String sendYubiReq() throws SocketException {
 
-    people = um.getUserByEmail(this.uname);
+    people = userFacade.findByEmail(this.uname);
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
@@ -327,7 +330,7 @@ public class RecoverySelector implements Serializable {
         people.
                 setStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
         people.getYubikey().setStatus(PeopleAccountStatus.LOST_YUBIKEY);
-        um.updatePeople(people);
+        userFacade.update(people);
         email.sendEmail(people.getEmail(), RecipientType.TO,
                 UserAccountsEmailMessages.DEVICE_LOST_SUBJECT, message);
 
@@ -337,9 +340,9 @@ public class RecoverySelector implements Serializable {
       } else {
 
         int val = people.getFalseLogin();
-        um.increaseLockNum(people.getUid(), val + 1);
+        usersController.increaseLockNum(people.getUid(), val + 1);
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-          um.changeAccountStatus(people.getUid(), "",
+          usersController.changeAccountStatus(people.getUid(), "",
                   PeopleAccountStatus.BLOCKED_ACCOUNT);
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(),
                   AccountsAuditActions.SUCCESS.name(),

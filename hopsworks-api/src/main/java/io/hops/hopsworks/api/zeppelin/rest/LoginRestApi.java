@@ -22,7 +22,7 @@ import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.user.UsersController;
 import org.apache.shiro.subject.Subject;
@@ -66,7 +66,7 @@ public class LoginRestApi {
   @EJB
   private UsersController userController;
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
 
   /**
    * Required by Swagger.

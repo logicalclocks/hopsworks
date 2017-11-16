@@ -10,8 +10,8 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
@@ -73,7 +73,7 @@ public class DelaProjectService {
   @EJB
   private KafkaController kafkaController;
   @EJB
-  private UserManager userBean;
+  private UserFacade userFacade;
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -229,7 +229,7 @@ public class DelaProjectService {
   }
 
   private Users getUser(String email) throws ThirdPartyException {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
         ThirdPartyException.Source.LOCAL, "exception");

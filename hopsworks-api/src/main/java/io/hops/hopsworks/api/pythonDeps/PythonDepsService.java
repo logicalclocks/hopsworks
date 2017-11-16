@@ -15,7 +15,6 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -64,8 +63,6 @@ public class PythonDepsService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserManager userManager;
-  @EJB
   private WebCommunication web;
   @EJB
   private Settings settings;
@@ -81,8 +78,6 @@ public class PythonDepsService {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private UserManager userBean;
 
   public void setProject(Project project) {
     this.project = project;
@@ -159,7 +154,7 @@ public class PythonDepsService {
   }
 
   private Users getUser(String email) throws ThirdPartyException {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
           ThirdPartyException.Source.LOCAL, "exception");

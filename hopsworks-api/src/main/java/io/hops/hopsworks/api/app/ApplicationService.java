@@ -24,11 +24,11 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.CertificatesController;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -75,7 +75,7 @@ public class ApplicationService {
   @EJB
   private UserFacade userFacade;
   @EJB
-  protected UserManager userManager;
+  protected UsersController usersController;
   @EJB
   private CertificatesController certificatesController;
 
@@ -195,8 +195,9 @@ public class ApplicationService {
   }
 
   private void assertAdmin(String projectUser) throws AppException {
-    String user = hdfsUserBean.getUserName(projectUser);
-    if (!userManager.findGroups(user).contains("HOPS_ADMIN")) {
+    String username = hdfsUserBean.getUserName(projectUser);
+    Users user = userFacade.findByUsername(username);
+    if (!usersController.isUserInRole(user, "HOPS_ADMIN")) {
       throw new AppException((Response.Status.UNAUTHORIZED.getStatusCode()),
           "only admins can call this function");
     }

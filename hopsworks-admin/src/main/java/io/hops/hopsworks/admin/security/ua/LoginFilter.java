@@ -1,5 +1,6 @@
 package io.hops.hopsworks.admin.security.ua;
 
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.io.IOException;
 import javax.ejb.EJB;
 import javax.servlet.Filter;
@@ -10,13 +11,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
 
 public class LoginFilter extends PolicyDecisionPoint implements Filter {
 
   @EJB
-  private UserManager uManager;
+  private UserFacade userFacade;
 
   private String urlList;
 
@@ -38,7 +38,7 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
     Users user = null;
 
     if (username != null) {
-      user = uManager.findByEmail(username);
+      user = userFacade.findByEmail(username);
     }
 
     // If user is logged in redirect to index first page 

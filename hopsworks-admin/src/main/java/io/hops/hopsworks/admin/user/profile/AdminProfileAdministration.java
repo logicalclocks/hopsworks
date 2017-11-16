@@ -22,8 +22,9 @@ import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
@@ -31,8 +32,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,10 +44,12 @@ public class AdminProfileAdministration implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
+  @EJB
+  protected UsersController usersController;
 
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
 
   @EJB
   private BbcGroupFacade bbcGroupFacade;
@@ -132,12 +134,12 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public List<String> getUserRole(Users p) {
-    List<String> list = userManager.findGroups(p.getUid());
+    List<String> list = usersController.getUserRoles(p);
     return list;
   }
 
   public String getChangedStatus(Users p) {
-    return userManager.findByEmail(p.getEmail()).getStatus().name();
+    return userFacade.findByEmail(p.getEmail()).getStatus().name();
   }
 
   public Users getUser() {
@@ -174,7 +176,7 @@ public class AdminProfileAdministration implements Serializable {
    * @return
    */
   public List<String> getCurrentGroups() {
-    List<String> list = userManager.findGroups(editingUser.getUid());
+    List<String> list = usersController.getUserRoles(editingUser);
     return list;
   }
 
@@ -183,7 +185,7 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public List<String> getNewGroups() {
-    List<String> list = userManager.findGroups(editingUser.getUid());
+    List<String> list = usersController.getUserRoles(editingUser);
     List<String> tmp = new ArrayList<>();
 
     for (BbcGroup b : bbcGroupFacade.findAll()) {
@@ -197,7 +199,7 @@ public class AdminProfileAdministration implements Serializable {
 
   public String getEditStatus() {
 
-    this.editStatus = userManager.getUserByEmail(this.editingUser.getEmail()).getStatus().name();
+    this.editStatus = userFacade.findByEmail(this.editingUser.getEmail()).getStatus().name();
     return this.editStatus;
   }
 
@@ -211,8 +213,7 @@ public class AdminProfileAdministration implements Serializable {
       groups.add(value.getGroupName());
     }
 
-    editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext()
-            .getSessionMap().get("editinguser");
+    editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("editinguser");
     address = editingUser.getAddress();
 
     login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext()
@@ -240,7 +241,7 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public List<Users> getUsersNameList() {
-    return userManager.findAllUsers();
+    return userFacade.findAllUsers();
   }
 
   public List<String> getGroups() {
@@ -257,13 +258,12 @@ public class AdminProfileAdministration implements Serializable {
 
   public String getLoginName() throws IOException {
     FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.
-            getExternalContext().getRequest();
+    HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
     Principal principal = request.getUserPrincipal();
 
     try {
-      Users p = userManager.findByEmail(principal.getName());
+      Users p = userFacade.findByEmail(principal.getName());
 
       if (p != null) {
         return p.getFname() + " " + p.getLname();
@@ -271,8 +271,7 @@ public class AdminProfileAdministration implements Serializable {
         return principal.getName();
       }
     } catch (Exception ex) {
-      ExternalContext extContext = FacesContext.getCurrentInstance().
-              getExternalContext();
+      ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
       extContext.redirect(extContext.getRequestContextPath());
       return null;
     }
@@ -286,25 +285,17 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#!".equals(selectedStatus)) {
       editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus));
       try {
-        userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(
-                selectedStatus));
-        am.registerAccountChange(sessionState.getLoggedInUser(),
-                AccountsAuditActions.CHANGEDSTATUS.name(),
-                UserAuditActions.SUCCESS.
-                name(), selectedStatus, editingUser);
-        MessagesController.addInfoMessage("Success",
-                "Status updated successfully.");
-      } catch (ApplicationException ex) {
-        MessagesController.addInfoMessage("Problem",
-                "Could not update account status.");
-        Logger.getLogger(AdminProfileAdministration.class.getName()).
-                log(Level.SEVERE, null, ex);
+        userFacade.updateStatus(editingUser.getEmail(), PeopleAccountStatus.valueOf(selectedStatus));
+        am.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.CHANGEDSTATUS.name(),
+            UserAuditActions.SUCCESS.name(), selectedStatus, editingUser);
+        MessagesController.addInfoMessage("Success", "Status updated successfully.");
+      } catch (Exception ex) {
+        MessagesController.addInfoMessage("Problem", "Could not update account status.");
+        Logger.getLogger(AdminProfileAdministration.class.getName()).log(Level.SEVERE, null, ex);
       }
     } else {
-      am.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.CHANGEDSTATUS.name(),
-              UserAuditActions.FAILED.
-              name(), selectedStatus, editingUser);
+      am.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.CHANGEDSTATUS.name(),
+          UserAuditActions.FAILED.name(), selectedStatus, editingUser);
       MessagesController.addErrorMessage("Error", "No selection made!");
 
     }
@@ -316,16 +307,14 @@ public class AdminProfileAdministration implements Serializable {
 
     // Register a new group
     if (!"#!".equals(newGroup)) {
-      userManager.registerGroup(editingUser, bbcGroup.getGid());
-      am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
-              name(), bbcGroup.getGroupName(), editingUser);
+      usersController.registerGroup(editingUser, bbcGroup.getGid());
+      am.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(), RolesAuditActions.SUCCESS.
+          name(), bbcGroup.getGroupName(), editingUser);
       MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
     } else {
-      am.registerRoleChange(sessionState.getLoggedInUser(),
-              RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
-              name(), bbcGroup.getGroupName(), editingUser);
+      am.registerRoleChange(sessionState.getLoggedInUser(), RolesAuditActions.ADDROLE.name(), RolesAuditActions.FAILED.
+          name(), bbcGroup.getGroupName(), editingUser);
       MessagesController.addErrorMessage("Error", "No selection made!!");
     }
 
@@ -336,7 +325,7 @@ public class AdminProfileAdministration implements Serializable {
 
     // Remove a group
     if (!"#!".equals(selectedGroup)) {
-      userManager.removeGroup(editingUser, bbcGroup.getGid());
+      userFacade.removeGroup(editingUser.getEmail(), bbcGroup.getGid());
 
       am.registerRoleChange(sessionState.getLoggedInUser(),
               RolesAuditActions.REMOVEROLE.name(), RolesAuditActions.SUCCESS.
@@ -366,13 +355,13 @@ public class AdminProfileAdministration implements Serializable {
   }
 
   public String getMaxNumProjs() {
-    return userManager.findByEmail(editingUser.getEmail()).getMaxNumProjects().
+    return userFacade.findByEmail(editingUser.getEmail()).getMaxNumProjects().
             toString();
   }
 
   public void setMaxNumProjs(String maxNumProjs) {
     int num = Integer.parseInt(maxNumProjs);
-    userManager.updateMaxNumProjs(editingUser, num);
+    usersController.updateMaxNumProjs(editingUser, num);
   }
 
   public boolean notVerified() {
@@ -398,7 +387,7 @@ public class AdminProfileAdministration implements Serializable {
                     AuditUtil.getUserURL(request), user.getUsername()
                     + activationKey));
     editingUser.setValidationKey(activationKey);
-    userManager.persist(editingUser);
+    userFacade.persist(editingUser);
 
   }
 

@@ -2,8 +2,9 @@ package io.hops.hopsworks.api.hopssite;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.CommentIssueReqDTO;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.CommentDTO;
 import io.hops.hopsworks.dela.dto.hopssite.CommentIssueDTO;
@@ -38,7 +39,9 @@ public class CommentService {
   @EJB
   private HopssiteController hopsSite;
   @EJB
-  private UserManager userBean;
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
   @EJB
   private Settings settings;
   @EJB
@@ -67,7 +70,7 @@ public class CommentService {
   public Response addComment(@Context SecurityContext sc, String content) throws ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:add {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userBean, sc.getUserPrincipal().getName());
+    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
@@ -86,7 +89,7 @@ public class CommentService {
     throws ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:update {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userBean, sc.getUserPrincipal().getName());
+    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     CommentDTO.Publish comment = new CommentDTO.Publish(user.getEmail(), content);
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
@@ -105,7 +108,7 @@ public class CommentService {
     throws ThirdPartyException, ThirdPartyException, ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:delete {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userBean, sc.getUserPrincipal().getName());
+    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     hopsSite.performAsUser(user, new HopsSite.UserFunc<String>() {
       @Override
       public String perform() throws ThirdPartyException {
@@ -124,7 +127,7 @@ public class CommentService {
     CommentIssueReqDTO commentReqIssue) throws ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
-    Users user = SettingsHelper.getUser(userBean, sc.getUserPrincipal().getName());
+    Users user = SettingsHelper.getUser(userFacade, sc.getUserPrincipal().getName());
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:report issue:{0}", commentReqIssue);
 //    CommentIssueDTO commentIssue
 //      = new CommentIssueDTO(commentReqIssue.getType(), commentReqIssue.getMsg(), user.getEmail());

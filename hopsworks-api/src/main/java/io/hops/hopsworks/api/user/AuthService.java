@@ -10,11 +10,10 @@ import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
@@ -61,9 +60,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class AuthService {
 
   @EJB
-  private UserFacade userBean;
-  @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
   @EJB
   private UsersController userController;
   @EJB
@@ -73,7 +70,7 @@ public class AuthService {
   @EJB
   private Settings settings;
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
@@ -103,7 +100,7 @@ public class AuthService {
   public Response validatePassword(@FormParam("password") String password, @Context SecurityContext sc,
       @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
       throws AppException, MessagingException {
-    Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     if (user.getPassword().equals(DigestUtils.sha256Hex(password))) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     }
@@ -130,7 +127,7 @@ public class AuthService {
     if (email == null || email.isEmpty()) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),"Email address field cannot be empty");
     }
-    Users user = userBean.findByEmail(email);
+    Users user = userFacade.findByEmail(email);
     if (user == null) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               "Unrecognized email address. Have you registered yet?");
@@ -167,7 +164,7 @@ public class AuthService {
     }
     // logout any user already loggedin if a new user tries to login 
     if (sc.getUserPrincipal() != null && !sc.getUserPrincipal().getName().equals(email)) {
-      Users userInReq = userBean.findByEmail(req.getRemoteUser());
+      Users userInReq = userFacade.findByEmail(req.getRemoteUser());
       try {
         req.getServletContext().log("logging out. User: " + sc.getUserPrincipal().getName());
         req.getSession().invalidate();
@@ -225,7 +222,7 @@ public class AuthService {
       req.getSession().invalidate();
       req.logout();
       json.setStatus("SUCCESS");
-      user = userBean.findByEmail(req.getRemoteUser());
+      user = userFacade.findByEmail(req.getRemoteUser());
       if (user != null) {
         userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
         am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
@@ -335,7 +332,7 @@ public class AuthService {
     // get the 8 char username
     String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH);
 
-    Users user = userBean.findByUsername(userName);
+    Users user = userFacade.findByUsername(userName);
 
     if (user == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "the user does not exist");
@@ -360,9 +357,9 @@ public class AuthService {
       if (nbTry > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
         user.setStatus(PeopleAccountStatus.SPAM_ACCOUNT);
       }
-      userBean.update(user);
+      userFacade.update(user);
       String email = sc.getUserPrincipal().getName();
-      Users initiator = userBean.findByEmail(email);
+      Users initiator = userFacade.findByEmail(email);
       am.registerRoleChange(initiator,
           PeopleAccountStatus.SPAM_ACCOUNT.name(), RolesAuditActions.SUCCESS.
           name(), Integer.toString(nbTry), user, req);
@@ -385,7 +382,7 @@ public class AuthService {
     // get the 8 char username
     String secret = key.substring(AuthenticationConstants.USERNAME_LENGTH);
 
-    Users user = userBean.findByUsername(userName);
+    Users user = userFacade.findByUsername(userName);
 
     if (user == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "the user does not exist");
@@ -406,9 +403,9 @@ public class AuthService {
       }
 
       user.setStatus(PeopleAccountStatus.VERIFIED_ACCOUNT);
-      user = userBean.update(user);
+      user = userFacade.update(user);
       String email = sc.getUserPrincipal().getName();
-      Users initiator = userBean.findByEmail(email);
+      Users initiator = userFacade.findByEmail(email);
       am.registerRoleChange(initiator,
           PeopleAccountStatus.VERIFIED_ACCOUNT.name(), RolesAuditActions.SUCCESS.
           name(), "", user, req);
@@ -424,9 +421,9 @@ public class AuthService {
       if (nbTry > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
         user.setStatus(PeopleAccountStatus.SPAM_ACCOUNT);
       }
-      userBean.update(user);
+      userFacade.update(user);
       String email = sc.getUserPrincipal().getName();
-      Users initiator = userBean.findByEmail(email);
+      Users initiator = userFacade.findByEmail(email);
       am.registerRoleChange(initiator,
           PeopleAccountStatus.SPAM_ACCOUNT.name(), RolesAuditActions.SUCCESS.
           name(), Integer.toString(nbTry), user, req);
@@ -439,7 +436,7 @@ public class AuthService {
   @Produces(MediaType.TEXT_PLAIN)
   public Response getSecurityQuestionMail(@Context SecurityContext sc, @Context HttpServletRequest req,
       @FormParam("email") String email) throws AppException {
-    Users u = userBean.findByEmail(email);
+    Users u = userFacade.findByEmail(email);
     if (u == null || u.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT) || u.getStatus().equals(
         PeopleAccountStatus.BLOCKED_ACCOUNT) || u.getStatus().equals(PeopleAccountStatus.SPAM_ACCOUNT)) {
       //if account blocked then ignore the request
@@ -458,7 +455,7 @@ public class AuthService {
             "we did not manage to send the email, the error was: " + e.getMessage());
       }
       u.setValidationKey(activationKey);
-      userBean.update(u);
+      userFacade.update(u);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     }else{
       String activationKey = SecurityUtils.getRandomPassword(64);
@@ -472,7 +469,7 @@ public class AuthService {
             "we did not manage to send the email, the error was: " + e.getMessage());
       }
       u.setValidationKey(activationKey);
-      userBean.update(u);
+      userFacade.update(u);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     }
   }

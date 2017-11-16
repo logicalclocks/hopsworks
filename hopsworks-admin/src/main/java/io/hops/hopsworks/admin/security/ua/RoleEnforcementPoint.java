@@ -1,7 +1,6 @@
 package io.hops.hopsworks.admin.security.ua;
 
 import java.io.Serializable;
-import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -9,12 +8,13 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -26,10 +26,12 @@ import javax.servlet.ServletException;
 public class RoleEnforcementPoint implements Serializable {
 
   @EJB
-  protected UserManager userManager;
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
 
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
 
   private boolean open_requests = false;
   private int tabIndex;
@@ -48,7 +50,7 @@ public class RoleEnforcementPoint implements Serializable {
       ExternalContext context = FacesContext.getCurrentInstance().
               getExternalContext();
       String userEmail = context.getUserPrincipal().getName();
-      user = userManager.findByEmail(userEmail);
+      user = userFacade.findByEmail(userEmail);
     }
     return user;
   }
@@ -75,8 +77,8 @@ public class RoleEnforcementPoint implements Serializable {
    */
   public boolean isAdmin() {
     if (getRequest().getRemoteUser() != null) {
-      Users p = userManager.findByEmail(getRequest().getRemoteUser());
-      return userManager.findGroups(p.getUid()).contains("HOPS_ADMIN");
+      Users p = userFacade.findByEmail(getRequest().getRemoteUser());
+      return usersController.isUserInRole(p, "HOPS_ADMIN");
     }
     return false;
   }
@@ -87,31 +89,24 @@ public class RoleEnforcementPoint implements Serializable {
    * @return
    */
   public boolean isUser() {
-
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("HOPS_USER"));
+    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
+    return usersController.isUserInRole(p, "HOPS_USER");
   }
 
   public boolean isAuditorRole() {
 
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("AUDITOR") || roles.contains("HOPS_ADMIN"));
+    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
+    return (usersController.isUserInRole(p, "AUDITOR") || !usersController.isUserInRole(p, "HOPS_ADMIN"));
   }
 
   public boolean isAgentRole() {
-
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("AGENT"));
+    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
+    return (usersController.isUserInRole(p,"AGENT"));
   }
 
   public boolean isOnlyAuditorRole() {
-
-    Users p = userManager.findByEmail(getRequest().getRemoteUser());
-    List<String> roles = userManager.findGroups(p.getUid());
-    return (roles.contains("AUDITOR") && !roles.contains("HOPS_ADMIN"));
+    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
+    return (usersController.isUserInRole(p,"AUDITOR") && !usersController.isUserInRole(p,"HOPS_ADMIN"));
   }
 
   /**
@@ -121,13 +116,9 @@ public class RoleEnforcementPoint implements Serializable {
   public boolean checkForRequests() {
     if (isAdmin()) {
       //return false if no requests
-      open_requests = !(userManager.findAllByStatus(
-              PeopleAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
-              || !(userManager.findAllByStatus(
-                      PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT).
-              isEmpty()
-              || !(userManager.findAllByStatus(
-              PeopleAccountStatus.VERIFIED_ACCOUNT).isEmpty()));
+      open_requests = !(userFacade.findAllByStatus(PeopleAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
+              || !(userFacade.findAllByStatus(PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT).isEmpty()
+              || !(userFacade.findAllByStatus(PeopleAccountStatus.VERIFIED_ACCOUNT).isEmpty()));
     }
     return open_requests;
   }
@@ -138,11 +129,11 @@ public class RoleEnforcementPoint implements Serializable {
 
   public String openRequests() {
     this.tabIndex = 1;
-    if (!userManager.findMobileRequests().isEmpty()) {
+    if (!userFacade.findAllMobileRequests().isEmpty()) {
       return "mobUsers";
-    } else if (!userManager.findYubikeyRequests().isEmpty()) {
+    } else if (!userFacade.findYubikeyRequests().isEmpty()) {
       return "yubikeyUsers";
-    } else if (!userManager.findSPAMAccounts().isEmpty()) {
+    } else if (!userFacade.findAllByStatus(PeopleAccountStatus.SPAM_ACCOUNT).isEmpty()) {
       return "spamUsers";
     }
 
@@ -169,7 +160,7 @@ public class RoleEnforcementPoint implements Serializable {
               getValue(), ip,
               browser, os, macAddress, UserAuditActions.SUCCESS.name());
 
-      userManager.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
+      usersController.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
       req.logout();
       if (null != sess) {
         sess.invalidate();
