@@ -280,7 +280,7 @@ public class UserService {
     List<ProjectTeam> list = projectController.findProjectTeamById(projectId);
 
     for (ProjectTeam pt : list) {
-      logger.log(Level.INFO, "{0} ({1}) -  {2}", new Object[]{pt.
+      logger.log(Level.FINEST, "{0} ({1}) -  {2}", new Object[]{pt.
         getProjectTeamPK().getTeamMember(),
         pt.getProjectTeamPK().getProjectId(), pt.getTeamRole()});
       if (pt.getProjectTeamPK().getTeamMember().compareToIgnoreCase(email) == 0) {
