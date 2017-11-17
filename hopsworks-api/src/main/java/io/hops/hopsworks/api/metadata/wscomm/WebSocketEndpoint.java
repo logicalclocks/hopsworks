@@ -65,7 +65,7 @@ public class WebSocketEndpoint {
     Users user = this.projectTeamFacade.findUserByEmail(this.sender);
     //returns the user role in project. Null if the user has no role in project
     this.userRole = this.projectTeamFacade.findCurrentRole(this.project, user);
-    logger.log(Level.INFO, "User role in this project {0}", this.userRole);
+    logger.log(Level.FINEST, "User role in this project {0}", this.userRole);
 
     if (this.userRole == null) {
       try {
@@ -83,7 +83,7 @@ public class WebSocketEndpoint {
     //query string is the client I want to communicate with
     String receiver = session.getQueryString();
 
-    logger.log(Level.INFO, "RECEIVED MESSAGE: {0}", msg.toString());
+    logger.log(Level.FINEST, "RECEIVED MESSAGE: {0}", msg.toString());
     Message response = this.protocol.GFR(msg);
     //broadcast the response back to everybody in the same project
     this.broadcast(response, session);
