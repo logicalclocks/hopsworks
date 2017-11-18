@@ -118,7 +118,7 @@
                     </div>
                   </div>
                 </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'distributedtensorflow' && jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">AppMaster virtual cores<i class="fa fa-info-circle" uib-tooltip="The number of virtual cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left">
@@ -228,7 +228,7 @@
                       <div class="col-md-2 jupyter-left"><input type="number" step="256" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                     </div>
                 </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode !== 'distributedtensorflow' && jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'tensorflow'">
+                  <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6"> Executor virtual cores <i class="fa fa-info-circle"
                                                                                 uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
