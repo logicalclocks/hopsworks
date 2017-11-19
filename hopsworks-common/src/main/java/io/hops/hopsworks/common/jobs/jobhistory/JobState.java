@@ -69,8 +69,8 @@ public enum JobState {
   }
 
   public static EnumSet<JobState> getRunningStates() {
-    return EnumSet.of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING,
-            SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
+    return EnumSet.
+        of(INITIALIZING, RUNNING, ACCEPTED, NEW, NEW_SAVING, SUBMITTED, STARTING_APP_MASTER, AGGREGATING_LOGS);
   }
 
 }

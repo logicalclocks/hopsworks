@@ -224,11 +224,11 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH, "$PWD");
     StringBuilder extraClassPathFiles = new StringBuilder();
     StringBuilder secondaryJars = new StringBuilder();
-    //Add hops-util.jar 
+    //Add hops-util.jar if it is a Kafka job
     builder.addLocalResource(new LocalResourceDTO(
         settings.getHopsUtilFilename(), settings.getHopsUtilHdfsPath(
         sparkUser),
-        LocalResourceVisibility.PRIVATE.toString(),
+        LocalResourceVisibility.APPLICATION.toString(),
         LocalResourceType.FILE.toString(), null), false);
 
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
@@ -430,9 +430,7 @@ public class SparkYarnRunnerBuilder {
       addSystemProperty(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, jobUser);
       addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
       addSystemProperty(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, serviceProps.getProjectName());
-
-      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY
-          + "=").
+      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY + "=").
           append(serviceProps.getRestEndpoint()).
           append(" -D" + Settings.HOPSWORKS_KEYSTORE_PROPERTY + "=").append(Settings.KEYSTORE_VAL_ENV_VAR).
           append(" -D" + Settings.HOPSWORKS_TRUSTSTORE_PROPERTY + "=").append(Settings.TRUSTSTORE_VAL_ENV_VAR).
@@ -443,7 +441,6 @@ public class SparkYarnRunnerBuilder {
           append(" -D" + Settings.HOPSWORKS_JOBNAME_PROPERTY + "=").append(serviceProps.getJobName()).
           append(" -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=").append(jobType.getName()).
           append(" -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=").append(jobUser);
-
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
         addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());

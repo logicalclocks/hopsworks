@@ -57,7 +57,7 @@ public class JobScheduler {
     }
     try {
       //Yes! Now execute!
-      executionController.start(job, job.getCreator(), null);
+      executionController.start(job, job.getCreator());
     } catch (IOException ex) {
       logger.log(Level.WARNING, "Exception while starting scheduled job " + job,
               ex);

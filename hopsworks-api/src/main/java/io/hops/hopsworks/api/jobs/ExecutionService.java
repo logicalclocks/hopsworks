@@ -107,7 +107,7 @@ public class ExecutionService {
       }
     }
     try {
-      Execution exec = executionController.start(job, user, req.getSession().getId());
+      Execution exec = executionController.start(job, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(exec).build();
     } catch (IOException | IllegalArgumentException | NullPointerException ex) {

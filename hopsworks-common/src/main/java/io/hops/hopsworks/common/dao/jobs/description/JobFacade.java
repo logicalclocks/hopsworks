@@ -28,7 +28,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   private EntityManager em;
 
   private static final Logger logger = Logger.getLogger(JobFacade.class.
-          getName());
+      getName());
 
   public JobFacade() {
     super(Jobs.class);
@@ -47,9 +47,9 @@ public class JobFacade extends AbstractFacade<Jobs> {
    * @return
    */
   public List<Jobs> findJobsForProjectAndType(
-          Project project, JobType type) {
+      Project project, JobType type) {
     TypedQuery<Jobs> q = em.createNamedQuery("Jobs.findByProjectAndType",
-            Jobs.class);
+        Jobs.class);
     q.setParameter("project", project);
     q.setParameter("type", type);
     return q.getResultList();
@@ -83,16 +83,16 @@ public class JobFacade extends AbstractFacade<Jobs> {
   //be found using em.find().
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Jobs create(Users creator, Project project,
-          JobConfiguration config) throws
-          IllegalArgumentException, NullPointerException {
+      JobConfiguration config) throws
+      IllegalArgumentException, NullPointerException {
     //Argument checking
     if (creator == null || project == null || config == null) {
       throw new NullPointerException(
-              "Owner, project and config must be non-null.");
+          "Owner, project and config must be non-null.");
     }
     //First: create a job object
     Jobs job = new Jobs(config, project, creator, config.
-            getAppName());
+        getAppName());
     //Finally: persist it, getting the assigned id.
     em.persist(job);
     em.flush(); //To get the id.
@@ -109,6 +109,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return em.find(Jobs.class, id);
   }
 
+  /**
+   *
+   * @param job
+   * @throws DatabaseException
+   */
   public void removeJob(Jobs job) throws DatabaseException {
     try {
       Jobs managedJob = em.find(Jobs.class, job.getId());
@@ -120,8 +125,15 @@ public class JobFacade extends AbstractFacade<Jobs> {
 
   }
 
+  /**
+   *
+   * @param jobId
+   * @param schedule
+   * @return
+   * @throws DatabaseException
+   */
   public boolean updateJobSchedule(int jobId, ScheduleDTO schedule) throws
-          DatabaseException {
+      DatabaseException {
     boolean status = false;
     try {
       Jobs managedJob = em.find(Jobs.class, jobId);
@@ -141,6 +153,11 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return status;
   }
 
+  /**
+   *
+   * @param project
+   * @return
+   */
   public List<Jobs> getRunningJobs(Project project) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
@@ -148,11 +165,34 @@ public class JobFacade extends AbstractFacade<Jobs> {
     return q.getResultList();
   }
 
-  public List<Jobs> getUserRunningJobs(Project project, String hdfsUser) {
+  /**
+   *
+   * @param project
+   * @param hdfsUser
+   * @return
+   */
+  public List<Jobs> getRunningJobs(Project project, String hdfsUser) {
     TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsForExecutionInState", Jobs.class);
     q.setParameter("project", project);
     q.setParameter("hdfsUser", hdfsUser);
     q.setParameter("stateCollection", JobState.getRunningStates());
     return q.getResultList();
   }
+
+  /**
+   *
+   * @param project
+   * @param hdfsUser
+   * @param jobIds
+   * @return
+   */
+  public List<Jobs> getRunningJobs(Project project, String hdfsUser, List<Integer> jobIds) {
+    TypedQuery<Jobs> q = em.createNamedQuery("Execution.findUserJobsIdsForExecutionInState", Jobs.class);
+    q.setParameter("jobids", jobIds);
+    q.setParameter("project", project);
+    q.setParameter("hdfsUser", hdfsUser);
+    q.setParameter("stateCollection", JobState.getRunningStates());
+    return q.getResultList();
+  }
+
 }
