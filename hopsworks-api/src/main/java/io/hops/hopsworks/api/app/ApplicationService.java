@@ -141,7 +141,6 @@ public class ApplicationService {
       @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws AppException {
 
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
-    assertAdmin(projectUser);
     Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
     for (Integer jobId : jobsDTO.getJobIds()) {
       Jobs job = jobFacade.findById(jobId);
@@ -163,7 +162,6 @@ public class ApplicationService {
   public Response getJobsWithRunningState(@Context SecurityContext sc,
       @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws AppException {
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
-    assertAdmin(projectUser);
     Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);
     List<Jobs> jobsRunning = jobFacade.getRunningJobs(project, projectUser, jobsDTO.getJobIds());
     List<Integer> jobIds = new ArrayList<>();
