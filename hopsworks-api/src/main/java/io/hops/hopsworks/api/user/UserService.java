@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.swagger.annotations.Api;
+import javax.mail.MessagingException;
 
 @Path("/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -125,11 +126,10 @@ public class UserService {
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
 
-    userController.changePassword(sc.getUserPrincipal().getName(), oldPassword,
-            newPassword, confirmedPassword, req);
+    userController.changePassword(sc.getUserPrincipal().getName(), oldPassword, newPassword, confirmedPassword, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
@@ -145,10 +145,9 @@ public class UserService {
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
-    userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword,
-            securityQuestion, securityAnswer, req);
+    userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword, securityQuestion, securityAnswer, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);

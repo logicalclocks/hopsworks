@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
+import io.hops.hopsworks.common.user.LoginController;
 import io.hops.hopsworks.common.user.UsersController;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -65,6 +66,8 @@ public class LoginRestApi {
   private UserFacade userBean;
   @EJB
   private UsersController userController;
+  @EJB
+  private LoginController loginController;
   @EJB
   private AccountAuditFacade am;
 
@@ -155,7 +158,7 @@ public class LoginRestApi {
       req.logout();
       req.getSession().invalidate();
       if (user != null) {
-        userController.setUserIsOnline(user, AuthenticationConstants.IS_OFFLINE);
+        loginController.setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
         am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
                 UserAuditActions.SUCCESS.name(), req);
         TicketContainer.instance.invalidate(user.getEmail());

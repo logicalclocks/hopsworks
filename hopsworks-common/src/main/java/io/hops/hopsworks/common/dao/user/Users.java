@@ -185,7 +185,10 @@ public class Users implements Serializable {
   @NotNull
   @Column(name = "two_factor")
   private boolean twoFactor;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "salt")
+  private String salt;
   @Basic(optional = false)
   @NotNull
   @Column(name = "tours_state")
@@ -254,6 +257,49 @@ public class Users implements Serializable {
     this.numCreatedProjects = 0;
   }
 
+  public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
+      String orcid, PeopleAccountStatus status, String secret, String validationKey, SecurityQuestion securityQuestion,
+      String securityAnswer, PeopleAccountType mode, Date passwordChanged, String mobile, Integer maxNumProjects,
+      boolean twoFactor, String salt, int toursState) {
+    this.username = username;
+    this.password = password;
+    this.email = email;
+    this.fname = fname;
+    this.lname = lname;
+    this.activated = activated;
+    this.title = title;
+    this.orcid = orcid;
+    this.status = status;
+    this.secret = secret;
+    this.validationKey = validationKey;
+    this.securityQuestion = securityQuestion;
+    this.securityAnswer = securityAnswer;
+    this.mode = mode;
+    this.passwordChanged = passwordChanged;
+    this.mobile = mobile;
+    this.maxNumProjects = maxNumProjects;
+    this.twoFactor = twoFactor;
+    this.salt = salt;
+    this.toursState = toursState;
+    this.numCreatedProjects = 0;
+  }
+
+  public Users(String username, String password, String email, String fname, String lname, String title,
+      PeopleAccountStatus status, PeopleAccountType mode, Integer maxNumProjects, String salt) {
+    this.username = username;
+    this.password = password;
+    this.email = email;
+    this.fname = fname;
+    this.lname = lname;
+    this.title = title;
+    this.status = status;
+    this.mode = mode;
+    this.maxNumProjects = maxNumProjects;
+    this.salt = salt;
+    this.numCreatedProjects = 0;
+  }
+  
+
   public Yubikey getYubikey() {
     return yubikey;
   }
@@ -303,7 +349,16 @@ public class Users implements Serializable {
   public void setPassword(String password) {
     this.password = password;
   }
+  
+  @XmlTransient
+  @JsonIgnore
+  public String getSalt() {
+    return salt;
+  }
 
+  public void setSalt(String salt) {
+    this.salt = salt;
+  }
   public String getEmail() {
     return email;
   }

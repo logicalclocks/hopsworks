@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.user.LoginController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import java.io.IOException;
@@ -62,14 +63,14 @@ public class ResetPassword implements Serializable {
 
   @EJB
   private AccountAuditFacade auditManager;
-
   @EJB
   protected UsersController usersController;
   @EJB
   private UserFacade userFacade;
-
   @EJB
   private EmailBean emailBean;
+  @EJB
+  private LoginController loginController;
 
   @Resource
   private UserTransaction userTransaction;
@@ -143,7 +144,8 @@ public class ResetPassword implements Serializable {
   }
 
   public String sendTmpPassword() throws MessagingException {
-
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     people = userFacade.findByEmail(this.username);
 
     if (people == null || people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
@@ -184,7 +186,7 @@ public class ResetPassword implements Serializable {
       people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
 
       // reset the old password with a new one
-      usersController.resetPassword(people, DigestUtils.sha256Hex(random_password));
+      loginController.changePassword(people, random_password, req);
 
       userTransaction.commit();
 
@@ -216,9 +218,7 @@ public class ResetPassword implements Serializable {
    */
   public String changePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-        getRequest();
-
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     if (req.getRemoteUser() == null) {
       return ("welcome");
     }
@@ -236,7 +236,7 @@ public class ResetPassword implements Serializable {
     try {
 
       // Reset the old password with a new one
-      usersController.resetPassword(people, DigestUtils.sha256Hex(passwd1));
+      loginController.changePassword(people, passwd1, req);
 
       try {
         usersController.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT);
@@ -457,8 +457,7 @@ public class ResetPassword implements Serializable {
 
   public String changeProfilePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-        getRequest();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
     if (req.getRemoteUser() == null) {
       return ("welcome");
@@ -506,7 +505,7 @@ public class ResetPassword implements Serializable {
       if (DigestUtils.sha256Hex(current).equals(people.getPassword())) {
 
         // reset the old password with a new one
-        usersController.resetPassword(people, DigestUtils.sha256Hex(passwd1));
+        loginController.changePassword(people, passwd1, req);
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();

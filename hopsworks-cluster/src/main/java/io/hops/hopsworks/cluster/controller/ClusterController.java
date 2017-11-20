@@ -16,6 +16,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.user.LoginController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
@@ -72,6 +73,8 @@ public class ClusterController {
   private UsersController userController;
   @EJB
   private UserStatusValidator statusValidator;
+  @EJB
+  private LoginController loginController;
 
   public void register(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
     isValidNewCluster(cluster);
@@ -272,7 +275,7 @@ public class ClusterController {
       MessagingException {
     String password = DigestUtils.sha256Hex(cluster.getChosenPassword());
     if (!password.equals(clusterAgent.getPassword())) {
-      userController.registerFalseLogin(clusterAgent);//will set status if false login > allowed
+      loginController.registerFalseLogin(clusterAgent, req);//will set status if false login > allowed
       am.registerLoginInfo(clusterAgent, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
       throw new SecurityException("Incorrect password.");
     }
@@ -287,7 +290,7 @@ public class ClusterController {
     if (!clusterAgent.getBbcGroupCollection().contains(group)) {
       throw new SecurityException("User not allowed to register clusters.");
     }
-    userController.resetFalseLogin(clusterAgent);
+    loginController.resetFalseLogin(clusterAgent);
   }
 
   private void removeUserIfNotValidated(Users u) {
