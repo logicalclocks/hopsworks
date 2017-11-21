@@ -168,6 +168,7 @@ public class ClusterController {
 
     clusterCert.setValidationKey(SecurityUtils.getRandomPassword(VALIDATION_KEY_LEN));
     clusterCert.setRegistrationStatus(RegistrationStatusEnum.UNREGISTRATION_PENDING);
+    clusterCert.setValidationKeyDate(new Date());
     clusterCertFacade.update(clusterCert);
     sendEmail(cluster, req, clusterCert.getId() + clusterCert.getValidationKey(), clusterAgent,
         AccountsAuditActions.UNREGISTRATION.name());
