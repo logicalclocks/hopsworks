@@ -79,7 +79,7 @@ public class UsersController {
   @EJB
   private Settings settings;
   @EJB
-  private LoginController loginController;
+  private AuthController authController;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -168,14 +168,14 @@ public class UsersController {
     String activationKey = SecurityUtils.getRandomPassword(64);
     String uname = generateUsername(newUser.getEmail());
     List<BbcGroup> groups = new ArrayList<>();
-    String salt = loginController.generateSalt();
-    String password = loginController.getPasswordHash(newUser.getChosenPassword(), salt);
+    String salt = authController.generateSalt();
+    String password = authController.getPasswordHash(newUser.getChosenPassword(), salt);
 
     Users user = new Users(uname, password,
         newUser.getEmail(), newUser.getFirstName(), newUser.getLastName(),
         new Timestamp(new Date().getTime()), "-", "-", accountStatus, otpSecret, activationKey,
         SecurityQuestion.getQuestion(newUser.getSecurityQuestion()),
-        loginController.getHash(newUser.getSecurityAnswer().toLowerCase()),
+        authController.getHash(newUser.getSecurityAnswer().toLowerCase()),
         accountType, new Timestamp(new Date().getTime()), newUser.getTelephoneNum(),
         settings.getMaxNumProjPerUser(), newUser.isTwoFactor(), salt, newUser.getToursState());
     user.setBbcGroupCollection(groups);
@@ -197,8 +197,8 @@ public class UsersController {
       AppException, NoSuchAlgorithmException {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
-    String salt = loginController.generateSalt();
-    String password = loginController.getPasswordHash(pwd, salt);
+    String salt = authController.generateSalt();
+    String password = authController.getPasswordHash(pwd, salt);
 
     Users user = new Users(uname, password, email, fname, lname, title, PeopleAccountStatus.NEW_MOBILE_ACCOUNT,
         PeopleAccountType.M_ACCOUNT_TYPE, 0, salt);
@@ -241,8 +241,8 @@ public class UsersController {
         throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
             ResponseMessages.USER_DOES_NOT_EXIST);
       }
-      loginController.validateSecurityQA(user, securityQuestion, securityAnswer, req);
-      loginController.resetPassword(user, req);
+      authController.validateSecurityQA(user, securityQuestion, securityAnswer, req);
+      authController.resetPassword(user, req);
     }
   }
 
@@ -253,12 +253,12 @@ public class UsersController {
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
     }
-    if (!loginController.validatePassword(user, oldPassword, req)) {
+    if (!authController.validatePassword(user, oldPassword, req)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
     }
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
-        loginController.changePassword(user, newPassword, req);
+        authController.changePassword(user, newPassword, req);
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, "Error while changing password: ", ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -276,12 +276,12 @@ public class UsersController {
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
     }
-    if (!loginController.validatePassword(user, oldPassword, req)) {
+    if (!authController.validatePassword(user, oldPassword, req)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      loginController.changeSecQA(user, securityQuestion, securityAnswer, req);
+      authController.changeSecQA(user, securityQuestion, securityAnswer, req);
     }
   }
 

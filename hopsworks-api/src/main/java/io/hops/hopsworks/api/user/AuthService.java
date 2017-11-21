@@ -11,11 +11,9 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.user.LoginController;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
@@ -43,7 +41,8 @@ import org.apache.commons.codec.binary.Base64;
 
 @Path("/auth")
 @Stateless
-@Api(value = "Auth", description = "Authentication service")
+@Api(value = "Auth",
+    description = "Authentication service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
 
@@ -56,30 +55,26 @@ public class AuthService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private Settings settings;
+  private AccountAuditFacade accountAuditFacade;
   @EJB
-  private AccountAuditFacade am;
-  @EJB
-  private EmailBean emailBean;
-  @EJB
-  private LoginController loginController;
+  private AuthController authController;
 
   @GET
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     try {
       json.setStatus("SUCCESS");
       json.setData(sc.getUserPrincipal().getName());
     } catch (Exception e) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              ResponseMessages.AUTHENTICATION_FAILURE);
+          ResponseMessages.AUTHENTICATION_FAILURE);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @POST
@@ -89,64 +84,38 @@ public class AuthService {
       @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
       throws AppException, MessagingException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    if (loginController.validatePassword(user, password)) {
+    if (authController.validatePassword(user, password)) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
   }
-  
+
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response login(@FormParam("email") String email,
-          @FormParam("password") String password, @FormParam("otp") String otp,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
-          throws AppException, MessagingException {
-
-    req.getServletContext().log("email: " + email);
-    req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
-    req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
-    req.getServletContext().log("SecurityContext in user role: " + sc.isUserInRole("HOPS_USER"));
-    req.getServletContext().log("SecurityContext in sysadmin role: " + sc.isUserInRole("HOPS_ADMIN"));
-    req.getServletContext().log("SecurityContext in agent role: " + sc.isUserInRole("AGENT"));
-    req.getServletContext().log("SecurityContext in cluster_agent role: " + sc.isUserInRole("CLUSTER_AGENT"));
+  public Response login(@FormParam("email") String email, @FormParam("password") String password,
+      @FormParam("otp") String otp, @Context SecurityContext sc, @Context HttpServletRequest req) throws AppException,
+      MessagingException {
+    logUserLogin(req);
     JsonResponse json = new JsonResponse();
     if (email == null || email.isEmpty()) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),"Email address field cannot be empty");
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Email address field cannot be empty");
     }
-    Users user = userFacade.findByEmail(email);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              "Unrecognized email address. Have you registered yet?");
-    }
-    String newPassword = loginController.preCustomRealmLoginChecke(email, password, otp, req);
+    
+    // Do pre cauth realm check 
+    String newPassword = authController.preCustomRealmLoginCheck(email, password, otp, req);
+    
     // logout any user already loggedin if a new user tries to login 
     if (req.getRemoteUser() != null && !req.getRemoteUser().equals(email)) {
       logoutAndInvalidateSession(req);
     }
     //only login if not already logged...
     if (sc.getUserPrincipal() == null) {
-      if (statusValidator.checkStatus(user.getStatus())) {
-        try {
-          req.getServletContext().log("going to login. User status: " + user.getStatus());
-          req.login(email, newPassword);
-          req.getServletContext().log("3 step: " + email);
-          loginController.resetFalseLogin(user);
-          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
-        } catch (ServletException e) {
-          loginController.registerFalseLogin(user, req);
-          am.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
-          throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
-        }
-      } else { // if user == null
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
-      }
+      login(email, newPassword, req);
     } else {
       req.getServletContext().log("Skip logged because already logged in: " + email);
     }
 
-    loginController.setUserOnlineStatus(user, AuthenticationConstants.IS_ONLINE);
     //read the user data from db and return to caller
     json.setStatus("SUCCESS");
     json.setSessionID(req.getSession().getId());
@@ -183,7 +152,7 @@ public class AuthService {
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
     qrCode = userController.registerUser(newUser, req);
-    if (loginController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
+    if (authController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       json.setSuccessMessage("We registered your account request. Please validate you email and we will "
@@ -196,7 +165,7 @@ public class AuthService {
   @Path("registerYubikey")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req) throws AppException, 
+  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req) throws AppException,
       SocketException, NoSuchAlgorithmException {
     JsonResponse json = new JsonResponse();
     userController.registerYubikeyUser(newUser, req);
@@ -207,10 +176,10 @@ public class AuthService {
   @Path("recoverPassword")
   @Produces(MediaType.APPLICATION_JSON)
   public Response recoverPassword(@FormParam("email") String email,
-          @FormParam("securityQuestion") String securityQuestion,
-          @FormParam("securityAnswer") String securityAnswer,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException, Exception {
+      @FormParam("securityQuestion") String securityQuestion,
+      @FormParam("securityAnswer") String securityAnswer,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException, Exception {
     JsonResponse json = new JsonResponse();
     userController.recoverPassword(email, securityQuestion, securityAnswer, req);
     json.setStatus("OK");
@@ -222,18 +191,18 @@ public class AuthService {
   @Path("/validation/{key}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response validateUserEmail(@Context HttpServletRequest req, @PathParam("key") String key) throws AppException {
-    loginController.validateKey(key, req);
+    authController.validateKey(key, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @POST
   @Path("/validation/{key}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response validateUserMail(@Context HttpServletRequest req, @PathParam("key") String key) throws AppException {
-    loginController.validateKey(key, req);
+    authController.validateKey(key, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @POST
   @Path("/recovery")
   @Produces(MediaType.TEXT_PLAIN)
@@ -243,11 +212,11 @@ public class AuthService {
     if (u == null || statusValidator.isBlockedAccount(u)) {
       //if account blocked then ignore the request
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    } 
-    loginController.sendNewValidationKey(u, req);
+    }
+    authController.sendNewValidationKey(u, req);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   private void logoutAndInvalidateSession(HttpServletRequest req) throws AppException {
     Users user = null;
     try {
@@ -255,15 +224,48 @@ public class AuthService {
       req.logout();
       user = userFacade.findByEmail(req.getRemoteUser());
       if (user != null) {
-        loginController.setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
-        am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
+        authController.setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
+        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), 
+            req);
         //remove zeppelin ticket for user
         TicketContainer.instance.invalidate(user.getEmail());
       }
     } catch (ServletException e) {
-      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
+      accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Logout failed on backend");
     }
   }
+  
+  private void login(String email, String password, HttpServletRequest req) throws AppException, MessagingException {
+    Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "Unrecognized email address. Have you registered yet?");
+    }
+    if (statusValidator.checkStatus(user.getStatus())) {
+      try {
+        req.getServletContext().log("going to login. User status: " + user.getStatus());
+        req.login(email, password);
+        req.getServletContext().log("3 step: " + email);
+        authController.resetFalseLogin(user);
+        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
+        authController.setUserOnlineStatus(user, AuthenticationConstants.IS_ONLINE);
+      } catch (ServletException e) {
+        authController.registerFalseLogin(user, req);
+        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+      }
+    } else { // if user == null
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
+    }
+  }
 
+  private void logUserLogin(HttpServletRequest req) {
+    req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
+    req.getServletContext().log("SecurityContext email: " + req.getUserPrincipal());
+    req.getServletContext().log("SecurityContext in user role: " + req.isUserInRole("HOPS_USER"));
+    req.getServletContext().log("SecurityContext in sysadmin role: " + req.isUserInRole("HOPS_ADMIN"));
+    req.getServletContext().log("SecurityContext in agent role: " + req.isUserInRole("AGENT"));
+    req.getServletContext().log("SecurityContext in cluster_agent role: " + req.isUserInRole("CLUSTER_AGENT"));
+  }
 }

@@ -42,9 +42,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class LoginController {
+public class AuthController {
 
-  private final static Logger LOGGER = Logger.getLogger(LoginController.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(AuthController.class.getName());
   private final static int SALT_LENGTH = 64;
   private final static String DIGEST = "";
   private final static int RANDOM_PWD_LEN = 64;
@@ -76,7 +76,7 @@ public class LoginController {
    * @throws MessagingException
    * @throws AppException 
    */
-  public String preCustomRealmLoginChecke(String email, String password, String otp, HttpServletRequest req) throws
+  public String preCustomRealmLoginCheck(String email, String password, String otp, HttpServletRequest req) throws
       MessagingException, AppException {
     if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
       throw new IllegalArgumentException("Missing argument.");
