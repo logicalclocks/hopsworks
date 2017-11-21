@@ -1,7 +1,6 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.util.ClusterUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -38,16 +37,7 @@ public class ClusterUtilisationService {
   private Settings settings;
 
   @GET
-  @Path("/multiplicator")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getCurrentMultiplicator() {
-    YarnPriceMultiplicator multiplicator = clusterUtil.getMultiplicator();
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        multiplicator).build();
-  }
-
-  @GET
-  @Path("/gpus")
+  @Path("/metrics")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getGpus() {
     Response response = null;

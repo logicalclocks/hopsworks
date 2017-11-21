@@ -8,7 +8,11 @@ angular.module('hopsWorksApp')
           function ($scope, $routeParams, $interval, ClusterUtilService) {
             var self = this;
             self.pId = $routeParams.projectID;
-            self.utilisation = 0.0;
+            self.utilisation = -1;
+            self.availableVCores = 0.0;
+            self.allocatedVCores = 0.0;
+            self.availableMB = 0.0;
+            self.allocatedMB = 0.0;
             self.availableGPUs = 0;
             self.allocatedGPUs = 0;
             self.reservedGPUs = 0;
@@ -24,24 +28,7 @@ angular.module('hopsWorksApp')
             self.KafkaWarn = false;
             
             var getClusterUtilisation = function () {
-              ClusterUtilService.getYarnmultiplicator().then(
-                      function (success) {
-                        var usage = parseFloat(success.data.multiplicator - 0.8).toFixed(4)*100;
-                        self.utilisation = Math.min(usage, 100);
-                        if (self.utilisation <= 50) {
-                          self.progressBarClass = 'progress-bar-success';
-                        } else if (self.utilisation <= 80) {
-                          self.progressBarClass = 'progress-bar-warning';
-                        } else {
-                          self.progressBarClass = 'progress-bar-danger';
-                        }
-                      }, function (error) {
-                        self.utilisation = 0.0;
-                        self.progressBarClass = 'progress-bar-info';
-              });
-            };
-            var getGpuUtilization = function () {
-              ClusterUtilService.getYarnGpu().then(
+                ClusterUtilService.getYarnMetrics().then(
                       function (success) {
                         self.allocatedGPUs = success.data.clusterMetrics.allocatedGPUs;
                         self.reservedGPUs = success.data.clusterMetrics.reservedGPUs;
@@ -55,13 +42,31 @@ angular.module('hopsWorksApp')
                           self.gpuBarClass = 'progress-bar-danger';
                         }
                         self.gpusPercent = (self.allocatedGPUs/totalGpus)*100;
+                        
+                        self.allocatedVCores = success.data.clusterMetrics.allocatedVirtualCores;
+                        self.availableVCores = success.data.clusterMetrics.availableVirtualCores;
+                        self.availableMB = success.data.clusterMetrics.availableMB;
+                        self.allocatedMB = success.data.clusterMetrics.allocatedMB;
+                        var totalVCores = self.allocatedVCores + self.availableVCores;
+                        var totalMB = self.allocatedMB + self.availableMB;
+                        var vCoreUtilisation = (self.allocatedVCores / totalVCores) * 100;
+                        var MBUtilisation = (self.allocatedMB / totalMB) * 100;
+                        self.utilisation = Math.max(vCoreUtilisation, MBUtilisation)
 
+                        if (self.utilisation <= 50) {
+                          self.progressBarClass = 'progress-bar-success';
+                        } else if (self.utilisation <= 80) {
+                          self.progressBarClass = 'progress-bar-warning';
+                        } else {
+                          self.progressBarClass = 'progress-bar-danger';
+                        }
                       }, function (error) {
-                        console.log("Problem getting GPU utilization");
-              });
-              
+                        console.log("Problem getting cluster utilization");
+                        self.utilisation = -1;
+                });
             };
-            
+                
+                
             var getHdfsStatus = function () {
               ClusterUtilService.getHdfsStatus().then(
                       function (success) {
@@ -167,7 +172,6 @@ angular.module('hopsWorksApp')
               getClusterUtilisation();
             }, 10000);
             getClusterUtilisation();
-            getGpuUtilization();
             getHdfsStatus();
             getYarnStatus();
             getKafkaStatus();

@@ -25,7 +25,6 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -155,8 +154,6 @@ public class JobService {
   private ElasticController elasticController;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private ExecutionController executionController;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB

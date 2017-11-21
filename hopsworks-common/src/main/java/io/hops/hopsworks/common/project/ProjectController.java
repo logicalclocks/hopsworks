@@ -1605,7 +1605,7 @@ public class ProjectController {
       }
       //kill all jobs run by this user.
       //kill jobs
-      List<Jobs> running = jobFacade.getUserRunningJobs(project, hdfsUser);
+      List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
       if (running != null && !running.isEmpty()) {
         Runtime rt = Runtime.getRuntime();
         for (Jobs job : running) {

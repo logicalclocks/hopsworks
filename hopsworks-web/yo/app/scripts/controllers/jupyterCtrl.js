@@ -177,6 +177,8 @@ angular.module('hopsWorksApp')
             self.onFileSelected = function (reason, path) {
               var re = /(?:\.([^.]+))?$/;
               var extension = re.exec(path)[1];
+              var file = path.replace(/^.*[\\\/]/, '')
+              var fileName = file.substr(0, file.lastIndexOf('.'))
               switch (reason.toUpperCase()) {
                 case "PYFILES":
                   if (extension.toUpperCase() === "PY" ||
@@ -204,6 +206,7 @@ angular.module('hopsWorksApp')
                   break;
                 case "ARCHIVES":
                   if (extension.toUpperCase() === "ZIP" || extension.toUpperCase() === "TGZ") {
+                    path = path + "#" + fileName
                     if (self.val.archives === "") {
                       self.val.archives = "\"" + path + "\"";
                     } else {
@@ -214,6 +217,7 @@ angular.module('hopsWorksApp')
                   }
                   break;
                 case "FILES":
+                  path = path + "#" + file
                   if (self.val.files === "") {
                     self.val.files = " \"" + path + "\"";
                   } else {

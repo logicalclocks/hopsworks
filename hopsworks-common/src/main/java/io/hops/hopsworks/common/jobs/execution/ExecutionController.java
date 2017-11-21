@@ -63,7 +63,7 @@ public class ExecutionController {
   private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Execution start(Jobs job, Users user, String sessionId) throws IOException {
+  public Execution start(Jobs job, Users user) throws IOException {
     Execution exec = null;
 
     switch (job.getJobType()) {
@@ -86,7 +86,7 @@ public class ExecutionController {
 //        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
         break;
       case FLINK:
-        return flinkController.startJob(job, user, sessionId);
+        return flinkController.startJob(job, user, null);
       case SPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {

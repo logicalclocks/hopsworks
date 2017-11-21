@@ -524,7 +524,7 @@ public class NotebookServerImpl implements
   public void sendNote(Session conn, HashSet<String> userAndRoles, Notebook notebook,
       Message fromMessage, Users user, String hdfsUser) throws IOException {
 
-    LOG.log(Level.INFO, "New operation from {0} : {1} : {2}", new Object[]{
+    LOG.log(Level.FINE, "New operation from {0} : {1} : {2}", new Object[]{
       fromMessage.principal, fromMessage.op, fromMessage.get("id")});
 
     String noteId = (String) fromMessage.get("id");

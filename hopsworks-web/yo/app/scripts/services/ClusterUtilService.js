@@ -6,11 +6,8 @@
 angular.module('hopsWorksApp')
         .factory('ClusterUtilService', ['$http', function ($http) {
             return {
-              getYarnmultiplicator: function () {
-                return $http.get('/api/clusterUtilisation/multiplicator');
-              },
-              getYarnGpu: function () {
-                return $http.get('/api/clusterUtilisation/gpus');
+              getYarnMetrics: function () {
+                return $http.get('/api/clusterUtilisation/metrics');
               },
               getHdfsStatus: function () {
                 return $http.get('/api/kmon/services/HDFS');
