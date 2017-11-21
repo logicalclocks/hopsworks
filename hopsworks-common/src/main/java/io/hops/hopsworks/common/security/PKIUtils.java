@@ -1,4 +1,4 @@
-package io.hops.hopsworks.common.util;
+package io.hops.hopsworks.common.security;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 
 public class PKIUtils {

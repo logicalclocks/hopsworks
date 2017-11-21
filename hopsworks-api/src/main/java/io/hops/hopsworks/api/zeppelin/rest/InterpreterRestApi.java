@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response.Status;
 
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang.exception.ExceptionUtils;

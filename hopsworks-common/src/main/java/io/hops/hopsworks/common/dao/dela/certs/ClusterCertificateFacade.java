@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.dela.certs;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -30,6 +31,10 @@ public class ClusterCertificateFacade {
     em.flush();
   }
 
+  public void saveClusterCerts(ClusterCertificate clusterCertificate) {
+    em.persist(clusterCertificate);
+  }
+  
   public Optional<ClusterCertificate> getClusterCert(String clusterName) {
     TypedQuery<ClusterCertificate> query = em.createNamedQuery(ClusterCertificate.QUERY_BY_NAME,
       ClusterCertificate.class)
@@ -37,6 +42,17 @@ public class ClusterCertificateFacade {
     try {
       ClusterCertificate res = query.getSingleResult();
       return Optional.of(res);
+    } catch (NoResultException ex) {
+      return Optional.empty();
+    }
+  }
+  
+  public Optional<List<ClusterCertificate>> getAllClusterCerts() {
+    TypedQuery<ClusterCertificate> query = em.createNamedQuery("ClusterCertificate.findAll",
+        ClusterCertificate.class);
+    try {
+      List<ClusterCertificate> result = query.getResultList();
+      return Optional.of(result);
     } catch (NoResultException ex) {
       return Optional.empty();
     }

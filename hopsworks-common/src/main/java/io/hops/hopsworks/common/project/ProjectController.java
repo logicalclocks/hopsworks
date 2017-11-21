@@ -67,8 +67,10 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificatesController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.LocalhostServices;
@@ -176,6 +178,8 @@ public class ProjectController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private CertificatesController certificatesController;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -2130,7 +2134,7 @@ public class ProjectController {
       String keyStore) throws Exception {
     //Compare the sent certificate with the one in the database
     String keypw = HopsUtils.decrypt(user.getPassword(), userCertsFacade.findUserCert(projectName, user.getUsername()).
-        getUserKeyPwd());
+        getUserKeyPwd(), certificatesMgmService.getMasterEncryptionPassword());
     String projectUser = projectName + HdfsUsersController.USER_NAME_DELIMITER
         + user.getUsername();
     validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
@@ -2151,7 +2155,8 @@ public class ProjectController {
           "certificates for project " + projectGenericUsername);
     }
 
-    String keypw = HopsUtils.decrypt(user.getPassword(), projectGenericUserCerts.getCertificatePassword());
+    String keypw = HopsUtils.decrypt(user.getPassword(), projectGenericUserCerts.getCertificatePassword(),
+        certificatesMgmService.getMasterEncryptionPassword());
     validateCert(Base64.decodeBase64(keyStore), keypw.toCharArray(),
         projectGenericUsername, false);
 

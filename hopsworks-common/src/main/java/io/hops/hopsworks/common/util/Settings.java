@@ -677,6 +677,11 @@ public class Settings implements Serializable {
     return CERTS_DIR;
   }
 
+  public synchronized String getHopsworksMasterEncPasswordFile() {
+    checkCache();
+    return getCertsDir() + File.separator + "encryption_master_password";
+  }
+  
   private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {

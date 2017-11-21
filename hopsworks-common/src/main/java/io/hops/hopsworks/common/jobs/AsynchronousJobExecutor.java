@@ -17,8 +17,8 @@ import java.io.IOException;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import io.hops.hopsworks.common.user.CertificateMaterializer;
-import io.hops.hopsworks.common.util.BaseHadoopClientsService;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 

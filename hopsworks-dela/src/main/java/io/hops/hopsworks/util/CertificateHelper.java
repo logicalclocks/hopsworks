@@ -3,6 +3,7 @@ package io.hops.hopsworks.util;
 import com.google.common.io.ByteStreams;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -29,14 +30,15 @@ public class CertificateHelper {
   private final static Logger LOG = Logger.getLogger(CertificateHelper.class.getName());
 
   public static Optional<Triplet<KeyStore, KeyStore, String>> loadKeystoreFromFile(String masterPswd, Settings settings,
-    ClusterCertificateFacade certFacade) {
+    ClusterCertificateFacade certFacade, CertificatesMgmService certificatesMgmService) {
     String certPath = settings.getHopsSiteCert();
     String intermediateCertPath = settings.getHopsSiteIntermediateCert();
     String keystorePath = settings.getHopsSiteKeyStorePath();
     String truststorePath = settings.getHopsSiteTrustStorePath();
     try {
       String certPswd = HopsUtils.randomString(64);
-      String encryptedCertPswd = HopsUtils.encrypt(masterPswd, certPswd);
+      String encryptedCertPswd = HopsUtils.encrypt(masterPswd, certPswd,
+          certificatesMgmService.getMasterEncryptionPassword());
       File certFile = readFile(certPath);
       File intermediateCertFile = readFile(intermediateCertPath);
       String clusterName = getClusterName(certFile);
@@ -67,13 +69,14 @@ public class CertificateHelper {
   }
 
   public static Optional<Triplet<KeyStore, KeyStore, String>> loadKeystoreFromDB(String masterPswd, String clusterName,
-    ClusterCertificateFacade certFacade) {
+    ClusterCertificateFacade certFacade, CertificatesMgmService certificatesMgmService) {
     try {
       Optional<ClusterCertificate> cert = certFacade.getClusterCert(clusterName);
       if (!cert.isPresent()) {
         return Optional.empty();
       }
-      String certPswd = HopsUtils.decrypt(masterPswd, cert.get().getCertificatePassword());
+      String certPswd = HopsUtils.decrypt(masterPswd, cert.get().getCertificatePassword(),
+          certificatesMgmService.getMasterEncryptionPassword());
       KeyStore keystore, truststore;
       try (ByteArrayInputStream keystoreIS = new ByteArrayInputStream(cert.get().getClusterKey());
         ByteArrayInputStream truststoreIS = new ByteArrayInputStream(cert.get().getClusterCert())) {

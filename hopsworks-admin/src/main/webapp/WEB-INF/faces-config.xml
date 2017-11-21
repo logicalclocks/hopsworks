@@ -241,6 +241,11 @@
       <to-view-id>/security/protected/admin/llapManagement.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+    <navigation-case>
+      <from-outcome>changeMasterEncPass</from-outcome>
+      <to-view-id>/security/protected/admin/changeMasterEncPass.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
 
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>

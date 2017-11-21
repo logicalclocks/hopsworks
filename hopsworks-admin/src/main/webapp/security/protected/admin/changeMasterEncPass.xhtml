@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+    <h:head>
+        <title><ui:insert name="title">Change master encryption password</ui:insert></title>
+            <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/component.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+        <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=/hopsworks/#!/login"/>
+    </h:head>
+
+
+    <h:body>
+        <ui:insert name="titleBar" style="width=100%">
+            <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+        </ui:insert>
+	
+        <p:growl id="messages" showDetail="true" sticky="true" autoUpdate="true"/>
+
+	<div align="center">
+	<h:form id="masterPasswordForm">
+	  <h:panelGrid columns="2">
+	    <f:facet name="header">
+              <p:column colspan="3">Change master encryption password</p:column>
+            </f:facet>
+	    <h:outputLabel for="currentPass" value="Current password: "/>
+	    <p:password id="currentPass"
+			value="#{masterEncPassBean.currentPassword}" required="true"/>
+
+
+	    <h:outputLabel for="newPass" value="New password: "/>
+	    <p:password id="newPass"
+			value="#{masterEncPassBean.newPassword}"
+	    required="true" match="retypePass" feedback="true"/>
+
+	    <h:outputLabel for="retypePass" value="Re-type password: "/>
+	    <p:password id="retypePass"
+			value="#{masterEncPassBean.retypePassword}" required="true"/>
+
+	  </h:panelGrid>
+	  
+	  <p:commandButton type="submit"
+		      actionListener="#{masterEncPassBean.changeMasterEncryptionPassword()}"
+		      value="Change"/>
+	</h:form>
+	</div>
+    </h:body>
+</html>

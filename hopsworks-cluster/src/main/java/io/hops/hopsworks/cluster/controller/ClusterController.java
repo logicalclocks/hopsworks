@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.PKIUtils;
+import io.hops.hopsworks.common.security.PKIUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;

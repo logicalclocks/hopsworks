@@ -20,7 +20,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "ClusterCertificate.findByName",
-    query = "SELECT c FROM ClusterCertificate c WHERE c.clusterName = :clusterName")})
+    query = "SELECT c FROM ClusterCertificate c WHERE c.clusterName = :clusterName"),
+  @NamedQuery(name = "ClusterCertificate.findAll",
+    query = "SELECT c FROM ClusterCertificate c")})
 public class ClusterCertificate implements Serializable {
   private static final long serialVersionUID = 1L;
   public static final String QUERY_BY_NAME = "ClusterCertificate.findByName";
