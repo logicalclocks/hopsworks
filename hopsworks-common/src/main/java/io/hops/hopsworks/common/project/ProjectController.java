@@ -208,7 +208,7 @@ public class ProjectController {
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
     try {
-      FolderNameValidator.isValidName(projectName, false);
+      FolderNameValidator.isValidProjectName(projectName, false);
     } catch (ValidationException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.INVALID_PROJECT_NAME);
