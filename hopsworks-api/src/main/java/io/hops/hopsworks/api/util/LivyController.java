@@ -81,7 +81,7 @@ public class LivyController {
         }
         break;
       case ZEPPELIN:
-        hdfsUsername = project.getName() + Settings.PROJECT_GENERIC_USER_SUFFIX;
+        hdfsUsername = project.getProjectGenericUser();
         for (LivyMsg.Session s : sessionList.getSessions()) {
           if (hdfsUsername.equals(s.getProxyUser())) {
             appStates = appStateBean.findByAppId(s.getAppId());
@@ -120,7 +120,7 @@ public class LivyController {
         hdfsUsername = hdfsUserBean.getHdfsUserName(project, user);
         break;
       case ZEPPELIN:
-        hdfsUsername = project.getName() + Settings.PROJECT_GENERIC_USER_SUFFIX;
+        hdfsUsername = project.getProjectGenericUser();
         break;
       default:
         break;

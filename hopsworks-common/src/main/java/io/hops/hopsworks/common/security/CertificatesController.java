@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.common.project;
+package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -56,6 +56,8 @@ public class CertificatesController {
   private Settings settings;
   @EJB
   private CertsFacade certsFacade;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
   
   /**
    * Creates x509 certificates for a project specific user and project generic
@@ -72,7 +74,8 @@ public class CertificatesController {
   public Future<CertsResult> generateCertificates(Project project, Users user,
       boolean generateProjectWideCerts) throws Exception {
     String userKeyPwd = HopsUtils.randomString(64);
-    String encryptedKey = HopsUtils.encrypt(user.getPassword(), userKeyPwd);
+    String encryptedKey = HopsUtils.encrypt(user.getPassword(), userKeyPwd,
+        certificatesMgmService.getMasterEncryptionPassword());
     LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
         project.getName(),
         user.getUsername(),

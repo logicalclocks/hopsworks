@@ -73,6 +73,8 @@ public class ResponseMessages {
           = "Your ssh keys were listed successfully.";
   public final static String NOTHING_TO_UPDATE
           = "Nothing to update";
+  public final static String MASTER_ENCRYPTION_PASSWORD_CHANGE = "Master password change procedure started. Check " +
+      "your inbox for final status";
 
   //project error response
   public final static String PROJECT_EXISTS

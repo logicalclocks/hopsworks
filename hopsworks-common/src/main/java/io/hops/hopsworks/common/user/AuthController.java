@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -68,6 +69,8 @@ public class AuthController {
   private CertsFacade userCertsFacade;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   /**
    * Pre check for custom realm login.
@@ -396,9 +399,10 @@ public class AuthController {
     try {
       for (Project project : projects) {
         UserCerts userCert = userCertsFacade.findUserCert(project.getName(), p.getUsername());
-        String certPassword = HopsUtils.decrypt(p.getPassword(), userCert.getUserKeyPwd());
+        String masterEncryptionPassword = certificatesMgmService.getMasterEncryptionPassword();
+        String certPassword = HopsUtils.decrypt(p.getPassword(), userCert.getUserKeyPwd(), masterEncryptionPassword);
         //Encrypt it with new password and store it in the db
-        String newSecret = HopsUtils.encrypt(pass, certPassword);
+        String newSecret = HopsUtils.encrypt(pass, certPassword, masterEncryptionPassword);
         userCert.setUserKeyPwd(newSecret);
         userCertsFacade.update(userCert);
 
@@ -411,9 +415,10 @@ public class AuthController {
               + Settings.PROJECT_GENERIC_USER_SUFFIX);
           pguCerts.add(userCertsFacade.findProjectGenericUserCerts(project.getName()
               + Settings.PROJECT_GENERIC_USER_SUFFIX));
-          String pguCertPassword = HopsUtils.decrypt(p.getPassword(), pguCert.getCertificatePassword());
+          String pguCertPassword = HopsUtils.decrypt(p.getPassword(), pguCert.getCertificatePassword(), 
+              masterEncryptionPassword);
           //Encrypt it with new password and store it in the db
-          String newPguSecret = HopsUtils.encrypt(pass, pguCertPassword);
+          String newPguSecret = HopsUtils.encrypt(pass, pguCertPassword, masterEncryptionPassword);
           pguCert.setCertificatePassword(newPguSecret);
           userCertsFacade.updatePGUCert(pguCert);
         }

@@ -23,8 +23,8 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.user.CertificateMaterializer;
-import io.hops.hopsworks.common.util.BaseHadoopClientsService;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;

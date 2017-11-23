@@ -15,9 +15,11 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,8 +29,10 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -406,6 +410,23 @@ public class Settings implements Serializable {
     }
   }
 
+  public synchronized void refreshCache() {
+    cached = false;
+    populateCache();
+  }
+  
+  public synchronized void updateVariable(String variableName, String variableValue) {
+    updateVariableInternal(variableName, variableValue);
+    refreshCache();
+  }
+  
+  public synchronized void updateVariables(Map<String, String> variablesToUpdate) {
+    for (Map.Entry<String, String> entry : variablesToUpdate.entrySet()) {
+      updateVariableInternal(entry.getKey(), entry.getValue());
+    }
+    refreshCache();
+  }
+  
   /**
    * This method will invalidate the cache of variables.
    * The next call to read a variable after invalidateCache() will trigger a read of all variables
@@ -709,6 +730,11 @@ public class Settings implements Serializable {
     return CERTS_DIR;
   }
 
+  public synchronized String getHopsworksMasterEncPasswordFile() {
+    checkCache();
+    return getCertsDir() + File.separator + "encryption_master_password";
+  }
+  
   private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {
@@ -1490,7 +1516,7 @@ public class Settings implements Serializable {
           = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_PROJECT_DISALLOWED_CHARS
     = "__, -, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
-  public static final String FILENAME_DISALLOWED_CHARS = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
+  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
     = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
@@ -1686,7 +1712,39 @@ public class Settings implements Serializable {
       return null;
     }
   }
-
+  
+  /**
+   * Get all variables from the database.
+   * @return List with all the variables
+   */
+  public List<Variables> getAllVariables() {
+    TypedQuery<Variables> query = em.createNamedQuery("Variables.findAll", Variables.class);
+    
+    try {
+      return query.getResultList();
+    } catch (EntityNotFoundException ex) {
+      logger.log(Level.SEVERE, ex.getMessage(), ex);
+    } catch (NoResultException ex) {
+    }
+    return new ArrayList<>();
+  }
+  
+  /**
+   * Update a variable in the database.
+   * @param variableName
+   * @param variableValue
+   */
+  private void updateVariableInternal(String variableName, String variableValue) {
+    Variables var = findById(variableName);
+    if (var == null) {
+      throw new NoResultException("Variable <" + variableName + "> does not exist in the database");
+    }
+    if (!var.getValue().equals(variableValue)) {
+      var.setValue(variableValue);
+      em.persist(var);
+    }
+  }
+  
   public void detach(Variables variable) {
     em.detach(variable);
   }

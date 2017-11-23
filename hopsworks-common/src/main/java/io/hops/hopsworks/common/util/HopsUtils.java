@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -631,6 +631,25 @@ public class HopsUtils {
     return true;
   }
 
+  private static Key generateKey(String userKey, String masterKey) {
+    // This is for backwards compatibility
+    // sha256 of 'adminpw'
+    if (masterKey.equals("5fcf82bc15aef42cd3ec93e6d4b51c04df110cf77ee715f62f3f172ff8ed9de9")) {
+      return new SecretKeySpec(userKey.substring(0, 16).getBytes(), "AES");
+    }
+    
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 8; i++) {
+      sb.append(userKey.charAt(i));
+      if (masterKey.length() > i + 1) {
+        sb.append(masterKey.charAt(i + 1));
+      } else {
+        sb.append(userKey.charAt(Math.max(0, userKey.length() - i)));
+      }
+    }
+    return new SecretKeySpec(sb.toString().getBytes(), "AES");
+  }
+  
   /**
    *
    * @param key
@@ -638,8 +657,10 @@ public class HopsUtils {
    * @return
    * @throws Exception
    */
-  public static String encrypt(String key, String plaintext) throws Exception {
-    Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
+  public static String encrypt(String key, String plaintext, String masterEncryptionPassword)
+      throws Exception {
+    
+    Key aesKey = generateKey(key, masterEncryptionPassword);
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, aesKey);
     byte[] encrypted = cipher.doFinal(plaintext.getBytes());
@@ -653,9 +674,10 @@ public class HopsUtils {
    * @return
    * @throws Exception
    */
-  public static String decrypt(String key, String ciphertext) throws Exception {
+  public static String decrypt(String key, String ciphertext, String masterEncryptionPassword)
+      throws Exception {
     Cipher cipher = Cipher.getInstance("AES");
-    Key aesKey = new SecretKeySpec(key.substring(0, 16).getBytes(), "AES");
+    Key aesKey = generateKey(key, masterEncryptionPassword);
     cipher.init(Cipher.DECRYPT_MODE, aesKey);
     String decrypted = new String(cipher.doFinal(Base64.decodeBase64(ciphertext)));
     return decrypted;

@@ -2,7 +2,7 @@ package io.hops.hopsworks.common.yarn;
 
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.util.BaseHadoopClientsService;
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;

@@ -14,7 +14,7 @@ import io.hops.hopsworks.common.dao.message.MessageFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class MessageController {
 
   private final static Logger logger = Logger.getLogger(MessageController.class.

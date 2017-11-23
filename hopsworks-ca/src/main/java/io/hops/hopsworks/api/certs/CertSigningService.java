@@ -11,7 +11,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.util.PKIUtils;
+import io.hops.hopsworks.common.security.PKIUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.io.File;

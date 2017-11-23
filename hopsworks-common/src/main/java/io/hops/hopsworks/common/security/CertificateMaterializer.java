@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.common.user;
+package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
@@ -80,6 +80,8 @@ public class CertificateMaterializer {
   private ProjectFacade projectFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
   @Resource
   private ManagedScheduledExecutorService scheduler;
   
@@ -305,7 +307,7 @@ public class CertificateMaterializer {
     }
     
     try {
-      return HopsUtils.decrypt(userPassword, encryptedPassword);
+      return HopsUtils.decrypt(userPassword, encryptedPassword, certificatesMgmService.getMasterEncryptionPassword());
     } catch (Exception ex) {
       throw new IOException(ex);
     }

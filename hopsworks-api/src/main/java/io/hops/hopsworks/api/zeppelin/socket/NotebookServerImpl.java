@@ -24,7 +24,8 @@ import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.user.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
@@ -117,12 +118,13 @@ public class NotebookServerImpl implements
   private CertsFacade certsFacade;
   private final ProjectTeamFacade projectTeamFacade;
   private final ActivityFacade activityFacade;
+  private final CertificatesMgmService certificatesMgmService;
 
   private String certPwd;
 
   public NotebookServerImpl(Project project, ZeppelinConfigFactory zeppelin,
       CertsFacade certsFacade, Settings settings, ProjectTeamFacade projectTeamFacade,
-      ActivityFacade activityFacade)
+      ActivityFacade activityFacade, CertificatesMgmService certificatesMgmService)
       throws IOException, RepositoryException,
       TaskRunnerException {
     this.project = project;
@@ -132,6 +134,7 @@ public class NotebookServerImpl implements
     this.certsFacade = certsFacade;
     this.projectTeamFacade = projectTeamFacade;
     this.activityFacade = activityFacade;
+    this.certificatesMgmService = certificatesMgmService;
   }
 
   public Notebook notebook() {
@@ -1539,7 +1542,8 @@ public class NotebookServerImpl implements
       try {
         ProjectGenericUserCerts serviceCert =
             certsFacade.findProjectGenericUserCerts(project.getProjectGenericUser());
-        certPwd = HopsUtils.decrypt(user.getPassword(), serviceCert.getCertificatePassword());
+        certPwd = HopsUtils.decrypt(user.getPassword(), serviceCert.getCertificatePassword(),
+            certificatesMgmService.getMasterEncryptionPassword());
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Cannot retrieve user " + project.getName()  +
             " keystore password. " + e);

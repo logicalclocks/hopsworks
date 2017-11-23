@@ -29,8 +29,8 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.project.CertificatesController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -139,16 +139,26 @@ public class ApplicationService {
   @ApiOperation(value = "Submit IDs of jobs to start")
   public Response startJobs(@Context SecurityContext sc,
       @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws AppException {
-
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
     Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
+    Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);
+    //Get the jobs to run, if the user is not the creator, run no jobs and return error message
+    List<Jobs> jobsToRun = new ArrayList<>();
     for (Integer jobId : jobsDTO.getJobIds()) {
       Jobs job = jobFacade.findById(jobId);
+      if (!job.getProject().equals(project) || !job.getCreator().equals(user)) {
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.UNAUTHORIZED).entity(
+            "User is not authorized to start some of the requested jobs").build();
+      }
+      jobsToRun.add(job);
+    }
+    for (Jobs job : jobsToRun) {
       try {
         executionController.start(job, user);
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).entity(
+            "An error occured while starting job with id:" + job.getId()).build();
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

@@ -3,6 +3,7 @@ package io.hops.hopsworks.dela;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dela.AddressJSON;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
@@ -50,6 +51,8 @@ public class DelaSetupWorker {
   private HopssiteController hopsSiteProxy;
   @EJB
   private TransferDelaController delaCtrl;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   private State state;
 
@@ -110,7 +113,8 @@ public class DelaSetupWorker {
     
     if (clusterName.isPresent()) {
       Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
-        = CertificateHelper.loadKeystoreFromDB(masterPswd.get(), clusterName.get(), clusterCertFacade);
+        = CertificateHelper.loadKeystoreFromDB(masterPswd.get(), clusterName.get(), clusterCertFacade,
+          certificatesMgmService);
       if (keystoreAux.isPresent()) {
         setupComplete(keystoreAux.get(), timer);
         return;
@@ -118,7 +122,7 @@ public class DelaSetupWorker {
     }
     
     Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
-      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade);
+      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade, certificatesMgmService);
     if (keystoreAux.isPresent()) {
       setupComplete(keystoreAux.get(), timer);
     } else {
