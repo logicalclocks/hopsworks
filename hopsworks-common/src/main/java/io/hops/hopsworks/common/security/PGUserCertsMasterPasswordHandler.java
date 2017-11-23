@@ -62,7 +62,7 @@ public class PGUserCertsMasterPasswordHandler implements CertificatesMgmService
     List<String> updatedCertsName = new ArrayList<>();
     
     List<ProjectGenericUserCerts> allPGUCerts = certsFacade.findAllProjectGenericUserCerts();
-    String mapKey, oldPassword, newEncCertPassword;
+    String mapKey = null, oldPassword, newEncCertPassword;
     Users user;
     
     try {
@@ -82,13 +82,11 @@ public class PGUserCertsMasterPasswordHandler implements CertificatesMgmService
         certsFacade.persistPGUCert(pguCert);
         updatedCertsName.add(mapKey);
       }
-      oldPasswordsForRollback.clear();
       return updatedCertsName;
     } catch (Exception ex) {
       String errorMsg = "Something went wrong while updating master encryption password for Project Generic User " +
-          "certificates";
+          "certificates. PGU certificate provoked the error was: " + mapKey;
       LOG.log(Level.SEVERE, errorMsg + " rolling back...", ex);
-      rollback();
       throw new EncryptionMasterPasswordException(errorMsg);
     }
   }

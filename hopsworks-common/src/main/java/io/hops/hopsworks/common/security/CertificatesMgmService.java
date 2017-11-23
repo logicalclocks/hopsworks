@@ -193,28 +193,45 @@ public class CertificatesMgmService {
   public void resetMasterEncryptionPassword(String newMasterPasswd, String userRequested) {
     try {
       String newDigest = DigestUtils.sha256Hex(newMasterPasswd);
-      List<String> updatedCertificates = new ArrayList<>();
-      for (Map.Entry<Class, MasterPasswordChangeHandler> handler : handlersMap.entrySet()) {
-        LOG.log(Level.FINE, "Calling master password change handler for <" + handler.getKey().getName() + ">");
-        List<String> updatedCerts = handler.getValue().handleMasterPasswordChange(getMasterEncryptionPassword(),
-            newDigest);
-        updatedCertificates.addAll(updatedCerts);
-      }
+      List<String> updatedCertificates = callUpdateHandlers(newDigest);
       updateMasterEncryptionPassword(newDigest);
       sendSuccessfulMessage(updatedCertificates, userRequested);
       LOG.log(Level.INFO, "Master encryption password changed!");
     } catch (EncryptionMasterPasswordException ex) {
-      String errorMsg = "*** Master encryption password update failed!!!";
+      String errorMsg = "*** Master encryption password update failed!!! Rolling back...";
       LOG.log(Level.SEVERE, errorMsg, ex);
+      callRollbackHandlers();
       sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     } catch (IOException ex) {
-      String errorMsg = "*** Failed to write new encryption password to file: " + newMasterPasswd;
+      String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
+          + ". Rolling back...";
       LOG.log(Level.SEVERE, errorMsg, ex);
+      callRollbackHandlers();
       sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     }
   }
   
-  public void registerMasterPasswordChangeHandler(Class clazz, MasterPasswordChangeHandler handler) {
+  @SuppressWarnings("unchecked")
+  private List<String> callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
+    List<String> updatedCertificates = new ArrayList<>();
+    for (Map.Entry<Class, MasterPasswordChangeHandler> handler : handlersMap.entrySet()) {
+      LOG.log(Level.FINE, "Calling master password UPDATE handler for <" + handler.getKey().getName() + ">");
+      List<String> updatedCerts = handler.getValue().handleMasterPasswordChange(getMasterEncryptionPassword(),
+          newDigest);
+      updatedCertificates.addAll(updatedCerts);
+    }
+    
+    return updatedCertificates;
+  }
+  
+  private void callRollbackHandlers() {
+    for (Map.Entry<Class, MasterPasswordChangeHandler> handler : handlersMap.entrySet()) {
+      LOG.log(Level.SEVERE, "Calling master password ROLLBACK handler for <" + handler.getKey().getName() + ">");
+      handler.getValue().rollback();
+    }
+  }
+  
+  private void registerMasterPasswordChangeHandler(Class clazz, MasterPasswordChangeHandler handler) {
     handlersMap.putIfAbsent(clazz, handler);
   }
   

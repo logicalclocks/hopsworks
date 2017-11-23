@@ -61,7 +61,7 @@ public class PSUserCertsMasterPasswordHandler implements CertificatesMgmService
     List<String> updatedCertsName = new ArrayList<>();
     
     List<UserCerts> allPSCerts = certsFacade.findAllUserCerts();
-    String mapKey, oldPassword, newEncCertPassword;
+    String mapKey = null, oldPassword, newEncCertPassword;
     Users user;
     
     try {
@@ -81,13 +81,11 @@ public class PSUserCertsMasterPasswordHandler implements CertificatesMgmService
         updatedCertsName.add(mapKey);
       }
     
-      oldPasswordsForRollback.clear();
       return updatedCertsName;
     } catch (Exception ex) {
       String errorMsg = "Something went wrong while updating master encryption password for Project Specific User " +
-          "certificates";
+          "certificates. PSU certificate provoked the error was: " + mapKey;
       LOG.log(Level.SEVERE, errorMsg + " rolling back...", ex);
-      rollback();
       throw new EncryptionMasterPasswordException(errorMsg);
     }
   }

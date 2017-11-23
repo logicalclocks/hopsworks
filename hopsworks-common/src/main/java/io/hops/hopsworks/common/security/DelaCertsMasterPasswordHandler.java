@@ -61,7 +61,7 @@ public class DelaCertsMasterPasswordHandler implements CertificatesMgmService
     
     Optional<List<ClusterCertificate>> maybe = clusterCertificateFacade.getAllClusterCerts();
     if (maybe.isPresent()) {
-      String mapKey, oldPassword, newEncCertPassword;
+      String mapKey = null, oldPassword, newEncCertPassword;
       try {
         for (ClusterCertificate cert : maybe.get()) {
           mapKey = cert.getClusterName();
@@ -73,11 +73,10 @@ public class DelaCertsMasterPasswordHandler implements CertificatesMgmService
           clusterCertificateFacade.saveClusterCerts(cert);
           updatedCertsName.add(mapKey);
         }
-        oldPasswordsForRollback.clear();
       } catch (Exception ex) {
-        String errorMsg = "Something went wrong while updating master encryption password for Cluster Certificates";
+        String errorMsg = "Something went wrong while updating master encryption password for Cluster Certificates. " +
+            "Cluster certificate provoked the error was: " + mapKey;
         LOG.log(Level.SEVERE, errorMsg + " rolling back...", ex);
-        rollback();
         throw new EncryptionMasterPasswordException(errorMsg);
       }
     }
