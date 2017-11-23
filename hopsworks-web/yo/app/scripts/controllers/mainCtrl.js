@@ -7,11 +7,11 @@ angular.module('hopsWorksApp')
         .controller('MainCtrl', ['$interval', '$cookies', '$location', '$scope', '$rootScope',
           'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
-          'MessageService', '$routeParams', '$window', 'HopssiteService',
+          'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
           function ($interval, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
-                  ElasticService, DelaProjectService, DelaService, md5, ModalService,
+                  ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
-                  MessageService, $routeParams, $window, HopssiteService) {
+                  MessageService, $routeParams, $window, HopssiteService, BannerService) {
             const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
             self.email = $cookies.get('email');
@@ -25,7 +25,16 @@ angular.module('hopsWorksApp')
             } else {
               self.searchType = "global";
             }
-
+            
+            var checkeIsAdmin = function () {
+              AuthService.isAdmin().then(
+                  function (success) {
+                    $cookies.put("isAdmin", true);
+                },function (error) {
+                    $cookies.put("isAdmin", false);
+              });
+            };
+            checkeIsAdmin();
             self.isAdmin = function () {
               return $cookies.get('isAdmin');
             };
@@ -66,6 +75,22 @@ angular.module('hopsWorksApp')
               });
             };
             checkDelaEnabled(); // check 
+            
+            self.userNotification = '';
+            var getUserNotification = function () {
+              self.userNotification = '';
+              BannerService.findUserBanner().then(
+                function (success) {
+                  console.log(success);
+                  if (success.data.successMessage) {
+                    self.userNotification = success.data.successMessage;
+                  }
+                }, function (error) {
+                  console.log(error);
+                  self.userNotification = '';
+              });
+            };
+            getUserNotification();
 
             self.profileModal = function () {
               ModalService.profile('md');

@@ -233,21 +233,23 @@ public class UsersController {
     user.setOrganization(org);
   }
 
-  public void recoverPassword(String email, String securityQuestion,
-      String securityAnswer, HttpServletRequest req) throws AppException, MessagingException, Exception {
+  public void recoverPassword(String email, String securityQuestion, String securityAnswer, HttpServletRequest req)
+      throws AppException, Exception {
     if (userValidator.isValidEmail(email) && userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       Users user = userFacade.findByEmail(email);
       if (user == null) {
         throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
             ResponseMessages.USER_DOES_NOT_EXIST);
       }
-      authController.validateSecurityQA(user, securityQuestion, securityAnswer, req);
+      if (!authController.validateSecurityQA(user, securityQuestion, securityAnswer, req)) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.SEC_QA_INCORRECT);
+      }
       authController.resetPassword(user, req);
     }
   }
 
   public void changePassword(String email, String oldPassword, String newPassword, String confirmedPassword,
-      HttpServletRequest req) throws AppException, MessagingException {
+      HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(email);
 
     if (user == null) {
@@ -270,7 +272,7 @@ public class UsersController {
   }
 
   public void changeSecQA(String email, String oldPassword, String securityQuestion, String securityAnswer,
-      HttpServletRequest req) throws AppException, MessagingException {
+      HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(email);
 
     if (user == null) {

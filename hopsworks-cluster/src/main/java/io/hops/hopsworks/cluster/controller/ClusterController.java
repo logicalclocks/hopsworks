@@ -272,8 +272,7 @@ public class ClusterController {
     return clusterCert;
   }
 
-  private void checkUserPasswordAndStatus(ClusterDTO cluster, Users clusterAgent, HttpServletRequest req) throws
-      MessagingException {
+  private void checkUserPasswordAndStatus(ClusterDTO cluster, Users clusterAgent, HttpServletRequest req) {
     String password = DigestUtils.sha256Hex(cluster.getChosenPassword());
     if (!password.equals(clusterAgent.getPassword())) {
       authController.registerFalseLogin(clusterAgent, req);//will set status if false login > allowed

@@ -1,7 +1,6 @@
 package io.hops.hopsworks.common.user;
 
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
@@ -24,10 +23,14 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import java.io.UnsupportedEncodingException;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -46,8 +49,8 @@ public class AuthController {
 
   private final static Logger LOGGER = Logger.getLogger(AuthController.class.getName());
   private final static int SALT_LENGTH = 64;
-  private final static String DIGEST = "";
-  private final static int RANDOM_PWD_LEN = 64;
+  private final static int RANDOM_PWD_LEN = 8;
+  private final static Random RANDOM = new SecureRandom();
 
   @EJB
   private UserFacade userFacade;
@@ -68,22 +71,17 @@ public class AuthController {
 
   /**
    * Pre check for custom realm login.
-   * @param email
+   * @param user
    * @param password
    * @param otp
    * @param req
    * @return
-   * @throws MessagingException
    * @throws AppException 
    */
-  public String preCustomRealmLoginCheck(String email, String password, String otp, HttpServletRequest req) throws
-      MessagingException, AppException {
-    if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
-      throw new IllegalArgumentException("Missing argument.");
-    }
-    Users user = userFacade.findByEmail(email);
+  public String preCustomRealmLoginCheck(Users user, String password, String otp, HttpServletRequest req) 
+      throws AppException {
     if (user == null) {
-      throw new IllegalArgumentException("User not found.");
+      throw new IllegalArgumentException("User not set.");
     }
     if (isTwoFactorEnabled(user)) {
       if ((otp == null || otp.isEmpty()) && user.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE)) {
@@ -117,13 +115,12 @@ public class AuthController {
    * @param password
    * @param req
    * @return
-   * @throws MessagingException
    */
-  public boolean validatePassword(Users user, String password, HttpServletRequest req) throws MessagingException {
+  public boolean validatePassword(Users user, String password, HttpServletRequest req) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
-    String userPwdHash = getPasswordHash(user.getPassword(), user.getSalt());
+    String userPwdHash = user.getPassword();
     String pwdHash = getPasswordHash(password, user.getSalt());
     if (!userPwdHash.equals(pwdHash)) {
       registerFalseLogin(user, req);
@@ -140,13 +137,12 @@ public class AuthController {
    * @param user
    * @param password
    * @return
-   * @throws MessagingException
    */
-  public boolean validatePassword(Users user, String password) throws MessagingException {
+  public boolean validatePassword(Users user, String password) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
-    String userPwdHash = getPasswordHash(user.getPassword(), user.getSalt());
+    String userPwdHash = user.getPassword();
     String pwdHash = getPasswordHash(password, user.getSalt());
     if (!userPwdHash.equals(pwdHash)) {
       registerFalseLogin(user);
@@ -164,11 +160,10 @@ public class AuthController {
    * @param securityAnswer
    * @param req
    * @return
-   * @throws AppException
-   * @throws MessagingException 
+   * @throws AppException 
    */
   public boolean validateSecurityQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req)
-      throws AppException, MessagingException {
+      throws AppException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -176,7 +171,7 @@ public class AuthController {
         || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(securityAnswer.toLowerCase()))) {
       registerFalseLogin(user, req);
       LOGGER.log(Level.WARNING, "False Security Question attempt by user: {0}", user.getEmail());
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.SEC_QA_INCORRECT);
+      return false;
     }
     return true;
   }
@@ -187,19 +182,16 @@ public class AuthController {
    * @param password
    * @param req
    * @return
-   * @throws MessagingException
    * @throws AppException 
    */
-  public boolean checkPasswordAndStatus(Users user, String password, HttpServletRequest req) throws MessagingException,
-      AppException {
+  public boolean checkPasswordAndStatus(Users user, String password, HttpServletRequest req) throws AppException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (!validatePassword(user, password, req)) {
       return false;
     }
-    userStatusValidator.checkStatus(user.getStatus());
-    return true;
+    return userStatusValidator.checkStatus(user.getStatus());
   }
 
   /**
@@ -329,10 +321,21 @@ public class AuthController {
         Settings.TwoFactorMode.OPTIONAL.getName());
   }
 
+  /**
+   * Hash password + salt
+   * @param password
+   * @param salt
+   * @return 
+   */
   public String getPasswordHash(String password, String salt) {
-    return DigestUtils.sha256Hex(getPasswordPlusSalt(password, salt));
+    return getHash(getPasswordPlusSalt(password, salt));
   }
 
+  /**
+   * Returns the hash of the value
+   * @param val
+   * @return 
+   */
   public String getHash(String val) {
     return DigestUtils.sha256Hex(val);
   }
@@ -372,7 +375,13 @@ public class AuthController {
         AccountsAuditActions.SUCCESS.name(), "Changed Security Question.", user, req);
   }
 
-  private String getPasswordPlusSalt(String password, String salt) {
+  /**
+   * Concatenates password and salt
+   * @param password
+   * @param salt
+   * @return 
+   */
+  public String getPasswordPlusSalt(String password, String salt) {
     return password + salt;
   }
 
@@ -391,7 +400,7 @@ public class AuthController {
         //Encrypt it with new password and store it in the db
         String newSecret = HopsUtils.encrypt(pass, certPassword);
         userCert.setUserKeyPwd(newSecret);
-        userCertsFacade.persist(userCert);
+        userCertsFacade.update(userCert);
 
         //If user is owner of the project, update projectgenericuser certs as well
         if (project.getOwner().equals(p)) {
@@ -406,18 +415,18 @@ public class AuthController {
           //Encrypt it with new password and store it in the db
           String newPguSecret = HopsUtils.encrypt(pass, pguCertPassword);
           pguCert.setCertificatePassword(newPguSecret);
-          userCertsFacade.persistPGUCert(pguCert);
+          userCertsFacade.updatePGUCert(pguCert);
         }
       }
-    } catch (Exception ex) {
+    } catch (Exception ex) { 
       LOGGER.log(Level.SEVERE, null, ex);
       //Persist old certs
-      for (UserCerts oldCert : oldCerts) {
-        userCertsFacade.persist(oldCert);
+      for (UserCerts oldCert : oldCerts) { 
+        userCertsFacade.update(oldCert);
       }
       if (pguCerts != null) {
         for (ProjectGenericUserCerts pguCert : pguCerts) {
-          userCertsFacade.persistPGUCert(pguCert);
+          userCertsFacade.updatePGUCert(pguCert);
         }
       }
       throw new Exception(ex);
@@ -428,10 +437,9 @@ public class AuthController {
   /**
    * Register failed login attempt.
    * @param user
-   * @param req
-   * @throws MessagingException 
+   * @param req 
    */
-  public void registerFalseLogin(Users user, HttpServletRequest req) throws MessagingException {
+  public void registerFalseLogin(Users user, HttpServletRequest req) {
     if (user != null) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
@@ -439,8 +447,12 @@ public class AuthController {
       // block the user account if more than allowed false logins
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT);
-        emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-            UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
+        try {
+          emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+              UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
+        } catch (MessagingException ex) {
+          LOGGER.log(Level.SEVERE, "Failed to send email. ", ex);
+        }
         accountAuditFacade.registerRoleChange(user, PeopleAccountStatus.SPAM_ACCOUNT.name(), RolesAuditActions.SUCCESS.
             name(), "False login retries:" + Integer.toString(count), user, req);
       }
@@ -449,7 +461,7 @@ public class AuthController {
     }
   }
 
-  private void registerFalseLogin(Users user) throws MessagingException {
+  private void registerFalseLogin(Users user) {
     if (user != null) {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
@@ -457,8 +469,12 @@ public class AuthController {
       // block the user account if more than allowed false logins
       if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
         user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT);
-        emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-            UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
+        try {
+          emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+              UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
+        } catch (MessagingException ex) {
+          LOGGER.log(Level.SEVERE, "Failed to send email.", ex);
+        }
       }
       // notify user about the false attempts
       userFacade.update(user);
@@ -524,6 +540,15 @@ public class AuthController {
    * @return 
    */
   public String generateSalt() {
-    return "";
+    byte[] bytes = new byte[SALT_LENGTH];
+    RANDOM.nextBytes(bytes);
+    byte[] encodedSalt = Base64.getEncoder().encode(bytes);
+    String salt = "";
+    try {
+      salt = new String(encodedSalt, "UTF-8");
+    } catch (UnsupportedEncodingException ex) {
+      LOGGER.log(Level.SEVERE, "Generate salt encoding failed", ex);
+    }
+    return salt;
   }
 }

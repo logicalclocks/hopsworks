@@ -63,18 +63,15 @@ public class AuthService {
   @Path("session")
   @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response session(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+  public Response session(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     try {
       json.setStatus("SUCCESS");
       json.setData(sc.getUserPrincipal().getName());
     } catch (Exception e) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          ResponseMessages.AUTHENTICATION_FAILURE);
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST
@@ -101,9 +98,13 @@ public class AuthService {
     if (email == null || email.isEmpty()) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Email address field cannot be empty");
     }
-    
+    Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "Unrecognized email address. Have you registered yet?");
+    }
     // Do pre cauth realm check 
-    String newPassword = authController.preCustomRealmLoginCheck(email, password, otp, req);
+    String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
     
     // logout any user already loggedin if a new user tries to login 
     if (req.getRemoteUser() != null && !req.getRemoteUser().equals(email)) {
@@ -111,7 +112,7 @@ public class AuthService {
     }
     //only login if not already logged...
     if (sc.getUserPrincipal() == null) {
-      login(email, newPassword, req);
+      login(user, email, passwordWithSaltPlusOtp, req);
     } else {
       req.getServletContext().log("Skip logged because already logged in: " + email);
     }
@@ -236,11 +237,9 @@ public class AuthService {
     }
   }
   
-  private void login(String email, String password, HttpServletRequest req) throws AppException, MessagingException {
-    Users user = userFacade.findByEmail(email);
+  private void login(Users user, String email, String password, HttpServletRequest req) throws AppException {
     if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "Unrecognized email address. Have you registered yet?");
+      throw new IllegalArgumentException("User not set.");
     }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {
