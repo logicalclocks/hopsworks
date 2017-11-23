@@ -175,9 +175,9 @@ public class DatasetController {
           dfso.rm(new Path(dsPath), true);//if dataset persist fails rm ds folder.
           throw failed;
         } catch (IOException ex) {
-          if(e.getCause() instanceof NonUniqueResultException){
+          if (e.getCause() instanceof NonUniqueResultException) {
             throw new IOException(
-              "A shared Dataset with the same name already exists.", ex);
+                "A shared Dataset with the same name already exists.", ex);
           }
           throw new IOException(
               "Failed to clean up properly on dataset creation failure", ex);
@@ -408,7 +408,7 @@ public class DatasetController {
           .append(File.separator).append(project)
           .append(File.separator).append(dsName)
           .append(File.separator).append(Settings.README_FILE);
-      
+
       readMeFilePath = readmeSb.toString();
 
       try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
@@ -529,7 +529,7 @@ public class DatasetController {
    * @return
    */
   public boolean isDownloadAllowed(Project project, Users user, String path) {
-    //Data Scientists are allowed to download their own data
+    //Data Scientists are allowed to download their own data and those of PROJECTGENERICUSER
     String role = projectTeamFacade.findCurrentRole(project, user);
     if (role.equals(AllowedRoles.DATA_OWNER)) {
       return true;
@@ -539,6 +539,9 @@ public class DatasetController {
         String username = hdfsUsersBean.getHdfsUserName(project, user);
         udfso = dfs.getDfsOps(username);
         String owner = udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getOwner();
+        if (owner.equals(project.getProjectGenericUser())) {
+          return true;
+        }
         //Find hdfs user for this project
         String projectUser = hdfsUsersBean.getHdfsUserName(project, user);
         //If user requesting the download is the owner, approve the request
