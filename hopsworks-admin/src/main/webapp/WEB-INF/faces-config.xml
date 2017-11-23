@@ -248,6 +248,12 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>refresh_variables</from-outcome>
+      <to-view-id>/security/protected/admin/refreshVariables.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+	
+    <navigation-case>
       <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>

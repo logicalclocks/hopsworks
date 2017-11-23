@@ -17,12 +17,15 @@
  */
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 
 import javax.annotation.security.RolesAllowed;
@@ -31,8 +34,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -40,6 +45,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,6 +65,8 @@ public class SystemAdminService {
   private CertificatesMgmService certificatesMgmService;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private Settings settings;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -68,8 +78,8 @@ public class SystemAdminService {
    * @return
    * @throws AppException
    */
-  @POST
-  @Path("/changeMasterEncryptionPass")
+  @PUT
+  @Path("/encryptionPass")
   public Response changeMasterEncryptionPassword(@Context SecurityContext sc, @Context HttpServletRequest request,
       @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword)
     throws AppException {
@@ -79,9 +89,8 @@ public class SystemAdminService {
       certificatesMgmService.checkPassword(oldPassword, userEmail);
       certificatesMgmService.resetMasterEncryptionPassword(newPassword, userEmail);
   
-      JsonResponse response = new JsonResponse();
-      response.setStatus("201");
-      response.setSuccessMessage(ResponseMessages.MASTER_ENCRYPTION_PASSWORD_CHANGE);
+      JsonResponse response = buildSuccessfulResponse(Response.Status.NO_CONTENT, ResponseMessages
+          .MASTER_ENCRYPTION_PASSWORD_CHANGE);
   
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
     } catch (EncryptionMasterPasswordException ex) {
@@ -90,5 +99,53 @@ public class SystemAdminService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error while reading master " +
           "password file: " + ex.getMessage());
     }
+  }
+  
+  @POST
+  @Path("/variables/refresh")
+  public Response refreshVariables(@Context SecurityContext sc, @Context HttpServletRequest request)
+    throws AppException {
+    LOG.log(Level.FINE, "Requested refreshing variables");
+    settings.refreshCache();
+    
+    JsonResponse response = buildSuccessfulResponse(Response.Status.NO_CONTENT, "Variables refreshed");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+  }
+  
+  @POST
+  @Consumes({MediaType.APPLICATION_JSON})
+  @Path("/variables")
+  public Response updateVariables(@Context SecurityContext sc, @Context HttpServletRequest request,
+      VariablesRequest variablesRequest)
+    throws AppException {
+  
+    List<Variables> variables = variablesRequest.getVariables();
+    
+    if (variables == null) {
+      LOG.log(Level.WARNING, "Malformed request to update variables");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Malformed request");
+    }
+    
+    Map<String, String> updateVariablesMap = new HashMap<>(variablesRequest.getVariables().size());
+    for (Variables var : variables) {
+      updateVariablesMap.putIfAbsent(var.getId(), var.getValue());
+    }
+    
+    try {
+      settings.updateVariables(updateVariablesMap);
+    } catch (Exception ex) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ex.getCause().getMessage());
+    }
+    
+    JsonResponse response = buildSuccessfulResponse(Response.Status.NO_CONTENT, "Variables updated");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+  }
+  
+  private JsonResponse buildSuccessfulResponse(Response.Status status, String successMessage) {
+    JsonResponse response = new JsonResponse();
+    response.setStatus(String.valueOf(status));
+    response.setSuccessMessage(successMessage);
+    
+    return response;
   }
 }

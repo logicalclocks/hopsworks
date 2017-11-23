@@ -17,8 +17,10 @@ and open the template in the editor.
           <p:toolbarGroup align="left">              
             <p:commandLink value="HopsWorks" action="welcome" rendered="#{!roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup>  
-          <p:toolbarGroup align="left">  
-            <p:commandLink value="Admin Home" action="adminIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
+          <p:toolbarGroup align="left">
+	    <p:commandLink value="Hopsworks" action="home" rendered="#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="Admin Home" action="adminIndex"
+			   rendered="#{roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup> 
 
 
