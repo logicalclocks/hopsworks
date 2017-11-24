@@ -1648,6 +1648,17 @@ public class ProjectController {
     } finally {
       ycs.closeYarnClient(yarnClientWrapper);
     }
+    
+    
+    
+    try {
+      kafkaFacade.removeAclsForUser(userToBeRemoved, project.getId());
+    } catch (Exception ex) {
+      String errorMsg = "Error while removing Kafka ACL for user " + userToBeRemoved.getUsername() + " from project " +
+          project.getName();
+      LOGGER.log(Level.SEVERE, errorMsg, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMsg);
+    }
 
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
