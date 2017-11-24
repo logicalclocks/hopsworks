@@ -3,7 +3,6 @@ package io.hops.hopsworks.api.user;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -17,6 +16,8 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.swagger.annotations.Api;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -45,7 +46,7 @@ import org.apache.commons.codec.binary.Base64;
     description = "Authentication service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuthService {
-
+  private final static Logger LOGGER = Logger.getLogger(AuthService.class.getName());
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -81,7 +82,7 @@ public class AuthService {
       @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
       throws AppException, MessagingException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    if (authController.validatePassword(user, password)) {
+    if (authController.validatePassword(user, password, req)) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
@@ -91,8 +92,7 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
-      @FormParam("otp") String otp, @Context SecurityContext sc, @Context HttpServletRequest req) throws AppException,
-      MessagingException {
+      @FormParam("otp") String otp, @Context HttpServletRequest req) throws AppException, MessagingException {
     logUserLogin(req);
     JsonResponse json = new JsonResponse();
     if (email == null || email.isEmpty()) {
@@ -111,7 +111,7 @@ public class AuthService {
       logoutAndInvalidateSession(req);
     }
     //only login if not already logged...
-    if (sc.getUserPrincipal() == null) {
+    if (req.getRemoteUser() == null) {
       login(user, email, passwordWithSaltPlusOtp, req);
     } else {
       req.getServletContext().log("Skip logged because already logged in: " + email);
@@ -219,21 +219,19 @@ public class AuthService {
   }
 
   private void logoutAndInvalidateSession(HttpServletRequest req) throws AppException {
-    Users user = null;
+    Users user = userFacade.findByEmail(req.getRemoteUser());
     try {
       req.getSession().invalidate();
       req.logout();
-      user = userFacade.findByEmail(req.getRemoteUser());
       if (user != null) {
-        authController.setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
-        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), 
-            req);
+        authController.registerLogout(user, req);
         //remove zeppelin ticket for user
         TicketContainer.instance.invalidate(user.getEmail());
       }
     } catch (ServletException e) {
+      LOGGER.log(Level.WARNING, e.getMessage());
       accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Logout failed on backend");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ResponseMessages.LOGOUT_FAILURE);
     }
   }
   
@@ -243,15 +241,11 @@ public class AuthService {
     }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {
-        req.getServletContext().log("going to login. User status: " + user.getStatus());
         req.login(email, password);
-        req.getServletContext().log("3 step: " + email);
-        authController.resetFalseLogin(user);
-        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
-        authController.setUserOnlineStatus(user, AuthenticationConstants.IS_ONLINE);
+        authController.registerLogin(user, req);        
       } catch (ServletException e) {
-        authController.registerFalseLogin(user, req);
-        accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+        LOGGER.log(Level.WARNING, e.getMessage());
+        authController.registerAuthenticationFailure(user, req); 
         throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.AUTHENTICATION_FAILURE);
       }
     } else { // if user == null
@@ -260,11 +254,12 @@ public class AuthService {
   }
 
   private void logUserLogin(HttpServletRequest req) {
-    req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
-    req.getServletContext().log("SecurityContext email: " + req.getUserPrincipal());
-    req.getServletContext().log("SecurityContext in user role: " + req.isUserInRole("HOPS_USER"));
-    req.getServletContext().log("SecurityContext in sysadmin role: " + req.isUserInRole("HOPS_ADMIN"));
-    req.getServletContext().log("SecurityContext in agent role: " + req.isUserInRole("AGENT"));
-    req.getServletContext().log("SecurityContext in cluster_agent role: " + req.isUserInRole("CLUSTER_AGENT"));
+    StringBuilder roles = new StringBuilder();
+    roles.append(req.isUserInRole("HOPS_USER")? "{user": "{");
+    roles.append(req.isUserInRole("HOPS_ADMIN")? " admin": "");
+    roles.append(req.isUserInRole("AGENT")? " agent": "");
+    roles.append(req.isUserInRole("CLUSTER_AGENT")? " cluster-agent}": "}");
+    LOGGER.log(Level.INFO, "[/hopsworks-api] login:\n email: {0}\n session: {1}\n in roles: {2}", new Object[]{
+      req.getUserPrincipal(), req.getSession().getId(), roles});
   }
 }

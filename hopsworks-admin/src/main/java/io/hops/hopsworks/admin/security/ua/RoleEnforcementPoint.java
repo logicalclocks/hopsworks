@@ -7,15 +7,11 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.AuditUtil;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,10 +24,9 @@ public class RoleEnforcementPoint implements Serializable {
   @EJB
   protected UsersController usersController;
   @EJB
-  private UserFacade userFacade;
-
+  protected AuthController authController;
   @EJB
-  private AccountAuditFacade am;
+  private UserFacade userFacade;
 
   private boolean open_requests = false;
   private int tabIndex;
@@ -47,8 +42,7 @@ public class RoleEnforcementPoint implements Serializable {
 
   public Users getUserFromSession() {
     if (user == null) {
-      ExternalContext context = FacesContext.getCurrentInstance().
-              getExternalContext();
+      ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
       String userEmail = context.getUserPrincipal().getName();
       user = userFacade.findByEmail(userEmail);
     }
@@ -66,8 +60,7 @@ public class RoleEnforcementPoint implements Serializable {
   }
 
   private HttpServletRequest getRequest() {
-    return (HttpServletRequest) FacesContext.getCurrentInstance().
-            getExternalContext().getRequest();
+    return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
   }
 
   /**
@@ -143,32 +136,16 @@ public class RoleEnforcementPoint implements Serializable {
   // MOVE OUT THIS
   public String logOut() {
     try {
-      getRequest().getSession().invalidate();
-
-      FacesContext ctx = FacesContext.getCurrentInstance();
-      HttpSession sess = (HttpSession) ctx.getExternalContext().
-              getSession(false);
-      HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-              getRequest();
-
-      String ip = AuditUtil.getIPAddress();
-      String browser = AuditUtil.getBrowserInfo();
-      String os = AuditUtil.getOSInfo();
-      String macAddress = AuditUtil.getMacAddress(ip);
-
-      am.registerLoginInfo(getUserFromSession(), UserAuditActions.LOGOUT.
-              getValue(), ip,
-              browser, os, macAddress, UserAuditActions.SUCCESS.name());
-
-      usersController.setOnline(user.getUid(), AuthenticationConstants.IS_OFFLINE);
-      req.logout();
-      if (null != sess) {
-        sess.invalidate();
+      this.user = getUserFromSession();
+      HttpServletRequest req = getRequest();
+      req.getSession().invalidate();
+      req.logout(); 
+      if (user != null) {
+        authController.registerLogout(user, req);
       }
-      ctx.getExternalContext().redirect("/hopsworks/#!/home");
+      FacesContext.getCurrentInstance().getExternalContext().redirect("/hopsworks/#!/home");
     } catch (IOException | ServletException ex) {
-      Logger.getLogger(RoleEnforcementPoint.class.getName()).
-              log(Level.SEVERE, null, ex);
+      Logger.getLogger(RoleEnforcementPoint.class.getName()).log(Level.SEVERE, null, ex);
     }
     return ("welcome");
   }

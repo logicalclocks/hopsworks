@@ -19,8 +19,7 @@ public class ResponseMessages {
   public final static String ACCOUNT_BLOCKED
           = "Your account hsd been blocked. Contact the administrator.";
   public final static String AUTHENTICATION_FAILURE = "Authentication failed";
-  public final static String LOGOUT_FAILURE
-          = "Logout failed due to server error";
+  public final static String LOGOUT_FAILURE = "Logout failed on backend.";
   public final static String EMAIL_EMPTY = "Email cannot be empty.";
   public final static String EMAIL_INVALID = "Not a valid email address.";
   public final static String EMAIL_SENDING_FAILURE

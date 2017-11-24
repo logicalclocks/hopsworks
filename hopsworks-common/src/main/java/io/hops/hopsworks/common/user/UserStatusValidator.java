@@ -48,6 +48,7 @@ public class UserStatusValidator {
     if (user == null) {
       return false;
     }
-    return user.equals(PeopleAccountStatus.LOST_MOBILE) || user.equals(PeopleAccountStatus.LOST_YUBIKEY);
+    return user.getStatus().equals(PeopleAccountStatus.LOST_MOBILE) || user.getStatus().equals(
+        PeopleAccountStatus.LOST_YUBIKEY);
   }
 }

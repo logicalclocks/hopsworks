@@ -135,28 +135,6 @@ public class AuthController {
   }
 
   /**
-   * Validates password but will not update account audit
-   *
-   * @param user
-   * @param password
-   * @return
-   */
-  public boolean validatePassword(Users user, String password) {
-    if (user == null) {
-      throw new IllegalArgumentException("User not set.");
-    }
-    String userPwdHash = user.getPassword();
-    String pwdHash = getPasswordHash(password, user.getSalt());
-    if (!userPwdHash.equals(pwdHash)) {
-      registerFalseLogin(user);
-      LOGGER.log(Level.WARNING, "False login attempt by user: {0}", user.getEmail());
-      return false;
-    }
-    resetFalseLogin(user);
-    return true;
-  }
-
-  /**
    * Validate security question and update false login attempts   
    * @param user
    * @param securityQuestion
@@ -351,14 +329,16 @@ public class AuthController {
    * @param req
    * @throws Exception
    */
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void changePassword(Users user, String password, HttpServletRequest req) throws Exception {
     String salt = generateSalt();
     String passwordWithSalt = getPasswordHash(password, salt);
-    resetProjectCertPassword(user, passwordWithSalt);
+    String oldPassword = user.getPassword();
     user.setPassword(passwordWithSalt);
     user.setSalt(salt);
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     userFacade.update(user);
+    resetProjectCertPassword(user, oldPassword);
     accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
         AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
   }
@@ -388,7 +368,7 @@ public class AuthController {
     return password + salt;
   }
 
-  private void resetProjectCertPassword(Users p, String pass) throws Exception {
+  private void resetProjectCertPassword(Users p, String oldPass) throws Exception {
     //For every project, change the certificate secret in the database
     //Get cert password by decrypting it with old password
 
@@ -400,9 +380,9 @@ public class AuthController {
       for (Project project : projects) {
         UserCerts userCert = userCertsFacade.findUserCert(project.getName(), p.getUsername());
         String masterEncryptionPassword = certificatesMgmService.getMasterEncryptionPassword();
-        String certPassword = HopsUtils.decrypt(p.getPassword(), userCert.getUserKeyPwd(), masterEncryptionPassword);
+        String certPassword = HopsUtils.decrypt(oldPass, userCert.getUserKeyPwd(), masterEncryptionPassword);
         //Encrypt it with new password and store it in the db
-        String newSecret = HopsUtils.encrypt(pass, certPassword, masterEncryptionPassword);
+        String newSecret = HopsUtils.encrypt(p.getPassword(), certPassword, masterEncryptionPassword);
         userCert.setUserKeyPwd(newSecret);
         userCertsFacade.update(userCert);
 
@@ -418,7 +398,7 @@ public class AuthController {
           String pguCertPassword = HopsUtils.decrypt(p.getPassword(), pguCert.getCertificatePassword(), 
               masterEncryptionPassword);
           //Encrypt it with new password and store it in the db
-          String newPguSecret = HopsUtils.encrypt(pass, pguCertPassword, masterEncryptionPassword);
+          String newPguSecret = HopsUtils.encrypt(oldPass, pguCertPassword, masterEncryptionPassword);
           pguCert.setCertificatePassword(newPguSecret);
           userCertsFacade.updatePGUCert(pguCert);
         }
@@ -466,26 +446,6 @@ public class AuthController {
     }
   }
 
-  private void registerFalseLogin(Users user) {
-    if (user != null) {
-      int count = user.getFalseLogin() + 1;
-      user.setFalseLogin(count);
-
-      // block the user account if more than allowed false logins
-      if (count > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-        user.setStatus(PeopleAccountStatus.BLOCKED_ACCOUNT);
-        try {
-          emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-              UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
-        } catch (MessagingException ex) {
-          LOGGER.log(Level.SEVERE, "Failed to send email.", ex);
-        }
-      }
-      // notify user about the false attempts
-      userFacade.update(user);
-    }
-  }
-
   /**
    * Registers failed email validation
    * @param user
@@ -505,24 +465,49 @@ public class AuthController {
           name(), "Wrong validation key retries: " + Integer.toString(count), user, req);
     }
   }
+  
+  /**
+   * Set user online, resets false login attempts and register login audit info
+   * @param user
+   * @param req 
+   */
+  public void registerLogin(Users user, HttpServletRequest req) {
+    resetFalseLogin(user);
+    setUserOnlineStatus(user, AuthenticationConstants.IS_ONLINE);
+    accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), req);
+    LOGGER.log(Level.INFO, "Logged in user: {0}. ", user.getEmail());
+  }
 
   /**
-   * Sets false login to 0 for the given user
-   * @param user 
+   * Set user offline and register login audit info
+   * @param user
+   * @param req 
    */
-  public void resetFalseLogin(Users user) {
+  public void registerLogout(Users user, HttpServletRequest req) {
+    setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
+    accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
+    LOGGER.log(Level.INFO, "Logged out user: {0}. ", user.getEmail());
+  }
+  
+  /**
+   * Register authentication failure and register login audit info
+   * @param user
+   * @param req 
+   */
+  public void registerAuthenticationFailure(Users user, HttpServletRequest req) {
+    registerFalseLogin(user, req);
+    accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
+    LOGGER.log(Level.INFO, "Authentication failure user: {0}. ", user.getEmail());
+  }
+
+  private void resetFalseLogin(Users user) {
     if (user != null) {
       user.setFalseLogin(0);
       userFacade.update(user);
     }
   }
 
-  /**
-   * Set the user as online
-   * @param user
-   * @param status 
-   */
-  public void setUserOnlineStatus(Users user, int status) {
+  private void setUserOnlineStatus(Users user, int status) {
     if (user != null) {
       user.setIsonline(status);
       userFacade.update(user);

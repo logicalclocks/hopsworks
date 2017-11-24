@@ -1,10 +1,7 @@
 package io.hops.hopsworks.admin.security.ua;
 
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.AuthController;
 import java.io.IOException;
@@ -28,8 +25,6 @@ public class LoginBean {
   private UserFacade userFacade;
   @EJB
   private AuthController authController;
-  @EJB
-  private AccountAuditFacade accountAuditFacade;
   
   private String username;
   private String password;
@@ -68,14 +63,9 @@ public class LoginBean {
     }
     try {
       request.login(this.username, passwordWithSaltPlusOtp);
-      authController.resetFalseLogin(user);
-      accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.SUCCESS.name(), 
-          request);
-      authController.setUserOnlineStatus(user, AuthenticationConstants.IS_ONLINE);
+      authController.registerLogin(user, request);
     } catch (ServletException e) {
-      authController.registerFalseLogin(user, request);
-      accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), 
-          request);
+      authController.registerAuthenticationFailure(user, request);      
       context.addMessage(null, new FacesMessage("Login failed."));
       return "";
     }

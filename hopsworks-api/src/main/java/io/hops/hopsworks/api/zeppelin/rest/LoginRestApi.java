@@ -19,13 +19,11 @@ package io.hops.hopsworks.api.zeppelin.rest;
 import io.hops.hopsworks.api.zeppelin.server.JsonResponse;
 import io.hops.hopsworks.api.zeppelin.util.SecurityUtils;
 import io.hops.hopsworks.api.zeppelin.util.TicketContainer;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UsersController;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +62,6 @@ public class LoginRestApi {
 
   @EJB
   private UserFacade userBean;
-  @EJB
-  private UsersController userController;
   @EJB
   private AuthController authController;
   @EJB
@@ -155,17 +151,14 @@ public class LoginRestApi {
     data.put("ticket", "anonymous");
     Users user = userBean.findByEmail(req.getRemoteUser());
     try {
-      req.logout();
       req.getSession().invalidate();
+      req.logout();
       if (user != null) {
-        authController.setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
-        am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
-                UserAuditActions.SUCCESS.name(), req);
+        authController.registerLogout(user, req);
         TicketContainer.instance.invalidate(user.getEmail());
       }
     } catch (ServletException e) {
-      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(),
-              UserAuditActions.FAILED.name(), req);
+      am.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
     }
 
     response = new JsonResponse(Response.Status.OK, "", data);
