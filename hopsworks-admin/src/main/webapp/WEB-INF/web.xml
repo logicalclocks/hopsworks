@@ -28,6 +28,10 @@
     <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
     <param-value>65535</param-value>
   </context-param>
+  <error-page>
+    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    <location>/expired.xhtml</location>
+  </error-page> 
   <servlet>
     <servlet-name>Faces Servlet</servlet-name>
     <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>

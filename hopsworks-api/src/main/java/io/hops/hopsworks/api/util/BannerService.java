@@ -13,13 +13,13 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/banner")
 @Stateless
@@ -52,8 +52,8 @@ public class BannerService {
   @Path("user")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response findUserBanner(@Context SecurityContext sc) throws AppException {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+  public Response findUserBanner(@Context HttpServletRequest req) throws AppException {
+    Users user = userFacade.findByEmail(req.getRemoteUser());
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("");
     if (user != null && (user.getSalt() == null || user.getSalt().isEmpty())) {

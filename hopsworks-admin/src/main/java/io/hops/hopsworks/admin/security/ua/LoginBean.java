@@ -72,6 +72,18 @@ public class LoginBean {
     return "adminIndex";
   }
   
+  public boolean isLoggedIn() {
+    HttpServletRequest req = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    return req.getRemoteUser() != null;
+  }
+
+  public void checkAlreadyLoggedin() throws IOException {
+    if (isLoggedIn()) {
+      ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+      ec.redirect(ec.getRequestContextPath() + "/security/protected/admin/adminIndex.xhtml");
+    }
+  }
+  
   public void gotoSupport() throws IOException {
     String link = "https://groups.google.com/forum/#!forum/hopshadoop";
     ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
