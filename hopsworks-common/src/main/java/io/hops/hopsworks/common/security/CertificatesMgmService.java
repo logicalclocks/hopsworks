@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +78,7 @@ public class CertificatesMgmService {
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
+  private final ReentrantLock opensslLock = new ReentrantLock(true);
   
   public CertificatesMgmService() {
   
@@ -148,6 +150,10 @@ public class CertificatesMgmService {
         new DelaCertsMasterPasswordHandler(settings);
     delaClusterCertsHandler.setFacade(clusterCertificateFacade);
     registerMasterPasswordChangeHandler(ClusterCertificate.class, delaClusterCertsHandler);
+  }
+  
+  public ReentrantLock getOpensslLock() {
+    return opensslLock;
   }
   
   @Lock(LockType.READ)

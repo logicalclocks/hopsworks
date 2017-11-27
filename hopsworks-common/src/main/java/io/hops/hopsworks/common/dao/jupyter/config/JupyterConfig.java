@@ -349,7 +349,10 @@ public class JupyterConfig {
                   "driver_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
                               Integer.toString(js.getAppmasterCores()),
                   "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
-                  "num_executors", (isSparkDynamic || isTensorFlow) ? "0" : Integer.toString(js.getNumExecutors()),
+                  "num_executors", (isSparkDynamic || isTensorFlow) ? "0" :
+                                   (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+                                   (isHorovod) ? "1":
+                                   Integer.toString(js.getNumExecutors()),
                   "executor_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
                               Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",

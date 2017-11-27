@@ -329,7 +329,7 @@ public class KafkaFacade {
       }
     }
   }
-
+  
   public void removeAllTopicsFromProject(Project project) throws
       InterruptedException, AppException {
 
@@ -373,6 +373,13 @@ public class KafkaFacade {
     }
   }
 
+  public void removeAclsForUser(Users user, Integer projectId) {
+    em.createNamedQuery("TopicAcls.deleteByUser", TopicAcls.class)
+        .setParameter("user", user)
+        .setParameter("projectId", projectId)
+        .executeUpdate();
+  }
+  
   public TopicDefaultValueDTO topicDefaultValues() throws AppException {
 
     Set<String> brokers = settings.getBrokerEndpoints();
