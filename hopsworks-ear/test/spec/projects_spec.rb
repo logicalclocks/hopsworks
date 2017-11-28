@@ -70,7 +70,7 @@ describe 'projects' do
         expect_json(errorMsg: "Project with the same name already exists.")
         expect_status(400)
       end
-      
+
       it 'should create a project X containing a dataset Y after deleteing a project X containing a dataset Y (issue #425)' do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
@@ -80,25 +80,25 @@ describe 'projects' do
         project = create_project_by_name(projectname)
         create_dataset_by_name(project, dsname)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"        
+        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"
         expect_status(200)
         get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
         ds = json_body.detect { |d| d[:name] == dsname }
         expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
       end
-      
+
       it 'should create a project given only name' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
         expect_json(errorMsg: "")
         expect_status(201)
       end
-      
-      it 'Should not let a user create more than the maximum number of allowed projects.' do
-        create_max_num_projects
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-        expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
-        expect_status(400)
-      end
+
+     # it 'Should not let a user create more than the maximum number of allowed projects.' do
+     #   create_max_num_projects
+     #   post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
+     #   expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
+     #   expect_status(400)
+     # end
     end
   end
   describe "#access" do
@@ -131,7 +131,7 @@ describe 'projects' do
       end
       it "should fail to delete project" do
         project = get_project
-        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete" 
+        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
         expect_status(401)
       end
     end
@@ -242,7 +242,7 @@ describe 'projects' do
         expect_status(200)
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
         memb = json_body.detect { |e| e[:user][:email] == new_member }
-        expect(memb).to be_nil 
+        expect(memb).to be_nil
       end
       it "should fail to remove a non-existing team member" do
         new_member = create_user[:email]

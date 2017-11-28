@@ -1,13 +1,13 @@
 require 'airborne'
 #require 'byebug'
 require 'active_record'
-require 'launchy'
+#require 'launchy'
 
 require 'dotenv'
 Dotenv.load
 
 mysql_adapter = "mysql2"
-if RUBY_PLATFORM == "java" 
+if RUBY_PLATFORM == "java"
   mysql_adapter = "jdbcmysql"
 end
 
@@ -20,7 +20,7 @@ begin
     :username => "kthfs",
     :password => "kthfs"})
   ActiveRecord::Base.connection # Calls connection object
-    puts "Connected to database!" if ActiveRecord::Base.connected? 
+    puts "Connected to database!" if ActiveRecord::Base.connected?
     puts "Not connected to database!" unless ActiveRecord::Base.connected?
   rescue
     puts "Error when connecting to database!"
@@ -36,12 +36,16 @@ RSpec.configure do |config|
   config.include FactoryHelper
   config.include DatasetHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
-#  config.before(:suite) { clean_test_data } 
-  config.after(:suite) { 
-    clean_test_data
+#  config.before(:suite) { clean_test_data }
+  config.after(:suite) {
+    # If we are not using Jenkins, then clean the data
+    if !ENV['JENKINS'] || ENV['JENKINS'] == "false"
+      clean_test_data
+    end
+
     if ENV['LAUNCH_BROWSER'] && ENV['LAUNCH_BROWSER']=="true"
-       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}") 
-    end  
+       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
+    end
   }
 end
 
@@ -58,9 +62,9 @@ def clean_test_data
       ssh.shell do |sh|
         puts "Remote HDFS Clean-up starting..."
         sh.execute("cd #{ENV['RSPEC_SSH_USER_DIR']}")
-        sh.execute("vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ") 
+        sh.execute("vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ")
         puts "Remote HDFS Clean-up finished."
-        
+
         puts "DataBase Clean-up starting..."
         sh.execute("vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
         sh.execute("vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
@@ -75,15 +79,15 @@ def clean_test_data
     end
   else
     puts "Vagrant HDFS Clean-up starting..."
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ") 
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ")
     puts "Vagrant HDFS Clean-up finished."
-    
+
     puts "DataBase Clean-up starting..."
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-    puts "DataBase Clean-up finished." 
-  end  
+    puts "DataBase Clean-up finished."
+  end
 end
