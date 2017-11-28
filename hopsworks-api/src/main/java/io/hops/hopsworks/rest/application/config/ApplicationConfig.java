@@ -58,9 +58,12 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
+
+    // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
-    
+    register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     
     //dela
@@ -72,8 +75,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.hopssite.HopssiteService.class);
     register(io.hops.hopsworks.api.hopssite.CommentService.class);
     register(io.hops.hopsworks.api.hopssite.RatingService.class);
-    //
-    
+
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);

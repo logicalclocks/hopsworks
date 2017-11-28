@@ -1,4 +1,4 @@
-package io.hops.hopsworks.admin.llap;
+package io.hops.hopsworks.common.admin.llap;
 
 import io.hops.hopsworks.common.dao.util.VariablesFacade;
 import io.hops.hopsworks.common.util.Settings;
@@ -27,12 +27,38 @@ public class LlapClusterFacade {
 
   private static final Logger logger = Logger.getLogger(LlapClusterFacade.class.getName());
 
+  private static String NINSTANCES = "llap_ninstances";
+  private static String EXECMEMORY = "llap_exec_memory";
+  private static String CACHEMEMORY = "llap_cache_memory";
+  private static String NEXECUTORS = "llap_executors_threads";
+  private static String NIOTHREADS = "llap_io_threads";
+
   @EJB
   private YarnClientService yarnClientService;
   @EJB
   private Settings settings;
   @EJB
   private VariablesFacade variablesFacade;
+
+  public LlapClusterStatus getClusterStatus() {
+    LlapClusterStatus clusterStatus = new LlapClusterStatus();
+    if (isClusterStarting()) {
+      clusterStatus.setClusterStatus(LlapClusterStatus.Status.LAUNCHING);
+    } else if (isClusterUp()) {
+      clusterStatus.setClusterStatus(LlapClusterStatus.Status.UP);
+      clusterStatus.setHosts(getLlapHosts());
+    } else {
+      clusterStatus.setClusterStatus(LlapClusterStatus.Status.DOWN);
+    }
+
+    clusterStatus.setInstanceNumber(Integer.parseInt(variablesFacade.getVariableValue(NINSTANCES)));
+    clusterStatus.setExecutorsMemory(Long.parseLong(variablesFacade.getVariableValue(EXECMEMORY)));
+    clusterStatus.setCacheMemory(Long.parseLong(variablesFacade.getVariableValue(CACHEMEMORY)));
+    clusterStatus.setExecutorsPerInstance(Integer.parseInt(variablesFacade.getVariableValue(NEXECUTORS)));
+    clusterStatus.setIOThreadsPerInstance(Integer.parseInt(variablesFacade.getVariableValue(NIOTHREADS)));
+
+    return clusterStatus;
+  }
 
   public boolean isClusterUp() {
     String llapAppID = variablesFacade.getVariableValue(Settings.VARIABLE_LLAP_APP_ID);
@@ -73,6 +99,8 @@ public class LlapClusterFacade {
 
     if (pid == -1) {
       return false;
+    } else if (pid == -2) {
+      return true;
     } else {
       // Check if the process is still running
       File procDir = new File("/proc/" + String.valueOf(pid));
@@ -127,5 +155,14 @@ public class LlapClusterFacade {
     }
 
     return hosts;
+  }
+
+  public void saveConfiguration(int nInstances, long execMemory, long cacheMemory, int nExecutors,
+                                int nIOThreaads) {
+    variablesFacade.storeVariable(NINSTANCES, String.valueOf(nInstances));
+    variablesFacade.storeVariable(EXECMEMORY, String.valueOf(execMemory));
+    variablesFacade.storeVariable(CACHEMEMORY, String.valueOf(cacheMemory));
+    variablesFacade.storeVariable(NEXECUTORS, String.valueOf(nExecutors));
+    variablesFacade.storeVariable(NIOTHREADS, String.valueOf(nIOThreaads));
   }
 }

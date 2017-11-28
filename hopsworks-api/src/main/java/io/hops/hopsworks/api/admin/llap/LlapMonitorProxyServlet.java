@@ -1,4 +1,4 @@
-package io.hops.hopsworks.api.admin;
+package io.hops.hopsworks.api.admin.llap;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import org.apache.http.client.utils.URIUtils;

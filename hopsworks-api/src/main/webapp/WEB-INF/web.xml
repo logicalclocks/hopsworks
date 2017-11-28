@@ -140,7 +140,7 @@
     <!-- LLAP monitor proxy servlet -->
     <servlet>
         <servlet-name>LlapMonitorProxyServlet</servlet-name>
-        <servlet-class>io.hops.hopsworks.api.admin.LlapMonitorProxyServlet</servlet-class>
+        <servlet-class>io.hops.hopsworks.api.admin.llap.LlapMonitorProxyServlet</servlet-class>
         <init-param>
             <param-name>targetUri</param-name>
             <param-value>http://{host}:15002/</param-value>

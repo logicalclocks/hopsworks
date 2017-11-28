@@ -56,7 +56,7 @@
             }
         </script>
 
-        <h:form style="width: 500px; margin: auto" >
+        <h:form style="width: 700px; margin: auto" >
             <h:panelGrid columns="2">
                 <f:facet name="header">
                     <p:column colspan="3">Settings</p:column>
@@ -66,22 +66,22 @@
                     <p:spinner id="nInstances" min="0" value="#{LlapBean.nInstances}" />
                 </p:column>
 
-                <p:column colspan="2">Executor Memory [mb]</p:column>
+                <p:column colspan="2">Executors Memory [mb per daemon]</p:column>
                 <p:column colspan="1">
                     <p:spinner id="execMemory" min="0" value="#{LlapBean.execMemory}"/>
                 </p:column>
 
-                <p:column colspan="2">Cache Memory [mb]</p:column>
-                <p:column colspan="1">
-                    <p:spinner id="cacheMemory" min="0" value="#{LlapBean.cacheMemory}"/>
-                </p:column>
-
-                <p:column colspan="2">Number of Executors per daemon</p:column>
+                <p:column colspan="2">Number of executors [per daemon]</p:column>
                 <p:column colspan="1">
                     <p:spinner id="nExecutors" min="0" value="#{LlapBean.nExecutors}"/>
                 </p:column>
 
-                <p:column colspan="2">Number of IO Threads per daemon</p:column>
+                <p:column colspan="2">Cache Memory [mb per daemon]</p:column>
+                <p:column colspan="1">
+                    <p:spinner id="cacheMemory" min="0" value="#{LlapBean.cacheMemory}"/>
+                </p:column>
+
+                <p:column colspan="2">Number of IO Threads [per daemon]</p:column>
                 <p:column colspan="1">
                     <p:spinner id="nIOThreads" min="0" value="#{LlapBean.nIOThreads}"/>
                 </p:column>
@@ -98,7 +98,7 @@
                                      actionListener="#{LlapBean.stopLLAP()}"
                                      disabled="#{!LlapBean.isClusterUp()}"
                                      onstart="PF('blockUIWidget').block()"
-                                     oncomplete="unblockOrReload(xhr, status, args)"
+                                     oncomplete="location.reload(true)"
                                      value="Stop LLAP cluster"/>
                 </p:row>
             </h:panelGrid>
