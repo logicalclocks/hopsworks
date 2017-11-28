@@ -391,7 +391,7 @@ public class ProjectController {
         }
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for the certificate " +
-            "generation thread to finish. Will try to cleanup...");
+            "generation thread to finish. Will try to cleanup...", ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
       return project;
@@ -1112,7 +1112,14 @@ public class ProjectController {
       if (certsGenerationFuture != null) {
         certsGenerationFuture.get();
       }
-      certificatesController.deleteProjectCertificates(project);
+      
+      try {
+        certificatesController.deleteProjectCertificates(project);
+      } catch (IOException ex) {
+        LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName() +
+                ". Manual cleanup is needed!!!", ex);
+        throw ex;
+      }
       
       String logPath = getYarnAgregationLogPath();
 
@@ -1312,11 +1319,11 @@ public class ProjectController {
                 certificatesController.deleteUserSpecificCertificates(project,
                     newMember);
               } catch (IOException | InterruptedException | ExecutionException e) {
-                String hdfsUser = project.getName() + HdfsUsersController
-                    .USER_NAME_DELIMITER + user.getUsername();
+                String failedUser = project.getName() + HdfsUsersController
+                    .USER_NAME_DELIMITER + newMember.getUsername();
                 LOGGER.log(Level.SEVERE,
                     "Could not delete user certificates for user " +
-                        hdfsUser + ". Manual cleanup is needed!!!");
+                        failedUser + ". Manual cleanup is needed!!! ", e);
               }
               LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
