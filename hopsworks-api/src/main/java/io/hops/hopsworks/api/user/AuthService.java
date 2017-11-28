@@ -139,9 +139,9 @@ public class AuthService {
   public Response login(@Context SecurityContext sc, @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
       throws AppException, MessagingException {
     if (sc.isUserInRole("HOPS_ADMIN")) {
-      return Response.ok().build();
+      return Response.ok(true).build();
     }
-    return Response.status(Response.Status.UNAUTHORIZED).build();
+    return Response.ok(false).build();
   }
 
   @POST

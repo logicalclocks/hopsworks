@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
             var checkeIsAdmin = function () {
               AuthService.isAdmin().then(
                   function (success) {
-                    $cookies.put("isAdmin", true);
+                    $cookies.put("isAdmin", success.data === 'true');
                 },function (error) {
                     $cookies.put("isAdmin", false);
               });

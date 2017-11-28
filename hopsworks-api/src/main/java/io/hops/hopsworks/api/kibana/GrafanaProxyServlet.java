@@ -32,10 +32,10 @@ public class GrafanaProxyServlet extends ProxyServlet {
   private ProjectController projectController;
 
   @Override
-  protected void service(HttpServletRequest servletRequest,
-          HttpServletResponse servletResponse)
-          throws ServletException, IOException {
-    if (servletRequest.getUserPrincipal() == null) {
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
+      throws ServletException, IOException {
+    if (servletRequest.getUserPrincipal() == null || 
+       (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.isUserInRole("HOPS_USER"))) {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }

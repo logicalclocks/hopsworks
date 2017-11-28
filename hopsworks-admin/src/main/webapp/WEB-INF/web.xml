@@ -103,7 +103,7 @@
   <session-config>
     <session-timeout>600</session-timeout>
     <cookie-config>
-      <name>SESSION</name>
+      <name>SESSION-ADMIN</name>
       <path>/</path>
       <http-only>false</http-only>
       <secure>false</secure>

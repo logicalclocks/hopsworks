@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://java.sun.com/jsf/facelets">
@@ -20,33 +20,33 @@
 
   <h:body>
 
-    <h:form class="stylelayout" id="formToolbar">  
-      <p:toolbar styleClass="MainToolbar">  
-        <p:toolbarGroup align="left">  
-          <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks')}"/>
-        </p:toolbarGroup> 
-        <p:toolbarGroup align="left">  
-          <p:commandLink value="Admin Home" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}"/>
-        </p:toolbarGroup> 
+      <h:form class="stylelayout" id="formToolbar">  
+        <p:toolbar styleClass="MainToolbar">  
+          <p:toolbarGroup align="left">  
+            <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks')}"/>
+          </p:toolbarGroup> 
+          <p:toolbarGroup align="left">  
+            <p:commandLink value="Admin Home" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}"/>
+          </p:toolbarGroup> 
 
-        <p:toolbarGroup align="left">
-          <p:commandButton value="Clusters" action='clusters'/>
-          <p:commandButton value="Hosts" action="hosts"/>
-        </p:toolbarGroup>  
+          <p:toolbarGroup align="left">
+            <p:commandButton value="Clusters" action='clusters'/>
+            <p:commandButton value="Hosts" action="hosts"/>
+          </p:toolbarGroup>  
 
-                    <p:toolbarGroup align="right">  
-                       <p:commandButton id="userBtn" value="" type="button" icon="ui-icon-person"/>  
-                       <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                          <!--<p:menuitem value="Backup / Restore" action="backuprestore" />--> 
-                          <p:menuitem value="Logout" action='#{roleEnforcementPoint.logOut()}'/> 
-                       </p:menu>  
-                    </p:toolbarGroup>  
+          <p:toolbarGroup align="right">  
+            <p:commandButton id="userBtn" value="#{loginBean.loginUsername()}" type="button" icon="ui-icon-person"/>  
+            <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+              <!--<p:menuitem value="Backup / Restore" action="backuprestore" />--> 
+              <p:menuitem value="Logout" action='#{loginBean.logOut()}'/> 
+            </p:menu>  
+          </p:toolbarGroup>  
 
-      </p:toolbar> 
+        </p:toolbar> 
 
-    </h:form>
+      </h:form>
 
-    <ui:insert name="content">Default content</ui:insert>
+      <ui:insert name="content">Default content</ui:insert>
 
   </h:body>
 
