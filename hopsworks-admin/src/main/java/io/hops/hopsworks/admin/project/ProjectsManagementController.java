@@ -216,5 +216,7 @@ public class ProjectsManagementController {
     return pythonDepsFacade.opStatus(proj);
   }
   
-  
+  public void deleteProject(Project project, String sessionId) throws AppException {
+    projectController.removeProject(project.getOwner().getEmail(), project.getId(), sessionId);
+  }
 }

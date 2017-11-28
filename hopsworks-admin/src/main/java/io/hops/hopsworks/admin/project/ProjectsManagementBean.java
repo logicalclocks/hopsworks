@@ -17,6 +17,7 @@
  */
 package io.hops.hopsworks.admin.project;
 
+import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.project.PaymentType;
@@ -28,7 +29,11 @@ import org.primefaces.event.RowEditEvent;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -39,7 +44,9 @@ import java.util.logging.Logger;
 
 @ManagedBean(name = "projectsmanagement")
 @ViewScoped
-public class ProjectsManagementBean {
+public class ProjectsManagementBean implements Serializable {
+  private static final long serialVersionUID = -1L;
+  private final Logger LOG = Logger.getLogger(ProjectsManagementBean.class.getName());
 
   @EJB
   private ProjectsManagementController projectsManagementController;
@@ -60,6 +67,7 @@ public class ProjectsManagementBean {
   private String hiveHdfsQuotaString = "";
   private List<String> paymentTypes = new ArrayList<>();
   private PaymentType paymentType;
+  private Project toBeDeletedProject;
 
   public long getHiveHdfsQuota() { return hiveHdfsQuota; }
 
@@ -352,7 +360,15 @@ public class ProjectsManagementBean {
   public void setAction(String action) {
     this.action = action;
   }
-
+  
+  public Project getToBeDeletedProject() {
+    return toBeDeletedProject;
+  }
+  
+  public void setToBeDeletedProject(Project toBeDeletedProject) {
+    this.toBeDeletedProject = toBeDeletedProject;
+  }
+  
   public void disableProject(String projectname) {
     projectsManagementController.disableProject(projectname);
   }
@@ -425,5 +441,28 @@ public class ProjectsManagementBean {
       sb.append("Error getting ops. Report a bug.");
     }
     return sb.toString();
+  }
+  
+  public void deleteProject() {
+    LOG.log(Level.INFO, "Deleting project: " + toBeDeletedProject);
+    Cookie[] cookies = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest())
+        .getCookies();
+    try {
+      String sessionId = "";
+      for (Cookie cookie : cookies) {
+        if (cookie.getName().equalsIgnoreCase("SESSION")) {
+          sessionId = cookie.getValue();
+          break;
+        }
+      }
+      projectsManagementController.deleteProject(toBeDeletedProject, sessionId);
+      allProjects.remove(toBeDeletedProject);
+      toBeDeletedProject = null;
+      MessagesController.addInfoMessage("Project deleted!");
+    } catch (AppException ex) {
+      LOG.log(Level.SEVERE, "Failed to delete project " + toBeDeletedProject, ex);
+      MessagesController.addErrorMessage("Deletion failed", "Failed deleting project "
+          + toBeDeletedProject.getName());
+    }
   }
 }

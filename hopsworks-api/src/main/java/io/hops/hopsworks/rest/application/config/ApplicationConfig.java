@@ -62,6 +62,7 @@ public class ApplicationConfig extends ResourceConfig {
     // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
+    register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
     register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
 
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
