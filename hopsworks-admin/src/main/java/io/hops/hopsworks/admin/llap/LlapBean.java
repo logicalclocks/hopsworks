@@ -18,14 +18,16 @@
 package io.hops.hopsworks.admin.llap;
 
 import io.hops.hopsworks.admin.lims.MessagesController;
-import io.hops.hopsworks.common.dao.util.VariablesFacade;
+import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
+import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
+import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;
 import org.primefaces.context.RequestContext;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,17 +39,9 @@ public class LlapBean implements Serializable {
   @EJB
   LlapClusterFacade llapClusterFacade;
   @EJB
-  VariablesFacade variablesFacade;
-  @EJB
   LlapClusterLifecycle llapClusterLifecycle;
 
   private static final Logger logger = Logger.getLogger(LlapBean.class.getName());
-
-  private static String NINSTANCES = "llap_ninstances";
-  private static String EXECMEMORY = "llap_exec_memory";
-  private static String CACHEMEMORY = "llap_cache_memory";
-  private static String NEXECUTORS = "llap_executors_threads";
-  private static String NIOTHREADS = "llap_io_threads";
 
   private static int MAXWAITINGITERATIONS = 240;
 
@@ -57,90 +51,58 @@ public class LlapBean implements Serializable {
   private int nExecutors = 4;
   private int nIOThreads = 4;
 
-  private Boolean isClusterUp = null;
-  private Boolean isClusterStarting = null;
+  private LlapClusterStatus.Status clusterStatus;
 
-  private List<String> llapHosts = new ArrayList<>();
+  private List<String> llapHosts = null;
   private String selectedHost = "";
 
-  public int getnInstances() {
-    String nInstancesStr = variablesFacade.getVariableValue(NINSTANCES);
-    if (nInstancesStr != null) {
-      nInstances = Integer.valueOf(nInstancesStr);
+  @PostConstruct
+  public void init() {
+    LlapClusterStatus status = llapClusterFacade.getClusterStatus();
+    this.clusterStatus = status.getClusterStatus();
+    this.nInstances = status.getInstanceNumber();
+    this.execMemory = status.getExecutorsMemory();
+    this.cacheMemory = status.getCacheMemory();
+    this.nExecutors = status.getExecutorsPerInstance();
+    this.nIOThreads = status.getIOThreadsPerInstance();
+    this.llapHosts = status.getHosts();
+
+    if (llapHosts != null && llapHosts.size() > 0) {
+      this.selectedHost = llapHosts.get(0);
     }
-    return nInstances;
   }
 
+  public int getnInstances() { return nInstances; }
+
   public void setnInstances(int nInstances) {
-    variablesFacade.storeVariable(NINSTANCES, String.valueOf(nInstances));
     this.nInstances = nInstances;
   }
 
-  public long getExecMemory() {
-    String execMemoryStr = variablesFacade.getVariableValue(EXECMEMORY);
-    if (execMemoryStr != null) {
-      execMemory = Long.valueOf(execMemoryStr);
-    }
-    return execMemory;
-  }
+  public long getExecMemory() { return execMemory; }
 
   public void setExecMemory(long execMemory) {
-    variablesFacade.storeVariable(EXECMEMORY, String.valueOf(execMemory));
     this.execMemory = execMemory;
   }
 
-  public long getCacheMemory() {
-    String cacheMemoryStr = variablesFacade.getVariableValue(CACHEMEMORY);
-    if (cacheMemoryStr != null) {
-      cacheMemory = Long.valueOf(cacheMemoryStr);
-    }
-    return cacheMemory;
-  }
+  public long getCacheMemory() { return cacheMemory; }
 
   public void setCacheMemory(long cacheMemory) {
-    variablesFacade.storeVariable(CACHEMEMORY, String.valueOf(cacheMemory));
     this.cacheMemory = cacheMemory;
   }
 
-  public int getnExecutors() {
-    String nExecutorsStr = variablesFacade.getVariableValue(NEXECUTORS);
-    if (nExecutorsStr != null) {
-      nExecutors = Integer.valueOf(nExecutorsStr);
-    }
-    return nExecutors;
-  }
+  public int getnExecutors() { return nExecutors; }
 
   public void setnExecutors(int nExecutors) {
-    variablesFacade.storeVariable(NEXECUTORS, String.valueOf(nExecutors));
     this.nExecutors = nExecutors;
   }
 
-  public int getnIOThreads() {
-    String nIOThreadsStr = variablesFacade.getVariableValue(NIOTHREADS);
-    if (nIOThreadsStr != null) {
-      nIOThreads = Integer.valueOf(nIOThreadsStr);
-    }
-    return nIOThreads;
-  }
+  public int getnIOThreads() { return nIOThreads; }
 
   public void setnIOThreads(int nIOThreads) {
-    variablesFacade.storeVariable(NIOTHREADS, String.valueOf(nIOThreads));
     this.nIOThreads = nIOThreads;
   }
 
-  public List<String> getLlapHosts() {
-    llapHosts = new ArrayList<>();
-    if (isClusterUp()) {
-      llapHosts.addAll(llapClusterFacade.getLlapHosts());
-      if (llapHosts.size() != 0) {
-        selectedHost = llapHosts.get(0);
-      }
-    }
-
-    return llapHosts;
-  }
-
-  public void setLlapHosts(List<String> llapHosts) { llapHosts = llapHosts; }
+  public List<String> getLlapHosts() { return llapHosts; }
 
   public String getSelectedHost() { return selectedHost; }
 
@@ -149,19 +111,11 @@ public class LlapBean implements Serializable {
   }
 
   public boolean isClusterUp() {
-    if (isClusterUp == null) {
-      isClusterUp = llapClusterFacade.isClusterUp();
-    }
-
-    return isClusterUp;
+    return clusterStatus == LlapClusterStatus.Status.UP;
   }
 
   public boolean isClusterStarting() {
-    if (isClusterStarting == null) {
-      isClusterStarting = llapClusterFacade.isClusterStarting();
-    }
-
-    return isClusterStarting;
+    return clusterStatus == LlapClusterStatus.Status.LAUNCHING;
   }
 
   public boolean areContainersRunning() {
@@ -169,8 +123,8 @@ public class LlapBean implements Serializable {
   }
 
   public void waitForCluster(boolean shouldBeStarting) {
-    if (!shouldBeStarting && (isClusterUp() ||
-        (!isClusterUp() && !isClusterStarting()))) {
+    if (!shouldBeStarting && (isClusterUp() || !isClusterUp() && !isClusterStarting())) {
+      // The cluster is up or down and nobody asked for a new cluster. Unlock the ui
       RequestContext.getCurrentInstance().addCallbackParam("alreadyUp", "true");
       return;
     }
@@ -178,6 +132,9 @@ public class LlapBean implements Serializable {
     // Wait for the cluster to come up.
     int counter = MAXWAITINGITERATIONS;
     try {
+      // We can't immediately start polling for isClusterStarting, as this execution path
+      // is faster than the startCluster function.
+      Thread.sleep(5000);
       while (llapClusterFacade.isClusterStarting() && counter > 0) {
         Thread.sleep(1500);
         counter--;

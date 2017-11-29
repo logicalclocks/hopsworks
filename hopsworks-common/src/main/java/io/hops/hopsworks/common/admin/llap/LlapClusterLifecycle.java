@@ -1,4 +1,4 @@
-package io.hops.hopsworks.admin.llap;
+package io.hops.hopsworks.common.admin.llap;
 
 import io.hops.hopsworks.common.dao.util.VariablesFacade;
 import io.hops.hopsworks.common.util.Settings;
@@ -49,6 +49,13 @@ public class LlapClusterLifecycle {
     if (llapClusterFacade.isClusterUp()){
       return ;
     }
+
+    // Store fake pid to make the waitForCluster function working
+    variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, "-2");
+
+    // Save new configuration in the database
+    llapClusterFacade.saveConfiguration(nInstances, execMemory, cacheMemory, nExecutors,
+        nIOThreads);
 
     // Script path
     String startScript = settings.getHopsworksDomainDir() + "/bin/start-llap.sh";
@@ -108,7 +115,7 @@ public class LlapClusterLifecycle {
     }
 
     // Process ended, clean the db
-    variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, String.valueOf(-1));
+    variablesFacade.storeVariable(Settings.VARIABLE_LLAP_START_PROC, "-1");
   }
 
     /**

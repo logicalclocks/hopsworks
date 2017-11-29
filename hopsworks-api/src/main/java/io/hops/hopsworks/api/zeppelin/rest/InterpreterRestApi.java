@@ -117,7 +117,7 @@ public class InterpreterRestApi {
   public InterpreterRestApi() {
   }
 
-  public void setParms(Project project, Users user, String userRole, ZeppelinConfig zeppelinConf) {
+  public void setParms(Project project, Users user, ZeppelinConfig zeppelinConf) {
     this.project = project;
     this.user = user;
     this.zeppelinConf = zeppelinConf;

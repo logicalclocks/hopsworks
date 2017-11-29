@@ -227,4 +227,10 @@ public class ResponseMessages {
       + "Jupyter will not work properly. "
       + "Try recreating the following dir manually:";
   public final static String HIVE_ADD_FAILURE = "Failed to create the Hive database";
+
+  // LLAP
+  public final static String LLAP_STATUS_INVALID = "Unrecognized new LLAP status";
+  public final static String LLAP_CLUSTER_ALREADY_UP = "LLAP cluster already up";
+  public final static String LLAP_CLUSTER_ALREADY_DOWN = "LLAP cluster already down";
+
 }

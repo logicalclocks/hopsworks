@@ -5,6 +5,7 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:pe="http://primefaces.org/ui/extensions"
       xmlns:p="http://primefaces.org/ui"
       >
   <f:view contentType="text/html">
@@ -24,6 +25,14 @@
         <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
       </ui:insert>
 
+      <pe:blockUI target="projectmodifyForm" widgetVar="blockUIWidget">
+        <h:panelGrid columns="2">
+          <h:graphicImage library="images" name="ajax-loader1.gif"
+			  style="vertical-align: middle;"/>
+          <h:outputText value="Please wait..." style="white-space: nowrap;"/>
+        </h:panelGrid>
+      </pe:blockUI>
+
       <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">
 
         <p:layoutUnit id="centerLayout" position="center">
@@ -35,7 +44,7 @@
 
             <div class="content">
               <h:form id="projectmodifyForm" >
-                <p:growl id="msgs" showDetail="true"/>
+                <p:growl id="msgs" showDetail="true" autoUpdate="true"/>
 
                 <p:dataTable id="projectsTable" var="project"
                              value="#{projectsmanagement.allProjects}"
@@ -50,7 +59,9 @@
                              rows="25"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="25,50,75,100,500">
+                             rowsPerPageTemplate="25,50,75,100,500"
+			     selectionMode="single"
+			     selection="#{projectsmanagement.toBeDeletedProject}">
 
                   <p:ajax event="rowEdit"
                           listener="#{projectsmanagement.onRowEdit}"
@@ -291,7 +302,26 @@
                             style="width:32px">
                     <p:rowEditor/>
                   </p:column>
+
                 </p:dataTable>
+
+		<p:contextMenu for="projectsTable">
+		  <p:menuitem value="Delete project"
+			      update="@form"
+			      icon="ui-icon-close"
+			      actionListener="#{projectsmanagement.deleteProject}"
+			      onstart="PF('blockUIWidget').block()"
+			      oncomplete="PF('blockUIWidget').unblock()">
+		    <p:confirm header="Delete project" message="Are
+			      you sure you want to delete the project and its files?" icon="ui-icon-alert"/>
+		  </p:menuitem>
+		</p:contextMenu>
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+		  <p:commandButton value="Yes" type="submit" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+		  <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+		</p:confirmDialog>
+		
               </h:form>
 
             </div>

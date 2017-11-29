@@ -349,18 +349,22 @@ public class JupyterConfig {
                   "driver_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
                               Integer.toString(js.getAppmasterCores()),
                   "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
-                  "num_executors", (isSparkDynamic || isTensorFlow) ? "0" :
+                  "num_executors", (isHorovod) ? "1":
                                    (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
-                                   (isHorovod) ? "1":
+                                   (isSparkDynamic) ? Integer.toString(js.getDynamicMinExecutors()):
                                    Integer.toString(js.getNumExecutors()),
                   "executor_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
                               Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow),
-                  "min_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicMinExecutors()),
-                  "initial_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicInitialExecutors()),
+                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow || isTensorFlowOnSpark),
+                  "min_executors", (isTensorFlow || isTensorFlowOnSpark) ? "0" :
+                                   Integer.toString(js.getDynamicMinExecutors()),
+                  "initial_executors", (isTensorFlow) ? "0" :
+                                   (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+                                   Integer.toString(js.getDynamicMinExecutors()),
                   "max_executors", (isTensorFlow) ? Integer.toString(js.getNumExecutors()):
-                              Integer.toString(js.getDynamicMaxExecutors()),
+                                   (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+                                   Integer.toString(js.getDynamicMaxExecutors()),
                   "archives", js.getArchives(),
                   "jars", js.getJars(),
                   "files", sparkFiles.toString(),
