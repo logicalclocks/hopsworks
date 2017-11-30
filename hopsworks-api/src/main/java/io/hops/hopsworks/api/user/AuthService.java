@@ -239,6 +239,9 @@ public class AuthService {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
+    if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), ResponseMessages.NO_ROLE_FOUND);
+    }
     if (statusValidator.checkStatus(user.getStatus())) {
       try {
         req.login(email, password);

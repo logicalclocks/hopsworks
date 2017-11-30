@@ -39,8 +39,7 @@ angular.module('hopsWorksApp')
                         $location.path('/');
                       }, function (error) {
                         self.working = false;
-                        if (error.data !== undefined && 
-                            error.data.statusCode === 400 &&
+                        if (error.data !== undefined && error.data.statusCode === 417 &&
                             error.data.errorMsg === "Second factor required.") {
                           self.errorMessage = "";
                           self.emailHash = md5.createHash(self.user.email || '');

@@ -26,6 +26,7 @@ public class UserDTO {
   private String postCode;
   private String country;
   private int maxNumProjects;
+  private int numCreatedProjects;
   private boolean testUser;
 
   public UserDTO() {
@@ -48,6 +49,7 @@ public class UserDTO {
       this.country = user.getAddress().getCountry();
     }
     this.maxNumProjects = user.getMaxNumProjects();
+    this.numCreatedProjects = user.getNumCreatedProjects();
     this.twoFactor = user.getTwoFactor();
     this.toursState = user.getToursState();
   }
@@ -214,6 +216,14 @@ public class UserDTO {
 
   public void setMaxNumProjects(int maxNumProjects) {
     this.maxNumProjects = maxNumProjects;
+  }
+
+  public int getNumCreatedProjects() {
+    return numCreatedProjects;
+  }
+
+  public void setNumCreatedProjects(int numCreatedProjects) {
+    this.numCreatedProjects = numCreatedProjects;
   }
 
   public boolean isTestUser() {

@@ -98,7 +98,7 @@ describe 'dataset' do
         add_member(member[:email], "Data scientist")
         create_session(member[:email],"Pass123")
         delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
-        expect_json(errorMsg: "Your role in this project is not authorized to perform this action.")
+        expect_json(errorMsg: ->(value){ expect(value).to include("Permission denied:")})       
         expect_status(403)
         reset_session
       end

@@ -188,30 +188,25 @@ public class UserService {
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getQRCode(@FormParam("password") String password,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+  public Response getQRCode(@FormParam("password") String password, @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (password == null || password.isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Password requierd.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Password requierd.");
     }
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
-    qrCode = userController.getQRCode(user, password);
+    qrCode = userController.getQRCode(user, password, req);
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Two factor disabled.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Two factor disabled.");
     }
     json.setStatus("OK");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST

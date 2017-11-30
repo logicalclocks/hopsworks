@@ -23,7 +23,6 @@ import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import org.apache.commons.codec.digest.DigestUtils;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
@@ -390,13 +389,12 @@ public class UsersController {
    * @return qrCode if tow factor is enabled null if disabled.
    * @throws AppException
    */
-  public byte[] changeTwoFactor(Users user, String password,
-      HttpServletRequest req) throws AppException {
+  public byte[] changeTwoFactor(Users user, String password, HttpServletRequest req) throws AppException {
     if (user == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
           ResponseMessages.USER_WAS_NOT_FOUND);
     }
-    if (!user.getPassword().equals(DigestUtils.sha256Hex(password))) {
+    if (!authController.validatePassword(user, password, req)) {
       am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
           AccountsAuditActions.FAILED.name(), "Incorrect password", user,
           req);
@@ -443,19 +441,18 @@ public class UsersController {
    *
    * @param user
    * @param password
+   * @param req
    * @return null if two factor is disabled.
    * @throws AppException
    */
-  public byte[] getQRCode(Users user, String password) throws AppException {
+  public byte[] getQRCode(Users user, String password, HttpServletRequest req) throws AppException {
     byte[] qr_code = null;
-    if (!user.getPassword().equals(DigestUtils.sha256Hex(password))) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PASSWORD_INCORRECT);
+    if (!authController.validatePassword(user, password, req)) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.PASSWORD_INCORRECT);
     }
     if (user.getTwoFactor()) {
       try {
-        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(),
-            AuthenticationConstants.ISSUER, user.getSecret());
+        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), AuthenticationConstants.ISSUER, user.getSecret());
       } catch (IOException | WriterException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
@@ -473,7 +470,6 @@ public class UsersController {
    * Register an address for new mobile users.
    *
    * @param user
-   * @return
    */
   public void registerAddress(Users user) {
     Address add = new Address();

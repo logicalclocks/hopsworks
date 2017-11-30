@@ -72,6 +72,7 @@ describe 'projects' do
       end
 
       it 'should create a project X containing a dataset Y after deleteing a project X containing a dataset Y (issue #425)' do
+        check_project_limit(2)
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
         dsname = "dataset_#{short_random_id}"
@@ -93,12 +94,12 @@ describe 'projects' do
         expect_status(201)
       end
 
-     # it 'Should not let a user create more than the maximum number of allowed projects.' do
-     #   create_max_num_projects
-     #   post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-     #   expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
-     #   expect_status(400)
-     # end
+      it 'Should not let a user create more than the maximum number of allowed projects.' do
+        create_max_num_projects
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
+        expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
+        expect_status(400)
+      end
     end
   end
   describe "#access" do

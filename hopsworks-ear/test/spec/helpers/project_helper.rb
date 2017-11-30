@@ -55,22 +55,26 @@ module ProjectHelper
     Project.find_by(projectName: "#{name}")
   end
   
-  def check_project_limit
+  def check_project_limit(limit=0)
     get "#{ENV['HOPSWORKS_API']}/user/profile"
     max_num_projects = json_body[:maxNumProjects]
-    get "#{ENV['HOPSWORKS_API']}/project"
-    if json_body.length >= max_num_projects
-      delete_project(json_body[0][:project])
+    num_created_projects = json_body[:numCreatedProjects]
+    if (max_num_projects - num_created_projects) <= limit
+      reset_session
+      with_valid_project
     end
+    
   end
   
   def create_max_num_projects
     get "#{ENV['HOPSWORKS_API']}/user/profile"
     max_num_projects = json_body[:maxNumProjects]
-    get "#{ENV['HOPSWORKS_API']}/project"
-    while json_body.length < max_num_projects
+    num_created_projects = json_body[:numCreatedProjects]
+    while num_created_projects < max_num_projects
       post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-      get "#{ENV['HOPSWORKS_API']}/project"
+      get "#{ENV['HOPSWORKS_API']}/user/profile"
+      max_num_projects = json_body[:maxNumProjects]
+      num_created_projects = json_body[:numCreatedProjects]
     end
   end
   

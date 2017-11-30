@@ -25,6 +25,10 @@ public class UserStatusValidator {
     if (status.equals(PeopleAccountStatus.LOST_MOBILE) || status.equals(PeopleAccountStatus.LOST_YUBIKEY)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), AccountStatusErrorMessages.LOST_DEVICE);
     }
+    if (status.equals(PeopleAccountStatus.VERIFIED_ACCOUNT)) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), AccountStatusErrorMessages.
+          UNAPPROVED_ACCOUNT);
+    }
     return true;
   }
 
