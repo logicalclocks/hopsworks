@@ -356,13 +356,16 @@ public class JupyterConfig {
                   "executor_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
                               Integer.toString(js.getNumExecutorCores()),
                   "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow || isTensorFlowOnSpark),
-                  "min_executors", (isTensorFlow || isTensorFlowOnSpark) ? "0" :
+                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow || isTensorFlowOnSpark ||
+                              isHorovod),
+                  "min_executors", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "0" :
                                    Integer.toString(js.getDynamicMinExecutors()),
                   "initial_executors", (isTensorFlow) ? "0" :
+                                   (isHorovod) ? "1" :
                                    (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
                                    Integer.toString(js.getDynamicMinExecutors()),
                   "max_executors", (isTensorFlow) ? Integer.toString(js.getNumExecutors()):
+                                   (isHorovod) ? "1" :
                                    (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
                                    Integer.toString(js.getDynamicMaxExecutors()),
                   "archives", js.getArchives(),
@@ -389,7 +392,9 @@ public class JupyterConfig {
                   "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
                   "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
                   "metrics_path", settings.getSparkMetricsPath(),
-                  "exec_timeout", (isTensorFlow) ? "5s" : "60s",
+                  "exec_timeout", (isTensorFlowOnSpark) ?
+                                  Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s":
+                                  "60s",
                   "extra_java_options", extraJavaOptions
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
