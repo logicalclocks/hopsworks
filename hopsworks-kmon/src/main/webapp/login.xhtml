@@ -16,9 +16,11 @@
         <p:panel id="loginPnl" header="Login" style="width: 350px; margin: 150px auto;">
           <h:panelGrid id="loginPanel" columns="2" cellpadding="5">
             <h:outputText value="Email" />
-            <p:inputText id="username" value="#{loginBean.username}"></p:inputText>
+            <p:inputText id="username" value="#{loginBean.credentials.username}"></p:inputText>
             <h:outputText value="Password" />
-            <p:password id="password" value="#{loginBean.password}" feedback="false"></p:password>
+            <p:password id="password" value="#{loginBean.credentials.password}" feedback="false"></p:password>
+            <h:outputText value="Enter code" rendered="#{loginBean.twoFactor}"/>
+            <p:password id="otp" value="#{loginBean.credentials.otp}" feedback="false" rendered="#{loginBean.twoFactor}"></p:password>
             <h:commandLink action="#{loginBean.gotoSupport()}" value="Need support?"></h:commandLink>
             <h:commandLink action="#{loginBean.gotoLoginHelp()}" value="Login help?"></h:commandLink>
           </h:panelGrid>

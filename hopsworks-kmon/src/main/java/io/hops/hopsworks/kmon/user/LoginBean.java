@@ -5,47 +5,65 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.AuthController;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 @ManagedBean
-@Stateless
-public class LoginBean {
+@SessionScoped
+public class LoginBean implements Serializable {
 
   private final static Logger LOGGER = Logger.getLogger(LoginBean.class.getName());
   @EJB
   private UserFacade userFacade;
   @EJB
   private AuthController authController;
+  @Inject
+  private Credentials credentials;
 
-  private String username;
-  private String password;
   private Users user;
+  private boolean twoFactor;
 
-  public String getUsername() {
-    return username;
+  @PostConstruct
+  public void init() {
+    twoFactor = false;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
+  public boolean isTwoFactor() {
+    return twoFactor;
   }
 
-  public String getPassword() {
-    return password;
+  public void setTwoFactor(boolean twoFactor) {
+    this.twoFactor = twoFactor;
   }
 
-  public void setPassword(String password) {
-    this.password = password;
+  public Credentials getCredentials() {
+    return credentials;
   }
-  
+
+  public void setCredentials(Credentials credentials) {
+    this.credentials = credentials;
+  }
+
+  public Users getUser() {
+    return user;
+  }
+
+  public void setUser(Users user) {
+    this.user = user;
+  }
+
   public Users getUserFromSession() {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
@@ -54,7 +72,7 @@ public class LoginBean {
     }
     return user;
   }
-  
+
   public String loginUsername() {
     this.user = getUserFromSession();
     if (this.user != null) {
@@ -66,21 +84,29 @@ public class LoginBean {
   public String login() {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-    this.user = userFacade.findByEmail(this.username);
+    this.user = userFacade.findByEmail(this.credentials.getUsername());
     if (user == null) {
-      context.addMessage(null, new FacesMessage("Login failed."));
+      context.addMessage(null, new FacesMessage("Login failed. User " + this.credentials.getUsername()));
       return "";
     }
     String passwordWithSaltPlusOtp;
     try {
-      passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, this.password, null, request);
+      passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, this.credentials.getPassword(),
+          this.credentials.getOtp(), request);
     } catch (AppException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       context.addMessage(null, new FacesMessage("Login failed."));
       return "";
+    } catch (EJBException ie) {
+      String msg = ie.getCausedByException().getMessage();
+      if (msg != null && !msg.isEmpty() && msg.contains("Second factor required.")) {
+        setTwoFactor(true);
+      }
+      context.addMessage(null, new FacesMessage(msg));
+      return "login";
     }
     try {
-      request.login(this.username, passwordWithSaltPlusOtp);
+      request.login(this.credentials.getUsername(), passwordWithSaltPlusOtp);
       authController.registerLogin(user, request);
     } catch (ServletException e) {
       authController.registerAuthenticationFailure(user, request);
