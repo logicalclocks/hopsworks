@@ -215,8 +215,11 @@
                 <fieldset>
                   <div ng-show="pythonDepsCtrl.enabled" class="control-group col-md-offset-1">
                     <div style="margin-top: 5px;">
-                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
-                                         href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
+                      <div>Conda Channel: <a uib-tooltip="You can search a different conda channel by entering a new channel name here." tooltip-placement="top"
+                                         href="#" data-inputclass="xwdith" editable-text="pythonDepsCtrl.condaChannel">{{ pythonDepsCtrl.condaChannel || 'default' }}</a></div>  
+                      
+<!--                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
+                                         href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  -->
                       <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
                                                        type="text" required y
                                                        ng-pattern="/^\s*\w*\s*$/"

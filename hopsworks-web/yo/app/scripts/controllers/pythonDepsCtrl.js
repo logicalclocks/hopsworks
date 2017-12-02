@@ -45,10 +45,11 @@ angular.module('hopsWorksApp')
 
 
 //            https://repo.continuum.io/pkgs/free/linux-64/
+            self.condaChannel = "default";
             self.condaUrl = "default";
             self.selectedLibs = {};
 
-            self.selectedLib = {"channelUrl": self.condaUrl,
+            self.selectedLib = {"channelUrl": self.condaChannel,
               "lib": "", "version": ""};
 
             self.progress = function () {
@@ -198,6 +199,7 @@ angular.module('hopsWorksApp')
               if (self.selectedLib.lib.length < 3) {
                 return;
               }
+              self.selectedLib.channelUrl = self.condaChannel;
               self.searching = true;
               self.resultsMsg = "Conda searching can take a good few seconds......bear with us.";
               self.resultsMessageShowing = true;
@@ -238,7 +240,7 @@ angular.module('hopsWorksApp')
 
               self.installing[host][lib] = true;
 
-              var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
+              var data = {"channelUrl": self.condaChannel, "lib": lib, "version": version.version};
 
               PythonDepsService.installOneHost(self.projectId, host, data).then(
                       function (success) {
@@ -258,7 +260,7 @@ angular.module('hopsWorksApp')
               }
               self.installing[lib] = true;
 
-              var data = {"channelUrl": self.condaUrl, "lib": lib, "version": version.version};
+              var data = {"channelUrl": self.condaChannel, "lib": lib, "version": version.version};
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
@@ -273,10 +275,10 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.uninstall = function (condaUrl, lib, version) {
+            self.uninstall = function (condaChannel, lib, version) {
               self.uninstalling[lib] = true;
 
-              var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
+              var data = {"channelUrl": condaChannel, "lib": lib, "version": version};
               PythonDepsService.uninstall(self.projectId, data).then(
                       function (success) {
                         self.getInstalled();
@@ -287,10 +289,10 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.upgrade = function (condaUrl, lib, version) {
+            self.upgrade = function (condaChannel, lib, version) {
               self.upgrading[lib] = true;
 
-              var data = {"channelUrl": condaUrl, "lib": lib, "version": version};
+              var data = {"channelUrl": condaChannel, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
                         growl.success("Sending command to update: " + lib, {title: 'Updating', ttl: 3000});
