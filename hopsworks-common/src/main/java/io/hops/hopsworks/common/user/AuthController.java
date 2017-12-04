@@ -395,10 +395,10 @@ public class AuthController {
               + Settings.PROJECT_GENERIC_USER_SUFFIX);
           pguCerts.add(userCertsFacade.findProjectGenericUserCerts(project.getName()
               + Settings.PROJECT_GENERIC_USER_SUFFIX));
-          String pguCertPassword = HopsUtils.decrypt(p.getPassword(), pguCert.getCertificatePassword(), 
+          String pguCertPassword = HopsUtils.decrypt(oldPass, pguCert.getCertificatePassword(), 
               masterEncryptionPassword);
           //Encrypt it with new password and store it in the db
-          String newPguSecret = HopsUtils.encrypt(oldPass, pguCertPassword, masterEncryptionPassword);
+          String newPguSecret = HopsUtils.encrypt(p.getPassword(), pguCertPassword, masterEncryptionPassword);
           pguCert.setCertificatePassword(newPguSecret);
           userCertsFacade.updatePGUCert(pguCert);
         }
