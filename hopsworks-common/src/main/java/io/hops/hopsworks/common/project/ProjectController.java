@@ -1586,30 +1586,6 @@ public class ProjectController {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
 
-      //kill zeppelin for this user
-      Response resp = ClientBuilder.newClient()
-          .target(settings.getRestEndpoint()
-              + "/hopsworks-api/api/zeppelin/" + project.getId()
-              + "/interpreter/check")
-          .request()
-          .cookie("SESSION", sessionId)
-          .method("GET");
-      LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
-      if (resp.getStatus() == 200) {
-        resp = ClientBuilder.newClient()
-            .target(settings.getRestEndpoint()
-                + "/hopsworks-api/api/zeppelin/" + project.getId()
-                + "/interpreter/restart/" + hdfsUser)
-            .request()
-            .cookie("SESSION", sessionId)
-            .method("GET");
-        LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
-        if (resp.getStatus() != 200) {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not close zeppelin interpreters, please wait 60 seconds to retry");
-        }
-      }
       //kill all jobs run by this user.
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);

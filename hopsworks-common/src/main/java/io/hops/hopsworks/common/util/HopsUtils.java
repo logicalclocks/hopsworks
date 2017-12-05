@@ -323,11 +323,6 @@ public class HopsUtils {
 
     materializeCertsRemote(projectGenericUser, remoteFSDir, kStorePath, tStorePath,
         passwdPath, dfso, settings);
-
-    // If RPC SSL is not enabled, we don't need them anymore in the local fs
-    if (!settings.getHopsRpcTls()) {
-      certificateMaterializer.removeCertificate(projectName);
-    }
   }
   
   private static void materializeCertsRemote(String prefix, String

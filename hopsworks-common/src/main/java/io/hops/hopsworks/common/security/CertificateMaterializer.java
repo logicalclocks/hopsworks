@@ -51,10 +51,10 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -99,8 +99,8 @@ public class CertificateMaterializer {
   
   private final Map<MaterialKey, InternalCryptoMaterial> materialMap =
       new ConcurrentHashMap<>();
-  private final Map<Integer, Set<String>> openInterpreterGroupsPerProject =
-      new ConcurrentHashMap<>();
+  
+  private final Set<Integer> projectsWithOpenInterpreters = new ConcurrentSkipListSet<>();
   private final Map<MaterialKey, FileRemover> scheduledFileRemovers =
       new HashMap<>();
   private String transientDir;
@@ -402,57 +402,21 @@ public class CertificateMaterializer {
   }
   
   /**
-   * This method is used by the HDFSNotebookRepo via a JNDI lookup
-   * It keeps track of the opened interpreter groups to safely remove crypto
-   * material when not needed any longer.
-   * Spark group: spark, sparksql, pyspark, etc
-   * Livy group: livy.spark, livy.sparksql, etc
+   * It is called every time a paragraph is executed in Zeppelin. If the certificates for a Project has already been
+   * materialized, this method will return false and they will not be materialized again.
    * @param projectId
-   * @param interpreterGrp
-   * @return True when there is no opened interpreter group and the material
-   * should be materialized. False when the project has already opened
-   * interpreter(s) and it should not materialize the certificates
+   * @return True if it is the first time a paragraph is executed for that project. Otherwise false
    */
-  public boolean openedInterpreter(Integer projectId, String interpreterGrp) {
-    Set<String> openedGrps = openInterpreterGroupsPerProject.get(projectId);
-    
-    if (openedGrps == null) {
-      // Most probably we will run either Spark or Livy interpreter group
-      openedGrps = new HashSet<>(2);
-      openedGrps.add(interpreterGrp);
-      openInterpreterGroupsPerProject.put(projectId, openedGrps);
-      return true;
-    }
-    
-    openedGrps.add(interpreterGrp);
-    return false;
+  public boolean openedInterpreter(Integer projectId) {
+    return projectsWithOpenInterpreters.add(projectId);
   }
   
   /**
-   * This method is used by the HDFSNotebookRepo via a JNDI lookup
-   * It keeps track of the opened interpreter groups to safely remove crypto
-   * material when not needed any longer.
-   * Spark group: spark, sparksql, pyspark, etc
-   * Livy group: livy.spark, livy.sparksql, etc
-   * @param projectId
-   * @param interpreterGrp
-   * @return True when all the interpreter groups for this project are closed
-   * and it is safe to remove the material. False when there still open
-   * interpreters for either this interpreter group or other.
+   * It is called only when a project has not running interpreters, thus it is safe to remove the certificates.
+   * @param projectId ID of the project
    */
-  public boolean closedInterpreter(Integer projectId, String username,
-      String interpreterGrp) {
-    Set<String> openedGrps = openInterpreterGroupsPerProject.get(projectId);
-    if (openedGrps == null) {
-      return true;
-    }
-    openedGrps.remove(interpreterGrp);
-    if (openedGrps.isEmpty()) {
-      openInterpreterGroupsPerProject.remove(projectId);
-      return true;
-    }
-    
-    return false;
+  public void closedInterpreter(Integer projectId) {
+    projectsWithOpenInterpreters.remove(projectId);
   }
   
   private void deleteMaterialFromLocalFs(String username) {

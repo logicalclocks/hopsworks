@@ -1239,8 +1239,6 @@ public class Settings implements Serializable {
   }
   
   // Zeppelin
-  public static final String HOPSHIVE_INT_GROUP = "2CRSX9NDY";
-  public static final String HOPSHIVE_INT_NAME = "hopshive";
   private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
   private String ZEPPELIN_INTERPRETERS
       = "org.apache.zeppelin.livy.LivySparkInterpreter,org.apache.zeppelin.livy.LivyPySparkInterpreter,"
