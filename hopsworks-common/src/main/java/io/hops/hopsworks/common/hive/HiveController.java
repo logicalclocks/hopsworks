@@ -150,11 +150,13 @@ public class HiveController {
     }
   }
 
-  public void dropDatabase(Project project, DistributedFileSystemOps dfso)
+  public void dropDatabase(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
       throws IOException {
     // To avoid case sensitive bugs, check if the project has a Hive database
     Dataset ds = datasetFacade.findByNameAndProjectId(project, project.getName().toLowerCase() + ".db");
-    if (ds == null || ds.getType() != DatasetType.HIVEDB)  {
+    
+    if ((ds == null || ds.getType() != DatasetType.HIVEDB)
+        && !forceCleanup)  {
       return;
     }
 

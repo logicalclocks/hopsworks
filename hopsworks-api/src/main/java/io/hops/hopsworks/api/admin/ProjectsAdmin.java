@@ -17,6 +17,7 @@
  */
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.admin.dto.ProjectDeletionLog;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -43,6 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -126,5 +128,18 @@ public class ProjectsAdmin {
     
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED)
         .entity(response).build();
+  }
+  
+  @DELETE
+  @Path("/projects/{name}/force")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response forceDeleteProject(@Context SecurityContext sc, @Context HttpServletRequest request,
+      @PathParam("name") String projectName) throws AppException {
+    String userEmail = sc.getUserPrincipal().getName();
+    String[] logs = projectController.forceCleanup(projectName, userEmail, request.getSession().getId());
+    ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);
+  
+    GenericEntity<ProjectDeletionLog> response = new GenericEntity<ProjectDeletionLog>(deletionLog) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
 }

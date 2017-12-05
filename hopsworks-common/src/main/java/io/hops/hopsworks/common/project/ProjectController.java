@@ -5,6 +5,9 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -67,6 +70,7 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
@@ -115,6 +119,7 @@ import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.json.JSONObject;
 
 @Stateless
@@ -180,6 +185,8 @@ public class ProjectController {
   private CertificatesController certificatesController;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private MessageController messageController;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -937,7 +944,428 @@ public class ProjectController {
     }
 
   }
-
+  
+  public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
+    CleanupLogger cleanupLogger = new CleanupLogger(projectName);
+    DistributedFileSystemOps dfso = null;
+    YarnClientWrapper yarnClientWrapper = null;
+    try {
+      dfso = dfs.getDfsOps();
+      yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
+      Project project = projectFacade.findByName(projectName);
+      if (project != null) {
+        cleanupLogger.logSuccess("Project not found in the database");
+  
+        // Remove from Project team
+        try {
+          updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
+          cleanupLogger.logSuccess("Updated team role");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Get Yarn applications
+        List<ApplicationReport> projectApps = null;
+        try {
+          Collection<ProjectTeam> team = project.getProjectTeamCollection();
+          Set<String> hdfsUsers = new HashSet<>();
+          for (ProjectTeam pt : team) {
+            String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
+                getUser());
+            hdfsUsers.add(hdfsUsername);
+          }
+          hdfsUsers.add(project.getProjectGenericUser());
+    
+          projectApps = getYarnApplications(hdfsUsers, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Gotten Yarn applications");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Kill Zeppelin jobs
+        try {
+          killZeppelin(project.getId(), sessionId);
+          cleanupLogger.logSuccess("Killed Zeppelin");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Stop Jupyter
+        try {
+          jupyterProcessFacade.stopProject(project);
+          cleanupLogger.logSuccess("Stopped Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Kill Yarn Jobs
+        try {
+          killYarnJobs(project);
+          cleanupLogger.logSuccess("Killed Yarn jobs");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Wait for Yarn logs
+        try {
+          waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Gotten logs for jobs");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Log removal
+        try {
+          logProject(project, OperationType.Delete);
+          cleanupLogger.logSuccess("Logged project removal");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change ownership of root dir
+        try {
+          Path path = new Path(File.separator + Settings.DIR_ROOT + File.separator
+              + project.getName());
+          changeOwnershipToSuperuser(path, dfso);
+          cleanupLogger.logSuccess("Changed ownership of root Project dir");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change ownership of tmp file
+        Path dummy = new Path("/tmp/" + project.getName());
+        try {
+          changeOwnershipToSuperuser(dummy, dfso);
+          cleanupLogger.logSuccess("Changed ownership of dummy inode");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove Kafka
+        try {
+          removeKafkaTopics(project);
+          cleanupLogger.logSuccess("Removed Kafka topics");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove certificates
+        try {
+          certificatesController.deleteProjectCertificates(project);
+          cleanupLogger.logSuccess("Removed certificates");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        List<HdfsUsers> usersToClean = getUsersToClean(project);
+        List<HdfsGroups> groupsToClean = getGroupsToClean(project);
+        
+        // Remove project related files
+        try {
+          removeProjectRelatedFiles(usersToClean, dfso);
+          cleanupLogger.logSuccess("Removed project related files");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove quotas
+        try {
+          removeQuotas(project);
+          cleanupLogger.logSuccess("Removed quotas");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change owner for files in shared datasets
+        try {
+          fixSharedDatasets(project, dfso);
+          cleanupLogger.logSuccess("Fixed shared datasets");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // 16) Delete Hive database - will automatically cleanup all the Hive's metadata
+        try {
+          hiveController.dropDatabase(project, dfso, true);
+          cleanupLogger.logSuccess("Removed Hive db");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Delete elasticsearch template for this project
+        try {
+          removeElasticsearch(project.getName());
+          cleanupLogger.logSuccess("Removed ElasticSearch");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // delete project group and users
+        try {
+          removeGroupAndUsers(groupsToClean, usersToClean);
+          cleanupLogger.logSuccess("Removed HDFS Groups and Users");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // remove anaconda repos
+        try {
+          removeJupyter(project);
+          cleanupLogger.logSuccess("Removed Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // remove dumy Inode
+        try {
+          dfso.rm(dummy, true);
+          cleanupLogger.logSuccess("Removed dummy Inode");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // remove folder
+        try {
+          removeProjectFolder(project.getName(), dfso);
+          cleanupLogger.logSuccess("Removed root Project folder");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+      } else {
+        // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
+        // with the same name at the same time
+        cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
+        Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        Users user = userBean.getUserByEmail(userEmail);
+        Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
+        Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
+        try {
+          if (!dfso.exists(tmpInodePath.toString())) {
+            dfso.touchz(tmpInodePath);
+          }
+          Inode tmpInode = inodes.getInodeAtPath(tmpInodePath.toString());
+          if (tmpInode != null) {
+            toDeleteProject.setInode(tmpInode);
+            projectFacade.persistProject(toDeleteProject);
+            projectFacade.flushEm();
+            cleanupLogger.logSuccess("Created dummy Inode");
+          }
+        } catch (IOException ex) {
+          cleanupLogger.logError("Could not create dummy Inode, moving on unsafe");
+        }
+  
+  
+        // Kill jobs
+        List<HdfsUsers> projectHdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
+        try {
+          Set<String> hdfsUsersStr = new HashSet();
+          for (HdfsUsers hdfsUser : projectHdfsUsers) {
+            hdfsUsersStr.add(hdfsUser.getName());
+          }
+          hdfsUsersStr.add(projectName + "__" + Settings.PROJECT_GENERIC_USER_SUFFIX);
+    
+          List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
+          waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Killed all Yarn Applications");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Cleanup Jupyter project
+        try {
+          jupyterProcessFacade.projectCleanup(toDeleteProject);
+          cleanupLogger.logSuccess("Cleaned Jupyter environment");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove project related files
+        try {
+          removeProjectRelatedFiles(projectHdfsUsers, dfso);
+          cleanupLogger.logSuccess("Removed project related files from HDFS");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Hive database
+        try {
+          hiveController.dropDatabase(toDeleteProject, dfso, true);
+          cleanupLogger.logSuccess("Dropped Hive database");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove ElasticSearch index
+        try {
+          removeElasticsearch(projectName);
+          cleanupLogger.logSuccess("Removed ElasticSearch");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove HDFS Groups and Users
+        try {
+          List<HdfsGroups> projectHdfsGroups = hdfsUsersBean.getAllProjectHdfsGroups(projectName);
+          removeGroupAndUsers(projectHdfsGroups, projectHdfsUsers);
+          cleanupLogger.logSuccess("Removed HDFS Groups and Users");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Yarn project quota
+        try {
+          removeQuotas(toDeleteProject);
+          cleanupLogger.logSuccess("Removed project quota");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Certificates
+        try {
+          LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(), projectName);
+          userCertsFacade.removeAllCertsOfAProject(projectName);
+          cleanupLogger.logSuccess("Deleted certificates");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove root project directory
+        try {
+          removeProjectFolder(projectName, dfso);
+          cleanupLogger.logSuccess("Removed root project directory");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove /tmp/project
+        try {
+          dfso.rm(new Path(File.separator + "tmp" + File.separator + projectName), true);
+          cleanupLogger.logSuccess("Removed /tmp");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+      }
+    } finally {
+      dfs.closeDfsClient(dfso);
+      ycs.closeYarnClient(yarnClientWrapper);
+      LOGGER.log(Level.INFO, cleanupLogger.getSuccessLog().toString());
+      LOGGER.log(Level.SEVERE, cleanupLogger.getErrorLog().toString());
+      sendInbox(cleanupLogger.getSuccessLog().append("\n")
+          .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
+    }
+    String[] logs = new String[2];
+    logs[0] = cleanupLogger.getSuccessLog().toString();
+    logs[1] = cleanupLogger.getErrorLog().toString();
+    return logs;
+  }
+  
+  private void sendInbox(String message, String userRequested) {
+    Users to = userBean.findByEmail(userRequested);
+    Users from = userBean.findByEmail(Settings.SITE_EMAIL);
+    messageController.send(to, from, "Force project cleanup", "Status", message, "");
+  }
+  
+  private void removeProjectRelatedFiles(List<HdfsUsers> hdfsUsers, DistributedFileSystemOps dfso)
+    throws IOException {
+    String logPath = getYarnAgregationLogPath();
+    for (HdfsUsers user : hdfsUsers) {
+      // Remove logs
+      dfso.rm(new Path(logPath + File.separator + user.getName()), true);
+      
+      // Change owner of history files
+      List<Inode> historyInodes = inodeFacade.findHistoryFileByHdfsUser(user);
+      for (Inode inode : historyInodes) {
+        dfso.setOwner(new Path(inodeFacade.getPath(inode)),
+            UserGroupInformation.getLoginUser().getUserName(), "hadoop");
+      }
+      
+      Path certsHdfsDir = new Path(settings.getHdfsTmpCertDir() + File.separator + user.getName());
+      if (dfso.exists(certsHdfsDir.toString())) {
+        dfso.rm(certsHdfsDir, true);
+      }
+    }
+  }
+  
+  private List<ApplicationReport> getYarnApplications(Set<String> hdfsUsers, YarnClient yarnClient)
+    throws YarnException, IOException {
+    List<ApplicationReport> projectApplications = yarnClient.getApplications(null, hdfsUsers, null,
+        EnumSet.of(
+            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+    return projectApplications;
+  }
+  
+  private void killYarnJobs(Project project) {
+    List<Jobs> running = jobFacade.getRunningJobs(project);
+    if (running != null && !running.isEmpty()) {
+      Runtime rt = Runtime.getRuntime();
+      for (Jobs job : running) {
+        //Get the appId of the running app
+        List<Execution> jobExecs = execFacade.findForJob(job);
+        //Sort descending based on jobId because therie might be two
+        // jobs with the same name and we want the latest
+        Collections.sort(jobExecs, new Comparator<Execution>() {
+          @Override
+          public int compare(Execution lhs, Execution rhs) {
+            return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
+                getId()) ? 1 : 0;
+          }
+        });
+        try {
+          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
+              + jobExecs.get(0).getAppId());
+        } catch (IOException ex) {
+          Logger.getLogger(ProjectController.class.getName()).
+              log(Level.SEVERE, null, ex);
+        }
+      }
+    }
+  }
+  
+  private void waitForJobLogs(List<ApplicationReport> projectsApps, YarnClient client)
+    throws YarnException, IOException, InterruptedException {
+    for (ApplicationReport appReport : projectsApps) {
+      FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
+      while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
+        client.killApplication(appReport.getApplicationId());
+        appReport = client.getApplicationReport(appReport.getApplicationId());
+        finalState = appReport.getFinalApplicationStatus();
+      }
+      LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
+      while (!YarnLogUtil.isFinal(logAggregationState)) {
+        Thread.sleep(500);
+        appReport = client.getApplicationReport(appReport.getApplicationId());
+        logAggregationState = appReport.getLogAggregationStatus();
+      }
+    }
+  }
+  
+  private void killZeppelin(Integer projectId, String sessionId) throws AppException {
+    Response resp = ClientBuilder.newClient()
+        .target(settings.getRestEndpoint()
+            + "/hopsworks-api/api/zeppelin/" + projectId
+            + "/interpreter/check")
+        .request()
+        .cookie("SESSION", sessionId)
+        .method("GET");
+    LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
+    if (resp.getStatus() == 200) {
+      resp = ClientBuilder.newClient()
+          .target(settings.getRestEndpoint()
+              + "/hopsworks-api/api/zeppelin/" + projectId
+              + "/interpreter/restart")
+          .request()
+          .cookie("SESSION", sessionId)
+          .method("GET");
+      LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
+      if (resp.getStatus() != 200) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(),
+            "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+      }
+    }
+  }
+  
   public void cleanup(Project project, String sessionId) throws AppException {
     cleanup(project, sessionId, null);
   }
@@ -974,39 +1402,16 @@ public class ProjectController {
               getUser());
           hdfsUsers.add(hdfsUsername);
         }
-        hdfsUsers.add(project.getName());
+        hdfsUsers.add(project.getProjectGenericUser());
 
-        List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
-            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
-            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+        List<ApplicationReport> projectsApps = getYarnApplications(hdfsUsers, client);
 
         //Restart zeppelin so interpreters shut down
-        Response resp = ClientBuilder.newClient()
-            .target(settings.getRestEndpoint()
-                + "/hopsworks-api/api/zeppelin/" + project.getId()
-                + "/interpreter/check")
-            .request()
-            .cookie("SESSION", sessionId)
-            .method("GET");
-        LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
-        if (resp.getStatus() == 200) {
-          resp = ClientBuilder.newClient()
-              .target(settings.getRestEndpoint()
-                  + "/hopsworks-api/api/zeppelin/" + project.getId()
-                  + "/interpreter/restart")
-              .request()
-              .cookie("SESSION", sessionId)
-              .method("GET");
-          LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
-          if (resp.getStatus() != 200) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Could not close zeppelin interpreters, please wait 60 seconds to retry");
-          }
-        }
-
+        killZeppelin(project.getId(), sessionId);
+        
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
+        
         try {
           removeAnacondaEnv(project);
         } catch (AppException ex) {
@@ -1014,45 +1419,9 @@ public class ProjectController {
         }
 
         //kill jobs
-        List<Jobs> running = jobFacade.getRunningJobs(project);
-        if (running != null && !running.isEmpty()) {
-          Runtime rt = Runtime.getRuntime();
-          for (Jobs job : running) {
-            //Get the appId of the running app
-            List<Execution> jobExecs = execFacade.findForJob(job);
-            //Sort descending based on jobId because therie might be two 
-            // jobs with the same name and we want the latest
-            Collections.sort(jobExecs, new Comparator<Execution>() {
-              @Override
-              public int compare(Execution lhs, Execution rhs) {
-                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                    getId()) ? 1 : 0;
-              }
-            });
-            try {
-              rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-                  + jobExecs.get(0).getAppId());
-            } catch (IOException ex) {
-              Logger.getLogger(ProjectController.class.getName()).
-                  log(Level.SEVERE, null, ex);
-            }
-          }
-        }
+        killYarnJobs(project);
 
-        for (ApplicationReport appReport : projectsApps) {
-          FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
-          while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
-            client.killApplication(appReport.getApplicationId());
-            appReport = client.getApplicationReport(appReport.getApplicationId());
-            finalState = appReport.getFinalApplicationStatus();
-          }
-          LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-          while (!YarnLogUtil.isFinal(logAggregationState)) {
-            Thread.sleep(500);
-            appReport = client.getApplicationReport(appReport.getApplicationId());
-            logAggregationState = appReport.getLogAggregationStatus();
-          }
-        }
+        waitForJobLogs(projectsApps, client);
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
@@ -1074,7 +1443,7 @@ public class ProjectController {
       }
     }
   }
-
+  
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, Future<CertificatesController
       .CertsResult> certsGenerationFuture)
@@ -1090,16 +1459,10 @@ public class ProjectController {
       String path = File.separator + Settings.DIR_ROOT + File.separator
           + project.getName();
       Path location = new Path(path);
-      if (dfso.exists(path)) {
-        dfso.setOwner(location, settings.getHdfsSuperUser(), settings.
-            getHdfsSuperUser());
-      }
+      changeOwnershipToSuperuser(location, dfso);
 
       Path dumy = new Path("/tmp/" + project.getName());
-      if (dfso.exists(dumy.toString())) {
-        dfso.setOwner(dumy, settings.getHdfsSuperUser(), settings.
-            getHdfsSuperUser());
-      }
+      changeOwnershipToSuperuser(dumy, dfso);
 
       //remove kafka topics
       removeKafkaTopics(project);
@@ -1117,42 +1480,17 @@ public class ProjectController {
                 ". Manual cleanup is needed!!!", ex);
         throw ex;
       }
-      
-      String logPath = getYarnAgregationLogPath();
-
-      for (HdfsUsers hdfsUser : usersToClean) {
-        //remove jobs log associated with project
-        location = new Path(logPath + "/" + hdfsUser.getName());
-        dfso.rm(location, true);
-
-        //change owner of history files
-        List<Inode> inodes = inodeFacade.findHistoryFileByHdfsUser(hdfsUser);
-        for (Inode inode : inodes) {
-          location = new Path(inodeFacade.getPath(inode));
-          dfso.setOwner(location, UserGroupInformation.getLoginUser().
-              getUserName(), "hadoop");
-        }
-
-        //Clean up tmp certificates dir from hdfs
-        String tmpCertsDir = settings.getHdfsTmpCertDir() + "/" + hdfsUser.
-            getName();
-        if (dfso.exists(tmpCertsDir)) {
-          dfso.rm(new Path(tmpCertsDir), true);
-        }
-
-      }
-
-      //remove folder created by zeppelin in /user
-      dfso.rm(new Path("/user/" + project.getName()), true);
+  
+      removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
       removeQuotas(project);
 
       //change owner for files in shared datasets
       fixSharedDatasets(project, dfso);
-
+      
       //Delete Hive database - will automatically cleanup all the Hive's metadata
-      hiveController.dropDatabase(project, dfso);
+      hiveController.dropDatabase(project, dfso, false);
 
       //Delete elasticsearch template for this project
       removeElasticsearch(project.getName());
@@ -1162,9 +1500,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove anaconda repos
-      removeAnacondaEnv(project);
 
       //remove anaconda repos
       removeJupyter(project);
@@ -1179,7 +1514,14 @@ public class ProjectController {
       }
     }
   }
-
+  
+  private void changeOwnershipToSuperuser(Path path, DistributedFileSystemOps dfso) throws IOException {
+    if (dfso.exists(path.toString())) {
+      dfso.setOwner(path, settings.getHdfsSuperUser(), settings.
+          getHdfsSuperUser());
+    }
+  }
+  
   @TransactionAttribute(
       TransactionAttributeType.REQUIRES_NEW)
   private List<ProjectTeam> updateProjectTeamRole(Project project,
@@ -2200,6 +2542,47 @@ public class ProjectController {
     if (!Arrays.equals(userKey, keyStore)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "Certificate error!");
+    }
+  }
+  
+  /**
+   * Helper class to log force cleanup operations
+   * @see ProjectController#forceCleanup(String, String, String)
+   */
+  private class CleanupLogger {
+    private final String projectName;
+    private final StringBuilder successLog;
+    private final StringBuilder errorLog;
+    
+    private CleanupLogger(String projectName) {
+      this.projectName = projectName;
+      successLog = new StringBuilder();
+      errorLog = new StringBuilder();
+    }
+    
+    private void logError(String message) {
+      log(errorLog, "*** ERROR ***", message);
+    }
+    
+    private void logSuccess(String message) {
+      log(successLog, "*** SUCCESS ***", message);
+    }
+    
+    private void log(StringBuilder log, String summary, String message) {
+      LocalDateTime now = LocalDateTime.now();
+      log.append("<").append(now.format(DateTimeFormatter.ISO_DATE_TIME)).append(">")
+          .append(summary)
+          .append(message)
+          .append(" *").append(projectName).append("*")
+          .append("\n");
+    }
+    
+    private StringBuilder getSuccessLog() {
+      return successLog;
+    }
+    
+    private StringBuilder getErrorLog() {
+      return errorLog;
     }
   }
 }

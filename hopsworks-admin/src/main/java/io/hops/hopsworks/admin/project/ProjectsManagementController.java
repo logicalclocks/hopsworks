@@ -219,4 +219,8 @@ public class ProjectsManagementController {
   public void deleteProject(Project project, String sessionId) throws AppException {
     projectController.removeProject(project.getOwner().getEmail(), project.getId(), sessionId);
   }
+  
+  public void forceDeleteProject(String projectName, String userEmail, String sessionId) {
+    projectController.forceCleanup(projectName, userEmail, sessionId);
+  }
 }

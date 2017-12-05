@@ -24,7 +24,9 @@ import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
 import io.hops.hopsworks.common.exception.AppException;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
+import org.primefaces.event.SelectEvent;
 
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -38,7 +40,9 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,6 +72,8 @@ public class ProjectsManagementBean implements Serializable {
   private List<String> paymentTypes = new ArrayList<>();
   private PaymentType paymentType;
   private Project toBeDeletedProject;
+  private String projectNameForceCleanup;
+  private final Map<String, Object> dialogOptions;
 
   public long getHiveHdfsQuota() { return hiveHdfsQuota; }
 
@@ -91,6 +97,11 @@ public class ProjectsManagementBean implements Serializable {
     for (PaymentType paymentType : PaymentType.values()) {
       paymentTypes.add(paymentType.name());
     }
+    
+    dialogOptions = new HashMap<>(3);
+    dialogOptions.put("resizable", false);
+    dialogOptions.put("draggable", false);
+    dialogOptions.put("modal", true);
   }
 
   public long getHdfsNsQuota() {
@@ -369,6 +380,14 @@ public class ProjectsManagementBean implements Serializable {
     this.toBeDeletedProject = toBeDeletedProject;
   }
   
+  public String getProjectNameForceCleanup() {
+    return projectNameForceCleanup;
+  }
+  
+  public void setProjectNameForceCleanup(String projectNameForceCleanup) {
+    this.projectNameForceCleanup = projectNameForceCleanup;
+  }
+  
   public void disableProject(String projectname) {
     projectsManagementController.disableProject(projectname);
   }
@@ -445,17 +464,8 @@ public class ProjectsManagementBean implements Serializable {
   
   public void deleteProject() {
     LOG.log(Level.INFO, "Deleting project: " + toBeDeletedProject);
-    Cookie[] cookies = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest())
-        .getCookies();
     try {
-      String sessionId = "";
-      for (Cookie cookie : cookies) {
-        if (cookie.getName().equalsIgnoreCase("SESSION")) {
-          sessionId = cookie.getValue();
-          break;
-        }
-      }
-      projectsManagementController.deleteProject(toBeDeletedProject, sessionId);
+      projectsManagementController.deleteProject(toBeDeletedProject, getSessionId());
       allProjects.remove(toBeDeletedProject);
       toBeDeletedProject = null;
       MessagesController.addInfoMessage("Project deleted!");
@@ -464,5 +474,35 @@ public class ProjectsManagementBean implements Serializable {
       MessagesController.addErrorMessage("Deletion failed", "Failed deleting project "
           + toBeDeletedProject.getName());
     }
+  }
+  
+  public void dialogForceCleanup() {
+    RequestContext.getCurrentInstance().openDialog("projectForceRemoveDialog", dialogOptions, null);
+  }
+  
+  public void selectedProjectForceCleanup() {
+    RequestContext.getCurrentInstance().closeDialog(projectNameForceCleanup);
+  }
+  
+  public void onProjectForceCleanupChosen(SelectEvent event) {
+    String projectName = (String) event.getObject();
+    LOG.log(Level.INFO, "Project force cleanup: " + projectName);
+    String userEmail = FacesContext.getCurrentInstance().getExternalContext()
+        .getUserPrincipal().getName();
+    MessagesController.addInfoMessage("Force project deletion", "Check Inbox for status");
+    projectsManagementController.forceDeleteProject(projectName, userEmail, getSessionId());
+  }
+  
+  private String getSessionId() {
+    Cookie[] cookies = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest())
+        .getCookies();
+    String sessionId = "";
+    for (Cookie cookie : cookies) {
+      if (cookie.getName().equalsIgnoreCase("SESSION")) {
+        sessionId = cookie.getValue();
+        break;
+      }
+    }
+    return sessionId;
   }
 }

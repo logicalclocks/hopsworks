@@ -63,6 +63,16 @@
 			     selectionMode="single"
 			     selection="#{projectsmanagement.toBeDeletedProject}">
 
+		  <f:facet name="header">
+		    <p:commandButton value="Force remove"
+				     style="ui-button-danger; float:right"
+				     actionListener="#{projectsmanagement.dialogForceCleanup}">
+		      <p:ajax event="dialogReturn"
+			      listener="#{projectsmanagement.onProjectForceCleanupChosen}"
+			      update=":projectmodifyForm:msgs"/>
+		    </p:commandButton>
+		  </f:facet>
+		
                   <p:ajax event="rowEdit"
                           listener="#{projectsmanagement.onRowEdit}"
                           update=":projectmodifyForm:msgs" />

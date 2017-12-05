@@ -638,7 +638,6 @@ public class ProjectService {
 
   }
 
-
   @Path("{id}/projectMembers")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public ProjectMembersService projectMembers(
