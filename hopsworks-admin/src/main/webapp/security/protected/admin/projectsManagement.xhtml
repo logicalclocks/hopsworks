@@ -37,7 +37,7 @@
 
         <p:layoutUnit id="centerLayout" position="center">
 
-          <div class="container" style="max-width: 1650px; min-width: 1650px">
+          <div class="container" style="max-width: 1700px; min-width: 1700px">
             <div align="left">
               <h2>Project Administration</h2>
             </div>
@@ -46,12 +46,12 @@
               <h:form id="projectmodifyForm" >
                 <p:growl id="msgs" showDetail="true" autoUpdate="true"/>
 
-                <p:dataTable id="projectsTable" var="project"
-                             value="#{projectsmanagement.allProjects}"
-                             filteredValue="#{projectsmanagement.filteredProjects}"
+                <p:dataTable id="projectsTable" var="ProjectQuotas"
+                             value="#{projectsmanagement.projectsQuotas}"
+                             filteredValue="#{projectsmanagement.filteredProjectsQuotas}"
                              widgetVar="projectsTable"
+                             rowKey="#{ProjectQuotas.name}"
                              emptyMessage="No projects found with given criteria"
-                             rowKey="#{project.name}"
                              style="table-layout: auto"
                              sortMode="multiple"
                              editable="true"
@@ -60,8 +60,8 @@
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                              rowsPerPageTemplate="25,50,75,100,500"
-			     selectionMode="single"
-			     selection="#{projectsmanagement.toBeDeletedProject}">
+                             selectionMode="single"
+                             selection="#{projectsmanagement.projectQuotasSelected}">
 
 		  <f:facet name="header">
 		    <p:commandButton value="Force remove"
@@ -79,86 +79,78 @@
                   <p:ajax event="rowEditCancel" update=":projectmodifyForm:msgs" />
 
                   <p:column id="projectNameColumn"
-                            filterBy="#{project.name}"
-                            sortBy="#{project.name}"
-                            filterMatchMode="contains"
                             headerText="Project"
+                            filterBy="#{ProjectQuotas.name}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{project.name}" />
+                    <h:outputText value="#{ProjectQuotas.name}" />
                   </p:column>
 
                   <p:column id="yarnquotaColumn"
-                            filterBy="#{projectsmanagement.getYarnQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getYarnQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Yarn quota left"
+                            filterBy="#{ProjectQuotas.yarnQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
-                        <h:outputText value="#{projectsmanagement.getYarnQuota(project.name)}" />
+                        <h:outputText value="#{ProjectQuotas.yarnQuota}" />
                       </f:facet>
                       <f:facet name="input">
-                        <p:inputText value="#{projectsmanagement.yarnQuota}" style="width:100%">
-                          <f:validateLongRange
-                            maximum="100000000"
-                            minimum="-100000000" />
+                        <p:inputText value="#{ProjectQuotas.yarnQuota}" style="width:100%">
+                          <f:validateRegex pattern="-?[0-9]{1,}:([0-9]{1,2}:){2}[0-9]{1,2}" />
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
 
                   <p:column id="yarntotalquotaColumn"
-                            filterBy="#{projectsmanagement.getTotalYarnQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getTotalYarnQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Yarn quota to date"
+                            filterBy="#{ProjectQuotas.yarnTotalQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <h:outputText
-                      value="#{projectsmanagement.getTotalYarnQuota(project.name)}" />
+                      value="#{ProjectQuotas.yarnTotalQuota}" />
                   </p:column>
 
                   <p:column id="hdfsquotaColumn"
-                            filterBy="#{projectsmanagement.getHdfsQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getHdfsQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Disk quota"
+                            filterBy="#{ProjectQuotas.hdfsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHdfsQuota(project.name)}" />
+                          value="#{ProjectQuotas.hdfsQuota}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hdfsquotaString}" style="width:100%">
+                          value="#{ProjectQuotas.hdfsQuota}" style="width:100%">
                           <f:validateRegex pattern = "([0-9]{1,6}+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
                   <p:column id="diskUsedColumn"
-                            filterBy="#{projectsmanagement.getHdfsUsed(project.name)}"
-                            sortBy="#{projectsmanagement.getHdfsUsed(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Disk Used (MB)"
+                            filterBy="#{ProjectQuotas.hdfsUsedQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHdfsUsed(project.name)}" />
+                    <h:outputText value="#{ProjectQuotas.hdfsUsedQuota}" />
                   </p:column>
 
                   <p:column id="hdfsNsquotaColumn"
-                            filterBy="#{projectsmanagement.getHdfsNsQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getHdfsNsQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Max No of Files"
+                            filterBy="#{ProjectQuotas.hdfsNsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHdfsNsQuota(project.name)}" />
+                          value="#{ProjectQuotas.hdfsNsQuota}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hdfsNsQuota}" style="width:100%">
+                          value="#{ProjectQuotas.hdfsNsQuota}" style="width:100%">
                           <f:validateLongRange
                             maximum="10000000000"
                             minimum="-1" />
@@ -166,57 +158,55 @@
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
+
                   <p:column id="noFilesUsedColumn"
-                            filterBy="#{projectsmanagement.getHdfsNsUsed(project.name)}"
-                            sortBy="#{projectsmanagement.getHdfsNsUsed(project.name)}"
-                            filterMatchMode="contains"
                             headerText="Num Files Used"
+                            filterBy="#{ProjectQuotas.hdfsUsedNsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHdfsNsUsed(project.name)}" />
+                    <h:outputText value="#{ProjectQuotas.hdfsUsedNsQuota}" />
                   </p:column>
 
                   <p:column id="hiveHdfsquotaColumn"
-                            filterBy="#{projectsmanagement.getHiveHdfsQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getHiveHdfsQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="HiveDB Disk Quota"
+                            filterBy="#{ProjectQuotas.hiveHdfsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHiveHdfsQuota(project.name)}" />
+                          value="#{ProjectQuotas.hiveHdfsQuota}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hiveHdfsQuotaString}" style="width:100%">
+                          value="#{ProjectQuotas.hiveHdfsQuota}" style="width:100%">
                           <f:validateRegex pattern = "(\-?[0-9]+([GMT]B)*)"/>
                         </p:inputText>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
+
                   <p:column id="hiveDiskUsedColumn"
-                            filterBy="#{projectsmanagement.getHiveHdfsUsed(project.name)}"
-                            sortBy="#{projectsmanagement.getHiveHdfsUsed(project.name)}"
-                            filterMatchMode="contains"
                             headerText="HiveDB Disk Used"
+                            filterBy="#{ProjectQuotas.hiveUsedHdfsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHiveHdfsUsed(project.name)}" />
+                    <h:outputText value="#{ProjectQuotas.hiveUsedHdfsQuota}" />
                   </p:column>
 
                   <p:column id="hiveHdfsNsquotaColumn"
-                            filterBy="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}"
-                            sortBy="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}"
-                            filterMatchMode="contains"
                             headerText="HiveDB Max # Files"
+                            filterBy="#{ProjectQuotas.hiveHdfsNsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: center;">
                     <p:cellEditor>
                       <f:facet name="output">
                         <h:outputText
-                          value="#{projectsmanagement.getHiveHdfsNsQuota(project.name)}" />
+                          value="#{ProjectQuotas.hiveHdfsNsQuota}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:inputText
-                          value="#{projectsmanagement.hiveHdfsNsQuota}" style="width:100%">
+                          value="#{ProjectQuotas.hiveHdfsNsQuota}" style="width:100%">
                           <f:validateLongRange
                             maximum="10000000000"
                             minimum="-1" />
@@ -224,88 +214,64 @@
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
+
                   <p:column id="hiveNoFilesUsedColumn"
-                            filterBy="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}"
-                            sortBy="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}"
-                            filterMatchMode="contains"
                             headerText="HiveDB # Files"
+                            filterBy="#{ProjectQuotas.hiveUsedHdfsNsQuota}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{projectsmanagement.getHiveHdfsNsUsed(project.name)}" />
+                    <h:outputText value="#{ProjectQuotas.hiveUsedHdfsNsQuota}" />
                   </p:column>
 
                   <p:column id="useremailColumn"
-                            filterBy="#{project.owner.username}"
-                            sortBy="#{project.owner.username}"
-                            filterMatchMode="contains"
                             headerText="Owner"
+                            filterBy="#{ProjectQuotas.owner}"
+                            filterMatchMode="contains"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{project.owner.username}" />
+                    <h:outputText value="#{ProjectQuotas.owner}" />
                   </p:column>
 
                   <p:column id="enabledColumn"
-                            filterBy="#{project.archived}"
-                            sortBy="#{project.archived}"
+                            filterBy="#{ProjectQuotas.archived}"
                             filterMatchMode="contains"
                             headerText="Archived"
                             style=" font-size: 12px; text-align: center;">
-
                     <p:cellEditor>
                       <f:facet name="output">
-                        <h:outputText value="#{project.archived}" />
+                        <h:outputText value="#{ProjectQuotas.archived}" />
                       </f:facet>
                       <f:facet name="input">
-                        <h:selectBooleanCheckbox value="#{project.archived}" style="width:100%"/>
+                        <h:selectBooleanCheckbox value="#{ProjectQuotas.archived}" style="width:100%"/>
                       </f:facet>
                     </p:cellEditor>
                   </p:column>
 
                   <p:column id="paymentTypeColumn"
-                            filterBy="#{project.paymentTypeString}"
-                            sortBy="#{project.paymentTypeString}"
+                            filterBy="#{ProjectQuotas.paymentType}"
                             filterMatchMode="contains"
                             headerText="Payment type"
                             style=" font-size: 12px; text-align: center;">
-
                     <p:cellEditor>
                       <f:facet name="output">
-                        <h:outputText value="#{projectsmanagement.getPaymentType(project.name)}" />
+                        <h:outputText value="#{ProjectQuotas.paymentType}" />
                       </f:facet>
                       <f:facet name="input">
                         <p:selectOneMenu id="changePaymentType"
-                                         value="#{projectsmanagement.paymentType}" 
+                                         value="#{ProjectQuotas.paymentType}"
                                          editable="false">
                           <f:selectItem itemLabel="payment type"/>
                           <f:selectItems value="#{projectsmanagement.paymentTypes}" />
                         </p:selectOneMenu>
                       </f:facet>
-<!--                      <p:selectOneMenu id="changePaymentType"
-                                       value="#{projectsmanagement.paymentType}" 
-                                       editable="false">
-                        <f:selectItem itemValue="#{project.paymentTypeString}"/>
-                        <f:selectItems value="#{projectsmanagement.paymentTypes}" />
-                      </p:selectOneMenu>-->
-                      
                     </p:cellEditor>
                   </p:column>
                   
-                  <p:column id="lastcreditpurchachedColumn"
-                            filterBy="#{projectsmanagement.getLastPaymentDate(project.name)}"
-                            sortBy="#{projectsmanagement.getLastPaymentDate(project.name)}"
-                            filterMatchMode="contains"
-                            headerText="Last purchase"
+                  <p:column id="lastQuotaUpdateColumn"
+                            headerText="Last Update"
+                            filterBy="#{ProjectQuotas.lastQuotaUpdate}"
+                            filterMatchMode="exact"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText
-                      value="#{projectsmanagement.getLastPaymentDate(project.name)}" />
-                  </p:column>
-
-                  <p:column id="totalcreditColumn"
-                            filterBy="#{project.retentionPeriod}"
-                            sortBy="#{project.retentionPeriod}"
-                            filterMatchMode="contains"
-                            headerText="Expires at"
-                            style=" font-size: 12px; text-align: left;">
-                    <h:outputText
-                      value="#{project.retentionPeriod}" />
+                    <h:outputText value="#{ProjectQuotas.lastQuotaUpdate}" />
                   </p:column>
 
                   <p:column headerText="Edit"
@@ -315,23 +281,23 @@
 
                 </p:dataTable>
 
-		<p:contextMenu for="projectsTable">
-		  <p:menuitem value="Delete project"
-			      update="@form"
-			      icon="ui-icon-close"
-			      actionListener="#{projectsmanagement.deleteProject}"
-			      onstart="PF('blockUIWidget').block()"
-			      oncomplete="PF('blockUIWidget').unblock()">
-		    <p:confirm header="Delete project" message="Are
-			      you sure you want to delete the project and its files?" icon="ui-icon-alert"/>
-		  </p:menuitem>
-		</p:contextMenu>
-		
-		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-		  <p:commandButton value="Yes" type="submit" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
-		  <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
-		</p:confirmDialog>
-		
+                <p:contextMenu for="projectsTable">
+                  <p:menuitem value="Delete project"
+                          update="@form"
+                          icon="ui-icon-close"
+                          actionListener="#{projectsmanagement.deleteProject}"
+                          onstart="PF('blockUIWidget').block()"
+                          oncomplete="PF('blockUIWidget').unblock()">
+                    <p:confirm header="Delete project" message="Are
+                          you sure you want to delete the project and its files?" icon="ui-icon-alert"/>
+                  </p:menuitem>
+                </p:contextMenu>
+
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                  <p:commandButton value="Yes" type="submit" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                  <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                </p:confirmDialog>
+
               </h:form>
 
             </div>

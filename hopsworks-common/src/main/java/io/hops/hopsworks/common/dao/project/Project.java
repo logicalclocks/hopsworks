@@ -150,6 +150,12 @@ public class Project implements Serializable {
   @Column(name = "description")
   private String description;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "last_quota_update")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date lastQuotaUpdate;
+
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
             referencedColumnName = "parent_id"),
@@ -430,6 +436,13 @@ public class Project implements Serializable {
   
   public String getProjectGenericUser() {
     return name + Settings.PROJECT_GENERIC_USER_SUFFIX;
+  }
+
+
+  public Date getLastQuotaUpdate() { return lastQuotaUpdate; }
+
+  public void setLastQuotaUpdate(Date lastQuotaUpdate) {
+    this.lastQuotaUpdate = lastQuotaUpdate;
   }
   
   @Override

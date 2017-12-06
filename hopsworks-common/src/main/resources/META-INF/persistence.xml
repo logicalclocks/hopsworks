@@ -49,9 +49,6 @@
     <class>io.hops.hopsworks.common.dao.metadata.Template</class>
     <class>io.hops.hopsworks.common.dao.metadata.TupleToFile</class>
     <class>io.hops.hopsworks.common.dao.project.Project</class>
-    <class>io.hops.hopsworks.common.dao.project.management.ProjectsManagement</class>
-    <class>io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory</class>
-    <class>io.hops.hopsworks.common.dao.project.payment.LastPayment</class>
     <class>io.hops.hopsworks.common.dao.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.common.dao.project.team.ProjectTeam</class>
     <class>io.hops.hopsworks.common.dao.role.Role</class>

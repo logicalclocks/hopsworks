@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
+import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributesFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
@@ -46,10 +47,6 @@ import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentAction;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryPK;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
@@ -99,8 +96,6 @@ import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.xml.rpc.ServiceException;
@@ -132,8 +127,6 @@ public class ProjectController {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
-  @EJB
-  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
@@ -187,9 +180,8 @@ public class ProjectController {
   private CertificatesMgmService certificatesMgmService;
   @EJB
   private MessageController messageController;
-
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
+  @EJB
+  private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -333,10 +325,8 @@ public class ProjectController {
 
       //set payment and quotas
       try {
-
         setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
             dfso, owner);
-
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -942,7 +932,6 @@ public class ProjectController {
     if (settings.isPythonKernelEnabled()) {
       jupyterProcessFacade.removePythonKernelsForProject(project.getName());
     }
-
   }
   
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -1781,35 +1770,18 @@ public class ProjectController {
     }
 
     //send the project back to client
-    String quota = getYarnQuota(name);
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        quota);
-  }
-
-  public String getYarnQuota(String name) {
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-        findByProjectName(name);
-    if (yarnQuota != null) {
-      return Float.toString(yarnQuota.getQuotaRemaining());
-    }
-    return "";
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids);
   }
 
   public void setProjectOwnerAndQuotas(Project project, long diskspaceQuotaInMB,
       DistributedFileSystemOps dfso, Users user)
       throws IOException {
-    this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(
-        new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
-            .getName(), project.getCreated()), project.
-            getOwner().getEmail(),
-            ProjectPaymentAction.DEPOSIT_MONEY, 0));
-    this.projectPaymentsHistoryFacade.flushEm();
     this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
         new YarnProjectsQuota(project.getName(), Integer.parseInt(
-            settings
-                .getYarnDefaultQuota()), 0));
+            settings.getYarnDefaultQuota()), 0));
     this.yarnProjectsQuotaFacade.flushEm();
-    setHdfsSpaceQuotaInMBs(project.getName(), diskspaceQuotaInMB, dfso);
+    setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, dfso);
+    projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
     logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
         ActivityFacade.FLAG_PROJECT, user, project);
@@ -1819,30 +1791,24 @@ public class ProjectController {
         getName());
   }
 
-  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
-      DistributedFileSystemOps dfso)
+  public void setHdfsSpaceQuotasInMBs(Project project, Long diskspaceQuotaInMB,
+      Long hiveDbSpaceQuotaInMb, DistributedFileSystemOps dfso)
       throws IOException {
-    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(projectname)),
+
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(project.getName())),
         diskspaceQuotaInMB);
-  }
 
-  public void setPaymentType(String projectname, PaymentType paymentType){
-    Project project = projectFacade.findByName(projectname);
-    if (project != null) {
-      project.setPaymentType(paymentType);
-      this.projectFacade.mergeProject(project);
-      this.projectFacade.flushEm();
+    if (hiveDbSpaceQuotaInMb != null &&
+        projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
+      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(project.getName()),
+          hiveDbSpaceQuotaInMb);
     }
   }
-  
-  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
 
-    HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
-    if (res == null) {
-      return new HdfsInodeAttributes(inodeId);
-    }
-
-    return res;
+  public void setPaymentType(Project project, PaymentType paymentType){
+    project.setPaymentType(paymentType);
+    this.projectFacade.mergeProject(project);
+    this.projectFacade.flushEm();
   }
 
   /**
@@ -1851,40 +1817,58 @@ public class ProjectController {
    * @return
    * @throws AppException
    */
-  public QuotasDTO getQuotas(Integer projectId) throws AppException {
+  public QuotasDTO getQuotas(Integer projectId) {
     Project project = projectFacade.find(projectId);
     return getQuotasInternal(project);
   }
 
-  private QuotasDTO getQuotasInternal(Project project) throws AppException {
-    String yarnQuota = getYarnQuota(project.getName());
+  public QuotasDTO getQuotasInternal(Project project) {
+    Long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L, dbhdfsQuota = -1L,
+        dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L;
+    Float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
 
-    HdfsInodeAttributes projectInodeAttrs = getHdfsQuotas(project.getInode().getId());
-    Long hdfsQuota = projectInodeAttrs.getDsquota().longValue();
-    Long hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
-    Long hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
-    Long hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    // Yarn Quota
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
+        findByProjectName(project.getName());
+    if (yarnQuota == null) {
+      LOGGER.log(Level.SEVERE, "Cannot find YARN quota information for project: " + project.getName());
+    } else {
+      yarnRemainingQuota = yarnQuota.getQuotaRemaining();
+      yarnTotalQuota = yarnQuota.getTotal();
+    }
+
+    // HDFS project directory quota
+    HdfsInodeAttributes projectInodeAttrs = hdfsInodeAttributesFacade.
+        getInodeAttributes(project.getInode().getId());
+    if (projectInodeAttrs == null) {
+      LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
+    } else {
+      hdfsQuota = projectInodeAttrs.getDsquota().longValue();
+      hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
+      hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
+      hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    }
 
     // If the Hive service is enabled, get the quota information for the db directory
     if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
       List<Dataset> datasets = (List<Dataset>)project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.HIVEDB) {
-          HdfsInodeAttributes dbInodeAttrs = getHdfsQuotas(ds.getInodeId());
-
-          Long dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
-          Long dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
-          Long dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-          Long dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
-
-          return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
-              dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
+          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          if (dbInodeAttrs == null) {
+            LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
+          } else {
+            dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
+            dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
+            dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
+          }
         }
       }
     }
 
-    return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
-        hdfsNsQuota, hdfsNsCount, (long)0, (long)0, (long)0, (long)0);
+    return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
+              dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
   }
 
   /**
@@ -2544,7 +2528,7 @@ public class ProjectController {
           "Certificate error!");
     }
   }
-  
+
   /**
    * Helper class to log force cleanup operations
    * @see ProjectController#forceCleanup(String, String, String)
@@ -2553,21 +2537,21 @@ public class ProjectController {
     private final String projectName;
     private final StringBuilder successLog;
     private final StringBuilder errorLog;
-    
+
     private CleanupLogger(String projectName) {
       this.projectName = projectName;
       successLog = new StringBuilder();
       errorLog = new StringBuilder();
     }
-    
+
     private void logError(String message) {
       log(errorLog, "*** ERROR ***", message);
     }
-    
+
     private void logSuccess(String message) {
       log(successLog, "*** SUCCESS ***", message);
     }
-    
+
     private void log(StringBuilder log, String summary, String message) {
       LocalDateTime now = LocalDateTime.now();
       log.append("<").append(now.format(DateTimeFormatter.ISO_DATE_TIME)).append(">")
@@ -2576,13 +2560,92 @@ public class ProjectController {
           .append(" *").append(projectName).append("*")
           .append("\n");
     }
-    
+
     private StringBuilder getSuccessLog() {
       return successLog;
     }
-    
+
     private StringBuilder getErrorLog() {
       return errorLog;
+    }
+  }
+
+  /**
+   * For HopsFS quotas, both the namespace and the space quotas should be not null
+   * at the same time.
+   * @param newProjectState
+   * @param quotas
+   * @throws IOException
+   * @throws AppException
+   */
+  public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws AppException {
+    Project currentProject = projectFacade.findByName(newProjectState.getName());
+
+    // Set (un)archived status only if changed
+    if (newProjectState.getArchived() != null &&
+        (currentProject.getArchived() != newProjectState.getArchived())) {
+      if (newProjectState.getArchived()) {
+        projectFacade.archiveProject(currentProject);
+      } else {
+        projectFacade.unarchiveProject(currentProject);
+      }
+    }
+
+    // Set payment type information
+    if (newProjectState.getPaymentType() != null &&
+        (newProjectState.getPaymentType() != currentProject.getPaymentType())) {
+      setPaymentType(currentProject, newProjectState.getPaymentType());
+    }
+
+    // Set the quotas information
+    if (quotas != null) {
+      QuotasDTO currentQuotas = getQuotasInternal(currentProject);
+
+      DistributedFileSystemOps dfso = dfs.getDfsOps();
+      boolean quotaChanged = false;
+      try {
+        // If Hdfs quotas has changed, persist the changes in the database.
+        if (quotas.getHdfsQuotaInBytes() != null && quotas.getHdfsNsQuota() != null &&
+            (!quotas.getHdfsQuotaInBytes().equals(currentQuotas.getHdfsQuotaInBytes()) ||
+                !quotas.getHdfsNsQuota().equals(currentQuotas.getHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(new Path(Settings.getProjectPath(currentProject.getName())),
+              quotas.getHdfsNsQuota(), quotas.getHdfsQuotaInBytes());
+          quotaChanged = true;
+
+        }
+
+        // If Hive quota has changed and the Hive service is enabled, persist the changes in the database.
+        if (quotas.getHiveHdfsQuotaInBytes() != null && quotas.getHiveHdfsNsQuota() != null &&
+            projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.HIVE) &&
+            (!quotas.getHiveHdfsQuotaInBytes().equals(currentQuotas.getHiveHdfsQuotaInBytes()) ||
+                !quotas.getHiveHdfsNsQuota().equals(currentQuotas.getHiveHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(currentProject.getName()),
+              quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
+          quotaChanged = true;
+        }
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Couldn't update quotas for project: " + currentProject.getName(), e);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.QUOTA_ERROR);
+      } finally {
+        if (dfso != null) {
+          dfso.close();
+        }
+      }
+
+      // If the yarn quota has changed, persist the change in the database
+      if (quotas.getYarnQuotaInSecs() != null &&
+          !quotas.getYarnQuotaInSecs().equals(currentQuotas.getYarnQuotaInSecs())) {
+        yarnProjectsQuotaFacade.changeYarnQuota(currentProject.getName(), quotas.getYarnQuotaInSecs());
+        quotaChanged = true;
+      }
+
+      // Register time of last quota change in the project entry
+      if (quotaChanged) {
+        projectFacade.setTimestampQuotaUpdate(currentProject, new Date());
+      }
     }
   }
 }

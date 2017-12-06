@@ -713,6 +713,14 @@ public class ProjectService {
       @Context HttpServletRequest req) throws AppException {
 
     QuotasDTO quotas = projectController.getQuotas(id);
+
+    // If YARN quota or HDFS quota for project directory is null, something is wrong with the project
+    // throw an APPException
+    if (quotas.getHdfsQuotaInBytes() == null || quotas.getYarnQuotaInSecs() == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.QUOTA_NOT_FOUND);
+    }
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         quotas).build();
   }

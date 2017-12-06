@@ -50,8 +50,7 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Integer inodeid, List<String> services,
-      List<ProjectTeam> projectTeam, List<InodeView> datasets,
-      String yarnQuotaInMins) {
+      List<ProjectTeam> projectTeam, List<InodeView> datasets) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;

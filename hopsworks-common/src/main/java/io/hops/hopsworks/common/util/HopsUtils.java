@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -696,4 +697,100 @@ public class HopsUtils {
     return new String(result);
   }
 
+  /**
+   * Converts HDFS quota from Bytes to a human friendly format
+   * @param quota
+   * @return
+   */
+  public static String spaceQuotaToString(long quota) {
+    DecimalFormat df = new DecimalFormat("##.##");
+
+    if(quota > 1099511627776L){
+      float tbSize = quota / 1099511627776L;
+      return df.format(tbSize) + "TB";
+    } else if (quota > 1073741824L){
+      float gbSize = quota / 1073741824L;
+      return df.format(gbSize) + "GB";
+    } else if (quota >= 0){
+      float mbSize = quota / 1048576;
+      return df.format(mbSize) + "MB";
+    } else {
+      return "-1MB";
+    }
+  }
+
+  /**
+   * Converts HDFS quota from human friendly format to Bytes
+   * @param quotaString
+   * @return
+   */
+  public static long spaceQuotaToLong(String quotaString){
+    long quota = -1l;
+    if (quotaString.endsWith("TB")) {
+      quota = Long.parseLong(quotaString.substring(0, quotaString.length()-2));
+      quota = quota * 1099511627776L;
+    } else if (quotaString.endsWith("GB")) {
+      quota = Long.parseLong(quotaString.substring(0, quotaString.length() - 2));
+      quota = quota * 1073741824L;
+    } else if (quotaString.endsWith("MB")) {
+      quota = Long.parseLong(quotaString.substring(0, quotaString.length()-2));
+      quota = quota * 1048576;
+    } else {
+      quota = Long.parseLong(quotaString);
+    }
+
+    return quota;
+  }
+
+  /**
+   * Convert processing quota from Seconds to human friendly format
+   * The format produced is : -?[0-9]{1,}:([0-9]{1,2}:){2}[0-9]{1,2}
+   * (Quota might be negative)
+   * - Seconds
+   * - Minutes
+   * - Hours
+   * - Days
+   * @param quota
+   * @return
+   */
+  public static String procQuotaToString(float quota) {
+    float absQuota = Math.abs(quota);
+    long days = Math.round(Math.floor(absQuota / 86400));
+    absQuota %= 86400;
+    long hours = Math.round(Math.floor(absQuota / 3600));
+    absQuota %= 3600;
+    long minutes = Math.round(Math.floor(absQuota / 60));
+    int seconds = Math.round(absQuota % 60);
+
+    if (quota >= 0) {
+      return String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
+    } else {
+      return String.format("-%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
+    }
+  }
+
+  /**
+   * Convert processing quota from human friendly to seconds
+   * The format accepted is -?[0-9]{1,}:([0-9]{1,2}:){2}[0-9]{1,2}
+   * @param quota
+   * @return
+   */
+  public static float procQuotaToFloat(String quota){
+    String[] quotaSplits = quota.split(":", 4);
+    float quotaSeconds = 0f;
+    // Days (might have the - sign)
+    quotaSeconds += Math.abs(Float.valueOf(quotaSplits[0])) * 86400;
+    // Hours
+    quotaSeconds += Float.valueOf(quotaSplits[1]) * 3600;
+    // Minutes
+    quotaSeconds += Float.valueOf(quotaSplits[2]) * 60;
+    // Seconds
+    quotaSeconds += Float.valueOf(quotaSplits[3]);
+
+    if (Float.valueOf(quotaSplits[0]) < 0) {
+      quotaSeconds *= -1f;
+    }
+
+    return quotaSeconds;
+  }
 }

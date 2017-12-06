@@ -70,8 +70,8 @@ public class YarnProjectsQuotaFacade extends
     return query.getResultList();
   }
 
-  public void changeYarnQuota(String projectname, float quota) {
-    YarnProjectsQuota project = findByProjectName(projectname);
+  public void changeYarnQuota(String projectName, float quota) {
+    YarnProjectsQuota project = findByProjectName(projectName);
     if (project != null) {
       project.setQuotaRemaining(quota);
       em.merge(project);
