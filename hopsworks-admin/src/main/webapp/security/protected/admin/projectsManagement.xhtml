@@ -69,7 +69,7 @@
 				     actionListener="#{projectsmanagement.dialogForceCleanup}">
 		      <p:ajax event="dialogReturn"
 			      listener="#{projectsmanagement.onProjectForceCleanupChosen}"
-			      update=":projectmodifyForm:msgs"/>
+			      update=":projectmodifyForm:msgs @form"/>
 		    </p:commandButton>
 		  </f:facet>
 		

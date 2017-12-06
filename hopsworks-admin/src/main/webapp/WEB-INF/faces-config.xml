@@ -252,6 +252,12 @@
       <to-view-id>/security/protected/admin/refreshVariables.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+
+    <navigation-case>
+      <from-outcome>manage_hosts</from-outcome>
+      <to-view-id>/security/protected/admin/hostsManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
 	
     <navigation-case>
       <from-outcome>adminIndex</from-outcome>
