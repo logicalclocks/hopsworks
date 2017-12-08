@@ -17,6 +17,8 @@
  */
 package io.hops.hopsworks.common.security;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
@@ -61,6 +63,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
@@ -102,7 +105,7 @@ public class CertificateMaterializer {
   
   private final Set<Integer> projectsWithOpenInterpreters = new ConcurrentSkipListSet<>();
   private final Map<MaterialKey, FileRemover> scheduledFileRemovers =
-      new HashMap<>();
+      new ConcurrentHashMap<>();
   private String transientDir;
   private Long DELAY_VALUE;
   private TimeUnit DELAY_TIMEUNIT;
@@ -393,6 +396,13 @@ public class CertificateMaterializer {
     }
   }
   
+  @Lock(LockType.READ)
+  @AccessTimeout(value=200)
+  public boolean existsInStore(String username, String projectName) {
+    MaterialKey key = new MaterialKey(username, projectName);
+    return materialMap.containsKey(key);
+  }
+  
   private void scheduleFileRemover(MaterialKey key, FileRemover fileRemover) {
     fileRemover.scheduledFuture = scheduler.schedule(fileRemover, DELAY_VALUE,
         DELAY_TIMEUNIT);
@@ -561,6 +571,61 @@ public class CertificateMaterializer {
     
     private void incrementReference() {
       references++;
+    }
+  }
+  
+  /**
+   * This section provides methods for monitoring and control.
+   */
+  
+  /**
+   * Return an immutable state of the CertificateMaterializer service. Both the materialized and those scheduled for
+   * removal
+   * @return Immutable state of CertificateMaterializer service
+   */
+  @SuppressWarnings("unchecked")
+  public MaterializerState<Map<String, Integer>, Set<String>> getState() {
+    MaterializerState<ImmutableMap<MaterialKey, InternalCryptoMaterial>, ImmutableSet<MaterialKey>>
+        materializerState = getImmutableState();
+    
+    ImmutableMap<MaterialKey, InternalCryptoMaterial> materializedState = materializerState.getMaterializedState();
+    Map<String, Integer> occurencies = new HashMap<>(materializedState.size());
+    ImmutableSet<Map.Entry<MaterialKey, InternalCryptoMaterial>> entrySet = materializedState.entrySet();
+    entrySet.stream()
+        .forEach(es ->
+            occurencies.put(es.getKey().getExtendedUsername(), es.getValue().references));
+    
+    ImmutableSet<MaterialKey> scheduledRemovals = materializerState.getScheduledRemovals();
+    Set<String> removals = scheduledRemovals.stream()
+        .map(mt -> mt.getExtendedUsername())
+        .collect(Collectors.toSet());
+    
+    return new MaterializerState<>(occurencies, removals);
+  }
+  
+  @Lock(LockType.WRITE)
+  private MaterializerState getImmutableState() {
+    ImmutableMap<MaterialKey, InternalCryptoMaterial> materializedState = ImmutableMap.copyOf(materialMap);
+    ImmutableSet<MaterialKey> scheduledRemovals = ImmutableSet.copyOf(scheduledFileRemovers.keySet());
+    return new MaterializerState<ImmutableMap<MaterialKey, InternalCryptoMaterial>, ImmutableSet<MaterialKey>>(
+        materializedState, scheduledRemovals);
+  }
+  
+  public class MaterializerState<T, S> {
+    private final T materializedState;
+    private final S scheduledRemovals;
+    
+    MaterializerState(T materializedState, S scheduledRemovals) {
+      this.materializedState = materializedState;
+      this.scheduledRemovals = scheduledRemovals;
+    }
+    
+    public T getMaterializedState() {
+      return materializedState;
+    }
+    
+    public S getScheduledRemovals() {
+      return scheduledRemovals;
     }
   }
 }

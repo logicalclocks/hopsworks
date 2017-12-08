@@ -98,7 +98,7 @@ public class SystemAdminService {
       certificatesMgmService.checkPassword(oldPassword, userEmail);
       certificatesMgmService.resetMasterEncryptionPassword(newPassword, userEmail);
   
-      JsonResponse response = buildResponse(Response.Status.NO_CONTENT, ResponseMessages
+      JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, ResponseMessages
           .MASTER_ENCRYPTION_PASSWORD_CHANGE);
   
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
@@ -117,7 +117,7 @@ public class SystemAdminService {
     LOG.log(Level.FINE, "Requested refreshing variables");
     settings.refreshCache();
     
-    JsonResponse response = buildResponse(Response.Status.NO_CONTENT, "Variables refreshed");
+    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables refreshed");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
@@ -146,7 +146,7 @@ public class SystemAdminService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ex.getCause().getMessage());
     }
     
-    JsonResponse response = buildResponse(Response.Status.NO_CONTENT, "Variables updated");
+    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
@@ -198,7 +198,7 @@ public class SystemAdminService {
       }
       
       hostsFacade.storeHost(storedNode, true);
-      JsonResponse response = buildResponse(Response.Status.NO_CONTENT, "Node updated");
+      JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Node updated");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
     }
   }
@@ -211,10 +211,10 @@ public class SystemAdminService {
       boolean deleted = hostsFacade.removeHostById(hostId);
       JsonResponse response;
       if (deleted) {
-        response = buildResponse(Response.Status.OK, "Node with ID " + hostId + " deleted");
+        response = noCacheResponse.buildJsonResponse(Response.Status.OK, "Node with ID " + hostId + " deleted");
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
       } else {
-        response = buildResponse(Response.Status.NOT_FOUND, "Could not delete node " + hostId);
+        response = noCacheResponse.buildJsonResponse(Response.Status.NOT_FOUND, "Could not delete node " + hostId);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).entity(response).build();
       }
     }
@@ -250,13 +250,5 @@ public class SystemAdminService {
   
     GenericEntity<Host> response = new GenericEntity<Host>(finalNode){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
-  }
-  
-  private JsonResponse buildResponse(Response.Status status, String message) {
-    JsonResponse response = new JsonResponse();
-    response.setStatus(String.valueOf(status));
-    response.setSuccessMessage(message);
-    
-    return response;
   }
 }
