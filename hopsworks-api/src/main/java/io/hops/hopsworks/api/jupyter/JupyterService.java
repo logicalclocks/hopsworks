@@ -255,7 +255,7 @@ public class JupyterService {
     if(project.getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
       if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "This project is out of credits.");
+        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "This project is out of credits.");
       }
     }
     
