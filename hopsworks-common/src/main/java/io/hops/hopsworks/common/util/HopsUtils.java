@@ -253,8 +253,11 @@ public class HopsUtils {
       + username + Path.SEPARATOR + username + "__kstore.jks");
     Path remoteProjectDirT = new Path(remoteFSDir + Path.SEPARATOR
         + username + Path.SEPARATOR + username + "__tstore.jks");
+    Path remoteProjectDirP = new Path(remoteFSDir + Path.SEPARATOR + username + Path.SEPARATOR + username +
+        CertificateMaterializer.CERT_PASS_SUFFIX);
     dfso.rm(remoteProjectDirK, false);
     dfso.rm(remoteProjectDirT, false);
+    dfso.rm(remoteProjectDirP, false);
   }
   
   /**

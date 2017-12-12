@@ -98,7 +98,7 @@ public class CertificateMaterializer {
     TIME_SUFFIXES.put("d", TimeUnit.DAYS);
   }
   
-  private final String CERT_PASS_SUFFIX = "__cert.key";
+  public static final String CERT_PASS_SUFFIX = "__cert.key";
   
   private final Map<MaterialKey, InternalCryptoMaterial> materialMap =
       new ConcurrentHashMap<>();
