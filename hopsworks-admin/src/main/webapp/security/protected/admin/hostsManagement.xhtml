@@ -76,7 +76,7 @@
 		  </p:column>
 
 
-		  <p:column id="hostname" headerText="Hostname"
+		  <p:column id="hostip" headerText="Host IP"
 			    filterBy="#{node.hostname}"
 			    filterMatchMode="contains">
 
@@ -84,7 +84,7 @@
 		      <f:facet name="output"><h:outputText value="#{node.hostname}"/></f:facet>
 		      <f:facet name="input"><p:inputText value="#{node.hostname}"
 							 style="width:100%"
-							 label="Hostname"/>
+							 label="Host IP"/>
 		      </f:facet>
 		    </p:cellEditor>
 		  </p:column>

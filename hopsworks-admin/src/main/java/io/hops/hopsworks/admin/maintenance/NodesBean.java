@@ -47,7 +47,7 @@ public class NodesBean implements Serializable {
   private List<Host> allNodes;
   private final Map<String, Object> dialogOptions;
   private String newNodeHostId;
-  private String newNodeHostname_;
+  private String newNodeHostIp;
   private Host toBeDeletedNode;
   
   public NodesBean() {
@@ -78,12 +78,12 @@ public class NodesBean implements Serializable {
     this.newNodeHostId = newNodeHostId;
   }
   
-  public String getNewNodeHostname_() {
-    return newNodeHostname_;
+  public String getNewNodeHostIp() {
+    return newNodeHostIp;
   }
   
-  public void setNewNodeHostname_(String newNodeHostname_) {
-    this.newNodeHostname_ = newNodeHostname_;
+  public void setNewNodeHostIp(String newNodeHostIp) {
+    this.newNodeHostIp = newNodeHostIp;
   }
   
   public Host getToBeDeletedNode() {
@@ -117,15 +117,15 @@ public class NodesBean implements Serializable {
   public void typedNewNodeDetails() {
     String[] obj = new String[2];
     obj[0] = newNodeHostId;
-    obj[1] = newNodeHostname_;
+    obj[1] = newNodeHostIp;
     RequestContext.getCurrentInstance().closeDialog(obj);
   }
   
   public void onDialogAddNewNodeClosed(SelectEvent event) {
     String newNodeHostId = ((String[]) event.getObject())[0];
-    String newNodeHostname_ = ((String[]) event.getObject())[1];
+    String newNodeHostIp = ((String[]) event.getObject())[1];
     if (newNodeHostId == null || newNodeHostId.isEmpty()
-        || newNodeHostname_ == null || newNodeHostname_.isEmpty()) {
+        || newNodeHostIp == null || newNodeHostIp.isEmpty()) {
       MessagesController.addErrorMessage("Host not added", "All fields must be filled");
     } else {
       Host existingNode = hostsFacade.findByHostId(newNodeHostId);
@@ -136,7 +136,7 @@ public class NodesBean implements Serializable {
       } else {
         Host newNode = new Host();
         newNode.setHostId(newNodeHostId);
-        newNode.setHostname(newNodeHostname_);
+        newNode.setHostname(newNodeHostIp);
         allNodes.add(newNode);
         hostsFacade.storeHost(newNode, true);
         LOG.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostId());
