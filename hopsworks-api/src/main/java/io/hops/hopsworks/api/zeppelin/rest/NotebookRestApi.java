@@ -605,10 +605,8 @@ public class NotebookRestApi {
       for (Paragraph p : paragraphs) {
         Interpreter interpreter = p.getCurrentRepl();
         if (null != interpreter) {
-          String interpreterGroup = interpreter.getInterpreterGroup().getId()
-              .split(":")[0];
           String username = hdfsUsersController.getUserName(hdfsUserName);
-          if (certificateMaterializer.openedInterpreter(project.getId(), interpreterGroup)) {
+          if (certificateMaterializer.openedInterpreter(project.getId())) {
             try {
               HopsUtils.materializeCertificatesForProject(project.getName(),
                   settings.getHopsworksTmpCertDir(), settings.getHdfsTmpCertDir(),
@@ -616,6 +614,7 @@ public class NotebookRestApi {
             } catch (IOException ex) {
               LOG.warn("Could not materialize certificates for user: " +
                   project.getName() + "__" + username);
+              certificateMaterializer.closedInterpreter(project.getId());
               HopsUtils.cleanupCertificatesForProject(project.getName(),
                   settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
               throw ex;

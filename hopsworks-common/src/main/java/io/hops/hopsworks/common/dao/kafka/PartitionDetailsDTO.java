@@ -17,7 +17,7 @@ public class PartitionDetailsDTO implements Serializable {
   }
 
   public PartitionDetailsDTO(int id, String paritionLeader,
-          List<String> replicas, List<String> inSyncReplicas) {
+      List<String> replicas, List<String> inSyncReplicas) {
     this.id = id;
     this.leader = paritionLeader;
     this.replicas = replicas;

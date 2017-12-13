@@ -236,7 +236,7 @@ public class InterpreterRestApi {
         interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
       }
 
-      cleanUserCertificates(project, settingId);
+      cleanUserCertificates(project);
 
       zeppelinConf.getNotebookServer().clearParagraphRuntimeInfo(setting);
 
@@ -262,32 +262,51 @@ public class InterpreterRestApi {
     InterpreterDTO interpreter = new InterpreterDTO(setting, !zeppelinResource.isInterpreterRunning(setting, project));
     return new JsonResponse(Status.OK, "", interpreter).build();
   }
-
-  private void cleanUserCertificates(Project project, String interpreterGroup) {
-    if (certificateMaterializer.closedInterpreter(project.getId(),
-        user.getUsername(), interpreterGroup)) {
-      DistributedFileSystemOps dfso = null;
+  
+  private void cleanUserCertificates(Project project) {
+    DistributedFileSystemOps dfso = null;
+    try {
+      if (!areRunningInterpretersForProject(project)) {
+        
+        dfso = dfsService.getDfsOps();
+        HopsUtils
+            .cleanupCertificatesForProject(project.getName(),
+                settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
+        certificateMaterializer.closedInterpreter(project.getId());
+      }
+    } catch (IOException ex) {
+      logger.warn("Could not remove materialized certificates for user " + project.getOwner().getUsername(), ex);
+    } catch (AppException ex) {
+      logger.error("Exception while trying to get running interpreters for project: " + project.getName()
+          + " Cleaning certificates...", ex);
+      dfso = dfsService.getDfsOps();
       try {
-        if (interpreterGroup.equals(Settings.HOPSHIVE_INT_GROUP)) {
-          // In case we are stopping a HopsHive interpreter we just need to
-          // remove the certificates materialized on the local fs.
-          certificateMaterializer.removeCertificate(project.getName());
-        } else {
-          dfso = dfsService.getDfsOps();
-          HopsUtils
-              .cleanupCertificatesForProject(project.getName(),
-                  settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
-        }
-      } catch (IOException ex) {
-        logger.warn("Could not remove materialized certificates for user " + project.getOwner().getUsername(), ex);
-      } finally {
-        if (null != dfso) {
-          dfso.close();
-        }
+        certificateMaterializer.closedInterpreter(project.getId());
+        HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(), dfso,
+            certificateMaterializer);
+      } catch (IOException ex1) {
+        logger.error("Could not clean certificates!", ex1);
+      }
+    } finally {
+      if (null != dfso) {
+        dfso.close();
       }
     }
   }
 
+  private boolean areRunningInterpretersForProject(Project project) throws AppException {
+    Map<String, InterpreterDTO> interpreters = interpreters(project);
+    boolean running = false;
+    for (Map.Entry<String, InterpreterDTO> interpreter : interpreters.entrySet()) {
+      if (!interpreter.getValue().isNotRunning()) {
+        running = true;
+        break;
+      }
+    }
+    
+    return running;
+  }
+  
   /**
    * Get livy session Yarn AppId
    *
@@ -387,7 +406,7 @@ public class InterpreterRestApi {
       }
     }
     int res = livyService.deleteLivySession(sessionId);
-    cleanUserCertificates(project, settingId);
+    cleanUserCertificates(project);
 
     if (res != Response.Status.NOT_FOUND.getStatusCode() && res != Response.Status.OK.getStatusCode()) {
       return new JsonResponse(Status.EXPECTATION_FAILED, "Could not stop session '" + sessionId + "'").build();
@@ -542,10 +561,8 @@ public class InterpreterRestApi {
           for (LivyMsg.Session session : interpreterDTO.getSessions()) {
             stopSession(interpreterDTO.getId(), session.getId());
           }
-        } else if (interpreterDTO.getName().equalsIgnoreCase("spark")) {
+        } else {
           restartSetting(null, interpreterDTO.getId());
-        } else if (interpreterDTO.getName().equalsIgnoreCase(Settings.HOPSHIVE_INT_NAME)) {
-          certificateMaterializer.removeCertificate(project.getName());
         }
       }
     }
@@ -558,38 +575,6 @@ public class InterpreterRestApi {
     List<ProjectTeam> projectTeam = teambean.findMembersByProject(this.project);
     for (ProjectTeam member : projectTeam) {
       TicketContainer.instance.invalidate(member.getUser().getEmail());
-    }
-
-    return new JsonResponse(Status.OK, "Cache cleared.").build();
-  }
-
-  /**
-   * Restarts zeppelin by cleaning the cache for the user
-   * and project
-   *
-   * @param user
-   * @return
-   * @throws AppException
-   */
-  @GET
-  @Path("restart/{user}")
-  public Response restart(@PathParam("user") String user) throws AppException {
-
-    Map<String, InterpreterDTO> interpreterDTOMap = interpreters(this.project);
-    InterpreterDTO interpreterDTO;
-    for (String key : interpreterDTOMap.keySet()) {
-      interpreterDTO = interpreterDTOMap.get(key);
-      if (!interpreterDTO.isNotRunning()) {
-        if (interpreterDTO.getName().equalsIgnoreCase("livy")) {
-          for (LivyMsg.Session session : interpreterDTO.getSessions()) {
-            if (session.getOwner().equals(user)) {
-              stopSession(interpreterDTO.getId(), session.getId());
-            }
-          }
-        } else if (interpreterDTO.getName().equalsIgnoreCase(Settings.HOPSHIVE_INT_NAME)) {
-          certificateMaterializer.removeCertificate(project.getName());
-        }
-      }
     }
 
     return new JsonResponse(Status.OK, "Cache cleared.").build();

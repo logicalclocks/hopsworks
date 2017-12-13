@@ -6,42 +6,48 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.hops.hopsworks.common.dao.project.payment;
+package io.hops.hopsworks.api.admin.dto;
 
-public enum ProjectPaymentAction {
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
-  DEPOSIT_MONEY("Deposit money"),
-  WITHDRAW_MONEY("Withdraw money"),
-  UNDEFINED("Undefined");
-
-  private final String readable;
-
-  private ProjectPaymentAction(String readable) {
-    this.readable = readable;
+@XmlRootElement
+public class ProjectDeletionLog implements Serializable {
+  private static final long serialVersionUID = 1L;
+  
+  private String successLog;
+  private String errorLog;
+  
+  public ProjectDeletionLog() {
   }
-
-  public static ProjectPaymentAction create(String str) {
-    if (str.compareTo(DEPOSIT_MONEY.toString()) == 0) {
-      return DEPOSIT_MONEY;
-    }
-    if (str.compareTo(WITHDRAW_MONEY.toString()) == 0) {
-      return WITHDRAW_MONEY;
-    }
-    return UNDEFINED;
+  
+  public ProjectDeletionLog(String successLog, String errorLog) {
+    this.successLog = successLog;
+    this.errorLog = errorLog;
   }
-
-  @Override
-  public String toString() {
-    return readable;
+  
+  public String getSuccessLog() {
+    return successLog;
   }
-
+  
+  public void setSuccessLog(String successLog) {
+    this.successLog = successLog;
+  }
+  
+  public String getErrorLog() {
+    return errorLog;
+  }
+  
+  public void setErrorLog(String errorLog) {
+    this.errorLog = errorLog;
+  }
 }

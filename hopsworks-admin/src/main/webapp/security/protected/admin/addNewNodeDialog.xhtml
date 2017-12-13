@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui">
+     
+    <h:head>
+      <title>Add new node</title>
+      <style type="text/css">
+        .ui-widget {
+          font-size: 90%;
+        }
+      </style>
+    </h:head>
+     
+    <h:body>
+        <h:form>
+	  <h:panelGrid columns="2" cellpadding="3">
+	    <h:outputText value="Host ID: "/>
+	    <p:inputText value="${nodesBean.newNodeHostId}"/>
+	    <h:outputText value="Host IP: "/>
+	    <p:inputText value="${nodesBean.newNodeHostIp}"/>
+	  </h:panelGrid>
+
+	  <p:commandButton value="Add"
+			   icon="ui-icon-plusthick"
+			   styleClass="ui-button-danger"
+			   actionListener="#{nodesBean.typedNewNodeDetails}"/>
+        </h:form>
+    </h:body>
+</html>

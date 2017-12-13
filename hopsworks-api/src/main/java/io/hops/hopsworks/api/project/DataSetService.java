@@ -1195,8 +1195,7 @@ public class DataSetService {
       String fileExtension = "txt"; // default file  type
       //Check if file contains a valid extension
       if (fileName.contains(".")) {
-        fileExtension = fileName.substring(fileName.lastIndexOf(".")).replace(".", "").
-                toUpperCase();
+        fileExtension = fileName.substring(fileName.lastIndexOf(".")).replace(".", "").toUpperCase();
       }
       long fileSize = udfso.getFileStatus(fullPath).getLen();
 
@@ -1206,42 +1205,34 @@ public class DataSetService {
         if (fileSize < settings.getFilePreviewImageSize()) {
           //Read the image in bytes and convert it to base64 so that is 
           //rendered properly in the front-end
-          byte[] imageInBytes = new byte[(int)fileSize];
+          byte[] imageInBytes = new byte[(int) fileSize];
           is.readFully(imageInBytes);
           String base64Image = new Base64().encodeAsString(imageInBytes);
-          filePreviewDTO = new FilePreviewDTO("image",
-                  fileExtension.toLowerCase(), base64Image);
+          filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_IMAGE_TYPE,
+              fileExtension.toLowerCase(), base64Image);
         } else {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "Image at " + fullPath.toString() + " is too big to display, " +
-                  "please download it by double-clicking it instead");
+              "Image at " + fullPath.toString() + " is too big to display, "
+              + "please download it by double-clicking it instead");
         }
       } else {
-        DataInputStream dis = new DataInputStream(is);
-        try {
+        try (DataInputStream dis = new DataInputStream(is)) {
           int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes
-          if (fileSize > sizeThreshold && !fileName.endsWith("README.md")
-                && mode.equals("tail")) {
+          if (fileSize > sizeThreshold && !fileName.endsWith(Settings.README_FILE)
+              && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
             dis.skipBytes((int) (fileSize - sizeThreshold));
-          } else if (fileName.endsWith("README.md") &&
-              fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
-
+          } else if (fileName.endsWith(Settings.README_FILE) && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "README.md must be smaller than "
-                    + Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README
-                    + " to be previewd");
-          } else  {
-            sizeThreshold = (int)fileSize;
+                Settings.README_FILE + " must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES/1024
+                + " KB to be previewed");
+          } else if ((int) fileSize < sizeThreshold) {
+            sizeThreshold = (int) fileSize;
           }
-
           byte[] headContent = new byte[sizeThreshold];
           dis.readFully(headContent, 0, sizeThreshold);
           //File content
-          filePreviewDTO = new FilePreviewDTO("text", fileExtension.
-                  toLowerCase(), new String(headContent));
-
-        } finally {
-          dis.close();
+          filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_TEXT_TYPE, fileExtension.toLowerCase(),
+              new String(headContent));
         }
       }
 

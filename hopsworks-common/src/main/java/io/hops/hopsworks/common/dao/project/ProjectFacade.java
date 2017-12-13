@@ -265,11 +265,8 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(newProject);
   }
 
-  public void archiveProject(String projectname) {
-    Project project = findByName(projectname);
-    if (project != null) {
-      project.setArchived(true);
-    }
+  public void archiveProject(Project project) {
+    project.setArchived(true);
     em.merge(project);
   }
 
@@ -287,11 +284,8 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(project);
   }
 
-  public void unarchiveProject(String projectname) {
-    Project project = findByName(projectname);
-    if (project != null) {
-      project.setArchived(false);
-    }
+  public void unarchiveProject(Project project) {
+    project.setArchived(false);
     em.merge(project);
   }
 
@@ -353,5 +347,11 @@ public class ProjectFacade extends AbstractFacade<Project> {
       return true;
     }
     return false;
+  }
+
+  public void setTimestampQuotaUpdate(Project project, Date timestamp) {
+    project.setLastQuotaUpdate(timestamp);
+    em.merge(project);
+    em.flush();
   }
 }

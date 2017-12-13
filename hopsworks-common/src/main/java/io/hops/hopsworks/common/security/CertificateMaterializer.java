@@ -17,6 +17,8 @@
  */
 package io.hops.hopsworks.common.security;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
@@ -51,16 +53,17 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
@@ -95,14 +98,14 @@ public class CertificateMaterializer {
     TIME_SUFFIXES.put("d", TimeUnit.DAYS);
   }
   
-  private final String CERT_PASS_SUFFIX = "__cert.key";
+  public static final String CERT_PASS_SUFFIX = "__cert.key";
   
   private final Map<MaterialKey, InternalCryptoMaterial> materialMap =
       new ConcurrentHashMap<>();
-  private final Map<Integer, Set<String>> openInterpreterGroupsPerProject =
-      new ConcurrentHashMap<>();
+  
+  private final Set<Integer> projectsWithOpenInterpreters = new ConcurrentSkipListSet<>();
   private final Map<MaterialKey, FileRemover> scheduledFileRemovers =
-      new HashMap<>();
+      new ConcurrentHashMap<>();
   private String transientDir;
   private Long DELAY_VALUE;
   private TimeUnit DELAY_TIMEUNIT;
@@ -393,6 +396,13 @@ public class CertificateMaterializer {
     }
   }
   
+  @Lock(LockType.READ)
+  @AccessTimeout(value=200)
+  public boolean existsInStore(String username, String projectName) {
+    MaterialKey key = new MaterialKey(username, projectName);
+    return materialMap.containsKey(key);
+  }
+  
   private void scheduleFileRemover(MaterialKey key, FileRemover fileRemover) {
     fileRemover.scheduledFuture = scheduler.schedule(fileRemover, DELAY_VALUE,
         DELAY_TIMEUNIT);
@@ -402,57 +412,21 @@ public class CertificateMaterializer {
   }
   
   /**
-   * This method is used by the HDFSNotebookRepo via a JNDI lookup
-   * It keeps track of the opened interpreter groups to safely remove crypto
-   * material when not needed any longer.
-   * Spark group: spark, sparksql, pyspark, etc
-   * Livy group: livy.spark, livy.sparksql, etc
+   * It is called every time a paragraph is executed in Zeppelin. If the certificates for a Project has already been
+   * materialized, this method will return false and they will not be materialized again.
    * @param projectId
-   * @param interpreterGrp
-   * @return True when there is no opened interpreter group and the material
-   * should be materialized. False when the project has already opened
-   * interpreter(s) and it should not materialize the certificates
+   * @return True if it is the first time a paragraph is executed for that project. Otherwise false
    */
-  public boolean openedInterpreter(Integer projectId, String interpreterGrp) {
-    Set<String> openedGrps = openInterpreterGroupsPerProject.get(projectId);
-    
-    if (openedGrps == null) {
-      // Most probably we will run either Spark or Livy interpreter group
-      openedGrps = new HashSet<>(2);
-      openedGrps.add(interpreterGrp);
-      openInterpreterGroupsPerProject.put(projectId, openedGrps);
-      return true;
-    }
-    
-    openedGrps.add(interpreterGrp);
-    return false;
+  public boolean openedInterpreter(Integer projectId) {
+    return projectsWithOpenInterpreters.add(projectId);
   }
   
   /**
-   * This method is used by the HDFSNotebookRepo via a JNDI lookup
-   * It keeps track of the opened interpreter groups to safely remove crypto
-   * material when not needed any longer.
-   * Spark group: spark, sparksql, pyspark, etc
-   * Livy group: livy.spark, livy.sparksql, etc
-   * @param projectId
-   * @param interpreterGrp
-   * @return True when all the interpreter groups for this project are closed
-   * and it is safe to remove the material. False when there still open
-   * interpreters for either this interpreter group or other.
+   * It is called only when a project has not running interpreters, thus it is safe to remove the certificates.
+   * @param projectId ID of the project
    */
-  public boolean closedInterpreter(Integer projectId, String username,
-      String interpreterGrp) {
-    Set<String> openedGrps = openInterpreterGroupsPerProject.get(projectId);
-    if (openedGrps == null) {
-      return true;
-    }
-    openedGrps.remove(interpreterGrp);
-    if (openedGrps.isEmpty()) {
-      openInterpreterGroupsPerProject.remove(projectId);
-      return true;
-    }
-    
-    return false;
+  public void closedInterpreter(Integer projectId) {
+    projectsWithOpenInterpreters.remove(projectId);
   }
   
   private void deleteMaterialFromLocalFs(String username) {
@@ -597,6 +571,61 @@ public class CertificateMaterializer {
     
     private void incrementReference() {
       references++;
+    }
+  }
+  
+  /**
+   * This section provides methods for monitoring and control.
+   */
+  
+  /**
+   * Return an immutable state of the CertificateMaterializer service. Both the materialized and those scheduled for
+   * removal
+   * @return Immutable state of CertificateMaterializer service
+   */
+  @SuppressWarnings("unchecked")
+  public MaterializerState<Map<String, Integer>, Set<String>> getState() {
+    MaterializerState<ImmutableMap<MaterialKey, InternalCryptoMaterial>, ImmutableSet<MaterialKey>>
+        materializerState = getImmutableState();
+    
+    ImmutableMap<MaterialKey, InternalCryptoMaterial> materializedState = materializerState.getMaterializedState();
+    Map<String, Integer> occurencies = new HashMap<>(materializedState.size());
+    ImmutableSet<Map.Entry<MaterialKey, InternalCryptoMaterial>> entrySet = materializedState.entrySet();
+    entrySet.stream()
+        .forEach(es ->
+            occurencies.put(es.getKey().getExtendedUsername(), es.getValue().references));
+    
+    ImmutableSet<MaterialKey> scheduledRemovals = materializerState.getScheduledRemovals();
+    Set<String> removals = scheduledRemovals.stream()
+        .map(mt -> mt.getExtendedUsername())
+        .collect(Collectors.toSet());
+    
+    return new MaterializerState<>(occurencies, removals);
+  }
+  
+  @Lock(LockType.WRITE)
+  private MaterializerState getImmutableState() {
+    ImmutableMap<MaterialKey, InternalCryptoMaterial> materializedState = ImmutableMap.copyOf(materialMap);
+    ImmutableSet<MaterialKey> scheduledRemovals = ImmutableSet.copyOf(scheduledFileRemovers.keySet());
+    return new MaterializerState<ImmutableMap<MaterialKey, InternalCryptoMaterial>, ImmutableSet<MaterialKey>>(
+        materializedState, scheduledRemovals);
+  }
+  
+  public class MaterializerState<T, S> {
+    private final T materializedState;
+    private final S scheduledRemovals;
+    
+    MaterializerState(T materializedState, S scheduledRemovals) {
+      this.materializedState = materializedState;
+      this.scheduledRemovals = scheduledRemovals;
+    }
+    
+    public T getMaterializedState() {
+      return materializedState;
+    }
+    
+    public S getScheduledRemovals() {
+      return scheduledRemovals;
     }
   }
 }

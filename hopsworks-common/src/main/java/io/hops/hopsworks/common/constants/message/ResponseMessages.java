@@ -131,6 +131,9 @@ public class ResponseMessages {
   public final static String CONSENT_ALREADY_EXISTS
           = "Duplicate error. There is already a consent form in the Project with the same name";
   public final static String PROJECT_NOT_SELECTED = "No project selected";
+  public final static String QUOTA_NOT_FOUND = "Quota information not found.";
+  public final static String QUOTA_REQUEST_NOT_COMPLETE = "Please specify both namespace and space quota.";
+  public final static String QUOTA_ERROR = "Quota update error.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";

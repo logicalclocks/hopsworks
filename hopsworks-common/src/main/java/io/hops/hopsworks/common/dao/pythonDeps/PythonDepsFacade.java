@@ -164,7 +164,7 @@ public class PythonDepsFacade {
               "Invalid version of python " + pythonVersion
               + " (valid: '2.7', and '3.5', and '3.6'");
     }
-    condaEnvironmentOp(CondaOp.CREATE, project, pythonVersion,  getHosts());
+    condaEnvironmentOp(CondaOp.CREATE, pythonVersion, project, pythonVersion,  getHosts());
 
     List<PythonDep> all = new ArrayList<>();
     projectFacade.enableConda(project);
@@ -338,7 +338,7 @@ public class PythonDepsFacade {
    */
   public void removeProject(Project proj) throws AppException {
     if (proj.getConda()) {
-      condaEnvironmentOp(CondaOp.REMOVE, proj, "", getHosts());
+      condaEnvironmentOp(CondaOp.REMOVE, "", proj, "", getHosts());
     }
   }
 
@@ -349,7 +349,7 @@ public class PythonDepsFacade {
    */
   public void cloneProject(Project srcProject, String destProj) throws
           AppException {
-    condaEnvironmentOp(CondaOp.CLONE, srcProject, destProj, getHosts());
+    condaEnvironmentOp(CondaOp.CLONE, "", srcProject, destProj, getHosts());
   }
 
   /**
@@ -358,15 +358,17 @@ public class PythonDepsFacade {
    * call to the kagent to execute the anaconda command.
    *
    * @param proj
+   * @param version
    * @param op
    * @param arg
+   * @param hosts
    * @throws AppException
    */
-  public void condaEnvironmentOp(CondaOp op, Project proj, String arg,
+  public void condaEnvironmentOp(CondaOp op, String version, Project proj, String arg,
           List<Host> hosts) throws AppException {
     for (Host h : hosts) {
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-              op, CondaStatus.ONGOING, proj, "", "", "default",
+              op, CondaStatus.ONGOING, proj, version, "", "default",
               new Date(), arg);
       em.persist(cc);
     }

@@ -3,6 +3,7 @@ package io.hops.hopsworks.common.dao.dataset;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -97,7 +98,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
       return null;
     }
   }
-
+  
   public List<Project> findProjectSharedWith(Project project, Inode inode) {
     List<Dataset> datasets = findByInode(inode);
     if (datasets == null){

@@ -459,9 +459,9 @@ public class DatasetController {
       dis = new DataInputStream(is);
       long fileSize = dfso.getFileStatus(new org.apache.hadoop.fs.Path(
           path)).getLen();
-      if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
+      if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
         throw new IllegalArgumentException("README.md must be smaller than"
-            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README
+            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES
             + " to be previewd");
       }
       byte[] headContent = new byte[(int) fileSize];

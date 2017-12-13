@@ -406,21 +406,21 @@ public class DistributedFileSystemOps {
    */
   public void setHdfsSpaceQuotaInMBs(Path src, long diskspaceQuotaInMB) throws
           IOException {
-    setHdfsQuota(src, HdfsConstants.QUOTA_DONT_SET, diskspaceQuotaInMB);
+    setHdfsQuotaBytes(src, HdfsConstants.QUOTA_DONT_SET,
+        DistributedFileSystemOps.MB * diskspaceQuotaInMB);
   }
 
   /**
    *
    * @param src
    * @param numberOfFiles
-   * @param diskspaceQuotaInMB
+   * @param diskspaceQuotaInBytes
    * @throws IOException
    */
-  public void setHdfsQuota(Path src, long numberOfFiles, long diskspaceQuotaInMB)
+  public void setHdfsQuotaBytes(Path src, long numberOfFiles, long diskspaceQuotaInBytes)
           throws
           IOException {
-    dfs.setQuota(src, numberOfFiles, DistributedFileSystemOps.MB
-            * diskspaceQuotaInMB);
+    dfs.setQuota(src, numberOfFiles, diskspaceQuotaInBytes);
   }
 
   /**

@@ -5,6 +5,9 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,6 +25,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributes;
+import io.hops.hopsworks.common.dao.hdfs.HdfsInodeAttributesFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
@@ -43,10 +47,6 @@ import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentAction;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryFacade;
-import io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistoryPK;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
@@ -67,6 +67,7 @@ import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
@@ -96,8 +97,6 @@ import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.xml.rpc.ServiceException;
@@ -116,6 +115,7 @@ import org.apache.hadoop.yarn.api.records.LogAggregationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.json.JSONObject;
 
 @Stateless
@@ -128,8 +128,6 @@ public class ProjectController {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
-  @EJB
-  private ProjectPaymentsHistoryFacade projectPaymentsHistoryFacade;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
@@ -183,9 +181,10 @@ public class ProjectController {
   private CertificatesController certificatesController;
   @EJB
   private CertificatesMgmService certificatesMgmService;
-
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
+  @EJB
+  private MessageController messageController;
+  @EJB
+  private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -329,10 +328,8 @@ public class ProjectController {
 
       //set payment and quotas
       try {
-
         setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
             dfso, owner);
-
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -938,9 +935,429 @@ public class ProjectController {
     if (settings.isPythonKernelEnabled()) {
       jupyterProcessFacade.removePythonKernelsForProject(project.getName());
     }
-
   }
-
+  
+  public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
+    CleanupLogger cleanupLogger = new CleanupLogger(projectName);
+    DistributedFileSystemOps dfso = null;
+    YarnClientWrapper yarnClientWrapper = null;
+    try {
+      dfso = dfs.getDfsOps();
+      yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
+      Project project = projectFacade.findByName(projectName);
+      if (project != null) {
+        cleanupLogger.logSuccess("Project not found in the database");
+  
+        // Remove from Project team
+        try {
+          updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
+          cleanupLogger.logSuccess("Updated team role");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Get Yarn applications
+        List<ApplicationReport> projectApps = null;
+        try {
+          Collection<ProjectTeam> team = project.getProjectTeamCollection();
+          Set<String> hdfsUsers = new HashSet<>();
+          for (ProjectTeam pt : team) {
+            String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
+                getUser());
+            hdfsUsers.add(hdfsUsername);
+          }
+          hdfsUsers.add(project.getProjectGenericUser());
+    
+          projectApps = getYarnApplications(hdfsUsers, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Gotten Yarn applications");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Kill Zeppelin jobs
+        try {
+          killZeppelin(project.getId(), sessionId);
+          cleanupLogger.logSuccess("Killed Zeppelin");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Stop Jupyter
+        try {
+          jupyterProcessFacade.stopProject(project);
+          cleanupLogger.logSuccess("Stopped Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Kill Yarn Jobs
+        try {
+          killYarnJobs(project);
+          cleanupLogger.logSuccess("Killed Yarn jobs");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Wait for Yarn logs
+        try {
+          waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Gotten logs for jobs");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Log removal
+        try {
+          logProject(project, OperationType.Delete);
+          cleanupLogger.logSuccess("Logged project removal");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change ownership of root dir
+        try {
+          Path path = new Path(File.separator + Settings.DIR_ROOT + File.separator
+              + project.getName());
+          changeOwnershipToSuperuser(path, dfso);
+          cleanupLogger.logSuccess("Changed ownership of root Project dir");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change ownership of tmp file
+        Path dummy = new Path("/tmp/" + project.getName());
+        try {
+          changeOwnershipToSuperuser(dummy, dfso);
+          cleanupLogger.logSuccess("Changed ownership of dummy inode");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove Kafka
+        try {
+          removeKafkaTopics(project);
+          cleanupLogger.logSuccess("Removed Kafka topics");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove certificates
+        try {
+          certificatesController.deleteProjectCertificates(project);
+          cleanupLogger.logSuccess("Removed certificates");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        List<HdfsUsers> usersToClean = getUsersToClean(project);
+        List<HdfsGroups> groupsToClean = getGroupsToClean(project);
+        
+        // Remove project related files
+        try {
+          removeProjectRelatedFiles(usersToClean, dfso);
+          cleanupLogger.logSuccess("Removed project related files");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Remove quotas
+        try {
+          removeQuotas(project);
+          cleanupLogger.logSuccess("Removed quotas");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // Change owner for files in shared datasets
+        try {
+          fixSharedDatasets(project, dfso);
+          cleanupLogger.logSuccess("Fixed shared datasets");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // 16) Delete Hive database - will automatically cleanup all the Hive's metadata
+        try {
+          hiveController.dropDatabase(project, dfso, true);
+          cleanupLogger.logSuccess("Removed Hive db");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Delete elasticsearch template for this project
+        try {
+          removeElasticsearch(project.getName());
+          cleanupLogger.logSuccess("Removed ElasticSearch");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // delete project group and users
+        try {
+          removeGroupAndUsers(groupsToClean, usersToClean);
+          cleanupLogger.logSuccess("Removed HDFS Groups and Users");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // remove anaconda repos
+        try {
+          removeJupyter(project);
+          cleanupLogger.logSuccess("Removed Jupyter");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+        
+        // remove dumy Inode
+        try {
+          dfso.rm(dummy, true);
+          cleanupLogger.logSuccess("Removed dummy Inode");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // remove folder
+        try {
+          removeProjectFolder(project.getName(), dfso);
+          cleanupLogger.logSuccess("Removed root Project folder");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+      } else {
+        // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
+        // with the same name at the same time
+        cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
+        Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        Users user = userFacade.findByEmail(userEmail);
+        Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
+        Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
+        try {
+          if (!dfso.exists(tmpInodePath.toString())) {
+            dfso.touchz(tmpInodePath);
+          }
+          Inode tmpInode = inodes.getInodeAtPath(tmpInodePath.toString());
+          if (tmpInode != null) {
+            toDeleteProject.setInode(tmpInode);
+            projectFacade.persistProject(toDeleteProject);
+            projectFacade.flushEm();
+            cleanupLogger.logSuccess("Created dummy Inode");
+          }
+        } catch (IOException ex) {
+          cleanupLogger.logError("Could not create dummy Inode, moving on unsafe");
+        }
+  
+  
+        // Kill jobs
+        List<HdfsUsers> projectHdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
+        try {
+          Set<String> hdfsUsersStr = new HashSet();
+          for (HdfsUsers hdfsUser : projectHdfsUsers) {
+            hdfsUsersStr.add(hdfsUser.getName());
+          }
+          hdfsUsersStr.add(projectName + "__" + Settings.PROJECT_GENERIC_USER_SUFFIX);
+    
+          List<ApplicationReport> projectApps = getYarnApplications(hdfsUsersStr, yarnClientWrapper.getYarnClient());
+          waitForJobLogs(projectApps, yarnClientWrapper.getYarnClient());
+          cleanupLogger.logSuccess("Killed all Yarn Applications");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Cleanup Jupyter project
+        try {
+          jupyterProcessFacade.projectCleanup(toDeleteProject);
+          cleanupLogger.logSuccess("Cleaned Jupyter environment");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove project related files
+        try {
+          removeProjectRelatedFiles(projectHdfsUsers, dfso);
+          cleanupLogger.logSuccess("Removed project related files from HDFS");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Hive database
+        try {
+          hiveController.dropDatabase(toDeleteProject, dfso, true);
+          cleanupLogger.logSuccess("Dropped Hive database");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove ElasticSearch index
+        try {
+          removeElasticsearch(projectName);
+          cleanupLogger.logSuccess("Removed ElasticSearch");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove HDFS Groups and Users
+        try {
+          List<HdfsGroups> projectHdfsGroups = hdfsUsersBean.getAllProjectHdfsGroups(projectName);
+          removeGroupAndUsers(projectHdfsGroups, projectHdfsUsers);
+          cleanupLogger.logSuccess("Removed HDFS Groups and Users");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Yarn project quota
+        try {
+          removeQuotas(toDeleteProject);
+          cleanupLogger.logSuccess("Removed project quota");
+        } catch (Exception ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove Certificates
+        try {
+          LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(), projectName);
+          userCertsFacade.removeAllCertsOfAProject(projectName);
+          cleanupLogger.logSuccess("Deleted certificates");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove root project directory
+        try {
+          removeProjectFolder(projectName, dfso);
+          cleanupLogger.logSuccess("Removed root project directory");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+  
+        // Remove /tmp/project
+        try {
+          dfso.rm(new Path(File.separator + "tmp" + File.separator + projectName), true);
+          cleanupLogger.logSuccess("Removed /tmp");
+        } catch (IOException ex) {
+          cleanupLogger.logError(ex.getMessage());
+        }
+      }
+    } finally {
+      dfs.closeDfsClient(dfso);
+      ycs.closeYarnClient(yarnClientWrapper);
+      LOGGER.log(Level.INFO, cleanupLogger.getSuccessLog().toString());
+      LOGGER.log(Level.SEVERE, cleanupLogger.getErrorLog().toString());
+      sendInbox(cleanupLogger.getSuccessLog().append("\n")
+          .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
+    }
+    String[] logs = new String[2];
+    logs[0] = cleanupLogger.getSuccessLog().toString();
+    logs[1] = cleanupLogger.getErrorLog().toString();
+    return logs;
+  }
+  
+  private void sendInbox(String message, String userRequested) {
+    Users to = userFacade.findByEmail(userRequested);
+    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    messageController.send(to, from, "Force project cleanup", "Status", message, "");
+  }
+  
+  private void removeProjectRelatedFiles(List<HdfsUsers> hdfsUsers, DistributedFileSystemOps dfso)
+    throws IOException {
+    String logPath = getYarnAgregationLogPath();
+    for (HdfsUsers user : hdfsUsers) {
+      // Remove logs
+      dfso.rm(new Path(logPath + File.separator + user.getName()), true);
+      
+      // Change owner of history files
+      List<Inode> historyInodes = inodeFacade.findHistoryFileByHdfsUser(user);
+      for (Inode inode : historyInodes) {
+        dfso.setOwner(new Path(inodeFacade.getPath(inode)),
+            UserGroupInformation.getLoginUser().getUserName(), "hadoop");
+      }
+      
+      Path certsHdfsDir = new Path(settings.getHdfsTmpCertDir() + File.separator + user.getName());
+      if (dfso.exists(certsHdfsDir.toString())) {
+        dfso.rm(certsHdfsDir, true);
+      }
+    }
+  }
+  
+  private List<ApplicationReport> getYarnApplications(Set<String> hdfsUsers, YarnClient yarnClient)
+    throws YarnException, IOException {
+    List<ApplicationReport> projectApplications = yarnClient.getApplications(null, hdfsUsers, null,
+        EnumSet.of(
+            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
+            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+    return projectApplications;
+  }
+  
+  private void killYarnJobs(Project project) {
+    List<Jobs> running = jobFacade.getRunningJobs(project);
+    if (running != null && !running.isEmpty()) {
+      Runtime rt = Runtime.getRuntime();
+      for (Jobs job : running) {
+        //Get the appId of the running app
+        List<Execution> jobExecs = execFacade.findForJob(job);
+        //Sort descending based on jobId because therie might be two
+        // jobs with the same name and we want the latest
+        Collections.sort(jobExecs, new Comparator<Execution>() {
+          @Override
+          public int compare(Execution lhs, Execution rhs) {
+            return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
+                getId()) ? 1 : 0;
+          }
+        });
+        try {
+          rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
+              + jobExecs.get(0).getAppId());
+        } catch (IOException ex) {
+          Logger.getLogger(ProjectController.class.getName()).
+              log(Level.SEVERE, null, ex);
+        }
+      }
+    }
+  }
+  
+  private void waitForJobLogs(List<ApplicationReport> projectsApps, YarnClient client)
+    throws YarnException, IOException, InterruptedException {
+    for (ApplicationReport appReport : projectsApps) {
+      FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
+      while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
+        client.killApplication(appReport.getApplicationId());
+        appReport = client.getApplicationReport(appReport.getApplicationId());
+        finalState = appReport.getFinalApplicationStatus();
+      }
+      LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
+      while (!YarnLogUtil.isFinal(logAggregationState)) {
+        Thread.sleep(500);
+        appReport = client.getApplicationReport(appReport.getApplicationId());
+        logAggregationState = appReport.getLogAggregationStatus();
+      }
+    }
+  }
+  
+  private void killZeppelin(Integer projectId, String sessionId) throws AppException {
+    Response resp = ClientBuilder.newClient()
+        .target(settings.getRestEndpoint()
+            + "/hopsworks-api/api/zeppelin/" + projectId
+            + "/interpreter/check")
+        .request()
+        .cookie("SESSION", sessionId)
+        .method("GET");
+    LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
+    if (resp.getStatus() == 200) {
+      resp = ClientBuilder.newClient()
+          .target(settings.getRestEndpoint()
+              + "/hopsworks-api/api/zeppelin/" + projectId
+              + "/interpreter/restart")
+          .request()
+          .cookie("SESSION", sessionId)
+          .method("GET");
+      LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
+      if (resp.getStatus() != 200) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(),
+            "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+      }
+    }
+  }
+  
   public void cleanup(Project project, String sessionId) throws AppException {
     cleanup(project, sessionId, null);
   }
@@ -977,39 +1394,16 @@ public class ProjectController {
               getUser());
           hdfsUsers.add(hdfsUsername);
         }
-        hdfsUsers.add(project.getName());
+        hdfsUsers.add(project.getProjectGenericUser());
 
-        List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
-            YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
-            YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
+        List<ApplicationReport> projectsApps = getYarnApplications(hdfsUsers, client);
 
         //Restart zeppelin so interpreters shut down
-        Response resp = ClientBuilder.newClient()
-            .target(settings.getRestEndpoint()
-                + "/hopsworks-api/api/zeppelin/" + project.getId()
-                + "/interpreter/check")
-            .request()
-            .cookie("SESSION", sessionId)
-            .method("GET");
-        LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
-        if (resp.getStatus() == 200) {
-          resp = ClientBuilder.newClient()
-              .target(settings.getRestEndpoint()
-                  + "/hopsworks-api/api/zeppelin/" + project.getId()
-                  + "/interpreter/restart")
-              .request()
-              .cookie("SESSION", sessionId)
-              .method("GET");
-          LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
-          if (resp.getStatus() != 200) {
-            throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Could not close zeppelin interpreters, please wait 60 seconds to retry");
-          }
-        }
-
+        killZeppelin(project.getId(), sessionId);
+        
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
+        
         try {
           removeAnacondaEnv(project);
         } catch (AppException ex) {
@@ -1017,45 +1411,9 @@ public class ProjectController {
         }
 
         //kill jobs
-        List<Jobs> running = jobFacade.getRunningJobs(project);
-        if (running != null && !running.isEmpty()) {
-          Runtime rt = Runtime.getRuntime();
-          for (Jobs job : running) {
-            //Get the appId of the running app
-            List<Execution> jobExecs = execFacade.findForJob(job);
-            //Sort descending based on jobId because therie might be two 
-            // jobs with the same name and we want the latest
-            Collections.sort(jobExecs, new Comparator<Execution>() {
-              @Override
-              public int compare(Execution lhs, Execution rhs) {
-                return lhs.getId() > rhs.getId() ? -1 : (lhs.getId() < rhs.
-                    getId()) ? 1 : 0;
-              }
-            });
-            try {
-              rt.exec(settings.getHadoopSymbolicLinkDir() + "/bin/yarn application -kill "
-                  + jobExecs.get(0).getAppId());
-            } catch (IOException ex) {
-              Logger.getLogger(ProjectController.class.getName()).
-                  log(Level.SEVERE, null, ex);
-            }
-          }
-        }
+        killYarnJobs(project);
 
-        for (ApplicationReport appReport : projectsApps) {
-          FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
-          while (finalState.equals(FinalApplicationStatus.UNDEFINED)) {
-            client.killApplication(appReport.getApplicationId());
-            appReport = client.getApplicationReport(appReport.getApplicationId());
-            finalState = appReport.getFinalApplicationStatus();
-          }
-          LogAggregationStatus logAggregationState = appReport.getLogAggregationStatus();
-          while (!YarnLogUtil.isFinal(logAggregationState)) {
-            Thread.sleep(500);
-            appReport = client.getApplicationReport(appReport.getApplicationId());
-            logAggregationState = appReport.getLogAggregationStatus();
-          }
-        }
+        waitForJobLogs(projectsApps, client);
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
@@ -1077,7 +1435,7 @@ public class ProjectController {
       }
     }
   }
-
+  
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, Future<CertificatesController
       .CertsResult> certsGenerationFuture)
@@ -1093,16 +1451,10 @@ public class ProjectController {
       String path = File.separator + Settings.DIR_ROOT + File.separator
           + project.getName();
       Path location = new Path(path);
-      if (dfso.exists(path)) {
-        dfso.setOwner(location, settings.getHdfsSuperUser(), settings.
-            getHdfsSuperUser());
-      }
+      changeOwnershipToSuperuser(location, dfso);
 
       Path dumy = new Path("/tmp/" + project.getName());
-      if (dfso.exists(dumy.toString())) {
-        dfso.setOwner(dumy, settings.getHdfsSuperUser(), settings.
-            getHdfsSuperUser());
-      }
+      changeOwnershipToSuperuser(dumy, dfso);
 
       //remove kafka topics
       removeKafkaTopics(project);
@@ -1120,42 +1472,17 @@ public class ProjectController {
                 ". Manual cleanup is needed!!!", ex);
         throw ex;
       }
-      
-      String logPath = getYarnAgregationLogPath();
-
-      for (HdfsUsers hdfsUser : usersToClean) {
-        //remove jobs log associated with project
-        location = new Path(logPath + "/" + hdfsUser.getName());
-        dfso.rm(location, true);
-
-        //change owner of history files
-        List<Inode> inodes = inodeFacade.findHistoryFileByHdfsUser(hdfsUser);
-        for (Inode inode : inodes) {
-          location = new Path(inodeFacade.getPath(inode));
-          dfso.setOwner(location, UserGroupInformation.getLoginUser().
-              getUserName(), "hadoop");
-        }
-
-        //Clean up tmp certificates dir from hdfs
-        String tmpCertsDir = settings.getHdfsTmpCertDir() + "/" + hdfsUser.
-            getName();
-        if (dfso.exists(tmpCertsDir)) {
-          dfso.rm(new Path(tmpCertsDir), true);
-        }
-
-      }
-
-      //remove folder created by zeppelin in /user
-      dfso.rm(new Path("/user/" + project.getName()), true);
+  
+      removeProjectRelatedFiles(usersToClean, dfso);
 
       //remove quota
       removeQuotas(project);
 
       //change owner for files in shared datasets
       fixSharedDatasets(project, dfso);
-
+      
       //Delete Hive database - will automatically cleanup all the Hive's metadata
-      hiveController.dropDatabase(project, dfso);
+      hiveController.dropDatabase(project, dfso, false);
 
       //Delete elasticsearch template for this project
       removeElasticsearch(project.getName());
@@ -1165,9 +1492,6 @@ public class ProjectController {
 
       //remove dumy Inode
       dfso.rm(dumy, true);
-
-      //remove anaconda repos
-      removeAnacondaEnv(project);
 
       //remove anaconda repos
       removeJupyter(project);
@@ -1182,7 +1506,14 @@ public class ProjectController {
       }
     }
   }
-
+  
+  private void changeOwnershipToSuperuser(Path path, DistributedFileSystemOps dfso) throws IOException {
+    if (dfso.exists(path.toString())) {
+      dfso.setOwner(path, settings.getHdfsSuperUser(), settings.
+          getHdfsSuperUser());
+    }
+  }
+  
   @TransactionAttribute(
       TransactionAttributeType.REQUIRES_NEW)
   private List<ProjectTeam> updateProjectTeamRole(Project project,
@@ -1442,35 +1773,18 @@ public class ProjectController {
     }
 
     //send the project back to client
-    String quota = getYarnQuota(name);
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        quota);
-  }
-
-  public String getYarnQuota(String name) {
-    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
-        findByProjectName(name);
-    if (yarnQuota != null) {
-      return Float.toString(yarnQuota.getQuotaRemaining());
-    }
-    return "";
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids);
   }
 
   public void setProjectOwnerAndQuotas(Project project, long diskspaceQuotaInMB,
       DistributedFileSystemOps dfso, Users user)
       throws IOException {
-    this.projectPaymentsHistoryFacade.persistProjectPaymentsHistory(
-        new ProjectPaymentsHistory(new ProjectPaymentsHistoryPK(project
-            .getName(), project.getCreated()), project.
-            getOwner().getEmail(),
-            ProjectPaymentAction.DEPOSIT_MONEY, 0));
-    this.projectPaymentsHistoryFacade.flushEm();
     this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
         new YarnProjectsQuota(project.getName(), Integer.parseInt(
-            settings
-                .getYarnDefaultQuota()), 0));
+            settings.getYarnDefaultQuota()), 0));
     this.yarnProjectsQuotaFacade.flushEm();
-    setHdfsSpaceQuotaInMBs(project.getName(), diskspaceQuotaInMB, dfso);
+    setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, dfso);
+    projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
     logActivity(ActivityFacade.NEW_PROJECT + project.getName(),
         ActivityFacade.FLAG_PROJECT, user, project);
@@ -1480,30 +1794,24 @@ public class ProjectController {
         getName());
   }
 
-  public void setHdfsSpaceQuotaInMBs(String projectname, long diskspaceQuotaInMB,
-      DistributedFileSystemOps dfso)
+  public void setHdfsSpaceQuotasInMBs(Project project, Long diskspaceQuotaInMB,
+      Long hiveDbSpaceQuotaInMb, DistributedFileSystemOps dfso)
       throws IOException {
-    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(projectname)),
+
+    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(project.getName())),
         diskspaceQuotaInMB);
-  }
 
-  public void setPaymentType(String projectname, PaymentType paymentType){
-    Project project = projectFacade.findByName(projectname);
-    if (project != null) {
-      project.setPaymentType(paymentType);
-      this.projectFacade.mergeProject(project);
-      this.projectFacade.flushEm();
+    if (hiveDbSpaceQuotaInMb != null &&
+        projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
+      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(project.getName()),
+          hiveDbSpaceQuotaInMb);
     }
   }
-  
-  public HdfsInodeAttributes getHdfsQuotas(int inodeId) throws AppException {
 
-    HdfsInodeAttributes res = em.find(HdfsInodeAttributes.class, inodeId);
-    if (res == null) {
-      return new HdfsInodeAttributes(inodeId);
-    }
-
-    return res;
+  public void setPaymentType(Project project, PaymentType paymentType){
+    project.setPaymentType(paymentType);
+    this.projectFacade.mergeProject(project);
+    this.projectFacade.flushEm();
   }
 
   /**
@@ -1512,40 +1820,58 @@ public class ProjectController {
    * @return
    * @throws AppException
    */
-  public QuotasDTO getQuotas(Integer projectId) throws AppException {
+  public QuotasDTO getQuotas(Integer projectId) {
     Project project = projectFacade.find(projectId);
     return getQuotasInternal(project);
   }
 
-  private QuotasDTO getQuotasInternal(Project project) throws AppException {
-    String yarnQuota = getYarnQuota(project.getName());
+  public QuotasDTO getQuotasInternal(Project project) {
+    Long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L, dbhdfsQuota = -1L,
+        dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L;
+    Float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
 
-    HdfsInodeAttributes projectInodeAttrs = getHdfsQuotas(project.getInode().getId());
-    Long hdfsQuota = projectInodeAttrs.getDsquota().longValue();
-    Long hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
-    Long hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
-    Long hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    // Yarn Quota
+    YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
+        findByProjectName(project.getName());
+    if (yarnQuota == null) {
+      LOGGER.log(Level.SEVERE, "Cannot find YARN quota information for project: " + project.getName());
+    } else {
+      yarnRemainingQuota = yarnQuota.getQuotaRemaining();
+      yarnTotalQuota = yarnQuota.getTotal();
+    }
+
+    // HDFS project directory quota
+    HdfsInodeAttributes projectInodeAttrs = hdfsInodeAttributesFacade.
+        getInodeAttributes(project.getInode().getId());
+    if (projectInodeAttrs == null) {
+      LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
+    } else {
+      hdfsQuota = projectInodeAttrs.getDsquota().longValue();
+      hdfsUsage = projectInodeAttrs.getDiskspace().longValue();
+      hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
+      hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    }
 
     // If the Hive service is enabled, get the quota information for the db directory
     if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
       List<Dataset> datasets = (List<Dataset>)project.getDatasetCollection();
       for (Dataset ds : datasets) {
         if (ds.getType() == DatasetType.HIVEDB) {
-          HdfsInodeAttributes dbInodeAttrs = getHdfsQuotas(ds.getInodeId());
-
-          Long dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
-          Long dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
-          Long dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-          Long dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
-
-          return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
-              dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
+          HdfsInodeAttributes dbInodeAttrs = hdfsInodeAttributesFacade.getInodeAttributes(ds.getInodeId());
+          if (dbInodeAttrs == null) {
+            LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
+          } else {
+            dbhdfsQuota = dbInodeAttrs.getDsquota().longValue();
+            dbhdfsUsage = dbInodeAttrs.getDiskspace().longValue();
+            dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
+            dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
+          }
         }
       }
     }
 
-    return new QuotasDTO(yarnQuota, hdfsQuota, hdfsUsage,
-        hdfsNsQuota, hdfsNsCount, (long)0, (long)0, (long)0, (long)0);
+    return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
+              dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
   }
 
   /**
@@ -1590,30 +1916,6 @@ public class ProjectController {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
 
-      //kill zeppelin for this user
-      Response resp = ClientBuilder.newClient()
-          .target(settings.getRestEndpoint()
-              + "/hopsworks-api/api/zeppelin/" + project.getId()
-              + "/interpreter/check")
-          .request()
-          .cookie("SESSION", sessionId)
-          .method("GET");
-      LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
-      if (resp.getStatus() == 200) {
-        resp = ClientBuilder.newClient()
-            .target(settings.getRestEndpoint()
-                + "/hopsworks-api/api/zeppelin/" + project.getId()
-                + "/interpreter/restart/" + hdfsUser)
-            .request()
-            .cookie("SESSION", sessionId)
-            .method("GET");
-        LOGGER.log(Level.FINE, "Zeppelin restart resp:{0}", resp.getStatus());
-        if (resp.getStatus() != 200) {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not close zeppelin interpreters, please wait 60 seconds to retry");
-        }
-      }
       //kill all jobs run by this user.
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
@@ -2228,6 +2530,126 @@ public class ProjectController {
     if (!Arrays.equals(userKey, keyStore)) {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "Certificate error!");
+    }
+  }
+
+  /**
+   * Helper class to log force cleanup operations
+   * @see ProjectController#forceCleanup(String, String, String)
+   */
+  private class CleanupLogger {
+    private final String projectName;
+    private final StringBuilder successLog;
+    private final StringBuilder errorLog;
+
+    private CleanupLogger(String projectName) {
+      this.projectName = projectName;
+      successLog = new StringBuilder();
+      errorLog = new StringBuilder();
+    }
+
+    private void logError(String message) {
+      log(errorLog, "*** ERROR ***", message);
+    }
+
+    private void logSuccess(String message) {
+      log(successLog, "*** SUCCESS ***", message);
+    }
+
+    private void log(StringBuilder log, String summary, String message) {
+      LocalDateTime now = LocalDateTime.now();
+      log.append("<").append(now.format(DateTimeFormatter.ISO_DATE_TIME)).append(">")
+          .append(summary)
+          .append(message)
+          .append(" *").append(projectName).append("*")
+          .append("\n");
+    }
+
+    private StringBuilder getSuccessLog() {
+      return successLog;
+    }
+
+    private StringBuilder getErrorLog() {
+      return errorLog;
+    }
+  }
+
+  /**
+   * For HopsFS quotas, both the namespace and the space quotas should be not null
+   * at the same time.
+   * @param newProjectState
+   * @param quotas
+   * @throws IOException
+   * @throws AppException
+   */
+  public void adminProjectUpdate(Project newProjectState, QuotasDTO quotas) throws AppException {
+    Project currentProject = projectFacade.findByName(newProjectState.getName());
+
+    // Set (un)archived status only if changed
+    if (newProjectState.getArchived() != null &&
+        (currentProject.getArchived() != newProjectState.getArchived())) {
+      if (newProjectState.getArchived()) {
+        projectFacade.archiveProject(currentProject);
+      } else {
+        projectFacade.unarchiveProject(currentProject);
+      }
+    }
+
+    // Set payment type information
+    if (newProjectState.getPaymentType() != null &&
+        (newProjectState.getPaymentType() != currentProject.getPaymentType())) {
+      setPaymentType(currentProject, newProjectState.getPaymentType());
+    }
+
+    // Set the quotas information
+    if (quotas != null) {
+      QuotasDTO currentQuotas = getQuotasInternal(currentProject);
+
+      DistributedFileSystemOps dfso = dfs.getDfsOps();
+      boolean quotaChanged = false;
+      try {
+        // If Hdfs quotas has changed, persist the changes in the database.
+        if (quotas.getHdfsQuotaInBytes() != null && quotas.getHdfsNsQuota() != null &&
+            (!quotas.getHdfsQuotaInBytes().equals(currentQuotas.getHdfsQuotaInBytes()) ||
+                !quotas.getHdfsNsQuota().equals(currentQuotas.getHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(new Path(Settings.getProjectPath(currentProject.getName())),
+              quotas.getHdfsNsQuota(), quotas.getHdfsQuotaInBytes());
+          quotaChanged = true;
+
+        }
+
+        // If Hive quota has changed and the Hive service is enabled, persist the changes in the database.
+        if (quotas.getHiveHdfsQuotaInBytes() != null && quotas.getHiveHdfsNsQuota() != null &&
+            projectServicesFacade.isServiceEnabledForProject(currentProject, ProjectServiceEnum.HIVE) &&
+            (!quotas.getHiveHdfsQuotaInBytes().equals(currentQuotas.getHiveHdfsQuotaInBytes()) ||
+                !quotas.getHiveHdfsNsQuota().equals(currentQuotas.getHiveHdfsNsQuota()))) {
+
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(currentProject.getName()),
+              quotas.getHiveHdfsNsQuota(), quotas.getHiveHdfsQuotaInBytes());
+          quotaChanged = true;
+        }
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Couldn't update quotas for project: " + currentProject.getName(), e);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.QUOTA_ERROR);
+      } finally {
+        if (dfso != null) {
+          dfso.close();
+        }
+      }
+
+      // If the yarn quota has changed, persist the change in the database
+      if (quotas.getYarnQuotaInSecs() != null &&
+          !quotas.getYarnQuotaInSecs().equals(currentQuotas.getYarnQuotaInSecs())) {
+        yarnProjectsQuotaFacade.changeYarnQuota(currentProject.getName(), quotas.getYarnQuotaInSecs());
+        quotaChanged = true;
+      }
+
+      // Register time of last quota change in the project entry
+      if (quotaChanged) {
+        projectFacade.setTimestampQuotaUpdate(currentProject, new Date());
+      }
     }
   }
 }

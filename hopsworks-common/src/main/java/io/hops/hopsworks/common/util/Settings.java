@@ -1271,8 +1271,6 @@ public class Settings implements Serializable {
   }
 
   // Zeppelin
-  public static final String HOPSHIVE_INT_GROUP = "2CRSX9NDY";
-  public static final String HOPSHIVE_INT_NAME = "hopshive";
   private String ZEPPELIN_DIR = "/srv/hops/zeppelin";
   private String ZEPPELIN_INTERPRETERS
       = "org.apache.zeppelin.livy.LivySparkInterpreter,org.apache.zeppelin.livy.LivyPySparkInterpreter,"
@@ -1528,46 +1526,37 @@ public class Settings implements Serializable {
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
   //Used to retrieve schema by HopsUtil
-  public static final String HOPSWORKS_PROJECTID_PROPERTY
-      = "hopsworks.projectid";
-  public static final String HOPSWORKS_PROJECTNAME_PROPERTY
-      = "hopsworks.projectname";
-  public static final String HOPSWORKS_PROJECTUSER_PROPERTY
-      = "hopsworks.projectuser";
+  public static final String HOPSWORKS_PROJECTID_PROPERTY = "hopsworks.projectid";
+  public static final String HOPSWORKS_PROJECTNAME_PROPERTY = "hopsworks.projectname";
+  public static final String HOPSWORKS_PROJECTUSER_PROPERTY = "hopsworks.projectuser";
   public static final String HOPSWORKS_JOBNAME_PROPERTY = "hopsworks.job.name";
   public static final String HOPSWORKS_JOBTYPE_PROPERTY = "hopsworks.job.type";
   public static final String HOPSWORKS_APPID_PROPERTY = "hopsworks.job.appid";
-  public static final String KAFKA_BROKERADDR_ENV_VAR
-      = "hopsworks.kafka.brokeraddress";
+  public static final String KAFKA_BROKERADDR_ENV_VAR = "hopsworks.kafka.brokeraddress";
   public static final String KAFKA_JOB_ENV_VAR = "hopsworks.kafka.job";
-  public static final String KAFKA_JOB_TOPICS_ENV_VAR
-      = "hopsworks.kafka.job.topics";
-  public static final String HOPSWORKS_SESSIONID_PROPERTY
-      = "hopsworks.sessionid";
+  public static final String KAFKA_JOB_TOPICS_ENV_VAR = "hopsworks.kafka.job.topics";
+  public static final String HOPSWORKS_SESSIONID_PROPERTY = "hopsworks.sessionid";
   public static final String HOPSWORKS_KEYSTORE_PROPERTY = "hopsworks.keystore";
   public static final String KEYSTORE_VAL_ENV_VAR = "keyPw";
-  public static final String HOPSWORKS_TRUSTSTORE_PROPERTY
-      = "hopsworks.truststore";
+  public static final String HOPSWORKS_TRUSTSTORE_PROPERTY = "hopsworks.truststore";
   public static final String TRUSTSTORE_VAL_ENV_VAR = "trustPw";
-
-  public static final String KAFKA_CONSUMER_GROUPS
-      = "hopsworks.kafka.consumergroups";
-  public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY
-      = "hopsworks.restendpoint";
-
-  public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY
-      = "hopsworks.elastic.endpoint";
+  public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
+  public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
+  public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
 
   public static int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   public static int FILE_PREVIEW_TXT_SIZE = 100;
-  public static int FILE_PREVIEW_TXT_SIZE_BYTES = 1024 * 128;
-  public static int FILE_PREVIEW_TXT_SIZE_BYTES_README = 1024 * 512;
-  public static String README_TEMPLATE = "*This is an auto-generated README.md"
-      + " file for your Dataset!*\n"
-      + "To replace it, go into your DataSet and edit the README.md file.\n"
-      + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
-      + "## %s";
+  public static final int FILE_PREVIEW_TXT_SIZE_BYTES = 1024 * 384;
+  public static final String README_TEMPLATE = "*This is an auto-generated README.md"
+    + " file for your Dataset!*\n"
+    + "To replace it, go into your DataSet and edit the README.md file.\n"
+    + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
+    + "## %s";
 
+  public static final String FILE_PREVIEW_TEXT_TYPE = "text";
+  public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
+  public static final String FILE_PREVIEW_MODE_TAIL = "tail";
+  
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
   }
