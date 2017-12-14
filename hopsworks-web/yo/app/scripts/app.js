@@ -35,7 +35,8 @@ angular.module('hopsWorksApp', [
   'rzModule',
   'isteven-multi-select',
   'nvd3',
-  'ui.toggle'
+  'ui.toggle',
+  'ngFileSaver'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {

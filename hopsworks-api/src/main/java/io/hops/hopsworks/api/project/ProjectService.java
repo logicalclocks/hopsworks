@@ -12,6 +12,7 @@ import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -31,15 +32,23 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.project.TourProjectType;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
+import java.io.File;
+import java.nio.file.Files;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,8 +59,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.mail.Message;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -64,6 +75,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.xml.rpc.ServiceException;
+import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
@@ -115,7 +127,18 @@ public class ProjectService {
   private UserFacade userFacade;
   @EJB
   private DistributedFsService dfs;
-  
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private Settings settings;
+  @EJB
+  private CertsFacade certsFacade;
+  @EJB
+  private MessageController messageController;
+  @EJB
+  private EmailBean emailBean;
+  @EJB
+  private AuthController authController;
   @Inject
   private DelaProjectService delaService;
   @Inject
@@ -813,6 +836,52 @@ public class ProjectService {
       }
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
+  }
+  
+  @POST
+  @Path("{id}/downloadCert")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response downloadCerts(@PathParam("id") Integer id, @FormParam("password") String password,
+      @Context HttpServletRequest req) throws AppException {
+    Users user = userFacade.findByEmail(req.getRemoteUser());
+    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password,
+        req)) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Access to the certificat has been forbidden.");
+    }
+    Project project = projectController.findProjectById(id);
+    String keyStorePath;
+    String trustStorePath;
+    String keyStore = "";
+    String trustStore = "";
+    try {
+      //Read certs from database and stream them out
+      certificateMaterializer.materializeCertificates(user.getUsername(), project.getName());
+      keyStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectKeystoreName(project.
+          getName(), user.getUsername());
+      trustStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
+          getProjectTruststoreName(project.getName(), user.getUsername());
+      keyStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(keyStorePath)));
+      trustStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(trustStorePath)));
+      //Send email with decrypted password to user
+      String certPwd = projectController.getProjectSpecificCertPw(user, project.getName(),
+          Base64.encodeBase64String(certsFacade.findUserCert(project.getName(), user.getUsername()).getUserKey()))
+          .getKeyPw();
+      //Pop-up a message from admin
+      messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+          "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
+          + "please check spam first and then contact the HopsWorks administrator.", "");
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
+          "The password for keystore and truststore is:" + certPwd);
+    } catch (IOException ioe) {
+      logger.log(Level.SEVERE, ioe.getMessage());
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
+    } catch (Exception ex) {
+      logger.log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
+    }
+    CertsDTO certsDTO = new CertsDTO("jks", keyStore, trustStore);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
   @Path("{id}/kafka")

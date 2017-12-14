@@ -6,10 +6,10 @@
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-          'UserService', 'TourService', 'PythonDepsService', 'StorageService',
+          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'FileSaver', 'Blob', 
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
-                  StorageService) {
+                  StorageService, CertService, FileSaver, Blob) {
 
             var self = this;
             self.loadedView = false;
@@ -588,12 +588,39 @@ angular.module('hopsWorksApp')
             };
             
             self.getCerts = function () {
-              ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId).then();
+              ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
+                .then(function (successPwd) {
+                  CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
+                    .then(function (success) {
+                      var certs = success.data;
+                      download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                      download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                    }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                  });
+                }, function (error) {
+
+                });
+            };
+            
+            var download = function (text, fileName) {
+              var bytes = toByteArray(text);
+              var data = new Blob([bytes], {type: 'application/octet-binary'});
+              FileSaver.saveAs(data, fileName);
+            };
+            
+            var toByteArray = function (text) {
+              var l = text.length;
+              var bytes = new Uint8Array(l);
+              for (var i = 0; i < l; i++) {
+                bytes[i] = text.charCodeAt(i);
+              }
+              return bytes;
             };
 
             self.isServiceEnabled = function(service) {
                 var idx = self.projectTypes.indexOf(service);
-                return idx === -1
-            }
+                return idx === -1;
+            };
 
           }]);

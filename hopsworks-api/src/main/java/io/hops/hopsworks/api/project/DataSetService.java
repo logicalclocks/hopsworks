@@ -1312,38 +1312,31 @@ public class DataSetService {
 
   @Path("fileDownload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DownloadService downloadDS(@Context SecurityContext sc) throws
-      AppException {
+  public DownloadService downloadDS(@Context SecurityContext sc) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     this.downloader.setProject(project);
     this.downloader.setProjectUsername(hdfsUsersBean.getHdfsUserName(project, user));
-    this.downloader.setUser(user);
     return downloader;
   }
   
   @Path("compressFile/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response compressFile(@PathParam("path") String path,
-          @Context SecurityContext context) throws
-          AppException {
+  public Response compressFile(@PathParam("path") String path, @Context SecurityContext context) throws AppException {
     Users user = userFacade.findByEmail(context.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
     if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.COMPRESS_ERROR);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.COMPRESS_ERROR);
     }
 
-    ErasureCodeJobConfiguration ecConfig
-            = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+    ErasureCodeJobConfiguration ecConfig = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(fullPath.toString());
 
     //persist the job in the database
-    Jobs jobdesc = this.jobcontroller.createJob(user, project,
-            ecConfig);
+    Jobs jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);

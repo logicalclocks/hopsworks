@@ -76,19 +76,6 @@ public class AuthService {
   }
 
   @POST
-  @Path("validatePassword")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response validatePassword(@FormParam("password") String password, @Context SecurityContext sc,
-      @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
-      throws AppException, MessagingException {
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    if (authController.validatePassword(user, password, req)) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.EXPECTATION_FAILED).build();
-  }
-
-  @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
