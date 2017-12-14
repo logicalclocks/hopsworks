@@ -10,7 +10,7 @@ module SessionHelper
   end
   
   def with_admin_session
-    user = create_user_without_role
+    user = create_user_without_role({})
     create_admin_role(user)
     create_session(user.email, user.password)
   end
@@ -44,7 +44,7 @@ module SessionHelper
     user[:securityAnswer]   = params[:security_answer] ? params[:security_answer] : "example_answer"
     user[:ToS]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
-    user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
+    user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : 0
     user[:testUser]         = true
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
