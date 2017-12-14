@@ -1,5 +1,7 @@
 package io.hops.hopsworks.common.exception;
 
+import javax.ws.rs.core.Response;
+
 public class AppException extends Exception {
 
   /**
@@ -18,6 +20,10 @@ public class AppException extends Exception {
   public AppException(int status, String msg) {
     super(msg);
     this.status = status;
+  }
+
+  public AppException(Response.Status status, String msg) {
+    this(status.getStatusCode(), msg);
   }
 
   public Integer getStatus() {

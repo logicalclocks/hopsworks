@@ -245,8 +245,7 @@ public class ProjectController {
        */
       try {
         try {
-          project = createProject(projectName, owner, projectDTO.
-              getDescription(), dfso);
+          project = createProject(projectName, owner, projectDTO.getDescription(), dfso);
         } catch (EJBException ex) {
           LOGGER.log(Level.WARNING, null, ex);
           Path dummy = new Path("/tmp/" + projectName);
@@ -1585,7 +1584,7 @@ public class ProjectController {
    *
    *
    * @param project
-   * @param email
+   * @param ownerEmail
    * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
@@ -1593,19 +1592,18 @@ public class ProjectController {
    */
   @TransactionAttribute(
       TransactionAttributeType.NEVER)
-  public List<String> addMembers(Project project, String email,
+  public List<String> addMembers(Project project, String ownerEmail,
       List<ProjectTeam> projectTeams) throws AppException {
     List<String> failedList = new ArrayList<>();
     if (projectTeams == null) {
       return failedList;
     }
 
-    Users user = userBean.getUserByEmail(email);
+    Users owner = userBean.getUserByEmail(ownerEmail);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
-        if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
-            getEmail())) {
+        if (!projectTeam.getProjectTeamPK().getTeamMember().equals(owner.getEmail())) {
 
           //if the role is not properly set set it to the default role (Data Scientist).
           if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
@@ -1673,7 +1671,7 @@ public class ProjectController {
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
                 getProjectTeamPK().getTeamMember(),
-                ActivityFacade.FLAG_PROJECT, user, project);
+                ActivityFacade.FLAG_PROJECT, owner, project);
           } else if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
                 + " was not found in the system.");

@@ -370,7 +370,7 @@ public class UsersController {
     }
   }
 
-  public UserDTO updateProfile(String email, String firstName, String lastName,
+  public Users updateProfile(String email, String firstName, String lastName,
           String telephoneNum, Integer toursState, HttpServletRequest req)
       throws AppException {
     Users user = userBean.findByEmail(email);
@@ -396,7 +396,7 @@ public class UsersController {
             req);
 
     userBean.update(user);
-    return new UserDTO(user);
+    return user;
   }
 
   public void registerFalseLogin(Users user) throws MessagingException {
