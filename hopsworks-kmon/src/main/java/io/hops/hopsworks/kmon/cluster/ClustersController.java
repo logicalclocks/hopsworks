@@ -17,8 +17,7 @@ public class ClustersController {
 
   @EJB
   private RoleEJB roleEjb;
-  private static final Logger logger = Logger.getLogger(
-          ClustersController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ClustersController.class.getName());
   private List<ClusterInfo> clusters;
 
   public ClustersController() {
@@ -26,7 +25,7 @@ public class ClustersController {
 
   @PostConstruct
   public void init() {
-    logger.info("init ClustersController");
+    LOGGER.info("init ClustersController");
     clusters = new ArrayList<>();
     loadClusters();
   }

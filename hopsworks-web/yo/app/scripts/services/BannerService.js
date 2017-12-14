@@ -8,6 +8,9 @@ angular.module('hopsWorksApp')
 
             findBanner: function () {
                 return $http.get('/api/banner');
+            },
+            findUserBanner: function () {
+                return $http.get('/api/banner/user');
             }
         };
         return service;

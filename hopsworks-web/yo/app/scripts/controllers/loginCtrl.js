@@ -8,27 +8,19 @@ angular.module('hopsWorksApp')
 
             self.announcement = "";
             self.secondFactorRequired = false;
-
-            self.showAnnouncement = function () {
-              if (self.announcement === "") {
-                return false;
-              } else {
-                return true;
-              }
-            };
             
             var getAnnouncement = function () {
               BannerService.findBanner().then(
-                      function (success) {
-                        console.log(success);
-                        self.otp = success.data.otp;
-                        if (success.data.status === 1) {
-                          self.announcement = success.data.message;
-                        }
-                      }, function (error) {
-                self.announcement = '';
+                function (success) {
+                  console.log(success);
+                  self.otp = success.data.otp;
+                  if (success.data.status === 1) {
+                    self.announcement = success.data.message;
+                  }
+                }, function (error) {
+                  self.announcement = '';
               });
-            };
+            };           
 
 
             self.working = false;
@@ -45,16 +37,9 @@ angular.module('hopsWorksApp')
                         self.secondFactorRequired = false;
                         $cookies.put("email", self.user.email);
                         $location.path('/');
-                        AuthService.isAdmin().then(
-                            function (success) {
-                              $cookies.put("isAdmin", true);
-                          },function (error) {
-                              $cookies.put("isAdmin", false);
-                        });
                       }, function (error) {
                         self.working = false;
-                        if (error.data !== undefined && 
-                            error.data.statusCode === 400 &&
+                        if (error.data !== undefined && error.data.statusCode === 417 &&
                             error.data.errorMsg === "Second factor required.") {
                           self.errorMessage = "";
                           self.emailHash = md5.createHash(self.user.email || '');

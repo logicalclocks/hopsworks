@@ -21,10 +21,10 @@ import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.swagger.annotations.Api;
 
 @Path("/activity")
@@ -38,7 +38,7 @@ public class ActivityService {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private UserManager userBean;
+  private UserFacade userFacade;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -48,7 +48,7 @@ public class ActivityService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {};
@@ -67,7 +67,7 @@ public class ActivityService {
           @QueryParam("to") int to,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {};
@@ -85,7 +85,7 @@ public class ActivityService {
           @QueryParam("to") int to,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.
             getPaginatedActivityByUser(from, to, user);
     GenericEntity<List<Activity>> projectActivities

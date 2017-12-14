@@ -58,13 +58,13 @@ describe "session" do
     end
     
     it "should fail to login without two factor" do
+      set_two_factor("true")
       email = "#{random_id}@email.com"
       create_2factor_user(email: email)
-      set_two_factor("true")
       create_session(email, "Pass123")
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: "Second factor required.")
-      expect_status(400)
+      expect_status(417)
     end
     
   end
@@ -102,16 +102,16 @@ describe "session" do
       expect_status(200)
     end
 
-    it "should fail to signup if not confirmed and no role" do
+    it "should fail to signin if not confirmed and no role" do
       email = "#{random_id}@email.com"
-      create_validated_user(email: email)
+      create_unapproved_user(email: email)
       create_session(email, "Pass123")
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
-      expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})
+      expect_json(errorMsg: ->(value){ expect(value).to include("This account has not yet been approved.")})
       expect_status(401)
     end
 
-    it "should fail to signup with role and new account (status 1)" do
+    it "should fail to signin with role and new account (status 1)" do
       email = "#{random_id}@email.com"
       register_user(email: email)
       create_role(User.find_by(email: email))
@@ -123,10 +123,7 @@ describe "session" do
 
     it "should fail with status 4 and no role" do
       email = "#{random_id}@email.com"
-      create_validated_user(email: email)
-      user = User.find_by(email: email)
-      user.status = 4
-      user.save
+      create_user_without_role(email: email)
       create_session(email, "Pass123")
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: ->(value){ expect(value).to include("No valid role found for this user")})

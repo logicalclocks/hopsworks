@@ -1,5 +1,5 @@
 require 'airborne'
-#require 'byebug'
+require 'byebug'
 require 'active_record'
 #require 'launchy'
 
@@ -35,17 +35,18 @@ RSpec.configure do |config|
   config.include ProjectHelper
   config.include FactoryHelper
   config.include DatasetHelper
+  config.include VariablesHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
-#  config.before(:suite) { clean_test_data }
+  # config.before(:suite) { clean_test_data }
   config.after(:suite) {
     # If we are not using Jenkins, then clean the data
-    if !ENV['JENKINS'] || ENV['JENKINS'] == "false"
+    if ARGV.grep(/spec\.rb/).empty? && (!ENV['JENKINS'] || ENV['JENKINS'] == "false") 
       clean_test_data
     end
 
-    if ENV['LAUNCH_BROWSER'] && ENV['LAUNCH_BROWSER']=="true"
-       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
-    end
+#    if ENV['LAUNCH_BROWSER'] && ENV['LAUNCH_BROWSER']=="true"
+#       Launchy.open("#{ENV['PROJECT_DIR']}#{ENV['RSPEC_REPORT']}")
+#    end
   }
 end
 
@@ -58,19 +59,20 @@ def clean_test_data
   require 'net/ssh'
   require 'net/ssh/shell'
   if ENV['RSPEC_SSH'] && ENV['RSPEC_SSH']=="true"
-    Net::SSH::start(ENV['RSPEC_SSH_HOST'], "#{ENV['RSPEC_SSH_USER']}") do |ssh|
+    Net::SSH.start("#{ENV['RSPEC_SSH_HOST']}", "#{ENV['RSPEC_SSH_USER']}") do |ssh|
       ssh.shell do |sh|
         puts "Remote HDFS Clean-up starting..."
         sh.execute("cd #{ENV['RSPEC_SSH_USER_DIR']}")
-        sh.execute("vagrant ssh -c '/srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects ' ")
+        sh.execute("vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_HDFS_USER']} -H sh -c \" /srv/hops/hadoop/bin/hadoop fs -rm -f -R -skipTrash /Projects \" ' ")
         puts "Remote HDFS Clean-up finished."
 
         puts "DataBase Clean-up starting..."
-        sh.execute("vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
-        sh.execute("vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
-        sh.execute("vagrant ssh -c 'cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-        sh.execute("vagrant ssh -c 'cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-        sh.execute("vagrant ssh -c 'cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
+        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+        sh.execute("vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
         res = sh.execute("exit")
         res.on_finish do |val1, val2|
         puts "DataBase Clean-up finished."
@@ -83,11 +85,12 @@ def clean_test_data
     puts "Vagrant HDFS Clean-up finished."
 
     puts "DataBase Clean-up starting..."
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"DROP DATABASE IF EXISTS hopsworks\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c '/srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh  -e \"CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1\" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" DROP DATABASE IF EXISTS hopsworks \\\" \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u #{ENV['RSPEC_VAGRANT_MYSQL_USER']} -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh -e \\\" CREATE DATABASE IF NOT EXISTS hopsworks CHARACTER SET latin1 \\\" \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
     puts "DataBase Clean-up finished."
   end
 end

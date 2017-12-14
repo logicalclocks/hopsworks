@@ -1,7 +1,6 @@
 package io.hops.hopsworks.dela.hopssite;
 
 import com.google.gson.Gson;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
@@ -42,8 +41,6 @@ public class HopssiteController {
   private Settings settings;
   @EJB
   private DelaStateController delaStateCtrl;
-  @EJB
-  private UserFacade userFacade;
 
   private void checkSetupReady() throws ThirdPartyException {
     delaStateCtrl.checkHopsworksDelaSetup();

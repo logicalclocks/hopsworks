@@ -21,8 +21,8 @@ import io.hops.hopsworks.apiV2.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -58,7 +58,7 @@ public class BlobsResource {
   @EJB
   private PathValidator pathValidator;
   @EJB
-  private UserManager userBean;
+  private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @Inject
@@ -91,7 +91,7 @@ public class BlobsResource {
           ResponseMessages.DOWNLOAD_ERROR);
     }
     
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String hdfsUserName = hdfsUsersBean.getHdfsUserName(project, user);
     
     DatasetPath dsPath = new DatasetPath(ds, path);

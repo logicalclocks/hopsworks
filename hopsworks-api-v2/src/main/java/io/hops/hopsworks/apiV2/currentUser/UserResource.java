@@ -7,7 +7,6 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
@@ -47,7 +46,7 @@ public class UserResource {
   @EJB
   private UserFacade userBean;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
   @EJB
   private UsersController userController;
   @EJB
@@ -149,7 +148,7 @@ public class UserResource {
   @Path("/activity")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getUserActivity(@Context SecurityContext sc, @Context HttpServletRequest req){
-    Users user = userManager.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
         = new GenericEntity<List<Activity>>(activityDetails) {};

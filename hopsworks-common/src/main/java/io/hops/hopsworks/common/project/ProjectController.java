@@ -54,11 +54,11 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
@@ -74,6 +74,7 @@ import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
@@ -130,7 +131,9 @@ public class ProjectController {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
-  private UserManager userBean;
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -504,7 +507,7 @@ public class ProjectController {
     //Persist project object
     this.projectFacade.persistProject(project);
     this.projectFacade.flushEm();
-    userBean.increaseNumCreatedProjects(user.getUid());
+    usersController.increaseNumCreatedProjects(user.getUid());
     logProject(project, OperationType.Add);
     return project;
   }
@@ -689,7 +692,7 @@ public class ProjectController {
       throws
       ProjectInternalFoldersFailedException, AppException {
 
-    Users user = userBean.getUserByEmail(username);
+    Users user = userFacade.findByEmail(username);
 
     try {
       datasetController.createDataset(user, project, "consents",
@@ -918,7 +921,7 @@ public class ProjectController {
           ResponseMessages.PROJECT_NOT_FOUND);
     }
     //Only project owner is able to delete a project
-    Users user = userBean.getUserByEmail(userMail);
+    Users user = userFacade.findByEmail(userMail);
     if (!project.getOwner().equals(user)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
@@ -1124,7 +1127,7 @@ public class ProjectController {
         // with the same name at the same time
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-        Users user = userBean.getUserByEmail(userEmail);
+        Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
         try {
@@ -1248,8 +1251,8 @@ public class ProjectController {
   }
   
   private void sendInbox(String message, String userRequested) {
-    Users to = userBean.findByEmail(userRequested);
-    Users from = userBean.findByEmail(Settings.SITE_EMAIL);
+    Users to = userFacade.findByEmail(userRequested);
+    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
     messageController.send(to, from, "Force project cleanup", "Status", message, "");
   }
   
@@ -1590,8 +1593,7 @@ public class ProjectController {
    * list.
    * @throws io.hops.hopsworks.common.exception.AppException
    */
-  @TransactionAttribute(
-      TransactionAttributeType.NEVER)
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String ownerEmail,
       List<ProjectTeam> projectTeams) throws AppException {
     List<String> failedList = new ArrayList<>();
@@ -1599,7 +1601,7 @@ public class ProjectController {
       return failedList;
     }
 
-    Users owner = userBean.getUserByEmail(ownerEmail);
+    Users owner = userFacade.findByEmail(ownerEmail);
     Users newMember;
     for (ProjectTeam projectTeam : projectTeams) {
       try {
@@ -1614,7 +1616,7 @@ public class ProjectController {
           }
 
           projectTeam.setTimestamp(new Date());
-          newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
+          newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().
               getTeamMember());
           if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
               project, newMember)) {
@@ -1875,11 +1877,12 @@ public class ProjectController {
    * @param project
    * @param email
    * @param toRemoveEmail
+   * @param sessionId
    * @throws AppException
    */
   public void removeMemberFromTeam(Project project, String email,
       String toRemoveEmail, String sessionId) throws AppException, Exception {
-    Users userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
+    Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.USER_DOES_NOT_EXIST);
@@ -1892,7 +1895,7 @@ public class ProjectController {
           ResponseMessages.TEAM_MEMBER_NOT_FOUND);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, userToBeRemoved);
 
     YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings
@@ -1989,8 +1992,8 @@ public class ProjectController {
   public void updateMemberRole(Project project, String owner,
       String toUpdateEmail, String newRole) throws AppException {
     Users projOwner = project.getOwner();
-    Users opsOwner = userBean.getUserByEmail(owner);
-    Users user = userBean.getUserByEmail(toUpdateEmail);
+    Users opsOwner = userFacade.findByEmail(owner);
+    Users user = userFacade.findByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Can not change the role of a project owner.");
@@ -2031,7 +2034,7 @@ public class ProjectController {
    * @return a list of project team
    */
   public List<ProjectTeam> findProjectByUser(String email) {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     return projectTeamFacade.findActiveByMember(user);
   }
 
@@ -2044,7 +2047,7 @@ public class ProjectController {
    * @return a list of project names
    */
   public List<String> findProjectNamesByUser(String email, boolean ignoreCase) {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     List<ProjectTeam> projectTeams = projectTeamFacade.findActiveByMember(user);
     List<String> projects = null;
     if (projectTeams != null && projectTeams.size() > 0) {
@@ -2099,7 +2102,7 @@ public class ProjectController {
       TourProjectType projectType) throws
       AppException {
 
-    Users user = userBean.getUserByEmail(username);
+    Users user = userFacade.findByEmail(username);
     try {
       datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
           "files for guide projects", -1, false, true, dfso);

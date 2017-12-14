@@ -12,7 +12,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -71,8 +70,6 @@ public class DatasetsResource {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private UserManager userBean;
-  @EJB
   private DatasetController datasetController;
   @EJB
   private DatasetFacade datasetFacade;
@@ -129,7 +126,7 @@ public class DatasetsResource {
   public Response createDataSet(CreateDatasetView createDatasetView, @Context SecurityContext sc,
       @Context HttpServletRequest req, @Context UriInfo uriInfo) throws AppException {
     
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (username == null) {
@@ -220,7 +217,7 @@ public class DatasetsResource {
     }
   
     org.apache.hadoop.fs.Path fullPath = pathValidator.getFullPath(new DatasetPath(dataset, "/"));
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DistributedFileSystemOps dfso = getDfsOpsForUserHelper(dataset, user);
     boolean success;
     try {
@@ -410,7 +407,7 @@ public class DatasetsResource {
   @Path("/{dsName}/files/{path: .+}")
   public Response deleteFileOrDir(@PathParam("dsName") String datasetName, @PathParam("path") String path, @Context
       SecurityContext sc, @Context HttpServletRequest req) throws AccessControlException, AppException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Dataset dataset = getDataset(datasetName);
     DistributedFileSystemOps dfso = getDfsOpsForUserHelper(dataset, user);
     org.apache.hadoop.fs.Path fullPath = pathValidator.getFullPath(new DatasetPath(dataset, path));
@@ -479,7 +476,7 @@ public class DatasetsResource {
     }
     
     DatasetPath targetDatasetPath = new DatasetPath(targetDs, targetPath);
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     switch(operation){
       case "copy":
         return copyHelper(user, sourceDatasetPath, targetDatasetPath);

@@ -3,8 +3,8 @@ package io.hops.hopsworks.api.kibana;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -25,24 +25,24 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectController projectController;
 
   @Override
-  protected void service(HttpServletRequest servletRequest,
-          HttpServletResponse servletResponse)
-          throws ServletException, IOException {
-    if (servletRequest.getUserPrincipal() == null) {
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
+      throws ServletException, IOException {
+    if (servletRequest.getUserPrincipal() == null || 
+       (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.isUserInRole("HOPS_USER"))) {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
     if (servletRequest.getRequestURI().contains("query")) {
       String email = servletRequest.getUserPrincipal().getName();
       Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
-      Users user = userManager.getUserByEmail(email);
+      Users user = userFacade.findByEmail(email);
       Matcher matcher = pattern.matcher(servletRequest.getQueryString());
       if (matcher.find()) {
         String appId = matcher.group(1);

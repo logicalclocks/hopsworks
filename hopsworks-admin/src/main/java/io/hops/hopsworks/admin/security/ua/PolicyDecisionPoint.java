@@ -1,28 +1,25 @@
 package io.hops.hopsworks.admin.security.ua;
 
 import javax.ejb.EJB;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.user.UsersController;
 
 public class PolicyDecisionPoint {
 
   @EJB
-  protected UserManager userManager;
+  private UsersController userController;
 
-  @EJB
-  private BbcGroupFacade bbcGroupFacade;
 
   public boolean isInAdminRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains("HOPS_ADMIN");
+    return userController.isUserInRole(user, "HOPS_ADMIN");
   }
 
   public boolean isInAuditorRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains("AUDITOR");
+    return userController.isUserInRole(user, "AUDITOR");
   }
 
   public boolean isInUserRole(Users user) {
-    return userManager.findGroups(user.getUid()).contains("HOPS_USER");
+    return userController.isUserInRole(user, "HOPS_USER");
   }
 
   public String redirectUser(Users user) {

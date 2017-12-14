@@ -2,6 +2,7 @@ package io.hops.hopsworks.admin.user.profile;
 
 import io.hops.hopsworks.admin.lims.ClientSessionState;
 import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.io.Serializable;
 import java.util.List;
 import javax.ejb.EJB;
@@ -14,24 +15,25 @@ import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.user.UsersController;
 
 @ManagedBean
 @ViewScoped
 public class ProfileManager implements Serializable {
 
-  public static final String DEFAULT_GRAVATAR
-          = "resources/images/icons/default-icon.jpg";
+  public static final String DEFAULT_GRAVATAR = "resources/images/icons/default-icon.jpg";
 
   private static final long serialVersionUID = 1L;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
+  @EJB
+  protected UsersController usersController;
 
   @EJB
-  private AuditManager auditManager;
+  private AccountAuditFacade auditManager;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -85,7 +87,7 @@ public class ProfileManager implements Serializable {
 
   public Users getUser() {
     if (user == null) {
-      user = userManager.findByEmail(sessionState.getLoggedInUsername());
+      user = userFacade.findByEmail(sessionState.getLoggedInUsername());
       address = user.getAddress();
       organization = user.getOrganization();
       login = auditManager.getLastUserLogin(user.getUid());
@@ -95,25 +97,21 @@ public class ProfileManager implements Serializable {
   }
 
   public List<String> getCurrentGroups() {
-    List<String> list = userManager.findGroups(user.getUid());
+    List<String> list = usersController.getUserRoles(user);
     return list;
   }
 
   public void updateUserInfo() {
 
     try {
-      userManager.updatePeople(user);
-      MessagesController.addInfoMessage("Success",
-              "Profile updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
+      userFacade.update(user);
+      MessagesController.addInfoMessage("Success", "Profile updated successfully.");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
               UserAuditActions.SUCCESS.name(), "", getUser());
     } catch (RuntimeException ex) {
-      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-              "Failed to update", null);
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
               UserAuditActions.FAILED.name(), "", getUser());
       return;
     }
@@ -125,19 +123,16 @@ public class ProfileManager implements Serializable {
   public void updateUserOrg() {
 
     try {
-      userManager.updateOrganization(organization);
-      MessagesController.addInfoMessage("Success",
-              "Profile updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.SUCCESS.name(), "Update Organization", getUser());
+      user.setOrganization(organization);
+      userFacade.update(user);
+      MessagesController.addInfoMessage("Success", "Profile updated successfully.");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
+          UserAuditActions.SUCCESS.name(), "Update Organization", getUser());
     } catch (RuntimeException ex) {
-      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-              "Failed to update", null);
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.FAILED.name(), "Update Organization", getUser());
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
+          UserAuditActions.FAILED.name(), "Update Organization", getUser());
     }
   }
 
@@ -147,18 +142,15 @@ public class ProfileManager implements Serializable {
   public void updateAddress() {
 
     try {
-      userManager.updateAddress(address);
-      MessagesController.addInfoMessage("Success",
-              "Address updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.SUCCESS.name(), "Update Address", getUser());
+      user.setAddress(address);
+      userFacade.update(user);
+      MessagesController.addInfoMessage("Success", "Address updated successfully.");
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
+          UserAuditActions.SUCCESS.name(), "Update Address", getUser());
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Update failed.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-              AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.FAILED.name(), "Update Address", getUser());
-
+      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
+          UserAuditActions.FAILED.name(), "Update Address", getUser());
     }
   }
 

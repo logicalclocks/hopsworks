@@ -1,7 +1,7 @@
 package io.hops.hopsworks.util;
 
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
@@ -63,8 +63,8 @@ public class SettingsHelper {
     return hopsSiteHost;
   }
   
-  public static Users getUser(UserManager userBean, String email) throws ThirdPartyException {
-    Users user = userBean.getUserByEmail(email);
+  public static Users getUser(UserFacade userFacade, String email) throws ThirdPartyException {
+    Users user = userFacade.findByEmail(email);
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
         ThirdPartyException.Source.LOCAL, "exception");

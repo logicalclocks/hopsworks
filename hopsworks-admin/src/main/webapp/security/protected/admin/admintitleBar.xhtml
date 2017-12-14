@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
@@ -12,17 +7,15 @@ and open the template in the editor.
 
   <body>
     <ui:composition>
-      <h:form class="stylelayout" id="formToolbar">  
+      <h:form class="stylelayout" id="formToolbar"> 
         <p:toolbar styleClass="MainToolbar">
           <p:toolbarGroup align="left">              
-            <p:commandLink value="HopsWorks" action="welcome" rendered="#{!roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="HopsWorks" action="#{facesContext.externalContext.redirect('/hopsworks')}" rendered="#{!roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup>  
           <p:toolbarGroup align="left">
-	    <p:commandLink value="Hopsworks" action="home" rendered="#{roleEnforcementPoint.loggedIn}"/>
-            <p:commandLink value="Admin Home" action="adminIndex"
-			   rendered="#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="Hopsworks" action="#{facesContext.externalContext.redirect('/hopsworks')}" rendered="#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="Admin Home" action="adminIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup> 
-
 
           <p:toolbarGroup align="right" rendered="#{roleEnforcementPoint.loggedIn}">
 

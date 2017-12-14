@@ -6,7 +6,7 @@ import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
@@ -53,7 +53,7 @@ public class UsersAdmin {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
-  private AuditManager auditManager;
+  private AccountAuditFacade auditManager;
   @EJB
   private EmailBean emailBean;
   @EJB

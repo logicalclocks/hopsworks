@@ -3,6 +3,7 @@ package io.hops.hopsworks.admin.user.account;
 import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.EmailBean;
 import java.io.Serializable;
 import java.util.logging.Logger;
@@ -24,14 +25,15 @@ import javax.transaction.UserTransaction;
 import org.apache.commons.codec.digest.DigestUtils;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -60,13 +62,15 @@ public class ResetPassword implements Serializable {
   private final int passwordLength = 6;
 
   @EJB
-  private AuditManager auditManager;
-
+  private AccountAuditFacade auditManager;
   @EJB
-  private UserManager mgr;
-
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
   @EJB
   private EmailBean emailBean;
+  @EJB
+  private AuthController authController;
 
   @Resource
   private UserTransaction userTransaction;
@@ -140,8 +144,9 @@ public class ResetPassword implements Serializable {
   }
 
   public String sendTmpPassword() throws MessagingException {
-
-    people = mgr.getUserByEmail(this.username);
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+    people = userFacade.findByEmail(this.username);
 
     if (people == null || people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
       return ("password_sent");
@@ -153,10 +158,9 @@ public class ResetPassword implements Serializable {
 
         // Lock the account if n tmies wrong answer  
         int val = people.getFalseLogin();
-        mgr.increaseLockNum(people.getUid(), val + 1);
+        usersController.increaseLockNum(people.getUid(), val + 1);
         if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-          mgr.changeAccountStatus(people.getUid(), "",
-              PeopleAccountStatus.DEACTIVATED_ACCOUNT);
+          usersController.changeAccountStatus(people.getUid(), "", PeopleAccountStatus.DEACTIVATED_ACCOUNT);
           String mess = UserAccountsEmailMessages.buildDeactivatedMessage();
           emailBean.sendEmail(people.getEmail(), RecipientType.TO,
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
@@ -182,7 +186,7 @@ public class ResetPassword implements Serializable {
       people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
 
       // reset the old password with a new one
-      mgr.resetPassword(people, DigestUtils.sha256Hex(random_password));
+      authController.changePassword(people, random_password, req);
 
       userTransaction.commit();
 
@@ -214,14 +218,12 @@ public class ResetPassword implements Serializable {
    */
   public String changePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-        getRequest();
-
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     if (req.getRemoteUser() == null) {
       return ("welcome");
     }
 
-    people = mgr.getUserByEmail(req.getRemoteUser());
+    people = userFacade.findByEmail(req.getRemoteUser());
 
     if (people == null) {
     }
@@ -234,10 +236,10 @@ public class ResetPassword implements Serializable {
     try {
 
       // Reset the old password with a new one
-      mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
+      authController.changePassword(people, passwd1, req);
 
       try {
-        mgr.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT);
+        usersController.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT);
       } catch (ApplicationException ex) {
         Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null,
             ex);
@@ -283,7 +285,7 @@ public class ResetPassword implements Serializable {
       return ("welcome");
     }
 
-    people = mgr.getUserByEmail(req.getRemoteUser());
+    people = userFacade.findByEmail(req.getRemoteUser());
 
     if (this.answer.isEmpty() || this.answer == null || this.current == null
         || this.current.isEmpty()) {
@@ -339,7 +341,7 @@ public class ResetPassword implements Serializable {
           equals(people.getPassword())) {
 
         // update the security question
-        mgr.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(
+        usersController.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(
             this.answer.toLowerCase()));
 
         // send email    
@@ -378,7 +380,7 @@ public class ResetPassword implements Serializable {
    */
   public String findQuestion() {
 
-    people = mgr.getUserByEmail(this.username);
+    people = userFacade.findByEmail(this.username);
     if (people == null) {
       this.question = SecurityQuestion.randomQuestion();
       return ("reset_password");
@@ -403,7 +405,7 @@ public class ResetPassword implements Serializable {
       return ("welcome");
     }
 
-    people = mgr.getUserByEmail(req.getRemoteUser());
+    people = userFacade.findByEmail(req.getRemoteUser());
 
     try {
 
@@ -422,7 +424,7 @@ public class ResetPassword implements Serializable {
           equals(people.getPassword())) {
 
         // close the account
-        mgr.changeAccountStatus(people.getUid(), this.notes,
+        usersController.changeAccountStatus(people.getUid(), this.notes,
             PeopleAccountStatus.DEACTIVATED_ACCOUNT);
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
@@ -455,14 +457,13 @@ public class ResetPassword implements Serializable {
 
   public String changeProfilePassword() {
     FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
-        getRequest();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
     if (req.getRemoteUser() == null) {
       return ("welcome");
     }
 
-    people = mgr.getUserByEmail(req.getRemoteUser());
+    people = userFacade.findByEmail(req.getRemoteUser());
 
     if (people == null) {
       FacesContext context = FacesContext.getCurrentInstance();
@@ -504,7 +505,7 @@ public class ResetPassword implements Serializable {
       if (DigestUtils.sha256Hex(current).equals(people.getPassword())) {
 
         // reset the old password with a new one
-        mgr.resetPassword(people, DigestUtils.sha256Hex(passwd1));
+        authController.changePassword(people, passwd1, req);
 
         // send email    
         String message = UserAccountsEmailMessages.buildResetMessage();
@@ -556,7 +557,7 @@ public class ResetPassword implements Serializable {
       return ("welcome");
     }
 
-    people = mgr.getUserByEmail(req.getRemoteUser());
+    people = userFacade.findByEmail(req.getRemoteUser());
 
     String ip = AuditUtil.getIPAddress();
     String browser = AuditUtil.getBrowserInfo();
@@ -569,7 +570,7 @@ public class ResetPassword implements Serializable {
     try {
       req.logout();
       session.invalidate();
-      mgr.setOnline(people.getUid(), -1);
+      usersController.setOnline(people.getUid(), -1);
       context.getExternalContext().redirect("/hopsworks/#!/home");
     } catch (IOException | ServletException ex) {
       Logger.getLogger(ResetPassword.class.getName()).

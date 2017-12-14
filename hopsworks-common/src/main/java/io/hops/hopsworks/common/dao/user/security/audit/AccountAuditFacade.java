@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.user.security.audit;
 
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.dao.user.consent.Consents;
 import java.sql.Timestamp;
@@ -18,9 +19,10 @@ import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
+import javax.persistence.TypedQuery;
 
 @Stateless
-public class AuditManager {
+public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
 
   @EJB
   private Settings settings;
@@ -28,7 +30,16 @@ public class AuditManager {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
+  @Override
+  protected EntityManager getEntityManager() {
+    return em;
+  }
+
   private Set<String> whitelistUserLogins;
+
+  public AccountAuditFacade() {
+    super(AccountAudit.class);
+  }
   
   @PostConstruct
   private void init() {
@@ -585,5 +596,19 @@ public class AuditManager {
     ca.setMac(AuditUtil.getMacAddress(AuditUtil.getIPAddress(req)));
 
     em.persist(ca);
+  }
+  
+  public List<AccountAudit> findByInitiator(Users user) {
+    TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByInitiator", AccountAudit.class);
+    query.setParameter("initiator", user);
+
+    return query.getResultList();
+  }
+
+  public List<AccountAudit> findByTarget(Users user) {
+    TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByTarget", AccountAudit.class);
+    query.setParameter("target", user);
+
+    return query.getResultList();
   }
 }

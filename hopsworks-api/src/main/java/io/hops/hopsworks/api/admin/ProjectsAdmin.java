@@ -24,8 +24,8 @@ import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -72,7 +72,7 @@ public class ProjectsAdmin {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
   
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class ProjectsAdmin {
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
       ProjectDTO projectDTO) throws AppException {
     String userEmail = sc.getUserPrincipal().getName();
-    Users user = userManager.findByEmail(userEmail);
+    Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
       LOG.log(Level.WARNING, "Unauthorized or unknown user tried to create a Project as another user");
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
@@ -115,7 +115,7 @@ public class ProjectsAdmin {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Owner email cannot be null");
     }
 
-    Users owner = userManager.findByEmail(ownerEmail);
+    Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
       LOG.log(Level.WARNING, "Owner is not in the database");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Unknown owner user " + ownerEmail);
@@ -141,13 +141,11 @@ public class ProjectsAdmin {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response getProjectsAdminInfo(@Context SecurityContext sc,
-                                       @Context HttpServletRequest req) {
+  public Response getProjectsAdminInfo(@Context SecurityContext sc, @Context HttpServletRequest req) {
 
     List<Project> projects = projectFacade.findAll();
     List<ProjectAdminInfoDTO> projectAdminInfoDTOList = new ArrayList<>();

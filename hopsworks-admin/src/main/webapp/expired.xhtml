@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>Session expired</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <meta http-equiv="refresh" content="0;url=#{request.contextPath}/login.xhtml" />
+    </h:head>
+    <h:body>
+      <p:panel header="Session expired" style="width: 400px; margin: 0 auto;">
+        <h3>You will be redirected to login page</h3>
+        <p><a href="#{request.contextPath}/login.xhtml">Click here if redirect didn't work</a>.</p>
+      </p:panel>
+    </h:body>
+</html>

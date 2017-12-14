@@ -6,10 +6,10 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -74,7 +74,7 @@ public class ProjectsResource {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
   @EJB
   private UsersController usersController;
   @EJB
@@ -125,7 +125,7 @@ public class ProjectsResource {
     
     //check the user
     String owner = sc.getUserPrincipal().getName();
-    Users user = userManager.getUserByEmail(owner);
+    Users user = userFacade.findByEmail(owner);
     if (user == null) {
       logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -171,7 +171,7 @@ public class ProjectsResource {
     String owner = sc.getUserPrincipal().getName();
     String username = usersController.generateUsername(owner);
     List<String> projectServices = new ArrayList<>();
-    Users user = userManager.getUserByEmail(owner);
+    Users user = userFacade.findByEmail(owner);
     if (user == null) {
       logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -258,7 +258,7 @@ public class ProjectsResource {
   public Response updateProject(ProjectView update, @PathParam("projectId") Integer id, @Context SecurityContext sc)
       throws AppException {
     String userEmail = sc.getUserPrincipal().getName();
-    Users user = userManager.getUserByEmail(userEmail);
+    Users user = userFacade.findByEmail(userEmail);
     Project project = projectController.findProjectById(id);
   
     boolean updated = false;

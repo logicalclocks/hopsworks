@@ -9,6 +9,12 @@ module SessionHelper
     end
   end
   
+  def with_admin_session
+    user = create_user_without_role({})
+    create_admin_role(user)
+    create_session(user.email, "Pass123")
+  end
+  
   def reset_and_create_session()
     reset_session
     user = create_user
@@ -38,7 +44,7 @@ module SessionHelper
     user[:securityAnswer]   = params[:security_answer] ? params[:security_answer] : "example_answer"
     user[:ToS]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
-    user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : false
+    user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : 0
     user[:testUser]         = true
     
     post "#{ENV['HOPSWORKS_API']}/auth/register", user
@@ -50,20 +56,6 @@ module SessionHelper
     user = User.find_by(email: params[:email])
     key = user.username + user.validation_key
     get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
-  end
-  
-  def set_two_factor(value)
-    variables = Variables.find_by(id: "twofactor_auth")
-    variables.value = value
-    variables.save
-    variables
-  end
-  
-  def set_two_factor_exclud(value)
-    variables = Variables.find_by(id: "twofactor-excluded-groups")
-    variables.value = value
-    variables.save
-    variables
   end
 
   def reset_session
@@ -94,7 +86,12 @@ module SessionHelper
     group = BbcGroup.find_by(group_name: "HOPS_USER")
     PeopleGroup.create(uid: user.uid, gid: group.gid)
   end
-
+  
+  def create_admin_role(user)
+    group = BbcGroup.find_by(group_name: "HOPS_ADMIN")
+    PeopleGroup.create(uid: user.uid, gid: group.gid)
+  end
+  
   def create_agent_role(user)
     group = BbcGroup.find_by(group_name: "AGENT")
     PeopleGroup.create(uid: user.uid, gid: group.gid)
@@ -110,12 +107,28 @@ module SessionHelper
     user
   end
   
-  def create_2factor_user(params={})
+  def create_unapproved_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
-    params[:twoFactor] = 1
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
+    user
+  end
+  
+  def create_user_without_role(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    create_validated_user(params)
+    user = User.find_by(email: params[:email])
+    user.status = 4
+    user.save
+    user
+  end
+  
+  def create_2factor_user(params={})
+    params[:email] = "#{random_id}@email.com" unless params[:email]
+    params[:twoFactor] = 1
+    create_user(params)
+    user = User.find_by(email: params[:email])
     user
   end
   
@@ -125,6 +138,8 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_agent_role(user)
+    user.status = 4
+    user.save
     user
   end
   

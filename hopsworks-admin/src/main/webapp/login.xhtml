@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+  <h:head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+  </h:head>
+
+  <h:body>
+      <h:form id="loginForm">
+        <f:event type="preRenderView" listener="#{loginBean.checkAlreadyLoggedin}" />
+        <p:growl autoUpdate="true" showDetail="true" life="4000" />
+        <p:panel id="loginPnl" header="Login" style="width: 350px; margin: 150px auto;">
+          <h:panelGrid id="loginPanel" columns="2" cellpadding="5">
+            <h:outputText value="Email" />
+            <p:inputText id="username" value="#{loginBean.credentials.username}"></p:inputText>
+            <h:outputText value="Password" />
+            <p:password id="password" value="#{loginBean.credentials.password}" feedback="false"></p:password>
+            <h:outputText value="Enter code" rendered="#{loginBean.twoFactor}"/>
+            <p:password id="otp" value="#{loginBean.credentials.otp}" feedback="false" rendered="#{loginBean.twoFactor}"></p:password>
+            <h:commandLink action="#{loginBean.gotoSupport()}" value="Need support?"></h:commandLink>
+            <p:link outcome="loginHelp" value="Login help?"></p:link>
+          </h:panelGrid>
+          <h:panelGrid columns="1" cellpadding="10" width="100%">
+            <p:commandButton id="loginButton" action="#{loginBean.login}"
+                             value="Login" update="loginForm" ajax="true" style="float: right;">
+            </p:commandButton>
+          </h:panelGrid>
+        </p:panel>
+      </h:form>
+  </h:body>
+</html>

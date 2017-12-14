@@ -2,6 +2,7 @@ package io.hops.hopsworks.cluster;
 
 import io.hops.hopsworks.cluster.controller.ClusterController;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
+import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
@@ -51,7 +52,8 @@ public class Cluster {
   @POST
   @Path("register/existing")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response registerExisting(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response registerExisting(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+      AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
     clusterController.registerCluster(cluster, req);
     JsonResponse res = new JsonResponse();
@@ -64,7 +66,8 @@ public class Cluster {
   @POST
   @Path("unregister")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+      AppException {
     LOGGER.log(Level.INFO, "Unregistering : {0}", cluster.getEmail());
     clusterController.unregister(cluster, req);
     JsonResponse res = new JsonResponse();
@@ -113,7 +116,7 @@ public class Cluster {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response getRegisterdClusters(@FormParam("email") String email, @FormParam("pwd") String pwd,
-      @Context HttpServletRequest req) throws MessagingException {
+      @Context HttpServletRequest req) throws MessagingException, AppException {
     ClusterDTO cluster = new ClusterDTO();
     cluster.setEmail(email);
     cluster.setChosenPassword(pwd);
@@ -128,7 +131,7 @@ public class Cluster {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response getRegisterdCluster(@FormParam("email") String email, @FormParam("pwd") String pwd, @FormParam(
       "orgName") String organizationName, @FormParam("orgUnitName") String organizationalUnitName,
-      @Context HttpServletRequest req) throws MessagingException {
+      @Context HttpServletRequest req) throws MessagingException, AppException {
     ClusterDTO cluster = new ClusterDTO();
     cluster.setEmail(email);
     cluster.setChosenPassword(pwd);

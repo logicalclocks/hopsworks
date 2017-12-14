@@ -26,8 +26,8 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -78,7 +78,7 @@ public class DownloadService {
   @EJB
   private MessageController messageController;
   @EJB
-  private UserManager userBean;
+  private UserFacade userFacade;
   @EJB
   private EmailBean email;
   @EJB
@@ -184,7 +184,7 @@ public class DownloadService {
             Base64.encodeBase64String(certsFacade.findUserCert(project.getName(), user.getUsername()).getUserKey()))
             .getKeyPw();
         //Pop-up a message from admin
-        messageController.send(user, userBean.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
+        messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
             "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
             + "please check spam first and then contact the HopsWorks administrator.", "");
         email.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",

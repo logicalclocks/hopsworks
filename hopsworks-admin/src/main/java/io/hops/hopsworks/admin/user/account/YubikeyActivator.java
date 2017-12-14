@@ -28,15 +28,16 @@ import io.hops.hopsworks.common.dao.user.security.Yubikey;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.user.UsersController;
 
 @ManagedBean
 @ViewScoped
@@ -48,10 +49,12 @@ public class YubikeyActivator implements Serializable {
           getName());
 
   @EJB
-  private UserManager userManager;
+  protected UsersController usersController;
+  @EJB
+  private UserFacade userFacade;
 
   @EJB
-  private AuditManager auditManager;
+  private AccountAuditFacade auditManager;
 
   @EJB
   private BbcGroupFacade bbcGroupFacade;
@@ -153,8 +156,7 @@ public class YubikeyActivator implements Serializable {
               && !this.selectedYubikyUser.getYubikey().getStatus().equals(PeopleAccountStatus.LOST_YUBIKEY)) {
         // Set status to active
         yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
-
-        userManager.updateYubikey(yubi);
+        userFacade.update(this.selectedYubikyUser);
 
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
                 PeopleAccountStatus.ACTIVATED_ACCOUNT.name(),
@@ -163,7 +165,7 @@ public class YubikeyActivator implements Serializable {
         if (!"#!".equals(this.sgroup.trim()) && (this.sgroup != null
                 || !this.sgroup.isEmpty())) {
           BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(this.sgroup);
-          userManager.registerGroup(this.selectedYubikyUser, bbcGroup.getGid());
+          usersController.registerGroup(this.selectedYubikyUser, bbcGroup.getGid());
           auditManager.registerRoleChange(sessionState.getLoggedInUser(),
                   RolesAuditActions.ADDROLE.name(),
                   RolesAuditActions.SUCCESS.name(), bbcGroup.getGroupName(),
@@ -181,7 +183,7 @@ public class YubikeyActivator implements Serializable {
 
         // Set status to active
         yubi.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
-        userManager.updateYubikey(yubi);
+        userFacade.update(this.selectedYubikyUser);
 
         auditManager.registerAccountChange(sessionState.getLoggedInUser(),
                 AccountsAuditActions.RECOVERY.name(),
@@ -189,8 +191,7 @@ public class YubikeyActivator implements Serializable {
 
       }
 
-      userManager.updateStatus(this.selectedYubikyUser,
-              PeopleAccountStatus.ACTIVATED_ACCOUNT);
+      usersController.updateStatus(this.selectedYubikyUser, PeopleAccountStatus.ACTIVATED_ACCOUNT);
       userTransaction.commit();
 
       auditManager.registerAccountChange(sessionState.getLoggedInUser(),

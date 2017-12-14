@@ -32,7 +32,7 @@ import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import io.hops.hopsworks.common.dao.user.consent.ConsentType;
 import io.hops.hopsworks.common.dao.user.consent.Consents;
 import io.hops.hopsworks.common.dao.user.consent.ConsentsFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -57,7 +57,7 @@ public class BiobankingService {
   private InodeFacade inodeFacade;
 
   @EJB
-  AuditManager am;
+  AccountAuditFacade am;
 
   private Project project;
 

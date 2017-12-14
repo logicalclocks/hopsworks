@@ -9,15 +9,12 @@ import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusEnum;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.user.UserStatusValidator;
-import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.security.PKIUtils;
@@ -67,11 +64,7 @@ public class ClusterController {
   @EJB
   private Settings settings;
   @EJB
-  private AuditManager am;
-  @EJB
-  private UsersController userController;
-  @EJB
-  private UserStatusValidator statusValidator;
+  private AuthController authController;
 
   public void register(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
     isValidNewCluster(cluster);
@@ -121,7 +114,7 @@ public class ClusterController {
       clusterAgent.getUsername()});
   }
 
-  public void registerCluster(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
+  public void registerCluster(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, AppException {
     isValidCluster(cluster);
     ClusterCert clusterCert = clusterCertFacade.getByOrgUnitNameAndOrgName(cluster.getOrganizationName(), cluster.
         getOrganizationalUnitName());
@@ -145,7 +138,7 @@ public class ClusterController {
       clusterAgent.getUsername()});
   }
 
-  public void unregister(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
+  public void unregister(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, AppException {
     isValidCluster(cluster);
     Users clusterAgent = userBean.findByEmail(cluster.getEmail());
     if (clusterAgent == null) {
@@ -236,7 +229,8 @@ public class ClusterController {
     }
   }
 
-  public List<ClusterCert> getAllClusters(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
+  public List<ClusterCert> getAllClusters(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, 
+      AppException {
     if (cluster == null) {
       throw new NullPointerException("Cluster not assigned.");
     }
@@ -254,7 +248,7 @@ public class ClusterController {
     return clusterCertFacade.getByAgent(clusterAgent);
   }
 
-  public ClusterCert getCluster(ClusterDTO cluster, HttpServletRequest req) throws MessagingException {
+  public ClusterCert getCluster(ClusterDTO cluster, HttpServletRequest req) throws MessagingException, AppException {
     isValidCluster(cluster);
     Users clusterAgent = userBean.findByEmail(cluster.getEmail());
     if (clusterAgent == null) {
@@ -269,26 +263,13 @@ public class ClusterController {
     return clusterCert;
   }
 
-  private void checkUserPasswordAndStatus(ClusterDTO cluster, Users clusterAgent, HttpServletRequest req) throws
-      MessagingException {
-    String password = DigestUtils.sha256Hex(cluster.getChosenPassword());
-    if (!password.equals(clusterAgent.getPassword())) {
-      userController.registerFalseLogin(clusterAgent);//will set status if false login > allowed
-      am.registerLoginInfo(clusterAgent, UserAuditActions.LOGIN.name(), UserAuditActions.FAILED.name(), req);
-      throw new SecurityException("Incorrect password.");
-    }
-    try {
-      statusValidator.checkStatus(clusterAgent.getStatus());
-    } catch (AppException ex) {
-      LOGGER.log(Level.WARNING, "User {0} with state {1} trying to login.", new Object[]{clusterAgent.getEmail(),
-        clusterAgent.getStatus()});
-      throw new SecurityException(ex.getMessage());
-    }
+  private void checkUserPasswordAndStatus(ClusterDTO cluster, Users clusterAgent, HttpServletRequest req) 
+      throws AppException {
+    authController.checkPasswordAndStatus(clusterAgent, cluster.getChosenPassword(), req);
     BbcGroup group = groupFacade.findByGroupName(CLUSTER_GROUP);
     if (!clusterAgent.getBbcGroupCollection().contains(group)) {
       throw new SecurityException("User not allowed to register clusters.");
     }
-    userController.resetFalseLogin(clusterAgent);
   }
 
   private void removeUserIfNotValidated(Users u) {
