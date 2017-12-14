@@ -74,8 +74,6 @@ public class UsersController {
   @EJB
   private EmailBean emailBean;
   @EJB
-  private AccountAuditFacade am;
-  @EJB
   private Settings settings;
   @EJB
   private AuthController authController;
@@ -100,15 +98,15 @@ public class UsersController {
       // Only register the user if i can send the email
       userFacade.persist(user);
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(),AuthenticationConstants.ISSUER, user.getSecret());
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.SUCCESS.name(), "", user, req);
-      am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
           AccountsAuditActions.SUCCESS.name(), "", user, req);
     } catch (WriterException | MessagingException | IOException ex) {
 
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
-      am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -137,11 +135,11 @@ public class UsersController {
               getValidationKey()));
       // only register the user if i can send the email to the user
       userFacade.persist(user);
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.SUCCESS.name(), "", user, req);
     } catch (MessagingException ex) {
 
-      am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
           AccountsAuditActions.FAILED.name(), "", user, req);
 
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -265,8 +263,8 @@ public class UsersController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
             ResponseMessages.PASSWORD_RESET_UNSUCCESSFUL);
       }
-      am.registerAccountChange(user, AccountsAuditActions.PASSWORD.name(), AccountsAuditActions.SUCCESS.name(), "",
-          user, req);
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(),
+          AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
     }
   }
 
@@ -307,7 +305,7 @@ public class UsersController {
     if (toursState != null) {
       user.setToursState(toursState);
     }
-    am.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
+    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
         AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,
         req);
 
@@ -395,7 +393,7 @@ public class UsersController {
           ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (!authController.validatePassword(user, password, req)) {
-      am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
           AccountsAuditActions.FAILED.name(), "Incorrect password", user,
           req);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -405,7 +403,7 @@ public class UsersController {
     if (user.getTwoFactor()) {
       user.setTwoFactor(false);
       userFacade.update(user);
-      am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
+      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
           AccountsAuditActions.SUCCESS.name(), "Disabled 2-factor", user,
           req);
     } else {
@@ -414,18 +412,18 @@ public class UsersController {
         userFacade.update(user);
         qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(),
             AuthenticationConstants.ISSUER, user.getSecret());
-        am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
+        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
             AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
             req);
-        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
             AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
             req);
       } catch (IOException | WriterException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
-        am.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
+        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
             AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
             req);
-        am.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
             AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
             req);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.

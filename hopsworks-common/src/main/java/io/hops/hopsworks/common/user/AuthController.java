@@ -35,6 +35,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -339,8 +340,6 @@ public class AuthController {
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     userFacade.update(user);
     resetProjectCertPassword(user, oldPassword);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
-        AccountsAuditActions.SUCCESS.name(), "Changed password.", user, req);
   }
 
   /**
@@ -371,10 +370,7 @@ public class AuthController {
   private void resetProjectCertPassword(Users p, String oldPass) throws Exception {
     //For every project, change the certificate secret in the database
     //Get cert password by decrypting it with old password
-
     List<Project> projects = projectFacade.findAllMemberStudies(p);
-    //In case of failure, keep a list of old certs 
-    List<UserCerts> oldCerts = userCertsFacade.findUserCertsByUid(p.getUsername());
     List<ProjectGenericUserCerts> pguCerts = null;
     try {
       for (Project project : projects) {
@@ -405,16 +401,7 @@ public class AuthController {
       }
     } catch (Exception ex) { 
       LOGGER.log(Level.SEVERE, null, ex);
-      //Persist old certs
-      for (UserCerts oldCert : oldCerts) { 
-        userCertsFacade.update(oldCert);
-      }
-      if (pguCerts != null) {
-        for (ProjectGenericUserCerts pguCert : pguCerts) {
-          userCertsFacade.updatePGUCert(pguCert);
-        }
-      }
-      throw new Exception(ex);
+      throw new EJBException(ex);
     }
 
   }
