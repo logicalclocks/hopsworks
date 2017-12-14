@@ -1,4 +1,4 @@
-package io.hops.hopsworks.common.hdfs;
+package io.hops.hopsworks.api.project;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

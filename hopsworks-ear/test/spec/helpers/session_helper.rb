@@ -12,7 +12,7 @@ module SessionHelper
   def with_admin_session
     user = create_user_without_role({})
     create_admin_role(user)
-    create_session(user.email, user.password)
+    create_session(user.email, "Pass123")
   end
   
   def reset_and_create_session()

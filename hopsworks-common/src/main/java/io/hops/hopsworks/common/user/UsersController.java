@@ -284,14 +284,12 @@ public class UsersController {
     }
   }
 
-  public UserDTO updateProfile(String email, String firstName, String lastName,
-      String telephoneNum, Integer toursState, HttpServletRequest req)
-      throws AppException {
+  public Users updateProfile(String email, String firstName, String lastName, String telephoneNum, Integer toursState,
+      HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(email);
 
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (firstName != null) {
       user.setFname(firstName);
@@ -308,9 +306,8 @@ public class UsersController {
     accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
         AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user,
         req);
-
     userFacade.update(user);
-    return new UserDTO(user);
+    return user;
   }
 
   public SshKeyDTO addSshKey(int id, String name, String sshKey) {

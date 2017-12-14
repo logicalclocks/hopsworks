@@ -106,10 +106,11 @@ public class UserService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
-
-    UserDTO userDTO = userController.updateProfile(sc.getUserPrincipal().
+    
+    Users user = userController.updateProfile(sc.getUserPrincipal().
             getName(), firstName, lastName, telephoneNum, toursState, req);
-
+    UserDTO userDTO = new UserDTO(user);
+    
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);

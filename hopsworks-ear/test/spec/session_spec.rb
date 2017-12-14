@@ -58,9 +58,9 @@ describe "session" do
     end
     
     it "should fail to login without two factor" do
+      set_two_factor("true")
       email = "#{random_id}@email.com"
       create_2factor_user(email: email)
-      set_two_factor("true")
       create_session(email, "Pass123")
       expect_json(successMessage: ->(value){ expect(value).to be_nil})
       expect_json(errorMsg: "Second factor required.")
