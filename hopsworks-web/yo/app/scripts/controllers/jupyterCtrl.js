@@ -414,6 +414,8 @@ angular.module('hopsWorksApp')
                   growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");
                 } else if (error.data !== undefined && error.status === 400) {
                   growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");
+                } else if (error.data !== undefined && error.status === 401) {
+                  growl.error("Cannot start Jupyter - your project has run out of credits. Please contact your system administrator.");
                 } else if (error.data !== undefined && error.status === 403) {
                   growl.error("Cannot start Jupyter - your project has run out of credits. Please contact your system administrator.");
                 } else {

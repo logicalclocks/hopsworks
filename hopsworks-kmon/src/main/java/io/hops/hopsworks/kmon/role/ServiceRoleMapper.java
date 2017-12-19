@@ -35,9 +35,13 @@ public class ServiceRoleMapper {
     serviceRoleMap.put(ServiceType.grafana, Arrays.asList(RoleType.grafana));
     serviceRoleMap.put(ServiceType.kafka, Arrays.asList(RoleType.kafka));
     serviceRoleMap.put(ServiceType.kibana, Arrays.asList(RoleType.kibana));
+    serviceRoleMap.put(ServiceType.hive, Arrays.asList(RoleType.hiveserver2));
+    serviceRoleMap.put(ServiceType.hive, Arrays.asList(RoleType.hivemetastore));
+    serviceRoleMap.put(ServiceType.hive, Arrays.asList(RoleType.hivecleaner));
+    serviceRoleMap.put(ServiceType.dela, Arrays.asList(RoleType.dela));
     
-    roleFullNames.put(RoleType.namenode, "Name Node");
-    roleFullNames.put(RoleType.datanode, "Data Node");
+    roleFullNames.put(RoleType.namenode, "NameNode");
+    roleFullNames.put(RoleType.datanode, "DataNode");
     roleFullNames.put(RoleType.ndbmtd, "MySQL Cluster NDB");
     roleFullNames.put(RoleType.mysqld, "MySQL Server");
     roleFullNames.put(RoleType.ndb_mgmd, "MGM Server");
@@ -48,13 +52,17 @@ public class ServiceRoleMapper {
     roleFullNames.put(RoleType.epipe, "Epipe");
     roleFullNames.put(RoleType.logstash, "Logstash");
     roleFullNames.put(RoleType.livy, "Livy");
-    roleFullNames.put(RoleType.historyserver, "History server");
-    roleFullNames.put(RoleType.sparkhistoryserver, "Spark history server");
+    roleFullNames.put(RoleType.historyserver, "MapRed History Server");
+    roleFullNames.put(RoleType.sparkhistoryserver, "Spark History Server");
     roleFullNames.put(RoleType.telegraf, "Telegraf");
     roleFullNames.put(RoleType.elasticsearch, "Elasticsearch");
     roleFullNames.put(RoleType.grafana, "Grafana");
     roleFullNames.put(RoleType.kafka, "Kafka");
     roleFullNames.put(RoleType.kibana, "Kibana");
+    roleFullNames.put(RoleType.hiveserver2, "HiveServer2");
+    roleFullNames.put(RoleType.hivemetastore, "HiveMetastore");
+    roleFullNames.put(RoleType.hivecleaner, "HiveCleaner");
+    roleFullNames.put(RoleType.dela, "Dela");
   }
 
   public static List<RoleType> getRoles(ServiceType serviceType) {

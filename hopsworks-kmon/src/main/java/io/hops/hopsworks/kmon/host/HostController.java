@@ -1,7 +1,7 @@
 package io.hops.hopsworks.kmon.host;
 
 import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Level;
@@ -16,7 +16,7 @@ import javax.faces.context.FacesContext;
 import io.hops.hopsworks.common.dao.command.Command;
 import io.hops.hopsworks.common.dao.command.CommandEJB;
 import io.hops.hopsworks.common.util.WebCommunication;
-import io.hops.hopsworks.common.dao.role.Role;
+import io.hops.hopsworks.common.dao.role.Roles;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
 import java.io.Reader;
@@ -55,9 +55,9 @@ public class HostController implements Serializable {
   private String service;
   @ManagedProperty("#{param.role}")
   private String role;
-  private Host host;
+  private Hosts host;
   private boolean found;
-  private List<Role> roles;
+  private List<Roles> roles;
   private static final Logger logger = Logger.getLogger(HostController.class.
           getName());
 
@@ -119,14 +119,14 @@ public class HostController implements Serializable {
     this.found = found;
   }
 
-  public Host getHost() {
+  public Hosts getHost() {
     loadHost();
     return host;
   }
 
   private void loadHost() {
     try {
-      host = hostEJB.findByHostId(hostId);
+      host = hostEJB.findByHostname(hostId);
       if (host != null) {
         found = true;
       }
@@ -143,7 +143,7 @@ public class HostController implements Serializable {
     //  TODO: If the web application server crashes, status will remain 'Running'.
     Command c = new Command(command, hostId, service, role, cluster);
     commandEJB.persistCommand(c);
-    Host h = hostEJB.findByHostId(hostId);
+    Hosts h = hostEJB.findByHostname(hostId);
     FacesContext context = FacesContext.getCurrentInstance();
 //    CommandThread r = new CommandThread(context, h.getPublicOrPrivateIp(), c);
 //    Thread t = new Thread(r);
@@ -152,7 +152,7 @@ public class HostController implements Serializable {
     runCommands(context, h.getPublicOrPrivateIp(), h.getAgentPassword(), c);
   }
 
-  public List<Role> getRoles() {
+  public List<Roles> getRoles() {
     loadRoles();
     return roles;
   }
@@ -253,7 +253,7 @@ public class HostController implements Serializable {
         if (res == Response.Status.Family.SUCCESSFUL) {
           c.succeeded();
           String messageText = "";
-          Role r = roleEjb.find(hostId, cluster, service, role);
+          Roles r = roleEjb.find(hostId, cluster, service, role);
 
           if (command.equalsIgnoreCase("start")) {
             JsonObject json

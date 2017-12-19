@@ -35,10 +35,10 @@
         <h:form id="form_hosts">  
           <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
 
-            <p:column  headerText="Host Id">  
+            <p:column  headerText="Hostname">  
               <p:commandLink id="gotohost" styleClass="Health-#{host.health}" action="#{urlController.host()}" ajax="false">
-                <h:outputText value="#{host.hostId}" />
-                <f:param name="hostid" value="#{host.hostId}"/>
+                <h:outputText value="#{host.hostname}" />
+                <f:param name="hostname" value="#{host.hostname}"/>
               </p:commandLink> 
             </p:column>
             <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>

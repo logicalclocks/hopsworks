@@ -48,29 +48,37 @@ import javax.persistence.ManyToMany;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll",
-          query = "SELECT t FROM Project t"),
+      query = "SELECT t FROM Project t")
+  ,
   @NamedQuery(name = "Project.findByName",
-          query = "SELECT t FROM Project t WHERE t.name = :name"),
+      query = "SELECT t FROM Project t WHERE t.name = :name")
+  ,
   @NamedQuery(name = "Project.findByOwner",
-          query = "SELECT t FROM Project t WHERE t.owner = :owner"),
+      query = "SELECT t FROM Project t WHERE t.owner = :owner")
+  ,
   @NamedQuery(name = "Project.findByCreated",
-          query = "SELECT t FROM Project t WHERE t.created = :created"),
+      query = "SELECT t FROM Project t WHERE t.created = :created")
+  ,
   @NamedQuery(name = "Project.findByEthicalStatus",
-          query
-          = "SELECT t FROM Project t WHERE t.ethicalStatus = :ethicalStatus"),
+      query
+      = "SELECT t FROM Project t WHERE t.ethicalStatus = :ethicalStatus")
+  ,
   @NamedQuery(name = "Project.findByRetentionPeriod",
-          query
-          = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod"),
+      query
+      = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod")
+  ,
   @NamedQuery(name = "Project.countProjectByOwner",
-          query
-          = "SELECT count(t) FROM Project t WHERE t.owner = :owner"),
+      query
+      = "SELECT count(t) FROM Project t WHERE t.owner = :owner")
+  ,
   @NamedQuery(name = "Project.findByOwnerAndName",
-          query
-          = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name"),
+      query
+      = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")
+  ,
   @NamedQuery(name = "Project.findByInodeId",
-          query
-          = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-          + "AND t.inode.inodePK.name = :name")})
+      query
+      = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
+      + "AND t.inode.inodePK.name = :name")})
 public class Project implements Serializable {
 
   @Column(name = "conda")
@@ -80,23 +88,23 @@ public class Project implements Serializable {
   @Column(name = "logs")
   private Boolean logs = false;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
+      mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
+      mappedBy = "project")
   private Collection<Activity> activityCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
+      mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
+      mappedBy = "project")
   private Collection<Dataset> datasetCollection;
 
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectId")
+      mappedBy = "projectId")
   private Collection<CondaCommands> condaCommandsCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "project")
+      mappedBy = "project")
   private Collection<JupyterSettings> jupyterSettingsCollection;
 
   private static final long serialVersionUID = 1L;
@@ -110,13 +118,13 @@ public class Project implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 88)
+      max = 88)
   @Column(name = "projectname")
   private String name;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "username",
-          referencedColumnName = "email")
+      referencedColumnName = "email")
   private Users owner;
 
   @Basic(optional = false)
@@ -131,7 +139,7 @@ public class Project implements Serializable {
 
   @NotNull
   @Size(min = 1,
-          max = 30)
+      max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
 
@@ -142,10 +150,10 @@ public class Project implements Serializable {
   @Column(name = "payment_type")
   @Enumerated(EnumType.STRING)
   private PaymentType paymentType;
-  
+
   @Column(name = "python_version")
   private String pythonVersion;
-  
+
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
@@ -158,30 +166,35 @@ public class Project implements Serializable {
 
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
-            referencedColumnName = "parent_id"),
+        referencedColumnName = "parent_id")
+    ,
     @JoinColumn(name = "inode_name",
-            referencedColumnName = "name"),
+        referencedColumnName = "name")
+    ,
     @JoinColumn(name = "partition_id",
-            referencedColumnName = "partition_id")})
+        referencedColumnName = "partition_id")})
   @OneToOne(optional = false)
   private Inode inode;
 
   @JoinTable(name = "hopsworks.project_pythondeps",
-          joinColumns
-          = {
-            @JoinColumn(name = "project_id",
-                    referencedColumnName = "id")},
-          inverseJoinColumns
-          = {
-            @JoinColumn(name = "dep_id",
-                    referencedColumnName = "id")})
+      joinColumns
+      = {
+        @JoinColumn(name = "project_id",
+            referencedColumnName = "id")},
+      inverseJoinColumns
+      = {
+        @JoinColumn(name = "dep_id",
+            referencedColumnName = "id")})
   @ManyToMany
   private Collection<PythonDep> pythonDepCollection;
 
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectId")
+      mappedBy = "projectId")
   private Collection<JupyterProject> jupyterProjectCollection;
-  
+
+//  @OneToMany(cascade = CascadeType.ALL,
+//      mappedBy = "projectId")
+//  private Collection<TfServing> tfServingCollection;
   public Project() {
   }
 
@@ -258,7 +271,7 @@ public class Project implements Serializable {
   public void setPythonVersion(String pythonVersion) {
     this.pythonVersion = pythonVersion;
   }
-  
+
   public String getDescription() {
     return description;
   }
@@ -319,7 +332,7 @@ public class Project implements Serializable {
     }
     Project other = (Project) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+        equals(other.id))) {
       return false;
     }
     return true;
@@ -356,7 +369,7 @@ public class Project implements Serializable {
   }
 
   public void setProjectTeamCollection(
-          Collection<ProjectTeam> projectTeamCollection) {
+      Collection<ProjectTeam> projectTeamCollection) {
     this.projectTeamCollection = projectTeamCollection;
   }
 
@@ -377,7 +390,7 @@ public class Project implements Serializable {
   }
 
   public void setProjectServicesCollection(
-          Collection<ProjectServices> projectServicesCollection) {
+      Collection<ProjectServices> projectServicesCollection) {
     this.projectServicesCollection = projectServicesCollection;
   }
 
@@ -404,7 +417,7 @@ public class Project implements Serializable {
   }
 
   public void setCondaCommandsCollection(
-          Collection<CondaCommands> condaCommandsCollection) {
+      Collection<CondaCommands> condaCommandsCollection) {
     this.condaCommandsCollection = condaCommandsCollection;
   }
 
@@ -419,10 +432,10 @@ public class Project implements Serializable {
   }
 
   public void setJupyterProjectCollection(
-          Collection<JupyterProject> jupyterProjectCollection) {
+      Collection<JupyterProject> jupyterProjectCollection) {
     this.jupyterProjectCollection = jupyterProjectCollection;
   }
-  
+
   @XmlTransient
   @JsonIgnore
   public Collection<JupyterSettings> getJupyterSettingsCollection() {
@@ -430,14 +443,13 @@ public class Project implements Serializable {
   }
 
   public void setJupyterSettingsCollection(
-          Collection<JupyterSettings> jupyterSettingsCollection) {
+      Collection<JupyterSettings> jupyterSettingsCollection) {
     this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
-  
+
   public String getProjectGenericUser() {
     return name + Settings.PROJECT_GENERIC_USER_SUFFIX;
   }
-
 
   public Date getLastQuotaUpdate() { return lastQuotaUpdate; }
 
@@ -448,6 +460,16 @@ public class Project implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
-            + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
+        + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
+
+//  @XmlTransient
+//  @JsonIgnore
+//  public Collection<TfServing> getTfServingCollection() {
+//    return tfServingCollection;
+//  }
+//
+//  public void setTfServingCollection(Collection<TfServing> tfServingCollection) {
+//    this.tfServingCollection = tfServingCollection;
+//  }
 }

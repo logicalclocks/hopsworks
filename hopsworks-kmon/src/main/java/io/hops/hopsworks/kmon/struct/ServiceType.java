@@ -18,5 +18,7 @@ public enum ServiceType {
   grafana,
   kafka,
   kibana,
+  hive,
+  dela,
   SSH
 }

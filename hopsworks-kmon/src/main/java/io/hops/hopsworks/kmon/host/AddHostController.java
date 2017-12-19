@@ -1,7 +1,7 @@
 package io.hops.hopsworks.kmon.host;
 
 import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,11 +41,11 @@ public class AddHostController implements Serializable {
               "A host with id " + hostId + " already exists.");
       context.addMessage(null, msg);
     } else {
-      Host host = new Host();
-      host.setHostId(hostId);
+      Hosts host = new Hosts();
+      host.setHostname(hostId);
       host.setPrivateIp(privateIp);
       host.setPublicIp(publicIp);
-      host.setHostname("");
+      host.setHostIp("");
       hostEJB.storeHost(host, true);
       RequestContext reqInstace = RequestContext.getCurrentInstance();
       reqInstace.addCallbackParam("hostadded", true);

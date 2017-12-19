@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.dao.pythonDeps;
 
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -87,11 +87,11 @@ public class PythonDepsFacade {
     @EJB
     private final WebCommunication web;
     private final String proj;
-    private final Host host;
+    private final Hosts host;
     private final CondaOp op;
     private final String arg;
 
-    public AnacondaTask(WebCommunication web, String proj, Host host,
+    public AnacondaTask(WebCommunication web, String proj, Hosts host,
             CondaOp op, String arg) {
       this.web = web;
       this.proj = proj;
@@ -103,7 +103,7 @@ public class PythonDepsFacade {
     @Override
     public void run() {
       try {
-        web.anaconda(host.getHostname(), host.
+        web.anaconda(host.getHostIp(), host.
                 getAgentPassword(), op.toString(), proj, arg);
       } catch (Exception ex) {
         Logger.getLogger(PythonDepsFacade.class.getName()).log(Level.SEVERE,
@@ -117,11 +117,11 @@ public class PythonDepsFacade {
     @EJB
     private final WebCommunication web;
     private final Project proj;
-    private final Host host;
+    private final Hosts host;
     private final CondaOp op;
     private final PythonDep dep;
 
-    public CondaTask(WebCommunication web, Project proj, Host host, CondaOp op,
+    public CondaTask(WebCommunication web, Project proj, Hosts host, CondaOp op,
             PythonDep dep) {
       this.web = web;
       this.proj = proj;
@@ -133,7 +133,7 @@ public class PythonDepsFacade {
     @Override
     public void run() {
       try {
-        web.conda(host.getHostname(), host.
+        web.conda(host.getHostIp(), host.
                 getAgentPassword(), op.toString(), proj.getName(), dep.
                 getRepoUrl().getUrl(), dep.getDependency(), dep.getVersion());
       } catch (Exception ex) {
@@ -257,8 +257,8 @@ public class PythonDepsFacade {
     return libs;
   }
 
-  private List<Host> getHosts() throws AppException {
-    List<Host> hosts = new ArrayList<>();
+  private List<Hosts> getHosts() throws AppException {
+    List<Hosts> hosts = new ArrayList<>();
     try {
       hosts = hostsFacade.find();
     } catch (Exception ex) {
@@ -364,22 +364,22 @@ public class PythonDepsFacade {
    * @param hosts
    * @throws AppException
    */
-  public void condaEnvironmentOp(CondaOp op, String version, Project proj, String arg,
-          List<Host> hosts) throws AppException {
-    for (Host h : hosts) {
+  public void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, String arg,
+          List<Hosts> hosts) throws AppException {
+    for (Hosts h : hosts) {
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-              op, CondaStatus.ONGOING, proj, version, "", "default",
+              op, CondaStatus.ONGOING, proj, pythonVersion, "", "default",
               new Date(), arg);
       em.persist(cc);
     }
   }
 
   public void blockingCondaEnvironmentOp(CondaOp op, String proj, String arg,
-          List<Host> hosts) throws AppException {
+          List<Hosts> hosts) throws AppException {
     List<Future> waiters = new ArrayList<>();
-    for (Host h : hosts) {
+    for (Hosts h : hosts) {
       logger.log(Level.INFO, "Create anaconda enviornment for {0} on {1}",
-              new Object[]{proj, h.getHostname()});
+              new Object[]{proj, h.getHostIp()});
       Future<?> f = kagentExecutorService.submit(
               new AnacondaTask(this.web, proj, h, op, arg));
       waiters.add(f);
@@ -424,7 +424,7 @@ public class PythonDepsFacade {
           os.setChannelUrl(cc.getChannelUrl());
           os.setLib(cc.getLib());
           os.setVersion(cc.getVersion());
-          Host h = cc.getHostId();
+          Hosts h = cc.getHostId();
           os.addHost(new HostOpStatus(h.getId(), cc.getStatus().toString()));
           if (cc.getStatus() == CondaStatus.FAILED) {
             failed = true;
@@ -479,7 +479,7 @@ public class PythonDepsFacade {
   private void condaOp(CondaOp op, Project proj, String channelUrl,
           String lib, String version) throws AppException {
 
-    List<Host> hosts = new ArrayList<>();
+    List<Hosts> hosts = new ArrayList<>();
     PythonDep dep = null;
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
@@ -512,7 +512,7 @@ public class PythonDepsFacade {
 
       // 4. Mark that the operation is executing at all hosts
       hosts = hostsFacade.find();
-      for (Host h : hosts) {
+      for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
                 op, CondaStatus.ONGOING, proj, lib,
                 version, channelUrl, new Date(), "");
@@ -531,7 +531,7 @@ public class PythonDepsFacade {
   public void blockingCondaOp(int hostId, CondaOp op,
           Project proj, String channelUrl,
           String lib, String version) throws AppException {
-    Host host = em.find(Host.class, hostId);
+    Hosts host = em.find(Hosts.class, hostId);
 
     AnacondaRepo repo = getRepo(proj, channelUrl, false);
     PythonDep dep = getDep(repo, lib, version, false, false);

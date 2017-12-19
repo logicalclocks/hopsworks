@@ -18,7 +18,7 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.admin.lims.MessagesController;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
@@ -44,11 +44,11 @@ public class NodesBean implements Serializable {
   @EJB
   private HostEJB hostsFacade;
   
-  private List<Host> allNodes;
+  private List<Hosts> allNodes;
   private final Map<String, Object> dialogOptions;
-  private String newNodeHostId;
+  private String newNodeHostname;
   private String newNodeHostIp;
-  private Host toBeDeletedNode;
+  private Hosts toBeDeletedNode;
   
   public NodesBean() {
     dialogOptions = new HashMap<>(3);
@@ -62,20 +62,20 @@ public class NodesBean implements Serializable {
     allNodes = hostsFacade.find();
   }
   
-  public List<Host> getAllNodes() {
+  public List<Hosts> getAllNodes() {
     return allNodes;
   }
   
-  public void setAllNodes(List<Host> allNodes) {
+  public void setAllNodes(List<Hosts> allNodes) {
     this.allNodes = allNodes;
   }
   
-  public String getNewNodeHostId() {
-    return newNodeHostId;
+  public String getNewNodeHostname() {
+    return newNodeHostname;
   }
   
-  public void setNewNodeHostId(String newNodeHostId) {
-    this.newNodeHostId = newNodeHostId;
+  public void setNewNodeHostname(String newNodeHostname) {
+    this.newNodeHostname = newNodeHostname;
   }
   
   public String getNewNodeHostIp() {
@@ -86,26 +86,27 @@ public class NodesBean implements Serializable {
     this.newNodeHostIp = newNodeHostIp;
   }
   
-  public Host getToBeDeletedNode() {
+  public Hosts getToBeDeletedNode() {
     return toBeDeletedNode;
   }
   
-  public void setToBeDeletedNode(Host toBeDeletedNode) {
+  public void setToBeDeletedNode(Hosts toBeDeletedNode) {
     this.toBeDeletedNode = toBeDeletedNode;
   }
   
   public void onRowEdit(RowEditEvent event) {
-    Host host = (Host) event.getObject();
+    Hosts host = (Hosts) event.getObject();
     
-    Host storedHost = hostsFacade.findByHostId(host.getHostId());
+    Hosts storedHost = hostsFacade.findByHostname(host.getHostname());
     if (storedHost != null) {
-      storedHost.setHostname(host.getHostname());
+      storedHost.setHostIp(host.getHostIp());
       storedHost.setPublicIp(host.getPublicIp());
       storedHost.setPrivateIp(host.getPrivateIp());
       storedHost.setAgentPassword(host.getAgentPassword());
+      storedHost.setRegistered(host.isRegistered());
       hostsFacade.storeHost(storedHost, true);
       MessagesController.addInfoMessage("Updated host");
-      LOG.log(Level.FINE, "Updated Host with ID: " + host.getHostId() + " Hostname: " + host.getHostname()
+      LOG.log(Level.FINE, "Updated Host with ID: " + host.getHostname() + " Hostname: " + host.getHostIp()
           + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp());
     }
   }
@@ -116,30 +117,30 @@ public class NodesBean implements Serializable {
   
   public void typedNewNodeDetails() {
     String[] obj = new String[2];
-    obj[0] = newNodeHostId;
+    obj[0] = newNodeHostname;
     obj[1] = newNodeHostIp;
     RequestContext.getCurrentInstance().closeDialog(obj);
   }
   
   public void onDialogAddNewNodeClosed(SelectEvent event) {
-    String newNodeHostId = ((String[]) event.getObject())[0];
+    String newNodeHostname = ((String[]) event.getObject())[0];
     String newNodeHostIp = ((String[]) event.getObject())[1];
-    if (newNodeHostId == null || newNodeHostId.isEmpty()
+    if (newNodeHostname == null || newNodeHostname.isEmpty()
         || newNodeHostIp == null || newNodeHostIp.isEmpty()) {
       MessagesController.addErrorMessage("Host not added", "All fields must be filled");
     } else {
-      Host existingNode = hostsFacade.findByHostId(newNodeHostId);
+      Hosts existingNode = hostsFacade.findByHostname(newNodeHostname);
       if (existingNode != null) {
-        LOG.log(Level.WARNING, "Tried to add Host with ID " + newNodeHostId + " but a host already exist with the " +
+        LOG.log(Level.WARNING, "Tried to add Host with ID " + newNodeHostname + " but a host already exist with the " +
             "same ID");
         MessagesController.addErrorMessage("Host with the same ID already exist!");
       } else {
-        Host newNode = new Host();
-        newNode.setHostId(newNodeHostId);
-        newNode.setHostname(newNodeHostIp);
+        Hosts newNode = new Hosts();
+        newNode.setHostname(newNodeHostname);
+        newNode.setHostIp(newNodeHostIp);
         allNodes.add(newNode);
         hostsFacade.storeHost(newNode, true);
-        LOG.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostId());
+        LOG.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostname());
         MessagesController.addInfoMessage("New node added", "Start kagent on the new node to " +
             "register with Hopsworks");
       }
@@ -148,13 +149,13 @@ public class NodesBean implements Serializable {
   
   public void deleteNode() {
     if (toBeDeletedNode != null) {
-      boolean deleted = hostsFacade.removeHostById(toBeDeletedNode.getHostId());
+      boolean deleted = hostsFacade.removeByHostname(toBeDeletedNode.getHostname());
       if (deleted) {
         allNodes.remove(toBeDeletedNode);
-        LOG.log(Level.INFO, "Removed Host with ID " + toBeDeletedNode.getHostId() + " from the database");
+        LOG.log(Level.INFO, "Removed Host with ID " + toBeDeletedNode.getHostname() + " from the database");
         MessagesController.addInfoMessage("Node deleted");
       } else {
-        LOG.log(Level.WARNING, "Could not delete Host " + toBeDeletedNode.getHostId() + " from the database");
+        LOG.log(Level.WARNING, "Could not delete Host " + toBeDeletedNode.getHostname() + " from the database");
         MessagesController.addErrorMessage("Could not delete node");
       }
     }

@@ -30,7 +30,6 @@
     <class>io.hops.hopsworks.common.dao.hdfs.inode.Inode</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeEncodingStatus</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeOps</class>
-    <class>io.hops.hopsworks.common.dao.host.Host</class>
     <class>io.hops.hopsworks.common.dao.kafka.ProjectTopics</class>
     <class>io.hops.hopsworks.common.dao.kafka.SchemaTopics</class>
     <class>io.hops.hopsworks.common.dao.kafka.SharedTopics</class>
@@ -51,13 +50,7 @@
     <class>io.hops.hopsworks.common.dao.project.Project</class>
     <class>io.hops.hopsworks.common.dao.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.common.dao.project.team.ProjectTeam</class>
-    <class>io.hops.hopsworks.common.dao.role.Role</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfClusters</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfExecutions</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfFifoQueue</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfJobs</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfResources</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfTasks</class>
+    <class>io.hops.hopsworks.common.dao.role.Roles</class>
     <class>io.hops.hopsworks.common.dao.user.BbcGroup</class>
     <class>io.hops.hopsworks.common.dao.user.Users</class>
     <class>io.hops.hopsworks.common.dao.user.cluster.ClusterCert</class>
@@ -88,6 +81,7 @@
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
     <class>io.hops.hopsworks.common.dao.jobs.description.Jobs</class>
     <class>io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate</class>
+    <class>io.hops.hopsworks.common.dao.host.Hosts</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

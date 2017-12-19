@@ -18,14 +18,14 @@ public class HostEJB implements Serializable {
   public HostEJB() {
   }
 
-  public List<Host> find() {
-    TypedQuery<Host> query = em.createNamedQuery("Host.find", Host.class);
+  public List<Hosts> find() {
+    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.find", Hosts.class);
     return query.getResultList();
   }
 
-  public Host findByHostname(String hostname) throws Exception {
-    TypedQuery<Host> query = em.createNamedQuery("Host.findBy-Hostname",
-            Host.class).setParameter("hostname", hostname);
+  public Hosts findByHostIp(String hostIp) throws Exception {
+    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-HostIp",
+            Hosts.class).setParameter("hostIp", hostIp);
     try {
       return query.getSingleResult();
     } catch (NoResultException ex) {
@@ -33,10 +33,10 @@ public class HostEJB implements Serializable {
     }
   }
 
-  public Host findByHostId(String hostId) {
-    TypedQuery<Host> query = em.createNamedQuery("Host.findBy-HostId",
-            Host.class).setParameter("hostId", hostId);
-    List<Host> result = query.getResultList();
+  public Hosts findByHostname(String hostname) {
+    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-Hostname",
+            Hosts.class).setParameter("hostname", hostname);
+    List<Hosts> result = query.getResultList();
     if (result.isEmpty()) {
       return null;
     } else if (result.size() == 1) {
@@ -47,18 +47,18 @@ public class HostEJB implements Serializable {
     }
   }
 
-  public List<Host> find(String cluster, String service, String role,
+  public List<Hosts> find(String cluster, String service, String role,
           Status status) {
-    TypedQuery<Host> query = em.createNamedQuery(
-            "Host.findBy-Cluster.Service.Role.Status", Host.class)
+    TypedQuery<Hosts> query = em.createNamedQuery(
+            "Hosts.findBy-Cluster.Service.Role.Status", Hosts.class)
             .setParameter("cluster", cluster).setParameter("service", service)
             .setParameter("role", role).setParameter("status", status);
     return query.getResultList();
   }
 
-  public List<Host> find(String cluster, String service, String role) {
-    TypedQuery<Host> query = em.createNamedQuery(
-            "Host.findBy-Cluster.Service.Role", Host.class)
+  public List<Hosts> find(String cluster, String service, String role) {
+    TypedQuery<Hosts> query = em.createNamedQuery(
+            "Hosts.findBy-Cluster.Service.Role", Hosts.class)
             .setParameter("cluster", cluster).setParameter("service", service)
             .setParameter("role", role);
     return query.getResultList();
@@ -66,7 +66,7 @@ public class HostEJB implements Serializable {
 
   public boolean hostExists(String hostId) {
     try {
-      if (findByHostId(hostId) != null) {
+      if (findByHostname(hostId) != null) {
         return true;
       }
       return false;
@@ -75,11 +75,11 @@ public class HostEJB implements Serializable {
     }
   }
 
-  public Host storeHost(Host host, boolean register) {
+  public Hosts storeHost(Hosts host, boolean register) {
     if (register) {
       em.merge(host);
     } else {
-      Host h = findByHostId(host.getHostId());
+      Hosts h = findByHostname(host.getHostname());
       host.setPrivateIp(h.getPrivateIp());
       host.setPublicIp(h.getPublicIp());
       host.setCores(h.getCores());
@@ -89,8 +89,8 @@ public class HostEJB implements Serializable {
     return host;
   }
   
-  public boolean removeHostById(String hostId) {
-    Host host = findByHostId(hostId);
+  public boolean removeByHostname(String hostname) {
+    Hosts host = findByHostname(hostname);
     if (host != null) {
       em.remove(host);
       return true;

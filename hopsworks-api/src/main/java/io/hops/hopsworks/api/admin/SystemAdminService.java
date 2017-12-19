@@ -21,8 +21,8 @@ import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.host.Host;
 import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.EncryptionMasterPasswordException;
@@ -154,35 +154,35 @@ public class SystemAdminService {
   @Path("/hosts")
   public Response getAllClusterNodes(@Context SecurityContext sc, @Context HttpServletRequest request)
       throws AppException {
-    List<Host> allNodes = hostsFacade.find();
+    List<Hosts> allNodes = hostsFacade.find();
     
-    List<Host> responseList = new ArrayList<>(allNodes.size());
+    List<Hosts> responseList = new ArrayList<>(allNodes.size());
     // Send only hostID and hostname
-    for (Host host : allNodes) {
-      Host node = new Host();
-      node.setHostId(host.getHostId());
+    for (Hosts host : allNodes) {
+      Hosts node = new Hosts();
       node.setHostname(host.getHostname());
+      node.setHostIp(host.getHostIp());
       node.setRegistered(host.isRegistered());
       responseList.add(node);
     }
     
-    GenericEntity<List<Host>> response = new GenericEntity<List<Host>>(responseList){};
+    GenericEntity<List<Hosts>> response = new GenericEntity<List<Hosts>>(responseList){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
   @PUT
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/hosts")
-  public Response updateClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Host
+  public Response updateClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Hosts
       nodeToUpdate) throws AppException {
   
-    Host storedNode = hostsFacade.findByHostId(nodeToUpdate.getHostId());
+    Hosts storedNode = hostsFacade.findByHostname(nodeToUpdate.getHostname());
     if (storedNode == null) {
       LOG.log(Level.WARNING, "Tried to update node that does not exist");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Tried to update node that does not exist");
     } else {
-      if (nodeToUpdate.getHostname() != null && !nodeToUpdate.getHostname().isEmpty()) {
-        storedNode.setHostname(nodeToUpdate.getHostname());
+      if (nodeToUpdate.getHostIp() != null && !nodeToUpdate.getHostIp().isEmpty()) {
+        storedNode.setHostIp(nodeToUpdate.getHostIp());
       }
     
       if (nodeToUpdate.getPublicIp() != null && !nodeToUpdate.getPublicIp().isEmpty()) {
@@ -208,7 +208,7 @@ public class SystemAdminService {
   public Response deleteNode(@Context SecurityContext sc, @Context HttpServletRequest request,
       @PathParam("hostid") String hostId) throws AppException {
     if (hostId != null) {
-      boolean deleted = hostsFacade.removeHostById(hostId);
+      boolean deleted = hostsFacade.removeByHostname(hostId);
       JsonResponse response;
       if (deleted) {
         response = noCacheResponse.buildJsonResponse(Response.Status.OK, "Node with ID " + hostId + " deleted");
@@ -225,30 +225,30 @@ public class SystemAdminService {
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/hosts")
-  public Response addNewClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Host newNode)
+  public Response addNewClusterNode(@Context SecurityContext sc, @Context HttpServletRequest request, Hosts newNode)
     throws AppException {
     
     // Do some sanity check
-    if (newNode.getHostId() == null || newNode.getHostId().isEmpty()
+    if (newNode.getHostname() == null || newNode.getHostname().isEmpty()
         || newNode.getHostname() == null || newNode.getHostname().isEmpty()) {
       LOG.log(Level.WARNING, "hostId or hostname of new node are empty");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "hostId or hostname of new node are empty");
     }
     
-    Host existingNode = hostsFacade.findByHostId(newNode.getHostId());
+    Hosts existingNode = hostsFacade.findByHostname(newNode.getHostname());
     if (existingNode != null) {
-      LOG.log(Level.WARNING, "Tried to add Host with ID " + newNode.getHostId() + " but a host already exist with " +
+      LOG.log(Level.WARNING, "Tried to add Host with ID " + newNode.getHostname() + " but a host already exist with " +
           "the same ID");
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Host with the same ID already exist");
     }
     
     // Make sure we store what we want in the DB and not what the user wants to
-    Host finalNode = new Host();
-    finalNode.setHostId(newNode.getHostId());
+    Hosts finalNode = new Hosts();
     finalNode.setHostname(newNode.getHostname());
+    finalNode.setHostIp(newNode.getHostIp());
     hostsFacade.storeHost(finalNode, true);
   
-    GenericEntity<Host> response = new GenericEntity<Host>(finalNode){};
+    GenericEntity<Hosts> response = new GenericEntity<Hosts>(finalNode){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
   }
 }

@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.dao.role;
 
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.WebCommunication;
@@ -32,100 +32,100 @@ public class RoleEJB {
   public RoleEJB() {
   }
 
-  public List<Role> findAll() {
-    TypedQuery<Role> query = em.createNamedQuery("Role.findAll", Role.class);
+  public List<Roles> findAll() {
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.findAll", Roles.class);
     return query.getResultList();
   }
 
-  public List<Role> findServiceRoles(String serviceName) {
-    TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Service", Role.class).
+  public List<Roles> findServiceRoles(String serviceName) {
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.findBy-Service", Roles.class).
         setParameter("service", serviceName);
     return query.getResultList();
   }
 
-  public List<Role> findRoles(String service, String role) {
-    TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Service-Role", Role.class)
+  public List<Roles> findRoles(String service, String role) {
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.findBy-Service-Role", Roles.class)
         .setParameter("service", service).setParameter("role", role);
     return query.getResultList();
   }
 
   public List<String> findClusters() {
-    TypedQuery<String> query = em.createNamedQuery("Role.findClusters",
+    TypedQuery<String> query = em.createNamedQuery("Roles.findClusters",
             String.class);
     return query.getResultList();
   }
 
   public List<String> findServices(String cluster) {
     TypedQuery<String> query = em.
-            createNamedQuery("Role.findServicesBy-Cluster", String.class)
+            createNamedQuery("Roles.findServicesBy-Cluster", String.class)
             .setParameter("cluster", cluster);
     return query.getResultList();
   }
 
   public List<String> findServices() {
-    TypedQuery<String> query = em.createNamedQuery("Role.findServices",
+    TypedQuery<String> query = em.createNamedQuery("Roles.findServices",
             String.class);
     return query.getResultList();
   }
 
-  public List<Role> findRoleOnHost(String hostId, String service, String role) {
+  public List<Roles> findRoleOnHost(String hostname, String service, String role) {
 
-    TypedQuery<Role> query = em.createNamedQuery("Role.findOnHost", Role.class)
-        .setParameter("hostId", hostId).setParameter("service", service).setParameter("role", role);
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.findOnHost", Roles.class)
+        .setParameter("hostname", hostname).setParameter("service", service).setParameter("role", role);
     return query.getResultList();
   }
 
-  public Role find(String hostId, String cluster, String service, String role) {
+  public Roles find(String hostname, String cluster, String service, String role) {
 
-    TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
-            .setParameter("hostId", hostId).setParameter("cluster", cluster)
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.find", Roles.class)
+            .setParameter("hostname", hostname).setParameter("cluster", cluster)
             .setParameter("service", service).setParameter("role", role);
     List results = query.getResultList();
     if (results.isEmpty()) {
       return null;
     } else if (results.size() == 1) {
-      return (Role) results.get(0);
+      return (Roles) results.get(0);
     }
     throw new NonUniqueResultException();
   }
 
-  public List<Role> findHostRoles(String hostId) {
-    TypedQuery<Role> query = em.createNamedQuery("Role.findBy-HostId",
-            Role.class)
-            .setParameter("hostId", hostId);
+  public List<Roles> findHostRoles(String hostname) {
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.findBy-HostId",
+            Roles.class)
+            .setParameter("hostname", hostname);
     return query.getResultList();
   }
 
-  public List<Role> findRoles(String cluster, String service, String role) {
-    TypedQuery<Role> query = em.createNamedQuery(
-            "Role.findBy-Cluster-Service-Role", Role.class)
+  public List<Roles> findRoles(String cluster, String service, String role) {
+    TypedQuery<Roles> query = em.createNamedQuery(
+            "Roles.findBy-Cluster-Service-Role", Roles.class)
             .setParameter("cluster", cluster).setParameter("service", service).
             setParameter("role", role);
     return query.getResultList();
   }
 
-  public List<Role> findRoles(String role) {
-    TypedQuery<Role> query = em.createNamedQuery(
-        "Role.findBy-Role", Role.class)
+  public List<Roles> findRoles(String role) {
+    TypedQuery<Roles> query = em.createNamedQuery(
+        "Roles.findBy-Role", Roles.class)
         .setParameter("role", role);
     return query.getResultList();
   }
   
   public Long count(String cluster, String service, String role) {
-    TypedQuery<Long> query = em.createNamedQuery("Role.Count", Long.class)
+    TypedQuery<Long> query = em.createNamedQuery("Roles.Count", Long.class)
             .setParameter("cluster", cluster).setParameter("service", service)
             .setParameter("role", role);
     return query.getSingleResult();
   }
 
   public Long countHosts(String cluster) {
-    TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
+    TypedQuery<Long> query = em.createNamedQuery("Roles.Count-hosts", Long.class)
             .setParameter("cluster", cluster);
     return query.getSingleResult();
   }
 
   public Long countRoles(String cluster, String service) {
-    TypedQuery<Long> query = em.createNamedQuery("Role.Count-roles", Long.class)
+    TypedQuery<Long> query = em.createNamedQuery("Roles.Count-roles", Long.class)
             .setParameter("cluster", cluster).setParameter("service", service);
     return query.getSingleResult();
   }
@@ -153,14 +153,14 @@ public class RoleEJB {
 
   public List<RoleHostInfo> findRoleHost(String cluster) {
     TypedQuery<RoleHostInfo> query = em.createNamedQuery(
-            "Role.findRoleHostBy-Cluster", RoleHostInfo.class)
+            "Roles.findRoleHostBy-Cluster", RoleHostInfo.class)
             .setParameter("cluster", cluster);
     return query.getResultList();
   }
 
   public List<RoleHostInfo> findRoleHost(String cluster, String service) {
     TypedQuery<RoleHostInfo> query = em.createNamedQuery(
-            "Role.findRoleHostBy-Cluster-Service", RoleHostInfo.class)
+            "Roles.findRoleHostBy-Cluster-Service", RoleHostInfo.class)
             .setParameter("cluster", cluster).setParameter("service", service);
     return query.getResultList();
   }
@@ -168,18 +168,18 @@ public class RoleEJB {
   public List<RoleHostInfo> findRoleHost(String cluster, String service,
           String role) {
     TypedQuery<RoleHostInfo> query = em.createNamedQuery(
-            "Role.findRoleHostBy-Cluster-Service-Role", RoleHostInfo.class)
+            "Roles.findRoleHostBy-Cluster-Service-Role", RoleHostInfo.class)
             .setParameter("cluster", cluster).setParameter("service", service)
             .setParameter("role", role);
     return query.getResultList();
   }
 
   public RoleHostInfo findRoleHost(String cluster, String service, String role,
-          String hostId) throws Exception {
+          String hostname) throws Exception {
     TypedQuery<RoleHostInfo> query = em.createNamedQuery(
-            "Role.findRoleHostBy-Cluster-Service-Role-Host", RoleHostInfo.class)
+            "Roles.findRoleHostBy-Cluster-Service-Role-Host", RoleHostInfo.class)
             .setParameter("cluster", cluster).setParameter("service", service)
-            .setParameter("role", role).setParameter("hostid", hostId);
+            .setParameter("role", role).setParameter("hostname", hostname);
     try {
       return query.getSingleResult();
     } catch (NoResultException ex) {
@@ -190,15 +190,14 @@ public class RoleEJB {
   public String findCluster(String ip, int webPort) {
     TypedQuery<String> query = em.createNamedQuery(
             "RoleHost.find.ClusterBy-Ip.WebPort", String.class)
-            .setParameter("ip", ip).setParameter("webPort", webPort);
+            .setParameter("ip", ip);
     return query.getSingleResult();
   }
 
   public String findPrivateIp(String cluster, String hostname, int webPort) {
     TypedQuery<String> query = em.createNamedQuery(
             "RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", String.class)
-            .setParameter("cluster", cluster).setParameter("hostname", hostname)
-            .setParameter("webPort", webPort);
+            .setParameter("cluster", cluster).setParameter("hostname", hostname);
     try {
       return query.getSingleResult();
     } catch (NoResultException ex) {
@@ -206,17 +205,17 @@ public class RoleEJB {
     }
   }
 
-  public void persist(Role role) {
+  public void persist(Roles role) {
     em.persist(role);
   }
 
-  public void store(Role role) {
-    TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
-            .setParameter("hostId", role.getHostId()).setParameter("cluster",
+  public void store(Roles role) {
+    TypedQuery<Roles> query = em.createNamedQuery("Roles.find", Roles.class)
+            .setParameter("hostname", role.getHost().getHostname()).setParameter("cluster",
             role.getCluster())
             .setParameter("service", role.getService()).setParameter("role",
             role.getRole());
-    List<Role> s = query.getResultList();
+    List<Roles> s = query.getResultList();
 
     if (s.size() > 0) {
       role.setId(s.get(0).getId());
@@ -226,8 +225,8 @@ public class RoleEJB {
     }
   }
 
-  public void deleteRolesByHostId(String hostId) {
-    em.createNamedQuery("Role.DeleteBy-HostId").setParameter("hostId", hostId).
+  public void deleteRolesByHostname(String hostname) {
+    em.createNamedQuery("Roles.DeleteBy-HostId").setParameter("hostname", hostname).
             executeUpdate();
   }
 
@@ -239,12 +238,12 @@ public class RoleEJB {
     return webOp(action, findServiceRoles(service));
   }
 
-  public String roleOnHostOp(String service, String roleName, String hostId,
+  public String roleOnHostOp(String service, String roleName, String hostname,
           Action action) throws AppException {
-    return webOp(action, findRoleOnHost(hostId, service, roleName));
+    return webOp(action, findRoleOnHost(hostname, service, roleName));
   }
 
-  private String webOp(Action operation, List<Role> roles) throws AppException {
+  private String webOp(Action operation, List<Roles> roles) throws AppException {
     if (operation == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "The action is not valid, valid action are " + Arrays.toString(
@@ -257,8 +256,8 @@ public class RoleEJB {
     String result = "";
     boolean success = false;
     int exception = Response.Status.BAD_REQUEST.getStatusCode();
-    for (Role role : roles) {
-      Host h = findHostById(role.getHostId());
+    for (Roles role : roles) {
+      Hosts h = role.getHost();
       if (h != null) {
         String ip = h.getPublicOrPrivateIp();
         String agentPassword = h.getAgentPassword();
@@ -275,7 +274,7 @@ public class RoleEJB {
           }
         }
       } else {
-        result += role.toString() + " " + "host not found: " + role.getHostId();
+        result += role.toString() + " " + "host not found: " + role.getHost();
       }
       result += "\n";
     }
@@ -285,8 +284,8 @@ public class RoleEJB {
     return result;
   }
 
-  private Host findHostById(String hostId) {
-    Host host = hostEJB.findByHostId(hostId);
+  private Hosts findHostById(String hostname) {
+    Hosts host = hostEJB.findByHostname(hostname);
     return host;
   }
 

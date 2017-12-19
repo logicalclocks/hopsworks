@@ -291,7 +291,13 @@ public class Alert implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.kmon.cluster.Alerts[ id=" + id + " ]";
+    return "Alert: " + message + "\r"
+         + "Host : " + hostid + "\r"
+         + "Type: " + type +  "\r"
+         + "Type Instance: " + typeInstance +  "\r"
+         + "Current Value: " + currentValue +  "\r"
+         + "Time: " + alertTime + "\r"
+        ;
   }
 
 }

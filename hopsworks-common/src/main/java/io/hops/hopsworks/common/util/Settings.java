@@ -180,6 +180,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
   private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
+  private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -310,6 +311,7 @@ public class Settings implements Serializable {
       HIVE_LLAP_LOCAL_FS_DIR = setStrVar(VARIABLE_HIVE_LLAP_LOCAL_DIR, HIVE_LLAP_LOCAL_FS_DIR);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
       HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
+      ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       ZEPPELIN_USER = setVar(VARIABLE_ZEPPELIN_USER, ZEPPELIN_USER);
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
       ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
@@ -1686,6 +1688,15 @@ public class Settings implements Serializable {
 
   public Settings() {
   }
+  
+  
+  private String ALERT_EMAIL_ADDRS = "";
+
+  public synchronized String getAlertEmailAddrs() {
+    checkCache();
+    return ALERT_EMAIL_ADDRS;
+  }
+  
 
   /**
    * Get the variable value with the given name.

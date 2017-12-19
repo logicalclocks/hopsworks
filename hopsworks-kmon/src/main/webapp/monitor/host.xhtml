@@ -44,8 +44,8 @@
           <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
             <p:toolbarGroup align="left">  
               <p:commandLink action="#{urlController.host()}" ajax="false">
-                <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
-                <f:param name="hostid" value="#{hostController.hostId}"/>   
+                <h:outputText value="#{hostController.host.hostname} (#{hostController.host.hostIp})"/>
+                <f:param name="hostid" value="#{hostController.hostname}"/>   
               </p:commandLink>
             </p:toolbarGroup>  
 
@@ -57,8 +57,8 @@
         <h:form styleClass="styleInfoPanel" id="form_host">
           <p:panel  header="Host Details">
             <p:dataTable id="host" var="host" value="#{hostController.host}">
-              <p:column headerText="Host Id" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostId}"/></p:column> 
-              <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
+              <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column> 
+              <p:column headerText="Host IP" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostIp}"/></p:column>
               <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
               <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
               <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
@@ -98,7 +98,7 @@
               <p:column headerText="Role Page">
                 <p:commandLink action="#{urlController.roleStatus}" ajax="false">
                   <h:outputText value="#{role}"/>
-                  <f:param name="hostid" value="#{role.hostId}"/>
+                  <f:param name="hostid" value="#{role.hostId.hostname}"/>
                   <f:param name="cluster" value="#{role.cluster}"/>
                   <f:param name="role" value="#{role.role}"/>
                   <f:param name="service" value="#{role.service}"/>
@@ -145,7 +145,7 @@
                                     <p:column>
                                         <p:commandLink id="nonAjax" actionListener="#{SshController.exec}" ajax="false">
                                             <f:param name="cluster" value="#{hostController.cluster}" />
-                                            <f:param name="hostid" value="#{hostController.host.hostId}" />
+                                            <f:param name="hostid" value="#{hostController.host.hostname}" />
                                             <h:outputText value="Execute ssh command" />
                                         </p:commandLink>                
                                     </p:column>

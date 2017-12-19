@@ -3,7 +3,7 @@ package io.hops.hopsworks.api.certs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import io.hops.hopsworks.api.annotation.AllowCORS;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.kafka.CsrDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -88,9 +88,9 @@ public class CertSigningService {
 
     if (json.has("host-id") && json.has("agent-password")) {
       String hostId = json.getString("host-id");
-      Host host;
+      Hosts host;
       try {
-        host = hostEJB.findByHostId(hostId);
+        host = hostEJB.findByHostname(hostId);
         String agentPassword = json.getString("agent-password");
         host.setAgentPassword(agentPassword);
         host.setRegistered(true);

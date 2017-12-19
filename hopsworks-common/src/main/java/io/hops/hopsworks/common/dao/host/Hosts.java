@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.dao.host;
 
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
+import io.hops.hopsworks.common.dao.role.Roles;
 import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -25,23 +26,23 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Table(name = "hopsworks.hosts")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Host.find",
-          query = "SELECT h FROM Host h"),
-  @NamedQuery(name = "Host.findBy-Id",
-          query = "SELECT h FROM Host h WHERE h.id = :id"),
-  @NamedQuery(name = "Host.findBy-HostId",
-          query = "SELECT h FROM Host h WHERE h.hostId = :hostId"),
-  @NamedQuery(name = "Host.findBy-Hostname",
-          query = "SELECT h FROM Host h WHERE h.hostname = :hostname"),
-  @NamedQuery(name = "Host.findBy-Cluster.Service.Role.Status",
+  @NamedQuery(name = "Hosts.find",
+          query = "SELECT h FROM Hosts h"),
+  @NamedQuery(name = "Hosts.findBy-Id",
+          query = "SELECT h FROM Hosts h WHERE h.id = :id"),
+  @NamedQuery(name = "Hosts.findBy-Hostname",
+          query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
+  @NamedQuery(name = "Hosts.findBy-HostIp",
+          query = "SELECT h FROM Hosts h WHERE h.hostIp = :hostIp"),
+  @NamedQuery(name = "Hosts.findBy-Cluster.Service.Role.Status",
           query
-          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster "
+          = "SELECT h FROM Hosts h, Roles r WHERE h = r.host AND r.cluster "
           + "= :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
-  @NamedQuery(name = "Host.findBy-Cluster.Service.Role",
+  @NamedQuery(name = "Hosts.findBy-Cluster.Service.Role",
           query
-          = "SELECT h FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster "
+          = "SELECT h FROM Hosts h, Roles r WHERE h = r.host AND r.cluster "
           + "= :cluster AND r.service = :service AND r.role = :role"),})
-public class Host implements Serializable {
+public class Hosts implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;
 
@@ -53,15 +54,15 @@ public class Host implements Serializable {
   @Column(name = "id")
   private Integer id;
 
-  @Column(name = "hostid",
-          nullable = false,
-          length = 128)
-  private String hostId;
-
-  @Column(name = "hostname_",
+  @Column(name = "hostname",
           nullable = false,
           length = 128)
   private String hostname;
+
+  @Column(name = "host_ip",
+          nullable = false,
+          length = 128)
+  private String hostIp;
 
   @Column(name = "public_ip",
           length = 15)
@@ -108,15 +109,10 @@ public class Host implements Serializable {
           mappedBy = "hostId")
   private Collection<CondaCommands> condaCommandsCollection;
 
-  public Host() {
-  }
-
-  public String getHostId() {
-    return hostId;
-  }
-
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  @OneToMany(mappedBy = "host")
+  private Collection<Roles> rolesCollection;
+  
+  public Hosts() {
   }
 
   public String getHostname() {
@@ -125,6 +121,14 @@ public class Host implements Serializable {
 
   public void setHostname(String hostname) {
     this.hostname = hostname;
+  }
+
+  public String getHostIp() {
+    return hostIp;
+  }
+
+  public void setHostIp(String ip) {
+    this.hostIp = ip;
   }
 
   public String getPublicIp() {
@@ -352,5 +356,22 @@ public class Host implements Serializable {
           Collection<CondaCommands> condaCommandsCollection) {
     this.condaCommandsCollection = condaCommandsCollection;
   }
+
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Roles> getRolesCollection() {
+    return rolesCollection;
+  }
+
+  public void setRolesCollection(Collection<Roles> rolesCollection) {
+    this.rolesCollection = rolesCollection;
+  }
+
+  @Override
+  public String toString() {
+    return this.hostIp + "(" + this.hostname + ")";
+  }
+
 
 }

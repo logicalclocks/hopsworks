@@ -2,23 +2,23 @@ package io.hops.hopsworks.common.dao.role;
 
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 
 public class RoleHostInfo {
 
-  private Role role;
-  private Host host;
+  private Roles role;
+  private Hosts host;
 
-  public RoleHostInfo(Role role, Host host) {
+  public RoleHostInfo(Roles role, Hosts host) {
     this.role = role;
     this.host = host;
   }
 
-  public Role getRole() {
+  public Roles getRole() {
     return role;
   }
 
-  public Host getHost() {
+  public Hosts getHost() {
     return host;
   }
 

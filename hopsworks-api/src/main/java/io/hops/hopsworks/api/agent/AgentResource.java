@@ -17,9 +17,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.role.Role;
+import io.hops.hopsworks.common.dao.role.Roles;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -30,6 +30,8 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaOp;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.io.ByteArrayInputStream;
@@ -44,6 +46,7 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.mail.MessagingException;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
@@ -71,6 +74,8 @@ public class AgentResource {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
+  @EJB
+  private EmailBean emailBean;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -98,14 +103,14 @@ public class AgentResource {
           StandardCharsets.UTF_8));
       JsonObject json = Json.createReader(stream).readObject();
       long agentTime = json.getJsonNumber("agent-time").longValue();
-      String hostId = json.getString("host-id");
-      Host host = hostFacade.findByHostId(hostId);
+      String hostname = json.getString("host-id");
+      Hosts host = hostFacade.findByHostname(hostname);
       if (host == null) {
-        logger.log(Level.WARNING, "Host with id {0} not found.", hostId);
+        logger.log(Level.WARNING, "Host with id {0} not found.", hostname);
         return Response.status(Response.Status.NOT_FOUND).build();
       }
       if (!host.isRegistered()) {
-        logger.log(Level.WARNING, "Host with id {0} is not registered.", hostId);
+        logger.log(Level.WARNING, "Host with id {0} is not registered.", hostname);
         return Response.status(Response.Status.NOT_ACCEPTABLE).build();
       }
       host.setLastHeartbeat((new Date()).getTime());
@@ -132,17 +137,17 @@ public class AgentResource {
         String cluster = s.getString("cluster");
         String roleName = s.getString("role");
         String service = s.getString("service");
-        Role role = null;
+        Roles role = null;
         try {
-          role = roleFacade.find(hostId, cluster, service, roleName);
+          role = roleFacade.find(hostname, cluster, service, roleName);
         } catch (Exception ex) {
           logger.log(Level.FINE, "Could not find a role for the kagent heartbeat.");
           continue;
         }
 
         if (role == null) {
-          role = new Role();
-          role.setHostId(hostId);
+          role = new Roles();
+          role.setHost(host);
           role.setCluster(cluster);
           role.setService(service);
           role.setRole(roleName);
@@ -153,7 +158,7 @@ public class AgentResource {
             : "0";
         String pid = s.containsKey("pid") ? s.getString("pid") : "-1";
         try {
-          role.setWebPort(Integer.parseInt(webPort));
+//          role.setWebPort(Integer.parseInt(webPort));
           role.setPid(Integer.parseInt(pid));
         } catch (NumberFormatException ex) {
           logger.log(Level.WARNING, "Invalid webport or pid - not a number for: {0}", role);
@@ -383,10 +388,10 @@ public class AgentResource {
       @Context HttpHeaders httpHeaders, String jsonString
   ) {
     // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
+    Alert alert = new Alert();
     try {
       InputStream stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
       JsonObject json = Json.createReader(stream).readObject();
-      Alert alert = new Alert();
       alert.setAlertTime(new Date());
       alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")).toString());
       alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
@@ -427,6 +432,16 @@ public class AgentResource {
       logger.log(Level.SEVERE, "Exception: {0}", ex);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
+
+    if (!settings.getAlertEmailAddrs().isEmpty()) {
+      try {
+        emailBean.sendEmails(settings.getAlertEmailAddrs(), UserAccountsEmailMessages.ALERT_SERVICE_DOWN, alert.
+            toString());
+      } catch (MessagingException ex) {
+        Logger.getLogger(AgentResource.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+
     return Response.ok().build();
   }
 }

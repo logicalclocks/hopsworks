@@ -9,7 +9,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.util.NodesTableItem;
@@ -92,18 +92,18 @@ public class CommunicationController {
     this.serviceInstancesController = serviceInstancesController;
   }
 
-  private Host findHostById(String hostId) throws Exception {
+  private Hosts findHostById(String hostId) throws Exception {
     try {
-      Host host = hostEJB.findByHostId(hostId);
+      Hosts host = hostEJB.findByHostname(hostId);
       return host;
     } catch (Exception ex) {
       throw new RuntimeException("HostId " + hostId + " not found.");
     }
   }
 
-  private Host findHostByRole(String cluster, String service, String role)
+  private Hosts findHostByRole(String cluster, String service, String role)
           throws Exception {
-    String id = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
+    String id = roleEjb.findRoles(cluster, service, role).get(0).getHost().getHostname();
     return findHostById(id);
   }
 
@@ -112,7 +112,7 @@ public class CommunicationController {
     // Finds hostId of mgmserver
     // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
     String mgmserverRole = "ndb_mgmd";
-    Host h = findHostByRole(cluster, service, mgmserverRole);
+    Hosts h = findHostByRole(cluster, service, mgmserverRole);
     String ip = h.getPublicOrPrivateIp();
     String agentPassword = h.getAgentPassword();
     return web.getConfig(ip, agentPassword, cluster, service, mgmserverRole);
@@ -120,7 +120,7 @@ public class CommunicationController {
 
   public String getRoleLog(int lines) {
     try {
-      Host h = findHostById(hostId);
+      Hosts h = findHostById(hostId);
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       return web.getRoleLog(ip, agentPassword, cluster, service, role, lines);
@@ -175,7 +175,7 @@ public class CommunicationController {
     for (InstanceInfo instance : instances) {
       if (instance.getRole().equals(role)) {
         try {
-          Host h = findHostById(instance.getHost());
+          Hosts h = findHostById(instance.getHost());
           String ip = h.getPublicOrPrivateIp();
           String agentPassword = h.getAgentPassword();
           results.add(web.asyncRoleOp(operation, ip, agentPassword, cluster, service, role));
@@ -196,7 +196,7 @@ public class CommunicationController {
   
   private String roleOperation(String operation) {
     try {
-      Host h = findHostById(hostId);
+      Hosts h = findHostById(hostId);
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       return web.roleOp(operation, ip, agentPassword, cluster, service, role);
@@ -207,7 +207,7 @@ public class CommunicationController {
 
   public String getAgentLog(int lines) {
     try {
-      Host h = findHostById(hostId);
+      Hosts h = findHostById(hostId);
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       return web.getAgentLog(ip, agentPassword, lines);
@@ -223,8 +223,8 @@ public class CommunicationController {
     final String ROLE = "mysqld";
     List<NodesTableItem> results;
     try {
-      String id = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
-      Host h = findHostById(hostId);
+      String id = roleEjb.findRoles(cluster, service, ROLE).get(0).getHost().getHostname();
+      Hosts h = findHostById(hostId);
       String ip = h.getPublicOrPrivateIp();
       String agentPassword = h.getAgentPassword();
       results = web.getNdbinfoNodesTable(ip, agentPassword);
