@@ -89,7 +89,8 @@
       "spark.dynamicAllocation.minExecutors": "%%min_executors%%",
       "spark.dynamicAllocation.maxExecutors": "%%max_executors%%",
       "spark.dynamicAllocation.executorIdleTimeout": "%%exec_timeout%%",
-      "spark.metrics.conf": "%%metrics_path%%"
+      "spark.metrics.conf": "%%metrics_path%%",
+      "spark.task.maxFailures": "%%max_failures%%"
     }
   },
   "use_auto_viz": true,
