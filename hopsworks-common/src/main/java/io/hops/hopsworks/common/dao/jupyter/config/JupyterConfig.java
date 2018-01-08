@@ -339,6 +339,7 @@ public class JupyterConfig {
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
           + ",jupyter,notebook,?";
+      String extraClassPath = settings.getHopsLeaderElectionJarPath();
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
@@ -396,6 +397,8 @@ public class JupyterConfig {
                                   Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s":
                                   "60s",
                   "extra_java_options", extraJavaOptions,
+                  "driver_extraClassPath",extraClassPath,
+                  "executor_extraClassPath",extraClassPath,
                   "max_failures", (isHorovod || isTensorFlow || isTensorFlowOnSpark) ? "1": "4"
               );
       createdSparkmagic = ConfigFileGenerator.createConfigFile(

@@ -513,10 +513,10 @@ public class Settings implements Serializable {
       = "spark.shuffle.service.enabled";
   public static final String SPARK_DRIVER_MEMORY_ENV = "spark.driver.memory";
   public static final String SPARK_DRIVER_CORES_ENV = "spark.driver.cores";
+  public static final String SPARK_DRIVER_EXTRACLASSPATH = "spark.driver.extraClassPath";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
-  public static final String SPARK_EXECUTOR_EXTRACLASSPATH
-      = "spark.executor.extraClassPath";
+  public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV
       = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
@@ -524,11 +524,12 @@ public class Settings implements Serializable {
   public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
-  public static final String SPARK_EXECUTORENV_PYTHONPATH
-      = "spark.executorEnv.PYTHONPATH";
-  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH
-      = "spark.executorEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
+  public static final String SPARK_EXECUTORENV_LD_LIBRARY_PATH = "spark.executorEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_EXECUTORENV_HDFS_USER = "spark.executorEnv.HDFS_USER";
+  public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
+  public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
   //TFSPARK properties
@@ -877,6 +878,11 @@ public class Settings implements Serializable {
   public static String getYarnConfDir(String hadoopDir) {
     return hadoopConfDir(hadoopDir);
   }
+  
+  public String getHopsLeaderElectionJarPath() {
+    return getHadoopSymbolicLinkDir() + "/share/hadoop/hdfs/lib/hops-leader-election-" + getHadoopVersion() + ".jar";
+  }
+  
   //Default configuration file names
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
   public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";

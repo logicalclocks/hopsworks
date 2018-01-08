@@ -44,7 +44,6 @@ import org.sonatype.aether.RepositoryException;
 public class ZeppelinConfig {
 
   private static final Logger LOGGER = Logger.getLogger(ZeppelinConfig.class.getName());
-  private static final String LOG4J_PROPS = "/log4j.properties";
   private static final String ZEPPELIN_SITE_XML = "/zeppelin-site.xml";
   private static final String ZEPPELIN_ENV_SH = "/zeppelin-env.sh";
   public static final String INTERPRETER_JSON = "/interpreter.json";
@@ -479,13 +478,14 @@ public class ZeppelinConfig {
     String projectNameProp = " -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=" + this.projectName;
     String userProp = " -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=" + this.projectName
         + Settings.PROJECT_GENERIC_USER_SUFFIX;
-    //String sessionIdProp =  " -D" + Settings.HOPSWORKS_SESSIONID_PROPERTY + "=" + this.sessionId;
     String extraSparkJavaOptions = " -Dlog4j.configuration=./log4j.properties "
         + logstashID + restEndpointProp + keystorePwProp + truststorePwProp + elasticEndpointProp + projectIdProp
         + projectNameProp + userProp;
     String hdfsResourceDir = "hdfs://" + resourceDir + File.separator;
     // Comma-separated files to be added as local resources to Spark/Livy interpreter
-
+    String driverExtraClassPath = settings.getHopsLeaderElectionJarPath();
+    String executorExtraClassPath = settings.getHopsLeaderElectionJarPath();
+    
     StringBuilder distFiles = new StringBuilder();
     distFiles
         // KeyStore
@@ -534,6 +534,8 @@ public class ZeppelinConfig {
               "livy_url", settings.getLivyUrl(),
               "metrics-properties_path", log4jPath + "," + distFiles.toString(),
               "extra_spark_java_options", extraSparkJavaOptions,
+              "driver_extraClassPath", driverExtraClassPath,
+              "executor_extraClassPath", executorExtraClassPath,
               "spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",
               "spark.yarn.stagingDir", hdfsResourceDir,
               "livy.spark.sql.warehouse.dir", hdfsResourceDir + "spark-warehouse",

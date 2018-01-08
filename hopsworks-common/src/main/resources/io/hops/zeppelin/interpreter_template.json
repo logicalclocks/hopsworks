@@ -222,11 +222,13 @@
         "livy.spark.driver.memory": "",
         "livy.spark.driver.cores": "",
         "livy.spark.driver.extraJavaOptions": "%%extra_spark_java_options%%",
+        "livy.spark.driver.extraClassPath" : "%%driver_extraClassPath%%",
         "livy.spark.driver.extraLibraryPath" : "%%cuda_dir%%/lib64",
         "livy.spark.executorEnv.HDFS_USER" : "%%hdfs_user%%",
         "livy.spark.executorEnv.HADOOP_HOME" : "%%hadoop_home%%",
         "livy.spark.executorEnv.LIBHDFS_OPTS" : "-Xmx96m",
-        "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%"
+        "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
+        "livy.spark.executor.extraClassPath" : "%%executor_extraClassPath%%"
       },
       "status": "READY",
       "interpreterGroup": [
