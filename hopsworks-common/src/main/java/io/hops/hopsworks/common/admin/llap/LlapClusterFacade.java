@@ -27,11 +27,11 @@ public class LlapClusterFacade {
 
   private static final Logger logger = Logger.getLogger(LlapClusterFacade.class.getName());
 
-  private static String NINSTANCES = "llap_ninstances";
-  private static String EXECMEMORY = "llap_exec_memory";
-  private static String CACHEMEMORY = "llap_cache_memory";
-  private static String NEXECUTORS = "llap_executors_threads";
-  private static String NIOTHREADS = "llap_io_threads";
+  private static final String NINSTANCES = "llap_ninstances";
+  private static final String EXECMEMORY = "llap_exec_memory";
+  private static final String CACHEMEMORY = "llap_cache_memory";
+  private static final String NEXECUTORS = "llap_executors_threads";
+  private static final String NIOTHREADS = "llap_io_threads";
 
   @EJB
   private YarnClientService yarnClientService;
@@ -51,11 +51,26 @@ public class LlapClusterFacade {
       clusterStatus.setClusterStatus(LlapClusterStatus.Status.DOWN);
     }
 
-    clusterStatus.setInstanceNumber(Integer.parseInt(variablesFacade.getVariableValue(NINSTANCES)));
-    clusterStatus.setExecutorsMemory(Long.parseLong(variablesFacade.getVariableValue(EXECMEMORY)));
-    clusterStatus.setCacheMemory(Long.parseLong(variablesFacade.getVariableValue(CACHEMEMORY)));
-    clusterStatus.setExecutorsPerInstance(Integer.parseInt(variablesFacade.getVariableValue(NEXECUTORS)));
-    clusterStatus.setIOThreadsPerInstance(Integer.parseInt(variablesFacade.getVariableValue(NIOTHREADS)));
+    String nInstances = variablesFacade.getVariableValue(NINSTANCES);
+    if (nInstances != null) {
+      clusterStatus.setInstanceNumber(Integer.parseInt(nInstances));
+    }
+    String execMemory = variablesFacade.getVariableValue(EXECMEMORY);
+    if (execMemory != null) {
+      clusterStatus.setExecutorsMemory(Long.parseLong(execMemory));
+    }
+    String cacheMemory = variablesFacade.getVariableValue(CACHEMEMORY);
+    if (cacheMemory != null) {
+      clusterStatus.setCacheMemory(Long.parseLong(cacheMemory));
+    }
+    String nExecutors = variablesFacade.getVariableValue(NEXECUTORS);
+    if (nExecutors != null) {
+      clusterStatus.setExecutorsPerInstance(Integer.parseInt(nExecutors));
+    }
+    String nIOThreads = variablesFacade.getVariableValue(NIOTHREADS);
+    if (nIOThreads != null) {
+      clusterStatus.setIOThreadsPerInstance(Integer.parseInt(nIOThreads));
+    }
 
     return clusterStatus;
   }
