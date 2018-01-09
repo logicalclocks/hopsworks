@@ -113,22 +113,10 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
-                makeEditable: function (dataSet) {
+                permissions: function (dataSet) {
                   var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/makeEditable',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
-                },
-                removeEditable: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/removeEditable',
+                    method: 'PUT',
+                    url: '/api/project/' + id + '/dataset/permissions',
                     headers: {
                       'Content-Type': 'application/json'
                     },

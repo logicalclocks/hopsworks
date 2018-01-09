@@ -6,8 +6,8 @@ angular.module('hopsWorksApp')
 
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': $routeParams.projectID, 'editable':false};
-            self.dataSets = {'name': dsName, 'description': "", 'projectIds': [], 'editable':false};
+            self.dataSet = {'name': dsName, 'description': "", 'projectId': $routeParams.projectID, 'permissions':'OWNER_ONLY'};
+            self.dataSets = {'name': dsName, 'description': "", 'projectIds': [], 'permissions':'OWNER_ONLY'};
             self.pId = $routeParams.projectID;
             var dataSetService = DataSetService(self.pId);
 

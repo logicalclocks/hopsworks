@@ -293,12 +293,11 @@ public class DatasetController {
    * original dataset
    *
    * @param orgDs the dataset to be make editable
-   * @param editable whether the dataset should be editable
    */
   //TODO: Add a reference in each dataset entry to the original dataset
-  public void changeEditable(Dataset orgDs, boolean editable) {
+  public void changePermissions(Dataset orgDs) {
     for (Dataset ds : datasetFacade.findByInode(orgDs.getInode())) {
-      ds.setEditable(editable);
+      ds.setEditable(orgDs.getEditable());
       datasetFacade.merge(ds);
     }
   }

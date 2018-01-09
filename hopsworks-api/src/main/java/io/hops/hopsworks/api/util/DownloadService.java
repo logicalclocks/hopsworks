@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -66,7 +67,7 @@ public class DownloadService {
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
     Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
+    if (ds.isShared() && ds.getEditable()==DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DOWNLOAD_ERROR);
     }
