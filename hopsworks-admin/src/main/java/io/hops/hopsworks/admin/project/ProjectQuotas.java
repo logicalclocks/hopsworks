@@ -80,12 +80,18 @@ public class ProjectQuotas {
 
   public boolean isArchived() { return archived; }
 
-  public void setArchived(boolean archived) { this.archived = archived; }
+  public void setArchived(boolean archived) { 
+    this.archived = archived; 
+    project.setArchived(archived);
+  }
 
   public PaymentType getPaymentType() { return paymentType; }
 
   public void setPaymentType(PaymentType paymentType) {
     this.paymentType = paymentType;
+    if(project!=null){
+      project.setPaymentType(paymentType);
+    }
   }
 
   public Date getLastQuotaUpdate() { return lastQuotaUpdate; }
