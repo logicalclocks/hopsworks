@@ -1,6 +1,7 @@
 package io.hops.hopsworks.common.hive;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -114,7 +115,7 @@ public class HiveController {
     dbDataset.setType(DatasetType.HIVEDB);
     // As we are running Zeppelin as projectGenericUser, we have to make
     // the directory editable by default
-    dbDataset.setEditable(true);
+    dbDataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
     dbDataset.setDescription(buildDescription(project.getName()));
     datasetFacade.persistDataset(dbDataset);
 

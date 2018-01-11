@@ -3,6 +3,7 @@ package io.hops.hopsworks.apiV2.projects;
 import io.hops.hopsworks.apiV2.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -223,6 +224,7 @@ public class DatasetsResource {
     try {
       success = datasetController.deleteDatasetDir(dataset, fullPath, dfso);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
           "Permission denied: You can not delete the file " + fullPath.toString());
     } catch (IOException ex) {
@@ -302,7 +304,7 @@ public class DatasetsResource {
   @Path("/{dsName}/editable")
   public Response isEditable(@PathParam("dsName") String name, @Context SecurityContext sc) throws AppException {
     Dataset ds = getDataset(name);
-    if (ds.isEditable()){
+    if (ds.getEditable()!= DatasetPermissions.OWNER_ONLY){
       return Response.noContent().build();
     } else {
       throw new AppException(Response.Status.NOT_FOUND, "Dataset not readonly");
@@ -312,12 +314,13 @@ public class DatasetsResource {
   @ApiOperation(value = "Make dataset editable", notes = "Allow data scientists to create and modify own " +
       "files in dataset.")
   @PUT
-  @Path("/{dsName}/editable")
-  public Response makeEditable(@PathParam("dsName") String name) throws AppException, AccessControlException {
+  @Path("/{dsName}/permissions")
+  public Response setPermissions(@PathParam("dsName") String name) throws AppException, AccessControlException {
+    //TODO(Theofilos): Change according to same method in API v1
     Dataset dataSet = getDataset(name);
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, true);
     changeDatasetPermissions(dataSet, fsPermission);
-    datasetController.changeEditable(dataSet, true);
+    datasetController.changePermissions(dataSet);
     
     return Response.noContent().build();
   }
@@ -329,7 +332,7 @@ public class DatasetsResource {
     Dataset dataset = getDataset(name);
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE, false);
     changeDatasetPermissions(dataset, fsPermission);
-    datasetController.changeEditable(dataset, false);
+    datasetController.changePermissions(dataset);
   
     return Response.noContent().build();
   }
@@ -343,6 +346,7 @@ public class DatasetsResource {
       datasetController.recChangeOwnershipAndPermission(datasetController.getDatasetPath(dataset),
           fsPermission, null, null, null, dfso);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
           "Permission denied: Can not change the permission of this file.");
     } catch (IOException e) {
@@ -416,6 +420,7 @@ public class DatasetsResource {
     try {
       success = dfso.rm(fullPath, true);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
           "Permission denied: You can not delete the file " + fullPath);
     } catch (IOException ex) {

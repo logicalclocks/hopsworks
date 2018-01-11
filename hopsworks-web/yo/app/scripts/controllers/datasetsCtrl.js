@@ -819,24 +819,11 @@ angular.module('hopsWorksApp')
             /**
              * Opens a modal dialog to make dataset editable
              * @param {type} name
+             * @param {type} permissions
              * @returns {undefined}
              */
-            self.makeEditable = function (name) {
-              ModalService.makeEditable('md', name).then(
-                      function (success) {
-                        growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
-                        getDirContents();
-                      }, function (error) {
-              });
-            };
-
-            /**
-             * Opens a modal dialog to remove editable from the dataset 
-             * @param {type} name
-             * @returns {undefined}
-             */
-            self.removeEditable = function (name) {
-              ModalService.removeEditable('md', name).then(
+            self.permissions = function (name, permissions) {
+              ModalService.permissions('md', name, permissions).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                         getDirContents();

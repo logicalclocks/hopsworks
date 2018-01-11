@@ -15,6 +15,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -807,7 +808,7 @@ public class ProjectService {
     if (ds.isPublicDs()) {
       newDS.setPublicDs(ds.getPublicDs());
     }
-    newDS.setEditable(false);
+    newDS.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.persistDataset(newDS);
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 

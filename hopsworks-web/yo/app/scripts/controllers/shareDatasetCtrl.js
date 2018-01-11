@@ -1,14 +1,21 @@
 angular.module('hopsWorksApp')
-    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'ModalService',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, ModalService) {
+    .controller('ShareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'permissions', 'ModalService',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, permissions, ModalService) {
 
             var self = this;
-
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'editable':false};
+            self.dataSet = {'name': dsName, 'description': "", 'projectId': "", 'permissions': permissions};
             self.pId = $routeParams.projectID;
             var dataSetService = DataSetService(self.pId);
+            var defaultPermissions = 'OWNER_ONLY';
+            
+            self.ownerOnlyMsg = "Sets default permissions setting of a Dataset. " +
+                    "Only Data Owners will be able to upload/remove files, either via the Dataset Browser or via Jobs and Jupyter notebooks. "+
+                    "To allow Zeppelin notebooks to write in this Dataset, select a less strict setting.";
+            self.groupWritableAndStickyBitSet = "Allow Data Owners to upload/remove files, Data Scientists are allowed to upload files but only remove files/dirs they own, via the Dataset Browser. "+
+                    "Zeppelin notebooks can write into the Dataset.<br> Are you sure you want to proceed?";
+            self.groupWritable = "This is the least strict setting. It allows both Data Owners and Data Scientists to upload/remove files either via the Dataset Browser or via Jobs/Notebooks. <br> Are you sure you want to proceed?";
 
             ProjectService.getAll().$promise.then(
                 function (success) {
@@ -33,14 +40,14 @@ angular.module('hopsWorksApp')
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
                 } else {
-                    self.dataSet.editable = false;
+                    self.dataSet.permissions = defaultPermissions;
                 }
 
             };
             
-            self.makeEditable = function () {
+            self.setPermissions = function () {
                 if ($scope.dataSetForm.$valid) {
-                    dataSetService.makeEditable(self.dataSet)
+                    dataSetService.permissions(self.dataSet)
                         .then(function (success) {
                             $uibModalInstance.close(success);
                         },
@@ -48,32 +55,30 @@ angular.module('hopsWorksApp')
                             growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                         });
                 } else {
-                    self.dataSet.editable = false;
+                    self.dataSet.permissions = defaultPermissions;
                 }
 
             };
-
-          self.removeEditable = function () {
-                if ($scope.dataSetForm.$valid) {
-                    dataSetService.removeEditable(self.dataSet)
-                        .then(function (success) {
-                            $uibModalInstance.close(success);
-                        },
-                        function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                        });
-                } else {
-                    self.dataSet.editable = false;
-                }
-
+            
+            self.getPermissionsText = function() {
+              if(typeof self.dataSet !== 'undefined'){
+                if(self.dataSet.permissions === 'GROUP_WRITABLE_SB'){
+                  return self.groupWritableAndStickyBitSet;
+                } else if(self.dataSet.permissions === 'GROUP_WRITABLE'){
+                  return self.groupWritable;
+                } else if(self.dataSet.permissions === 'OWNER_ONLY'){
+                  return self.ownerOnlyMsg;
+                } 
+              }
             };
             
               /**
              * Opens a modal dialog to make dataset editable
+             * @param {type} permissions
              * @returns {undefined}
              */
-            self.makeEditableModal = function () {
-              ModalService.makeEditable('md', dsName).then(
+            self.setPermissionsModal = function (permissions) {
+              ModalService.permissions('md', dsName, permissions).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
                       }, function (error) {

@@ -16,7 +16,7 @@ public class DataSetDTO {
   private boolean isPublic;
   private boolean searchable;
   private boolean generateReadme;
-  private boolean editable;
+  private DatasetPermissions permissions;
   private int template;
   private Integer projectId;
   private List<Integer> projectIds;
@@ -155,12 +155,12 @@ public class DataSetDTO {
     this.sharedWith = sharedWith;
   }
 
-  public boolean isEditable() {
-    return editable;
+  public DatasetPermissions getPermissions() {
+    return permissions;
   }
 
-  public void setEditable(boolean editable) {
-    this.editable = editable;
+  public void setPermissions(DatasetPermissions permissions) {
+    this.permissions = permissions;
   }
 
   public List<UserCardDTO> getProjectTeam() {
