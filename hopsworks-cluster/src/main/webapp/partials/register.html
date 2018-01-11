@@ -7,14 +7,12 @@
         <div class="panel-body">
           <form name="registerForm" ng-submit="register()" role="form">
             <div class="form-group has-feedback">
-              <label class="text-muted">Cluster Common Name</label>
-              <input name="first_name" placeholder="Common Name" autocomplete="off"
-                     maxlength="64"
-                     pattern="(^(?!.*__.*).*$)"
-                     title="Common name can not contain __, and should be at most 64 characters."
-                     ng-model="newUser.commonName" required class="form-control "
-                     type="text">
-              <span class="fa fa-server form-control-feedback text-muted" style="top: 34px;"></span>
+              <label class="text-muted">Email address</label>
+              <input name="user_email" placeholder="Email" autocomplete="off"
+                     ng-model="newUser.email" required
+                     class="form-control"
+                     type="email">
+              <span class="fa fa-envelope form-control-feedback text-muted" style="top: 34px;"></span>
             </div>
             <div class="form-group has-feedback">
               <label class="text-muted">Organization Name</label>
@@ -33,14 +31,6 @@
                      ng-model="newUser.organizationalUnitName" required class="form-control "
                      type="text">
               <span class="fa fa-server form-control-feedback text-muted" style="top: 34px;"></span>
-            </div>
-            <div class="form-group has-feedback">
-              <label class="text-muted">Email address</label>
-              <input name="user_email" placeholder="Email" autocomplete="off"
-                     ng-model="newUser.email" required
-                     class="form-control"
-                     type="email">
-              <span class="fa fa-envelope form-control-feedback text-muted" style="top: 34px;"></span>
             </div>
             <div class="form-group has-feedback">
               <label class="text-muted">Password</label>

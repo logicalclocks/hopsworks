@@ -8,6 +8,11 @@ angular.module('hopsWorksApp')
                   url: '/api/dela',
                   isArray: true});         
               },
+              getClientType: function() {
+                return $http({
+                  method: 'GET',
+                  url: '/api/dela/client'}); 
+              },
               search: function (searchTerm) {
                 return $http({
                   method: 'GET',

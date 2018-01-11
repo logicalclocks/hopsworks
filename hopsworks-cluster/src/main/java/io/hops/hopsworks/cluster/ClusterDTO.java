@@ -7,7 +7,6 @@ public class ClusterDTO {
   private String email;
   private String chosenPassword;
   private String repeatedPassword;
-  private String commonName;
   private String organizationName;
   private String organizationalUnitName;
   private boolean tos;
@@ -39,14 +38,6 @@ public class ClusterDTO {
     this.repeatedPassword = repeatedPassword;
   }
 
-  public String getCommonName() {
-    return commonName;
-  }
-
-  public void setCommonName(String commonName) {
-    this.commonName = commonName;
-  }
-
   public String getOrganizationName() {
     return organizationName;
   }
@@ -74,8 +65,8 @@ public class ClusterDTO {
   @Override
   public String toString() {
     return "ClusterDTO{" + "email=" + email + ", chosenPassword=" + chosenPassword + ", repeatedPassword=" +
-        repeatedPassword + ", commonName=" + commonName + ", organizationName=" + organizationName +
-        ", organizationalUnitName=" + organizationalUnitName + ", tos=" + tos + '}';
+        repeatedPassword + ", organizationName=" + organizationName + ", organizationalUnitName=" +
+        organizationalUnitName + ", tos=" + tos + '}';
   }
   
 }

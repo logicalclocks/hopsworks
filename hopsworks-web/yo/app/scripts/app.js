@@ -89,25 +89,25 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/delahopsDataset.html',
                       controller: 'HopsDatasetCtrl as publicDataset',
                       resolve: {
-                        auth: ['$rootScope', '$q', '$location', 'AuthService', '$cookies',
-                          function ($rootScope, $q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      if($rootScope.isDelaEnabled) {
-                                        $cookies.put("email", success.data.data.value);
-                                      } else {
-                                        return $q.reject();
-                                      }
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
+                        auth: ['$rootScope', '$q', '$location', '$cookies', 'HopssiteService',
+                          function ($rootScope, $q, $location, $cookies, HopssiteService) {
+                            return HopssiteService.getServiceInfo("dela").then(function (success) {
+                              if (success.data.status === 1 ) {
+                                $rootScope['isDelaEnabled'] = true;
+                              } else {
+                                $rootScope['isDelaEnabled'] = false;
+                                $location.path('/');
+                                return $q.reject();
+                              }
+                            }, function (error) {
+                              $rootScope['isDelaEnabled'] = false;
+                              $cookies.remove("email");
+                              $cookies.remove("projectID");
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(error);
+                            });
+                          }]}
                     })
                     .when('/delaclusterDataset', {
                       templateUrl: 'views/delaclusterDataset.html',

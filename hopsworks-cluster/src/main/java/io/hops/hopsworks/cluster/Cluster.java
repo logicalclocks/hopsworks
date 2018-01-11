@@ -32,23 +32,24 @@ public class Cluster {
   private final static Logger LOGGER = Logger.getLogger(Cluster.class.getName());
   @EJB
   private ClusterController clusterController;
-
-  public Cluster() {
-  }
-
+  @EJB
+  private ClusterState clusterState;
+  
   @POST
   @Path("register")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response register(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+    AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
-    clusterController.register(cluster, req);
+    boolean autoValidate = clusterState.bypassActivationLink();
+    clusterController.register(cluster, req, autoValidate);
     JsonResponse res = new JsonResponse();
     res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
         + ClusterController.VALIDATION_KEY_EXPIRY_DATE + " hours before installing your new cluster.");
     return Response.ok().entity(res).build();
   }
-
+  
   @POST
   @Path("register/existing")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -120,8 +121,8 @@ public class Cluster {
     ClusterDTO cluster = new ClusterDTO();
     cluster.setEmail(email);
     cluster.setChosenPassword(pwd);
-    List<ClusterCert> clusters = clusterController.getAllClusters(cluster, req);
-    GenericEntity<List<ClusterCert>> clustersEntity = new GenericEntity<List<ClusterCert>>(clusters) {
+    List<ClusterYmlDTO> clusters = clusterController.getAllClusterYml(cluster, req);
+    GenericEntity<List<ClusterYmlDTO>> clustersEntity = new GenericEntity<List<ClusterYmlDTO>>(clusters) {
     };
     return Response.ok().entity(clustersEntity).build();
   }

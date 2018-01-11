@@ -2,6 +2,7 @@ package io.hops.hopsworks.api.dela;
 
 import com.google.gson.Gson;
 import io.hops.hopsworks.api.dela.dto.BootstrapDTO;
+import io.hops.hopsworks.api.dela.dto.DelaClientDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
@@ -67,7 +68,8 @@ public class DelaService {
   private final static Logger LOG = Logger.getLogger(DelaService.class.getName());
   @EJB
   private NoCacheResponse noCacheResponse;
-  
+  @EJB
+  private Settings settings;
   @EJB
   private HopssiteController hopsSite;
   @EJB
@@ -83,6 +85,14 @@ public class DelaService {
   private DatasetController datasetCtrl;
   @EJB
   private DistributedFsService dfs;
+  
+  @GET
+  @Path("/client")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getClientType() {
+    DelaClientDTO clientType = new DelaClientDTO(settings.getDelaClientType().type);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clientType).build();
+  }
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)

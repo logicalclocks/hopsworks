@@ -7,102 +7,132 @@ public class HopsSite {
   public static class ClusterService {
 
     public static String delaVersion() {
-      return "cluster/dela/version";
+      return "public/cluster/dela/version";
     }
 
     public static String registerCluster() {
-      return "cluster/register";
+      return "private/cluster/register";
     }
 
     public static String heavyPing(String publicCId) {
-      return "cluster/heavyPing/" + publicCId;
+      return "private/cluster/heavyPing/" + publicCId;
     }
 
     public static String ping(String publicCId) {
-      return "cluster/ping/" + publicCId;
+      return "private/cluster/ping/" + publicCId;
     }
   }
 
   public static class UserService {
-
+    public static String user() {
+      return "private/user";
+    }
+    
     public static String registerUser(String publicCId) {
-      return "user/register/" + publicCId;
+      return "private/user/register/" + publicCId;
     }
 
     public static String getUser(String publicCId, String email) {
-      return "user/" + publicCId + "/" + email;
+      return "private/user/" + publicCId + "/" + email;
     }
   }
 
   public static class DatasetService {
 
+    public static String dataset() {
+      return "private/dataset";
+    }
+    
+    public static String datasetByPublicId() {
+      return "private/dataset/byPublicId";
+    }
+    
+    public static String datasetIssue() {
+      return "private/dataset/issue";
+    }
+    
+    public static String datasetCategory() {
+      return "private/dataset/category";
+    }
+    
+    public static String datasetPopular() {
+      return "private/dataset/popular";
+    }
+    
     public static String publish(String publicCId) {
-      return "dataset/publish/" + publicCId;
+      return "private/dataset/publish/" + publicCId;
     }
 
     public static String unpublish(String publicCId, String publicDSId) {
-      return "dataset/unpublish/" + publicCId + "/" + publicDSId;
+      return "private/dataset/unpublish/" + publicCId + "/" + publicDSId;
     }
 
     public static String download(String publicCId, String publicDSId) {
-      return "dataset/download/" + publicCId + "/" + publicDSId;
+      return "private/dataset/download/" + publicCId + "/" + publicDSId;
     }
 
     public static String complete(String publicCId, String publicDSId) {
-      return "dataset/complete/" + publicCId + "/" + publicDSId;
+      return "private/dataset/complete/" + publicCId + "/" + publicDSId;
     }
 
     public static String remove(String publicCId, String publicDSId) {
-      return "dataset/remove/" + publicCId + "/" + publicDSId;
+      return "private/dataset/remove/" + publicCId + "/" + publicDSId;
     }
 
     public static String search() {
-      return "dataset/search";
+      return "public/dataset/search";
     }
 
     public static String searchPage(String sessionId, Integer startItem, Integer nrItems) {
-      return "dataset/search/" + sessionId + "/page/" + startItem + "/" + nrItems;
+      return "public/dataset/search/" + sessionId + "/page/" + startItem + "/" + nrItems;
     }
 
     public static String details(String publicDSId) {
-      return "dataset/" + publicDSId + "/details";
+      return "public/dataset/" + publicDSId + "/details";
     }
   }
 
   public static class RatingService {
     
+    public static String rating() {
+      return "private/rating";
+    }
+    
+    public static String getDatasetAllByPublicId() {
+      return "private/rating/all/byPublicId";
+    }
     public static String getDatasetAllRating(String publicDSId) {
-      return "/rating/dataset/" + publicDSId + "/all";
+      return "private/rating/dataset/" + publicDSId + "/all";
     }
     
     public static String getDatasetUserRating(String publicCId, String publicDSId) {
-      return "/rating/cluster/" + publicCId + "/dataset/" + publicDSId + "/user";
+      return "private/rating/cluster/" + publicCId + "/dataset/" + publicDSId + "/user";
     }
     
     public static String addRating(String publicCId, String publicDSId) {
-      return "/rating/cluster/" + publicCId + "/dataset/" + publicDSId + "/add";
+      return "private/rating/cluster/" + publicCId + "/dataset/" + publicDSId + "/add";
     }
   }
   
   public static class CommentService {
     public static String getDatasetAllComments(String publicDSId) {
-      return "/comment/dataset/" + publicDSId + "/all";
+      return "private/comment/dataset/" + publicDSId + "/all";
     }
     
     public static String addComment(String publicCId, String publicDSId) {
-      return "/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/add";
+      return "private/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/add";
     }
     
     public static String updateComment(String publicCId, String publicDSId, Integer commentId) {
-      return "/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/update/" + commentId; 
+      return "private/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/update/" + commentId; 
     }
     
     public static String removeComment(String publicCId, String publicDSId, Integer commentId) {
-      return "/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/delete/" + commentId; 
+      return "private/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/delete/" + commentId; 
     }
     
     public static String reportComment(String publicCId, String publicDSId, Integer commentId) {
-      return "/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/report/" + commentId;
+      return "private/comment/cluster/" + publicCId + "/dataset/" + publicDSId + "/report/" + commentId;
     }
   }
 

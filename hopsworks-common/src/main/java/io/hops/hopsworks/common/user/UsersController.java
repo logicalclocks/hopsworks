@@ -1,18 +1,45 @@
 package io.hops.hopsworks.common.user;
 
+import com.google.zxing.WriterException;
+import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.Address;
+import io.hops.hopsworks.common.dao.user.security.Organization;
+import io.hops.hopsworks.common.dao.user.security.Yubikey;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
+import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
+import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
-import com.google.zxing.WriterException;
+import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
+import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
+import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.util.AuditUtil;
+import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.QRCodeGenerator;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -21,36 +48,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
+import javax.persistence.TransactionRequiredException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
-import io.hops.hopsworks.common.dao.user.security.Address;
-import io.hops.hopsworks.common.dao.user.security.Organization;
-import io.hops.hopsworks.common.dao.user.security.Yubikey;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
-import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
-import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import io.hops.hopsworks.common.util.AuditUtil;
-import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.QRCodeGenerator;
-import io.hops.hopsworks.common.util.Settings;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import javax.persistence.TransactionRequiredException;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -191,7 +191,7 @@ public class UsersController {
    * @throws NoSuchAlgorithmException 
    */
   public Users createNewAgent(String email, String fname, String lname, String pwd, String title) throws
-      AppException, NoSuchAlgorithmException {
+      AppException {
     String uname = generateUsername(email);
     List<BbcGroup> groups = new ArrayList<>();
     String salt = authController.generateSalt();
