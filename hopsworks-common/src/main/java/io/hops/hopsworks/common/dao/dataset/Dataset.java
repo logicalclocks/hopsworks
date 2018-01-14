@@ -103,7 +103,7 @@ public class Dataset implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "editable")
-  private int editable = 1;
+  private int editable = 0;
   @Basic(optional = false)
   @NotNull
   @Column(name = "searchable")

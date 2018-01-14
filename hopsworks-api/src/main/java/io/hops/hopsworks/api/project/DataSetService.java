@@ -462,12 +462,15 @@ public class DataSetService {
         switch (dataSet.getPermissions()) {
           case OWNER_ONLY:
             fsPermission = new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE, false);
+            ds.setEditable(DatasetPermissions.OWNER_ONLY);
             break;
           case GROUP_WRITABLE_SB:
             fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, true);
+            ds.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
             break;
           case GROUP_WRITABLE:
             fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, false);
+            ds.setEditable(DatasetPermissions.GROUP_WRITABLE);
             break;
           default:
             break;
@@ -616,10 +619,6 @@ public class DataSetService {
     DsPath dsPath = pathValidator.validatePath(this.project, dataSetName.getName());
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
-    if (ds.getEditable()==DatasetPermissions.OWNER_ONLY) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_EDITABLE);
-    }
     String dsName = ds.getInode().getInodePK().getName();
 
     DistributedFileSystemOps dfso = null;
@@ -694,7 +693,6 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
@@ -1338,8 +1336,17 @@ public class DataSetService {
             json).build();
   }
 
+  /**
+   * Upload methods does not need to go through the filter, hdfs will through the exception and it is propagated to 
+   * the HTTP response.
+   * 
+   * @param path
+   * @param sc
+   * @param templateId
+   * @return
+   * @throws AppException 
+   */
   @Path("upload/{path: .+}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public UploadService upload(
           @PathParam("path") String path, @Context SecurityContext sc,
           @QueryParam("templateId") int templateId) throws AppException {
@@ -1347,17 +1354,21 @@ public class DataSetService {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
-    if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_EDITABLE);
-    }
-    
     Project owning = datasetController.getOwningProject(dsPath.getDs());
     //Is user a member of this project? If so get their role
     boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
     String role = null;
-    if(isMember){
+    if (isMember) {
       role = projectTeamFacade.findCurrentRole(owning, user);
+    }
+
+    //Do not allow non-DataOwners to upload to a non-Editable dataset
+    //Do not allow anyone to upload if the dataset is shared and non-Editable
+    if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY 
+        && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER)) 
+        || !project.equals(owning))) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NOT_EDITABLE);
     }
      
     this.uploader.confFileUpload(dsPath, username, templateId, role);

@@ -199,8 +199,7 @@ public class UploadService {
       if (this.username != null) {
         DistributedFileSystemOps udfso = null;
         try {
-          //If the user has a role in the owning project of the Dataset and that is Data Owner
-          //perform operation as superuser
+          //If the user is a Data Owner in the owning project perform operation as superuser
           if (!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER)) {
             udfso = dfs.getDfsOps();
           } else {
