@@ -141,6 +141,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
   private static final String VARIABLE_HDFS_WEB_UI_IP = "hdfs_ui_ip";
+  private static final String VARIABLE_HDFS_WEB_UI_PORT = "hdfs_ui_port";
   private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
       = "file_preview_image_size";
@@ -362,6 +363,7 @@ public class Settings implements Serializable {
           YARN_DEFAULT_QUOTA);
       YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
       HDFS_WEB_UI_IP = setIpVar(VARIABLE_HDFS_WEB_UI_IP, HDFS_WEB_UI_IP);
+      HDFS_WEB_UI_PORT = setIntVar(VARIABLE_HDFS_WEB_UI_PORT, HDFS_WEB_UI_PORT);
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
           HDFS_DEFAULT_QUOTA_MBs);
