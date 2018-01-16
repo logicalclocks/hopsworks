@@ -60,7 +60,6 @@ public class PythonDepsService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-  @EJB
   private Project project;
   @EJB
   private HdfsUsersController hdfsUsersController;
