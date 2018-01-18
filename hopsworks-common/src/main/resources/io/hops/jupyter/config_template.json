@@ -27,7 +27,7 @@
     "loggers": {
       "magicsLogger": {
         "handlers": ["magicsHandler"],
-        "level": "DEBUG",
+        "level": "WARN",
         "propagate": 0
       }
     }
@@ -59,7 +59,7 @@
       "spark.yarn.appMasterEnv.LD_LIBRARY_PATH": "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
       "spark.yarn.appMasterEnv.CUDA_VISIBLE_DEVICES": "",
       "spark.yarn.appMasterEnv.HADOOP_HOME": "%%hadoop_home%%",
-      "spark.yarn.appMasterEnv.LIBHDFS_OPTS": "-Xmx96m",
+      "spark.yarn.appMasterEnv.LIBHDFS_OPTS": "-Xmx96m -Dlog4j.configuration=%%hadoop_home%%/etc/hadoop/log4j.properties -Dhadoop.root.logger=WARN,RFA",
       "spark.yarn.appMasterEnv.HADOOP_HDFS_HOME": "%%hadoop_home%%",
       "spark.yarn.appMasterEnv.HADOOP_VERSION": "%%hadoop_version%%",
       "spark.yarn.appMasterEnv.HADOOP_USER_NAME": "%%hdfs_user%%",
@@ -72,7 +72,7 @@
       "spark.executorEnv.MPI_NP": "%%mpi_np%%",
       "spark.executorEnv.HADOOP_USER_NAME": "%%hdfs_user%%",
       "spark.executorEnv.HADOOP_HOME": "%%hadoop_home%%",
-      "spark.executorEnv.LIBHDFS_OPTS": "-Xmx96m",
+      "spark.executorEnv.LIBHDFS_OPTS": "-Xmx96m -Dlog4j.configuration=%%hadoop_home%%/etc/hadoop/log4j.properties -Dhadoop.root.logger=WARN,RFA",
       "spark.executorEnv.PYSPARK_PYTHON": "%%pyspark_bin%%",
       "spark.executorEnv.PYSPARK3_PYTHON": "%%pyspark_bin%%",
       "spark.executorEnv.LD_LIBRARY_PATH": "%%java_home%%/jre/lib/amd64/server:%%cuda_dir%%/lib64:%%hadoop_home%%/lib/native",
