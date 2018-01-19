@@ -209,7 +209,7 @@
         "livy.spark.yarn.appMasterEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
         "livy.spark.yarn.appMasterEnv.HADOOP_USER_NAME" : "%%hdfs_user%%",
         "livy.spark.yarn.appMasterEnv.HADOOP_HOME" : "%%hadoop_home%%",
-        "livy.spark.yarn.appMasterEnv.LIBHDFS_OPTS" : "-Xmx96m",
+        "livy.spark.yarn.appMasterEnv.LIBHDFS_OPTS" : "-Xmx96m -Dlog4j.configuration=%%hadoop_home%%/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA",
         "livy.spark.yarn.appMasterEnv.HADOOP_VERSION" : "%%hadoop_version%%",
         "livy.spark.yarn.driverEnv.PYSPARK_PYTHON": "%%zeppelin.python_conda_path%%",
         "livy.spark.yarn.driverEnv.PYSPARK3_PYTHON": "%%zeppelin.python_conda_path%%",
@@ -226,7 +226,7 @@
         "livy.spark.driver.extraLibraryPath" : "%%cuda_dir%%/lib64",
         "livy.spark.executorEnv.HDFS_USER" : "%%hdfs_user%%",
         "livy.spark.executorEnv.HADOOP_HOME" : "%%hadoop_home%%",
-        "livy.spark.executorEnv.LIBHDFS_OPTS" : "-Xmx96m",
+        "livy.spark.executorEnv.LIBHDFS_OPTS" : "-Xmx96m -Dlog4j.configuration=%%hadoop_home%%/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA",
         "livy.spark.executor.extraJavaOptions": "%%extra_spark_java_options%%",
         "livy.spark.executor.extraClassPath" : "%%executor_extraClassPath%%"
       },
