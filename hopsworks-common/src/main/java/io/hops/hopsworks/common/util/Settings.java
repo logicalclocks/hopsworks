@@ -524,6 +524,8 @@ public class Settings implements Serializable {
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
   public static final String SPARK_METRICS_ENV = "spark.metrics.conf";
   public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
+  public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
+  
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";

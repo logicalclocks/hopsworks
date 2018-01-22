@@ -330,22 +330,17 @@ public class SparkYarnRunnerBuilder {
     //If DynamicExecutors are not enabled, set the user defined number 
     //of executors
     if (dynamicExecutors) {
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(
-          dynamicExecutors));
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
-          String.valueOf(numberOfExecutorsMin));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_ENV, String.valueOf(dynamicExecutors));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV, String.valueOf(numberOfExecutorsMin));
       //TODO: Fill in the init and max number of executors. Should it be a per job
       //or global setting?
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
-          String.valueOf(numberOfExecutorsMax));
-      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
-          String.valueOf(numberOfExecutorsInit));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV, String.valueOf(numberOfExecutorsMax));
+      addSystemProperty(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV, String.valueOf(numberOfExecutorsInit));
       //Dynamic executors requires the shuffle service to be enabled
       addSystemProperty(Settings.SPARK_SHUFFLE_SERVICE, "true");
       //spark.shuffle.service.enabled
     } else {
-      addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(
-          numberOfExecutors));
+      addSystemProperty(Settings.SPARK_NUMBER_EXECUTORS_ENV, Integer.toString(numberOfExecutors));
     }
 
     List<String> jobSpecificProperties = new ArrayList<>();
@@ -356,43 +351,28 @@ public class SparkYarnRunnerBuilder {
     jobSpecificProperties.add(Settings.SPARK_EXECUTOR_CORES_ENV);
 
     //These properties are set so that spark history server picks them up
-    addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(
-        driverMemory) + "m");
-    addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(
-        driverCores));
+    addSystemProperty(Settings.SPARK_DRIVER_MEMORY_ENV, Integer.toString(driverMemory) + "m");
+    addSystemProperty(Settings.SPARK_DRIVER_CORES_ENV, Integer.toString(driverCores));
     addSystemProperty(Settings.SPARK_EXECUTOR_MEMORY_ENV, executorMemory);
-    addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(
-        executorCores));
+    addSystemProperty(Settings.SPARK_EXECUTOR_CORES_ENV, Integer.toString(executorCores));
     addSystemProperty(Settings.SPARK_DRIVER_STAGINGDIR_ENV, stagingPath);
     //Add log4j property
-    addSystemProperty(Settings.SPARK_LOG4J_CONFIG,
-        Settings.SPARK_LOG4J_PROPERTIES);
+    addSystemProperty(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
     //Comma-separated list of attributes sent to Logstash
-    addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + ","
-        + jobName + ","
-        + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
-    addSystemProperty(Settings.HOPSWORKS_APPID_PROPERTY,
-        YarnRunner.APPID_PLACEHOLDER);
+    addSystemProperty(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + "," + job.getId()
+        + "," + YarnRunner.APPID_PLACEHOLDER);
+    addSystemProperty(Settings.HOPSWORKS_APPID_PROPERTY, YarnRunner.APPID_PLACEHOLDER);
     addSystemProperty(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopSymbolicLinkDir()
         + "/lib/native/");
 
     //Set executor extraJavaOptions to make parameters available to executors
-    StringBuilder extraJavaOptions = new StringBuilder();
-    extraJavaOptions.append("'-Dspark.executor.extraJavaOptions=").
-        append("-D").append(Settings.SPARK_LOG4J_CONFIG).append("=").append(
-        Settings.SPARK_LOG4J_PROPERTIES).
-        append(" ").
-        append("-D").append(Settings.LOGSTASH_JOB_INFO).append("=").append(
-        project.toLowerCase()).append(",").
-        append(jobName).append(",").append(job.getId()).append(
-        ",").append(YarnRunner.APPID_PLACEHOLDER).
-        append(" ").
-        append("-D").append(Settings.SPARK_JAVA_LIBRARY_PROP).append("=").
-        append(services.getSettings().getHadoopSymbolicLinkDir()).
-        append("/lib/native/").
-        append(" ").
-        append("-D").append(Settings.HOPSWORKS_APPID_PROPERTY).append("=").
-        append(YarnRunner.APPID_PLACEHOLDER);
+    Map<String, String> extraJavaOptions = new HashMap<>();
+    extraJavaOptions.put(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
+    extraJavaOptions.put(Settings.LOGSTASH_JOB_INFO, project.toLowerCase() + "," + jobName + "," + job.getId() + ","
+        + YarnRunner.APPID_PLACEHOLDER);
+    extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopSymbolicLinkDir()
+        + "/lib/native/");
+    extraJavaOptions.put(Settings.HOPSWORKS_APPID_PROPERTY, YarnRunner.APPID_PLACEHOLDER);
 
     try {
       //Parse user provided properties (if any) and add them to the job
@@ -407,7 +387,7 @@ public class SparkYarnRunnerBuilder {
                 "This user-provided Spark property is not allowed:" + key);
           }
           addSystemProperty(key, val);
-          extraJavaOptions.append(" -D").append(key).append("=").append(val);
+          extraJavaOptions.put(key, val);
         }
       }
     } catch (Exception ex) {
@@ -421,52 +401,42 @@ public class SparkYarnRunnerBuilder {
     }
 
     if (serviceProps != null) {
-
-      addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.
-          getRestEndpoint());
+      addSystemProperty(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.getRestEndpoint());
       addSystemProperty(Settings.HOPSWORKS_KEYSTORE_PROPERTY, Settings.KEYSTORE_VAL_ENV_VAR);
       addSystemProperty(Settings.HOPSWORKS_TRUSTSTORE_PROPERTY, Settings.TRUSTSTORE_VAL_ENV_VAR);
-      addSystemProperty(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, serviceProps.
-          getElastic().getRestEndpoint());
-      addSystemProperty(Settings.HOPSWORKS_JOBNAME_PROPERTY, serviceProps.
-          getJobName());
+      addSystemProperty(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, serviceProps.getElastic().getRestEndpoint());
+      addSystemProperty(Settings.HOPSWORKS_JOBNAME_PROPERTY, serviceProps.getJobName());
       addSystemProperty(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobType.getName());
       addSystemProperty(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, jobUser);
       addSystemProperty(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
       addSystemProperty(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, serviceProps.getProjectName());
-      extraJavaOptions.append(" -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY + "=").
-          append(serviceProps.getRestEndpoint()).
-          append(" -D" + Settings.HOPSWORKS_KEYSTORE_PROPERTY + "=").append(Settings.KEYSTORE_VAL_ENV_VAR).
-          append(" -D" + Settings.HOPSWORKS_TRUSTSTORE_PROPERTY + "=").append(Settings.TRUSTSTORE_VAL_ENV_VAR).
-          append(" -D" + Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY + "=").append(
-          serviceProps.getElastic().getRestEndpoint()).
-          append(" -D" + Settings.HOPSWORKS_PROJECTID_PROPERTY + "=").append(serviceProps.getProjectId()).
-          append(" -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=").append(serviceProps.getProjectName()).
-          append(" -D" + Settings.HOPSWORKS_JOBNAME_PROPERTY + "=").append(serviceProps.getJobName()).
-          append(" -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=").append(jobType.getName()).
-          append(" -D" + Settings.HOPSWORKS_PROJECTUSER_PROPERTY + "=").append(jobUser);
+
+      extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, serviceProps.getRestEndpoint());
+      extraJavaOptions.put(Settings.HOPSWORKS_KEYSTORE_PROPERTY, Settings.KEYSTORE_VAL_ENV_VAR);
+      extraJavaOptions.put(Settings.HOPSWORKS_TRUSTSTORE_PROPERTY, Settings.TRUSTSTORE_VAL_ENV_VAR);
+      extraJavaOptions.put(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, serviceProps.getElastic().getRestEndpoint());
+      extraJavaOptions.put(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(serviceProps.getProjectId()));
+      extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, serviceProps.getProjectName());
+      extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, serviceProps.getJobName());
+      extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobType.getName());
+      extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, jobUser);
+
       //Handle Kafka properties
       if (serviceProps.getKafka() != null) {
         addSystemProperty(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());
         addSystemProperty(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.getKafka().getTopics());
         addSystemProperty(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.getKafka().getConsumerGroups());
-        builder.
-            addJavaOption(" -D" + Settings.KAFKA_CONSUMER_GROUPS + "=" + serviceProps.getKafka().getConsumerGroups());
-        extraJavaOptions.
-            append(" -D" + Settings.KAFKA_BROKERADDR_ENV_VAR + "=").
-            append(serviceProps.getKafka().getBrokerAddresses()).
-            append(" -D" + Settings.KAFKA_JOB_TOPICS_ENV_VAR + "=").
-            append(serviceProps.getKafka().getTopics());
+        extraJavaOptions.put(Settings.KAFKA_BROKERADDR_ENV_VAR, serviceProps.getKafka().getBrokerAddresses());
+        extraJavaOptions.put(Settings.KAFKA_JOB_TOPICS_ENV_VAR, serviceProps.getKafka().getTopics());
+        extraJavaOptions.put(Settings.KAFKA_CONSUMER_GROUPS, serviceProps.getKafka().getConsumerGroups());
+
       }
     }
-    extraJavaOptions.append("'");
-    builder.addJavaOption(extraJavaOptions.toString());
 
     //Set up command
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(((SparkJobConfiguration) job.getJobConfig()).
         getMainClass());
-    //TODO(set app file from path)
 
     if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
@@ -478,40 +448,49 @@ public class SparkYarnRunnerBuilder {
         addSystemProperty(Settings.SPARK_TF_PS_ENV, Integer.toString(numOfPs));
       } else if (serviceProps.isAnacondaEnabled()) {
         //Add libs to PYTHONPATH
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON,
-            serviceProps.getAnaconda().getEnvPath());
+        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
       } else {
         //Throw error in Hopswors UI to notify user to enable Anaconda
-        throw new IOException(
-            "Pyspark job needs to have Python Anaconda environment enabled");
+        throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
       }
       builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
       addSystemProperty(Settings.SPARK_EXECUTORENV_PYTHONPATH, pythonPathExecs.toString());
     }
 
+    //Parse properties from Spark config file
     Properties sparkProperties = new Properties();
-    try (InputStream is = new FileInputStream(sparkDir + "/"
-        + Settings.SPARK_CONFIG_FILE)) {
+    try (InputStream is = new FileInputStream(sparkDir + "/" + Settings.SPARK_CONFIG_FILE)) {
       sparkProperties.load(is);
-      //For every property that is in the spark configuration file but is not
-      //already set, create a java system property.
+      //For every property that is in the spark configuration file but is not already set, create a system property.
       for (String property : sparkProperties.stringPropertyNames()) {
-        if (!jobSpecificProperties.contains(property) && sparkProperties.
-            getProperty(property) != null
-            && !sparkProperties.getProperty(
-                property).isEmpty()) {
-          addSystemProperty(property, sparkProperties.getProperty(property).
-              trim());
+        if (!jobSpecificProperties.contains(property)
+            && sparkProperties.getProperty(property) != null
+            && !sparkProperties.getProperty(property).isEmpty()
+            && !extraJavaOptions.containsKey(property)) {
+          addSystemProperty(property, sparkProperties.getProperty(property).trim());
         }
       }
     }
+    
+    
+    //Create a string with system properties from extraJavaOptions
+    StringBuilder extraJavaOptionsSb = new StringBuilder();
+    extraJavaOptionsSb.append("'-D"+Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS+"=");
+    for (String key : extraJavaOptions.keySet()) {
+      extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key)).append(" ");
+    }
+    extraJavaOptionsSb.append("'");
+    extraJavaOptionsSb = extraJavaOptionsSb.deleteCharAt(extraJavaOptionsSb.lastIndexOf(","));
+    builder.addJavaOption(extraJavaOptionsSb.toString());
+    
     for (String s : sysProps.keySet()) {
       //Exclude "hopsworks.yarn.appid" property because we do not want to 
       //escape it now
       String option;
-      if (s.equals(Settings.LOGSTASH_JOB_INFO) || s.equals(Settings.HOPSWORKS_APPID_PROPERTY) || s.equals(
-          Settings.SPARK_EXECUTORENV_PYTHONPATH) || s.equals(
-              Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH)) {
+      if (s.equals(Settings.LOGSTASH_JOB_INFO)
+          || s.equals(Settings.HOPSWORKS_APPID_PROPERTY)
+          || s.equals(Settings.SPARK_EXECUTORENV_PYTHONPATH)
+          || s.equals(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH)) {
         option = "-D" + s + "=" + sysProps.get(s);
       } else {
         option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
