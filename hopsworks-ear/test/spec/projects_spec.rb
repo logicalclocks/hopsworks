@@ -22,14 +22,14 @@ describe 'projects' do
       it 'should work with valid params' do
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-        expect_json(successMessage: "Project created successfully.")
+        expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
       end
       it 'should create resources and logs datasets with right permissions and owner' do
         projectname = "project_#{Time.now.to_i}"
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-        expect_json(successMessage: "Project created successfully.")
+        expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
         get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
         project_id = json_body[:projectId]
@@ -48,7 +48,7 @@ describe 'projects' do
         projectname = "project_#{Time.now.to_i}"
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-        expect_json(successMessage: "Project created successfully.")
+        expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
         get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
         project_id = json_body[:projectId]
@@ -97,7 +97,7 @@ describe 'projects' do
       it 'Should not let a user create more than the maximum number of allowed projects.' do
         create_max_num_projects
         post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-        expect_json(errorMsg: "You have reached the maximum number of allowed projects.")
+        expect_json(errorMsg: "You have reached the maximum number of projects you could create. Contact an administrator to increase your limit.")
         expect_status(400)
       end
     end

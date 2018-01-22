@@ -348,14 +348,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return false;
   }
 
-  public void decrementNumProjectsCreated(Users user) {
-    int n = user.getNumCreatedProjects();
-    if (n > 0) {
-      user.setNumCreatedProjects(n - 1);
-      em.merge(user);
-    }
-  }
-
   public void setTimestampQuotaUpdate(Project project, Date timestamp) {
     project.setLastQuotaUpdate(timestamp);
     em.merge(project);

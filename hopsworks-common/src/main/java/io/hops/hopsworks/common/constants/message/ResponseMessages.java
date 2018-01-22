@@ -80,7 +80,8 @@ public class ResponseMessages {
   public final static String PROJECT_EXISTS
           = "Project with the same name already exists.";
   public final static String NUM_PROJECTS_LIMIT_REACHED
-          = "You have reached the maximum number of allowed projects.";
+          = "You have reached the maximum number of projects you could create." +
+            " Contact an administrator to increase your limit.";
   public final static String INVALID_PROJECT_NAME
           = "Invalid project name, valid characters: [a-z,0-9].";
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";

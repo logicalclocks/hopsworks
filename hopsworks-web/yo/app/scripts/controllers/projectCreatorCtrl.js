@@ -10,7 +10,15 @@ angular.module('hopsWorksApp')
             self.card = {};
             self.myCard = {};
             self.cards = [];
-
+            self.user = {
+              firstName: '',
+              lastName: '',
+              email: '',
+              telephoneNum: '',
+              registeredon: '',
+              twoFactor: ''
+            };
+            
             self.projectMembers = [];
             self.projectTeam = [];
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
@@ -33,6 +41,7 @@ angular.module('hopsWorksApp')
 
             UserService.profile().then(
                     function (success) {
+                      self.user = success.data;
                       if (success.data.email !== undefined) {
                         self.myCard.email = success.data.email;
                         if (success.data.firstName !== undefined) {

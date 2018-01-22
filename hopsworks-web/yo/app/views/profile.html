@@ -48,11 +48,6 @@
                 class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
         </div>
 
-        <div class="form-group has-feedback">
-          <label class="text-muted">Number of Projects Allowed: </label>&nbsp;&nbsp;{{profileCtrl.user.maxNumProjects}}
-        </div>
-
-
         <div class="row form-actions">
           <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
             <button type="submit" class="btn btn-block btn-primary"
@@ -64,6 +59,12 @@
             <input type="button" class="btn btn-block btn-primary" ng-click="profileCtrl.reset()"
                    value="Reset" ng-disabled="profileForm.$pristine"/>
           </div>
+        </div>
+          
+          <div class="form-group has-feedback" style="margin-top: 15px;">
+            <div><label class="text-muted">Number of active projects: </label>&nbsp;&nbsp;{{profileCtrl.user.numActiveProjects}}</div>
+            <div><label class="text-muted">You can still create </label>&nbsp;{{profileCtrl.user.numRemainingProjects}}&nbsp;<label class="text-muted"> project(s)</label></div>
+            <div><label class="text-muted">You have created {{profileCtrl.user.numCreatedProjects}} project(s) out of a maximum of {{profileCtrl.user.maxNumProjects}}</label></div>
         </div>
       </form>
     </div>

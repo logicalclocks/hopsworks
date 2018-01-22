@@ -617,7 +617,11 @@ public class ProjectService {
 
     JsonResponse json = new JsonResponse();
     json.setStatus("201");// Created
-    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
+    StringBuilder message = new StringBuilder();
+    message.append(ResponseMessages.PROJECT_CREATED);
+    message.append("<br>You have ").append(user.getMaxNumProjects()- user.getNumCreatedProjects()).
+        append(" project(s) left that you can create");
+    json.setSuccessMessage(message.toString());
 
     if (failedMembers != null && !failedMembers.isEmpty()) {
       json.setFieldErrors(failedMembers);

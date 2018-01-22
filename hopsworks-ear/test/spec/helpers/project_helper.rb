@@ -12,7 +12,7 @@ module ProjectHelper
     new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-    expect_json(successMessage: "Project created successfully.")
+    expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end
@@ -22,7 +22,7 @@ module ProjectHelper
     new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-    expect_json(successMessage: "Project created successfully.")
+    expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end

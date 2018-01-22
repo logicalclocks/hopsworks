@@ -28,6 +28,8 @@ public class UserDTO {
   private int maxNumProjects;
   private int numCreatedProjects;
   private boolean testUser;
+  private int numActiveProjects;
+  private int numRemainingProjects;
 
   public UserDTO() {
   }
@@ -52,6 +54,8 @@ public class UserDTO {
     this.numCreatedProjects = user.getNumCreatedProjects();
     this.twoFactor = user.getTwoFactor();
     this.toursState = user.getToursState();
+    this.numActiveProjects = user.getNumActiveProjects();
+    numRemainingProjects = maxNumProjects-numCreatedProjects;
   }
 
   public String getUsername() { return username; }
@@ -216,6 +220,7 @@ public class UserDTO {
 
   public void setMaxNumProjects(int maxNumProjects) {
     this.maxNumProjects = maxNumProjects;
+    numRemainingProjects = maxNumProjects-numCreatedProjects;
   }
 
   public int getNumCreatedProjects() {
@@ -224,6 +229,23 @@ public class UserDTO {
 
   public void setNumCreatedProjects(int numCreatedProjects) {
     this.numCreatedProjects = numCreatedProjects;
+    numRemainingProjects = maxNumProjects-numCreatedProjects;
+  }
+
+  public int getNumRemainingProjects(){
+    return numRemainingProjects;
+  }
+  
+  public void setNumRemainingProjects(int numRemainingProjects){
+    this.numRemainingProjects = numRemainingProjects;
+  }
+  
+  public int getNumActiveProjects() {
+    return numActiveProjects;
+  }
+
+  public void setNumActiveProjects(int numActiveProjects) {
+    this.numActiveProjects = numActiveProjects;
   }
 
   public boolean isTestUser() {

@@ -204,6 +204,10 @@ public class Users implements Serializable {
   @NotNull
   private Integer numCreatedProjects = 0;
   @Basic(optional = false)
+  @Column(name = "num_active_projects")
+  @NotNull
+  private Integer numActiveProjects = 0;
+  @Basic(optional = false)
   @NotNull
   @Column(name = "two_factor")
   private boolean twoFactor;
@@ -247,7 +251,8 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-      int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects) {
+      int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects,
+      int numActiveProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -257,6 +262,7 @@ public class Users implements Serializable {
     this.status = status;
     this.maxNumProjects = maxNumProjects;
     this.numCreatedProjects = numCreatedProjects;
+    this.numActiveProjects  = numActiveProjects;
   }
 
   public Users(Integer uid) {
@@ -277,6 +283,7 @@ public class Users implements Serializable {
     this.status = status;
     this.maxNumProjects = maxNumProjects;
     this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
   }
 
   public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
@@ -304,6 +311,7 @@ public class Users implements Serializable {
     this.salt = salt;
     this.toursState = toursState;
     this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
   }
 
   public Users(String username, String password, String email, String fname, String lname, String title,
@@ -319,6 +327,7 @@ public class Users implements Serializable {
     this.maxNumProjects = maxNumProjects;
     this.salt = salt;
     this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
   }
   
 
@@ -559,6 +568,14 @@ public class Users implements Serializable {
     this.numCreatedProjects = numCreatedProjects;
   }
 
+  public Integer getNumActiveProjects() {
+    return numCreatedProjects;
+  }
+
+  public void setNumActiveProjects(Integer numActiveProjects) {
+    this.numActiveProjects = numActiveProjects;
+  }
+
   @XmlTransient
   @JsonIgnore
   public boolean getTwoFactor() {
@@ -616,6 +633,6 @@ public class Users implements Serializable {
 
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
-        isonline, maxNumProjects, numCreatedProjects);
+        isonline, maxNumProjects, numCreatedProjects, numActiveProjects);
   }
 }

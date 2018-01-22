@@ -443,7 +443,7 @@ public class ProjectController {
         LOGGER.log(Level.WARNING,
             "Quotas corresponding to this project already exist in the system "
             + "Possible inconsistency! Retry.", project.getName());
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, true);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "Quotas corresponding to this project already exist in the system "
             + "Possible inconsistency!");
@@ -451,13 +451,13 @@ public class ProjectController {
         LOGGER.log(Level.WARNING,
             "Logs corresponding to this project already exist in the system "
             + "Possible inconsistency!", project.getName());
-        cleanup(project, sessionId);
+        cleanup(project, sessionId, true);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "Logs corresponding to this project already exist in the system "
             + "Possible inconsistency! Retry");
       }
     } catch (IOException | EJBException ex) {
-      cleanup(project, sessionId);
+      cleanup(project, sessionId, true);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(), "error while running verifications");
     }
@@ -1358,11 +1358,21 @@ public class ProjectController {
   }
 
   public void cleanup(Project project, String sessionId) throws AppException {
-    cleanup(project, sessionId, null);
+    cleanup(project, sessionId, false);
+  }
+  
+  public void cleanup(Project project, String sessionId, boolean decreaseCreatedProj) throws AppException {
+    cleanup(project, sessionId, null, decreaseCreatedProj);
   }
 
   public void cleanup(Project project, String sessionId,
       Future<CertificatesController.CertsResult> certsGenerationFuture)
+      throws AppException {
+    cleanup(project, sessionId, certsGenerationFuture, true);
+  }
+  
+  public void cleanup(Project project, String sessionId,
+      Future<CertificatesController.CertsResult> certsGenerationFuture, boolean decreaseCreatedProj)
       throws AppException {
     if (project == null) {
       return;
@@ -1416,7 +1426,7 @@ public class ProjectController {
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture);
+        removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture, decreaseCreatedProj);
         return;
       } catch (Exception ex) {
         if (nbTry < 3) {
@@ -1436,7 +1446,8 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-      List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture)
+      List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
+      boolean decreaseCreatedProj)
       throws IOException, InterruptedException, ExecutionException,
       AppException {
     DistributedFileSystemOps dfso = null;
@@ -1496,6 +1507,12 @@ public class ProjectController {
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
+      
+      if(decreaseCreatedProj){
+        usersController.decrementNumProjectsCreated(project.getOwner().getUid());
+      }
+      
+      usersController.decrementNumActiveProjects(project.getOwner().getUid());
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
