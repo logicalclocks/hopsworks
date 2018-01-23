@@ -351,13 +351,13 @@
 
               <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
                 <div class="text-right col-md-6">More Spark Properties <i class="fa fa-info-circle"
-                      uib-tooltip="Enter additional line-separated Spark properties here. Use spaces to separate parameters from values." 
+                      uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
                       style="margin-left: 10px"></i>
                 </div>
                 <div class="col-md-5 jupyter-left">
                   <textarea style="width: 100%;" id="TextArea" ng-model="jupyterCtrl.val.sparkParams" 
                             ng-keyup="autoExpand($event)" 
-                            placeholder="spark.yarn.am.port  12242">
+                            placeholder="spark.yarn.am.port=12242&#10;spark.driver.extraLibraryPath=/path/to/extra/library">
                   </textarea>
                 </div>
 
