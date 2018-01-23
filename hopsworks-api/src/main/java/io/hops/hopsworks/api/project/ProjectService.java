@@ -9,6 +9,7 @@ import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
+import io.hops.hopsworks.api.tensorflow.TfServingService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -99,6 +100,8 @@ public class ProjectService {
   private KafkaService kafka;
   @Inject
   private JupyterService jupyter;
+  @Inject
+  private TfServingService tfServingService;
   @Inject
   private DataSetService dataSet;
   @Inject
@@ -915,6 +918,20 @@ public class ProjectService {
     this.jupyter.setProjectId(id);
 
     return this.jupyter;
+  }
+
+  @Path("{id}/tfserving")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public TfServingService tfServingService(
+          @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.tfServingService.setProjectId(id);
+
+    return this.tfServingService;
   }
 
   @Path("{id}/pythonDeps")

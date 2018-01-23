@@ -12,7 +12,8 @@ public enum ProjectServiceEnum {
   DELA("Dela"),
   JUPYTER("Jupyter"),
   JOBS("Jobs"),
-  HIVE("Hive");
+  HIVE("Hive"),
+  SERVING("Serving");
 
   private final String readable;
 

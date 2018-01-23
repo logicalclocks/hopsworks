@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -162,6 +163,8 @@ public class ProjectController {
   private PythonDepsFacade pythonDepsFacade;
   @EJB
   private JupyterProcessFacade jupyterProcessFacade;
+  @EJB
+  private TfServingProcessFacade tfServingProcessFacade;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -749,6 +752,10 @@ public class ProjectController {
       case HIVE:
         toPersist = addServiceHive(project, user, dfso);
         break;
+      case SERVING:
+        toPersist= addServiceDataset(project, user,
+            Settings.ServiceDataset.SERVING, dfso, udfso);
+        break;
       default:
         toPersist = true;
     }
@@ -1108,6 +1115,7 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+
         // remove dumy Inode
         try {
           dfso.rm(dummy, true);
@@ -1412,6 +1420,8 @@ public class ProjectController {
 
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
+
+        tfServingProcessFacade.removeProject(project);
 
         try {
           removeAnacondaEnv(project);
@@ -2262,6 +2272,12 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeJupyter(Project project) throws AppException {
     jupyterProcessFacade.removeProject(project);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void removeTfServing(Project project) throws AppException {
+    LOGGER.log(Level.SEVERE, "PLEASE REMOVE TF SERVINGS");
+    tfServingProcessFacade.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

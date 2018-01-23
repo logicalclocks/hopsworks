@@ -90,6 +90,13 @@
         </a>
       </li>
 
+      <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()">
+        <a class="left-right" id="servingTab">
+          Model Serving
+          <img class="pull-right" style="margin-right:10px" height="25" src="images/tf-175x200_bw.png"/>
+        </a>
+      </li>
+
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>

@@ -575,8 +575,8 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/tensorflow', {
-                      templateUrl: 'views/tensorflow.html',
+                    .when('/project/:projectID/tfserving', {
+                      templateUrl: 'views/tfServing.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',

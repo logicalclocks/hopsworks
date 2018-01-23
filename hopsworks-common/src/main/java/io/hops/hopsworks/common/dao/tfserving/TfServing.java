@@ -1,7 +1,7 @@
-package io.hops.hopsworks.common.dao.tensorflow.tf;
+package io.hops.hopsworks.common.dao.tfserving;
 
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.project.Project;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
@@ -18,54 +18,39 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Enumerated;
+import javax.persistence.EnumType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@Table(name = "tf_serving",
-    catalog = "hopsworks",
-    schema = "")
+@Table(name = "tf_serving", catalog = "hopsworks", schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "TfServing.findAll",
-      query = "SELECT t FROM TfServing t")
-  ,
-    @NamedQuery(name = "TfServing.findById",
-      query = "SELECT t FROM TfServing t WHERE t.id = :id")
-  ,
-    @NamedQuery(name = "TfServing.findByHostIp",
-      query = "SELECT t FROM TfServing t WHERE t.hostIp = :hostIp")
-  ,
-    @NamedQuery(name = "TfServing.findByPort",
-      query = "SELECT t FROM TfServing t WHERE t.port = :port")
-  ,
-    @NamedQuery(name = "TfServing.findByPid",
-      query = "SELECT t FROM TfServing t WHERE t.pid = :pid")
-  ,
-    @NamedQuery(name = "TfServing.findByTfServingStatus",
-      query
-      = "SELECT t FROM TfServing t WHERE t.tfServingStatus = :tfServingStatus")
-  ,
-    @NamedQuery(name = "TfServing.findByHdfsUserId",
-      query
-      = "SELECT t FROM TfServing t WHERE t.hdfsUserId = :hdfsUserId")
-  ,
-    @NamedQuery(name = "TfServing.findByCreated",
-      query = "SELECT t FROM TfServing t WHERE t.created = :created")
-  ,
-    @NamedQuery(name = "TfServing.findByModelName",
-      query = "SELECT t FROM TfServing t WHERE t.modelName = :modelName")
-  ,
-    @NamedQuery(name = "TfServing.findByHdfsModelPath",
-      query
-      = "SELECT t FROM TfServing t WHERE t.hdfsModelPath = :hdfsModelPath")
-  ,
-    @NamedQuery(name = "TfServing.findByVersion",
-      query = "SELECT t FROM TfServing t WHERE t.version = :version")
-  ,
-    @NamedQuery(name = "TfServing.findByBatchSize",
-      query = "SELECT t FROM TfServing t WHERE t.batchSize = :batchSize")})
+    @NamedQuery(name = "TfServing.findAll", query = "SELECT t FROM TfServing t")
+    , @NamedQuery(name = "TfServing.findById", query = "SELECT t FROM TfServing t WHERE t.id = :id")
+    , @NamedQuery(name = "TfServing.findByProject", query = "SELECT t FROM TfServing t " +
+        "WHERE t.project = :project")
+    , @NamedQuery(name = "TfServing.findByHostIp", query = "SELECT t FROM TfServing t WHERE t.hostIp = :hostIp")
+    , @NamedQuery(name = "TfServing.findByPort", query = "SELECT t FROM TfServing t WHERE t.port = :port")
+    , @NamedQuery(name = "TfServing.findByPid", query = "SELECT t FROM TfServing t WHERE t.pid = :pid")
+    , @NamedQuery(name = "TfServing.findByStatus", query = "SELECT t FROM TfServing t " +
+        "WHERE t.status = :status")
+    , @NamedQuery(name = "TfServing.findByHdfsUserId", query = "SELECT t FROM TfServing t " +
+        "WHERE t.hdfsUserId = :hdfsUserId")
+    , @NamedQuery(name = "TfServing.findByCreated", query = "SELECT t FROM TfServing t WHERE t.created = :created")
+    , @NamedQuery(name = "TfServing.findByModelName", query = "SELECT t FROM TfServing t " +
+        "WHERE t.modelName = :modelName")
+    , @NamedQuery(name = "TfServing.findByHdfsModelPath", query = "SELECT t FROM TfServing t " +
+        "WHERE t.hdfsModelPath = :hdfsModelPath")
+    , @NamedQuery(name = "TfServing.findByVersion", query = "SELECT t FROM TfServing t WHERE t.version = :version")
+    , @NamedQuery(name = "TfServing.findByEnableBatching", query = "SELECT t FROM TfServing t " +
+        "WHERE t.enableBatching = :enableBatching")
+    , @NamedQuery(name = "TfServing.updateRunningState", query = "UPDATE TfServing t SET t.status =" +
+        " :status, t.pid = :pid, t.port = :port, t.hostIp = :hostIp WHERE t.id = :id")
+    , @NamedQuery(name = "TfServing.updateModelVersion", query = "UPDATE TfServing t SET t.hdfsModelPath =" +
+        " :hdfsModelPath, t.version = :version WHERE t.id = :id")})
 public class TfServing implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -83,33 +68,25 @@ public class TfServing implements Serializable {
   private BigInteger pid;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 50)
-  @Column(name = "tf_serving_status")
-  private String tfServingStatus;
-
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status")
+  private TfServingStatusEnum status;
   @Basic(optional = false)
   @NotNull
-  @JoinColumn(name = "hdfs_user_id",
-      referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private HdfsUsers hdfsUserId;
-
+  @Column(name = "hdfs_user_id")
+  private int hdfsUserId;
   @Basic(optional = false)
-  @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 255)
+  @Size(min = 1, max = 255)
   @Column(name = "model_name")
   private String modelName;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 255)
+  @Size(min = 1, max = 255)
   @Column(name = "hdfs_model_path")
   private String hdfsModelPath;
   @Basic(optional = false)
@@ -118,12 +95,17 @@ public class TfServing implements Serializable {
   private int version;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "batch_size")
-  private int batchSize;
-  @JoinColumn(name = "project_id",
-      referencedColumnName = "id")
+  @Size(min = 0,
+          max = 255)
+  @Column(name = "secret")
+  private String secret;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "enable_batching")
+  private boolean enableBatching;
+  @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Project projectId;
+  private Project project;
 
   public TfServing() {
   }
@@ -132,16 +114,16 @@ public class TfServing implements Serializable {
     this.id = id;
   }
 
-  public TfServing(Integer id, String tfServingStatus, HdfsUsers hdfsUserId, Date created, String modelName,
-      String hdfsModelPath, int version, int batchSize) {
+  public TfServing(Integer id, TfServingStatusEnum status, int hdfsUserId, Date created,
+                   String modelName, String hdfsModelPath, int version, boolean enableBatching) {
     this.id = id;
-    this.tfServingStatus = tfServingStatus;
+    this.status = status;
     this.hdfsUserId = hdfsUserId;
     this.created = created;
     this.modelName = modelName;
     this.hdfsModelPath = hdfsModelPath;
     this.version = version;
-    this.batchSize = batchSize;
+    this.enableBatching = enableBatching;
   }
 
   public Integer getId() {
@@ -176,19 +158,19 @@ public class TfServing implements Serializable {
     this.pid = pid;
   }
 
-  public String getTfServingStatus() {
-    return tfServingStatus;
+  public TfServingStatusEnum getStatus() {
+    return status;
   }
 
-  public void setTfServingStatus(String tfServingStatus) {
-    this.tfServingStatus = tfServingStatus;
+  public void setStatus(TfServingStatusEnum status) {
+    this.status = status;
   }
 
-  public HdfsUsers getHdfsUserId() {
+  public int getHdfsUserId() {
     return hdfsUserId;
   }
 
-  public void setHdfsUserId(HdfsUsers hdfsUserId) {
+  public void setHdfsUserId(int hdfsUserId) {
     this.hdfsUserId = hdfsUserId;
   }
 
@@ -224,20 +206,28 @@ public class TfServing implements Serializable {
     this.version = version;
   }
 
-  public int getBatchSize() {
-    return batchSize;
+  public String getSecret() {
+    return secret;
   }
 
-  public void setBatchSize(int batchSize) {
-    this.batchSize = batchSize;
+  public void setSecret(String secret) {
+    this.secret = secret;
   }
 
-  public Project getProjectId() {
-    return projectId;
+  public boolean getEnableBatching() {
+    return enableBatching;
   }
 
-  public void setProjectId(Project projectId) {
-    this.projectId = projectId;
+  public void setEnableBatching(boolean enableBatching) {
+    this.enableBatching = enableBatching;
+  }
+
+  public Project getProject() {
+    return project;
+  }
+
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   @Override
@@ -262,7 +252,7 @@ public class TfServing implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.tensorflow.tf.TfServing[ id=" + id + " ]";
+    return "io.hops.hopsworks.common.dao.tfserving.TfServing[ id=" + id + " ]";
   }
-
+    
 }

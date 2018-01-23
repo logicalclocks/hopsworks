@@ -26,6 +26,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import io.hops.hopsworks.common.dao.tfserving.TfServing;
 import io.hops.hopsworks.common.util.Settings;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -106,7 +107,8 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<JupyterSettings> jupyterSettingsCollection;
-
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+  private Collection<TfServing> tfServingCollection;
   private static final long serialVersionUID = 1L;
 
   @Id
@@ -447,6 +449,16 @@ public class Project implements Serializable {
     this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TfServing> getTfServingCollection() {
+    return tfServingCollection;
+  }
+
+  public void setTfServingCollection(Collection <TfServing> tfServingCollection) {
+    this.tfServingCollection = tfServingCollection;
+  }
+
   public String getProjectGenericUser() {
     return name + Settings.PROJECT_GENERIC_USER_SUFFIX;
   }
@@ -462,14 +474,4 @@ public class Project implements Serializable {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
         + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
-
-//  @XmlTransient
-//  @JsonIgnore
-//  public Collection<TfServing> getTfServingCollection() {
-//    return tfServingCollection;
-//  }
-//
-//  public void setTfServingCollection(Collection<TfServing> tfServingCollection) {
-//    this.tfServingCollection = tfServingCollection;
-//  }
 }
