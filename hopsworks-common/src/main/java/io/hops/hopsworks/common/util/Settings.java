@@ -1428,7 +1428,7 @@ public class Settings implements Serializable {
   }
 
   private String HOPSWORKS_REST_ENDPOINT = "http://192.168.56.101:8080";
-
+  
   /**
    * Generates the Endpoint for kafka.
    *

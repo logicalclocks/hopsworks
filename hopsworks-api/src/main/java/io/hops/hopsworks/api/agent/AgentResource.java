@@ -3,6 +3,7 @@ package io.hops.hopsworks.api.agent;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.alert.Alert;
 import io.hops.hopsworks.common.dao.alert.AlertEJB;
+import io.hops.hopsworks.common.dao.host.Health;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,7 +60,7 @@ import org.json.simple.JSONArray;
 @Api(value = "Agent Service",
     description = "Agent Service")
 public class AgentResource {
-
+    
   @EJB
   private HostEJB hostFacade;
   @EJB
@@ -117,10 +118,16 @@ public class AgentResource {
       host.setLoad1(json.getJsonNumber("load1").doubleValue());
       host.setLoad5(json.getJsonNumber("load5").doubleValue());
       host.setLoad15(json.getJsonNumber("load15").doubleValue());
+      long previousDiskUsed = host.getDiskUsed();
       host.setDiskUsed(json.getJsonNumber("disk-used").longValue());
       host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
       host.setPrivateIp(json.getString("private-ip"));
       host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
+      if(previousDiskUsed<host.getDiskUsed() && ((float)host.getDiskUsed())/host.getDiskCapacity() > 0.8 ){
+        String subject = "alert: hard drive full on " + host.getHostname();
+        String body = host.getHostname() + " hard drive utilisation is " + host.getDiskUsageInfo();
+        emailAlert(subject, body);
+      }
       host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
       host.setCores(json.getInt("cores"));
       hostFacade.storeHost(host, false);
@@ -164,11 +171,12 @@ public class AgentResource {
           logger.log(Level.WARNING, "Invalid webport or pid - not a number for: {0}", role);
           continue;
         }
+        Health previousRoleHealt = role.getHealth();
         if (s.containsKey("status")) {
           if ((role.getStatus() == null || !role.getStatus().equals(Status.Started)) && Status.valueOf(s.getString(
               "status")).equals(Status.Started)) {
             role.setStartTime(agentTime);
-          }
+          } 
           role.setStatus(Status.valueOf(s.getString("status")));
         } else {
           role.setStatus(Status.None);
@@ -186,7 +194,12 @@ public class AgentResource {
         } else {
           role.setUptime(0);
         }
-
+        if(!role.getHealth().equals(previousRoleHealt) && role.getHealth().equals(Health.Bad)){
+          String subject = "alert: " + role.getService() + "." + role.getRole() + "@" + role.getHost().getHostname();
+          String body = role.getService() + "." + role.getRole() + "@" + role.getHost().getHostname()+ 
+                  " transitioned from state " + previousRoleHealt + " to " + role.getHealth();
+          emailAlert(subject, body);
+        }
         roleFacade.store(role);
       }
 
@@ -380,6 +393,16 @@ public class AgentResource {
         commandsForKagent).build();
   }
 
+  private void emailAlert(String subject, String body){
+    try {
+      emailBean.sendEmails(settings.getAlertEmailAddrs(), subject, body);
+    } catch (MessagingException ex) {
+      logger.log(Level.SEVERE, ex.getMessage());
+    }
+  }
+  
+  
+  
   @POST
   @Path("/alert")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -397,7 +420,9 @@ public class AgentResource {
       alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")).toString());
       alert.setAgentTime(json.getJsonNumber("Time").bigIntegerValue());
       alert.setMessage(json.getString("Message"));
-      alert.setHostid(json.getString("host-id"));
+      String hostname = json.getString("host-id");
+      Hosts host = hostFacade.findByHostname(hostname);
+      alert.setHostid(host.getId());
       alert.setPlugin(json.getString("Plugin"));
       if (json.containsKey("PluginInstance")) {
         alert.setPluginInstance(json.getString("PluginInstance"));

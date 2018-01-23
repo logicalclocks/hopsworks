@@ -48,6 +48,10 @@ public class Hosts implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  public static int getHeartbeatInterval(){
+    return HEARTBEAT_INTERVAL;
+  }
+  
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE)
   @Basic(optional = false)
