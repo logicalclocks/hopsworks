@@ -136,20 +136,44 @@ angular.module('hopsWorksApp', [
                         auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
                           function ($q, $location, AuthService, $cookies, VariablesService) {
                             return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                      $location.path('/');
-                                      $location.replace();
-                                      return $q.when(success);
-                                    },
-                                    function (err) {
-                                      VariablesService.getTwofactor().then(
-                                              function (success) {
-                                                $cookies.put("otp", success.data.successMessage);
-                                              }, function (error) {
-
-                                      });
-                                    });
+                              function (success) {
+                                $cookies.put("email", success.data.data.value);
+                                $location.path('/');
+                                $location.replace();
+                                return $q.when(success);
+                              },
+                              function (err) {
+                                VariablesService.getAuthStatus().then(
+                                  function (success) {
+                                    $cookies.put("otp", success.data.twofactor);
+                                    $cookies.put("ldap", success.data.ldap);
+                                  }, function (error) {
+                                });
+                              });
+                          }]
+                      }
+                    })
+                    .when('/ldapLogin', {
+                      templateUrl: 'views/ldapLogin.html',
+                      controller: 'LdapLoginCtrl as loginCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
+                          function ($q, $location, AuthService, $cookies, VariablesService) {
+                            return AuthService.session().then(
+                              function (success) {
+                                $cookies.put("email", success.data.data.value);
+                                $location.path('/');
+                                $location.replace();
+                                return $q.when(success);
+                              },
+                              function (err) {
+                                VariablesService.getAuthStatus().then(
+                                  function (success) {
+                                    $cookies.put("otp", success.data.twofactor);
+                                    $cookies.put("ldap", success.data.ldap);
+                                  }, function (error) {
+                                });
+                              });
                           }]
                       }
                     })

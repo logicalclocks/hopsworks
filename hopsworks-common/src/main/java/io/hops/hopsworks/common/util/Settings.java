@@ -402,6 +402,7 @@ public class Settings implements Serializable {
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       populateDelaCache();
+      populateLDAPCache();
       //Set Zeppelin Default Interpreter
       zeppelinDefaultInterpreter = getZeppelinDefaultInterpreter(ZEPPELIN_INTERPRETERS);
       cached = true;
@@ -2325,4 +2326,124 @@ public class Settings implements Serializable {
     }
   }
   //Kafka END
+  
+  
+  //-------------------------LDAP----------------------------
+  private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
+  private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";
+  private static final String VARIABLE_LDAP_USER_ID = "ldap_user_id";
+  private static final String VARIABLE_LDAP_USER_GIVEN_NAME = "ldap_user_givenName";
+  private static final String VARIABLE_LDAP_USER_SURNAME = "ldap_user_surname";
+  private static final String VARIABLE_LDAP_USER_EMAIL = "ldap_user_email";
+  private static final String VARIABLE_LDAP_USER_SEARCH_FILTER = "ldap_user_search_filter";
+  private static final String VARIABLE_LDAP_GROUP_SEARCH_FILTER = "ldap_group_search_filter";
+  private static final String VARIABLE_LDAP_ATTR_BINARY = "ldap_attr_binary";
+  private static final String VARIABLE_LDAP_GROUP_TARGET = "ldap_group_target";
+  private static final String VARIABLE_LDAP_DYNAMIC_GROUP_TARGET = "ldap_dyn_group_target";
+  private static final String VARIABLE_LDAP_USERDN = "ldap_user_dn";
+  private static final String VARIABLE_LDAP_GROUPDN = "ldap_group_dn";
+  private static final String VARIABLE_LDAP_ACCOUNT_STATUS = "ldap_account_status";
+
+  private String LDAP_AUTH = "false";
+  private String LDAP_GROUP_MAPPING = "";
+  private String LDAP_USER_ID = "uid"; //login name
+  private String LDAP_USER_GIVEN_NAME = "givenName";
+  private String LDAP_USER_SURNAME = "sn";
+  private String LDAP_USER_EMAIL = "mail";
+  private String LDAP_USER_SEARCH_FILTER = "uid=%s";
+  private String LDAP_GROUP_SEARCH_FILTER = "member=%d";
+  private String LDAP_ATTR_BINARY = "java.naming.ldap.attributes.binary";
+  private String LDAP_GROUP_TARGET = "cn";
+  private String LDAP_DYNAMIC_GROUP_TARGET = "memberOf";
+  private String LDAP_LDAP_USERDN = "";
+  private String LDAP_LDAP_GROUPDN = "";
+  private int LDAP_ACCOUNT_STATUS = 4;
+
+  private void populateLDAPCache() {
+    LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
+    LDAP_GROUP_MAPPING = setVar(VARIABLE_LDAP_GROUP_MAPPING, LDAP_GROUP_MAPPING);
+    LDAP_USER_ID = setVar(VARIABLE_LDAP_USER_ID, LDAP_USER_ID);
+    LDAP_USER_GIVEN_NAME = setVar(VARIABLE_LDAP_USER_GIVEN_NAME, LDAP_USER_GIVEN_NAME);
+    LDAP_USER_SURNAME = setVar(VARIABLE_LDAP_USER_SURNAME, LDAP_USER_SURNAME);
+    LDAP_USER_EMAIL = setVar(VARIABLE_LDAP_USER_EMAIL, LDAP_USER_EMAIL);
+    LDAP_USER_SEARCH_FILTER = setVar(VARIABLE_LDAP_USER_SEARCH_FILTER, LDAP_USER_SEARCH_FILTER);
+    LDAP_GROUP_SEARCH_FILTER = setVar(VARIABLE_LDAP_GROUP_SEARCH_FILTER, LDAP_GROUP_SEARCH_FILTER);
+    LDAP_ATTR_BINARY = setVar(VARIABLE_LDAP_ATTR_BINARY, LDAP_ATTR_BINARY);
+    LDAP_GROUP_TARGET = setVar(VARIABLE_LDAP_GROUP_TARGET, LDAP_GROUP_TARGET);
+    LDAP_DYNAMIC_GROUP_TARGET = setVar(VARIABLE_LDAP_DYNAMIC_GROUP_TARGET, LDAP_DYNAMIC_GROUP_TARGET);
+    LDAP_LDAP_USERDN = setVar(VARIABLE_LDAP_USERDN, LDAP_LDAP_USERDN);
+    LDAP_LDAP_GROUPDN = setVar(VARIABLE_LDAP_GROUPDN, LDAP_LDAP_GROUPDN);
+    LDAP_ACCOUNT_STATUS = setIntVar(VARIABLE_LDAP_ACCOUNT_STATUS, LDAP_ACCOUNT_STATUS);
+  }
+
+  public synchronized String getLDAPAuthStatus() {
+    checkCache();
+    return LDAP_AUTH;
+  }
+
+  public synchronized String getLdapGroupMapping() {
+    checkCache();
+    return LDAP_GROUP_MAPPING;
+  }
+
+  public synchronized String getLdapUserId() {
+    checkCache();
+    return LDAP_USER_ID;
+  }
+
+  public synchronized String getLdapUserGivenName() {
+    checkCache();
+    return LDAP_USER_GIVEN_NAME;
+  }
+
+  public synchronized String getLdapUserSurname() {
+    checkCache();
+    return LDAP_USER_SURNAME;
+  }
+
+  public synchronized String getLdapUserMail() {
+    checkCache();
+    return LDAP_USER_EMAIL;
+  }
+
+  public synchronized String getLdapUserSearchFilter() {
+    checkCache();
+    return LDAP_USER_SEARCH_FILTER;
+  }
+
+  public synchronized String getLdapGroupSearchFilter() {
+    checkCache();
+    return LDAP_GROUP_SEARCH_FILTER;
+  }
+
+  public synchronized String getLdapAttrBinary() {
+    checkCache();
+    return LDAP_ATTR_BINARY;
+  }
+
+  public synchronized String getLdapGroupTarget() {
+    checkCache();
+    return LDAP_GROUP_TARGET;
+  }
+
+  public synchronized String getLdapDynGroupTarget() {
+    checkCache();
+    return LDAP_DYNAMIC_GROUP_TARGET;
+  }
+
+  public synchronized String getLdapUserDN() {
+    checkCache();
+    return LDAP_LDAP_USERDN;
+  }
+
+  public synchronized String getLdapGroupDN() {
+    checkCache();
+    return LDAP_LDAP_GROUPDN;
+  }
+
+  public synchronized int getLdapAccountStatus() {
+    checkCache();
+    return LDAP_ACCOUNT_STATUS;
+  }
+  //----------------------------END LDAP------------------------------------
 }

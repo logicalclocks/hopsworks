@@ -90,7 +90,7 @@ def clean_test_data
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/tables.sql | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/rows.sql   | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
     system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" cat /srv/hops/domains/views.sql  | /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks \" ' ")
-    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c  'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
+    system("cd #{ENV['RSPEC_USER_DIR']}; vagrant ssh -c 'sudo -u root -H sh -c \" /srv/hops/mysql-cluster/ndb/scripts/mysql-client.sh --database=hopsworks -e \\\" UPDATE hosts SET registered=1 WHERE id=1; \\\" \" ' ")
     puts "DataBase Clean-up finished."
   end
 end

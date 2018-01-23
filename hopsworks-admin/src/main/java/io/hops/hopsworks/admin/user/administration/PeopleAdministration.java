@@ -37,7 +37,6 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -188,9 +187,18 @@ public class PeopleAdministration implements Serializable {
   public String getChanged_Status(Users p) {
     return userFacade.findByEmail(p.getEmail()).getStatusName();
   }
-
-  public boolean mobileAccount(Users u) {
-    return u.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE);
+  
+  public String accountTypeStr(Users u) {
+    switch (u.getMode()) {
+      case M_ACCOUNT_TYPE:
+        return "Mobile Account";
+      case Y_ACCOUNT_TYPE:
+        return "Yubikey Account";
+      case LDAP_ACCOUNT_TYPE:
+        return "LDAP Account";
+      default:
+        return "Unknown Account type";
+    }
   }
 
   public List<String> getActGroups() {

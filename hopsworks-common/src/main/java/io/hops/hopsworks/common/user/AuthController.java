@@ -10,6 +10,8 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
+import io.hops.hopsworks.common.dao.user.ldap.LdapUserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
@@ -21,6 +23,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.user.ldap.LdapRealm;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -41,6 +44,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.naming.NamingException;
+import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -72,20 +77,28 @@ public class AuthController {
   private ProjectFacade projectFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private LdapRealm ldapRealm;
+  @EJB
+  private LdapUserFacade ldapUserFacade;
 
   /**
    * Pre check for custom realm login.
+   *
    * @param user
    * @param password
    * @param otp
    * @param req
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
-  public String preCustomRealmLoginCheck(Users user, String password, String otp, HttpServletRequest req) 
+  public String preCustomRealmLoginCheck(Users user, String password, String otp, HttpServletRequest req)
       throws AppException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
+    }
+    if (user.getMode().equals(PeopleAccountType.LDAP_ACCOUNT_TYPE)) {
+      throw new IllegalArgumentException("Can not login ldap user. Use LDAP login.");
     }
     if (isTwoFactorEnabled(user)) {
       if ((otp == null || otp.isEmpty()) && user.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE)) {
@@ -112,8 +125,19 @@ public class AuthController {
     return newPassword;
   }
 
+  public String preLdapLoginCheck(Users user, String password, HttpServletRequest req) {
+    if (user == null) {
+      throw new IllegalArgumentException("User not set.");
+    }
+    if (!user.getMode().equals(PeopleAccountType.LDAP_ACCOUNT_TYPE)) {
+      throw new IllegalArgumentException("User is not registerd as ldap user.");
+    }
+    String newPassword = getPasswordPlusSalt(password, user.getSalt()) + AuthenticationConstants.MOBILE_OTP_PADDING;
+    return newPassword;
+  }
+
   /**
-   * Validates password and update account audit
+   * Validates password and update account audit. Use validatePwd if ldap user.
    *
    * @param user
    * @param password
@@ -123,6 +147,48 @@ public class AuthController {
   public boolean validatePassword(Users user, String password, HttpServletRequest req) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
+    }
+    if (user.getMode().equals(PeopleAccountType.LDAP_ACCOUNT_TYPE)) {
+      throw new IllegalArgumentException("Operation not allowed for LDAP account.");
+    }
+    String userPwdHash = user.getPassword();
+    String pwdHash = getPasswordHash(password, user.getSalt());
+    if (!userPwdHash.equals(pwdHash)) {
+      registerFalseLogin(user, req);
+      LOGGER.log(Level.WARNING, "False login attempt by user: {0}", user.getEmail());
+      return false;
+    }
+    resetFalseLogin(user);
+    return true;
+  }
+  
+  /**
+   * Validate password works both for hopsworks and ldap user
+   * @param user
+   * @param password
+   * @param req
+   * @return
+   */
+  public boolean validatePwd(Users user, String password, HttpServletRequest req) {
+    if (user == null) {
+      throw new IllegalArgumentException("User not set.");
+    }
+    if (user.getMode().equals(PeopleAccountType.LDAP_ACCOUNT_TYPE)) {
+      LdapUser ldapUser = ldapUserFacade.findByUsers(user);
+      if (ldapUser == null) {
+        return false;
+      }
+      try {
+        ldapRealm.authenticateLdapUser(ldapUser, password);
+        return true;
+      } catch (LoginException ex) {
+        LOGGER.log(Level.WARNING, "False login attempt by ldap user: {0}", user.getEmail());
+        LOGGER.log(Level.WARNING, null, ex.getMessage());
+        return false;
+      } catch (EJBException | NamingException ee) {
+        LOGGER.log(Level.WARNING, "Could not reach LDAP server. {0}", ee.getMessage());
+        throw new IllegalStateException("Could not reach LDAP server.");
+      }
     }
     String userPwdHash = user.getPassword();
     String pwdHash = getPasswordHash(password, user.getSalt());
@@ -136,18 +202,22 @@ public class AuthController {
   }
 
   /**
-   * Validate security question and update false login attempts   
+   * Validate security question and update false login attempts
+   *
    * @param user
    * @param securityQuestion
    * @param securityAnswer
    * @param req
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   public boolean validateSecurityQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req)
       throws AppException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
+    }
+    if (user.getMode().equals(PeopleAccountType.LDAP_ACCOUNT_TYPE)) {
+      throw new IllegalArgumentException("Operation not allowed for LDAP account.");
     }
     if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQuestion)
         || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(securityAnswer.toLowerCase()))) {
@@ -160,11 +230,12 @@ public class AuthController {
 
   /**
    * Checks password and user status. Also updates false login attempts
+   *
    * @param user
    * @param password
    * @param req
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   public boolean checkPasswordAndStatus(Users user, String password, HttpServletRequest req) throws AppException {
     if (user == null) {
@@ -178,9 +249,10 @@ public class AuthController {
 
   /**
    * Validates email validation key. Also updates false key validation attempts.
+   *
    * @param key
    * @param req
-   * @throws AppException 
+   * @throws AppException
    */
   public void validateKey(String key, HttpServletRequest req) throws AppException {
     if (key == null) {
@@ -222,9 +294,10 @@ public class AuthController {
 
   /**
    * Sends new activation key to the given user.
+   *
    * @param user
    * @param req
-   * @throws MessagingException 
+   * @throws MessagingException
    */
   public void sendNewValidationKey(Users user, HttpServletRequest req) throws MessagingException {
     if (user == null) {
@@ -305,9 +378,10 @@ public class AuthController {
 
   /**
    * Hash password + salt
+   *
    * @param password
    * @param salt
-   * @return 
+   * @return
    */
   public String getPasswordHash(String password, String salt) {
     return getHash(getPasswordPlusSalt(password, salt));
@@ -315,8 +389,9 @@ public class AuthController {
 
   /**
    * Returns the hash of the value
+   *
    * @param val
-   * @return 
+   * @return
    */
   public String getHash(String val) {
     return DigestUtils.sha256Hex(val);
@@ -344,10 +419,11 @@ public class AuthController {
 
   /**
    * Change security question and adds account audit for the operation.
+   *
    * @param user
    * @param securityQuestion
    * @param securityAnswer
-   * @param req 
+   * @param req
    */
   public void changeSecQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req) {
     user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
@@ -359,9 +435,10 @@ public class AuthController {
 
   /**
    * Concatenates password and salt
+   *
    * @param password
    * @param salt
-   * @return 
+   * @return
    */
   public String getPasswordPlusSalt(String password, String salt) {
     return password + salt;
@@ -391,7 +468,7 @@ public class AuthController {
               + Settings.PROJECT_GENERIC_USER_SUFFIX);
           pguCerts.add(userCertsFacade.findProjectGenericUserCerts(project.getName()
               + Settings.PROJECT_GENERIC_USER_SUFFIX));
-          String pguCertPassword = HopsUtils.decrypt(oldPass, pguCert.getCertificatePassword(), 
+          String pguCertPassword = HopsUtils.decrypt(oldPass, pguCert.getCertificatePassword(),
               masterEncryptionPassword);
           //Encrypt it with new password and store it in the db
           String newPguSecret = HopsUtils.encrypt(p.getPassword(), pguCertPassword, masterEncryptionPassword);
@@ -399,7 +476,7 @@ public class AuthController {
           userCertsFacade.updatePGUCert(pguCert);
         }
       }
-    } catch (Exception ex) { 
+    } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       throw new EJBException(ex);
     }
@@ -408,8 +485,9 @@ public class AuthController {
 
   /**
    * Register failed login attempt.
+   *
    * @param user
-   * @param req 
+   * @param req
    */
   public void registerFalseLogin(Users user, HttpServletRequest req) {
     if (user != null) {
@@ -435,8 +513,9 @@ public class AuthController {
 
   /**
    * Registers failed email validation
+   *
    * @param user
-   * @param req 
+   * @param req
    */
   public void registerFalseKeyValidation(Users user, HttpServletRequest req) {
     if (user != null) {
@@ -452,11 +531,12 @@ public class AuthController {
           name(), "Wrong validation key retries: " + Integer.toString(count), user, req);
     }
   }
-  
+
   /**
    * Set user online, resets false login attempts and register login audit info
+   *
    * @param user
-   * @param req 
+   * @param req
    */
   public void registerLogin(Users user, HttpServletRequest req) {
     resetFalseLogin(user);
@@ -467,19 +547,21 @@ public class AuthController {
 
   /**
    * Set user offline and register login audit info
+   *
    * @param user
-   * @param req 
+   * @param req
    */
   public void registerLogout(Users user, HttpServletRequest req) {
     setUserOnlineStatus(user, AuthenticationConstants.IS_OFFLINE);
     accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.SUCCESS.name(), req);
     LOGGER.log(Level.INFO, "Logged out user: {0}. ", user.getEmail());
   }
-  
+
   /**
    * Register authentication failure and register login audit info
+   *
    * @param user
-   * @param req 
+   * @param req
    */
   public void registerAuthenticationFailure(Users user, HttpServletRequest req) {
     registerFalseLogin(user, req);
@@ -514,7 +596,8 @@ public class AuthController {
 
   /**
    * Generates a salt value with SALT_LENGTH and DIGEST
-   * @return 
+   *
+   * @return
    */
   public String generateSalt() {
     byte[] bytes = new byte[SALT_LENGTH];

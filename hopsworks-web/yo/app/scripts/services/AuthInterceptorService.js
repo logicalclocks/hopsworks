@@ -25,7 +25,7 @@ angular.module('hopsWorksApp')
 
                   var url = $location.url();
 
-                  if (url != '/login' && url != '/register' && url != '/recover') {
+                  if (url != '/login' && url != '/ldapLogin' && url != '/register' && url != '/recover') {
                     $location.url('/login');
                     $location.replace();
                   }

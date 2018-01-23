@@ -10,6 +10,12 @@ angular.module('hopsWorksApp')
               getTwofactor: function () {
                 return $http.get('/api/variables/twofactor');
               },
+              getLDAPAuthStatus: function () {
+                return $http.get('/api/variables/ldap');
+              },
+              getAuthStatus: function () {
+                return $http.get('/api/variables/authStatus');
+              },
               getVariable: function (id) {
                 return $http.get('/api/variables/' + id);
               }

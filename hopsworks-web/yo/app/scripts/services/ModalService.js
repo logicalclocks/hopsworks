@@ -1139,5 +1139,21 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              ldapUserConsent: function (size, data, val) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/ldapUserConsentModal.html',
+                  controller: 'LdapUserConsentModalCtrl as ldapUserConsentModalCtrl',
+                  size: size,
+                  resolve: {
+                    data: function () {
+                      return data;
+                    },
+                    val: function () {
+                      return val;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              }
             };
           }]);

@@ -1,4 +1,4 @@
-
+<div ng-if="profileCtrl.user.userAccountType !== 'LDAP_ACCOUNT_TYPE' ">
 <div class="modal-header">
   <button class="close" ng-click="profileCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
   <h2 class="modal-title">Profile</h2>
@@ -203,4 +203,49 @@
       </div>
     </div>
   </form>
+</div>
+</div>
+<!-- LDAP user -->
+<div ng-if="profileCtrl.user.userAccountType === 'LDAP_ACCOUNT_TYPE' ">
+  <div class="modal-header">
+    <button class="close" ng-click="profileCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+    <h2 class="modal-title">LDAP Profile</h2>
+  </div>
+  <div class="modal-body" id="ldapProfileModal">
+    <div class="row">
+      <div class="col-xs-9 col-sm-9 col-md-9 pull-right">
+        <div class="row">
+          <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group has-feedback">
+              <label class="text-muted">First Name</label>
+              <input name="first_name" placeholder="First Name"
+                     ng-model="profileCtrl.user.firstName" class="form-control "
+                     type="text" ng-disabled="true">
+            </div>
+          </div>
+          <div class="col-xs-6 col-sm-6 col-md-6">
+            <div class="form-group has-feedback">
+              <label class="text-muted">Last Name</label>
+              <input name="last_name" placeholder="Last Name"
+                     ng-model="profileCtrl.user.lastName" class="form-control "
+                     type="text" ng-disabled="true">
+            </div>
+          </div>
+        </div>
+        <div class="form-group has-feedback">
+          <label class="text-muted">Email</label>
+          <input name="phone_number" placeholder="Email"
+                 ng-model="profileCtrl.user.email" class="form-control " type="text" ng-disabled="true">
+          <span class="fa fa-envelope form-control-feedback text-muted"></span>
+        </div>
+        <div class="form-group has-feedback">
+          <label class="text-muted">Number of Projects Allowed: </label>&nbsp;&nbsp;{{profileCtrl.user.maxNumProjects}}
+        </div>
+      </div>
+      <div class="col-xs-3 col-sm-3 col-md-3 ">
+        <img class="img-thumbnail"
+             ng-src="https://www.gravatar.com/avatar/{{profileCtrl.emailHash}}?d=retro&s=200"/>
+      </div>
+    </div>
+  </div>
 </div>

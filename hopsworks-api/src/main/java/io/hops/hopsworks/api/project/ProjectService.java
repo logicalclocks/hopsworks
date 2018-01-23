@@ -853,8 +853,8 @@ public class ProjectService {
   public Response downloadCerts(@PathParam("id") Integer id, @FormParam("password") String password,
       @Context HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(req.getRemoteUser());
-    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password,
-        req)) {
+    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)
+        ) {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Access to the certificat has been forbidden.");
     }
     Project project = projectController.findProjectById(id);

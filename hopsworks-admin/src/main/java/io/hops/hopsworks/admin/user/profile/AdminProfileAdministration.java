@@ -29,7 +29,6 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.user.UsersController;
@@ -128,9 +127,18 @@ public class AdminProfileAdministration implements Serializable {
   public void setEditingUser(Users editingUser) {
     this.editingUser = editingUser;
   }
-
-  public boolean mobileAccount() {
-    return this.editingUser.getMode().equals(PeopleAccountType.M_ACCOUNT_TYPE);
+  
+  public String accountTypeStr() {
+    switch (this.editingUser.getMode()) {
+      case M_ACCOUNT_TYPE:
+        return "Mobile Account";
+      case Y_ACCOUNT_TYPE:
+        return "Yubikey Account";
+      case LDAP_ACCOUNT_TYPE:
+        return "LDAP Account";
+      default:
+        return "Unknown Account type";
+    }
   }
 
   public List<String> getUserRole(Users p) {

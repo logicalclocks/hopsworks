@@ -25,6 +25,7 @@ angular.module('hopsWorksApp')
 
             self.working = false;
             self.otp = $cookies.get('otp');
+            self.ldapEnabled = $cookies.get('ldap') === 'true';
             self.user = {email: '', password: '', otp: ''};
             self.emailHash = md5.createHash(self.user.email || '');
             getAnnouncement();

@@ -20,5 +20,16 @@ module VariablesHelper
     refresh_variables
     variables
   end
+  
+  def set_ldap_enabled (value)
+    variables = Variables.find_by(id: "ldap_auth")
+    if variables.nil?
+      variables.id = "ldap_auth"
+    end
+    variables.value = value
+    variables.save
+    refresh_variables
+    variables
+  end
 
 end

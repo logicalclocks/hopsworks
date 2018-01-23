@@ -16,6 +16,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.exception.mapper.AccessControlExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.AppExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.AuthExceptionMapper.class);
+    register(io.hops.hopsworks.api.exception.mapper.LoginExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.ThrowableExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.TransactionExceptionMapper.class);
     register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);

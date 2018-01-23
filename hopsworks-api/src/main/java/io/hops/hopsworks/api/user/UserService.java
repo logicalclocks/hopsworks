@@ -103,12 +103,10 @@ public class UserService {
           @FormParam("lastName") String lastName,
           @FormParam("telephoneNum") String telephoneNum,
           @FormParam("toursState") Integer toursState,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
     
-    Users user = userController.updateProfile(sc.getUserPrincipal().
-            getName(), firstName, lastName, telephoneNum, toursState, req);
+    Users user = userController.updateProfile(req.getRemoteUser(), firstName, lastName, telephoneNum, toursState, req);
     UserDTO userDTO = new UserDTO(user);
     
     json.setStatus("OK");
@@ -126,11 +124,10 @@ public class UserService {
           @FormParam("oldPassword") String oldPassword,
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
 
-    userController.changePassword(sc.getUserPrincipal().getName(), oldPassword, newPassword, confirmedPassword, req);
+    userController.changePassword(req.getRemoteUser(), oldPassword, newPassword, confirmedPassword, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
@@ -145,10 +142,9 @@ public class UserService {
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
-    userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword, securityQuestion, securityAnswer, req);
+    userController.changeSecQA(req.getRemoteUser(), oldPassword, securityQuestion, securityAnswer, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
@@ -162,9 +158,8 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.findByEmail(req.getRemoteUser());
 
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
