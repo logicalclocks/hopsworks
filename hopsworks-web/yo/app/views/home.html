@@ -69,41 +69,38 @@
           </button>
 
         </span>
-
-        <div class="list-group-item"
-             style="background-color: #f5f5f5;">
-          <div class="input-group-btn search-panel pull-left" uib-dropdown
-               style="width: 83px;">
-            <button type="button" class="btn btn-default" ihhd="filterByButton" uib-dropdown-toggle>
-              <span id="search_concept">Filter by</span>
-              <span class="caret"></span>
-            </button>
-
-            <ul uib-dropdown-menu class="dropdown-menu" role="menu">
-              <li><a href="#its_equal"> My own</a></li>
-              <li><a href="#greather_than"> Private</a></li>
-              <li><a href="#less_than"> Public </a></li>
-              <li class="divider"></li>
-              <li><a href="#all">All</a></li>
-            </ul>
+        <div class="list-group-item" style="background-color: #f5f5f5;">
+          <div class="input-group">
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
+                <span id="search_concept">Sort by</span>
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="" ng-click="homeCtrl.sortBy='-project.name'"><i class="pull-right fa fa-sort-alpha-desc text-muted" aria-hidden="true"></i>Name Desc</a></li>
+                <li><a class="dropdown-item" href="" ng-click="homeCtrl.sortBy='project.name'"><i class="pull-right fa fa-sort-alpha-asc text-muted" aria-hidden="true"></i>Name Asc</a></li>
+                <li><a class="dropdown-item" href="" ng-click="homeCtrl.sortBy='project.created'"><i class="pull-right fa fa-sort-numeric-desc text-muted" aria-hidden="true"></i>Created Desc</a></li>
+                <li><a class="dropdown-item" href="" ng-click="homeCtrl.sortBy='-project.created'"><i class="pull-right fa fa-sort-numeric-asc text-muted" aria-hidden="true"></i>Created Asc</a></li>
+              </ul>
+            </div>
+            <input type="hidden" name="search_param" value="all" id="search_param">
+            <input type="text" class="form-control pull-left" ng-model="searchProject"  name="x" placeholder="Find project...">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="button" style="height:34px;">
+                <i class="fa fa-search" aria-hidden="true"></i>
+              </button>
+            </span>
           </div>
-          <input type="hidden" name="search_param" value="all" id="search_param">
-          <input type="text" class="form-control pull-left" ng-model="searchProject"
-                 style="width: 155px; border-radius: 0;"
-                 name="x" placeholder="Find project...">
-          <span class="input-group-btn">
-            <button class="btn btn-default" type="button" style="height:34px;">
-              <span class="glyphicon glyphicon-search"></span>
-            </button>
-          </span>
         </div>
-        <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
+        
+        <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects | orderBy: homeCtrl.sortBy">
           <a ng-class="{disabled: project.project.archived, disabled: homeCtrl.working[project.project.id]}"
              href="#!/project/{{project.project.id}}"
              class="list-group-item"
              context-menu
              data-target="menu-{{$index}}"
-             id="{{project.project.name.substr(0, 5) === 'demo_'}}">
+             id="{{project.project.name.substr(0, 5) === 'demo_'}}"
+             title="{{project.project.name.length > 17 ? project.project.name:''}}">
             <div ng-if="project.teamRole === 'Data scientist'">
               <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
             </div>
