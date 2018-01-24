@@ -889,7 +889,7 @@ public class ProjectController {
        */
       Path location = new Path(File.separator + rootDir);
       FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-          FsAction.ALL); // permission 777 so any one can creat a project.
+          FsAction.READ_EXECUTE);
       rootDirCreated = dfso.mkdir(location, fsPermission);
     } else {
       rootDirCreated = true;
