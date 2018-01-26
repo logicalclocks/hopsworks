@@ -2,6 +2,7 @@ package io.hops.hopsworks.cluster;
 
 import io.hops.hopsworks.cluster.controller.ClusterController;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
+import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.List;
@@ -31,27 +32,29 @@ public class Cluster {
   private final static Logger LOGGER = Logger.getLogger(Cluster.class.getName());
   @EJB
   private ClusterController clusterController;
-
-  public Cluster() {
-  }
-
+  @EJB
+  private ClusterState clusterState;
+  
   @POST
   @Path("register")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response register(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+    AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
-    clusterController.register(cluster, req);
+    boolean autoValidate = clusterState.bypassActivationLink();
+    clusterController.register(cluster, req, autoValidate);
     JsonResponse res = new JsonResponse();
     res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
         + ClusterController.VALIDATION_KEY_EXPIRY_DATE + " hours before installing your new cluster.");
     return Response.ok().entity(res).build();
   }
-
+  
   @POST
   @Path("register/existing")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response registerExisting(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response registerExisting(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+      AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
     clusterController.registerCluster(cluster, req);
     JsonResponse res = new JsonResponse();
@@ -64,7 +67,8 @@ public class Cluster {
   @POST
   @Path("unregister")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException {
+  public Response unregister(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
+      AppException {
     LOGGER.log(Level.INFO, "Unregistering : {0}", cluster.getEmail());
     clusterController.unregister(cluster, req);
     JsonResponse res = new JsonResponse();
@@ -113,12 +117,12 @@ public class Cluster {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response getRegisterdClusters(@FormParam("email") String email, @FormParam("pwd") String pwd,
-      @Context HttpServletRequest req) throws MessagingException {
+      @Context HttpServletRequest req) throws MessagingException, AppException {
     ClusterDTO cluster = new ClusterDTO();
     cluster.setEmail(email);
     cluster.setChosenPassword(pwd);
-    List<ClusterCert> clusters = clusterController.getAllClusters(cluster, req);
-    GenericEntity<List<ClusterCert>> clustersEntity = new GenericEntity<List<ClusterCert>>(clusters) {
+    List<ClusterYmlDTO> clusters = clusterController.getAllClusterYml(cluster, req);
+    GenericEntity<List<ClusterYmlDTO>> clustersEntity = new GenericEntity<List<ClusterYmlDTO>>(clusters) {
     };
     return Response.ok().entity(clustersEntity).build();
   }
@@ -128,7 +132,7 @@ public class Cluster {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   public Response getRegisterdCluster(@FormParam("email") String email, @FormParam("pwd") String pwd, @FormParam(
       "orgName") String organizationName, @FormParam("orgUnitName") String organizationalUnitName,
-      @Context HttpServletRequest req) throws MessagingException {
+      @Context HttpServletRequest req) throws MessagingException, AppException {
     ClusterDTO cluster = new ClusterDTO();
     cluster.setEmail(email);
     cluster.setChosenPassword(pwd);

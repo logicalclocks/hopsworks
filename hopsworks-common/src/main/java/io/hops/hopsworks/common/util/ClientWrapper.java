@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import java.security.KeyStore;
 import java.util.List;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -202,8 +203,26 @@ public class ClientWrapper<T extends Object> {
     return new ClientWrapper(client, resultClass);
   }
 
+  public static <T> ClientWrapper<T> httpsInstance(Class<T> resultClass) {
+    Client client = ClientBuilder.newBuilder().hostnameVerifier(InsecureHostnameVerifier.INSTANCE).build();
+    return new ClientWrapper(client, resultClass);
+  }
+
   public static <T> ClientWrapper httpInstance(Class<T> resultClass) {
     Client client = ClientBuilder.newClient();
     return new ClientWrapper(client, resultClass);
+  }
+
+  private static class InsecureHostnameVerifier implements HostnameVerifier {
+
+    static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
+
+    InsecureHostnameVerifier() {
+    }
+
+    @Override
+    public boolean verify(String string, SSLSession ssls) {
+      return true;
+    }
   }
 }

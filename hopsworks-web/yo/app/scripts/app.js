@@ -35,7 +35,8 @@ angular.module('hopsWorksApp', [
   'rzModule',
   'isteven-multi-select',
   'nvd3',
-  'ui.toggle'
+  'ui.toggle',
+  'ngFileSaver'
 ])
         .config(['$routeProvider', '$httpProvider', '$compileProvider', 'flowFactoryProvider', 'accordionConfig',
           function ($routeProvider, $httpProvider, $compileProvider, flowFactoryProvider, accordionConfig) {
@@ -88,25 +89,25 @@ angular.module('hopsWorksApp', [
                       templateUrl: 'views/delahopsDataset.html',
                       controller: 'HopsDatasetCtrl as publicDataset',
                       resolve: {
-                        auth: ['$rootScope', '$q', '$location', 'AuthService', '$cookies',
-                          function ($rootScope, $q, $location, AuthService, $cookies) {
-                            return AuthService.session().then(
-                                    function (success) {
-                                      if($rootScope.isDelaEnabled) {
-                                        $cookies.put("email", success.data.data.value);
-                                      } else {
-                                        return $q.reject();
-                                      }
-                                    },
-                                    function (err) {
-                                      $cookies.remove("email");
-                                      $cookies.remove("projectID");
-                                      $location.path('/login');
-                                      $location.replace();
-                                      return $q.reject(err);
-                                    });
-                          }]
-                      }
+                        auth: ['$rootScope', '$q', '$location', '$cookies', 'HopssiteService',
+                          function ($rootScope, $q, $location, $cookies, HopssiteService) {
+                            return HopssiteService.getServiceInfo("dela").then(function (success) {
+                              if (success.data.status === 1 ) {
+                                $rootScope['isDelaEnabled'] = true;
+                              } else {
+                                $rootScope['isDelaEnabled'] = false;
+                                $location.path('/');
+                                return $q.reject();
+                              }
+                            }, function (error) {
+                              $rootScope['isDelaEnabled'] = false;
+                              $cookies.remove("email");
+                              $cookies.remove("projectID");
+                              $location.path('/login');
+                              $location.replace();
+                              return $q.reject(error);
+                            });
+                          }]}
                     })
                     .when('/delaclusterDataset', {
                       templateUrl: 'views/delaclusterDataset.html',
@@ -135,20 +136,44 @@ angular.module('hopsWorksApp', [
                         auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
                           function ($q, $location, AuthService, $cookies, VariablesService) {
                             return AuthService.session().then(
-                                    function (success) {
-                                      $cookies.put("email", success.data.data.value);
-                                      $location.path('/');
-                                      $location.replace();
-                                      return $q.when(success);
-                                    },
-                                    function (err) {
-                                      VariablesService.getTwofactor().then(
-                                              function (success) {
-                                                $cookies.put("otp", success.data.successMessage);
-                                              }, function (error) {
-
-                                      });
-                                    });
+                              function (success) {
+                                $cookies.put("email", success.data.data.value);
+                                $location.path('/');
+                                $location.replace();
+                                return $q.when(success);
+                              },
+                              function (err) {
+                                VariablesService.getAuthStatus().then(
+                                  function (success) {
+                                    $cookies.put("otp", success.data.twofactor);
+                                    $cookies.put("ldap", success.data.ldap);
+                                  }, function (error) {
+                                });
+                              });
+                          }]
+                      }
+                    })
+                    .when('/ldapLogin', {
+                      templateUrl: 'views/ldapLogin.html',
+                      controller: 'LdapLoginCtrl as loginCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies', 'VariablesService',
+                          function ($q, $location, AuthService, $cookies, VariablesService) {
+                            return AuthService.session().then(
+                              function (success) {
+                                $cookies.put("email", success.data.data.value);
+                                $location.path('/');
+                                $location.replace();
+                                return $q.when(success);
+                              },
+                              function (err) {
+                                VariablesService.getAuthStatus().then(
+                                  function (success) {
+                                    $cookies.put("otp", success.data.twofactor);
+                                    $cookies.put("ldap", success.data.ldap);
+                                  }, function (error) {
+                                });
+                              });
                           }]
                       }
                     })
@@ -574,8 +599,8 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/tensorflow', {
-                      templateUrl: 'views/tensorflow.html',
+                    .when('/project/:projectID/tfserving', {
+                      templateUrl: 'views/tfServing.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',

@@ -30,8 +30,8 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 import javax.persistence.EntityExistsException;
@@ -54,7 +54,7 @@ public class KafkaService {
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
 
   private Integer projectId;
   private Project project;
@@ -193,7 +193,7 @@ public class KafkaService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     String userEmail = sc.getUserPrincipal().getName();
-    Users user = userManager.getUserByEmail(userEmail);
+    Users user = userFacade.findByEmail(userEmail);
     if (projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");

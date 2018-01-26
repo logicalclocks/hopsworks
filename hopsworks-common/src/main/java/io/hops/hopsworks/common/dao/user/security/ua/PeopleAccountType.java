@@ -18,7 +18,12 @@ public enum PeopleAccountType {
    * Feel free to replace them by useful values.
    * 
    */
-  ZERO(0), ONE(1),TWO(2),THREE(3),FOUR(4),FIVE(5),SIX(6),SEVEN(7),HEIGHT(8),NINE(9),
+  ZERO(0), ONE(1),TWO(2),THREE(3),FOUR(4),FIVE(5),SIX(6),SEVEN(7),HEIGHT(8),  
+
+  // Mark account as LDAP
+  @XmlEnumValue("LDAP_ACCOUNT")
+  LDAP_ACCOUNT_TYPE(9),
+  
   // For mobile account types classification
   @XmlEnumValue("M_ACCOUNT_TYPE")
   M_ACCOUNT_TYPE(10),  //kept number 10 and 11 to keep retrocompatibility

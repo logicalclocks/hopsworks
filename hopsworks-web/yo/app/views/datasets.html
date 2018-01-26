@@ -82,8 +82,10 @@
                                     title="{{dataset.name.length > 17 ? dataset.name:''}}">
                                 {{dataset.name| cut:true:17:'...'}}
                               </span>
-                              <span class="glyphicon glyphicon-edit pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
-                                    title="This dataset is editable by all project members."></span>
+                              <span class="fa fa-user pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
+                                    title="This dataset is group writable and sticky bit is set."></span>
+                              <span class="fa fa-users pull-right" ng-if="dataset.permission === 'rwxrwx---'" data-toggle="tooltip"
+                                    title="This dataset is group writable."></span>
                               <br/>
                               <small><b>Owner:</b>
                                 <span data-toggle="tooltip"
@@ -148,30 +150,34 @@
                                 Remove Dataset</span>
                             </a>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission !== 'rwxrwx--T'"
-                              ng-show="projectCtrl.role === 'Data owner'  && dataset.publicDs === 0">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="2"
-                               ng-click="datasetsCtrl.makeEditable(dataset.name)">
-                              <span><i class="glyphicon glyphicon-edit"></i>
-                                Make Editable</span>
+                          
+                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner'">
+                            <a tabindex="-1">
+                              <span><i class="glyphicon glyphicon-edit"></i>Permissions</span>
                             </a>
+                            <ul class="dropdown-menu">
+                              <li ng-if="dataset.permission === 'rwxrwx--T' || dataset.permission === 'rwxrwx---'">
+                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'OWNER_ONLY'); $event.stopPropagation();">
+                                  <span><i class="fa fa-lock"></i> Owner only</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.permission !== 'rwxrwx--T'">
+                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
+                                  <span><i class="fa fa-user"></i> Group writable & sticky bit set</span>
+                                </a>
+                              </li>
+                              <li ng-if="dataset.permission !== 'rwxrwx---'">
+                                <a tabindex="-1" ng-click="datasetsCtrl.permissions(dataset.name, 'GROUP_WRITABLE'); $event.stopPropagation();">
+                                  <span><i class="fa fa-users"></i> Group writable</span>
+                                </a>
+                              </li>
+                            </ul>
                           </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && dataset.permission === 'rwxrwx--T'" ng-show="projectCtrl.role === 'Data owner'">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="2"
-                               ng-click="datasetsCtrl.removeEditable(dataset.name)">
-                              <span><i class="glyphicon glyphicon-edit"></i>
-                                Remove Editable</span>
-                            </a>
-                          </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" class="divider"></li>
+                          <li ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner'" class="divider"></li>
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
-                               tabindex="3"
+                               tabindex="4"
                                ng-click="metadataCtrl.attachTemplate(dataset); $event.stopPropagation();">
                               <span><i class="fa fa-upload"></i>
                                 Add metadata</span>
@@ -180,7 +186,7 @@
                           <li ng-if="dataset.name.indexOf('::') === -1" ng-show="projectCtrl.role === 'Data owner' && dataset.publicDs === 0">
                             <a class="pointer"
                                role="menuitem"
-                               tabindex="4"
+                               tabindex="5"
                                ng-click="metadataCtrl.detachTemplate(dataset); $event.stopPropagation();">
                               <span><i class="fa fa-download"></i>
                                 Remove metadata</span>
@@ -206,7 +212,7 @@
                             </a>
                           </li>
                           <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
+                          <li ng-controller="DelaClientCtrl as delaClientCtrl" class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && projectCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
                             <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
                             <ul class="dropdown-menu">
                               <li ng-if="dataset.publicDs === 0">
@@ -219,7 +225,7 @@
                                   <span><i class="fa fa-server"></i> Cluster</span>
                                 </a>
                               </li>
-                              <li ng-if="dataset.publicDs === 0 && isDelaEnabled">
+                              <li ng-if="dataset.publicDs === 0 && isDelaEnabled && delaClientCtrl.hopsUploadEnabled()">
                                 <a tabindex="-1" ng-click="datasetsCtrl.shareWithHops(dataset.id); $event.stopPropagation();">
                                   <span><i class="fa fa-globe"></i> Hops</span>
                                 </a>
@@ -283,7 +289,7 @@
                             <div class="icon">
                               <i class="glyphicon glyphicon-folder-open"></i>
                             </div>
-                            Select a DataSet to view its details.
+                            Click on a DataSet's name to view its details.
                           </div>
                         </div>
                         <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-bordred table-striped" style="margin-top: 16px;">

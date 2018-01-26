@@ -222,7 +222,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              shareDataset: function (size, dsName) {
+              shareDataset: function (size, dsName, permissions) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/shareDataset.html',
                   controller: 'ShareDatasetCtrl as shareDatasetCtrl',
@@ -241,14 +241,17 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
+                    }, 
+                    permissions: function () {
+                      return permissions;
                     }
                   }
                 });
                 return modalInstance.result;
               },
-              makeEditable: function (size, dsName) {
+              permissions: function (size, dsName, permissions) {
                 var modalInstance = $uibModal.open({
-                  templateUrl: 'views/makeEditable.html',
+                  templateUrl: 'views/datasetPermissions.html',
                   controller: 'ShareDatasetCtrl as shareDatasetCtrl',
                   size: size,
                   resolve: {
@@ -265,30 +268,9 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
-                    }
-                  }
-                });
-                return modalInstance.result;
-              },
-              removeEditable: function (size, dsName) {
-                var modalInstance = $uibModal.open({
-                  templateUrl: 'views/removeEditable.html',
-                  controller: 'ShareDatasetCtrl as shareDatasetCtrl',
-                  size: size,
-                  resolve: {
-                    auth: ['$q', '$location', 'AuthService',
-                      function ($q, $location, AuthService) {
-                        return AuthService.session().then(
-                                function (success) {
-                                },
-                                function (err) {
-                                  $location.path('/login');
-                                  $location.replace();
-                                  return $q.reject(err);
-                                });
-                      }],
-                    dsName: function () {
-                      return dsName;
+                    },
+                    permissions: function () {
+                      return permissions;
                     }
                   }
                 });
@@ -313,6 +295,9 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
+                    }, 
+                    permissions: function () {
+                      return permissions;
                     }
                   }
                 });
@@ -1154,5 +1139,21 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              ldapUserConsent: function (size, data, val) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/ldapUserConsentModal.html',
+                  controller: 'LdapUserConsentModalCtrl as ldapUserConsentModalCtrl',
+                  size: size,
+                  resolve: {
+                    data: function () {
+                      return data;
+                    },
+                    val: function () {
+                      return val;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              }
             };
           }]);

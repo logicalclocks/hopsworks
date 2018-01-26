@@ -28,6 +28,10 @@
     <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
     <param-value>65535</param-value>
   </context-param>
+  <error-page>
+    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    <location>/expired.xhtml</location>
+  </error-page> 
   <servlet>
     <servlet-name>Faces Servlet</servlet-name>
     <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -88,18 +92,18 @@
     </web-resource-collection>
   </security-constraint>
   <login-config>
-    <auth-method>BASIC</auth-method>
+    <auth-method>FORM</auth-method>
     <realm-name>cauthRealm</realm-name>
-    <!--    <form-login-config>
-      <form-login-page>/hopsworks/#!/login</form-login-page>
+    <form-login-config>
+      <form-login-page>/login.xhtml</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
-    </form-login-config>-->
+    </form-login-config>
   </login-config>  
   
   <session-config>
     <session-timeout>600</session-timeout>
     <cookie-config>
-      <name>SESSION</name>
+      <name>SESSION-ADMIN</name>
       <path>/</path>
       <http-only>false</http-only>
       <secure>false</secure>

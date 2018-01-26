@@ -140,7 +140,7 @@
     <!-- LLAP monitor proxy servlet -->
     <servlet>
         <servlet-name>LlapMonitorProxyServlet</servlet-name>
-        <servlet-class>io.hops.hopsworks.api.admin.LlapMonitorProxyServlet</servlet-class>
+        <servlet-class>io.hops.hopsworks.api.admin.llap.LlapMonitorProxyServlet</servlet-class>
         <init-param>
             <param-name>targetUri</param-name>
             <param-value>http://{host}:15002/</param-value>
@@ -221,7 +221,7 @@
             <role-name>HOPS_USER</role-name>
         </auth-constraint>
     </security-constraint>
-    <security-constraint>
+<!--    <security-constraint>
         <display-name>Grafana proxy servlet</display-name>
         <web-resource-collection>
             <web-resource-name>GrafanaProxyServlet</web-resource-name>
@@ -234,7 +234,7 @@
             <role-name>HOPS_ADMIN</role-name>
             <role-name>HOPS_USER</role-name>
         </auth-constraint>
-    </security-constraint>
+    </security-constraint>-->
     <security-constraint>
         <display-name>Zeppelin SocketConstraint</display-name>
         <web-resource-collection>

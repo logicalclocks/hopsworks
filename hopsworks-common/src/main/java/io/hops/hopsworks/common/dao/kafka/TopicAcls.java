@@ -55,7 +55,10 @@ import io.hops.hopsworks.common.dao.user.Users;
       query
       = "SELECT t FROM TopicAcls t WHERE t.principal = :principal AND t.role = :role AND t.host = :host AND "
           + "t.operationType = :operationType AND t.permissionType = :permissionType AND "
-          + "t.projectTopics.projectTopicsPK.topicName = :topicName")})
+          + "t.projectTopics.projectTopicsPK.topicName = :topicName"),
+  @NamedQuery(name = "TopicAcls.deleteByUser",
+      query = "DELETE FROM TopicAcls t WHERE t.user = :user AND t.projectTopics.projectTopicsPK.projectId = " +
+          ":projectId")})
 public class TopicAcls implements Serializable {
 
   private static final long serialVersionUID = 1L;

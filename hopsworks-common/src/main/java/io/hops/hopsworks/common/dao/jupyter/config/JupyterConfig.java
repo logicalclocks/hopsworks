@@ -5,6 +5,14 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.templates.AppendConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import io.hops.hopsworks.common.util.templates.IgnoreConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.OverwriteConfigReplacementPolicy;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,10 +23,16 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 
 public class JupyterConfig {
@@ -31,6 +45,13 @@ public class JupyterConfig {
   private static final String JUPYTER_CUSTOM_JS = "/custom/custom.js";
   private static final String SPARKMAGIC_CONFIG = "/config.json";
   private static final int DELETE_RETRY = 10;
+  private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
+  // e.x. spark.files=hdfs://someFile,hdfs://anotherFile
+  private static final Pattern SPARK_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
+  private static final ConfigReplacementPolicy OVERWRITE = new OverwriteConfigReplacementPolicy();
+  private static final ConfigReplacementPolicy IGNORE = new IgnoreConfigReplacementPolicy();
+  private static final ConfigReplacementPolicy APPEND = new AppendConfigReplacementPolicy();
+  private final Set<String> blacklistedSparkProperties;
 
   public static JupyterConfig COMMON_CONF;
 
@@ -71,6 +92,7 @@ public class JupyterConfig {
     runDirPath = notebookPath + File.separator + "run";
     this.token = token;
     try {
+      blacklistedSparkProperties = readBlacklistedSparkProperties();
       newDir = createJupyterDirs();
       createConfigFiles(nameNodeEndpoint, port, js);
     } catch (Exception e) {
@@ -82,13 +104,16 @@ public class JupyterConfig {
       LOGGER.log(Level.SEVERE,
           "Error in initializing JupyterConfig for project: {0}. {1}",
           new Object[]{this.project.getName(), e});
+      if (e instanceof IllegalArgumentException) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "Could not configure Jupyter, " + e.getMessage());
+      }
       throw new AppException(
           Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "Could not configure Jupyter. Report a bug.");
-
     }
   }
-
+  
   public String getProjectUserPath() {
     return projectUserPath;
   }
@@ -312,25 +337,12 @@ public class JupyterConfig {
       }
 
       String sparkProps = js.getSparkParams();
-      if (sparkProps != null && !sparkProps.isEmpty()) {
-        String lines[] = sparkProps.split("\\r?\\n");
-        StringBuffer sb = new StringBuffer();
-        for (String l : lines) {
-          // Trim white-spaces on the left and the right of each line
-          String leftRemoved = l.replaceAll("^\\s+", "");
-          String trimmedLine = leftRemoved.replaceAll("\\s+$", "");
-          String[] props = trimmedLine.split(" +");
-          for (int x = 0; x < props.length; x++) {
-            if (x == 0) {
-              sb.append("\"").append(props[x]).append("\": ");
-            } else {
-              sb.append("\"").append(props[x]).append("\",").append(System.lineSeparator());
-              x = props.length; // ignore any more properties on the same line
-            }
-          }
-        }
-        sparkProps = sb.toString();
-      }
+      
+      // Spark properties user has defined in the jupyter dashboard
+      Map<String, String> userSparkProperties = parseSparkProperties(sparkProps);
+      // Validate user defined properties
+      validateUserProperties(userSparkProperties.keySet());
+      
       LOGGER.info("SparkProps are: " + System.lineSeparator() + sparkProps);
 
       boolean isTensorFlow = js.getMode().compareToIgnoreCase("tensorflow") == 0;
@@ -339,52 +351,201 @@ public class JupyterConfig {
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
           + ",jupyter,notebook,?";
+      String extraClassPath = settings.getHopsLeaderElectionJarPath();
+  
+      // Map of default/system Spark(Magic) properties <Property_Name, ConfigProperty>
+      // Property_Name should be either the SparkMagic property name or Spark property name
+      // The replacement pattern is defined in ConfigProperty
+      Map<String, ConfigProperty> sparkMagicParams = new HashMap<>();
+      sparkMagicParams.put("livy_ip", new ConfigProperty("livy_ip", IGNORE, settings.getLivyIp()));
+      sparkMagicParams.put("jupyter_home", new ConfigProperty("jupyter_home", IGNORE, this.confDirPath));
+      sparkMagicParams.put("driverCores", new ConfigProperty("driver_cores", IGNORE,
+          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+              Integer.toString(js.getAppmasterCores())));
+      sparkMagicParams.put("driverMemory", new ConfigProperty("driver_memory", IGNORE,
+          Integer.toString(js.getAppmasterMemory()) + "m"));
+      sparkMagicParams.put("numExecutors", new ConfigProperty("num_executors", IGNORE,
+          (isHorovod) ? "1":
+              (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+                  (isSparkDynamic) ? Integer.toString(js.getDynamicMinExecutors()):
+                      Integer.toString(js.getNumExecutors())));
+      sparkMagicParams.put("executorCores", new ConfigProperty("executor_cores", IGNORE,
+          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+              Integer.toString(js.getNumExecutorCores())));
+      sparkMagicParams.put("executorMemory", new ConfigProperty("executor_memory", IGNORE,
+          Integer.toString(js.getExecutorMemory()) + "m"));
+      sparkMagicParams.put("proxyUser", new ConfigProperty("hdfs_user", IGNORE, this.hdfsUser));
+      sparkMagicParams.put("name", new ConfigProperty("spark_magic_name", IGNORE,
+          "remotesparkmagics-jupyter-" + js.getMode()));
+      sparkMagicParams.put("queue", new ConfigProperty("yarn_queue", IGNORE, "default"));
+      sparkMagicParams.put("archives", new ConfigProperty("archives", IGNORE, js.getArchives()));
+      sparkMagicParams.put("jars", new ConfigProperty("jars", IGNORE, js.getJars()));
+      sparkMagicParams.put("pyFiles", new ConfigProperty("pyFiles", IGNORE, js.getPyFiles()));
+      sparkMagicParams.put("files", new ConfigProperty("files", IGNORE, sparkFiles.toString()));
+      
+      // Spark properties
+      sparkMagicParams.put("spark.executorEnv.PATH", new ConfigProperty("spark_executorEnv_PATH",
+          APPEND, this.settings.getAnacondaProjectDir(project.getName())
+          + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
+      
+      sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK_PYTHON", new ConfigProperty("pyspark_bin",
+          IGNORE, this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+  
+      sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK_DRIVER_PYTHON", new ConfigProperty("pyspark_bin",
+          IGNORE, this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+  
+      sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK3_PYTHON", new ConfigProperty("pyspark_bin",
+          IGNORE, this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+  
+      sparkMagicParams.put("spark.yarn.appMasterEnv.LD_LIBRARY_PATH", new ConfigProperty(
+          "spark_yarn_appMaster_LD_LIBRARY_PATH", APPEND,
+          this.settings.getJavaHome() + "/jre/lib/amd64/server:" + this.settings.getCudaDir()
+              + "/lib64:" + this.settings.getHadoopSymbolicLinkDir() + "/lib/native"));
+      
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_HOME", new ConfigProperty("hadoop_home",
+          IGNORE, this.settings.getHadoopSymbolicLinkDir()));
+      
+      sparkMagicParams.put("spark.yarn.appMasterEnv.LIBHDFS_OPTS", new ConfigProperty(
+          "spark_yarn_appMasterEnv_LIBHDFS_OPTS", APPEND,
+          "-Xmx96m -Dlog4j.configuration=" + this.settings.getHadoopSymbolicLinkDir()
+              +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA"));
+      
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_HDFS_HOME", new ConfigProperty(
+          "hadoop_home", IGNORE, this.settings.getHadoopSymbolicLinkDir()));
+  
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_VERSION", new ConfigProperty(
+          "hadoop_version", IGNORE, this.settings.getHadoopVersion()));
+      
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_USER_NAME", new ConfigProperty(
+          "hdfs_user", IGNORE, this.hdfsUser));
+  
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HDFS_BASE_DIR", new ConfigProperty(
+          "spark_yarn_appMasterEnv_HDFS_BASE_DIR", IGNORE,
+          "hdfs://Projects/" + this.project.getName() + js.getBaseDir()));
+      
+      sparkMagicParams.put("spark.yarn.stagingDir", new ConfigProperty(
+          "spark_yarn_stagingDir", IGNORE,
+          "hdfs:///Projects/" + this.project.getName() + "/Resources"));
+      
+      sparkMagicParams.put("spark.driver.extraLibraryPath", new ConfigProperty(
+          "spark_driver_extraLibraryPath", APPEND,
+          this.getSettings().getCudaDir() + "/lib64"));
+      
+      sparkMagicParams.put("spark.driver.extraJavaOptions", new ConfigProperty(
+          "spark_driver_extraJavaOptions", APPEND, extraJavaOptions));
+      
+      sparkMagicParams.put("spark.driver.extraClassPath", new ConfigProperty(
+          "spark_driver_extraClassPath", APPEND, extraClassPath));
+  
+      sparkMagicParams.put("spark.executor.extraClassPath", new ConfigProperty(
+          "spark_executor_extraClassPath", APPEND, extraClassPath));
+      
+      sparkMagicParams.put("spark.executorEnv.MPI_NP", new ConfigProperty(
+          "spark_executorEnv_MPI_NP", IGNORE, (isHorovod) ? Integer.toString(js.getNumMpiNp()) : ""));
+      
+      sparkMagicParams.put("spark.executorEnv.HADOOP_USER_NAME", new ConfigProperty(
+          "hdfs_user", IGNORE, this.hdfsUser));
+      
+      sparkMagicParams.put("spark.executorEnv.HADOOP_HOME", new ConfigProperty(
+          "hadoop_home", IGNORE, this.settings.getHadoopSymbolicLinkDir()));
+      
+      sparkMagicParams.put("spark.executorEnv.LIBHDFS_OPTS", new ConfigProperty(
+          "spark_executorEnv_LIBHDFS_OPTS", APPEND,
+          "-Xmx96m -Dlog4j.configuration=" + this.settings.getHadoopSymbolicLinkDir() +
+              "/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA"));
+      
+      sparkMagicParams.put("spark.executorEnv.PYSPARK_PYTHON", new ConfigProperty(
+          "pyspark_bin", IGNORE,
+          this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+  
+      sparkMagicParams.put("spark.executorEnv.PYSPARK3_PYTHON", new ConfigProperty(
+          "pyspark_bin", IGNORE,
+          this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+      
+      sparkMagicParams.put("spark.executorEnv.LD_LIBRARY_PATH", new ConfigProperty(
+          "spark_executorEnv_LD_LIBRARY_PATH", APPEND,
+          this.settings.getJavaHome() + "/jre/lib/amd64/server:" + this.settings
+              .getCudaDir() + "/lib64:" + this.settings.getHadoopSymbolicLinkDir() + "/lib/native"));
+      
+      sparkMagicParams.put("spark.executorEnv.HADOOP_HDFS_HOME", new ConfigProperty(
+          "hadoop_home", IGNORE, this.settings.getHadoopSymbolicLinkDir()));
+      
+      sparkMagicParams.put("spark.executorEnv.HADOOP_VERSION", new ConfigProperty(
+          "hadoop_version", IGNORE, this.settings.getHadoopVersion()));
+      
+      sparkMagicParams.put("spark.executorEnv.extraJavaOptions", new ConfigProperty(
+          "spark_executorEnv_extraJavaOptions", APPEND, extraJavaOptions));
+      
+      sparkMagicParams.put("spark.executorEnv.HDFS_BASE_DIR", new ConfigProperty(
+          "spark_executorEnv_HDFS_BASE_DIR", IGNORE,
+          "hdfs://Projects/" + this.project.getName() + js.getBaseDir()));
+      
+      sparkMagicParams.put("spark.pyspark.python", new ConfigProperty(
+          "pyspark_bin", IGNORE,
+          this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
+      
+      sparkMagicParams.put("spark.shuffle.service.enabled", new ConfigProperty("", IGNORE, "true"));
+      
+      sparkMagicParams.put("spark.submit.deployMode", new ConfigProperty("", IGNORE, "cluster"));
+  
+      sparkMagicParams.put("spark.tensorflow.application", new ConfigProperty(
+          "spark_tensorflow_application", IGNORE,
+          Boolean.toString(isTensorFlow || isTensorFlowOnSpark || isHorovod)));
+  
+      sparkMagicParams.put("spark.tensorflow.num.ps", new ConfigProperty(
+          "spark_tensorflow_num_ps", IGNORE,
+          (isTensorFlowOnSpark) ? Integer.toString(js.getNumTfPs()) : "0"));
+      
+      sparkMagicParams.put("spark.executor.gpus", new ConfigProperty(
+          "spark_executor_gpus", IGNORE,
+          (isTensorFlow || isTensorFlowOnSpark) ? Integer.toString(js.getNumTfGpus()):
+              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumTfGpus()): "0"));
+      
+      sparkMagicParams.put("spark.dynamicAllocation.enabled", new ConfigProperty(
+          "spark_dynamicAllocation_enabled", OVERWRITE,
+          Boolean.toString(isSparkDynamic || isTensorFlow || isTensorFlowOnSpark || isHorovod)));
+      
+      sparkMagicParams.put("spark.dynamicAllocation.initialExecutors", new ConfigProperty(
+          "spark_dynamicAllocation_initialExecutors", OVERWRITE,
+          (isTensorFlow) ? "0" :
+              (isHorovod) ? "1" :
+                  (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  Integer.toString(js.getDynamicMinExecutors())));
+      
+      sparkMagicParams.put("spark.dynamicAllocation.minExecutors", new ConfigProperty(
+          "spark_dynamicAllocation_minExecutors", OVERWRITE,
+          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "0" :
+              Integer.toString(js.getDynamicMinExecutors())));
+      
+      sparkMagicParams.put("spark.dynamicAllocation.maxExecutors", new ConfigProperty(
+          "spark_dynamicAllocation_maxExecutors", OVERWRITE,
+          (isTensorFlow) ? Integer.toString(js.getNumExecutors()) :
+              (isHorovod) ? "1" :
+                  (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  Integer.toString(js.getDynamicMaxExecutors())));
+      
+      sparkMagicParams.put("spark.dynamicAllocation.executorIdleTimeout", new ConfigProperty(
+          "spark_dynamicAllocation_executorIdleTimeout", OVERWRITE,
+          (isTensorFlowOnSpark) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
+              "60s"));
+      
+      sparkMagicParams.put("spark.metrics.conf", new ConfigProperty(
+          "spark_metrics_conf", OVERWRITE, settings.getSparkMetricsPath()));
+      
+      sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
+          "spark_task_maxFailures", OVERWRITE,
+          (isHorovod || isTensorFlow || isTensorFlowOnSpark) ? "1": "4"));
+      
+      // Merge system and user defined properties
+      Map<String, String> sparkParamsAfterMerge = mergeHopsworksAndUserParams(sparkMagicParams, userSparkProperties);
+      
       StringBuilder sparkmagic_sb
           = ConfigFileGenerator.
               instantiateFromTemplate(
                   ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE,
-                  "spark_params", sparkProps,
-                  "livy_ip", settings.getLivyIp(),
-                  "hdfs_user", this.hdfsUser,
-                  "driver_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
-                              Integer.toString(js.getAppmasterCores()),
-                  "driver_memory", Integer.toString(js.getAppmasterMemory()) + "m",
-                  "num_executors", (isSparkDynamic || isTensorFlow) ? "0" : Integer.toString(js.getNumExecutors()),
-                  "executor_cores", (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
-                              Integer.toString(js.getNumExecutorCores()),
-                  "executor_memory", Integer.toString(js.getExecutorMemory()) + "m",
-                  "dynamic_executors", Boolean.toString(isSparkDynamic || isTensorFlow),
-                  "min_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicMinExecutors()),
-                  "initial_executors", (isTensorFlow) ? "0" : Integer.toString(js.getDynamicInitialExecutors()),
-                  "max_executors", (isTensorFlow) ? Integer.toString(js.getNumExecutors()):
-                              Integer.toString(js.getDynamicMaxExecutors()),
-                  "archives", js.getArchives(),
-                  "jars", js.getJars(),
-                  "files", sparkFiles.toString(),
-                  "pyFiles", js.getPyFiles(),
-                  "yarn_queue", "default",
-                  "num_ps", (isTensorFlowOnSpark) ? Integer.toString(js.getNumTfPs()) : "0",
-                  "num_gpus", (isTensorFlow || isTensorFlowOnSpark) ? Integer.toString(js.getNumTfGpus()):
-                              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumTfGpus()): "0",
-                  "mpi_np", (isHorovod) ? Integer.toString(js.getNumMpiNp()) : "",
-                  "tensorflow", Boolean.toString(isTensorFlow || isTensorFlowOnSpark || isHorovod),
-                  "jupyter_home", this.confDirPath,
-                  "project", this.project.getName(),
-                  "mode", js.getMode(),
-                  "nn_endpoint", this.nameNodeEndpoint,
-                  "spark_user", this.settings.getSparkUser(),
-                  "java_home", this.settings.getJavaHome(),
-                  "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
-                  "hadoop_version", this.settings.getHadoopVersion(),
-                  "pyspark_bin", this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python",
-                  "anaconda_dir", this.settings.getAnacondaDir(),
-                  "cuda_dir", this.settings.getCudaDir(),
-                  "anaconda_env", this.settings.getAnacondaProjectDir(project.getName()),
-                  "sparkhistoryserver_ip", this.settings.getSparkHistoryServerIp(),
-                  "metrics_path", settings.getSparkMetricsPath(),
-                  "exec_timeout", (isTensorFlow) ? "5s" : "60s",
-                  "extra_java_options", extraJavaOptions
-              );
+                  sparkParamsAfterMerge);
+      
+      
       createdSparkmagic = ConfigFileGenerator.createConfigFile(
           sparkmagic_config_file,
           sparkmagic_sb.toString());
@@ -403,7 +564,118 @@ public class JupyterConfig {
     // Add this local file to 'spark: file' to copy it to hdfs and localize it.
     return createdJupyter || createdSparkmagic || createdCustomJs;
   }
-
+  
+  /**
+   * Merge system and user defined configuration properties based on the replacement policy of each property
+   * @param hopsworksParams System/default properties
+   * @param userParameters User defined properties parsed by parseSparkProperties(String sparkProps)
+   * @return A map with the replacement pattern and value for each property
+   */
+  private Map<String, String> mergeHopsworksAndUserParams(Map<String, ConfigProperty> hopsworksParams,
+      Map<String, String> userParameters) {
+    Map<String, String> finalParams = new HashMap<>();
+    Set<String> notReplacedUserParams = new HashSet<>();
+    
+    for (Map.Entry<String, String> userParam : userParameters.entrySet()) {
+      if (hopsworksParams.containsKey(userParam.getKey())) {
+        ConfigProperty prop = hopsworksParams.get(userParam.getKey());
+        prop.replaceValue(userParam.getValue());
+        finalParams.put(prop.getReplacementPattern(), prop.getValue());
+      } else {
+        notReplacedUserParams.add(userParam.getKey());
+      }
+    }
+  
+    String userParamsStr = "";
+    if (!notReplacedUserParams.isEmpty()) {
+      StringBuilder userParamsSb = new StringBuilder();
+      userParamsSb.append(",\n");
+      notReplacedUserParams.stream()
+          .forEach(p ->
+            userParamsSb.append("\"").append(p).append("\": ").append("\"").append(userParameters.get(p))
+                .append("\"," + "\n"));
+  
+      userParamsStr = userParamsSb.toString();
+      // Remove last comma and add a new line char
+      userParamsStr = userParamsStr.trim().substring(0, userParamsStr.length() - 2) + "\n";
+    }
+    finalParams.put("spark_user_defined_properties", userParamsStr);
+    
+    for (ConfigProperty configProperty : hopsworksParams.values()) {
+      finalParams.putIfAbsent(configProperty.getReplacementPattern(), configProperty.getValue());
+    }
+    
+    return finalParams;
+  }
+  
+  /**
+   * Parse configuration properties defined by the user in Jupyter dashboard
+   * @param sparkProps Spark properties in one string
+   * @return Map of property name and value
+   */
+  private Map<String, String> parseSparkProperties(String sparkProps) throws IOException {
+    Map<String, String> sparkProperties = new HashMap<>();
+    if (sparkProps != null) {
+      Arrays.asList(NEW_LINE_PATTERN.split(sparkProps)).stream()
+          .map(l -> l.trim())
+          .forEach(l -> {
+              // User defined properties should be in the form of property_name=value
+              Matcher propMatcher = SPARK_PROPS_PATTERN.matcher(l);
+              if (propMatcher.matches()) {
+                sparkProperties.put(propMatcher.group(1), propMatcher.group(2));
+              }
+            });
+    }
+    if (LOGGER.isLoggable(Level.FINE)) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("User defined spark properties are: ");
+      if (sparkProperties.isEmpty()) {
+        sb.append("NONE");
+        LOGGER.log(Level.FINE, sb.toString());
+      } else {
+        for (Map.Entry<String, String> prop : sparkProperties.entrySet()) {
+          sb.append(prop.getKey()).append("=").append(prop.getValue()).append("\n");
+        }
+        LOGGER.log(Level.FINE, sb.toString());
+      }
+    }
+    return sparkProperties;
+  }
+  
+  /**
+   * Validate user defined properties against a list of blacklisted Spark properties
+   * @param userProperties Parsed user defined properties
+   */
+  private void validateUserProperties(Collection<String> userProperties) {
+    for (String userProperty : userProperties) {
+      if (blacklistedSparkProperties.contains(userProperty)) {
+        throw new IllegalArgumentException("User defined property <" + userProperty + "> is blacklisted!");
+      }
+    }
+  }
+  
+  /**
+   * Read blacklisted Spark properties from file
+   * @return Blacklisted Spark properties
+   * @throws IOException
+   */
+  private Set<String> readBlacklistedSparkProperties() throws IOException {
+    File sparkBlacklistFile = Paths.get(settings.getSparkDir(), Settings.SPARK_BLACKLISTED_PROPS).toFile();
+    LineIterator lineIterator = FileUtils.lineIterator(sparkBlacklistFile);
+    Set<String> blacklistedProps = new HashSet<>();
+    try {
+      while (lineIterator.hasNext()) {
+        String line = lineIterator.nextLine();
+        if (!line.startsWith("#")) {
+          blacklistedProps.add(line);
+        }
+      }
+      return blacklistedProps;
+    } finally {
+      LineIterator.closeQuietly(lineIterator);
+    }
+  }
+  
   /**
    * Closes all resources and deletes project dir
    * /srv/zeppelin/Projects/this.projectName recursive.

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui">
+     
+    <h:head>
+        <title>Type project name</title>
+        <style type="text/css">
+            .ui-widget {
+                font-size: 90%;
+            }
+        </style>
+    </h:head>
+     
+    <h:body>
+        <h:form>
+          <h:panelGrid columns="2" cellpadding="3">
+	    <h:outputText value="Project name: "/>
+	    <p:inputText value="#{projectsmanagement.projectNameForceCleanup}"/>
+	  </h:panelGrid>
+
+	  <p:commandButton value="Delete!" style="ui-button-danger"
+			   icon="ui-icon-alert" actionListener="#{projectsmanagement.selectedProjectForceCleanup}"/>
+        </h:form>
+    </h:body>
+     
+</html>

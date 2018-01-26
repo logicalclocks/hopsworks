@@ -75,34 +75,34 @@
                           <div class="col-md-5">
                             <label class="control-label">Status</label>
                             <fieldset>
-                                <label class="text-muted">Datasets</label>
-                                <div class="row" style="margin-left:15px; margin-bottom:0px">
-                                  <fieldset ng-if="projectCtrl.hdfsQuota() != null">
-                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                                      {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
-                                    </span>
-                                  </fieldset>
-                                </div>
-                                <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
-                                  <fieldset ng-if="projectCtrl.hdfsNsCount() != null">
-                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() === -1">
-                                      {{projectCtrl.hdfsNsCount()}} files
-                                    </span>
-                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !== -1">
-                                      {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
-                                    </span>
-                                  </fieldset>
-                                </div>
+                              <label class="text-muted">Datasets</label>
+                              <div class="row" style="margin-left:15px; margin-bottom:0px">
+                                <fieldset ng-if="projectCtrl.hdfsQuota() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                    {{projectCtrl.hdfsUsage()}} of {{projectCtrl.hdfsQuota()}} used
+                                  </span>
+                                </fieldset>
+                              </div>
+                              <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
+                                <fieldset ng-if="projectCtrl.hdfsNsCount() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() === -1">
+                                    {{projectCtrl.hdfsNsCount()}} files
+                                  </span>
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" ng-show="projectCtrl.hdfsNsQuota() !== -1">
+                                    {{projectCtrl.hdfsNsCount()}} files of {{projectCtrl.hdfsNsQuota()}} used
+                                  </span>
+                                </fieldset>
+                              </div>
                             </fieldset>
                             <fieldset ng-if="projectCtrl.isServiceEnabled('HIVE')">
                               <label class="text-muted">Hive Database</label>
 
                               <div class="row" style="margin-left:15px; margin-bottom:0px">
-                              <fieldset ng-if="projectCtrl.hiveHdfsQuota() != null">
-                                <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
-                                  {{projectCtrl.hiveHdfsUsage()}} of {{projectCtrl.hiveHdfsQuota()}} used
-                                </span>
-                              </fieldset>
+                                <fieldset ng-if="projectCtrl.hiveHdfsQuota() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px">
+                                    {{projectCtrl.hiveHdfsUsage()}} of {{projectCtrl.hiveHdfsQuota()}} used
+                                  </span>
+                                </fieldset>
                               </div>
                               <div class="row" style="margin-top: 10px; margin-left:15px; margin-bottom:0px">
                                 <fieldset ng-if="projectCtrl.hiveHdfsNsCount() != null">
@@ -117,14 +117,14 @@
 
                             </fieldset>
                             <fieldset>
-                                <label class="text-muted">CPU</label>
-                                <div class="row" style="margin-left:15px; margin-bottom:10px">
-                                  <fieldset ng-if="projectCtrl.yarnQuota() != null">
-                                    <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
-                                      {{projectCtrl.yarnQuota()}} CPU hours
-                                    </span>
-                                  </fieldset>
-                                </div>
+                              <label class="text-muted">CPU</label>
+                              <div class="row" style="margin-left:15px; margin-bottom:10px">
+                                <fieldset ng-if="projectCtrl.yarnQuota() != null">
+                                  <span style="margin-top: 40px; margin-left:10px; margin-bottom:0px" >
+                                    {{projectCtrl.yarnQuota()}} CPU hours
+                                  </span>
+                                </fieldset>
+                              </div>
                             </fieldset>
 
                             <fieldset>
@@ -139,7 +139,7 @@
                             </fieldset>
                             <div class="row" style="margin-left:15px; margin-bottom:0px">
                               <button class="btn btn-success" type="button" 
-                                      
+
                                       ng-disabled="projectCtrl.working"
                                       ng-click="projectCtrl.getCerts()">
                                 Export Certificates
@@ -174,8 +174,8 @@
                       <p class="lead">
                       <div><span> <label>Enable Python Kernel: 
                             <input type="checkbox" ng-init="pythonDepsCtrl.pythonKernelEnabled = true" ng-model="pythonDepsCtrl.pythonKernelEnabled"></label>
-                      <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonDepsCtrl.pythonKernelEnabled == true, 'fa-info' : pythonDepsCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project." 
-                                                          style="margin-left: 10px"></i></span>
+                          <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonDepsCtrl.pythonKernelEnabled == true, 'fa-info' : pythonDepsCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project." 
+                             style="margin-left: 10px"></i></span>
                       </div>
 
                       <div>
@@ -187,9 +187,8 @@
                           </button>
                           <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
                             <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('2.7')">Python 2.7</a></li>
-                            <!--                            <li class="divider"></li>
-                                                        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
-                                                        <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.5')">Python 3.5</a></li>-->
+                            <li class="divider"></li>
+                            <li role="menuitem"><a ng-click="pythonDepsCtrl.enable('3.6')">Python 3.6</a></li>
                           </ul>
                         </div>
                       </div>
@@ -215,8 +214,11 @@
                 <fieldset>
                   <div ng-show="pythonDepsCtrl.enabled" class="control-group col-md-offset-1">
                     <div style="margin-top: 5px;">
-                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
-                                         href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  
+                      <div>Conda Channel: <a uib-tooltip="You can search a different conda channel by entering a new channel name here." tooltip-placement="top"
+                                             href="#" data-inputclass="xwdith" editable-text="pythonDepsCtrl.condaChannel">{{ pythonDepsCtrl.condaChannel || 'default' }}</a></div>  
+
+                      <!--                      <div>Conda URL: <a uib-tooltip="You can search a different conda repository by entering a new URL for a channel here." tooltip-placement="top"
+                                                               href="#" data-inputclass="xwdith" editable-url="pythonDepsCtrl.condaUrl">{{ pythonDepsCtrl.condaUrl || 'empty' }}</a></div>  -->
                       <!--                          <input id="condaurl" ng-trim="false" class="form-control" 
                                                        type="text" required y
                                                        ng-pattern="/^\s*\w*\s*$/"

@@ -65,9 +65,6 @@ angular.module('hopsWorksApp')
                 fileDownload: function (fileName) {
                   location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/' + fileName;
                 },
-                getCerts: function (password) {
-                  location.href=getPathname() + '/api/project/' + id + '/dataset/fileDownload/certs/projectUserCerts.zip?password='+password;
-                },
                 compressFile: function(fileName) {
                   return $http.get('/api/project/' + id + '/dataset/compressFile/' + fileName);
                 },
@@ -116,22 +113,10 @@ angular.module('hopsWorksApp')
 
                   return $http(regReq);
                 },
-                makeEditable: function (dataSet) {
+                permissions: function (dataSet) {
                   var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/makeEditable',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: dataSet
-                  };
-
-                  return $http(regReq);
-                },
-                removeEditable: function (dataSet) {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + id + '/dataset/removeEditable',
+                    method: 'PUT',
+                    url: '/api/project/' + id + '/dataset/permissions',
                     headers: {
                       'Content-Type': 'application/json'
                     },

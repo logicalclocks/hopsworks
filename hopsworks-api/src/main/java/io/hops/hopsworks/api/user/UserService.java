@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.swagger.annotations.Api;
+import javax.mail.MessagingException;
 
 @Path("/user")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
@@ -102,13 +103,12 @@ public class UserService {
           @FormParam("lastName") String lastName,
           @FormParam("telephoneNum") String telephoneNum,
           @FormParam("toursState") Integer toursState,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
-
-    UserDTO userDTO = userController.updateProfile(sc.getUserPrincipal().
-            getName(), firstName, lastName, telephoneNum, toursState, req);
-
+    
+    Users user = userController.updateProfile(req.getRemoteUser(), firstName, lastName, telephoneNum, toursState, req);
+    UserDTO userDTO = new UserDTO(user);
+    
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
     json.setData(userDTO);
@@ -124,12 +124,10 @@ public class UserService {
           @FormParam("oldPassword") String oldPassword,
           @FormParam("newPassword") String newPassword,
           @FormParam("confirmedPassword") String confirmedPassword,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
 
-    userController.changePassword(sc.getUserPrincipal().getName(), oldPassword,
-            newPassword, confirmedPassword, req);
+    userController.changePassword(req.getRemoteUser(), oldPassword, newPassword, confirmedPassword, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
@@ -144,11 +142,9 @@ public class UserService {
   public Response changeSecurityQA(@FormParam("oldPassword") String oldPassword,
           @FormParam("securityQuestion") String securityQuestion,
           @FormParam("securityAnswer") String securityAnswer,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, MessagingException {
     JsonResponse json = new JsonResponse();
-    userController.changeSecQA(sc.getUserPrincipal().getName(), oldPassword,
-            securityQuestion, securityAnswer, req);
+    userController.changeSecQA(req.getRemoteUser(), oldPassword, securityQuestion, securityAnswer, req);
 
     json.setStatus("OK");
     json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
@@ -162,9 +158,8 @@ public class UserService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeTwoFactor(@FormParam("password") String password,
           @FormParam("twoFactor") boolean twoFactor,
-          @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
+    Users user = userBean.findByEmail(req.getRemoteUser());
 
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
@@ -189,30 +184,25 @@ public class UserService {
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getQRCode(@FormParam("password") String password,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+  public Response getQRCode(@FormParam("password") String password, @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
     Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
     if (user == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              ResponseMessages.USER_WAS_NOT_FOUND);
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), ResponseMessages.USER_WAS_NOT_FOUND);
     }
     if (password == null || password.isEmpty()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Password requierd.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Password requierd.");
     }
     byte[] qrCode;
     JsonResponse json = new JsonResponse();
-    qrCode = userController.getQRCode(user, password);
+    qrCode = userController.getQRCode(user, password, req);
     if (qrCode != null) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Two factor disabled.");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Two factor disabled.");
     }
     json.setStatus("OK");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST

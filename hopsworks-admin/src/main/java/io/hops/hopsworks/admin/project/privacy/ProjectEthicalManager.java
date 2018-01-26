@@ -14,7 +14,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 
 @ManagedBean(name = "projectEthicalManager")
@@ -29,7 +29,7 @@ public class ProjectEthicalManager implements Serializable {
   private ProjectFacade projectController;
 
   @EJB
-  AuditManager am;
+  AccountAuditFacade am;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;

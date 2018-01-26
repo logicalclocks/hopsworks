@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -67,8 +66,6 @@ public class RequestService {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private UserManager userBean;
-  @EJB
   private MessageController messageBean;
 
   private final static Logger logger = Logger.getLogger(RequestService.class.
@@ -87,7 +84,7 @@ public class RequestService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
     }
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Inode inode = inodes.findById(requestDTO.getInodeId());
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -216,7 +213,7 @@ public class RequestService {
               "Incomplete request!");
     }
     //should be removed when users and user merg.
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Project project = projectFacade.find(requestDTO.getProjectId());
 
     if (project == null) {

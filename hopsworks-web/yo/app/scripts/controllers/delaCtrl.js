@@ -7,7 +7,6 @@ angular.module('hopsWorksApp')
             self.preview = {};
             self.contents = [];
 
-
             self.remove = function (dataset) {
               if (dataset.torrentStatus === 'UPLOADING') {
                 ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? \n\

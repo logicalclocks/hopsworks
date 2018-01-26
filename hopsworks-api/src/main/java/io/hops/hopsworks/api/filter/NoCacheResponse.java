@@ -1,5 +1,7 @@
 package io.hops.hopsworks.api.filter;
 
+import io.hops.hopsworks.api.util.JsonResponse;
+
 import javax.ejb.Stateless;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
@@ -26,5 +28,13 @@ public class NoCacheResponse {
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "GET")
             .cacheControl(cc);
+  }
+  
+  public JsonResponse buildJsonResponse(Response.Status status, String message) {
+    JsonResponse response = new JsonResponse();
+    response.setStatus(String.valueOf(status));
+    response.setSuccessMessage(message);
+    
+    return response;
   }
 }

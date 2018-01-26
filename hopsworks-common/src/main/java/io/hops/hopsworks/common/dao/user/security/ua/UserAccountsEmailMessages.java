@@ -18,6 +18,9 @@ public class UserAccountsEmailMessages {
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
           = "Welcome to HopsWorks!";
 
+  public final static String ALERT_SERVICE_DOWN
+          = "A Hopsworks service has stopped ";
+
   /*
    * Subject of device lost
    */

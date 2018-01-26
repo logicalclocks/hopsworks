@@ -128,6 +128,7 @@
     <script src="bower_components/nvd3/build/nv.d3.js"></script>
     <script src="bower_components/angular-nvd3/dist/angular-nvd3.js"></script>
     <script src="bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.js"></script>
+    <script src="bower_components/angular-file-saver/dist/angular-file-saver.bundle.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -199,8 +200,9 @@
     <script src="scripts/controllers/uberCtrl.js"></script>
     <script src="scripts/controllers/workflowCtrl.js"></script>
     <script src="scripts/controllers/workflowcreatorCtrl.js"></script>
-    <script src="scripts/controllers/uberCtrl.js"></script>    
-    <script src="scripts/controllers/kafkaCtrl.js"></script>    
+    <script src="scripts/controllers/uberCtrl.js"></script>
+    <script src="scripts/controllers/tfservingCtrl.js"></script>
+    <script src="scripts/controllers/kafkaCtrl.js"></script>
     <script src="scripts/controllers/tensorflowCtrl.js"></script>    
     <script src="scripts/controllers/pythonDepsCtrl.js"></script>    
     <script src="scripts/controllers/selectProjectCtrl.js"></script>    
@@ -210,6 +212,7 @@
     <script src="scripts/controllers/schemaViewContentCtrl.js"></script>
     <script src="scripts/controllers/schemaUpdateContentCtrl.js"></script>
     <script src="scripts/controllers/delaCtrl.js"></script>
+    <script src="scripts/controllers/delaClientCtrl.js"></script>
     <script src="scripts/controllers/setupDownload.js"></script>
     <script src="scripts/controllers/json.js"></script> 
     <script src="scripts/controllers/filePreviewCtrl.js"></script>
@@ -221,6 +224,8 @@
     <script src="scripts/controllers/delahopsDatasetCtrl.js"></script>
     <script src="scripts/controllers/delaclusterDatasetCtrl.js"></script>
     <script src="scripts/controllers/publicDSPanelCtrl.js"></script>
+    <script src="scripts/controllers/ldapLoginCtrl.js"></script>
+    <script src="scripts/controllers/ldapUserConsentModalCtrl.js"></script>
     <script src="scripts/controllers/workflowexecutionCtrl.js"></script>
     <script src="scripts/controllers/workflowjobCtrl.js"></script>
 
@@ -245,6 +250,7 @@
     <script src="scripts/services/SparkService.js"></script>
     <script src="scripts/services/AdamService.js"></script>
     <script src="scripts/services/FlinkService.js"></script>
+    <script src="scripts/services/TfServingService.js"></script>p
     <script src="scripts/services/TensorFlowService.js"></script>
     <script src="scripts/services/HistoryService.js"></script>
     <script src="scripts/services/JobService.js"></script>
@@ -272,6 +278,7 @@
     <script src="scripts/services/PythonDepsService.js"></script>
     <script src="scripts/services/KibanaService.js"></script>
     <script src="scripts/services/JupyterService.js"></script>
+    <script src="scripts/services/CertService.js"></script>
     <!-- endbuild -->
 
   </body>

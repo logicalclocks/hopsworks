@@ -16,6 +16,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.exception.mapper.AccessControlExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.AppExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.AuthExceptionMapper.class);
+    register(io.hops.hopsworks.api.exception.mapper.LoginExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.ThrowableExceptionMapper.class);
     register(io.hops.hopsworks.api.exception.mapper.TransactionExceptionMapper.class);
     register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);
@@ -25,6 +26,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.jobs.FlinkService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
+    register(io.hops.hopsworks.api.tensorflow.TfServingService.class);
     register(io.hops.hopsworks.api.jobs.KafkaService.class);
     register(io.hops.hopsworks.api.jobs.SparkService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);
@@ -58,9 +60,14 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
+
+    // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
-    
+    register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
+    register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
+    register(io.hops.hopsworks.api.admin.CertificateMaterializerAdmin.class);
+
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     
     //dela
@@ -72,8 +79,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.hopssite.HopssiteService.class);
     register(io.hops.hopsworks.api.hopssite.CommentService.class);
     register(io.hops.hopsworks.api.hopssite.RatingService.class);
-    //
-    
+
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);

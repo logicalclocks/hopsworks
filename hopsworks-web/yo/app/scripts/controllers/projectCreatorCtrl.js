@@ -10,7 +10,15 @@ angular.module('hopsWorksApp')
             self.card = {};
             self.myCard = {};
             self.cards = [];
-
+            self.user = {
+              firstName: '',
+              lastName: '',
+              email: '',
+              telephoneNum: '',
+              registeredon: '',
+              twoFactor: ''
+            };
+            
             self.projectMembers = [];
             self.projectTeam = [];
 //            self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'WORKFLOWS'];
@@ -19,11 +27,11 @@ angular.module('hopsWorksApp')
 //            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'TENSORFLOW'];
 //            self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA'];
             if ($rootScope.isDelaEnabled) {
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA'];
-              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
+              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
             } else {
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE'];
-              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE'];
+              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+              self.selectionProjectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
             }
 
             self.projectName = '';
@@ -33,6 +41,7 @@ angular.module('hopsWorksApp')
 
             UserService.profile().then(
                     function (success) {
+                      self.user = success.data;
                       if (success.data.email !== undefined) {
                         self.myCard.email = success.data.email;
                         if (success.data.firstName !== undefined) {

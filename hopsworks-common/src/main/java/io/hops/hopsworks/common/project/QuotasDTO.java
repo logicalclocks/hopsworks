@@ -1,29 +1,34 @@
 package io.hops.hopsworks.common.project;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 @XmlRootElement
-public class QuotasDTO {
+public class QuotasDTO implements Serializable {
 
-  private Long hdfsUsageInBytes;
-  private Long hdfsQuotaInBytes;
-  private Long hdfsNsCount;
-  private Long hdfsNsQuota;
-  private Long hiveHdfsUsageInBytes;
-  private Long hiveHdfsQuotaInBytes;
-  private Long hiveHdfsNsCount;
-  private Long hiveHdfsNsQuota;
-  private String yarnQuotaInSecs;
+  private static final long serialVersionUID = -1L;
+
+  private Long hdfsUsageInBytes = null;
+  private Long hdfsQuotaInBytes = null;
+  private Long hdfsNsCount = null;
+  private Long hdfsNsQuota = null;
+  private Long hiveHdfsUsageInBytes = null;
+  private Long hiveHdfsQuotaInBytes = null;
+  private Long hiveHdfsNsCount = null;
+  private Long hiveHdfsNsQuota = null;
+  private Float yarnQuotaInSecs = null;
+  private Float yarnUsedQuotaInSecs = null;
 
   public QuotasDTO() {
   }
 
-  public QuotasDTO(String yarnQuotaInMins,
-      Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
-      Long hdfsNsQuota, Long hdfsNsCount,
-      Long hiveHdfsQuotaInBytes, Long hiveHdfsUsageInBytes,
-      Long hiveHdfsNsQuota, Long hiveHdfsNsCount) {
-    this.yarnQuotaInSecs = yarnQuotaInMins;
+  public QuotasDTO(Float yarnQuotaInSecs, Float yarnUsedQuotaInSecs,
+                   Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
+                   Long hdfsNsQuota, Long hdfsNsCount,
+                   Long hiveHdfsQuotaInBytes, Long hiveHdfsUsageInBytes,
+                   Long hiveHdfsNsQuota, Long hiveHdfsNsCount) {
+    this.yarnQuotaInSecs = yarnQuotaInSecs;
+    this.yarnUsedQuotaInSecs = yarnUsedQuotaInSecs;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
     this.hdfsUsageInBytes = hdfsUsageInBytes;
     this.hdfsNsQuota = hdfsNsQuota;
@@ -34,11 +39,20 @@ public class QuotasDTO {
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
   }
 
+  public QuotasDTO(Long hdfsQuotaInBytes, Long hdfsNsQuota,
+                   Long hiveHdfsQuotaInBytes, Long hiveHdfsNsQuota, Float yarnQuotaInSecs) {
+    this.hdfsQuotaInBytes = hdfsQuotaInBytes;
+    this.hdfsNsQuota = hdfsNsQuota;
+    this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
+    this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+    this.yarnQuotaInSecs = yarnQuotaInSecs;
+  }
+
   public Long getHdfsQuotaInBytes() {
     return hdfsQuotaInBytes;
   }
 
-  public String getYarnQuotaInSecs() {
+  public Float getYarnQuotaInSecs() {
     return yarnQuotaInSecs;
   }
 
@@ -46,7 +60,7 @@ public class QuotasDTO {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
   }
 
-  public void setYarnQuotaInSecs(String yarnQuotaInSecs) {
+  public void setYarnQuotaInSecs(Float yarnQuotaInSecs) {
     this.yarnQuotaInSecs = yarnQuotaInSecs;
   }
 
@@ -74,28 +88,44 @@ public class QuotasDTO {
     this.hdfsNsCount = hdfsNsCount;
   }
 
-  public Long getHiveHdfsUsageInBytes() { return hiveHdfsUsageInBytes; }
+  public Long getHiveHdfsUsageInBytes() {
+    return hiveHdfsUsageInBytes;
+  }
 
   public void setHiveHdfsUsageInBytes(Long hiveHdfsUsageInBytes) {
     this.hiveHdfsUsageInBytes = hiveHdfsUsageInBytes;
   }
 
-  public Long getHiveHdfsQuotaInBytes() { return hiveHdfsQuotaInBytes; }
+  public Long getHiveHdfsQuotaInBytes() {
+    return hiveHdfsQuotaInBytes;
+  }
 
   public void setHiveHdfsQuotaInBytes(Long hiveHdfsQuotaInBytes) {
     this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
   }
 
-  public Long getHiveHdfsNsCount() { return hiveHdfsNsCount; }
+  public Long getHiveHdfsNsCount() {
+    return hiveHdfsNsCount;
+  }
 
   public void setHiveHdfsNsCount(Long hiveHdfsNsCount) {
     this.hiveHdfsNsCount = hiveHdfsNsCount;
   }
 
-  public Long getHiveHdfsNsQuota() { return hiveHdfsNsQuota; }
+  public Long getHiveHdfsNsQuota() {
+    return hiveHdfsNsQuota;
+  }
 
   public void setHiveHdfsNsQuota(Long hiveHdfsNsQuota) {
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+  }
+
+  public Float getYarnUsedQuotaInSecs() {
+    return yarnUsedQuotaInSecs;
+  }
+
+  public void setYarnUsedQuotaInSecs(Float yarnUsedQuotaInSecs) {
+    this.yarnUsedQuotaInSecs = yarnUsedQuotaInSecs;
   }
 
   @Override
@@ -109,7 +139,8 @@ public class QuotasDTO {
         ", hiveHdfsQuotaInBytes=" + hiveHdfsQuotaInBytes +
         ", hiveHdfsNsCount=" + hiveHdfsNsCount +
         ", hiveHdfsNsQuota=" + hiveHdfsNsQuota +
-        ", yarnQuotaInSecs='" + yarnQuotaInSecs + '\'' +
+        ", yarnQuotaInSecs=" + yarnQuotaInSecs +
+        ", yarnUsedQuotaInSecs =" + yarnUsedQuotaInSecs +
         '}';
   }
 }

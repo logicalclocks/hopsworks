@@ -87,20 +87,23 @@
               <span class="loading-dots"></span>
             </div>
             <div ng-if="!publicDataset.loadingComments && publicDataset.comments === undefined" class="text-muted" style="text-align: center;">No comments found.</div>
-            <div ng-repeat="comment in publicDataset.comments">
+            <div ng-repeat="comment in publicDataset.comments track by $index">
               <img alt="" class="publicdataset-comment-img pull-left" src="https://gravatar.com/avatar/{{publicDataset.getEmailHash(comment.user.email)}}?d=retro&s=30">
               <div class="publicdataset-comment">
                 <span class="text-muted"><b>{{comment.user.firstname }} {{comment.user.lastname}} @ {{comment.user.organization}}</b> commented | on {{comment.datePublished | date:'medium'}}</span>
-                <div id="commentdiv" class="publicdataset-comment-msg" 
-                     contenteditable="{{publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable}}" 
+                <div id="commentdiv-{{$index}}" class="publicdataset-comment-msg" 
+                     contenteditable="{{publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable[$index]}}" 
                      ng-bind-html="comment.content | highlightUsername"></div>
                 <div class="pull-right">
-                  <span title="Edit your comment" ng-if="publicDataset.myUserId === comment.user.userId && !publicDataset.commentEditable"
+                  <span title="Edit your comment" ng-if="publicDataset.myUserId === comment.user.userId && !publicDataset.commentEditable[$index]"
                         class="publicdataset-issue text-muted"
-                        ng-click="publicDataset.commentMakeEditable()"><i class="fa fa-edit"></i></span>
-                  <span title="Save comment" ng-if="publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable"
+                        ng-click="publicDataset.commentMakeEditable($index)"><i class="fa fa-edit"></i></span>
+                  <span title="Cancel edit" ng-if="publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable[$index]"
                         class="publicdataset-issue text-muted"
-                        ng-click="publicDataset.saveComment(comment.id)"><i class="fa fa-floppy-o"></i></span>
+                        ng-click="publicDataset.cancelEdit(comment, $index)"><i class="fa fa-times"></i></span>
+                  <span title="Save comment" ng-if="publicDataset.myUserId === comment.user.userId && publicDataset.commentEditable[$index]"
+                        class="publicdataset-issue text-muted"
+                        ng-click="publicDataset.saveComment(comment.id, $index)"><i class="fa fa-floppy-o"></i></span>
                   <span title="Delete comment" ng-if="publicDataset.myUserId === comment.user.userId "
                         class="publicdataset-issue text-muted"
                         ng-click="publicDataset.deleteComment(comment.id)"><i class="fa fa-trash-o"></i></span>

@@ -2,9 +2,9 @@ package io.hops.hopsworks.api.cluster;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.role.Role;
+import io.hops.hopsworks.common.dao.role.Roles;
 import io.hops.hopsworks.common.dao.role.RoleEJB;
 import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
@@ -46,8 +46,8 @@ public class Monitor {
   @Path("/roles")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAllRoles(@Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Role> list = roleEjb.findAll();
-    GenericEntity<List<Role>> roles = new GenericEntity<List<Role>>(list) {
+    List<Roles> list = roleEjb.findAll();
+    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
   }
@@ -57,8 +57,8 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getServiceRoles(@PathParam("serviceName") String serviceName, @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    List<Role> list = roleEjb.findServiceRoles(serviceName);
-    GenericEntity<List<Role>> roles = new GenericEntity<List<Role>>(list) {
+    List<Roles> list = roleEjb.findServiceRoles(serviceName);
+    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
   }
@@ -68,8 +68,8 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHostRoles(@PathParam("hostId") String hostId, @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    List<Role> list = roleEjb.findHostRoles(hostId);
-    GenericEntity<List<Role>> roles = new GenericEntity<List<Role>>(list) {
+    List<Roles> list = roleEjb.findHostRoles(hostId);
+    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
   }
@@ -79,8 +79,8 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getRoles(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
       @Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Role> list = roleEjb.findRoles(serviceName, roleName);
-    GenericEntity<List<Role>> roles = new GenericEntity<List<Role>>(list) {
+    List<Roles> list = roleEjb.findRoles(serviceName, roleName);
+    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
   }
@@ -90,8 +90,8 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHosts(@Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Host> list = hostEjb.find();
-    GenericEntity<List<Host>> hosts = new GenericEntity<List<Host>>(list) {
+    List<Hosts> list = hostEjb.find();
+    GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(hosts).build();
   }
@@ -102,9 +102,9 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHosts(@PathParam("hostId") String hostId, @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    Host h = hostEjb.findByHostId(hostId);
+    Hosts h = hostEjb.findByHostname(hostId);
     if (h != null) {
-      GenericEntity<Host> host = new GenericEntity<Host>(h) {
+      GenericEntity<Hosts> host = new GenericEntity<Hosts>(h) {
       };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(host).build();
     } else {

@@ -62,12 +62,24 @@ public class UserFacade extends AbstractFacade<Users> {
     return res;
   }
   
+  public List<Users> findYubikeyRequests() {
+    TypedQuery<Users> query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.VERIFIED_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.Y_ACCOUNT_TYPE);
+    List<Users> res = query.getResultList();
+
+    query = em.createNamedQuery("Users.findByStatusAndMode", Users.class);
+    query.setParameter("status", PeopleAccountStatus.NEW_YUBIKEY_ACCOUNT);
+    query.setParameter("mode", PeopleAccountType.Y_ACCOUNT_TYPE);
+
+    res.addAll(query.getResultList());
+    return res;
+  }
+  
   public Users findByUsername(String username) {
     try {
-      return em.createNamedQuery("Users.findByUsername", Users.class).
-              setParameter(
-                      "username", username)
-              .getSingleResult();
+      return em.createNamedQuery("Users.findByUsername", Users.class).setParameter("username", username).
+          getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
@@ -87,9 +99,7 @@ public class UserFacade extends AbstractFacade<Users> {
   }
 
   public int lastUserID() {
-
-    Query query = em.createNativeQuery(
-            "SELECT MAX(p.uid) FROM hopsworks.users p");
+    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM hopsworks.users p");
     Object obj = query.getSingleResult();
 
     if (obj == null) {
@@ -98,6 +108,7 @@ public class UserFacade extends AbstractFacade<Users> {
     return (Integer) obj;
   }
 
+  @Override
   public Users update(Users user) {
     return em.merge(user);
   }
@@ -194,4 +205,5 @@ public class UserFacade extends AbstractFacade<Users> {
     user.setStatus(newStatus);
     em.merge(user);
   }
+  
 }

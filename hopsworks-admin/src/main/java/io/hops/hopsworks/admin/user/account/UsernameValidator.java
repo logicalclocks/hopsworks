@@ -1,7 +1,7 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.user.UsersController;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.EJB;
@@ -18,7 +18,7 @@ import javax.faces.validator.ValidatorException;
 public class UsernameValidator implements Validator {
 
   @EJB
-  private UserManager mgr;
+  protected UsersController usersController;
 
   // The pattern for email validation
   private static final String EMAIL_PATTERN
@@ -48,9 +48,8 @@ public class UsernameValidator implements Validator {
 
     }
 
-    if (mgr.isUsernameTaken(uname)) {
-      FacesMessage facesMsg = new FacesMessage(
-              AccountStatusErrorMessages.EMAIL_TAKEN);
+    if (usersController.isUsernameTaken(uname)) {
+      FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
       facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
       throw new ValidatorException(facesMsg);
     }

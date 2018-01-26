@@ -31,7 +31,7 @@ public class RoleController {
   private String cluster;
   private List<InstanceFullInfo> instanceInfoList = new ArrayList<>();
   private String health;
-  private boolean renderWebUi;
+//  private boolean renderWebUi;
   private boolean found;
   private static final Logger logger = Logger.getLogger(RoleController.class.
           getName());
@@ -54,16 +54,16 @@ public class RoleController {
       InstanceFullInfo info = new InstanceFullInfo(roleHost.getRole().
               getCluster(),
               roleHost.getRole().getService(), roleHost.getRole().getRole(),
-              roleHost.getRole().getHostId(), ip, roleHost.getRole().
-              getWebPort(),
+              roleHost.getRole().getHost().getHostname(), ip, 0,
+//          roleHost.getRole().getWebPort(),
               roleHost.getStatus(), roleHost.getHealth().toString());
       info.setPid(roleHost.getRole().getPid());
       String upTime = roleHost.getHealth() == Health.Good ? FormatUtils.time(
               roleHost.getRole().getUptime() * 1000) : "";
       info.setUptime(upTime);
       instanceInfoList.add(info);
-      renderWebUi = roleHost.getRole().getWebPort() != null && roleHost.
-              getRole().getWebPort() != 0;
+//      renderWebUi = roleHost.getRole().getWebPort() != null && roleHost.
+//              getRole().getWebPort() != 0;
       health = roleHost.getHealth().toString();
       found = true;
     } catch (Exception ex) {
@@ -119,9 +119,9 @@ public class RoleController {
     this.found = found;
   }
 
-  public boolean getRenderWebUi() {
-    return renderWebUi;
-  }
+//  public boolean getRenderWebUi() {
+//    return renderWebUi;
+//  }
 
   public List<InstanceFullInfo> getInstanceFullInfo() {
     loadRoles();

@@ -180,7 +180,7 @@ public class ServiceInstancesController {
     for (RoleHostInfo r : roleHostList) {
       instances.add(new InstanceInfo(r.getRole().getCluster(), r.getRole().
               getService(), r.getRole().getRole(),
-              r.getRole().getHostId(), r.getStatus(), r.getHealth().toString()));
+              r.getRole().getHost().getHostname(), r.getStatus(), r.getHealth().toString()));
     }
     filteredInstances.addAll(instances);
     return instances;

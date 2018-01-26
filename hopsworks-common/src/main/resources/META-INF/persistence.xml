@@ -30,7 +30,6 @@
     <class>io.hops.hopsworks.common.dao.hdfs.inode.Inode</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeEncodingStatus</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeOps</class>
-    <class>io.hops.hopsworks.common.dao.host.Host</class>
     <class>io.hops.hopsworks.common.dao.kafka.ProjectTopics</class>
     <class>io.hops.hopsworks.common.dao.kafka.SchemaTopics</class>
     <class>io.hops.hopsworks.common.dao.kafka.SharedTopics</class>
@@ -49,18 +48,9 @@
     <class>io.hops.hopsworks.common.dao.metadata.Template</class>
     <class>io.hops.hopsworks.common.dao.metadata.TupleToFile</class>
     <class>io.hops.hopsworks.common.dao.project.Project</class>
-    <class>io.hops.hopsworks.common.dao.project.management.ProjectsManagement</class>
-    <class>io.hops.hopsworks.common.dao.project.payment.ProjectPaymentsHistory</class>
-    <class>io.hops.hopsworks.common.dao.project.payment.LastPayment</class>
     <class>io.hops.hopsworks.common.dao.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.common.dao.project.team.ProjectTeam</class>
-    <class>io.hops.hopsworks.common.dao.role.Role</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfClusters</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfExecutions</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfFifoQueue</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfJobs</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfResources</class>
-    <class>io.hops.hopsworks.common.dao.tensorflow.TfTasks</class>
+    <class>io.hops.hopsworks.common.dao.role.Roles</class>
     <class>io.hops.hopsworks.common.dao.user.BbcGroup</class>
     <class>io.hops.hopsworks.common.dao.user.Users</class>
     <class>io.hops.hopsworks.common.dao.user.cluster.ClusterCert</class>
@@ -77,20 +67,24 @@
     <class>io.hops.hopsworks.common.dao.user.security.audit.Userlogins</class>
     <class>io.hops.hopsworks.common.dao.user.sshkey.AuthorizedSshkeys</class>
     <class>io.hops.hopsworks.common.dao.user.sshkey.SshKeys</class>
+    <class>io.hops.hopsworks.common.dao.user.ldap.LdapUser</class>
     <class>io.hops.hopsworks.common.dao.zeppelin.ZeppelinInterpreterConfs</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
+    <class>io.hops.hopsworks.common.dao.tfserving.TfServing</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>
     <class>io.hops.hopsworks.common.dao.jupyter.config.JupyterInterpreter</class>
     <!-- Converters -->
+    <class>io.hops.hopsworks.common.dao.tfserving.TfServingStatusConverter</class>
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter</class>
     <class>io.hops.hopsworks.common.dao.workflow.NodeDataConverter</class>
     <class>io.hops.hopsworks.common.dao.jobs.description.Jobs</class>
     <class>io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate</class>
+    <class>io.hops.hopsworks.common.dao.host.Hosts</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

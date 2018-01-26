@@ -1,6 +1,6 @@
 package io.hops.hopsworks.common.dao.pythonDeps;
 
-import io.hops.hopsworks.common.dao.host.Host;
+import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.util.Date;
@@ -121,12 +121,12 @@ public class CondaCommands implements Serializable {
   @JoinColumn(name = "host_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Host hostId;
+  private Hosts hostId;
 
   public CondaCommands() {
   }
 
-  public CondaCommands(Host h, String user, PythonDepsFacade.CondaOp op,
+  public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
           PythonDepsFacade.CondaStatus status, Project project, String lib,
           String version, String channelUrl,  Date created, String arg) {
     this.hostId = h;
@@ -218,11 +218,11 @@ public class CondaCommands implements Serializable {
     this.projectId = projectId;
   }
 
-  public Host getHostId() {
+  public Hosts getHostId() {
     return hostId;
   }
 
-  public void setHostId(Host hostId) {
+  public void setHostId(Hosts hostId) {
     this.hostId = hostId;
   }
 

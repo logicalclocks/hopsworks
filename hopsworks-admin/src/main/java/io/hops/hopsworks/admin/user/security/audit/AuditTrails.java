@@ -1,26 +1,27 @@
 package io.hops.hopsworks.admin.user.security.audit;
 
 import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.consent.ConsentStatus;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.ConsentsAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.ProjectAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
+import io.hops.hopsworks.common.user.UsersController;
 
 @ManagedBean
 @ViewScoped
@@ -29,10 +30,12 @@ public class AuditTrails implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @EJB
-  private UserManager userManager;
+  private UserFacade userFacade;
+  @EJB
+  protected UsersController usersController;;
 
   @EJB
-  private AuditManager auditManager;
+  private AccountAuditFacade auditManager;
 
   @EJB
   private ActivityFacade activityController;
@@ -206,7 +209,7 @@ public class AuditTrails implements Serializable {
    */
   public List<AccountAudit> getAccountAudit(String username, Date from, Date to,
           String action) {
-    Users u = userManager.getUserByEmail(username);
+    Users u = userFacade.findByEmail(username);
 
     if (u == null) {
       return auditManager.getAccountAudit(convertTosqlDate(from),
@@ -234,7 +237,7 @@ public class AuditTrails implements Serializable {
   public List<RolesAudit> getRoleAudit(String username, Date from, Date to,
           String action) {
 
-    Users u = userManager.getUserByEmail(username);
+    Users u = userFacade.findByEmail(username);
 
     if (u == null) {
       return auditManager.getRolesAudit(convertTosqlDate(from),
@@ -255,7 +258,7 @@ public class AuditTrails implements Serializable {
    */
   public List<Userlogins> getUserLogins(String username, Date from, Date to,
           String action) {
-    Users u = userManager.getUserByEmail(username);
+    Users u = userFacade.findByEmail(username);
     if (u == null) {
       return auditManager.getUsersLoginsFromTo(convertTosqlDate(from),
               convertTosqlDate(to), action);
@@ -378,7 +381,7 @@ public class AuditTrails implements Serializable {
 
   public void processConsentsAuditRequest(ConsentStatus action) {
 
-    if (!action.name().isEmpty() && action != null) {
+    if (action != null && !action.name().isEmpty()) {
       consnetAudit = auditManager.getConsentsAudit(convertTosqlDate(from),
               convertTosqlDate(to), action.name());
     } else {

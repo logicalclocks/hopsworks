@@ -29,6 +29,8 @@ import io.hops.hopsworks.common.dao.user.Users;
           query = "SELECT r FROM RolesAudit r WHERE r.logId = :logId"),
   @NamedQuery(name = "RolesAudit.findByInitiator",
           query = "SELECT r FROM RolesAudit r WHERE r.initiator = :initiator"),
+  @NamedQuery(name = "RolesAudit.findByTarget",
+          query = "SELECT r FROM RolesAudit r WHERE r.target = :target"),
   @NamedQuery(name = "RolesAudit.findByAction",
           query = "SELECT r FROM RolesAudit r WHERE r.action = :action"),
   @NamedQuery(name = "RolesAudit.findByTime",

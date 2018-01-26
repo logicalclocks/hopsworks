@@ -48,7 +48,7 @@ public class TransferDelaController {
       ClientWrapper<AddressJSON> rc = ClientWrapper
         .httpInstance(AddressJSON.class)
         .setTarget(delaTransferHttpEndpoint)
-        .setPath(TransferDelaPaths.CONTACT)
+        .setPath(TransferDela.CONTACT)
         .setPayload(delaVersion);
       logger.log(Settings.DELA_DEBUG, "dela:contact {0}", rc.getFullPath());
       AddressJSON result = rc.doPost();

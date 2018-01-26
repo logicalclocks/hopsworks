@@ -85,8 +85,8 @@ public class Alert implements Serializable {
   @Column(name = "data_source")
   private String dataSource;
   @Size(max = 256)
-  @Column(name = "hostid")
-  private String hostid;
+  @Column(name = "host_id")
+  private int hostid;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -113,7 +113,7 @@ public class Alert implements Serializable {
   public Alert() {
   }
 
-  public Alert(String hostId, String message, String plugin,
+  public Alert(int hostId, String message, String plugin,
           String pluginInstance, String type, String typeInstance) {
     this.hostid = hostId;
     this.message = message;
@@ -204,11 +204,11 @@ public class Alert implements Serializable {
     this.dataSource = dataSource;
   }
 
-  public String getHostid() {
+  public int getHostid() {
     return hostid;
   }
 
-  public void setHostid(String hostid) {
+  public void setHostid(int hostid) {
     this.hostid = hostid;
   }
 
@@ -291,7 +291,13 @@ public class Alert implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.kmon.cluster.Alerts[ id=" + id + " ]";
+    return "Alert: " + message + "\r"
+         + "Host : " + hostid + "\r"
+         + "Type: " + type +  "\r"
+         + "Type Instance: " + typeInstance +  "\r"
+         + "Current Value: " + currentValue +  "\r"
+         + "Time: " + alertTime + "\r"
+        ;
   }
 
 }

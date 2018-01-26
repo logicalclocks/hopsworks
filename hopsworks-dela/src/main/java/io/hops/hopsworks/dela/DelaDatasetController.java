@@ -1,6 +1,7 @@
 package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -38,7 +39,7 @@ public class DelaDatasetController {
   public Dataset uploadToHops(Dataset dataset, String publicDSId) {
     dataset.setPublicDsState(Dataset.SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
-    dataset.setEditable(false);
+    dataset.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.merge(dataset);
     datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;
@@ -47,7 +48,7 @@ public class DelaDatasetController {
   public Dataset unshareFromHops(Dataset dataset) {
     dataset.setPublicDsState(Dataset.SharedState.PRIVATE);
     dataset.setPublicDsId(null);
-    dataset.setEditable(true);
+    dataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
     datasetFacade.merge(dataset);
     datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;
@@ -64,7 +65,7 @@ public class DelaDatasetController {
     }
     dataset.setPublicDsState(Dataset.SharedState.HOPS);
     dataset.setPublicDsId(publicDSId);
-    dataset.setEditable(false);
+    dataset.setEditable(DatasetPermissions.OWNER_ONLY);
     datasetFacade.merge(dataset);
     datasetCtrl.logDataset(dataset, OperationType.Update);
     return dataset;

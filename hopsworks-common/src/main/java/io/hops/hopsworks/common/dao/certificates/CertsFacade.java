@@ -102,6 +102,10 @@ public class CertsFacade {
   public void persistPGUCert(ProjectGenericUserCerts pgu) {
     em.persist(pgu);
   }
+  
+  public void updatePGUCert(ProjectGenericUserCerts pgu) {
+    em.merge(pgu);
+  }
 
   public ProjectGenericUserCerts findProjectGenericUserCerts(String projectGenericUsername) {
     TypedQuery<ProjectGenericUserCerts> query = em.createNamedQuery(

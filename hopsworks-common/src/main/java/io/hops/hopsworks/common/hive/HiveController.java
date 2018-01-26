@@ -1,12 +1,14 @@
 package io.hops.hopsworks.common.hive;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -16,7 +18,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -27,6 +28,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +45,8 @@ public class HiveController {
   private DatasetFacade datasetFacade;
   @EJB
   private BaseHadoopClientsService bhcs;
-
+  @EJB
+  private ProjectFacade projectFacade;
 
   private final static String driver = "org.apache.hive.jdbc.HiveDriver";
   private final static Logger logger = Logger.getLogger(HiveController.class.getName());
@@ -51,8 +54,7 @@ public class HiveController {
   private Connection conn;
   private String jdbcString = null;
 
-  @PostConstruct
-  public void init() {
+  private void initConnection() throws SQLException{
     try {
       // Load Hive JDBC Driver
       Class.forName(driver);
@@ -66,16 +68,11 @@ public class HiveController {
           "sslKeyStore=" + bhcs.getSuperKeystorePath() + ";" +
           "keyStorePassword=" + bhcs.getSuperKeystorePassword();
 
-      // Create connection
-      initConnection();
-    } catch (ClassNotFoundException | SQLException e) {
+      conn = DriverManager.getConnection(jdbcString);
+    } catch (ClassNotFoundException e) {
       logger.log(Level.SEVERE, "Error opening Hive JDBC connection: " +
         e);
     }
-  }
-
-  private void initConnection() throws SQLException{
-    conn = DriverManager.getConnection(jdbcString);
   }
 
   @PreDestroy
@@ -118,7 +115,7 @@ public class HiveController {
     dbDataset.setType(DatasetType.HIVEDB);
     // As we are running Zeppelin as projectGenericUser, we have to make
     // the directory editable by default
-    dbDataset.setEditable(true);
+    dbDataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
     dbDataset.setDescription(buildDescription(project.getName()));
     datasetFacade.persistDataset(dbDataset);
 
@@ -133,6 +130,7 @@ public class HiveController {
 
       // Set the default quota
       dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+      projectFacade.setTimestampQuotaUpdate(project, new Date());
     } catch (IOException e) {
       logger.log(Level.SEVERE, "Cannot assign Hive database directory " + dbPath.toString() +
           " to correct user/group. Trace: " + e);
@@ -150,11 +148,13 @@ public class HiveController {
     }
   }
 
-  public void dropDatabase(Project project, DistributedFileSystemOps dfso)
+  public void dropDatabase(Project project, DistributedFileSystemOps dfso, boolean forceCleanup)
       throws IOException {
     // To avoid case sensitive bugs, check if the project has a Hive database
     Dataset ds = datasetFacade.findByNameAndProjectId(project, project.getName().toLowerCase() + ".db");
-    if (ds == null || ds.getType() != DatasetType.HIVEDB)  {
+    
+    if ((ds == null || ds.getType() != DatasetType.HIVEDB)
+        && !forceCleanup)  {
       return;
     }
 

@@ -12,6 +12,7 @@ import io.hops.hopsworks.api.util.UploadService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
@@ -28,14 +29,12 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.MoveDTO;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
@@ -47,6 +46,7 @@ import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
+import io.swagger.annotations.ApiOperation;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +65,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -97,8 +98,6 @@ public class DataSetService {
   private DatasetRequestFacade datasetRequest;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private UserManager userBean;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -338,7 +337,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException,
           AccessControlException {
 
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
     JsonResponse json = new JsonResponse();
 
@@ -393,7 +392,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException,
           AccessControlException {
 
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     JsonResponse json = new JsonResponse();
 
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
@@ -441,33 +440,48 @@ public class DataSetService {
             projects).build();
   }
 
-  @POST
-  @Path("/makeEditable")
+  @ApiOperation(value = "Set permissions (potentially with sticky bit) for datasets",
+      notes = "Allow data scientists to create and modify own files in dataset.")
+  @PUT
+  @Path("/permissions")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response makeEditable(
+  public Response setPermissions(
           DataSetDTO dataSet,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException,
           AccessControlException {
-
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
-
     JsonResponse json = new JsonResponse();
-
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
       // Change permission as super user
-      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-              FsAction.NONE, true);
-      datasetController.recChangeOwnershipAndPermission(
-          datasetController.getDatasetPath(ds),
-          fsPermission, null, null, null, dfso);
-      datasetController.changeEditable(ds, true);
+      FsPermission fsPermission = null;
+      if (null != dataSet.getPermissions()) {
+        switch (dataSet.getPermissions()) {
+          case OWNER_ONLY:
+            fsPermission = new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE, false);
+            ds.setEditable(DatasetPermissions.OWNER_ONLY);
+            break;
+          case GROUP_WRITABLE_SB:
+            fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, true);
+            ds.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
+            break;
+          case GROUP_WRITABLE:
+            fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, false);
+            ds.setEditable(DatasetPermissions.GROUP_WRITABLE);
+            break;
+          default:
+            break;
+        }
+        datasetController.recChangeOwnershipAndPermission(datasetController.getDatasetPath(ds), fsPermission, null, 
+            null,null, dfso);
+        datasetController.changePermissions(ds);
+      }
     } catch (AccessControlException ex) {
-      throw new AccessControlException(
-              "Permission denied: Can not change the permission of this file.");
+      logger.log(Level.FINE, null, ex);
+      throw new AccessControlException("Permission denied: Can not change the permission of this file.");
     } catch (IOException e) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while creating directory: " + e.
@@ -478,51 +492,8 @@ public class DataSetService {
       }
     }
 
-    json.setSuccessMessage("The Dataset was successfully made editable.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
-
-  @POST
-  @Path("/removeEditable")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response removeEditable(
-          DataSetDTO dataSet,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
-
-    Dataset ds = dtoValidator.validateDTO(this.project, dataSet, false);
-    JsonResponse json = new JsonResponse();
-
-    DistributedFileSystemOps dfso = null;
-    try {
-      // change the permissions as superuser
-      dfso = dfs.getDfsOps();
-      FsPermission fsPermission = new FsPermission(FsAction.ALL,
-              FsAction.READ_EXECUTE,
-              FsAction.NONE, false);
-      datasetController.recChangeOwnershipAndPermission(
-          datasetController.getDatasetPath(ds),
-          fsPermission, null, null, null, dfso);
-      datasetController.changeEditable(ds, false);
-    } catch (AccessControlException ex) {
-      throw new AccessControlException(
-              "Permission denied: Can not change the permission of this file.");
-    } catch (IOException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error while creating directory: " + e.
-              getLocalizedMessage());
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-
-    json.setSuccessMessage("The Dataset was successfully made not editable.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    json.setSuccessMessage("The Dataset permissions were successfully modified.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @GET
@@ -596,7 +567,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     if (username == null) {
@@ -643,15 +614,11 @@ public class DataSetService {
           AccessControlException {
 
     JsonResponse json = new JsonResponse();
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, dataSetName.getName());
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
-    if (!ds.isEditable()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_EDITABLE);
-    }
     String dsName = ds.getInode().getInodePK().getName();
 
     DistributedFileSystemOps dfso = null;
@@ -667,6 +634,7 @@ public class DataSetService {
           dataSetName.isSearchable(), udfso);
 
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
               "Permission denied: You can not create a folder in "
               + dsName);
@@ -725,8 +693,7 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
-      Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+      Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
@@ -741,6 +708,7 @@ public class DataSetService {
       success = datasetController.
               deleteDatasetDir(ds, fullPath, dfso);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + fullPath.toString());
     } catch (IOException ex) {
@@ -790,7 +758,7 @@ public class DataSetService {
       @Context HttpServletRequest req) throws AppException,
       AccessControlException {
     JsonResponse json = new JsonResponse();
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
@@ -824,6 +792,7 @@ public class DataSetService {
         }
       }
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
           "Permission denied: You can not delete the file " + fullPath);
     } catch (IOException ex) {
@@ -862,7 +831,7 @@ public class DataSetService {
           AccessControlException {
     boolean success = false;
     JsonResponse json = new JsonResponse();
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, fileName);
     Dataset ds = dsPath.getDs();
@@ -892,6 +861,7 @@ public class DataSetService {
       }
       success = dfso.rm(fullPath, true);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
               "Permission denied: You can not delete the file " + fullPath);
     } catch (IOException ex) {
@@ -930,7 +900,7 @@ public class DataSetService {
           @Context SecurityContext sc, @Context HttpServletRequest req,
           MoveDTO dto) throws
           AppException, AccessControlException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
@@ -1034,7 +1004,7 @@ public class DataSetService {
           @Context SecurityContext sc, @Context HttpServletRequest req,
           MoveDTO dto) throws
           AppException, AccessControlException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
@@ -1109,7 +1079,7 @@ public class DataSetService {
   public Response checkFileExists(@PathParam("path") String path,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -1124,6 +1094,7 @@ public class DataSetService {
       //tests if the user have permission to access this path
       is = udfso.open(filePath);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
               "Permission denied: You can not download the file ");
     } catch (IOException ex) {
@@ -1153,7 +1124,7 @@ public class DataSetService {
   public Response checkFileForDownload(@PathParam("path") String path,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owningProject = datasetController.getOwningProject(dsPath.getDs());
     //User must be accessing a dataset directly, not by being shared with another project.
@@ -1175,7 +1146,7 @@ public class DataSetService {
           @QueryParam("mode") String mode,
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -1198,8 +1169,7 @@ public class DataSetService {
       String fileExtension = "txt"; // default file  type
       //Check if file contains a valid extension
       if (fileName.contains(".")) {
-        fileExtension = fileName.substring(fileName.lastIndexOf(".")).replace(".", "").
-                toUpperCase();
+        fileExtension = fileName.substring(fileName.lastIndexOf(".")).replace(".", "").toUpperCase();
       }
       long fileSize = udfso.getFileStatus(fullPath).getLen();
 
@@ -1209,47 +1179,40 @@ public class DataSetService {
         if (fileSize < settings.getFilePreviewImageSize()) {
           //Read the image in bytes and convert it to base64 so that is 
           //rendered properly in the front-end
-          byte[] imageInBytes = new byte[(int)fileSize];
+          byte[] imageInBytes = new byte[(int) fileSize];
           is.readFully(imageInBytes);
           String base64Image = new Base64().encodeAsString(imageInBytes);
-          filePreviewDTO = new FilePreviewDTO("image",
-                  fileExtension.toLowerCase(), base64Image);
+          filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_IMAGE_TYPE,
+              fileExtension.toLowerCase(), base64Image);
         } else {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "Image at " + fullPath.toString() + " is too big to display, " +
-                  "please download it by double-clicking it instead");
+              "Image at " + fullPath.toString() + " is too big to display, "
+              + "please download it by double-clicking it instead");
         }
       } else {
-        DataInputStream dis = new DataInputStream(is);
-        try {
+        try (DataInputStream dis = new DataInputStream(is)) {
           int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes
-          if (fileSize > sizeThreshold && !fileName.endsWith("README.md")
-                && mode.equals("tail")) {
+          if (fileSize > sizeThreshold && !fileName.endsWith(Settings.README_FILE)
+              && mode.equals(Settings.FILE_PREVIEW_MODE_TAIL)) {
             dis.skipBytes((int) (fileSize - sizeThreshold));
-          } else if (fileName.endsWith("README.md") &&
-              fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
-
+          } else if (fileName.endsWith(Settings.README_FILE) && fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    "README.md must be smaller than "
-                    + Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README
-                    + " to be previewd");
-          } else  {
-            sizeThreshold = (int)fileSize;
+                Settings.README_FILE + " must be smaller than " + Settings.FILE_PREVIEW_TXT_SIZE_BYTES/1024
+                + " KB to be previewed");
+          } else if ((int) fileSize < sizeThreshold) {
+            sizeThreshold = (int) fileSize;
           }
-
           byte[] headContent = new byte[sizeThreshold];
           dis.readFully(headContent, 0, sizeThreshold);
           //File content
-          filePreviewDTO = new FilePreviewDTO("text", fileExtension.
-                  toLowerCase(), new String(headContent));
-
-        } finally {
-          dis.close();
+          filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_TEXT_TYPE, fileExtension.toLowerCase(),
+              new String(headContent));
         }
       }
 
       json.setData(filePreviewDTO);
     } catch (AccessControlException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AccessControlException(
               "Permission denied: You can not view the file ");
     } catch (IOException ex) {
@@ -1325,38 +1288,31 @@ public class DataSetService {
 
   @Path("fileDownload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DownloadService downloadDS(@Context SecurityContext sc) throws
-      AppException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+  public DownloadService downloadDS(@Context SecurityContext sc) throws AppException {
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     this.downloader.setProject(project);
     this.downloader.setProjectUsername(hdfsUsersBean.getHdfsUserName(project, user));
-    this.downloader.setUser(user);
     return downloader;
   }
   
   @Path("compressFile/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response compressFile(@PathParam("path") String path,
-          @Context SecurityContext context) throws
-          AppException {
-    Users user = userBean.getUserByEmail(context.getUserPrincipal().getName());
+  public Response compressFile(@PathParam("path") String path, @Context SecurityContext context) throws AppException {
+    Users user = userFacade.findByEmail(context.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
     Dataset ds = dsPath.getDs();
-    if (ds.isShared() && !ds.isEditable() && !ds.isPublicDs()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.COMPRESS_ERROR);
+    if (ds.isShared() && ds.getEditable() == DatasetPermissions.OWNER_ONLY && !ds.isPublicDs()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.COMPRESS_ERROR);
     }
 
-    ErasureCodeJobConfiguration ecConfig
-            = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
+    ErasureCodeJobConfiguration ecConfig = (ErasureCodeJobConfiguration) JobConfiguration.JobConfigurationFactory.
             getJobConfigurationTemplate(JobType.ERASURE_CODING);
     ecConfig.setFilePath(fullPath.toString());
 
     //persist the job in the database
-    Jobs jobdesc = this.jobcontroller.createJob(user, project,
-            ecConfig);
+    Jobs jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);
@@ -1380,26 +1336,39 @@ public class DataSetService {
             json).build();
   }
 
+  /**
+   * Upload methods does not need to go through the filter, hdfs will through the exception and it is propagated to 
+   * the HTTP response.
+   * 
+   * @param path
+   * @param sc
+   * @param templateId
+   * @return
+   * @throws AppException 
+   */
   @Path("upload/{path: .+}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public UploadService upload(
           @PathParam("path") String path, @Context SecurityContext sc,
           @QueryParam("templateId") int templateId) throws AppException {
-    Users user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
-    if (!dsPath.getDs().isEditable()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.DATASET_NOT_EDITABLE);
-    }
-    
     Project owning = datasetController.getOwningProject(dsPath.getDs());
     //Is user a member of this project? If so get their role
     boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
     String role = null;
-    if(isMember){
+    if (isMember) {
       role = projectTeamFacade.findCurrentRole(owning, user);
+    }
+
+    //Do not allow non-DataOwners to upload to a non-Editable dataset
+    //Do not allow anyone to upload if the dataset is shared and non-Editable
+    if (dsPath.getDs().getEditable() == DatasetPermissions.OWNER_ONLY 
+        && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER)) 
+        || !project.equals(owning))) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.DATASET_NOT_EDITABLE);
     }
      
     this.uploader.confFileUpload(dsPath, username, templateId, role);

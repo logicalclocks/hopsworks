@@ -40,55 +40,77 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Users.findAll",
-          query = "SELECT u FROM Users u"),
+      query = "SELECT u FROM Users u")
+  ,
   @NamedQuery(name = "Users.findByUid",
-          query = "SELECT u FROM Users u WHERE u.uid = :uid"),
+      query = "SELECT u FROM Users u WHERE u.uid = :uid")
+  ,
   @NamedQuery(name = "Users.findByUsername",
-          query = "SELECT u FROM Users u WHERE u.username = :username"),
+      query = "SELECT u FROM Users u WHERE u.username = :username")
+  ,
   @NamedQuery(name = "Users.findByPassword",
-          query = "SELECT u FROM Users u WHERE u.password = :password"),
+      query = "SELECT u FROM Users u WHERE u.password = :password")
+  ,
   @NamedQuery(name = "Users.findByEmail",
-          query = "SELECT u FROM Users u WHERE u.email = :email"),
+      query = "SELECT u FROM Users u WHERE u.email = :email")
+  ,
   @NamedQuery(name = "Users.findByFname",
-          query = "SELECT u FROM Users u WHERE u.fname = :fname"),
+      query = "SELECT u FROM Users u WHERE u.fname = :fname")
+  ,
   @NamedQuery(name = "Users.findByLname",
-          query = "SELECT u FROM Users u WHERE u.lname = :lname"),
+      query = "SELECT u FROM Users u WHERE u.lname = :lname")
+  ,
   @NamedQuery(name = "Users.findByActivated",
-          query = "SELECT u FROM Users u WHERE u.activated = :activated"),
+      query = "SELECT u FROM Users u WHERE u.activated = :activated")
+  ,
   @NamedQuery(name = "Users.findByTitle",
-          query = "SELECT u FROM Users u WHERE u.title = :title"),
+      query = "SELECT u FROM Users u WHERE u.title = :title")
+  ,
   @NamedQuery(name = "Users.findByOrcid",
-          query = "SELECT u FROM Users u WHERE u.orcid = :orcid"),
+      query = "SELECT u FROM Users u WHERE u.orcid = :orcid")
+  ,
   @NamedQuery(name = "Users.findByFalseLogin",
-          query = "SELECT u FROM Users u WHERE u.falseLogin = :falseLogin"),
+      query = "SELECT u FROM Users u WHERE u.falseLogin = :falseLogin")
+  ,
   @NamedQuery(name = "Users.findByIsonline",
-          query = "SELECT u FROM Users u WHERE u.isonline = :isonline"),
+      query = "SELECT u FROM Users u WHERE u.isonline = :isonline")
+  ,
   @NamedQuery(name = "Users.findBySecret",
-          query = "SELECT u FROM Users u WHERE u.secret = :secret"),
+      query = "SELECT u FROM Users u WHERE u.secret = :secret")
+  ,
   @NamedQuery(name = "Users.findByValidationKey",
-          query = "SELECT u FROM Users u WHERE u.validationKey = :validationKey"),
+      query = "SELECT u FROM Users u WHERE u.validationKey = :validationKey")
+  ,
   @NamedQuery(name = "Users.findBySecurityQuestion",
-          query
-          = "SELECT u FROM Users u WHERE u.securityQuestion = :securityQuestion"),
+      query
+      = "SELECT u FROM Users u WHERE u.securityQuestion = :securityQuestion")
+  ,
   @NamedQuery(name = "Users.findBySecurityAnswer",
-          query
-          = "SELECT u FROM Users u WHERE u.securityAnswer = :securityAnswer"),
+      query
+      = "SELECT u FROM Users u WHERE u.securityAnswer = :securityAnswer")
+  ,
   @NamedQuery(name = "Users.findByMode",
-          query = "SELECT u FROM Users u WHERE u.mode = :mode"),
+      query = "SELECT u FROM Users u WHERE u.mode = :mode")
+  ,
   @NamedQuery(name = "Users.findByPasswordChanged",
-          query
-          = "SELECT u FROM Users u WHERE u.passwordChanged = :passwordChanged"),
+      query
+      = "SELECT u FROM Users u WHERE u.passwordChanged = :passwordChanged")
+  ,
   @NamedQuery(name = "Users.findByNotes",
-          query = "SELECT u FROM Users u WHERE u.notes = :notes"),
+      query = "SELECT u FROM Users u WHERE u.notes = :notes")
+  ,
   @NamedQuery(name = "Users.findByMobile",
-          query = "SELECT u FROM Users u WHERE u.mobile = :mobile"),
+      query = "SELECT u FROM Users u WHERE u.mobile = :mobile")
+  ,
   @NamedQuery(name = "Users.findByStatus",
-          query = "SELECT u FROM Users u WHERE u.status = :status"),
+      query = "SELECT u FROM Users u WHERE u.status = :status")
+  ,
   @NamedQuery(name = "Users.findByStatusAndMode",
-          query = "SELECT u FROM Users u WHERE u.status = :status and u.mode = :mode"),
+      query = "SELECT u FROM Users u WHERE u.status = :status and u.mode = :mode")
+  ,
   @NamedQuery(name = "Users.findByTwoFactor",
-          query
-          = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
+      query
+      = "SELECT u FROM Users u WHERE u.twoFactor = :twoFactor")})
 public class Users implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -100,13 +122,13 @@ public class Users implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 10)
+      max = 10)
   @Column(name = "username")
   private String username;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 128)
+      max = 128)
   @Column(name = "password")
   private String password;
   // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)
@@ -182,47 +204,55 @@ public class Users implements Serializable {
   @NotNull
   private Integer numCreatedProjects = 0;
   @Basic(optional = false)
+  @Column(name = "num_active_projects")
+  @NotNull
+  private Integer numActiveProjects = 0;
+  @Basic(optional = false)
   @NotNull
   @Column(name = "two_factor")
   private boolean twoFactor;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "salt")
+  private String salt;
   @Basic(optional = false)
   @NotNull
   @Column(name = "tours_state")
   private int toursState;
-  
+
   @JoinTable(name = "hopsworks.people_group",
-          joinColumns = {
-            @JoinColumn(name = "uid",
-                    referencedColumnName = "uid")},
-          inverseJoinColumns = {
-            @JoinColumn(name = "gid",
-                    referencedColumnName = "gid")})
+      joinColumns = {
+        @JoinColumn(name = "uid",
+            referencedColumnName = "uid")},
+      inverseJoinColumns = {
+        @JoinColumn(name = "gid",
+            referencedColumnName = "gid")})
   @ManyToMany
   private Collection<BbcGroup> bbcGroupCollection;
 
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "uid")
+      mappedBy = "uid")
   private Address address;
 
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "uid")
+      mappedBy = "uid")
   private Organization organization;
 
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "uid")
+      mappedBy = "uid")
   private Yubikey yubikey;
 
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "users")
+      mappedBy = "users")
   private Collection<JupyterSettings> jupyterSettingsCollection;
-  
-  
+
+
   public Users() {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects) {
+      int falseLogin, PeopleAccountStatus status, int isonline, int maxNumProjects, int numCreatedProjects,
+      int numActiveProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -232,6 +262,7 @@ public class Users implements Serializable {
     this.status = status;
     this.maxNumProjects = maxNumProjects;
     this.numCreatedProjects = numCreatedProjects;
+    this.numActiveProjects  = numActiveProjects;
   }
 
   public Users(Integer uid) {
@@ -239,8 +270,8 @@ public class Users implements Serializable {
   }
 
   public Users(Integer uid, String username, String password, Date activated,
-          int falseLogin, int isonline, PeopleAccountType mode,
-          Date passwordChanged, PeopleAccountStatus status, int maxNumProjects) {
+      int falseLogin, int isonline, PeopleAccountType mode,
+      Date passwordChanged, PeopleAccountStatus status, int maxNumProjects) {
     this.uid = uid;
     this.username = username;
     this.password = password;
@@ -252,7 +283,54 @@ public class Users implements Serializable {
     this.status = status;
     this.maxNumProjects = maxNumProjects;
     this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
   }
+
+  public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
+      String orcid, PeopleAccountStatus status, String secret, String validationKey, SecurityQuestion securityQuestion,
+      String securityAnswer, PeopleAccountType mode, Date passwordChanged, String mobile, Integer maxNumProjects,
+      boolean twoFactor, String salt, int toursState) {
+    this.username = username;
+    this.password = password;
+    this.email = email;
+    this.fname = fname;
+    this.lname = lname;
+    this.activated = activated;
+    this.title = title;
+    this.orcid = orcid;
+    this.status = status;
+    this.secret = secret;
+    this.validationKey = validationKey;
+    this.securityQuestion = securityQuestion;
+    this.securityAnswer = securityAnswer;
+    this.mode = mode;
+    this.passwordChanged = passwordChanged;
+    this.mobile = mobile;
+    this.maxNumProjects = maxNumProjects;
+    this.twoFactor = twoFactor;
+    this.salt = salt;
+    this.toursState = toursState;
+    this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
+  }
+
+  public Users(String username, String password, String email, String fname, String lname, String title, String orcid,
+      PeopleAccountStatus status, PeopleAccountType mode, Integer maxNumProjects, String salt) {
+    this.username = username;
+    this.password = password;
+    this.email = email;
+    this.fname = fname;
+    this.lname = lname;
+    this.title = title;
+    this.orcid = orcid;
+    this.status = status;
+    this.mode = mode;
+    this.maxNumProjects = maxNumProjects;
+    this.salt = salt;
+    this.numCreatedProjects = 0;
+    this.numActiveProjects = 0;
+  }
+  
 
   public Yubikey getYubikey() {
     return yubikey;
@@ -303,7 +381,16 @@ public class Users implements Serializable {
   public void setPassword(String password) {
     this.password = password;
   }
+  
+  @XmlTransient
+  @JsonIgnore
+  public String getSalt() {
+    return salt;
+  }
 
+  public void setSalt(String salt) {
+    this.salt = salt;
+  }
   public String getEmail() {
     return email;
   }
@@ -450,10 +537,10 @@ public class Users implements Serializable {
     return status;
   }
 
-  public String getStatusName(){
+  public String getStatusName() {
     return status.name();
   }
-  
+
   public void setStatus(PeopleAccountStatus status) {
     this.status = status;
   }
@@ -482,12 +569,20 @@ public class Users implements Serializable {
     this.numCreatedProjects = numCreatedProjects;
   }
 
+  public Integer getNumActiveProjects() {
+    return numCreatedProjects;
+  }
+
+  public void setNumActiveProjects(Integer numActiveProjects) {
+    this.numActiveProjects = numActiveProjects;
+  }
+
   @XmlTransient
   @JsonIgnore
   public boolean getTwoFactor() {
     return twoFactor;
   }
-  
+
   public void setTwoFactor(boolean twoFactor) {
     this.twoFactor = twoFactor;
   }
@@ -495,11 +590,10 @@ public class Users implements Serializable {
   public int getToursState() {
     return toursState;
   }
-  
+
   public void setToursState(int toursState) {
     this.toursState = toursState;
   }
-
 
   @XmlTransient
   @JsonIgnore
@@ -508,10 +602,10 @@ public class Users implements Serializable {
   }
 
   public void setJupyterSettingsCollection(
-          Collection<JupyterSettings> jupyterSettingsCollection) {
+      Collection<JupyterSettings> jupyterSettingsCollection) {
     this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
-  
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -527,7 +621,7 @@ public class Users implements Serializable {
     }
     Users other = (Users) object;
     if ((this.uid == null && other.uid != null) || (this.uid != null
-            && !this.uid.equals(other.uid))) {
+        && !this.uid.equals(other.uid))) {
       return false;
     }
     return true;
@@ -540,6 +634,6 @@ public class Users implements Serializable {
 
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
-            isonline, maxNumProjects, numCreatedProjects);
+        isonline, maxNumProjects, numCreatedProjects, numActiveProjects);
   }
 }

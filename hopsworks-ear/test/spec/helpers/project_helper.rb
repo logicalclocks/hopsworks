@@ -12,7 +12,7 @@ module ProjectHelper
     new_project = {projectName: "project_#{short_random_id}", description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-    expect_json(successMessage: "Project created successfully.")
+    expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end
@@ -22,7 +22,7 @@ module ProjectHelper
     new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_json(errorMsg: ->(value){ expect(value).to be_empty})
-    expect_json(successMessage: "Project created successfully.")
+    expect_json(successMessage: regex("Project created successfully.*"))
     expect_status(201)
     get_project_by_name(new_project[:projectName])
   end
@@ -55,22 +55,26 @@ module ProjectHelper
     Project.find_by(projectName: "#{name}")
   end
   
-  def check_project_limit
+  def check_project_limit(limit=0)
     get "#{ENV['HOPSWORKS_API']}/user/profile"
     max_num_projects = json_body[:maxNumProjects]
-    get "#{ENV['HOPSWORKS_API']}/project"
-    if json_body.length >= max_num_projects
-      delete_project(json_body[0][:project])
+    num_created_projects = json_body[:numCreatedProjects]
+    if (max_num_projects - num_created_projects) <= limit
+      reset_session
+      with_valid_project
     end
+    
   end
   
   def create_max_num_projects
     get "#{ENV['HOPSWORKS_API']}/user/profile"
     max_num_projects = json_body[:maxNumProjects]
-    get "#{ENV['HOPSWORKS_API']}/project"
-    while json_body.length < max_num_projects
+    num_created_projects = json_body[:numCreatedProjects]
+    while num_created_projects < max_num_projects
       post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}"}
-      get "#{ENV['HOPSWORKS_API']}/project"
+      get "#{ENV['HOPSWORKS_API']}/user/profile"
+      max_num_projects = json_body[:maxNumProjects]
+      num_created_projects = json_body[:numCreatedProjects]
     end
   end
   

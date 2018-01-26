@@ -114,7 +114,7 @@
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">AppMaster memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container. 1024 MB is more than sufficient for most cases." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left">
-                      <input type="number" step="256" ng-model="jupyterCtrl.val.appmasterMemory" min="1024" class="form-control">
+                      <input type="number" step="1" ng-model="jupyterCtrl.val.appmasterMemory" min="1024" class="form-control">
                     </div>
                   </div>
                 </div>
@@ -132,11 +132,11 @@
                     <div class="text-right col-md-6">Number of hosts <i class="fa fa-info-circle"
                                                                         uib-tooltip="The number of hosts to run Horovod on. Current support is only 1 host." style="margin-left: 10px"></i>
                     </div>
-                    <div class="col-md-2 jupyter-left"><input type="number" step="1" ng-readonly="true" ng-init="1" ng-model="jupyterCtrl.val.numExecutors" min="0" max="1" class="form-control"></div>
+                    <div class="col-md-2 jupyter-left"><input type="number" step="1" ng-readonly="true" ng-init="1" value="1" min="0" max="1" class="form-control"></div>
                   </div>
                   <div class="row clusterparams">
                     <div class="text-right col-md-6"> Memory (MB) per host <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be allocated on each host. The specified amount of memory will be shared by all MPI processes on the machine." style="margin-left: 10px"></i></div>
-                    <div class="col-md-2 jupyter-left"><input type="number" step="256" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
+                    <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                   </div>
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Number of processes<i class="fa fa-info-circle"
@@ -148,7 +148,7 @@
                     </div>
                   </div>
                   <div class="row clusterparams">
-                    <div class="text-right col-md-6">Number of GPUs per process<i class="fa fa-info-circle"
+                    <div class="text-right col-md-6">GPUs per process<i class="fa fa-info-circle"
                                                                                   uib-tooltip="The number of GPUs accessible for each process (0 or 1)."
                                                                                   style="margin-left: 10px"></i>
                     </div>
@@ -207,7 +207,7 @@
                   </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkDynamic' && jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'tensorflow'">
+                <div class="row" ng-if="jupyterCtrl.val.mode !== 'sparkDynamic' && jupyterCtrl.val.mode !== 'horovod' && jupyterCtrl.val.mode !== 'tensorflow' && jupyterCtrl.val.mode !== 'distributedTensorFlow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Number of executors <i class="fa fa-info-circle"
                                                                             uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i>
@@ -215,6 +215,16 @@
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
                 </div>
+
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTensorFlow'">
+                  <div class="row clusterparams">
+                    <div class="text-right col-md-6"> Workers <i class="fa fa-info-circle"
+                                                                            uib-tooltip="The number of workers that should be requested for this job." style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
+                  </div>
+                </div>
+
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Max parallel executions <i class="fa fa-info-circle" uib-tooltip="The maximum number of parallel tflauncher executions. If this configuration is less than the number of tflauncher jobs, the remaining jobs will be queued and executed once a previous job is finished." style="margin-left: 10px"></i>
@@ -225,7 +235,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode !== 'horovod'">
                   <div class="row clusterparams">
                       <div class="text-right col-md-6"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
-                      <div class="col-md-2 jupyter-left"><input type="number" step="256" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
+                      <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
                     </div>
                 </div>
                   <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
@@ -341,13 +351,13 @@
 
               <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
                 <div class="text-right col-md-6">More Spark Properties <i class="fa fa-info-circle"
-                      uib-tooltip="Enter additional line-separated Spark properties here. Use spaces to separate parameters from values." 
+                      uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
                       style="margin-left: 10px"></i>
                 </div>
                 <div class="col-md-5 jupyter-left">
                   <textarea style="width: 100%;" id="TextArea" ng-model="jupyterCtrl.val.sparkParams" 
                             ng-keyup="autoExpand($event)" 
-                            placeholder="spark.yarn.am.port  12242">
+                            title="spark.yarn.am.port=12242&#10;spark.driver.extraLibraryPath=/path/to/extra/library">
                   </textarea>
                 </div>
 

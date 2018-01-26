@@ -1590,36 +1590,20 @@ public class NotebookServerImpl implements
 
     // Materialize certificates both in local filesystem and
     // in HDFS for the interpreters
-    // Interpreter group is in the form GROUP_ID:shared_process
-    // GROUP_ID: 2CFZ6Q3A2 -> Spark group
-    // GROUP_ID: 2CHUQQW33 -> Livy group
-    // GROUP_ID: 2CRSX9NDY -> Hive group
-    String[] interpreterGrp = p.getCurrentRepl().getInterpreterGroup()
-        .getId().split(":");
-    String interpreterGroup;
-    if (interpreterGrp.length >= 2) {
-      interpreterGroup = interpreterGrp[0];
-    } else {
-      interpreterGroup = p.getCurrentRepl().getInterpreterGroup().getId();
-    }
-
-    if (certificateMaterializer.openedInterpreter(project.getId(), interpreterGroup)) {
-
+    if (certificateMaterializer.openedInterpreter(project.getId())) {
+    
       DistributedFileSystemOps dfso = null;
       try {
-        if (interpreterGroup.equals(Settings.HOPSHIVE_INT_GROUP)) {
-          // Hive case
-          // Materialize the certificates for the project user on the local fs
-          certificateMaterializer.materializeCertificates(project.getName());
-        } else {
-          // Livy case
-          dfso = dfsService.getDfsOps();
-          HopsUtils.materializeCertificatesForProject(project.getName(),
-              settings.getHopsworksTmpCertDir(),
-              settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
-              settings);
-        }
+        dfso = dfsService.getDfsOps();
+        HopsUtils.materializeCertificatesForProject(project.getName(),
+            settings.getHopsworksTmpCertDir(),
+            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
+            settings);
       } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Error while materializing certificates for Zeppelin", ex);
+        certificateMaterializer.closedInterpreter(project.getId());
+        HopsUtils.cleanupCertificatesForProject(project.getName(),
+            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
         throw ex;
       } finally {
         if (null != dfso) {

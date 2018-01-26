@@ -293,12 +293,11 @@ public class DatasetController {
    * original dataset
    *
    * @param orgDs the dataset to be make editable
-   * @param editable whether the dataset should be editable
    */
   //TODO: Add a reference in each dataset entry to the original dataset
-  public void changeEditable(Dataset orgDs, boolean editable) {
+  public void changePermissions(Dataset orgDs) {
     for (Dataset ds : datasetFacade.findByInode(orgDs.getInode())) {
-      ds.setEditable(editable);
+      ds.setEditable(orgDs.getEditable());
       datasetFacade.merge(ds);
     }
   }
@@ -459,9 +458,9 @@ public class DatasetController {
       dis = new DataInputStream(is);
       long fileSize = dfso.getFileStatus(new org.apache.hadoop.fs.Path(
           path)).getLen();
-      if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README) {
+      if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
         throw new IllegalArgumentException("README.md must be smaller than"
-            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES_README
+            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES
             + " to be previewd");
       }
       byte[] headContent = new byte[(int) fileSize];

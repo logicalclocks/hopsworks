@@ -103,7 +103,7 @@ public class Dataset implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "editable")
-  private boolean editable = true;
+  private int editable = 0;
   @Basic(optional = false)
   @NotNull
   @Column(name = "searchable")
@@ -161,7 +161,7 @@ public class Dataset implements Serializable {
     this.name = ds.getInode().getInodePK().getName();
     this.searchable = ds.isSearchable();
     this.description = ds.getDescription();
-    this.editable = ds.isEditable();
+    this.editable = ds.getPermissionsAsInt();
     this.publicDs = ds.getPublicDs();
     this.type = ds.getType();
   }
@@ -201,13 +201,41 @@ public class Dataset implements Serializable {
   public void setProject(Project project) {
     this.project = project;
   }
-
-  public boolean isEditable() {
+  
+  private int getPermissionsAsInt() {
     return editable;
   }
 
-  public void setEditable(boolean editable) {
-    this.editable = editable;
+  public DatasetPermissions getEditable() {
+    switch (this.editable) {
+      case 0:
+        return DatasetPermissions.OWNER_ONLY;
+      case 1:
+        return DatasetPermissions.GROUP_WRITABLE_SB;
+      case 2:
+        return DatasetPermissions.GROUP_WRITABLE;
+      default:
+        break;
+    }
+    return null;
+  }
+
+  public void setEditable(DatasetPermissions permissions) {
+    if (null != permissions) {
+      switch (permissions) {
+        case OWNER_ONLY:
+          this.editable = 0;
+          break;
+        case GROUP_WRITABLE_SB:
+          this.editable = 1;
+          break;
+        case GROUP_WRITABLE:
+          this.editable = 2;
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   public boolean isSearchable() {

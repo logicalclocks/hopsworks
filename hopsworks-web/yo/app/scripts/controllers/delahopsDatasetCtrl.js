@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
             self.userRating = 0;
             self.myUserId;
             self.myClusterId;
-            self.commentEditable = false;
+            self.commentEditable = [];
             self.newComment;
             self.updateComment;
             self.publicDSId = $rootScope.publicDSId;
@@ -27,7 +27,6 @@ angular.module('hopsWorksApp')
 
             var getUser = function () {
               HopssiteService.getUserId().then(function (success) {
-                console.log("getUser", success);
                 self.myUserId = success.data;
               }, function (error) {
                 self.myUserId = undefined;
@@ -37,7 +36,6 @@ angular.module('hopsWorksApp')
             
             var getClusterId = function () {
               HopssiteService.getClusterId().then(function (success) {
-                console.log("getClusterId", success);
                 self.myClusterId = success.data;
               }, function (error) {
                 self.myClusterId = undefined;
@@ -48,7 +46,6 @@ angular.module('hopsWorksApp')
             var getDisplayCategories = function () {
               self.loadingDisplayCategories = true;
               HopssiteService.getDisplayCategories().then(function (success) {
-                console.log("getDisplayCategories", success);
                 self.displayCategories = success.data;
                 self.loadingDisplayCategories = false;
               }, function (error) {
@@ -60,7 +57,6 @@ angular.module('hopsWorksApp')
             
             var getDataset = function (publicId) {
               HopssiteService.getDataset(publicId).then(function (success) {
-                console.log("getDataset", success);
                 self.selectedDataset = success.data;
                 self.selectedSubCategory = undefined;
                 getBasicReadme(publicId);
@@ -74,7 +70,6 @@ angular.module('hopsWorksApp')
             var getDatasetFromLocal = function (inodeId) {
               ProjectService.getDatasetInfo({inodeId: inodeId}).$promise.then(
                 function (response) {
-                  console.log('getDatasetFromLocal: ', response);
                   self.selectedDataset = response;
                   getReadMeLocal(self.selectedDataset.inodeId);
                 }, function (error) {
@@ -83,7 +78,6 @@ angular.module('hopsWorksApp')
             };            
             
             self.selectCategory = function (category) {
-              console.log("selectDisplayCategory", category);
               self.selectedDataset = undefined;
               self.selectedCategory = category;
               self.selectedCategoryMap[category.categoryName] = category;
@@ -91,7 +85,6 @@ angular.module('hopsWorksApp')
             };
             
             self.selectDisplayCategory = function (category) {
-              console.log("selectDisplayCategory", category);
               self.selectedDataset = undefined;
               self.selectedCategory = category;
               self.selectedCategoryMap[category.categoryName] = category;
@@ -126,7 +119,6 @@ angular.module('hopsWorksApp')
                         category['selectedList'] = success;
                         category['selectedSubCategoryList'] = success.data;
                         self.loadingSelectedCategory = false;
-                        console.log("doGetLocalCluster", success);
                       },
                       function (error) {
                         category['selectedList'] = [];
@@ -144,7 +136,6 @@ angular.module('hopsWorksApp')
               }
 
               HopssiteService.getType(category.categoryName).then(function (success) {
-                console.log("doGet", success);
                 category['selectedList'] = success.data;
                 category['selectedSubCategoryList'] = success.data;
                 self.loadingSelectedCategory = false;
@@ -169,7 +160,6 @@ angular.module('hopsWorksApp')
               self.readme = '';
               self.loadingReadme = true;
               HopssiteService.getReadmeByInode(inodeId).then(function (success) {
-                console.log("getReadMeLocal", success);
                 var conv = new showdown.Converter({parseImgDimensions: true});
                 self.readme =  conv.makeHtml(success.data.content);
                 self.loadingReadme = false;
@@ -184,7 +174,6 @@ angular.module('hopsWorksApp')
               self.readme = '';
               self.loadingReadme = true;
               DelaService.getReadme(publicId, bootstrap).then(function (success) {
-                console.log("getreadme", success);
                 var conv = new showdown.Converter({parseImgDimensions: true});
                 self.readme = conv.makeHtml(success.data.content);
                 self.loadingReadme = false;
@@ -198,8 +187,10 @@ angular.module('hopsWorksApp')
             var getComments = function (publicId) {
               self.loadingComments = true;
               self.comments = [];
+              if (self.myUserId === undefined) {
+                getUser();
+              }
               HopssiteService.getComments(publicId).then(function (success) {
-                console.log("getComments", success);
                 self.comments = success.data;
                 self.loadingComments = false;
               }, function (error) {
@@ -211,7 +202,6 @@ angular.module('hopsWorksApp')
 
             var getUserRating = function (publicId) {
               HopssiteService.getUserRating(publicId).then(function (success) {
-                console.log("getUserRating", success);
                 self.userRating = success.data.rate;
               }, function (error) {
                 self.userRating = 1;
@@ -240,7 +230,6 @@ angular.module('hopsWorksApp')
             self.reportAbuse = function (commentId) {
               ModalService.reportIssueModal('md', 'Report issue', '').then(function (success) {
                 var issue = getIssueObject('CommentIssue', success);
-                console.log(issue);
                 postCommentIssue(commentId, issue);
               }, function (error) {
                 console.log(error);
@@ -255,24 +244,33 @@ angular.module('hopsWorksApp')
             self.reportDataset = function () {
               ModalService.reportIssueModal('md', 'Report issue', '').then(function (success) {
                 var issue = getIssueObject('DatasetIssue', success);
-                console.log(issue);
                 postDatasetIssue(self.selectedDataset.publicId, issue);
               }, function (error) {
                 console.log(error);
               });
             };
 
-            self.commentMakeEditable = function () {
-              self.commentEditable = !self.commentEditable;
-              if (this.commentEditable) {
-                $('#commentdiv').css("background-color", "#FFFFCC");
+            self.commentMakeEditable = function (index) {
+              self.commentEditable[index] = !self.commentEditable[index];
+              var commentId = "#commentdiv-" + index;
+              if (self.commentEditable[index]) {
+                $(commentId).css("background-color", "#FFFFCC");
               }
             };
 
+            self.cancelEdit = function (comment, index) {
+              self.commentEditable[index] = !self.commentEditable[index];
+              var commentElementId = "#commentdiv-" + index;
+              if (!self.commentEditable[index]) {
+                $(commentElementId).html(comment.content);
+                $(commentElementId).css("background-color", "#FFF");
+              }
+            };
+            
             self.postComment = function () {
               HopssiteService.postComment(self.selectedDataset.publicId, self.newComment).then(function (success) {
-                console.log("saveComment", success);
                 self.newComment = '';
+                self.commentEditable = [];
                 getComments(self.selectedDataset.publicId);
               }, function (error) {
                 console.log("saveComment", error);
@@ -281,20 +279,19 @@ angular.module('hopsWorksApp')
             
             self.deleteComment = function (commentId) {
               HopssiteService.deleteComment(self.selectedDataset.publicId, commentId).then(function (success) {
-                console.log("deleteComment", success);
                 getComments(self.selectedDataset.publicId);
               }, function (error) {
                 console.log("deleteComment", error);
               });
             };
 
-            self.saveComment = function (commentId) {
-              self.commentEditable = !self.commentEditable;
-              self.updateComment = $('#commentdiv').text();
+            self.saveComment = function (commentId, index) {
+              self.commentEditable[index] = !self.commentEditable[index];
+              var commentElementId = "#commentdiv-" + index;
+              self.updateComment = $(commentElementId).html();
               //TODO (Ermias): delete if empty
               HopssiteService.updateComment(self.selectedDataset.publicId, commentId, self.updateComment).then(function (success) {
-                console.log("saveComment", success);
-                $('#commentdiv').css("background-color", "#FFF");
+                $(commentElementId).css("background-color", "#FFF");
                 self.updateComment = '';
                 getComments(self.selectedDataset.publicId);
               }, function (error) {
@@ -331,11 +328,9 @@ angular.module('hopsWorksApp')
               var projects;
               HopssiteService.getLocalDatasetByPublicId(dataset.publicId).then(function (response) {
                 datasetDto = response.data;
-                console.log('datasetDto: ', datasetDto);
                 //fetch the projects to pass them in the modal.
                 ProjectService.query().$promise.then(function (success) {
                   projects = success;
-                  console.log('projects: ', projects);
                   //show dataset
                   ModalService.viewPublicDataset('md', projects, datasetDto).then(function (success) {
                     growl.success(success.data.successMessage, {title: 'Success', ttl: 1000, referenceId: 13});

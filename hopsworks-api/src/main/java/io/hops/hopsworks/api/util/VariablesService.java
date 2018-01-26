@@ -32,8 +32,7 @@ public class VariablesService {
   public Response getVar(@PathParam("id") String id) throws AppException {
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(vf.findById(id).getValue());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @GET
@@ -41,8 +40,25 @@ public class VariablesService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getTwofactor() throws AppException {
     JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(vf.findById("twofactor_auth").getValue());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+    json.setSuccessMessage(vf.getTwoFactorAuth());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
+  
+  @GET
+  @Path("ldap")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getLDAPAuthStatus() throws AppException {
+    JsonResponse json = new JsonResponse();
+    json.setSuccessMessage(vf.getLDAPAuthStatus());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  @GET
+  @Path("authStatus")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getAuthStatus() throws AppException {
+    AuthStatus authStatus = new AuthStatus(vf.getTwoFactorAuth(), vf.getLDAPAuthStatus());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
+  }
+  
 }

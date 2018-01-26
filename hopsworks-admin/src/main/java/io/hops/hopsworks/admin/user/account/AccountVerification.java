@@ -1,6 +1,7 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -12,20 +13,22 @@ import javax.persistence.QueryTimeoutException;
 import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.AuditManager;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountType;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.user.UsersController;
 
 @ManagedBean
 @RequestScoped
 public class AccountVerification {
 
   @EJB
-  private UserManager mgr;
+  private UserFacade userFacade;
+  @EJB
+  protected UsersController usersController;
 
   @EJB
-  private AuditManager am;
+  private AccountAuditFacade am;
 
   @ManagedProperty("#{param.key}")
   private String key;
@@ -58,7 +61,7 @@ public class AccountVerification {
     Users user = null;
 
     try {
-      user = mgr.getUserByUsername(username);
+      user = userFacade.findByUsername(username);
     } catch (QueryTimeoutException ex) {
       dbDown = true;
       return false;
@@ -91,24 +94,24 @@ public class AccountVerification {
     }
 
     if (key.equals(user.getValidationKey())) {
-      mgr.changeAccountStatus(user.getUid(), "",
+      usersController.changeAccountStatus(user.getUid(), "",
               PeopleAccountStatus.VERIFIED_ACCOUNT);
       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.SUCCESS.name(),
               "Verified account email address.", user);
-      mgr.resetKey(user.getUid());
+      usersController.resetKey(user.getUid());
       return true;
     }
 
     int val = user.getFalseLogin();
-    mgr.increaseLockNum(user.getUid(), val + 1);
+    usersController.increaseLockNum(user.getUid(), val + 1);
 
     // if more than 5 times false logins set as spam
     if (val > AuthenticationConstants.ACCOUNT_VALIDATION_TRIES) {
-      mgr.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.
+      usersController.changeAccountStatus(user.getUid(), PeopleAccountStatus.SPAM_ACCOUNT.
               toString(),
               PeopleAccountStatus.SPAM_ACCOUNT);
-      mgr.resetKey(user.getUid());
+      usersController.resetKey(user.getUid());
       am.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
               AccountsAuditActions.FAILED.name(),
               "Too many false activation attemps.", user);

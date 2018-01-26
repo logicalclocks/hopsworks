@@ -23,6 +23,7 @@ angular.module('hopsWorksApp')
             self.working = [];
             self.user = {};
             self.showTourTips = true;
+            self.sortBy='-project.created';
             self.getTours = function () {
               self.tours = [
                 {'name': 'Spark', 'tip': 'Take a tour of HopsWorks by creating a project and running a Spark job!'},
@@ -55,6 +56,7 @@ angular.module('hopsWorksApp')
             // Load all projects
             var loadProjects = function (success) {
               self.projects = success;
+              console.log("Projects: ", self.projects);
               self.pageSizeProjects = 10;
               self.totalPagesProjects = Math.ceil(self.projects.length / self.pageSizeProjects);
               self.totalItemsProjects = self.projects.length;

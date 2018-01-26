@@ -425,13 +425,18 @@ public class JupyterProcessFacade {
       }
     }
 
+    projectCleanup(project);
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void projectCleanup(Project project) {
     String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
     int exitValue;
     String[] command = {"/usr/bin/sudo", prog, project.getName()};
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-
+    
       BufferedReader br = new BufferedReader(new InputStreamReader(
           process.getInputStream(), Charset.forName("UTF8")));
       String line;
@@ -445,14 +450,13 @@ public class JupyterProcessFacade {
           + project.getName() + ": {0}", ex.toString());
       exitValue = -2;
     }
-
+  
     if (exitValue != 0) {
       logger.log(Level.WARNING, "Problem remove project's jupyter folder: "
           + project.getName());
     }
-
   }
-
+  
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean pingServerJupyterUser(Long pid) {
     int exitValue = executeJupyterCommand("ping", pid.toString());

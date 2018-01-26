@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      >
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
+      </ui:insert>
+
+
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
+
+        <p:layoutUnit id="centerLayout" position="center">
+
+          <div class="container">
+            <div align="left">
+              <h2>Manage cluster nodes</h2>
+            </div>
+
+            <div class="content">
+              <h:form id="manageClusterNodes" >
+                <p:growl id="growl" showDetail="true" sticky="true"/>
+
+                <p:dataTable id="nodesTable" var="node"
+                             value="#{nodesBean.allNodes}"
+                             editable="true"
+                             style="table-layout: auto"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}
+                             {FirstPageLink} {PreviousPageLink}
+                             {PageLinks} {NextPageLink} {LastPageLink}
+                             {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,25,50,100,250"
+                             rowKey="#{node.hostname}"
+                             selectionMode="single"
+                             selection="#{nodesBean.toBeDeletedNode}">
+
+                  <f:facet name="header">
+                    <h:outputText value="Cluster Nodes"
+                                  style="float:center"/>
+                    <p:commandButton value="Add new node"
+                                     style="float:right"
+                                     actionListener="#{nodesBean.dialogAddNewNode}">
+                      <p:ajax event="dialogReturn"
+                              listener="#{nodesBean.onDialogAddNewNodeClosed}"
+                              update=":manageClusterNodes:growl @form"/>
+                    </p:commandButton>
+                  </f:facet>
+
+                  <p:ajax event="rowEdit"
+                          listener="#{nodesBean.onRowEdit}"
+                          update=":manageClusterNodes:growl"/>
+
+                  <p:column id="hostname" headerText="Hostname"
+                            filterBy="#{node.hostname}"
+                            filterMatchMode="contains">
+                    <h:outputText value="#{node.hostname}"/>
+                  </p:column>
+
+
+                  <p:column id="hostip" headerText="Host IP"
+                            filterBy="#{node.hostIp}"
+                            filterMatchMode="contains">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{node.hostIp}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{node.hostIp}"
+                                                         style="width:100%"
+                                                         label="Host IP"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
+
+                  <p:column id="publicIp" headerText="Public IP">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{node.publicIp}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{node.publicIp}"
+                                                         style="width:100%"
+                                                         label="Public IP"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
+
+                  <p:column id="privateIp" headerText="Private IP">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{node.privateIp}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{node.privateIp}"
+                                                         style="width:100%"
+                                                         label="Private IP"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
+
+                  <p:column id="agentPassword" headerText="Agent password">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{node.agentPassword}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{node.agentPassword}"
+                                                         style="width:100%"
+                                                         label="Agent password"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+                  <p:column id="registered" headerText="Registered?">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{node.registered}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{node.registered}"
+                                                         style="width:100%"
+                                                         label="Registered"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
+
+                  <p:column style="width:32px">
+                    <p:rowEditor />
+                  </p:column>
+
+                </p:dataTable>
+
+                <p:contextMenu for="nodesTable">
+                  <p:menuitem value="Delete node"
+                              update="@form"
+                              icon="ui-icon-close"
+                              actionListener="#{nodesBean.deleteNode}">
+                    <p:confirm header="Delete node" message="Are you
+                               sure you want to delete the node" icon="ui-icon-alert"/>
+                  </p:menuitem>
+                </p:contextMenu>
+
+                <p:confirmDialog global="true" showEffect="fade"
+                                 hideEffect="fade">
+                  <p:commandButton value="Yes" type="submit"
+                                   styleClass="ui-confirmdialog-yes"
+                                   icon="ui-icon-check"/>
+                  <p:commandButton value="No" type="button"
+                                   styleClass="ui-confirmdialog-no"
+                                   icon="ui-icon-close"/>
+                </p:confirmDialog>
+              </h:form>   
+
+            </div>
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+
+    </h:body>
+  </f:view>
+</html>

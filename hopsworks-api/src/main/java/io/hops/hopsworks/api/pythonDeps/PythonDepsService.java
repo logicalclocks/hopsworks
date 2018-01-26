@@ -2,9 +2,6 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
@@ -15,12 +12,10 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -64,25 +59,12 @@ public class PythonDepsService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserManager userManager;
-  @EJB
-  private WebCommunication web;
-  @EJB
   private Settings settings;
-  @EJB
-  private HostEJB hostsFacade;
-
   private Project project;
-  @EJB
-  private JupyterProcessFacade jupyterProcessFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
   private UserFacade userFacade;
-  @EJB
-  private UserManager userBean;
 
   public void setProject(Project project) {
     this.project = project;
@@ -107,7 +89,7 @@ public class PythonDepsService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response index() throws AppException {
 
     Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
@@ -159,7 +141,7 @@ public class PythonDepsService {
   }
 
   private Users getUser(String email) throws ThirdPartyException {
-    Users user = userBean.getUserByEmail(email);
+    Users user = userFacade.findByEmail(email);
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
           ThirdPartyException.Source.LOCAL, "exception");

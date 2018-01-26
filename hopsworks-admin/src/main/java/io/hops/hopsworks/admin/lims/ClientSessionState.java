@@ -8,7 +8,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import java.io.IOException;
 import javax.faces.context.ExternalContext;
@@ -21,7 +21,7 @@ public class ClientSessionState implements Serializable {
   private ProjectFacade projectFacade;
 
   @EJB
-  private UserManager userFacade;
+  private UserFacade userFacade;
 
   private Project activeProject;
 

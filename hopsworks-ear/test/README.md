@@ -37,5 +37,9 @@ If you have already deployed hopsworks-ear and just want to run the integration 
    bundle install
    rspec --format html --out ../target/test-report.html
 ```
-
+To run a single test 
+```sh
+   cd hopsworks/hopsworks-ear/test
+   rspec ./spec/session_spec.rb:60
+```
 When the test is done if 'LAUNCH_BROWSER' is set to true in .env it will open the test report in a browser.

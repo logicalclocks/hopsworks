@@ -1,0 +1,35 @@
+<div class="modal-header">
+  <button type="button" class="close" ng-click="ldapUserConsentModalCtrl.cancel()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h3 class="modal-title">LDAP profile</h3>
+</div>
+<div class="modal-body">
+  <h4>To use this system we need to save the following information about you.</h4>
+  <div>
+    <label for="noteName">Given name</label> 
+    <input type="text" class="form-control" id="noteName" ng-model="ldapUserConsentModalCtrl.data.givenName" disabled>
+  </div>
+  <div>
+    <label for="noteName">Surname</label> 
+    <input type="text" class="form-control" id="noteName" ng-model="ldapUserConsentModalCtrl.data.sn" disabled>
+  </div>
+  <div class="form-group">
+    <label for="email" ng-if="ldapUserConsentModalCtrl.data.email.length > 1">Email (choose another email from the list)</label>
+    <label for="email" ng-if="ldapUserConsentModalCtrl.data.email.length <= 1">Email</label>
+    <select id="email"
+            name="email"
+            class="form-control"
+            ng-model="ldapUserConsentModalCtrl.user.chosenEmail"
+            ng-options="option for option in ldapUserConsentModalCtrl.data.email">
+    </select>
+  </div>
+  <div class="checkbox c-checkbox">
+    <label>
+      <input required name="user_agreed" ng-model="ldapUserConsentModalCtrl.user.consent" type="checkbox">
+      <span class="fa fa-check"></span>I approve 
+    </label>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="ldapUserConsentModalCtrl.cancel()">Cancel</button>
+  <button class="btn btn-primary" ng-click="ldapUserConsentModalCtrl.ok()">Continue</button>
+</div>
