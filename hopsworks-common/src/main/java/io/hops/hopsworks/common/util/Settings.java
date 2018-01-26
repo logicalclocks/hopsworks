@@ -179,6 +179,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN =
       "whitelist_users";
+  private static final String VARIABLE_BLACKLIST_USERS_LOGIN =
+      "blacklist_users";
   private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   
@@ -395,6 +397,8 @@ public class Settings implements Serializable {
           CERTIFICATE_MATERIALIZER_DELAY);
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
+      BLACKLIST_USERS_LOGIN = setStrVar(VARIABLE_BLACKLIST_USERS_LOGIN,
+          BLACKLIST_USERS_LOGIN);
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       populateDelaCache();
@@ -1236,6 +1240,18 @@ public class Settings implements Serializable {
   public synchronized String getWhitelistUsersLogin() {
     checkCache();
     return WHITELIST_USERS_LOGIN;
+  }
+  
+  /*
+  Comma-separated list of user emails that should not be persisted in the
+  userlogins table for auditing.
+  kagent -> agent@hops.io
+   */
+  private String BLACKLIST_USERS_LOGIN = "devices@hops.io";
+  
+  public synchronized String getBlacklistUsersLogin() {
+    checkCache();
+    return BLACKLIST_USERS_LOGIN;
   }
   
   // Zeppelin

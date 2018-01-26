@@ -135,6 +135,13 @@ public class AuthService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
               "Unrecognized email address. Have you registered yet?");
     }
+    
+    //Do not allow devices user to login
+    if (settings.getBlacklistUsersLogin().contains(user.getEmail())){
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "This system user is not allowed to login.");
+    }
+    
     String newPassword = null;
     Variables varTwoFactor = settings.findById("twofactor_auth");
     Variables varExclude = settings.findById("twofactor-excluded-groups");
