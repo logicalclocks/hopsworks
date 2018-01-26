@@ -54,6 +54,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
             || pathParts[0].equalsIgnoreCase("activity")
             || pathParts[0].equalsIgnoreCase("notebook")
             || pathParts[0].equalsIgnoreCase("interpreter"))) {
+      
 
       JsonResponse json = new JsonResponse();
       Integer projectId;

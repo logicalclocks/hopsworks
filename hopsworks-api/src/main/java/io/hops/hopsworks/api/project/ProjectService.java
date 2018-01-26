@@ -2,6 +2,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
+import io.hops.hopsworks.api.device.DeviceManagementService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jobs.BiobankingService;
@@ -98,6 +99,8 @@ public class ProjectService {
   private ProjectMembersService projectMembers;
   @Inject
   private KafkaService kafka;
+  @Inject
+  private DeviceManagementService deviceManagementService;
   @Inject
   private JupyterService jupyter;
   @Inject
@@ -904,6 +907,19 @@ public class ProjectService {
     this.kafka.setProjectId(id);
 
     return this.kafka;
+  }
+  
+  @Path("{id}/deviceManagement")
+  public DeviceManagementService deviceManagement(
+      @PathParam("id") Integer id) throws AppException {
+    Project project = projectController.findProjectById(id);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    this.deviceManagementService.setProjectId(id);
+
+    return this.deviceManagementService;
   }
   
   @Path("{id}/jupyter")

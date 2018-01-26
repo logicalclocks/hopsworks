@@ -5,7 +5,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('PythonDepsCtrl', ['$scope', '$routeParams', 'growl', '$location', 'PythonDepsService', '$interval', '$mdDialog',
+            .controller('PythonDepsCtrl', ['$scope', '$routeParams', 'growl', '$location', 'PythonDepsService', '$interval', '$mdDialog',
           function ($scope, $routeParams, growl, $location, PythonDepsService, $interval, $mdDialog) {
 
 

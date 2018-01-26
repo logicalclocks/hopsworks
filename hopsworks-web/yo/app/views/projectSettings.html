@@ -428,13 +428,63 @@
                   </tbody>
                 </table>
 
-              </uib-tab>              
+              </uib-tab>
+              <uib-tab index="4" heading="Device Settings">
+                <div ng-controller="DevicesSettingsCtrl as devicesSettingsCtrl">
+                  <form role="form" name="deviceForm" ng-submit="devicesSettingsCtrl.postDevicesSettings()">
+                    <h2>Device Settings</h2> 
+                    <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;">
+                      <div class="panel-body">
+                        <div id="updateDevicesSettings">
+                          <div class="controls">
+                            <p></p>
+                            <label class="control-label">Devices feature:</label><br />
+                            <div class="col-md-12">
+                              <ui-select style="min-width: 100px;" name="devicesSettingsEnabled" theme="select2"
+                                         style="margin-left: 10px" ng-model="devicesSettingsCtrl.enabled"  required>
+                                <ui-select-match placeholder="Select">{{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="item in devicesSettingsCtrl.enabledStates | filter: $select.search">
+                                  <div ng-bind-html="item.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                              </ui-select><br>
+                              <p></p>
+                              <label class="text-muted">By enabling this feature devices are allowed to login 
+                                to HopsWorks and produce records into the project's kafka topics.</label>
+                            </div>
+                            <label class="control-label">Every time a device logs in authorize it up to:</label><br />
+                            <div class="col-md-12">
+                              <ui-select style="min-width: 100px;" name="jwtTokenDurationInHours" theme="select2"
+                                         style="margin-left: 10px" ng-model="devicesSettingsCtrl.jwtTokenDurationInHours"  required ng-disabled="devicesSettingsCtrl.enabled.value === 0">
+                                <ui-select-match placeholder="Select duration">{{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="item in devicesSettingsCtrl.jwtTokenDurationInHoursStates | filter: $select.search">
+                                  <div ng-bind-html="item.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                              </ui-select><br>
+                              <p></p>
+                              <label class="text-muted">Defines the maximum session time for the devices. The device has to present its credentials again after this much time
+                              has elapsed since the latest login.</label>
+                            </div>
+                            <p></p>
+                            <p></p>
+                            <label class="control-label">Documentation on how devices can authenticate and send data to HopsWorks can be found here:</label><br />
+                            <div class="col-md-12">
+                              <label class="text-muted">Documentation Link Here</label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit" ng-disabled="devicesSettingsCtrl.working">
+                      <i ng-if="devicesSettingsCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                      Save
+                    </button>
+                  </form>
+                </div>
+              </uib-tab>
+
             </uib-tabset>
           </div>
-
-
       </section>
-
     </div>
   </div>
 </div>
