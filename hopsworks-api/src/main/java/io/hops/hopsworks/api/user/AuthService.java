@@ -97,6 +97,12 @@ public class AuthService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "Unrecognized email address. Have you registered yet?");
     }
+    
+    if(!userController.isLoginAllowed(user.getUsername())){
+      LOGGER.log(Level.FINE, "Login attempt for blacklisted user with email:{0}", email);
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "This user is not allowed to login");
+    }
+    
     // Do pre cauth realm check 
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
 

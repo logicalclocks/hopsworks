@@ -55,8 +55,8 @@ import org.json.JSONObject;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserManager;
 import io.hops.hopsworks.common.exception.AppException;
 
 @Path("/devices-api")
@@ -68,8 +68,8 @@ public class DeviceService {
 
   private final static Logger logger = Logger.getLogger(DeviceService.class.getName());
 
-  public static final String UUID_V4_REGEX =
-    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}";
+  public static final String UUID_V4_REGEX
+      = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}";
 
   @EJB
   private DeviceFacade deviceFacade;
@@ -90,14 +90,13 @@ public class DeviceService {
   private Settings settings; // Only used for the produce endpoint
 
   @EJB
-  private UserManager userManager; // Only used for the produce endpoint
-
-  @EJB
   private ProjectController projectController; // Only used for the produce endpoint
 
   @EJB
   private ProjectFacade projectFacade; // Only used for the produce endpoint
 
+  @EJB
+  private UserFacade userFacade;
 
   public DeviceService() {
   }
@@ -111,20 +110,19 @@ public class DeviceService {
    * @throws DeviceServiceException It is thrown when there is a validation problem with the provided object.
    */
   private void validate(AuthDeviceDTO authDeviceDTO) throws DeviceServiceException {
-    if (authDeviceDTO == null || authDeviceDTO.getDeviceUuid() == null || authDeviceDTO.getPassword() == null){
+    if (authDeviceDTO == null || authDeviceDTO.getDeviceUuid() == null || authDeviceDTO.getPassword() == null) {
       throw new DeviceServiceException(new DeviceResponseBuilder().MISSING_PARAMS);
     }
-    if (!authDeviceDTO.getDeviceUuid().matches(UUID_V4_REGEX)){
+    if (!authDeviceDTO.getDeviceUuid().matches(UUID_V4_REGEX)) {
       throw new DeviceServiceException(new DeviceResponseBuilder().AUTH_UUID4_BAD_REQ);
     }
   }
 
-
-  private SchemaDTO getSchemaForTopic(Integer projectId, String topicName) throws  DeviceServiceException{
+  private SchemaDTO getSchemaForTopic(Integer projectId, String topicName) throws DeviceServiceException {
     SchemaDTO schemaDTO;
     try {
       schemaDTO = kafkaFacade.getSchemaForProjectTopic(projectId, topicName);
-      if (schemaDTO == null){
+      if (schemaDTO == null) {
         throw new DeviceServiceException(new DeviceResponseBuilder().PROJECT_TOPIC_NOT_FOUND);
       }
     } catch (Exception e) {
@@ -132,7 +130,6 @@ public class DeviceService {
     }
     return schemaDTO;
   }
-
 
   /**
    * Retrieves the entire keystore file of the provided path into a Base64 encoded string.
@@ -162,7 +159,7 @@ public class DeviceService {
    * @throws IOException
    */
   private List<GenericData.Record> toAvro(String avroSchemaContents, JSONArray records)
-    throws IOException {
+      throws IOException {
 
     ArrayList<GenericData.Record> list = new ArrayList<>();
     for (int i = 0; i < records.length(); i++) {
@@ -178,13 +175,19 @@ public class DeviceService {
 
   /**
    * Registers a device under a project.
+   *
+   * @param projectName
+   * @param req
+   * @param deviceDTO
+   * @return
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @POST
   @Path("/{projectName}/register")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response postRegisterEndpoint(@PathParam("projectName") String projectName,
-    @Context HttpServletRequest req, AuthDeviceDTO deviceDTO) throws AppException {
+      @Context HttpServletRequest req, AuthDeviceDTO deviceDTO) throws AppException {
     try {
       validate(deviceDTO);
       try {
@@ -192,37 +195,43 @@ public class DeviceService {
         deviceDTO.setPassword(DigestUtils.sha256Hex(deviceDTO.getPassword()));
         deviceFacade.createProjectDevice(project.getId(), deviceDTO);
         return DeviceResponseBuilder.successfulJsonResponse(Status.OK);
-      }catch (Exception e) {
+      } catch (Exception e) {
         return new DeviceResponseBuilder().DEVICE_ALREADY_REGISTERED;
       }
-    }catch(DeviceServiceException e) {
+    } catch (DeviceServiceException e) {
       return e.getResponse();
     }
   }
 
   /**
    * Logs in a device under a project.
+   *
+   * @param projectName
+   * @param req
+   * @param deviceDTO
+   * @return
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @POST
   @Path("/{projectName}/login")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response postLoginEndpoint(@PathParam("projectName") String projectName, @Context HttpServletRequest req,
-                                    AuthDeviceDTO deviceDTO) throws AppException {
+      AuthDeviceDTO deviceDTO) throws AppException {
     try {
       validate(deviceDTO);
       Project project = projectFacade.findByName(projectName);
       ProjectDevice device = deviceFacade.readProjectDevice(project.getId(), deviceDTO.getDeviceUuid());
-      if (device == null){
+      if (device == null) {
         return new DeviceResponseBuilder().DEVICE_NOT_REGISTERED;
       }
 
       // Validates that the Device is in the Approved State.
-      if (device.getState() != ProjectDevice.State.Approved){
-        if (device.getState() == ProjectDevice.State.Disabled){
+      if (device.getState() != ProjectDevice.State.Approved) {
+        if (device.getState() == ProjectDevice.State.Disabled) {
           return new DeviceResponseBuilder().DEVICE_DISABLED;
         }
-        if (device.getState() == ProjectDevice.State.Pending){
+        if (device.getState() == ProjectDevice.State.Pending) {
           return new DeviceResponseBuilder().DEVICE_PENDING;
         }
         return new DeviceResponseBuilder().DEVICE_UNKNOWN_STATE;
@@ -231,17 +240,17 @@ public class DeviceService {
       if (device.getPassword().equals(DigestUtils.sha256Hex(deviceDTO.getPassword()))) {
         deviceFacade.updateProjectDeviceLastLoggedIn(project.getId(), deviceDTO);
         return DeviceResponseBuilder.successfulJsonResponse(
-          Status.OK, DeviceServiceSecurity.generateJwt(
-            deviceFacade.readProjectDevicesSettings(project.getId()), device));
+            Status.OK, DeviceServiceSecurity.generateJwt(
+                deviceFacade.readProjectDevicesSettings(project.getId()), device));
       }
       return new DeviceResponseBuilder().DEVICE_LOGIN_FAILED;
-    }catch(DeviceServiceException e) {
+    } catch (DeviceServiceException e) {
       return e.getResponse();
     }
   }
 
   /**
-   * Endpoint to  verify the jwt token provided in the Authorization Header.
+   * Endpoint to verify the jwt token provided in the Authorization Header.
    * Useful for testing purposes for developers of devices that are integrating towards hopsworks.
    */
   @POST
@@ -249,36 +258,46 @@ public class DeviceService {
   @DeviceJwtTokenRequired
   @Produces(MediaType.APPLICATION_JSON)
   public Response postVerifyTokenEndpoint(
-    @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
+      @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
     return DeviceResponseBuilder.successfulJsonResponse(Status.OK);
   }
 
   /**
    * Endpoint to get the schema of a topic under a project.
    * Useful for checking the schema of the topic on the client before producing.
+   *
+   * @param projectName
+   * @param req
+   * @return
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @GET
   @Path("/{projectName}/topic-schema")
   @DeviceJwtTokenRequired
   @Produces(MediaType.APPLICATION_JSON)
   public Response getTopicSchemaEndpoint(
-    @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
+      @PathParam("projectName") String projectName, @Context HttpServletRequest req) throws AppException {
 
     Integer projectId = (Integer) req.getAttribute(DeviceServiceSecurity.PROJECT_ID);
     String topicName = req.getParameter("topic");
 
-    SchemaDTO schemaDTO = null;
     try {
-      schemaDTO = getSchemaForTopic(projectId, topicName);
+      SchemaDTO schemaDTO = getSchemaForTopic(projectId, topicName);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaDTO).build();
+
     } catch (DeviceServiceException e) {
-      return e.getResponse();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaDTO).build();
 
   }
 
   /**
    * Endpoint to produce to kafka the specified records to the specified topic of the specified project.
+   * @param projectName
+   * @param req
+   * @param jsonString
+   * @return 
+   * @throws io.hops.hopsworks.common.exception.AppException 
    */
   @POST
   @Path("/{projectName}/produce")
@@ -287,7 +306,7 @@ public class DeviceService {
   @Produces(MediaType.APPLICATION_JSON)
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public Response postProduceEndpoint(@PathParam("projectName") String projectName, @Context HttpServletRequest req,
-                                      String jsonString) throws AppException {
+      String jsonString) throws AppException {
 
     Users user = null;
     Project project = null;
@@ -303,7 +322,7 @@ public class DeviceService {
       JSONArray records = json.getJSONArray("records");
 
       // Extracts the default device-user from the database
-      user = userManager.getUserByEmail(DeviceServiceSecurity.DEFAULT_DEVICE_USER_EMAIL);
+      user = userFacade.findByEmail(DeviceServiceSecurity.DEFAULT_DEVICE_USER_EMAIL);
 
       // Extracts the project from the database
       project = projectFacade.find(projectId);
@@ -316,12 +335,11 @@ public class DeviceService {
         return e.getResponse();
       }
 
+      HopsUtils.copyUserKafkaCerts(userCerts, project, user.getUsername(), settings.getHopsworksTmpCertDir(),
+          settings.getHdfsTmpCertDir(), certificateMaterializer, settings.getHopsRpcTls());
 
-      HopsUtils.copyUserKafkaCerts(userCerts, project,  user.getUsername(), settings.getHopsworksTmpCertDir(),
-        settings.getHdfsTmpCertDir(), certificateMaterializer, settings.getHopsRpcTls());
-
-      String keyStoreFilePath = settings.getHopsworksTmpCertDir() + File.separator +
-        HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername());
+      String keyStoreFilePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectKeystoreName(
+          project.getName(), user.getUsername());
 
       String base64EncodedKeyStore = keystoreEncode(keyStoreFilePath);
 
@@ -334,16 +352,17 @@ public class DeviceService {
 
       List<GenericData.Record> avroRecords = toAvro(schemaDTO.getContents(), records);
       List<AckRecordDTO> acks = kafkaFacade.produce(
-        true, project, user, certPwDTO, deviceUuid, topicName, schemaDTO.getContents(), avroRecords);
-      GenericEntity<List<AckRecordDTO>> listAcks = new GenericEntity<List<AckRecordDTO>>(acks){};
+          true, project, user, certPwDTO, deviceUuid, topicName, schemaDTO.getContents(), avroRecords);
+      GenericEntity<List<AckRecordDTO>> listAcks = new GenericEntity<List<AckRecordDTO>>(acks) {
+      };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(listAcks).build();
-    }catch(JSONException e) {
+    } catch (JSONException e) {
       return new DeviceResponseBuilder().MISSING_PARAMS;
     } catch (DeviceServiceException e) {
       return e.getResponse();
-    }catch (Exception e){
+    } catch (Exception e) {
       return new DeviceResponseBuilder().UNEXPECTED_ERROR;
-    }finally {
+    } finally {
       if (user != null && project != null) {
         certificateMaterializer.removeCertificate(user.getUsername(), project.getName());
       }

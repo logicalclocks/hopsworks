@@ -179,6 +179,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
+  private static final String VARIABLE_BLACKLIST_USERS_LOGIN = "blacklist_users";
   private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
@@ -397,8 +398,8 @@ public class Settings implements Serializable {
       HOPS_RPC_TLS = setStrVar(VARIABLE_HOPS_RPC_TLS, HOPS_RPC_TLS);
       CERTIFICATE_MATERIALIZER_DELAY = setStrVar(VARIABLE_CERT_MATER_DELAY,
           CERTIFICATE_MATERIALIZER_DELAY);
-      WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
-          WHITELIST_USERS_LOGIN);
+      WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN, WHITELIST_USERS_LOGIN);
+      BLACKLIST_USERS_LOGIN = setStrVar(VARIABLE_BLACKLIST_USERS_LOGIN, BLACKLIST_USERS_LOGIN);
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       populateDelaCache();
@@ -1281,6 +1282,17 @@ public class Settings implements Serializable {
   public synchronized String getWhitelistUsersLogin() {
     checkCache();
     return WHITELIST_USERS_LOGIN;
+  }
+  
+  private String BLACKLIST_USERS_LOGIN = "devices@hops.io";
+  
+  /*
+   * Comma-separated list of usernames that should not be allowed to login.
+   * android devices -> devices0
+   */
+  public synchronized String getBlacklistUsersLogin() {
+    checkCache();
+    return BLACKLIST_USERS_LOGIN;
   }
 
   // Zeppelin

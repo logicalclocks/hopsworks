@@ -591,6 +591,10 @@ public class UsersController {
     return (userFacade.findByEmail(username) != null);
   }
 
+  public boolean isLoginAllowed(String email){
+    return !settings.getBlacklistUsersLogin().contains(email);
+  }
+  
   public boolean isUserInRole(Users user, String groupName) {
     if (user == null || groupName == null) {
       return false;
