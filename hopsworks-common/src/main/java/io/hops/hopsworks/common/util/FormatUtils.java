@@ -8,6 +8,8 @@ import java.util.List;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
+
 public class FormatUtils {
 
   final static double K = 1024d;
@@ -83,6 +85,13 @@ public class FormatUtils {
     html = html.replaceAll("\t", StringUtils.repeat("&nbsp;", 8));
     html = html.replaceAll(" ", StringUtils.repeat("&nbsp;", 1));
     return html;
+  }
+
+  public static String getUserURL(HttpServletRequest req) {
+    String domain = req.getRequestURL().toString();
+    String cpath = req.getContextPath();
+
+    return domain.substring(0, domain.indexOf(cpath));
   }
 
   public static List<String> rrdChartFormats() {

@@ -30,25 +30,19 @@ import io.hops.hopsworks.common.dao.user.Users;
   @NamedQuery(name = "AccountAudit.findByInitiator",
           query = "SELECT a FROM AccountAudit a WHERE a.initiator = :initiator"),
   @NamedQuery(name = "AccountAudit.findByTarget",
-          query = "SELECT r FROM RolesAudit r WHERE r.target = :target"),
+          query = "SELECT a FROM AccountAudit a WHERE a.target = :target"),
   @NamedQuery(name = "AccountAudit.findByAction",
           query = "SELECT a FROM AccountAudit a WHERE a.action = :action"),
   @NamedQuery(name = "AccountAudit.findByTime",
-          query = "SELECT a FROM AccountAudit a WHERE a.time = :time"),
+          query = "SELECT a FROM AccountAudit a WHERE a.actionTimestamp = :actionTimestamp"),
   @NamedQuery(name = "AccountAudit.findByMessage",
           query = "SELECT a FROM AccountAudit a WHERE a.message = :message"),
   @NamedQuery(name = "AccountAudit.findByOutcome",
           query = "SELECT a FROM AccountAudit a WHERE a.outcome = :outcome"),
   @NamedQuery(name = "AccountAudit.findByIp",
           query = "SELECT a FROM AccountAudit a WHERE a.ip = :ip"),
-  @NamedQuery(name = "AccountAudit.findByEmail",
-          query = "SELECT a FROM AccountAudit a WHERE a.email = :email"),
-  @NamedQuery(name = "AccountAudit.findByBrowser",
-          query = "SELECT a FROM AccountAudit a WHERE a.browser = :browser"),
-  @NamedQuery(name = "AccountAudit.findByOs",
-          query = "SELECT a FROM AccountAudit a WHERE a.os = :os"),
-  @NamedQuery(name = "AccountAudit.findByMac",
-          query = "SELECT a FROM AccountAudit a WHERE a.mac = :mac")})
+  @NamedQuery(name = "AccountAudit.findByUserAgent",
+      query = "SELECT a FROM AccountAudit a WHERE a.userAgent = :userAgent")})
 public class AccountAudit implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -60,9 +54,9 @@ public class AccountAudit implements Serializable {
   @Size(max = 45)
   @Column(name = "action")
   private String action;
-  @Column(name = "time")
+  @Column(name = "action_timestamp")
   @Temporal(TemporalType.TIMESTAMP)
-  private Date time;
+  private Date actionTimestamp;
   @Size(max = 100)
   @Column(name = "message")
   private String message;
@@ -72,130 +66,71 @@ public class AccountAudit implements Serializable {
   @Size(max = 45)
   @Column(name = "ip")
   private String ip;
-  @Size(max = 45)
-  @Column(name = "browser")
-  private String browser;
-  @Size(max = 45)
-  @Column(name = "os")
-  private String os;
-  @Size(max = 254)
-  @Column(name = "email")
-  private String email;
-  @Size(max = 45)
-  @Column(name = "mac")
-  private String mac;
+  @Size(max = 255)
+  @Column(name = "useragent")
+  private String userAgent;
   @JoinColumn(name = "initiator",
-          referencedColumnName = "uid")
+      referencedColumnName = "uid")
   @ManyToOne
   private Users initiator;
 
   @JoinColumn(name = "target",
-          referencedColumnName = "uid")
+      referencedColumnName = "uid")
   @ManyToOne
   private Users target;
 
   public AccountAudit() {
   }
 
-  public AccountAudit(Integer logId) {
-    this.logId = logId;
-  }
-
-  public Integer getLogId() {
-    return logId;
-  }
-
-  public void setLogId(Integer logId) {
-    this.logId = logId;
-  }
-
-  public String getAction() {
-    return action;
-  }
-
-  public void setAction(String action) {
+  public AccountAudit(String action, Date actionTimestamp, String message, String outcome, String ip,
+                      String userAgent, Users target, Users initiator) {
     this.action = action;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public Date getTime() {
-    return time;
-  }
-
-  public void setTime(Date time) {
-    this.time = time;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
+    this.actionTimestamp = actionTimestamp;
     this.message = message;
-  }
-
-  public String getOutcome() {
-    return outcome;
-  }
-
-  public void setOutcome(String outcome) {
     this.outcome = outcome;
-  }
-
-  public String getIp() {
-    return ip;
-  }
-
-  public void setIp(String ip) {
     this.ip = ip;
-  }
-
-  public String getBrowser() {
-    return browser;
-  }
-
-  public void setBrowser(String browser) {
-    this.browser = browser;
-  }
-
-  public String getOs() {
-    return os;
-  }
-
-  public void setOs(String os) {
-    this.os = os;
-  }
-
-  public String getMac() {
-    return mac;
-  }
-
-  public void setMac(String mac) {
-    this.mac = mac;
-  }
-
-  public Users getInitiator() {
-    return initiator;
-  }
-
-  public void setInitiator(Users initiator) {
+    this.userAgent = userAgent;
     this.initiator = initiator;
-  }
-
-  public Users getTarget() {
-    return target;
-  }
-
-  public void setTarget(Users target) {
     this.target = target;
   }
+
+  public AccountAudit(Integer logId) { this.logId = logId; }
+
+  public Integer getLogId() { return logId; }
+
+  public void setLogId(Integer logId) { this.logId = logId; }
+
+  public String getAction() { return action; }
+
+  public void setAction(String action) { this.action = action; }
+
+  public Date getActionTimestamp() { return actionTimestamp; }
+
+  public void setActionTimestamp(Date time) { this.actionTimestamp = time; }
+
+  public String getMessage() { return message; }
+
+  public void setMessage(String message) { this.message = message; }
+
+  public String getOutcome() { return outcome; }
+
+  public void setOutcome(String outcome) { this.outcome = outcome; }
+
+  public String getIp() { return ip; }
+
+  public void setIp(String ip) { this.ip = ip; }
+
+  public String getUserAgent() { return userAgent; }
+
+  public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
+
+  public Users getInitiator() { return initiator; }
+
+  public void setInitiator(Users initiator) { this.initiator = initiator; }
+
+  public Users getTarget() { return target; }
+
+  public void setTarget(Users target) { this.target = target; }
 
   @Override
   public int hashCode() {
@@ -212,7 +147,7 @@ public class AccountAudit implements Serializable {
     }
     AccountAudit other = (AccountAudit) object;
     if ((this.logId == null && other.logId != null) || (this.logId != null
-            && !this.logId.equals(other.logId))) {
+        && !this.logId.equals(other.logId))) {
       return false;
     }
     return true;
@@ -220,7 +155,16 @@ public class AccountAudit implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bb.security.audit.model.AccountAudit[ logId=" + logId + " ]";
+    return "AccountAudit{" +
+        "logId=" + logId +
+        ", action='" + action + '\'' +
+        ", time=" + actionTimestamp +
+        ", message='" + message + '\'' +
+        ", outcome='" + outcome + '\'' +
+        ", ip='" + ip + '\'' +
+        ", userAgent='" + userAgent + '\'' +
+        ", initiator=" + initiator +
+        ", target=" + target +
+        '}';
   }
-
 }

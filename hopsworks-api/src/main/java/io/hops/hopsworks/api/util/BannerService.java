@@ -23,7 +23,8 @@ import javax.ws.rs.core.Response;
 
 @Path("/banner")
 @Stateless
-@Api(value = "Banner Service", description = "Banner Service")
+@Api(value = "Banner Service",
+    description = "Banner Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class BannerService {
 
@@ -47,7 +48,7 @@ public class BannerService {
     maintenance.setOtp(settings.getTwoFactorAuth());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(maintenance).build();
   }
-  
+
   @GET
   @Path("user")
   @Produces(MediaType.APPLICATION_JSON)
@@ -60,5 +61,34 @@ public class BannerService {
       json.setSuccessMessage("For security purposes, we highly recommend you change your password.");
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+
+  @GET
+  @Path("firsttime")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response isFirstTimeLogin(@Context HttpServletRequest req) throws AppException {
+    if (maintenanceController.isFirstTimeLogin()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+  }
+  
+  @GET
+  @Path("firstlogin")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
+  public Response firstLogin(@Context HttpServletRequest req) throws AppException {
+    settings.updateVariable("first_time_login", "0");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }  
+
+  @GET
+  @Path("admin_pwd_changed")  
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response adminPwdChanged(@Context HttpServletRequest req) throws AppException {
+    if (settings.isDefaultAdminPasswordChanged()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
   }
 }

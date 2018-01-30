@@ -24,7 +24,7 @@ public enum TourProjectType {
   KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.KAFKA}),
   DISTRIBUTED_TENSORFLOW("distributed tensorflow", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
   TENSORFLOW("tensorflow", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
-    ProjectServiceEnum.ZEPPELIN});
+    ProjectServiceEnum.SERVING, ProjectServiceEnum.ZEPPELIN});
 
   private final String tourName;
   private final ProjectServiceEnum[] activeServices;

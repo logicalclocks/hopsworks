@@ -22,6 +22,25 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              viewJson: function (size, title, msg, projectId) {
+                var modalInstance = $uibModal.open({
+                  templateUrl: 'views/jsonModal.html',
+                  controller: 'ModalCtrl as modalCtrl',
+                  size: size,
+                  resolve: {
+                    title: function () {
+                      return title;
+                    },
+                    msg: function () {
+                      return msg;
+                    },
+                    projectId: function () {
+                      return projectId;
+                    }
+                  }
+                });
+                return modalInstance.result;
+              },
               certs: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/certsModal.html',

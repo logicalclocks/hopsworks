@@ -20,8 +20,10 @@
                      placeholder="Email"
                      name="user_email">
             </div>
-            <div class="form-group">
-              <input id="login_inputPassword" class="form-control" type="password" required
+            <div class="form-group" >
+              <input uib-tooltip="Default password is 'admin'" tooltip-placement="left" 
+                     tooltip-is-open="true" tooltip-enable="loginCtrl.showDefaultPassword()"
+                id="login_inputPassword" class="form-control" type="password" required
                      ng-model="loginCtrl.user.password"
                      autocomplete="off"
                      placeholder="Password"
@@ -101,4 +103,18 @@
 
     </div>
   </div>
+  
+  <tour class="ng-scope" step="loginCtrl.tourService.currentStep_TourOne" post-tour="closeTour()" ng-if="loginCtrl.firstTime">
+    <virtual-step
+      class="ng-scope"
+      tourtip="Enter the admin account password: admin"
+      tourtip-step="0"
+      tourtip-element="#true.list-group-item"
+      tourtip-placement="left"
+      tourtip-next-label="Ok"
+      on-proceed="loginCtrl.enterAdminPassword()"
+      tourtip-offset-vertical="-17"
+      tourtip-offset-horizontal="13"
+      ></virtual-step>
+  </tour>  
 </div>

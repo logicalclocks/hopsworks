@@ -1,7 +1,7 @@
 package io.hops.hopsworks.common.dao.host;
 
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
-import io.hops.hopsworks.common.dao.role.Roles;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.util.FormatUtils;
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -30,18 +30,20 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query = "SELECT h FROM Hosts h"),
   @NamedQuery(name = "Hosts.findBy-Id",
           query = "SELECT h FROM Hosts h WHERE h.id = :id"),
+  @NamedQuery(name = "Hosts.findBy-hasGpus",
+          query = "SELECT h FROM Hosts h WHERE h.numGpus = :numGpus"),
   @NamedQuery(name = "Hosts.findBy-Hostname",
           query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
   @NamedQuery(name = "Hosts.findBy-HostIp",
           query = "SELECT h FROM Hosts h WHERE h.hostIp = :hostIp"),
-  @NamedQuery(name = "Hosts.findBy-Cluster.Service.Role.Status",
+  @NamedQuery(name = "Hosts.findBy-Cluster.Group.Service.Status",
           query
-          = "SELECT h FROM Hosts h, Roles r WHERE h = r.host AND r.cluster "
-          + "= :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
-  @NamedQuery(name = "Hosts.findBy-Cluster.Service.Role",
+          = "SELECT h FROM Hosts h, HostServices r WHERE h = r.host AND r.cluster "
+          + "= :cluster AND r.group = :group AND r.service = :service AND r.status = :status"),
+  @NamedQuery(name = "Hosts.findBy-Cluster.Group.Service",
           query
-          = "SELECT h FROM Hosts h, Roles r WHERE h = r.host AND r.cluster "
-          + "= :cluster AND r.service = :service AND r.role = :role"),})
+          = "SELECT h FROM Hosts h, HostServices r WHERE h = r.host AND r.cluster "
+          + "= :cluster AND r.group = :group AND r.service = :service"),})
 public class Hosts implements Serializable {
 
   private static final int HEARTBEAT_INTERVAL = 10;
@@ -106,6 +108,9 @@ public class Hosts implements Serializable {
   @Column(name = "memory_used")
   private Long memoryUsed;
 
+  @Column(name = "has_gpus")
+  private int numGpus = 0;
+
   @Column(name = "registered")
   private boolean registered;
 
@@ -114,7 +119,7 @@ public class Hosts implements Serializable {
   private Collection<CondaCommands> condaCommandsCollection;
 
   @OneToMany(mappedBy = "host")
-  private Collection<Roles> rolesCollection;
+  private Collection<HostServices> hostServices;
   
   public Hosts() {
   }
@@ -229,6 +234,14 @@ public class Hosts implements Serializable {
 
   public void setMemoryUsed(Long memoryUsed) {
     this.memoryUsed = memoryUsed;
+  }
+
+  public int getNumGpus() {
+    return numGpus;
+  }
+
+  public void setNumGpus(int numGpus) {
+    this.numGpus = numGpus;
   }
 
   public boolean isRegistered() {
@@ -364,12 +377,12 @@ public class Hosts implements Serializable {
   
   @XmlTransient
   @JsonIgnore
-  public Collection<Roles> getRolesCollection() {
-    return rolesCollection;
+  public Collection<HostServices> getHostServicesCollection() {
+    return hostServices;
   }
 
-  public void setRolesCollection(Collection<Roles> rolesCollection) {
-    this.rolesCollection = rolesCollection;
+  public void setHostServicesCollection(Collection<HostServices> hostServicesCollection) {
+    this.hostServices = hostServicesCollection;
   }
 
   @Override

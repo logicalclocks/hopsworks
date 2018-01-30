@@ -1,5 +1,6 @@
 package io.hops.hopsworks.common.dao.alert;
 
+import io.hops.hopsworks.common.dao.host.Hosts;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Column;
@@ -13,6 +14,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Temporal;
 import java.math.BigInteger;
 import javax.persistence.Basic;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -84,15 +87,17 @@ public class Alert implements Serializable {
   @Size(max = 128)
   @Column(name = "data_source")
   private String dataSource;
-  @Size(max = 256)
-  @Column(name = "host_id")
-  private int hostid;
+  @JoinColumn(name = "host_id",
+      referencedColumnName = "id")
+  @ManyToOne
+  private Hosts host;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 1024)
   @Column(name = "message")
   private String message;
+    
   @Size(max = 128)
   @Column(name = "plugin")
   private String plugin;
@@ -113,9 +118,9 @@ public class Alert implements Serializable {
   public Alert() {
   }
 
-  public Alert(int hostId, String message, String plugin,
+  public Alert(Hosts host, String message, String plugin,
           String pluginInstance, String type, String typeInstance) {
-    this.hostid = hostId;
+    this.host = host;
     this.message = message;
     this.plugin = plugin;
     this.pluginInstance = pluginInstance;
@@ -204,12 +209,12 @@ public class Alert implements Serializable {
     this.dataSource = dataSource;
   }
 
-  public int getHostid() {
-    return hostid;
+  public Hosts getHost() {
+    return host;
   }
 
-  public void setHostid(int hostid) {
-    this.hostid = hostid;
+  public void setHost(Hosts host) {
+    this.host = host;
   }
 
   public String getMessage() {
@@ -292,7 +297,7 @@ public class Alert implements Serializable {
   @Override
   public String toString() {
     return "Alert: " + message + "\r"
-         + "Host : " + hostid + "\r"
+         + "Host : " + host.getHostname() + "\r"
          + "Type: " + type +  "\r"
          + "Type Instance: " + typeInstance +  "\r"
          + "Current Value: " + currentValue +  "\r"

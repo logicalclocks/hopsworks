@@ -2,15 +2,23 @@ package io.hops.hopsworks.kmon.struct;
 
 public enum ServiceType {
 
-  HDFS,
-  YARN,
-  MAP_REDUCE,
+  namenode,
+  datanode,
+  ndb_mgmd,
+  mysqld,
+  ndbmtd,
+  resourcemanager,
+  nodemanager,
   zookeeper,
-  NDB,
   influxdb,
   epipe,
   logstash,
+  hiveserver2,
+  hivemetastore,
+  hivecleaner,
+  dela,
   livy,
+  spark,
   historyserver,
   sparkhistoryserver,
   telegraf,
@@ -18,7 +26,6 @@ public enum ServiceType {
   grafana,
   kafka,
   kibana,
-  hive,
-  dela,
-  SSH
+  filebeat,
+  ssh
 }

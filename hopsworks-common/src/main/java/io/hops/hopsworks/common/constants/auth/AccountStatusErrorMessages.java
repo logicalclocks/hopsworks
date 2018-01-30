@@ -8,8 +8,6 @@ public class AccountStatusErrorMessages {
   
   public final static String USER_NOT_FOUND = "No account found.";
 
-  public final static String YUBIKEY = "You are using a Yubikey Not a QRCode";
-
   public final static String BLOCKED_ACCOUNT = "This account has been blocked.";
 
   public final static String INACTIVE_ACCOUNT = "This account has not been activated.";
@@ -40,11 +38,11 @@ public class AccountStatusErrorMessages {
 
   public final static String PASSWORD_EMPTY = "Enter a password.";
 
-  public final static String INCCORCT_PASSWORD = "The password is incorrect.";
+  public final static String INCORRECT_PASSWORD = "The password is incorrect.";
 
-  public final static String INCCORCT_DEACTIVATION_LENGTH
+  public final static String INCORRECT_DEACTIVATION_LENGTH
           = "The message should have a length between 5 and 500 characters.";
 
-  public final static String INCCORCT_TMP_PIN = "The temporary code was wrong.";
+  public final static String INCORRECT_TMP_PIN = "The temporary code was wrong.";
 
 }

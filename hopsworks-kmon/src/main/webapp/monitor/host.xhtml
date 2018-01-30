@@ -45,7 +45,7 @@
             <p:toolbarGroup align="left">  
               <p:commandLink action="#{urlController.host()}" ajax="false">
                 <h:outputText value="#{hostController.host.hostname} (#{hostController.host.hostIp})"/>
-                <f:param name="hostid" value="#{hostController.hostname}"/>   
+                <f:param name="hostname" value="#{hostController.hostname}"/>   
               </p:commandLink>
             </p:toolbarGroup>  
 
@@ -90,18 +90,18 @@
 
           <p:spacer width="1" height="20" /> 
 
-          <p:panel header="Roles">
-            <p:dataTable id="roles" var="role" value="#{hostController.roles}">
-              <p:column headerText="Cluster"><h:outputText value="#{role.cluster}"/></p:column>
-              <p:column headerText="Service"><h:outputText value="#{role.service}"/></p:column>                            
-              <p:column headerText="Role"><h:outputText value="#{role.role}"/></p:column>                           
-              <p:column headerText="Role Page">
-                <p:commandLink action="#{urlController.roleStatus}" ajax="false">
-                  <h:outputText value="#{role}"/>
-                  <f:param name="hostid" value="#{role.hostId.hostname}"/>
-                  <f:param name="cluster" value="#{role.cluster}"/>
-                  <f:param name="role" value="#{role.role}"/>
-                  <f:param name="service" value="#{role.service}"/>
+          <p:panel header="Services">
+            <p:dataTable id="services" var="hostService" value="#{hostController.hostServices}">
+              <p:column headerText="Cluster"><h:outputText value="#{hostService.cluster}"/></p:column>
+              <p:column headerText="Group"><h:outputText value="#{hostService.group}"/></p:column>                            
+              <p:column headerText="Service"><h:outputText value="#{hostService.service}"/></p:column>                           
+              <p:column headerText="Service Status">
+                <p:commandLink action="#{urlController.serviceStatus}" ajax="false">
+                  <h:outputText value="#{hostService.host.hostname}"/>
+                  <f:param name="hostname" value="#{hostService.host.hostname}"/>
+                  <f:param name="cluster" value="#{hostService.cluster}"/>
+                  <f:param name="service" value="#{hostService.service}"/>
+                  <f:param name="group" value="#{hostService.group}"/>
                 </p:commandLink>                         
               </p:column>  
             </p:dataTable>                       
@@ -145,7 +145,7 @@
                                     <p:column>
                                         <p:commandLink id="nonAjax" actionListener="#{SshController.exec}" ajax="false">
                                             <f:param name="cluster" value="#{hostController.cluster}" />
-                                            <f:param name="hostid" value="#{hostController.host.hostname}" />
+                                            <f:param name="hostname" value="#{hostController.host.hostname}" />
                                             <h:outputText value="Execute ssh command" />
                                         </p:commandLink>                
                                     </p:column>

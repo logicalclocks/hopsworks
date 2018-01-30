@@ -28,7 +28,8 @@
       </h:form>
       <!--Navigation Bar - End-->
 
-      <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
+      <div class="services-header">#{clustersController.clusters.size()} Cluster
+        <h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
 
       <p:panel header="Clusters">  
         <h:form id="formServices">  
@@ -44,32 +45,32 @@
               </p:commandLink> 
             </p:column> 
 
-            <p:column headerText="Services">
-              <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
-                <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
-                               action="#{urlController.serviceStatus}" ajax="false">
-                  <h:outputText value="#{service}"/>
+            <p:column headerText="Groups">
+              <ui:repeat value="#{cluster.groups}" var="group" varStatus="status">
+                <p:commandLink styleClass="Health-#{cluster.groupHealth(group)}" 
+                               action="#{urlController.groupStatus}" ajax="false">
+                  <h:outputText value="#{group}"/>
                   <f:param name="cluster" value="#{cluster.name}"/>
-                  <f:param name="service" value="#{service}"/>
+                  <f:param name="group" value="#{group}"/>
                 </p:commandLink>
                 <p:spacer width="6" height="0" rendered="#{!status.last}"/>
               </ui:repeat>
             </p:column>
 
-            <p:column headerText="Roles">
-              <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
-                <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
-                               action="#{urlController.serviceInstances()}" ajax="false">
-                  <h:outputText value="${cluster.roleCount(role)} ${role}" style="white-space: nowrap"/>
+            <p:column headerText="Services">
+              <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
+                <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
+                               action="#{urlController.groupInstances()}" ajax="false">
+                  <h:outputText value="${cluster.serviceCount(service)} ${service}" style="white-space: nowrap"/>
                   <f:param name="cluster" value="#{cluster.name}"/>
-                  <f:param name="role" value="#{role}"/>
-                  <f:param name="service" value="#{cluster.roleService(role)}"/>
+                  <f:param name="group" value="#{cluster.serviceGroup(service)}"/>
+                  <f:param name="service" value="#{service}"/>
                 </p:commandLink>
                 <p:spacer width="6" height="0" rendered="#{!status.last}"/>
               </ui:repeat>
             </p:column>                                    
 
-            <p:column headerText="Roles Status">
+            <p:column headerText="Service Status">
               <ui:repeat value="#{cluster.status.entrySet().toArray()}" var="item" varStatus="status">
                 <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}" style="white-space: nowrap"/>
                 <h:outputText value=", " rendered="#{!status.last}"/>
@@ -80,7 +81,7 @@
               <h:outputText value="#{cluster.clusterHealth}"/>
             </p:column>                    
 
-            <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>
+            <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfHosts}"/></p:column>
             <p:column headerText="Cores"><h:outputText value="#{cluster.totalCores}"/></p:column>
             <p:column headerText="Disk Capacity"><h:outputText value="#{cluster.totalDiskCapacity}"/></p:column>
             <p:column headerText="Memory Capacity"><h:outputText value="#{cluster.totalMemoryCapacity}"/></p:column> 

@@ -197,17 +197,6 @@ public class AuthService {
   }
 
   @POST
-  @Path("registerYubikey")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response registerYubikey(UserDTO newUser, @Context HttpServletRequest req) throws AppException,
-      SocketException, NoSuchAlgorithmException {
-    JsonResponse json = new JsonResponse();
-    userController.registerYubikeyUser(newUser, req);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-  }
-
-  @POST
   @Path("recoverPassword")
   @Produces(MediaType.APPLICATION_JSON)
   public Response recoverPassword(@FormParam("email") String email,

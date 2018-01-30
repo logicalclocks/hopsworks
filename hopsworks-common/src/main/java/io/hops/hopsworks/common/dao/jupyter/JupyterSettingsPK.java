@@ -14,6 +14,7 @@ public class JupyterSettingsPK implements Serializable {
   @NotNull
   @Column(name = "project_id")
   private int projectId;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -75,5 +76,7 @@ public class JupyterSettingsPK implements Serializable {
     return "io.hops.hopsworks.common.dao.jupyter.JupyterSettingsPK[ projectId=" +
             projectId + ", teamMember=" + email + " ]";
   }
+
+
 
 }

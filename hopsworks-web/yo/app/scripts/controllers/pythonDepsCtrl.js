@@ -5,8 +5,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('PythonDepsCtrl', ['$scope', '$routeParams', 'growl', '$location', 'PythonDepsService', '$interval', '$mdDialog',
-          function ($scope, $routeParams, growl, $location, PythonDepsService, $interval, $mdDialog) {
+        .controller('PythonDepsCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonDepsService',
+          'ModalService', '$interval', '$mdDialog',
+          function ($scope, $route, $routeParams, growl, $location, PythonDepsService, ModalService, $interval, $mdDialog) {
 
 
             var self = this;
@@ -41,12 +42,16 @@ angular.module('hopsWorksApp')
             self.numEnvsNotEnabled = 0;
             self.numEnvs = 0;
 
+            self.isRetryingFailedCondaOps = false;
+
             self.pythonKernelEnabled = "true";
+
+            self.pythonVersion = "";
 
 
 //            https://repo.continuum.io/pkgs/free/linux-64/
-            self.condaChannel = "default";
-            self.condaUrl = "default";
+            self.condaChannel = "defaults";
+            self.condaUrl = "defaults";
             self.selectedLibs = {};
 
             self.selectedLib = {"channelUrl": self.condaChannel,
@@ -156,6 +161,7 @@ angular.module('hopsWorksApp')
               PythonDepsService.enabled(self.projectId).then(
                       function (success) {
                         self.enabled = true;
+                        self.pythonVersion = success.data;
                       }, function (error) {
                 self.enabled = false;
               });
@@ -170,11 +176,12 @@ angular.module('hopsWorksApp')
 
             self.enable = function (version) {
               self.enabling = true;
-            PythonDepsService.enable(self.projectId, version, self.pythonKernelEnabled).then(
+              PythonDepsService.enable(self.projectId, version, self.pythonKernelEnabled).then(
                       function (success) {
                         self.enabled = true;
                         self.enabling = false;
                         self.getInstallationStatus();
+                        self.pythonVersion = version;
                         growl.success("Anaconda initialized for this project.", {title: 'Done', ttl: 5000});
                       }, function (error) {
                 self.enabling = false;
@@ -183,6 +190,29 @@ angular.module('hopsWorksApp')
             };
 
 
+            self.destroyAnaconda = function () {
+
+              ModalService.confirm('sm', 'Remove Conda Environment?',
+                      'You can re-create it again later.')
+                      .then(function (success) {
+                        self.enabling = true;
+                        growl.success("Removing Anaconda for this project.....", {title: 'Done', ttl: 2000});
+                        PythonDepsService.destroyAnaconda(self.projectId).then(
+                                function (success) {
+                                  self.enabled = true;
+                                  self.enabling = false;
+                                  self.getInstallationStatus();
+                                  growl.success("Anaconda removed for this project.", {title: 'Done', ttl: 5000});
+                                  $route.reload();
+                                }, function (error) {
+                          self.enabling = false;
+                          growl.error("Could not remove Anaconda", {title: 'Error', ttl: 5000});
+                        });
+                      }, function (error) {
+
+                      });
+            }
+
             self.getInstalled = function () {
 
               PythonDepsService.index(self.projectId).then(
@@ -190,6 +220,36 @@ angular.module('hopsWorksApp')
                         self.installedLibs = success.data;
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+              });
+            };
+
+            self.failedHosts = function (opStatus) {
+
+              var hostsJson = JSON.stringify(opStatus.hosts);
+
+              if (hostsJson === '') {
+                growl.error("Cant find any problemtic conda ops on the hosts.", {title: 'Error', ttl: 3000});
+              } else {
+                ModalService.viewJson('md', 'Problematic Hosts for Conda Operations',
+                        hostsJson)
+                        .then(function (success) {
+                        }, function (error) {
+
+                        });
+              }
+            };
+
+
+            self.retryFailedCondaOps = function () {
+              self.isRetryingFailedCondaOps = true;
+              PythonDepsService.retryFailedCondaOps(self.projectId).then(
+                      function (success) {
+                        self.isRetryingFailedCondaOps = false;
+                        self.getInstallationStatus();
+                        growl.success("Retried failed conda ops for this project.", {title: 'Done', ttl: 3000});
+                      }, function (error) {
+                self.isRetryingFailedCondaOps = false;
+                growl.error("Could not retry failed conda ops for this project.", {title: 'Error', ttl: 5000});
               });
             };
 
@@ -277,17 +337,34 @@ angular.module('hopsWorksApp')
 
             self.uninstall = function (condaChannel, lib, version) {
               self.uninstalling[lib] = true;
-
               var data = {"channelUrl": condaChannel, "lib": lib, "version": version};
-              PythonDepsService.uninstall(self.projectId, data).then(
+
+              PythonDepsService.clearCondaOps(self.projectId, data).then(
                       function (success) {
                         self.getInstalled();
-                        self.uninstalling[lib] = false;
+                        growl.info("Clearing conda operations", {title: 'Clearing Conda Commands and Uninstalling Library', ttl: 3000});
+                        PythonDepsService.uninstall(self.projectId, data).then(
+                                function (success) {
+//                                  self.getInstalled();
+                                  self.uninstalling[lib] = false;
+//                                  growl.info("Uninstalling conda library", {title: 'Uninstalling', ttl: 2000});
+                                  PythonDepsService.clearCondaOps(self.projectId, data).then(
+                                          function (success) {
+                                            self.getInstalled();
+                                          }, function (error) {
+                                    // do nothing
+                                  });
+                                }, function (error) {
+                          self.uninstalling[lib] = false;
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+                        });
                       }, function (error) {
                 self.uninstalling[lib] = false;
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
             };
+
+
 
             self.upgrade = function (condaChannel, lib, version) {
               self.upgrading[lib] = true;

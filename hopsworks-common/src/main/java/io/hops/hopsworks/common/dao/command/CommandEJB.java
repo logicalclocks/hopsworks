@@ -70,7 +70,7 @@ public class CommandEJB {
     return query.getResultList();
   }
 
-  public List<Command> findLatestByClusterServiceRoleHostId(String cluster,
+  public List<Command> findLatestByClusterServiceRoleHostname(String cluster,
           String service, String role, String hostId) {
 
     TypedQuery<Command> query = em.createNamedQuery(

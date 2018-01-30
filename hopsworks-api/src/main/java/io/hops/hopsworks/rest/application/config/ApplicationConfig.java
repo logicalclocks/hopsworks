@@ -21,7 +21,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.exception.mapper.TransactionExceptionMapper.class);
     register(io.hops.hopsworks.api.filter.RequestAuthFilter.class);
     register(io.hops.hopsworks.api.jobs.AdamService.class);
-    register(io.hops.hopsworks.api.jobs.BiobankingService.class);
     register(io.hops.hopsworks.api.jobs.ExecutionService.class);
     register(io.hops.hopsworks.api.jobs.FlinkService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);

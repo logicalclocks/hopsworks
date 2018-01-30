@@ -60,10 +60,6 @@ import javax.persistence.ManyToMany;
   @NamedQuery(name = "Project.findByCreated",
       query = "SELECT t FROM Project t WHERE t.created = :created")
   ,
-  @NamedQuery(name = "Project.findByEthicalStatus",
-      query
-      = "SELECT t FROM Project t WHERE t.ethicalStatus = :ethicalStatus")
-  ,
   @NamedQuery(name = "Project.findByRetentionPeriod",
       query
       = "SELECT t FROM Project t WHERE t.retentionPeriod = :retentionPeriod")
@@ -138,12 +134,6 @@ public class Project implements Serializable {
   @Column(name = "retention_period")
   @Temporal(TemporalType.DATE)
   private Date retentionPeriod;
-
-  @NotNull
-  @Size(min = 1,
-      max = 30)
-  @Column(name = "ethical_status")
-  private String ethicalStatus;
 
   @Column(name = "deleted")
   private Boolean deleted;
@@ -224,14 +214,6 @@ public class Project implements Serializable {
 
   public void setCreated(Date created) {
     this.created = created;
-  }
-
-  public String getEthicalStatus() {
-    return ethicalStatus;
-  }
-
-  public void setEthicalStatus(String ethicalStatus) {
-    this.ethicalStatus = ethicalStatus;
   }
 
   public String getName() {

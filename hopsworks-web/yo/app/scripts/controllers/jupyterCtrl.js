@@ -41,6 +41,18 @@ angular.module('hopsWorksApp')
             ];
             self.logLevelSelected;
 
+
+//  (Group/World readable, not writable)
+//  (Group readable and writable)
+//  (Not Group readable or writable)
+            self.umasks = [
+              {id: 1, name: '022'},
+              {id: 2, name: '007'},
+              {id: 3, name: '077'}
+            ];
+            self.umask = self.umasks[1];
+
+
             self.job = {'type': '',
               'name': '',
               'id': '',
@@ -50,12 +62,14 @@ angular.module('hopsWorksApp')
                       }
             };
 
-
-
-
             self.changeLogLevel = function () {
               self.val.logLevel = self.logLevelSelected.name;
             };
+
+            self.changeUmask = function () {
+              self.val.umask = self.umask.name;
+            };
+
 
             self.changeBaseDir = function () {
               self.val.baseDir = self.selected.name;
@@ -316,6 +330,16 @@ angular.module('hopsWorksApp')
                         } else {
                           self.logLevelSelected = self.log_levels[2];
                         }
+                        if (self.val.umask === "022") {
+                          self.umask = self.umasks[0];
+                        } else if (self.val.umask === "007") {
+                          self.umask = self.umasks[1];
+                        } else if (self.val.umask === "077") {
+                          self.umask = self.umasks[2];
+                        } else {
+                          self.umask = self.umasks[0];                          
+                        }
+                        
                       }, function (error) {
                 growl.error("Could not get Jupyter Notebook Server Settings.");
               }

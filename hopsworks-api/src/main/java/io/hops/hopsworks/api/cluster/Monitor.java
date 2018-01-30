@@ -3,11 +3,13 @@ package io.hops.hopsworks.api.cluster;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.common.dao.role.Roles;
-import io.hops.hopsworks.common.dao.role.RoleEJB;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -36,53 +38,57 @@ import javax.ws.rs.core.SecurityContext;
 public class Monitor {
 
   @EJB
-  private RoleEJB roleEjb;
+  private HostServicesFacade hostServicesFacade;
   @EJB
-  private HostEJB hostEjb;
+  private HostsFacade hostEjb;
   @EJB
   private NoCacheResponse noCacheResponse;
 
   @GET
-  @Path("/roles")
+  @Path("/services")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAllRoles(@Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findAll();
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+    List<HostServices> list = hostServicesFacade.findAll();
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/services/{serviceName}")
+  @Path("/groups/{groupName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getServiceRoles(@PathParam("serviceName") String serviceName, @Context SecurityContext sc,
+  public Response getServiceRoles(@PathParam("groupName") String groupName, @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findServiceRoles(serviceName);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
-    };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    List<HostServices> list = hostServicesFacade.findGroupServices(groupName);
+    // Do not leak Host data back to clients!
+    List<ServiceStatusDTO> groupStatus = new ArrayList<>();
+    for (HostServices h : list) {
+      groupStatus.add(new ServiceStatusDTO(h.getGroup(), h.getService(), h.getStatus()));
+    }
+    GenericEntity<List<ServiceStatusDTO>> services = new GenericEntity<List<ServiceStatusDTO>>(groupStatus) { };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/hosts/{hostId}/roles")
+  @Path("/hosts/{hostId}/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHostRoles(@PathParam("hostId") String hostId, @Context SecurityContext sc,
+  public Response getHostRoles(@PathParam("hostId") String hostname, @Context SecurityContext sc,
       @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findHostRoles(hostId);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+    List<HostServices> list = hostServicesFacade.findHostServiceByHostname(hostname);
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
-  @Path("/services/{serviceName}/roles/{roleName}")
+  @Path("/groups/{groupName}/services/{serviceName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRoles(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
+  public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
       @Context SecurityContext sc, @Context HttpServletRequest req) {
-    List<Roles> list = roleEjb.findRoles(serviceName, roleName);
-    GenericEntity<List<Roles>> roles = new GenericEntity<List<Roles>>(list) {
+    List<HostServices> list = hostServicesFacade.findGroups(groupName, serviceName);
+    GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(roles).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
   }
 
   @GET
@@ -112,42 +118,43 @@ public class Monitor {
     }
 
   }
-  
+
   @POST
-  @Path("/services/{serviceName}")
+  @Path("/groups/{groupName}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceOp(@PathParam("serviceName") String serviceName, @Context SecurityContext sc,
-      @Context HttpServletRequest req, RolesActionDTO action) throws AppException {
-    String result = roleEjb.serviceOp(serviceName, action.getAction());
+  public Response serviceOp(@PathParam("groupName") String groupName, @Context SecurityContext sc,
+      @Context HttpServletRequest req, ServicesActionDTO action) throws AppException {
+    String result = hostServicesFacade.serviceOp(groupName, action.getAction());
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage(result);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-  
+
   @POST
-  @Path("/services/{serviceName}/roles/{roleName}")
+  @Path("/groups/{groupName}/services/{serviceName}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response roleOp(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
-      @Context SecurityContext sc, @Context HttpServletRequest req, RolesActionDTO action) throws AppException {
+  public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
+      @Context SecurityContext sc, @Context HttpServletRequest req, ServicesActionDTO action) throws AppException {
     JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(roleEjb.roleOp(serviceName, roleName, action.getAction()));
+    json.setSuccessMessage(hostServicesFacade.serviceOp(groupName, serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-  
+
   @POST
-  @Path("/services/{serviceName}/roles/{roleName}/hosts/{hostId}")
+  @Path("/groups/{groupName}/services/{serviceName}/hosts/{hostId}")
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response roleOnHostOp(@PathParam("serviceName") String serviceName, @PathParam("roleName") String roleName,
+  public Response serviceOnHostOp(@PathParam("groupName") String groupName,
+      @PathParam("serviceName") String serviceName,
       @PathParam("hostId") String hostId, @Context SecurityContext sc, @Context HttpServletRequest req,
-      RolesActionDTO action) throws AppException {
+      ServicesActionDTO action) throws AppException {
     JsonResponse json = new JsonResponse();
-    json.setSuccessMessage(roleEjb.roleOnHostOp(serviceName, roleName, hostId, action.getAction()));
+    json.setSuccessMessage(hostServicesFacade.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 }

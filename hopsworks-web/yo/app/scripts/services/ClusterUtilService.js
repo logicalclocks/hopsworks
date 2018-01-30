@@ -10,13 +10,13 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/clusterUtilisation/metrics');
               },
               getHdfsStatus: function () {
-                return $http.get('/api/kmon/services/HDFS');
+                return $http.get('/api/kmon/groups/HDFS');
               },
               getYarnStatus: function () {
-                return $http.get('/api/kmon/services/YARN');
+                return $http.get('/api/kmon/groups/YARN');
               },
               getKafkaStatus: function () {
-                return $http.get('/api/kmon/services/kafka');
+                return $http.get('/api/kmon/groups/kafka');
               }
             };
           }]);

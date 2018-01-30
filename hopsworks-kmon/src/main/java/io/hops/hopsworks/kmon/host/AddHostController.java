@@ -1,6 +1,6 @@
 package io.hops.hopsworks.kmon.host;
 
-import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import java.io.Serializable;
 import java.util.logging.Level;
@@ -19,10 +19,10 @@ import io.hops.hopsworks.common.dao.command.CommandEJB;
 public class AddHostController implements Serializable {
 
   @EJB
-  private HostEJB hostEJB;
+  private HostsFacade hostEJB;
   @EJB
   private CommandEJB commandEJB;
-  private String hostId;
+  private String hostname;
   private String privateIp;
   private String publicIp;
   private static final Logger logger = Logger.getLogger(AddHostController.class.
@@ -35,14 +35,14 @@ public class AddHostController implements Serializable {
   public void addHost(ActionEvent actionEvent) {
     FacesContext context = FacesContext.getCurrentInstance();
     FacesMessage msg;
-    if (hostEJB.hostExists(hostId)) {
-      logger.log(Level.INFO, "Host with id {0} already exists.", hostId);
+    if (hostEJB.hostExists(hostname)) {
+      logger.log(Level.INFO, "Host with id {0} already exists.", hostname);
       msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Host Exists",
-              "A host with id " + hostId + " already exists.");
+              "A host with id " + hostname + " already exists.");
       context.addMessage(null, msg);
     } else {
       Hosts host = new Hosts();
-      host.setHostname(hostId);
+      host.setHostname(hostname);
       host.setPrivateIp(privateIp);
       host.setPublicIp(publicIp);
       host.setHostIp("");
@@ -50,24 +50,24 @@ public class AddHostController implements Serializable {
       RequestContext reqInstace = RequestContext.getCurrentInstance();
       reqInstace.addCallbackParam("hostadded", true);
       msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Host Added",
-              "Host " + hostId + " added successfully.");
+              "Host " + hostname + " added successfully.");
       context.addMessage(null, msg);
       resetValues();
     }
   }
 
   private void resetValues() {
-    hostId = "";
+    hostname = "";
     privateIp = "";
     publicIp = "";
   }
 
-  public String getHostId() {
-    return hostId;
+  public String getHostname() {
+    return hostname;
   }
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
   }
 
   public String getPrivateIp() {

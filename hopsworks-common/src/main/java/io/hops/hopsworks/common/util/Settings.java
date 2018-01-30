@@ -3,6 +3,8 @@ package io.hops.hopsworks.common.util;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
@@ -29,6 +31,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -51,6 +54,9 @@ public class Settings implements Serializable {
 
   private static final Logger logger = Logger.getLogger(Settings.class.
       getName());
+
+  @EJB
+  private UserFacade userFacade;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -182,6 +188,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RECOVERY_PATH = "recovery_endpoint";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
+  private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -400,11 +407,17 @@ public class Settings implements Serializable {
       WHITELIST_USERS_LOGIN = setStrVar(VARIABLE_WHITELIST_USERS_LOGIN,
           WHITELIST_USERS_LOGIN);
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
+      FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
       zeppelinDefaultInterpreter = getZeppelinDefaultInterpreter(ZEPPELIN_INTERPRETERS);
+
+//      Users user = userFacade.findByEmail("admin@kth.se");
+//      if (user != null) {
+//        ADMIN_PWD=user.getPassword();
+//      }
       cached = true;
     }
   }
@@ -419,19 +432,19 @@ public class Settings implements Serializable {
     cached = false;
     populateCache();
   }
-  
+
   public synchronized void updateVariable(String variableName, String variableValue) {
     updateVariableInternal(variableName, variableValue);
     refreshCache();
   }
-  
+
   public synchronized void updateVariables(Map<String, String> variablesToUpdate) {
     for (Map.Entry<String, String> entry : variablesToUpdate.entrySet()) {
       updateVariableInternal(entry.getKey(), entry.getValue());
     }
     refreshCache();
   }
-  
+
   /**
    * This method will invalidate the cache of variables.
    * The next call to read a variable after invalidateCache() will trigger a read of all variables
@@ -462,14 +475,14 @@ public class Settings implements Serializable {
     checkCache();
     return TWOFACTOR_EXCLUDE;
   }
-  
+
   public static enum TwoFactorMode {
     MANDATORY("mandatory", "User can not disable two factor auth."),
     OPTIONAL("true", "Users can choose to disable two factor auth.");
 
     private final String name;
     private final String description;
-    
+
     private TwoFactorMode(String name, String description) {
       this.name = name;
       this.description = description;
@@ -526,7 +539,7 @@ public class Settings implements Serializable {
   public static final String SPARK_METRICS_ENV = "spark.metrics.conf";
   public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
-  
+
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
@@ -742,7 +755,7 @@ public class Settings implements Serializable {
     checkCache();
     return getCertsDir() + File.separator + "encryption_master_password";
   }
-  
+
   private static String HOPSWORKS_INSTALL_DIR = "/srv/hops/domains";
 
   public synchronized String getHopsworksInstallDir() {
@@ -883,11 +896,11 @@ public class Settings implements Serializable {
   public static String getYarnConfDir(String hadoopDir) {
     return hadoopConfDir(hadoopDir);
   }
-  
+
   public String getHopsLeaderElectionJarPath() {
     return getHadoopSymbolicLinkDir() + "/share/hadoop/hdfs/lib/hops-leader-election-" + getHadoopVersion() + ".jar";
   }
-  
+
   //Default configuration file names
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
   public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
@@ -1091,7 +1104,6 @@ public class Settings implements Serializable {
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_RESULTS = "Results";
-  public static final String DIR_CONSENTS = "consents";
   public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
@@ -1439,6 +1451,31 @@ public class Settings implements Serializable {
     return "http://" + HOPSWORKS_REST_ENDPOINT;
   }
 
+  private String FIRST_TIME_LOGIN = "0";
+
+  public synchronized String getFirstTimeLogin() {
+    checkCache();
+    return FIRST_TIME_LOGIN;
+  }
+
+  private final String DEFAULT_ADMIN_PWD = "12fa520ec8f65d3a6feacfa97a705e622e1fea95b80b521ec016e43874dfed5a";
+  private String ADMIN_PWD = DEFAULT_ADMIN_PWD;
+
+  public synchronized void setAdminPasswordChanged() {
+    // Just use a dummy password here, no need to store the actual password - enough to say it is different from 'admin'
+    ADMIN_PWD = "changed";
+  }
+  public synchronized boolean isDefaultAdminPasswordChanged() {
+    if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
+      return true;
+    }
+    Users user = userFacade.findByEmail("admin@kth.se");
+    if (user != null) {
+      ADMIN_PWD = user.getPassword();
+    }
+    return ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0;
+  }
+
   private String HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = "adminpw";
 
   public synchronized String getHopsworksMasterPasswordSsl() {
@@ -1524,15 +1561,41 @@ public class Settings implements Serializable {
 
   //Filename conventions
   public static final String PROJECT_DISALLOWED_CHARS
-          = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
-  public static final String PRINT_PROJECT_DISALLOWED_CHARS
-    = "__, -, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
+      = " -/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
+  public static final String PRINT_PROJECT_DISALLOWED_CHARS = "__, -, space, " 
+      + "/, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String PRINT_FILENAME_DISALLOWED_CHARS
-    = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
+      = "__, space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #,ö,ä,å,Ö,Å,Ä,à,á,é,è,â,î,ï,ü,Ü,@,$,{,},[,],+,~,^";
   public static final String SHARED_FILE_SEPARATOR = "::";
   public static final String DOUBLE_UNDERSCORE = "__";
+
+  // Authentication Constants
+  // POSIX compliant usernake length
+  public static final int USERNAME_LENGTH = 8;
+
+  // Strating user id from 1000 to create a POSIX compliant username: meb1000
+  public static int STARTING_USER = 1000;
+  public static int PASSWORD_MIN_LENGTH = 6;
+
+  // POSIX compliant usernake length
+  public static final int ACCOUNT_VALIDATION_TRIES = 5;
+
+  // Issuer of the QrCode
+  public static final String ISSUER = "hops.io";
+
+  // For padding when password field is empty: 6 chars
+  public static final String MOBILE_OTP_PADDING = "@@@@@@";
+
+  // when user is loged in 1 otherwise 0
+  public static final int IS_ONLINE = 1;
+  public static final int IS_OFFLINE = 0;
+
+  public static final int ALLOWED_FALSE_LOGINS = 20;
+
+  //hopsworks user prefix username prefix
+  public static final String USERNAME_PREFIX = "meb";
 
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
@@ -1561,15 +1624,15 @@ public class Settings implements Serializable {
   public static int FILE_PREVIEW_TXT_SIZE = 100;
   public static final int FILE_PREVIEW_TXT_SIZE_BYTES = 1024 * 384;
   public static final String README_TEMPLATE = "*This is an auto-generated README.md"
-    + " file for your Dataset!*\n"
-    + "To replace it, go into your DataSet and edit the README.md file.\n"
-    + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
-    + "## %s";
+      + " file for your Dataset!*\n"
+      + "To replace it, go into your DataSet and edit the README.md file.\n"
+      + "\n" + "*%s* DataSet\n" + "===\n" + "\n"
+      + "## %s";
 
   public static final String FILE_PREVIEW_TEXT_TYPE = "text";
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
-  
+
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
   }
@@ -1700,15 +1763,13 @@ public class Settings implements Serializable {
 
   public Settings() {
   }
-  
-  
+
   private String ALERT_EMAIL_ADDRS = "";
 
   public synchronized String getAlertEmailAddrs() {
     checkCache();
     return ALERT_EMAIL_ADDRS;
   }
-  
 
   /**
    * Get the variable value with the given name.
@@ -1724,14 +1785,15 @@ public class Settings implements Serializable {
       return null;
     }
   }
-  
+
   /**
    * Get all variables from the database.
+   *
    * @return List with all the variables
    */
   public List<Variables> getAllVariables() {
     TypedQuery<Variables> query = em.createNamedQuery("Variables.findAll", Variables.class);
-    
+
     try {
       return query.getResultList();
     } catch (EntityNotFoundException ex) {
@@ -1740,9 +1802,10 @@ public class Settings implements Serializable {
     }
     return new ArrayList<>();
   }
-  
+
   /**
    * Update a variable in the database.
+   *
    * @param variableName
    * @param variableValue
    */
@@ -1756,7 +1819,7 @@ public class Settings implements Serializable {
       em.persist(var);
     }
   }
-  
+
   public void detach(Variables variable) {
     em.detach(variable);
   }
@@ -2015,7 +2078,7 @@ public class Settings implements Serializable {
     checkCache();
     return DELA_ENABLED;
   }
-  
+
   public synchronized DelaClientType getDelaClientType() {
     return DELA_CLIENT_TYPE;
   }
@@ -2326,8 +2389,7 @@ public class Settings implements Serializable {
     }
   }
   //Kafka END
-  
-  
+
   //-------------------------LDAP----------------------------
   private static final String VARIABLE_LDAP_AUTH = "ldap_auth";
   private static final String VARIABLE_LDAP_GROUP_MAPPING = "ldap_group_mapping";

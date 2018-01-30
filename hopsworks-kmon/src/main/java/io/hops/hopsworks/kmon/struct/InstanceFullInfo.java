@@ -11,23 +11,23 @@ public class InstanceFullInfo implements Serializable {
   private String host;
   private String ip;
   private String cluster;
+  private String group;
   private String service;
-  private String role;
   private Status status;
   private String health;
   private int pid;
   private String uptime;
   private Integer webPort;
 
-  public InstanceFullInfo(String cluster, String service, String role,
+  public InstanceFullInfo(String cluster, String group, String service,
           String host, String ip, Integer webPort, Status status, String health) {
 
-    this.name = role + " @" + host;
+    this.name = service + " @" + host;
     this.host = host;
     this.ip = ip;
     this.cluster = cluster;
-    this.role = role;
     this.service = service;
+    this.group = group;
     this.status = status;
     this.health = health;
     this.webPort = webPort;
@@ -53,10 +53,14 @@ public class InstanceFullInfo implements Serializable {
     return health;
   }
 
-  public String getRole() {
-    return role;
+  public String getService() {
+    return service;
   }
 
+  public void setService(String service) {
+    this.service = service;
+  }
+  
   public int getPid() {
     return pid;
   }
@@ -89,12 +93,12 @@ public class InstanceFullInfo implements Serializable {
     this.cluster = cluster;
   }
 
-  public String getService() {
-    return service;
+  public String getGroup() {
+    return group;
   }
 
-  public void setService(String service) {
-    this.service = service;
+  public void setGroup(String service) {
+    this.group = service;
   }
 
   public String getWebUiLink() {

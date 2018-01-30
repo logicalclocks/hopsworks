@@ -21,7 +21,7 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -56,7 +56,7 @@ public class HdfsUsersController {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private JupyterProcessFacade jupyterConfigFactory;
+  private JupyterProcessMgr jupyterConfigFactory;
   @EJB
   private JupyterFacade jupyterFacade;
 

@@ -1,6 +1,6 @@
 package io.hops.hopsworks.kmon.terminal;
 
-import io.hops.hopsworks.kmon.struct.ServiceType;
+import io.hops.hopsworks.kmon.struct.GroupType;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,8 +11,8 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostEJB;
-import io.hops.hopsworks.kmon.struct.RoleType;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.kmon.struct.ServiceType;
 import io.hops.hopsworks.common.dao.host.Status;
 
 @ManagedBean
@@ -21,12 +21,12 @@ public class TerminalController {
 
   @ManagedProperty("#{param.cluster}")
   private String cluster;
-  @ManagedProperty("#{param.role}")
-  private String role;
   @ManagedProperty("#{param.service}")
   private String service;
+  @ManagedProperty("#{param.group}")
+  private String group;
   @EJB
-  private HostEJB hostEjb;
+  private HostsFacade hostEjb;
   @EJB
   private WebCommunication web;
   private static final Logger logger = Logger.getLogger(
@@ -55,20 +55,20 @@ public class TerminalController {
     logger.info("init TerminalController");
   }
 
-  public String getRole() {
-    return role;
-  }
-
-  public void setRole(String role) {
-    this.role = role;
-  }
-
   public String getService() {
     return service;
   }
 
   public void setService(String service) {
     this.service = service;
+  }
+
+  public String getGroup() {
+    return group;
+  }
+
+  public void setGroup(String group) {
+    this.group = group;
   }
 
   public void setCluster(String cluster) {
@@ -85,25 +85,25 @@ public class TerminalController {
 
   public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection
-    String roleName;
-    if (service.equalsIgnoreCase(ServiceType.HDFS.toString())) {
+    String serviceName;
+    if (group.equalsIgnoreCase(GroupType.HDFS.toString())) {
       if (command.equals("hdfs")) {
-        roleName = RoleType.datanode.toString();
+        serviceName = ServiceType.datanode.toString();
       } else {
         return "Unknown command. Accepted commands are: hdfs";
       }
 
-    } else if (service.equalsIgnoreCase(ServiceType.NDB.toString())) {
+    } else if (group.equalsIgnoreCase(GroupType.NDB.toString())) {
       if (command.equals("mysql")) {
-        roleName = RoleType.mysqld.toString();
+        serviceName = ServiceType.mysqld.toString();
       } else if (command.equals("ndb_mgm")) {
-        roleName = RoleType.ndb_mgmd.toString();
+        serviceName = ServiceType.ndb_mgmd.toString();
       } else {
         return "Unknown command. Accepted commands are: mysql, ndb_mgm";
       }
-    } else if (service.equalsIgnoreCase(ServiceType.YARN.toString())) {
+    } else if (group.equalsIgnoreCase(GroupType.YARN.toString())) {
       if (command.equals("yarn")) {
-        roleName = RoleType.resourcemanager.toString();
+        serviceName = ServiceType.resourcemanager.toString();
       } else {
         return "Unknown command. Accepted commands are: yarn";
       }
@@ -113,13 +113,13 @@ public class TerminalController {
     try {
 //          TODO: get only one host
       List<Hosts> hosts = hostEjb.
-              find(cluster, service, roleName, Status.Started);
+              find(cluster, group, serviceName, Status.Started);
       if (hosts.isEmpty()) {
         throw new RuntimeException("No live node available.");
       }
       String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), hosts.
               get(0).getAgentPassword(),
-              cluster, service, roleName, command, params);
+              cluster, group, serviceName, command, params);
       return result;
     } catch (Exception ex) {
       logger.log(Level.SEVERE, null, ex);

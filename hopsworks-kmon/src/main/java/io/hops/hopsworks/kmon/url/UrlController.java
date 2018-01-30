@@ -11,31 +11,23 @@ import javax.faces.context.FacesContext;
 @RequestScoped
 public class UrlController {
 
-  @ManagedProperty("#{param.hostid}")
-  private String hostId;
-  @ManagedProperty("#{param.role}")
-  private String role;
+  @ManagedProperty("#{param.hostname}")
+  private String hostname;
   @ManagedProperty("#{param.service}")
   private String service;
+  @ManagedProperty("#{param.group}")
+  private String group;
   @ManagedProperty("#{param.cluster}")
   private String cluster;
   @ManagedProperty("#{param.status}")
   private String status;
   @ManagedProperty("#{param.target}")
   private String target;
-  private static final Logger logger = Logger.getLogger(UrlController.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(UrlController.class.getName());
 
   public UrlController() {
-    logger.info("UrlController");
-  }
-
-  public String getRole() {
-    return role;
-  }
-
-  public void setRole(String role) {
-    this.role = role;
+    logger.info("UrlController - hostname: " + hostname + " ; cluster: " + cluster + "; group: " + group
+        + " ; service: " + service + " ; status: " + status + " ; target: " + target);
   }
 
   public String getService() {
@@ -46,12 +38,20 @@ public class UrlController {
     this.service = service;
   }
 
-  public String getHostId() {
-    return hostId;
+  public String getGroup() {
+    return group;
   }
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public void setGroup(String group) {
+    this.group = group;
+  }
+
+  public String getHostname() {
+    return hostname;
+  }
+
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
   }
 
   public void setCluster(String cluster) {
@@ -79,7 +79,7 @@ public class UrlController {
   }
 
   public String host() {
-    return "host?faces-redirect=true&hostid=" + hostId;
+    return "host?faces-redirect=true&hostname=" + hostname;
   }
 
   public String clustersStatus(){
@@ -94,60 +94,55 @@ public class UrlController {
     return "cluster-status?faces-redirect=true&cluster=" + cluster;
   }
   
-  public String serviceInstance() {
-    return "services-instances-status?faces-redirect=true&hostid="
-            + hostId + "&cluster=" + cluster + "&role=" + role;
+  public String groupInstance() {
+    return "services-instances-status?faces-redirect=true&hostname=" 
+        + hostname + "&cluster=" + cluster + "&group=" + group;
   }
 
   public String clusterActionHistory() {
     return "cluster-actionhistory?faces-redirect=true&cluster=" + cluster;
   }
 
-  public String serviceStatus() {
-    return "service-status?faces-redirect=true&cluster=" + cluster + "&service="
-            + service;
+  public String groupStatus() {
+    return "group-status?faces-redirect=true&cluster=" + cluster + "&group=" + group;
   }
 
-  public String serviceInstances() {
+  public String groupInstances() {
     String url = "service-instances?faces-redirect=true";
-    if (hostId != null) {
-      url += "&hostid=" + hostId;
+    if (hostname != null) {
+      url += "&hostname=" + hostname;
     }
     if (cluster != null) {
       url += "&cluster=" + cluster;
     }
+    if (group != null) {
+      url += "&group=" + group;
+    }
     if (service != null) {
       url += "&service=" + service;
     }
-    if (role != null) {
-      url += "&r=" + role;
-    }
     if (status != null) {
-      url += "&s=" + status;
+      url += "&status=" + status;
     }
     return url;
   }
 
+  public String groupActionHistory() {
+    return "group-actionhistory?faces-redirect=true&cluster=" + cluster + "&group=" + group;
+  }
+
+  public String groupTerminal() {
+    return "group-terminal?faces-redirect=true&cluster=" + cluster + "&group=" + group;
+  }
+
+  public String serviceStatus() {
+    return "service-status?faces-redirect=true&hostname=" + hostname + "&cluster="
+            + cluster + "&group=" + group + "&service=" + service;
+  }
+
   public String serviceActionHistory() {
-    return "service-actionhistory?faces-redirect=true&cluster=" + cluster
-            + "&service=" + service;
-  }
-
-  public String serviceTerminal() {
-    return "service-terminal?faces-redirect=true&cluster=" + cluster
-            + "&service=" + service;
-  }
-
-  public String roleStatus() {
-    return "role-status?faces-redirect=true&hostid=" + hostId + "&cluster="
-            + cluster
-            + "&service=" + service + "&role=" + role;
-  }
-
-  public String roleActionHistory() {
-    return "role-actionhistory?faces-redirect=true&hostid=" + hostId
-            + "&cluster=" + cluster
-            + "&service=" + service + "&role=" + role;
+    return "service-actionhistory?faces-redirect=true&hostname=" + hostname
+            + "&cluster=" + cluster + "&group=" + group + "&service=" + service;
   }
 
   public void redirectToEditGraphs() {

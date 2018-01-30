@@ -69,8 +69,12 @@ public class HDFSNotebookRepo implements NotebookRepo {
     this.hdfsConf = getHadoopConf();
     superuser = UserGroupInformation.getLoginUser();
     try {
+//          ("java:global/hopsworks-common-0.2.0-SNAPSHOT/DistributedFsService");
+      String applicationName = InitialContext.doLookup("java:app/AppName");
+      String moduleName = InitialContext.doLookup("java:module/ModuleName");
+      moduleName = moduleName.replace("api", "common");
       dfsService = InitialContext.doLookup
-          ("java:global/hopsworks-ear/hopsworks-common-0.1.0/DistributedFsService");
+          ("java:global/" + applicationName + "/" + moduleName + "/DistributedFsService");
     } catch (NamingException ex) {
       throw new IOException(ex);
     }

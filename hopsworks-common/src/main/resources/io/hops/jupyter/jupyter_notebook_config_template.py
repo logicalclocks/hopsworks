@@ -4,6 +4,7 @@ c.HDFSContentsManager.hdfs_namenode_host='%%namenode_ip%%'
 c.HDFSContentsManager.hdfs_namenode_port=%%namenode_port%%
 c.HDFSContentsManager.root_dir='/Projects/%%project%%%%base_dir%%' 
 c.HDFSContentsManager.hdfs_user = '%%hdfs_user%%'
+c.HDFSContentsManager.hadoop_client_env_opts = '-D fs.permissions.umask-mode=0002'
 
 c.NotebookApp.contents_manager_class='hdfscontents.hdfsmanager.HDFSContentsManager'
 

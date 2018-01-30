@@ -38,6 +38,27 @@
               <h:form id="manageClusterNodes" >
                 <p:growl id="growl" showDetail="true" sticky="true"/>
 
+
+                <div class="ui-g">
+                  <div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>
+                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
+                    <div class="ui-g-12">
+                      <h:outputText value="Anaconda package:  #{nodesBean.anacondaLastSynchronized()}"
+                                    style="float:left"/>
+                    </div>
+                    <div class="ui-g-12">
+                      <h:outputText value="Gpu Anaconda package: #{nodesBean.anacondaGpuLastSynchronized()}"
+                                    style="float:left"/>
+                    </div>
+                  </div>
+                  <div class="ui-g-12 ui-md-2">
+                    <p:commandButton value="Zip Anaconda Libraries"
+                                     style="float:right" 
+                                     actionListener="#{nodesBean.zipUpAnacondaLibs}" ajax ="true" update="@all">
+                    </p:commandButton>
+                  </div>
+                </div>
+
                 <p:dataTable id="nodesTable" var="node"
                              value="#{nodesBean.allNodes}"
                              editable="true"
@@ -57,13 +78,14 @@
                     <h:outputText value="Cluster Nodes"
                                   style="float:center"/>
                     <p:commandButton value="Add new node"
-                                     style="float:right"
+                                     style="float:right" 
                                      actionListener="#{nodesBean.dialogAddNewNode}">
                       <p:ajax event="dialogReturn"
                               listener="#{nodesBean.onDialogAddNewNodeClosed}"
                               update=":manageClusterNodes:growl @form"/>
                     </p:commandButton>
                   </f:facet>
+
 
                   <p:ajax event="rowEdit"
                           listener="#{nodesBean.onRowEdit}"
@@ -162,6 +184,12 @@
                                    icon="ui-icon-close"/>
                 </p:confirmDialog>
               </h:form>   
+
+              <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+
+              <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+                <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
+              </p:dialog>           
 
             </div>
           </div> 

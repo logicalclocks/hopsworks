@@ -21,7 +21,7 @@
         <p:panelGrid>  
           <p:row>  
             <p:column>
-              <p:commandLink id="services" action="clusters" ajax="false">  
+              <p:commandLink id="groups" action="clusters" ajax="false">  
                 <h:outputText value="Clusters" />
               </p:commandLink> 
               <h:outputText value=" &raquo; "/>
@@ -82,7 +82,7 @@
                 <h:outputText value="#{clusterInfo.clusterHealth}"/>
               </p:column>                    
 
-              <p:column headerText="Hosts"><h:outputText value="#{clusterInfo.numberOfMachines}"/></p:column>
+              <p:column headerText="Hosts"><h:outputText value="#{clusterInfo.numberOfHosts}"/></p:column>
               <p:column headerText="Cores"><h:outputText value="#{clusterInfo.totalCores}"/></p:column>
               <p:column headerText="Disk Capacity"><h:outputText value="#{clusterInfo.totalDiskCapacity}"/></p:column>
               <p:column headerText="Memory Capacity"><h:outputText value="#{clusterInfo.totalMemoryCapacity}"/></p:column> 
@@ -93,37 +93,37 @@
           <p:spacer width="1" height="20" />
 
           <p:panel header="Services">
-            <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
-              <p:column headerText="Service">
-                <p:commandLink action="#{urlController.serviceStatus}" ajax="false" styleClass="Health-#{service.health}">
-                  <h:outputText value="#{service.name}"/>
+            <p:dataTable id="group" var="group" value="#{clusterStatusController.group}">
+              <p:column headerText="Group">
+                <p:commandLink action="#{urlController.groupStatus}" ajax="false" styleClass="Health-#{group.health}">
+                  <h:outputText value="#{group.name}"/>
                   <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                  <f:param name="service" value="#{service.name}"/>
+                  <f:param name="group" value="#{group.name}"/>
                 </p:commandLink>                         
               </p:column>
 
-              <p:column headerText="Roles">
-                <ui:repeat value="#{service.roles}" var="role" varStatus="status">
-                  <p:commandLink styleClass="Health-#{service.roleHealth(role)}" 
-                                 action="#{urlController.serviceInstances}" ajax="false">
-                    <h:outputText value="${service.roleCount(role)} ${role}"/>
+              <p:column headerText="Services">
+                <ui:repeat value="#{group.services}" var="service" varStatus="status">
+                  <p:commandLink styleClass="Health-#{group.serviceHealth(service)}" 
+                                 action="#{urlController.groupInstances}" ajax="false">
+                    <h:outputText value="${group.serviceCount(service)} ${service}"/>
                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                    <f:param name="role" value="#{role}"/>
-                    <f:param name="service" value="#{service.name}"/>
+                    <f:param name="service" value="#{service}"/>
+                    <f:param name="group" value="#{group.name}"/>
                   </p:commandLink>
                   <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                 </ui:repeat>
               </p:column>                   
 
-              <p:column headerText="Roles Status">
-                <ui:repeat value="#{service.status.entrySet().toArray()}" var="item" varStatus="status">
+              <p:column headerText="Services Status">
+                <ui:repeat value="#{group.status.entrySet().toArray()}" var="item" varStatus="status">
                   <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
                   <h:outputText value=", " rendered="#{!status.last}"/>
                 </ui:repeat>
               </p:column>                   
 
-              <p:column headerText="Health" styleClass="Health-#{service.health}">
-                <h:outputText value="#{service.health}"/>
+              <p:column headerText="Health" styleClass="Health-#{group.health}">
+                <h:outputText value="#{group.health}"/>
               </p:column> 
 
             </p:dataTable>  

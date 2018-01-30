@@ -84,17 +84,17 @@ module SessionHelper
 
   def create_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_USER")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    UserGroup.create(uid: user.uid, gid: group.gid)
   end
   
   def create_admin_role(user)
     group = BbcGroup.find_by(group_name: "HOPS_ADMIN")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    UserGroup.create(uid: user.uid, gid: group.gid)
   end
   
   def create_agent_role(user)
     group = BbcGroup.find_by(group_name: "AGENT")
-    PeopleGroup.create(uid: user.uid, gid: group.gid)
+    UserGroup.create(uid: user.uid, gid: group.gid)
   end
   
   def create_user(params={})
@@ -102,7 +102,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 4
+    user.status = 2
     user.save
     user
   end
@@ -119,7 +119,7 @@ module SessionHelper
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
     user = User.find_by(email: params[:email])
-    user.status = 4
+    user.status = 2
     user.save
     user
   end
@@ -138,7 +138,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_agent_role(user)
-    user.status = 4
+    user.status = 2
     user.save
     user
   end
@@ -148,7 +148,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 6
+    user.status = 4
     user.save
     user
   end
@@ -158,7 +158,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 5
+    user.status = 3
     user.save
     user
   end
@@ -168,7 +168,7 @@ module SessionHelper
     create_validated_user(params)
     user = User.find_by(email: params[:email])
     create_role(user)
-    user.status = 7
+    user.status = 5
     user.save
     user
   end

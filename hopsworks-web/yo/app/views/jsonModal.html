@@ -1,0 +1,16 @@
+<div class="modal-header">
+  <button type="button" class="close" ng-click="modalCtrl.cancel()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h3 class="modal-title">{{modalCtrl.title}}</h3>
+</div>
+<div class="modal-body">
+    <div class="view-info">
+      <div class="col-md-12">
+        <pretty-json json="modalCtrl.msg"></pretty-json>
+      </div>
+        
+    </div>
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-primary" ng-click="modalCtrl.ok()">OK</button>
+</div>

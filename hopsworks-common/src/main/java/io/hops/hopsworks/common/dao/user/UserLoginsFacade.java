@@ -29,7 +29,7 @@ public class UserLoginsFacade extends AbstractFacade<Userlogins> {
             Userlogins.class);
     return query.getResultList();
   }
-
+  
   public void persist(Userlogins logins) {
     em.persist(logins);
   }

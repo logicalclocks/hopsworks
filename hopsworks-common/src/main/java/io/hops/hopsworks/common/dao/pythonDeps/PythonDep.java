@@ -86,8 +86,7 @@ public class PythonDep implements Serializable {
     this.id = id;
   }
 
-  public PythonDep(Integer id, String dependency, String version) {
-    this.id = id;
+  public PythonDep(String dependency, String version) {
     this.dependency = dependency;
     this.version = version;
   }

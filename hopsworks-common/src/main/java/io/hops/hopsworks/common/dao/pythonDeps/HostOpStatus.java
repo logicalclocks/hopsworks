@@ -5,22 +5,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class HostOpStatus {
 
-  private int hostId;
+  private String hostId;
   private String status;
 
   public HostOpStatus() {
   }
 
-  public HostOpStatus(int hostId, String status) {
+  public HostOpStatus(String hostId, String status) {
     this.hostId = hostId;
     this.status = status;
   }
 
-  public int getHostId() {
+  public String getHostId() {
     return hostId;
   }
 
-  public void setHostId(int hostId) {
+  public void setHostId(String hostId) {
     this.hostId = hostId;
   }
 
@@ -37,8 +37,6 @@ public class HostOpStatus {
     return hostId + ":" + status;
   }
   
-  
-
   // Two versions are equal if they have the same 'name', status doesn't matter.
   @Override
   public boolean equals(Object o) {
@@ -46,7 +44,7 @@ public class HostOpStatus {
       return false;
     }
     HostOpStatus v = (HostOpStatus) o;
-    if (v.hostId != this.hostId) {
+    if (v.hostId.equals(this.hostId)) {
       return false;
     }
     return true;
@@ -54,7 +52,7 @@ public class HostOpStatus {
 
   @Override
   public int hashCode() {
-    return hostId * 17; //To change body of generated methods, choose Tools | Templates.
+    return hostId.hashCode() * 17; //To change body of generated methods, choose Tools | Templates.
   }
 
 }

@@ -5,16 +5,16 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ear</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>ear</packaging>
 
-  <name>hopsworks-ear</name>
+  <name>hopsworks-ear:0.2.0-SNAPSHOT</name>
   
   <build>
     <plugins>
@@ -36,37 +36,37 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>ejb</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-dela</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>ejb</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-kmon</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-api</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-admin</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-api-v2</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-SNAPSHOT</version>
       <type>war</type>
     </dependency>
   </dependencies>
@@ -143,7 +143,7 @@
         <dependency>
           <groupId>rubygems</groupId>
           <artifactId>net-ssh-shell</artifactId>
-          <version>0.2.0</version>
+          <version>0.2.0-SNAPSHOT</version>
           <type>gem</type>
           <scope>test</scope>
         </dependency>
@@ -265,7 +265,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>
-          <version>0.1.0</version>
+          <version>0.2.0-SNAPSHOT</version>
           <type>war</type>
         </dependency>
       </dependencies>

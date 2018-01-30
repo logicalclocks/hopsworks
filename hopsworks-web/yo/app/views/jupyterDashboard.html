@@ -118,14 +118,14 @@
                     </div>
                   </div>
                 </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">AppMaster virtual cores<i class="fa fa-info-circle" uib-tooltip="The number of virtual cores that should be requested for the Yarn Application Master container." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left">
                       <input type="number" step="1" ng-model="jupyterCtrl.val.appmasterCores" ng-init="1" min="1" class="form-control">
                     </div>
                   </div>
-                  </div>
+                </div>
 
                 <div class="row"  ng-if="jupyterCtrl.val.mode === 'horovod'">
                   <div class="row clusterparams">
@@ -149,8 +149,8 @@
                   </div>
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">GPUs per process<i class="fa fa-info-circle"
-                                                                                  uib-tooltip="The number of GPUs accessible for each process (0 or 1)."
-                                                                                  style="margin-left: 10px"></i>
+                                                                        uib-tooltip="The number of GPUs accessible for each process (0 or 1)."
+                                                                        style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left">
                       <input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numTfGpus" min="0" max="1" class="form-control">
@@ -219,7 +219,7 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'distributedTensorFlow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6"> Workers <i class="fa fa-info-circle"
-                                                                            uib-tooltip="The number of workers that should be requested for this job." style="margin-left: 10px"></i>
+                                                                 uib-tooltip="The number of workers that should be requested for this job." style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="number" ng-model="jupyterCtrl.val.numExecutors" ng-init="1" min="1" value="1" class="form-control"></div>
                   </div>
@@ -234,17 +234,17 @@
                 </div>
                 <div class="row" ng-if="jupyterCtrl.val.mode !== 'horovod'">
                   <div class="row clusterparams">
-                      <div class="text-right col-md-6"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
-                      <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
-                    </div>
+                    <div class="text-right col-md-6"> Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+                    <div class="col-md-2 jupyter-left"><input type="number" step="1" min="1024" ng-model="jupyterCtrl.val.executorMemory" class="form-control"></div>
+                  </div>
                 </div>
-                  <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'sparkStatic' || jupyterCtrl.val.mode === 'sparkDynamic'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6"> Executor virtual cores <i class="fa fa-info-circle"
                                                                                 uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
                     <div class="col-md-2 jupyter-left"><input type="number" min="1" step="1" ng-model="jupyterCtrl.val.numExecutorCores" class="form-control"></div>
-                    </div>
-                    </div>
+                  </div>
+                </div>
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Executor GPUs<i class="fa fa-info-circle"
@@ -266,6 +266,26 @@
                     </div>
                   </div>
                 </div>
+                
+                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
+                  <div class="text-right col-md-6">Log Level <i class="fa fa-info-circle"
+                                                                uib-tooltip="Log4j log level for this job." 
+                                                                style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-2 jupyter-left">
+                    <ui-select ng-model="jupyterCtrl.logLevelSelected" theme="bootstrap"
+                               on-select="jupyterCtrl.changeLogLevel()">
+                      <ui-select-match >
+                        <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
+                      </ui-select-match>
+                      <ui-select-choices repeat="level in (jupyterCtrl.log_levels | filter: $select.search) track by level.name">
+                        <span ng-bind="level.name | highlight: $select.search"></span>
+                      </ui-select-choices>
+                    </ui-select>
+                  </div>
+                </div>
+
+                
                 <div class="row clusterparams">
                   <div class="text-right col-md-6">
                     <label for="archives">
@@ -330,29 +350,10 @@
                   </div>
                 </div>
 
-                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
-                  <div class="text-right col-md-6">Log Level <i class="fa fa-info-circle"
-                                                                uib-tooltip="Log4j log level for this job." 
-                                                                style="margin-left: 10px"></i>
-                  </div>
-                  <div class="col-md-2 jupyter-left">
-                    <ui-select ng-model="jupyterCtrl.logLevelSelected" theme="bootstrap"
-                               on-select="jupyterCtrl.changeLogLevel()">
-                      <ui-select-match >
-                        <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
-                      </ui-select-match>
-                      <ui-select-choices repeat="level in (jupyterCtrl.log_levels | filter: $select.search) track by level.name">
-                        <span ng-bind="level.name | highlight: $select.search"></span>
-                      </ui-select-choices>
-                    </ui-select>
-                  </div>
-                </div>
-              </div>
-
               <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
                 <div class="text-right col-md-6">More Spark Properties <i class="fa fa-info-circle"
-                      uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
-                      style="margin-left: 10px"></i>
+                                                                          uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
+                                                                          style="margin-left: 10px"></i>
                 </div>
                 <div class="col-md-5 jupyter-left">
                   <textarea style="width: 100%;" id="TextArea" ng-model="jupyterCtrl.val.sparkParams" 
@@ -391,6 +392,27 @@
                               </div>-->
               </div>
             </div>
+                
+                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
+                  <div class="text-right col-md-6">Umask (output files) <i class="fa fa-info-circle"
+                                                                           uib-tooltip="022 - Group readable/not-writable : 007 Group readable/writable : 077 - Group not-readable/not-writable" 
+                                                                           style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-2 jupyter-left">
+                    <ui-select ng-model="jupyterCtrl.umask" theme="bootstrap"
+                               on-select="jupyterCtrl.changeUmask()">
+                      <ui-select-match >
+                        <span ng-bind="jupyterCtrl.umask.name"></span>
+                      </ui-select-match>
+                      <ui-select-choices repeat="level in (jupyterCtrl.umasks | filter: $select.search) track by level.name">
+                        <span ng-bind="level.name | highlight: $select.search"></span>
+                      </ui-select-choices>
+                    </ui-select>
+                  </div>
+                </div>
+              </div>
+                
+                
           </div>
         </div>
 
@@ -441,27 +463,27 @@
                         <table class="table table-hover ds-sidenav-table" style="width: 100%">
                           <tbody>
                             <tr>
-                              <td>Open Jupyter in a new Tab</td>
-                              <td style="text-align: right">                                      
+                              <td>                                      
                                 <button uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server" 
-                                        tooltip-placement="auto left"
+                                        tooltip-placement="auto right"
                                         ng-click="jupyterCtrl.openWindow()" 
                                         type="button" class="btn btn-info btn-sm">
                                   <span class="glyphicon glyphicon-eye-open" ></span>
                                 </button>
                               </td>
+                              <td style="text-align: right">Open Jupyter in a new Tab</td>
                             </tr>
                             <tr ng-repeat="session in sessions">
-                              <td>Open UI for {{session.appId}}</td>
-                              <td style="text-align: right">                                      
+                              <td>                                      
                                 <button
                                   uib-tooltip="Open the Spark UI for a Livy Session" 
-                                  tooltip-placement="auto left"
+                                  tooltip-placement="auto top"
                                   ng-click="jupyterCtrl.showLivyUI(session.appId)"
                                   type="button" class="btn btn-info btn-sm" >
                                   <span class="glyphicon glyphicon-eye-open" ></span>
                                 </button>
                               </td>
+                              <td style="text-align: right">Open UI for {{session.appId}}</td>
                             </tr>
                             <!--                        <tr  ng-if="interpreter.interpreter.group === 'tensorflow' && !interpreter.interpreter.notRunning">
                                                       <td><span>Open TensorBoard UI</span></td>
@@ -476,16 +498,15 @@
                                                       </td>
                                                     </tr>-->
                             <tr>
-                              <td>Shutdown Notebook Server</td>
-                              <td style="text-align: right">                                      			  
-                                <button tooltip-placement="auto left"
+                              <td>                                      			  
+                                <button tooltip-placement="auto top"
                                         uib-tooltip="Shutdown Jupyter Notebook Server and stop applications." 
-                                        tooltip-placement="auto left"
                                         ng-click="jupyterCtrl.stop()" 
                                         type="button" class="btn btn-danger btn-sm" >
                                   <span class="glyphicon glyphicon-off" ></span>
                                 </button>
                               </td>
+                              <td style="text-align: right">Shutdown Notebook Server</td>
                             </tr>
                           </tbody>                     
                         </table>

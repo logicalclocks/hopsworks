@@ -91,38 +91,38 @@ public class WebCommunication {
    * @param agentPassword
    * @param cluster
    * @param service
-   * @param role
+   * @param service
    * @return
    */
-  public String roleOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String service, String role) throws AppException {
-    String url = createUrl(operation, hostAddress, cluster, service, role);
+  public String serviceOp(String operation, String hostAddress,
+      String agentPassword, String cluster, String group, String service) throws AppException {
+    String url = createUrl(operation, hostAddress, cluster, group, service);
     return fetchContent(url, agentPassword);
   }
 
   @Asynchronous
-  public Future<String> asyncRoleOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String service, String role) throws AppException {
-    String url = createUrl(operation, hostAddress, cluster, service, role);
+  public Future<String> asyncServiceOp(String operation, String hostAddress,
+      String agentPassword, String cluster, String group, String service) throws AppException {
+    String url = createUrl(operation, hostAddress, cluster, group, service);
     return new AsyncResult<String>(fetchContent(url, agentPassword));
   }
   
   public String getConfig(String hostAddress, String agentPassword,
-      String cluster, String service, String role) throws AppException {
-    String url = createUrl("config", hostAddress, cluster, service, role);
+      String cluster, String group, String service) throws AppException {
+    String url = createUrl("config", hostAddress, cluster, group, service);
     return fetchContent(url, agentPassword);
   }
 
-  public String getRoleLog(String hostAddress, String agentPassword,
-      String cluster, String service, String role, int lines) throws AppException {
-    String url = createUrl("log", hostAddress, cluster, service, role, String.
+  public String getServiceLog(String hostAddress, String agentPassword,
+      String cluster, String group, String service, int lines) throws AppException {
+    String url = createUrl("log", hostAddress, cluster, group, service, String.
             valueOf(lines));
     return fetchLog(url, agentPassword);
   }
 
-  public String getServiceLog(String hostAddress, String agentPassword,
-      String cluster, String service, int lines) throws AppException {
-    String url = createUrl("log", hostAddress, cluster, service, String.valueOf(
+  public String getGroupLog(String hostAddress, String agentPassword,
+      String cluster, String group, int lines) throws AppException {
+    String url = createUrl("log", hostAddress, cluster, group, String.valueOf(
             lines));
     return fetchLog(url, agentPassword);
   }
@@ -164,30 +164,30 @@ public class WebCommunication {
   }
 
   public String executeRun(String hostAddress, String agentPassword,
-          String cluster, String service, String role, String command,
+          String cluster, String group, String service, String command,
           String[] params) throws Exception {
-    return execute("execute/run", hostAddress, agentPassword, cluster, service,
-            role, command, params);
+    return execute("execute/run", hostAddress, agentPassword, cluster, group,
+            service, command, params);
   }
 
   public String executeStart(String hostAddress, String agentPassword,
-          String cluster, String service, String role, String command,
+          String cluster, String group, String service, String command,
           String[] params) throws Exception {
-    return execute("execute/start", hostAddress, agentPassword, cluster, service,
-            role, command, params);
+    return execute("execute/start", hostAddress, agentPassword, cluster, group,
+            service, command, params);
   }
 
   public String executeContinue(String hostAddress, String agentPassword,
-          String cluster, String service, String role, String command,
+          String cluster, String group, String service, String command,
           String[] params) throws Exception {
     return execute("execute/continue", hostAddress, agentPassword, cluster,
-            service, role, command, params);
+            group, service, command, params);
   }
 
   private String execute(String path, String hostAddress, String agentPassword,
-          String cluster, String service, String role, String command,
+          String cluster, String group, String service, String command,
           String[] params) throws Exception {
-    String url = createUrl(path, hostAddress, cluster, service, role, command);
+    String url = createUrl(path, hostAddress, cluster, group, service, command);
     String optionsAndParams = "";
     for (String param : params) {
       optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
@@ -209,10 +209,10 @@ public class WebCommunication {
   }
 
   public Response doCommand(String hostAddress, String agentPassword,
-          String cluster, String service, String role, String command) throws
+          String cluster, String group, String service, String command) throws
           Exception {
-    String url = createUrl("do", hostAddress, agentPassword, cluster, service,
-            role, command);
+    String url = createUrl("do", hostAddress, agentPassword, cluster, group,
+            service, command);
     return getWebResource(url, agentPassword);
   }
 

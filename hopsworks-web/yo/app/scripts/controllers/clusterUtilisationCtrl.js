@@ -77,13 +77,13 @@ angular.module('hopsWorksApp')
                         var nbNameNodes = 0;
                         var nbRunningNameNodes = 0;
                         success.data.forEach(function (status) {
-                          if (status.role === "datanode") {
+                          if (status.service === "datanode") {
                             nbDataNodes++;
                             if (status.status === "Started") {
                               nbRunningDataNodes++;
                             }
                           }
-                          if (status.role === "namenode") {
+                          if (status.service === "namenode") {
                             nbNameNodes++;
                             if (status.status === "Started") {
                               nbRunningNameNodes++;
@@ -114,13 +114,13 @@ angular.module('hopsWorksApp')
                         var nbRMs = 0;
                         var nbRunningRMs = 0;
                         success.data.forEach(function (status) {
-                          if (status.role === "nodemanager") {
+                          if (status.service === "nodemanager") {
                             nbNodeManagers++;
                             if (status.status === "Started") {
                               nbRunningNodeManagers++;
                             }
                           }
-                          if (status.role === "resourcemanager") {
+                          if (status.service === "resourcemanager") {
                             nbRMs++;
                             if (status.status === "Started") {
                               nbRunningRMs++;

@@ -4,7 +4,6 @@ import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jobs.BiobankingService;
 import io.hops.hopsworks.api.jobs.JobService;
 import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
@@ -109,8 +108,6 @@ public class ProjectService {
   @Inject
   private JobService jobs;
   @Inject
-  private BiobankingService biobanking;
-  @Inject
   private PythonDepsService pysparkService;
   @Inject
   private CertService certs;
@@ -124,7 +121,6 @@ public class ProjectService {
   private InodeFacade inodes;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-
   @EJB
   private UsersController usersController;
   @EJB
@@ -515,7 +511,7 @@ public class ProjectService {
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
-  public Response starterProject(
+  public Response example(
       @PathParam("type") String type,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
@@ -713,15 +709,6 @@ public class ProjectService {
     return this.jobs.setProject(project);
   }
 
-  @Path("{projectId}/biobanking")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public BiobankingService biobanking(@PathParam("projectId") Integer projectId)
-      throws
-      AppException {
-    Project project = projectController.findProjectById(projectId);
-    return this.biobanking.setProject(project);
-  }
-  
   @Path("{projectId}/certs")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public CertService certs(@PathParam("projectId") Integer projectId) throws

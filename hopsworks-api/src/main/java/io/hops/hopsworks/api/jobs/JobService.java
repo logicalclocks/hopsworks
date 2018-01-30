@@ -159,6 +159,7 @@ public class JobService {
   @EJB
   private YarnApplicationstateFacade appStateBean;
 
+  // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
   private static final String PROXY_USER_COOKIE_NAME = "proxy-user";
 

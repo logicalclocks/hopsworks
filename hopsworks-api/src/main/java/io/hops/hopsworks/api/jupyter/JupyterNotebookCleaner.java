@@ -3,7 +3,7 @@ package io.hops.hopsworks.api.jupyter;
 import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import java.util.logging.Logger;
@@ -29,7 +29,7 @@ public class JupyterNotebookCleaner {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
-  private JupyterProcessFacade jupyterProcessFacade;
+  private JupyterProcessMgr jupyterProcessFacade;
 
   public JupyterNotebookCleaner() {
   }
@@ -65,7 +65,7 @@ public class JupyterNotebookCleaner {
       List<JupyterProject> notebooks = jupyterProcessFacade.getAllNotebooks();
       for (JupyterProject jp : notebooks) {
         if (!jupyterProcessFacade.pingServerJupyterUser(jp.getPid())) {
-//          jupyterProcessFacade.killHardJupyterWithPid(jp.getPid());
+//          jupyterProcessFacade.killOrphanedWithPid(jp.getPid());
           int hdfsId = jp.getHdfsUserId();
 //          String hdfsUser = hdfsUsersFacade.
 //          jupyterProcessFacade.stopCleanly();

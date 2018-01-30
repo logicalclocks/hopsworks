@@ -7,8 +7,8 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.ldap.LdapUserDTO;
 import io.hops.hopsworks.common.dao.user.ldap.LdapUserFacade;
 import io.hops.hopsworks.common.dao.user.ldap.LdapUser;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.ArrayList;
@@ -99,7 +99,7 @@ public class LdapUserController {
     }
     String authKey = SecurityUtils.getRandomPassword(16);
     Users user = userController.createNewLdapUser(email, userDTO.getGivenName(), userDTO.getSn(), authKey,
-        PeopleAccountStatus.fromValue(settings.getLdapAccountStatus()));
+        UserAccountStatus.fromValue(settings.getLdapAccountStatus()));
     List<String> groups = new ArrayList<>();
     try {
       groups = ldapRealm.getUserGroups(userDTO.getUid());

@@ -1,13 +1,10 @@
 package io.hops.hopsworks.common.dao.jupyter;
 
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterInterpreter;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -15,15 +12,12 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 @Entity
 @Table(name = "jupyter_project",
@@ -58,9 +52,6 @@ public class JupyterProject implements Serializable {
   @NotNull
   @Column(name = "pid")
   private long pid;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "jupyterProject")
-  private Collection<JupyterInterpreter> jupyterInterpreterCollection;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -220,15 +211,5 @@ public class JupyterProject implements Serializable {
     this.pid = pid;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public Collection<JupyterInterpreter> getJupyterInterpreterCollection() {
-    return jupyterInterpreterCollection;
-  }
-
-  public void setJupyterInterpreterCollection(
-          Collection<JupyterInterpreter> jupyterInterpreterCollection) {
-    this.jupyterInterpreterCollection = jupyterInterpreterCollection;
-  }
 
 }

@@ -17,7 +17,7 @@
     <ui:define name="scripts">
       <script>
         jQuery(document).ready(function () {
-          jQuery('select[id*="Name"]').val('#{serviceInstancesController.role}');
+          jQuery('select[id*="Name"]').val('#{serviceInstancesController.service}');
           jQuery('select[id*="Status1"]').val('#{serviceInstancesController.status}');
         });
       </script>
@@ -39,17 +39,18 @@
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
               </p:commandLink> 
               <h:outputText value=" &raquo; "/>
-              <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
+              <p:commandLink action="#{urlController.groupStatus}" ajax="false">  
+                <h:outputText value="#{serviceInstancesController.group}" />
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>                          
+              </p:commandLink>                      
+              <h:outputText value=" &raquo; " rendered="#{not empty serviceInstancesController.service}"/>
+              <p:commandLink action="#{urlController.groupStatus}" ajax="false" 
+                             rendered="#{not empty serviceInstancesController.service}">  
                 <h:outputText value="#{serviceInstancesController.service}" />
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>                          
-              </p:commandLink>                      
-              <h:outputText value=" &raquo; " rendered="#{not empty serviceInstancesController.role}"/>
-              <p:commandLink action="#{urlController.serviceStatus}" ajax="false" rendered="#{not empty serviceInstancesController.role}">  
-                <h:outputText value="#{serviceInstancesController.role}" />
-                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>
                 <f:param name="service" value="#{serviceInstancesController.service}"/>
-                <f:param name="role" value="#{serviceInstancesController.role}"/>
               </p:commandLink>                     
             </p:column>
           </p:row>
@@ -68,50 +69,47 @@
 
         <!-- Second Toolbar-->
         <h:form>  
-          <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
+          <p:toolbar styleClass="SecondToolbar#{groupStatusController.health}">
             <p:toolbarGroup align="left">  
               
               <p:commandButton value="Status" icon="ui-icon-home" 
-                               action="#{urlController.serviceStatus}" ajax="false">
+                               action="#{urlController.groupStatus}" ajax="false">
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>
               </p:commandButton>  
               <p:commandButton styleClass="Selected" value="Instances" icon="ui-icon-note" 
                                rendered="#{serviceStatusController.renderInstancesLink()}"                                                 
-                               action="#{urlController.serviceInstances}">
+                               action="#{urlController.groupInstances}">
                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
-                <f:param name="service" value="#{serviceInstancesController.service}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>
               </p:commandButton>                    
             </p:toolbarGroup>  
 
             
             <p:toolbarGroup align="center">  
                 <p:menuButton value="Start/Stop">  
-                  <p:menuitem id="restartall_role" value="Restart All" action="#{communicationController.roleRestartAll()}" process="@this"                            
+                  <p:menuitem id="restartall_service" value="Restart All" action="#{communicationController.serviceRestartAll()}" process="@this"                            
                               disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
                     <f:param name="service" value="#{serviceInstancesController.service}"/>
-                    <f:param name="role" value="#{serviceInstancesController.role}"/>
-                    <f:param name="r" value="#{serviceInstancesController.role}"/>
                   </p:menuitem>
-                  <p:menuitem id="startall_role" value="Start All" action="#{communicationController.roleStartAll()}" process="@this"
+                  <p:menuitem id="startall_service" value="Start All" action="#{communicationController.serviceStartAll()}" process="@this"
                               icon="ui-icon-play" disabled="#{serviceInstancesController.disableStart()}" ajax ="true" update="@all">
                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
                     <f:param name="service" value="#{serviceInstancesController.service}"/>
-                    <f:param name="role" value="#{serviceInstancesController.role}"/>
-                    <f:param name="r" value="#{serviceInstancesController.role}"/>
                   </p:menuitem>
-                  <p:menuitem id="stopall_role" value="Stop All" action="#{communicationController.roleStopAll()}" process="@this"
+                  <p:menuitem id="stopall_service" value="Stop All" action="#{communicationController.serviceStopAll()}" process="@this"
                               disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
                     <f:param name="service" value="#{serviceInstancesController.service}"/>
-                    <f:param name="role" value="#{serviceInstancesController.role}"/>
-                    <f:param name="r" value="#{serviceInstancesController.role}"/>
                   </p:menuitem>
                 </p:menuButton> 
-                <p:tooltip for="startall_role" rendered="#{serviceInstancesController.disableStart()}" 
+                <p:tooltip for="startall_service" rendered="#{serviceInstancesController.disableStart()}" 
                            value="#{settingsController.tooltipDisabledAction('start')}"/>                     
-                <p:tooltip for="stopall_role" rendered="#{serviceInstancesController.disableStop()}" 
+                <p:tooltip for="stopall_service" rendered="#{serviceInstancesController.disableStop()}" 
                            value="#{settingsController.tooltipDisabledAction('stop')}"/>
               </p:toolbarGroup>  
 
@@ -134,14 +132,14 @@
 
             <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}">
 
-              <p:column id="Name" headerText="Role">
+              <p:column id="Name" headerText="Service">
 
-                <p:commandLink action="#{urlController.roleStatus}" ajax="false">
+                <p:commandLink action="#{urlController.serviceStatus}" ajax="false">
                   <h:outputText value="#{instance.name}"/>
-                  <f:param name="hostid" value="#{instance.host}"/>
                   <f:param name="cluster" value="#{instance.cluster}"/>
-                  <f:param name="role" value="#{instance.role}"/>
+                  <f:param name="group" value="#{instance.group}"/>
                   <f:param name="service" value="#{instance.service}"/>
+                  <f:param name="hostname" value="#{instance.host}"/>
                 </p:commandLink>                    
 
               </p:column>
@@ -149,10 +147,10 @@
               <p:column id="Host" headerText="Host">
                 <p:commandLink action="#{urlController.host}" ajax="false">
                   <h:outputText value="#{instance.host}"/>
-                  <f:param name="hostid" value="#{instance.host}"/>
                   <f:param name="cluster" value="#{instance.cluster}"/>
-                  <f:param name="role" value="#{instance.role}"/>
+                  <f:param name="group" value="#{instance.group}"/>
                   <f:param name="service" value="#{instance.service}"/>
+                  <f:param name="hostname" value="#{instance.host}"/>
                 </p:commandLink> 
               </p:column>
 
@@ -173,7 +171,7 @@
 
         <p:panel>
           <c:if test="#{serviceInstancesController.serviceWithMetrics}">
-            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe>
+            <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;service=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe>
           </c:if>
         </p:panel>
 

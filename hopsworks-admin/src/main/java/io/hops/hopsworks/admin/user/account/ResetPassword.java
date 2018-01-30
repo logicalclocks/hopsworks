@@ -2,7 +2,6 @@ package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
-import io.hops.hopsworks.common.constants.auth.AuthenticationConstants;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.EmailBean;
 import java.io.Serializable;
@@ -22,19 +21,20 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.dao.user.security.ua.PeopleAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.AuditUtil;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.servlet.ServletException;
@@ -148,7 +148,7 @@ public class ResetPassword implements Serializable {
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     people = userFacade.findByEmail(this.username);
 
-    if (people == null || people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
+    if (people == null || people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
       return ("password_sent");
     }
     try {
@@ -159,8 +159,8 @@ public class ResetPassword implements Serializable {
         // Lock the account if n tmies wrong answer  
         int val = people.getFalseLogin();
         usersController.increaseLockNum(people.getUid(), val + 1);
-        if (val > AuthenticationConstants.ALLOWED_FALSE_LOGINS) {
-          usersController.changeAccountStatus(people.getUid(), "", PeopleAccountStatus.DEACTIVATED_ACCOUNT);
+        if (val > Settings.ALLOWED_FALSE_LOGINS) {
+          usersController.changeAccountStatus(people.getUid(), "", UserAccountStatus.DEACTIVATED_ACCOUNT);
           String mess = UserAccountsEmailMessages.buildDeactivatedMessage();
           emailBean.sendEmail(people.getEmail(), RecipientType.TO,
               UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
@@ -180,10 +180,10 @@ public class ResetPassword implements Serializable {
 
       userTransaction.begin();
       // make the account pending until it will be reset by user upon first login
-      // mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+      // mgr.updateStatus(people, UserAccountStatus.ACCOUNT_PENDING.getValue());
       // update the status of user to active
 
-      people.setStatus(PeopleAccountStatus.ACTIVATED_ACCOUNT);
+      people.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
 
       // reset the old password with a new one
       authController.changePassword(people, random_password, req);
@@ -193,7 +193,7 @@ public class ResetPassword implements Serializable {
       auditManager.registerAccountChange(people,
           AccountsAuditActions.PASSWORDCHANGE.name(),
           AccountsAuditActions.SUCCESS.name(), "Temporary Password Sent.",
-          people);
+          people, req);
       // sned the new password to the user email
       emailBean.sendEmail(people.getEmail(), RecipientType.TO,
           UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
@@ -222,13 +222,9 @@ public class ResetPassword implements Serializable {
     if (req.getRemoteUser() == null) {
       return ("welcome");
     }
-
     people = userFacade.findByEmail(req.getRemoteUser());
 
-    if (people == null) {
-    }
-
-    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
+    if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage("Inactive Account");
       return "";
     }
@@ -239,7 +235,7 @@ public class ResetPassword implements Serializable {
       authController.changePassword(people, passwd1, req);
 
       try {
-        usersController.updateStatus(people, PeopleAccountStatus.ACTIVATED_ACCOUNT);
+        usersController.updateStatus(people, UserAccountStatus.ACTIVATED_ACCOUNT);
       } catch (ApplicationException ex) {
         Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null,
             ex);
@@ -251,18 +247,14 @@ public class ResetPassword implements Serializable {
       emailBean.sendEmail(people.getEmail(), RecipientType.TO,
           UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
-      auditManager.registerAccountChange(people,
-          UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
-          UserAuditActions.SUCCESS.name(), "",
-          people);
+      auditManager.registerAccountChange(people, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
+          UserAuditActions.SUCCESS.name(), "", people, req);
       return ("password_changed");
-    } catch (MessagingException ex) {
+    } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
 
-      auditManager.registerAccountChange(people,
-          UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
-          UserAuditActions.FAILED.name(), "",
-          people);
+      auditManager.registerAccountChange(people, UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET,
+          UserAuditActions.FAILED.name(), "", people, req);
       return ("");
 
     } catch (Exception ex) {
@@ -287,15 +279,13 @@ public class ResetPassword implements Serializable {
 
     people = userFacade.findByEmail(req.getRemoteUser());
 
+
     if (this.answer.isEmpty() || this.answer == null || this.current == null
         || this.current.isEmpty()) {
       MessagesController.addSecurityErrorMessage("No valid answer!");
 
-      auditManager.registerAccountChange(people,
-          AccountsAuditActions.SECQUESTION.name(),
-          AccountsAuditActions.FAILED.name(), "",
-          people);
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return ("");
     }
 
@@ -304,41 +294,30 @@ public class ResetPassword implements Serializable {
       HttpSession session = (HttpSession) context.getExternalContext().
           getSession(false);
       session.invalidate();
-
-      auditManager.registerAccountChange(people,
-          AccountsAuditActions.SECQUESTION.name(),
-          AccountsAuditActions.FAILED.name(), "",
-          people);
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return ("welcome");
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus().equals(PeopleAccountStatus.BLOCKED_ACCOUNT)) {
+    if (people.getStatus().equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-      auditManager.registerAccountChange(people,
-          AccountsAuditActions.SECQUESTION.name(),
-          AccountsAuditActions.FAILED.name(), "",
-          people);
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
     }
 
-    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
+    if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
       MessagesController.addSecurityErrorMessage(
           AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-      auditManager.registerAccountChange(people,
-          AccountsAuditActions.SECQUESTION.name(),
-          AccountsAuditActions.FAILED.name(), "",
-          people);
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
     }
 
     try {
-      if (DigestUtils.sha256Hex(this.current).
-          equals(people.getPassword())) {
+      if (DigestUtils.sha256Hex(this.current).equals(people.getPassword())) {
 
         // update the security question
         usersController.resetSecQuestion(people.getUid(), question, DigestUtils.sha256Hex(
@@ -348,25 +327,17 @@ public class ResetPassword implements Serializable {
         String message = UserAccountsEmailMessages.buildSecResetMessage();
         emailBean.sendEmail(people.getEmail(), RecipientType.TO,
             UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
-
-        auditManager.registerAccountChange(people,
-            AccountsAuditActions.SECQUESTION.name(),
-            AccountsAuditActions.SUCCESS.name(), "",
-            people);
-
+        auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+            AccountsAuditActions.SUCCESS.name(), "", people, req);
         return ("sec_question_changed");
       } else {
         MessagesController.addSecurityErrorMessage(
             AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-
-        auditManager.registerAccountChange(people,
-            AccountsAuditActions.SECQUESTION.name(),
-            AccountsAuditActions.FAILED.name(), "",
-            people);
-
+        auditManager.registerAccountChange(people, AccountsAuditActions.SECQUESTION.name(),
+            AccountsAuditActions.FAILED.name(), "", people, req);
         return "";
       }
-    } catch (MessagingException ex) {
+    } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Technical Error!");
       return ("");
     }
@@ -386,7 +357,7 @@ public class ResetPassword implements Serializable {
       return ("reset_password");
     }
 
-    if (people.getStatus().equals(PeopleAccountStatus.DEACTIVATED_ACCOUNT)) {
+    if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
       this.question = SecurityQuestion.randomQuestion();
       return ("reset_password");
     }
@@ -411,46 +382,35 @@ public class ResetPassword implements Serializable {
 
       // check the deactivation reason length
       if (this.notes.length() < 5 || this.notes.length() > 500) {
-        MessagesController.addSecurityErrorMessage(
-            AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
+        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_DEACTIVATION_LENGTH);
 
-        auditManager.registerAccountChange(people,
-            PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
-            UserAuditActions.FAILED.name(), "",
-            people);
+        auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
+            UserAuditActions.FAILED.name(), "", people, req);
       }
 
-      if (DigestUtils.sha256Hex(this.current).
-          equals(people.getPassword())) {
+      if (DigestUtils.sha256Hex(this.current).equals(people.getPassword())) {
 
         // close the account
         usersController.changeAccountStatus(people.getUid(), this.notes,
-            PeopleAccountStatus.DEACTIVATED_ACCOUNT);
+            UserAccountStatus.DEACTIVATED_ACCOUNT);
         // send email    
         String message = UserAccountsEmailMessages.buildSecResetMessage();
         emailBean.sendEmail(people.getEmail(), RecipientType.TO,
             UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
 
-        auditManager.registerAccountChange(people,
-            PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
-            UserAuditActions.FAILED.name(), "",
-            people);
+        auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
+            UserAuditActions.FAILED.name(), "", people, req);
       } else {
-        MessagesController.addSecurityErrorMessage(
-            AccountStatusErrorMessages.INCCORCT_PASSWORD);
+        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_PASSWORD);
 
-        auditManager.registerAccountChange(people,
-            PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
-            UserAuditActions.FAILED.name(), "",
-            people);
+        auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
+            UserAuditActions.FAILED.name(), "", people, req);
         return "";
       }
-    } catch (MessagingException ex) {
+    } catch (MessagingException e) {
 
-      auditManager.registerAccountChange(people,
-          PeopleAccountStatus.DEACTIVATED_ACCOUNT.name(),
-          UserAuditActions.FAILED.name(), "",
-          people);
+      auditManager.registerAccountChange(people, UserAccountStatus.DEACTIVATED_ACCOUNT.name(),
+          UserAuditActions.FAILED.name(), "", people, req);
     }
     return logout();
   }
@@ -474,24 +434,17 @@ public class ResetPassword implements Serializable {
     }
 
     // Check the status to see if user is not blocked or deactivate
-    if (people.getStatus() == PeopleAccountStatus.BLOCKED_ACCOUNT) {
-      MessagesController.addSecurityErrorMessage(
-          AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
-      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
-          name(), AccountsAuditActions.FAILED.name(), "",
-          people);
+    if (people.getStatus() == UserAccountStatus.BLOCKED_ACCOUNT) {
+      MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
     }
 
-    if (people.getStatus() == PeopleAccountStatus.DEACTIVATED_ACCOUNT) {
-      MessagesController.addSecurityErrorMessage(
-          AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-
-      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
-          name(), AccountsAuditActions.FAILED.name(), "",
-          people);
-
+    if (people.getStatus() == UserAccountStatus.DEACTIVATED_ACCOUNT) {
+      MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return "";
     }
 
@@ -502,7 +455,7 @@ public class ResetPassword implements Serializable {
 
     try {
 
-      if (DigestUtils.sha256Hex(current).equals(people.getPassword())) {
+      if (DigestUtils.sha256Hex(current).equals(people.getPassword()))  {
 
         // reset the old password with a new one
         authController.changePassword(people, passwd1, req);
@@ -512,29 +465,21 @@ public class ResetPassword implements Serializable {
         emailBean.sendEmail(people.getEmail(), RecipientType.TO,
             UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
 
-        auditManager.registerAccountChange(people,
-            AccountsAuditActions.PASSWORD.name(),
-            AccountsAuditActions.SUCCESS.name(), "",
-            people);
-
+        auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
+            AccountsAuditActions.SUCCESS.name(), "", people, req);
         return ("profile_password_changed");
       } else {
         MessagesController.addSecurityErrorMessage(
             AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-        auditManager.registerAccountChange(people,
-            AccountsAuditActions.PASSWORD.name(),
-            AccountsAuditActions.FAILED.name(), "",
-            people);
-
+        auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
+            AccountsAuditActions.FAILED.name(), "", people, req);
         return "";
       }
     } catch (MessagingException ex) {
       MessagesController.addSecurityErrorMessage("Email Technical Error!");
 
-      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.
-          name(), AccountsAuditActions.FAILED.name(), "",
-          people);
-
+      auditManager.registerAccountChange(people, AccountsAuditActions.PASSWORD.name(),
+          AccountsAuditActions.FAILED.name(), "", people, req);
       return ("");
     } catch (Exception ex) {
       Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
@@ -558,15 +503,8 @@ public class ResetPassword implements Serializable {
     }
 
     people = userFacade.findByEmail(req.getRemoteUser());
-
-    String ip = AuditUtil.getIPAddress();
-    String browser = AuditUtil.getBrowserInfo();
-    String os = AuditUtil.getOSInfo();
-    String macAddress = AuditUtil.getMacAddress(ip);
-
-    auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.getValue(),
-        ip, browser, os, macAddress, UserAuditActions.SUCCESS.name());
-
+    auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.toString(),
+        UserAuditActions.SUCCESS.toString(), req);
     try {
       req.logout();
       session.invalidate();
@@ -580,14 +518,11 @@ public class ResetPassword implements Serializable {
   }
 
   public String returnMenu() {
-
-    FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
-
-    if (null != sess) {
+    HttpSession sess = (HttpSession)
+        FacesContext.getCurrentInstance().getExternalContext().getSession(false);
+    if (sess != null) {
       sess.invalidate();
     }
     return ("welcome");
-
   }
 }

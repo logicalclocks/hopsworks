@@ -9,11 +9,8 @@
     <ui:composition>
       <h:form class="stylelayout" id="formToolbar"> 
         <p:toolbar styleClass="MainToolbar">
-          <p:toolbarGroup align="left">              
-            <p:commandLink value="HopsWorks" action="#{facesContext.externalContext.redirect('/hopsworks')}" rendered="#{!roleEnforcementPoint.loggedIn}"/>
-          </p:toolbarGroup>  
           <p:toolbarGroup align="left">
-            <p:commandLink value="Hopsworks" action="#{facesContext.externalContext.redirect('/hopsworks')}" rendered="#{roleEnforcementPoint.loggedIn}"/>
+            <p:commandLink value="HopsWorks" action="#{facesContext.externalContext.redirect('/hopsworks')}" />
             <p:commandLink value="Admin Home" action="adminIndex" rendered="#{roleEnforcementPoint.loggedIn}"/>
           </p:toolbarGroup> 
 

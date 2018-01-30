@@ -16,12 +16,12 @@ public class CommandController {
 
   @EJB
   private CommandEJB commandEJB;
-  @ManagedProperty("#{param.hostid}")
-  private String hostId;
-  @ManagedProperty("#{param.role}")
-  private String role;
+  @ManagedProperty("#{param.hostname}")
+  private String hostname;
   @ManagedProperty("#{param.service}")
   private String service;
+  @ManagedProperty("#{param.group}")
+  private String group;
   @ManagedProperty("#{param.cluster}")
   private String cluster;
   private static final Logger logger = Logger.getLogger(CommandController.class.
@@ -35,14 +35,6 @@ public class CommandController {
     logger.info("init CommandController");
   }
 
-  public String getRole() {
-    return role;
-  }
-
-  public void setRole(String role) {
-    this.role = role;
-  }
-
   public String getService() {
     return service;
   }
@@ -51,12 +43,20 @@ public class CommandController {
     this.service = service;
   }
 
-  public String getHostId() {
-    return hostId;
+  public String getGroup() {
+    return group;
   }
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public void setGroup(String group) {
+    this.group = group;
+  }
+
+  public String getHostname() {
+    return hostname;
+  }
+
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
   }
 
   public void setCluster(String cluster) {
@@ -79,19 +79,19 @@ public class CommandController {
 
   public List<Command> getRecentCommandsByClusterService() {
     List<Command> commands = commandEJB.findRecentByClusterService(cluster,
-            service);
+            group);
     return commands;
   }
 
   public List<Command> getRunningCommandsByClusterService() {
     List<Command> commands = commandEJB.findRunningByClusterService(cluster,
-            service);
+            group);
     return commands;
   }
 
   public List<Command> getRecentCommandsByInstance() {
     List<Command> commands = commandEJB.findRecentByClusterService(cluster,
-            service);
+            group);
     return commands;
   }
 }

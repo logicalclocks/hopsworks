@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+
+  <ui:composition template="layout.xhtml">
+
+    <ui:define name="title">
+      #{settingsController.name} - Group Status
+    </ui:define>
+
+    <ui:define name="css">
+    </ui:define>
+
+    <ui:define name="scripts">
+    </ui:define>
+
+    <ui:define name="content">
+
+      <!--Navigation Bar - Begin -->
+      <h:form styleClass="styleNav">
+        <p:panelGrid>  
+          <p:row>  
+            <p:column>
+              <p:commandLink action="#{urlController.clustersStatus}" ajax="false">
+                <h:outputText value="Clusters" />
+              </p:commandLink> 
+              <h:outputText value=" &raquo; "/>
+              <p:commandLink action="#{urlController.clusterStatus(groupStatusController.cluster)}" ajax="false">  
+                <h:outputText value="#{groupStatusController.cluster}" />
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+              </p:commandLink> 
+              <h:outputText value=" &raquo; "/>
+              <p:commandLink action="#{urlController.groupStatus}" ajax="false">  
+                <h:outputText value="#{serviceInstancesController.group}" />
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>                          
+              </p:commandLink>                       
+            </p:column>
+          </p:row>
+        </p:panelGrid>
+      </h:form>
+      <!--Navigation Bar - End-->
+
+      <p:outputPanel rendered="#{not serviceController.serviceFound}">
+        <p:spacer width="1" height="50" />             
+        <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+          <p align="center">Service not found!</p>   
+        </p:panel>
+      </p:outputPanel>         
+
+      <p:outputPanel rendered="#{serviceController.serviceFound}">         
+        <!-- Second Toolbar-->
+        <h:form>  
+          <p:toolbar styleClass="SecondToolbar#{groupStatusController.health}">
+            <p:toolbarGroup align="left">  
+
+              <p:commandButton value="Status" icon="ui-icon-home" 
+                               action="#{urlController.serviceStatus}" ajax="false">
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>
+              </p:commandButton>  
+              <p:commandButton styleClass="Selected" value="Instances" icon="ui-icon-note" 
+                               rendered="#{groupStatusController.renderInstancesLink()}"                                                 
+                               action="#{urlController.groupInstances}">
+                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                <f:param name="group" value="#{serviceInstancesController.group}"/>
+              </p:commandButton>                    
+            </p:toolbarGroup>  
+
+            
+            <p:toolbarGroup align="center">  
+                <p:menuButton value="Start/Stop">  
+                  <p:menuitem id="restartall_service" value="Restart All" action="#{communicationController.serviceRestartAll()}" process="@this"                            
+                              disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                  </p:menuitem>
+                  <p:menuitem id="startall_service" value="Start All" action="#{communicationController.serviceStartAll()}" process="@this"
+                              icon="ui-icon-play" disabled="#{serviceInstancesController.disableStart()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                  </p:menuitem>
+                  <p:menuitem id="stopall_service" value="Stop All" action="#{communicationController.serviceStopAll()}" process="@this"
+                              disabled="#{serviceInstancesController.disableStop()}" ajax ="true" update="@all">
+                    <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                    <f:param name="group" value="#{serviceInstancesController.group}"/>
+                    <f:param name="service" value="#{serviceInstancesController.service}"/>
+                  </p:menuitem>
+                </p:menuButton> 
+                <p:tooltip for="startall_service" rendered="#{serviceInstancesController.disableStart()}" 
+                           value="#{settingsController.tooltipDisabledAction('start')}"/>                     
+                <p:tooltip for="stopall_service" rendered="#{serviceInstancesController.disableStop()}" 
+                           value="#{settingsController.tooltipDisabledAction('stop')}"/>
+              </p:toolbarGroup>  
+
+          </p:toolbar>  
+        </h:form>
+
+        <!-- Second Toolbar - End -->        
+
+
+        <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
+          <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+        </p:dialog>             
+
+        <p:spacer width="1" height="10" />
+
+        <h:form styleClass="styleInfoPanel">
+          <p:panel header="Services' Status and Health Summary">
+
+            <p:dataTable id="service" var="service" value="#{groupStatusController.services}">
+
+              <p:column headerText="Service name">
+
+                <p:commandLink styleClass="Health-#{service.serviceHealth}" action="#{urlController.groupInstances}" ajax="false">
+                  <h:outputText value="#{service.fullName}"/>
+                  <f:param name="cluster" value="#{groupStatusController.cluster}"/>
+                  <f:param name="group" value="#{groupStatusController.group}"/>                        
+                  <f:param name="service" value="#{service.serviceName}"/>
+                </p:commandLink>                         
+              </p:column>  
+
+              <p:column headerText="Status">
+                <ui:repeat value="#{service.statusMap.entrySet().toArray()}" var="item" varStatus="status">
+                  <p:commandLink styleClass="Status-${item.key}" action="#{urlController.groupInstances}" ajax="false">
+                    <h:outputText value="${item.value} ${item.key}"/>
+                    <!--<p:tooltip for="statuslink" value="#{settingsController.tooltip(item.key, item.value)}" showEffect="fade" hideEffect="fade" />-->
+                    <f:param name="cluster" value="#{groupStatusController.cluster}"/>
+                    <f:param name="group" value="#{groupStatusController.group}"/>
+                    <f:param name="service" value="#{service.serviceName}"/>
+                    <f:param name="status" value="${item.key}"/>                           
+                  </p:commandLink>
+                  <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                </ui:repeat> 
+                <p:outputLabel rendered="#{empty service.statusMap.entrySet()}">No service instance running</p:outputLabel>
+              </p:column>
+
+              <p:column headerText="Health">
+                <ui:repeat value="#{service.healthMap.entrySet().toArray()}" var="item" varStatus="status">
+                  <h:outputText value="${item.value} ${item.key}" styleClass="Health-${item.key}"/>
+                  <h:outputText value=", " rendered="#{!status.last}"/>
+                </ui:repeat>
+              </p:column>
+
+            </p:dataTable> 
+
+          </p:panel>                    
+        </h:form>
+      </p:outputPanel>
+      <!--<p:spacer width="1" height="10" />-->
+
+      <p:spacer width="1" height="25" />
+
+
+      <c:if test="#{serviceInstancesController.serviceWithMetrics}">
+        <p:outputPanel>
+          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
+        </p:outputPanel>
+      </c:if>
+
+    </ui:define>
+
+  </ui:composition>
+
+</html>

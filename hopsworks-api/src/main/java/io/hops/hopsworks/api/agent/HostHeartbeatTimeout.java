@@ -3,7 +3,7 @@ package io.hops.hopsworks.api.agent;
 import static io.hops.hopsworks.api.agent.AgentResource.logger;
 import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class HostHeartbeatTimeout {
   TimerService timerService;
 
   @EJB
-  private HostEJB hostFacade;
+  private HostsFacade hostFacade;
   @EJB
   private Settings settings;
   @EJB

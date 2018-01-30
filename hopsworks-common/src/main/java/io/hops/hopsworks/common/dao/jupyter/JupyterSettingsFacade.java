@@ -9,6 +9,11 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import org.apache.commons.codec.digest.DigestUtils;
 
+/**
+ * The jupyter_settings table stores the most recent configuration settings from the user's Hopsworks UI.
+ * That is, what version did the user pick (tensorflow, dynamic/static spark, horovod, TfOnSpark, etc)
+ * How many executors (CPU/Memory/GPus), etc...
+ */
 @Stateless
 public class JupyterSettingsFacade {
 
@@ -42,8 +47,9 @@ public class JupyterSettingsFacade {
     if (js == null) {
       String secret = DigestUtils.sha256Hex(Integer.toString(
               ThreadLocalRandom.current().nextInt()));
-      // Set default framework to 'sparkDynamic'
-      js = new JupyterSettings(pk, secret, "sparkDynamic");
+      js = new JupyterSettings(pk);
+      js.setSecret(secret);
+      js.setMode("sparkDynamic");
       persist(js);
     }
     return js;

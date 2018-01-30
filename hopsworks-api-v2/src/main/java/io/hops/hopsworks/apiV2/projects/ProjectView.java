@@ -37,7 +37,6 @@ public class ProjectView {
   private Integer projectId;
   private String description;
   private Date created;
-  private String ethicalStatus;
   private boolean archived;
   private String name;
   private UserView owner;
@@ -50,7 +49,6 @@ public class ProjectView {
   public ProjectView(Project project){
     this.projectId = project.getId();
     this.name = project.getName();
-    this.ethicalStatus = project.getEthicalStatus();
     this.created = project.getCreated();
     this.description = project.getDescription();
     this.owner = new UserView(project.getOwner());
@@ -113,15 +111,7 @@ public class ProjectView {
   public void setCreated(Date created) {
     this.created = created;
   }
-  
-  public String getEthicalStatus() {
-    return ethicalStatus;
-  }
-  
-  public void setEthicalStatus(String ethicalStatus) {
-    this.ethicalStatus = ethicalStatus;
-  }
-  
+
   public boolean isArchived() {
     return archived;
   }

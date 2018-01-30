@@ -22,7 +22,7 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -46,7 +46,7 @@ public class JupyterNotebooksBean {
   @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
-  private JupyterProcessFacade jupyterProcessFacade;
+  private JupyterProcessMgr jupyterProcessFacade;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
@@ -93,25 +93,22 @@ public class JupyterNotebooksBean {
   }
 
   public String kill(JupyterProject notebook) {
-    String projectPath;
+    String jupyterHomePath;
     String hdfsUser = getHdfsUser(notebook);
-    if (hdfsUser.compareTo("Orphaned") == 0) {
-      if (jupyterProcessFacade.killHardJupyterWithPid(notebook.getPid()) == -1) {
-        return "KILL_NOTEBOOK_FAILED";
+    try {
+      if (hdfsUser.compareTo("Orphaned") == 0) {
+        jupyterHomePath = "";
+      } else {
+        jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, notebook);
       }
-    } else {
-      try {
-        projectPath = jupyterProcessFacade.getJupyterHome(hdfsUser, notebook);
-        jupyterProcessFacade.killServerJupyterUser(projectPath, notebook.getPid(), notebook.getPort());
-        jupyterFacade.removeNotebookServer(hdfsUser);
-        FacesContext context = FacesContext.getCurrentInstance();
-        context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
-      } catch (AppException ex) {
-        Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
-        FacesContext context = FacesContext.getCurrentInstance();
-        context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));
-        return "KILL_NOTEBOOK_FAILED";
-      }
+      jupyterProcessFacade.killServerJupyterUser(hdfsUser, jupyterHomePath, notebook.getPid(), notebook.getPort());
+      FacesContext context = FacesContext.getCurrentInstance();
+      context.addMessage(null, new FacesMessage("Successful", "Successfully killed Jupyter Notebook Server."));
+    } catch (AppException ex) {
+      Logger.getLogger(JupyterNotebooksBean.class.getName()).log(Level.SEVERE, null, ex);
+      FacesContext context = FacesContext.getCurrentInstance();
+      context.addMessage(null, new FacesMessage("Failure", "Failed to kill Jupyter Notebook Server."));
+      return "KILL_NOTEBOOK_FAILED";
     }
     return "KILL_NOTEBOOK_SUCCESS";
   }

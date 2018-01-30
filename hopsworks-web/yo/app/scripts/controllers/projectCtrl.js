@@ -225,7 +225,6 @@ angular.module('hopsWorksApp')
                 'description': self.currentProject.description,
                 'services': self.selectionProjectTypes,
                 'retentionPeriod': self.currentProject.retentionPeriod,
-                'ethicalStatus': self.currentProject.ethicalStatus
               };
 
               ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
@@ -434,10 +433,6 @@ angular.module('hopsWorksApp')
 
             self.showCharon = function () {
               return showService("Charon");
-            };
-
-            self.showBiobanking = function () {
-              return showService("Biobanking");
             };
 
             self.showKafka = function () {

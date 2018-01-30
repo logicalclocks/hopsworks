@@ -9,7 +9,6 @@ import javax.ejb.Stateless;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
-import io.hops.hopsworks.common.dao.jobs.JobOutputFileFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
@@ -34,8 +33,6 @@ public class AsynchronousJobExecutor {
 
   @EJB
   private ExecutionFacade executionFacade;
-  @EJB
-  private JobOutputFileFacade jobOutputFileFacade;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -73,10 +70,6 @@ public class AsynchronousJobExecutor {
     return yarnExecutionFinalizer;
   }
   
-  public JobOutputFileFacade getJobOutputFileFacade() {
-    return jobOutputFileFacade;
-  }
-
   public DistributedFsService getFsService() {
     return dfs;
   }

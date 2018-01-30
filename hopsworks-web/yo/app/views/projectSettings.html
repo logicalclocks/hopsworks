@@ -199,15 +199,23 @@
 
                 </div>
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
-                  <h2>Install Python Libraries with Anaconda</h2>                  
+                  <h2>Install Python Libraries with Anaconda. </h2><span style="pull-right">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>                  
                 </div>
-                <div class="row">
+                <div class="row" ng-show="pythonDepsCtrl.enabled">
                   <div class="col-md-offset-1 col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
                     <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                          aria-valuenow="{{pythonDepsCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
                       Installing conda at all hosts
                       <!--Number of hosts left: {{pythonDepsCtrl.numEnvsNotEnabled}}-->
                     </div>
+                  </div>
+                  <div class="col-md-offset-2 col-md-2 pull-right" style="margin-right: 60px">
+                    <button tooltip-placement="auto top"
+                            uib-tooltip="The project's Anaconda Environment will be deleted (but it can be recreated again)." 
+                            ng-click="pythonDepsCtrl.destroyAnaconda()" 
+                            type="button" class="btn btn-danger btn-sm" >
+                      Remove Anaconda
+                    </button>
                   </div>
                 </div>
 
@@ -297,7 +305,7 @@
                         <div class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
                       </td>
                       <td class="col-sm-2">
-                        <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'INSTALLED'"
+                        <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'SUCCESS'"
                                 ng-click="pythonDepsCtrl.install(row.lib, pythonDepsCtrl.selectedLibs[row.lib].version); active = 3">
                           <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                           Install</button>
@@ -358,11 +366,11 @@
                       </td>
                       <td class="col-sm-2" ng-if="row.preinstalled === 'false'">
                         <div class="button-group">
-                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'INSTALLED' || row.preinstalled === 'true'"
+                          <button type="submit" class="btn btn-success" ng-disabled="row.status !== 'SUCCESS' || row.preinstalled === 'true'"
                                   ng-click="pythonDepsCtrl.upgrade(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.upgrading[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Upgrade</button>
-                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'INSTALLED' || row.preinstalled === 'true'"
+                          <button type="submit" class="btn btn-danger" ng-disabled="row.status !== 'SUCCESS' || row.preinstalled === 'true'"
                                   ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
                             <i ng-if="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Uninstall</button>
@@ -376,7 +384,7 @@
               </uib-tab>
 
 
-              <uib-tab index="3" heading="Ongoing Installation Status" ng-if="false" 
+              <uib-tab index="3" heading="Ongoing Operations"  
                        ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed" 
                        ng-click="pythonDepsCtrl.getInstallationStatus()">
                 <h2>Ongoing installations</h2>
@@ -391,6 +399,14 @@
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
                       <th class="col-sm-2"></th>
+                      <th class="col-sm-2">
+                        <button type="submit" class="btn btn-success" 
+                                  tooltip-placement="auto top"
+                                  uib-tooltip="Retry all the conda commands that failed for this environment"                                  
+                                  ng-click="pythonDepsCtrl.retryFailedCondaOps()">
+                            <i ng-show="pythonDepsCtrl.isRetryingFailedCondaOps" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                            Retry Failed Ops</button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -403,10 +419,28 @@
                       </td>
                       <td class="col-sm-2">{{row.version}}
                       </td>
-                      <td class="col-sm-2">{{row.status}}
+                      <td class="col-sm-2">
+                        <span ng-if="row.status === 'FAILED'"
+                          style="color: #880000 ">{{row.status}}</span>
+                        <span ng-if="row.status !== 'FAILED'">{{row.status}}</span>
+                      </td>
+                      <td class="col-md-2" >
+                          <button ng-show="row.status === 'FAILED'" type="submit" class="btn btn-info"
+                                  tooltip-placement="auto left"
+                                  uib-tooltip="Show the hosts that this conda command failed on "                                  
+                                  ng-click="pythonDepsCtrl.failedHosts(row)">
+                            More Info</button>                                          
+                      </td>
+                      <td class="col-sm-2" >
+                          <button ng-show="row.status === 'FAILED'" type="submit" class="btn btn-md btn-danger"
+                                  tooltip-placement="auto left"
+                                  uib-tooltip="Remove the conda command toclean up this environment"                                  
+                                  ng-click="pythonDepsCtrl.uninstall(row.channelUrl, row.lib, row.version)">
+                            <i ng-show="pythonDepsCtrl.uninstalling[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                             Remove</button>                                          
                       </td>
                     </tr>
-                    <tr st-select-row="row" st-select-mode="single" ng-repeat="h in row.hosts" 
+<!--                    <tr st-select-row="row" st-select-mode="single" ng-repeat="h in row.hosts" 
                         ng-class="{'selectedTopicEven': h.isSelected === true}">
                       <td class="col-sm-4">
                         {{h.hostId}}
@@ -424,7 +458,7 @@
                             Retry</button>
                         </div>
                       </td>
-                    </tr>
+                    </tr>-->
                   </tbody>
                 </table>
 

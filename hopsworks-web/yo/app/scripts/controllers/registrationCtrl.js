@@ -64,26 +64,8 @@ angular.module('hopsWorksApp')
                     self.working = false;
                     self.errorMessage = error.data.errorMsg;
                   });
-                }else if (self.newUser.authType === 'Yubikey') {
-                  AuthService.registerYubikey(self.newUser).then(
-                          function (success) {
-                            self.user = angular.copy(empty);
-                            $scope.registerForm.$setPristine();
-                            self.successMessage = success.data.successMessage;
-                            self.working = false;
-                            self.userEmail= success.data.userEmail;
-                            $location.path("/yubikey");
-                            $location.replace();
-                            //$location.path('/login');
-                          }, function (error) {
-                    self.working = false;
-                    self.errorMessage = error.data.errorMsg;
-                  });
                 }
-                ;
-              }
-              ;
-
+              };
             };
             self.countries = getAllCountries();
           }]);

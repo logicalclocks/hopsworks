@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT c FROM CondaCommands c WHERE c.op = :op"),
   @NamedQuery(name = "CondaCommands.findByProj",
           query
-          = "SELECT c FROM CondaCommands c WHERE c.proj = :proj"),
+          = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId"),
   @NamedQuery(name = "CondaCommands.findByChannelUrl",
           query
           = "SELECT c FROM CondaCommands c WHERE c.channelUrl = :channelUrl"),

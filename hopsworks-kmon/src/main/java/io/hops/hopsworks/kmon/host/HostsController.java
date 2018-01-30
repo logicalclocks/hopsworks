@@ -1,6 +1,6 @@
 package io.hops.hopsworks.kmon.host;
 
-import io.hops.hopsworks.common.dao.host.HostEJB;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import javax.faces.bean.RequestScoped;
 public class HostsController implements Serializable {
 
   @EJB
-  private HostEJB hostEJB;
+  private HostsFacade hostEJB;
   private List<Hosts> hosts;
   private static final Logger logger = Logger.getLogger(HostsController.class.
           getName());

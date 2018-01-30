@@ -16,7 +16,6 @@ public class ProjectDTO {
   private String description;
   private Date retentionPeriod;
   private Date created;
-  private String ethicalStatus;
   private boolean archived;
   private List<String> services;
   private List<ProjectTeam> projectTeam;
@@ -41,7 +40,6 @@ public class ProjectDTO {
     this.owner = project.getOwner().getEmail();
     this.retentionPeriod = project.getRetentionPeriod();
     this.created = project.getCreated();
-    this.ethicalStatus = project.getEthicalStatus();
     this.archived = project.getArchived();
     this.description = project.getDescription();
     this.services = services;
@@ -58,7 +56,6 @@ public class ProjectDTO {
     this.owner = project.getOwner().getEmail();
     this.retentionPeriod = project.getRetentionPeriod();
     this.created = project.getCreated();
-    this.ethicalStatus = project.getEthicalStatus();
     this.archived = project.getArchived();
     this.description = project.getDescription();
     this.services = services;
@@ -67,15 +64,13 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
-      Date retentionPeriod, Date created, String ethicalStatus,
-      boolean archived, String description,
+      Date retentionPeriod, Date created, boolean archived, String description,
       List<String> services, List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.owner = owner;
     this.retentionPeriod = retentionPeriod;
     this.created = created;
-    this.ethicalStatus = ethicalStatus;
     this.archived = archived;
     this.description = description;
     this.services = services;
@@ -130,14 +125,6 @@ public class ProjectDTO {
     this.created = created;
   }
 
-  public String getEthicalStatus() {
-    return ethicalStatus;
-  }
-
-  public void setEthicalStatus(String ethicalStatus) {
-    this.ethicalStatus = ethicalStatus;
-  }
-
   public boolean isArchived() {
     return archived;
   }
@@ -190,8 +177,8 @@ public class ProjectDTO {
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
         + ", description=" + description + ", retentionPeriod="
-        + retentionPeriod + ", created=" + created + ", ethicalStatus="
-        + ethicalStatus + ", archived=" + archived + ", services="
+        + retentionPeriod + ", created=" + created + ", archived="
+        + archived + ", services="
         + services + ", projectTeam=" + projectTeam + '}';
   }
 
