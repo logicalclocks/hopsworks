@@ -35,11 +35,11 @@
           <div class="content">
             <h:form id="reqdataForm">
               <p:dataTable id="userReqTable" var="req"
-                           value="#{peopleAdministration.allRequests}" 
+                           value="#{userAdministration.allRequests}" 
                            widgetVar="reqsTable"
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
-                           selection="#{peopleAdministration.selectedUsers}" 
+                           selection="#{userAdministration.selectedUsers}" 
                            editable="true" editMode="cell"
                            rows="25"
                            paginator="true"
@@ -63,35 +63,35 @@
 
                 <p:column id="roleColumn" headerText="Role">
                   <p:selectOneMenu id="roleToChoose" 
-                                   rendered="#{peopleAdministration.notVerified(req) == false}"
-                                   value="#{peopleAdministration.role}"
+                                   rendered="#{userAdministration.notVerified(req) == false}"
+                                   value="#{userAdministration.role}"
                                    editable="false">
                     <f:selectItem itemLabel="Select Role"
-                                  itemValue="#{peopleAdministration.role}"/>
-                    <f:selectItems value="#{peopleAdministration.actGroups}"/>
+                                  itemValue="#{userAdministration.role}"/>
+                    <f:selectItems value="#{userAdministration.actGroups}"/>
                   </p:selectOneMenu>
                 </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
                   <h:panelGrid columns="3" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAdministration.rejectUser(req)}"
+                                   action="#{userAdministration.rejectUser(req)}"
                                    update="@form">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                   rendered="#{peopleAdministration.notVerified(req) == false}"
-                                   actionListener="#{peopleAdministration.activateUser(req)}" 
+                                   rendered="#{userAdministration.notVerified(req) == false}"
+                                   actionListener="#{userAdministration.activateUser(req)}" 
                                    update="@form">
                       <p:confirm header="Activate user" 
                                  message="Activate #{req.email} ?" 
                                  icon="ui-icon-alert"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
-                                   rendered="#{peopleAdministration.notVerified(req)}"
-                                   actionListener="#{peopleAdministration.resendAccountVerificationEmail(req)}" 
+                                   rendered="#{userAdministration.notVerified(req)}"
+                                   actionListener="#{userAdministration.resendAccountVerificationEmail(req)}" 
                                    update="@form">
                       <p:confirm header="Resend Email" 
                                  message="Resend Account Validation Email to #{req.email} ?"

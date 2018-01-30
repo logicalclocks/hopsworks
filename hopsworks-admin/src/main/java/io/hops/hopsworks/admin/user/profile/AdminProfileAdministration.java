@@ -372,7 +372,9 @@ public class AdminProfileAdministration implements Serializable {
 
   public void setMaxNumProjs(String maxNumProjs) {
     int num = Integer.parseInt(maxNumProjs);
-    usersController.updateMaxNumProjs(editingUser, num);
+    if(num > -1){
+      usersController.updateMaxNumProjs(editingUser, num);
+    }
   }
 
   public boolean notVerified() {

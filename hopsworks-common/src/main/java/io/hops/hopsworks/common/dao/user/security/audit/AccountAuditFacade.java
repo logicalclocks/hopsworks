@@ -51,7 +51,12 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     Query query = em.createNamedQuery("Userlogins.findUserLast", Userlogins.class)
         .setParameter("user", user)
         .setMaxResults(1);
-    return (Userlogins) query.getSingleResult();
+    List<Userlogins> logins = query.getResultList();
+    //A user might have never logged in, so we need to check first
+    if (!logins.isEmpty()) {
+      return logins.get(0);
+    }
+    return null;
   }
 
   public void registerLoginInfo(Users user, String action, String outcome, HttpServletRequest req) {

@@ -169,7 +169,7 @@
                                 value="MaxNumProjects"
                                 update=":account_status :num_projs"
                                 pt:placeholder="Max Number of Projects"
-                                action="#{adminProfileAdministration.setMaxNumProjs()}"/> 
+                                action="#{adminProfileAdministration.setMaxNumProjs(adminProfileAdministration.maxNumProjs)}"/> 
             </h:panelGrid>
           </h:form>
 
@@ -368,9 +368,15 @@
             </h3> 
           </p:column>
 
-          <p:column>
+          <p:column rendered="#{adminProfileAdministration.login!=null}">
             <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-              #{adminProfileAdministration.login.loginDate} from #{adminProfileAdministration.login.ip} with #{adminProfileAdministration.login.browser}
+              #{adminProfileAdministration.login.loginDate} from #{adminProfileAdministration.login.ip} with #{adminProfileAdministration.login.userAgent}
+            </h3> 
+          </p:column>
+          
+          <p:column rendered="#{adminProfileAdministration.login==null}">
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              -
             </h3> 
           </p:column>
 

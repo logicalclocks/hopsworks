@@ -48,10 +48,10 @@ import javax.faces.bean.RequestScoped;
 
 @ManagedBean
 @RequestScoped
-public class PeopleAdministration implements Serializable {
+public class UserAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  private static final Logger LOGGER = Logger.getLogger(PeopleAdministration.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(UserAdministration.class.getName());
 
   @EJB
   private UserFacade userFacade;
@@ -122,7 +122,7 @@ public class PeopleAdministration implements Serializable {
   // list of roles that can be activated for a user
   List<String> actGroups;
 
-  public PeopleAdministration() {
+  public UserAdministration() {
     // Default no-arg constructor
   }
 
@@ -362,7 +362,7 @@ public class PeopleAdministration implements Serializable {
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
           getMessage());
-      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
+      Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE,
           "Could not remove user.", ex);
     }
   }
@@ -386,7 +386,7 @@ public class PeopleAdministration implements Serializable {
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
           getMessage());
-      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
+      Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE,
           "Could not remove user from spam list.", ex);
     }
   }
@@ -507,7 +507,7 @@ public class PeopleAdministration implements Serializable {
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to "
           + user1.getEmail() + ". " + e.getMessage());
-      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
+      Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE,
           "Could not send email to {0}. {1}", new Object[]{user1.getEmail(),
             e});
     }

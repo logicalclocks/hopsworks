@@ -35,11 +35,11 @@
           <div class="content">
             <h:form id="spamReuests">
               <p:dataTable id="spamUserReqTable" var="req" 
-                           value="#{peopleAdministration.spamUsers}" 
+                           value="#{userAdministration.spamUsers}" 
                            widgetVar="spamReqsTable" 
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
-                           selection="#{peopleAdministration.selectedUsers}"
+                           selection="#{userAdministration.selectedUsers}"
                            editable="true" 
                            editMode="cell"
                            rows="25"
@@ -78,7 +78,7 @@
                   <h:panelGrid columns="2" style="width: auto">                                                    
                     <p:commandLink id="deleteUser"
                                    styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{peopleAdministration.deleteUser(req)}" 
+                                   action="#{userAdministration.deleteUser(req)}" 
                                    update="@form">
                       <p:confirm header="Remove user" 
                                  message="Are you sure you want to remove this user?" 
@@ -86,7 +86,7 @@
                     </p:commandLink>
                     <p:commandLink id="removeFromSpam"
                                    styleClass="ui-button-allow fa fa-check" 
-                                   action="#{peopleAdministration.removeFromSpam(req)}" 
+                                   action="#{userAdministration.removeFromSpam(req)}" 
                                    update="@form">
                       <p:confirm header="Remove user from spam" 
                                  message="Are you sure you want to remove this user from spam list?" 

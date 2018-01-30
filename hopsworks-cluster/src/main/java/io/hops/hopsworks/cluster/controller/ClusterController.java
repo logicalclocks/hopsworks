@@ -17,8 +17,8 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.security.PKIUtils;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.AuditUtil;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -386,11 +386,11 @@ public class ClusterController {
       if (type.equals(AccountsAuditActions.REGISTRATION.name())) {
         emailBean.sendEmail(cluster.getEmail(), Message.RecipientType.TO,
           UserAccountsEmailMessages.CLUSTER_REQUEST_SUBJECT, UserAccountsEmailMessages.
-          buildClusterRegisterRequestMessage(AuditUtil.getUserURL(req), validationKey));
+          buildClusterRegisterRequestMessage(FormatUtils.getUserURL(req), validationKey));
       } else {
         emailBean.sendEmail(cluster.getEmail(), Message.RecipientType.TO,
           UserAccountsEmailMessages.CLUSTER_REQUEST_SUBJECT, UserAccountsEmailMessages.
-          buildClusterUnregisterRequestMessage(AuditUtil.getUserURL(req), validationKey));
+          buildClusterUnregisterRequestMessage(FormatUtils.getUserURL(req), validationKey));
       }
     } catch (MessagingException ex) {
       LOGGER.log(Level.SEVERE, "Could not send email to ", u.getEmail());

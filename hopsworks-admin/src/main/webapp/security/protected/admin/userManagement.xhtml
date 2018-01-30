@@ -39,8 +39,8 @@
                 <p:growl id="growl" life="2000"/>
 
                 <p:dataTable id="userdataTable" var="muser" 
-                             value="#{peopleAdministration.allUsers}" 
-                             filteredValue="#{peopleAdministration.filteredUsers}" 
+                             value="#{userAdministration.allUsers}" 
+                             filteredValue="#{userAdministration.filteredUsers}" 
                              widgetVar="usersTable"
                              emptyMessage="No users found with given criteria"
                              rowKey="#{muser.email}"
@@ -69,7 +69,7 @@
 
                   <p:column id="statCol"  filterBy="#{muser.status}" 
                             headerText="Status" >
-                    <h:outputText value="#{peopleAdministration.getChanged_Status(muser)}"/>
+                    <h:outputText value="#{userAdministration.getChanged_Status(muser)}"/>
                   </p:column>
 
                   <p:column id="onlineCol"  filterBy="#{muser.isonline}" 
@@ -79,12 +79,12 @@
 
 
                   <p:column id="roleNCol" headerText="Role">
-                    <h:outputText value="#{peopleAdministration.getUserRole(muser)}" />
+                    <h:outputText value="#{userAdministration.getUserRole(muser)}" />
                   </p:column>
 
 
                   <p:column id="actionUserColumn" headerText="Modify" >                                                 
-                    <p:commandLink  action="#{peopleAdministration.modifyUser}" update="@form" styleClass="fa fa-pencil-square-o" value="">
+                    <p:commandLink  action="#{userAdministration.modifyUser}" update="@form" styleClass="fa fa-pencil-square-o" value="">
                       <f:param name="userMail" value="#{muser.email}"/>
                     </p:commandLink>
                   </p:column>
