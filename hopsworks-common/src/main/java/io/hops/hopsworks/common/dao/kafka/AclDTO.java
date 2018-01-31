@@ -27,6 +27,16 @@ public class AclDTO implements Serializable {
     this.host = host;
     this.role = role;
   }
+  
+  public AclDTO(String projectName, String userEmail,
+      String permissionType, String operationType, String host, String role) {
+    this.projectName = projectName;
+    this.userEmail = userEmail;
+    this.permissionType = permissionType;
+    this.operationType = operationType;
+    this.host = host;
+    this.role = role;
+  }
 
   public Integer getId() {
     return id;

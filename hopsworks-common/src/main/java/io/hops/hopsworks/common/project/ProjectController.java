@@ -74,6 +74,7 @@ import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
+import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
@@ -168,6 +169,8 @@ public class ProjectController {
   private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
+  @EJB 
+  KafkaController kafkaController;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -1652,14 +1655,20 @@ public class ProjectController {
             try {
               hdfsUsersBean.addNewProjectMember(project, projectTeam);
             } catch (IOException ex) {
+              LOGGER.log(Level.SEVERE,"Could not add member:"+newMember+" to project:"+project+" in HDFS.", ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
-              throw new EJBException("Could not add member to HDFS.");
+              throw new EJBException("Could not add member:"+newMember+" to project:"+project+" in HDFS.");
             }
+            //Add user to kafka topics ACLs by default
+            if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+              kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
+            }
+            
+            
             // TODO: This should now be a REST call
             Future<CertificatesController.CertsResult> certsResultFuture = null;
             try {
-              certsResultFuture = certificatesController
-                  .generateCertificates(project, newMember, false);
+              certsResultFuture = certificatesController.generateCertificates(project, newMember, false);
               certsResultFuture.get();
               if (settings.isPythonKernelEnabled()) {
                 jupyterProcessFacade.createPythonKernelForProjectUser(project, newMember);
@@ -1931,7 +1940,7 @@ public class ProjectController {
       List<ApplicationReport> projectsApps = client.getApplications(null, hdfsUsers, null, EnumSet.of(
           YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
           YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
-      //kill jupitter for this user
+      //kill jupyter for this user
       jupyterProcessFacade.stopCleanly(hdfsUser);
       if (settings.isPythonKernelEnabled()) {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
@@ -1984,7 +1993,7 @@ public class ProjectController {
     }
 
     try {
-      kafkaFacade.removeAclsForUser(userToBeRemoved, project.getId());
+      kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
     } catch (Exception ex) {
       String errorMsg = "Error while removing Kafka ACL for user " + userToBeRemoved.getUsername() + " from project "
           + project.getName();
