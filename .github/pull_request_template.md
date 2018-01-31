@@ -1,8 +1,9 @@
 ## Make sure there is no duplicate PR for this issue
 
-* **Please check if the PR fulfills these requirements**
-- [ ] Tests for the changes have been added and passed (for bug fixes / features)
-- [ ] HOPS JIRA issue has been opened for this PR
+* **Please check if the PR meets the following requirements**
+- [ ] Adds tests for the submitted changes (for bug fixes & features)
+- [ ] Passes the tests
+- [ ] HOPSWORKS JIRA issue has been opened for this PR
 - [ ] All commits have been squashed down to a single commit
 
 
