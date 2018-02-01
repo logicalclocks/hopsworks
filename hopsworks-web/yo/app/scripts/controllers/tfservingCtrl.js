@@ -238,6 +238,7 @@ angular.module('hopsWorksApp')
 
                     },
                     function(error) {
+                        self.getAllServings(self.projectId)
                         if (error.data !== undefined) {
                             growl.error(error.data.errorMsg, {
                                 title: 'Error',

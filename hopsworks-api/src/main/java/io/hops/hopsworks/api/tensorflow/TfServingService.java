@@ -64,7 +64,7 @@ import io.hops.hopsworks.common.dao.tfserving.TfServing;
 import io.hops.hopsworks.common.dao.tfserving.TfServingFacade;
 import io.hops.hopsworks.common.dao.tfserving.TfServingStatusEnum;
 import io.hops.hopsworks.common.dao.tfserving.config.TfServingDTO;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessFacade;
+import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -91,7 +91,7 @@ public class TfServingService {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
-  private TfServingProcessFacade tfServingProcessFacade;
+  private TfServingProcessMgr TfServingProcessMgr;
   @EJB
   private InodeFacade inodes;
 
@@ -169,7 +169,7 @@ public class TfServingService {
               getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
     }
 
-    String logString = tfServingProcessFacade.getLogs(tfServing);
+    String logString = TfServingProcessMgr.getLogs(tfServing);
 
     JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
     if(logString != null) {
@@ -212,6 +212,16 @@ public class TfServingService {
 
       String modelPath = tfServing.getHdfsModelPath();
 
+      if(modelPath.startsWith("hdfs://")) {
+        int projectsIndex = modelPath.indexOf("/Projects");
+        modelPath = modelPath.substring(projectsIndex, modelPath.length());
+      }
+
+      if(!inodes.existsPath(modelPath)) {
+        throw new AppException(
+                Response.Status.NOT_FOUND.getStatusCode(),
+                "Could not find .pb file in the path " + modelPath);
+      }
 
       if(modelPath.equals("")) {
         throw new AppException(
@@ -234,12 +244,14 @@ public class TfServingService {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 ".pb file should be located in Models/{model_name}/{version}");
       }
+
+      String email = sc.getUserPrincipal().getName();
+
       tfServing.setVersion(version);
       tfServing.setProject(project);
       tfServing.setHdfsModelPath(basePath);
-
       tfServing.setStatus(TfServingStatusEnum.CREATED);
-
+      tfServing.setCreator(userFacade.findByEmail(email));
       tfServingFacade.persist(tfServing);
 
     } catch (DatabaseException dbe) {
@@ -279,7 +291,7 @@ public class TfServingService {
     } catch (DatabaseException ex) {
       LOGGER.log(Level.WARNING,
               "Serving could not be deleted with id: " + tfServing.getId());
-      throw new AppException(Response.Status.FORBIDDEN.
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), ex.getMessage());
     }
 
@@ -333,7 +345,7 @@ public class TfServingService {
         tfServing.setStatus(TfServingStatusEnum.STARTING);
         tfServingFacade.updateRunningState(tfServing);
 
-        TfServingDTO tfServingDTO = tfServingProcessFacade.startTfServingAsTfServingUser(hdfsUser, tfServing);
+        TfServingDTO tfServingDTO = TfServingProcessMgr.startTfServingAsTfServingUser(hdfsUser, tfServing);
 
         if(tfServingDTO.getExitValue() != 0) {
 
@@ -410,17 +422,29 @@ public class TfServingService {
     if (status.equals(TfServingStatusEnum.CREATED) ||
             status.equals(TfServingStatusEnum.STOPPED)) {
 
+      if(modelPath.startsWith("hdfs://")) {
+        int projectsIndex = modelPath.indexOf("/Projects");
+        modelPath = modelPath.substring(projectsIndex, modelPath.length());
+      }
+
+      if(!inodes.existsPath(modelPath)) {
+        throw new AppException(
+                Response.Status.NOT_FOUND.getStatusCode(),
+                "Could not find .pb file in the path " + modelPath);
+      }
+
+
       tfServing.setHdfsModelPath(getModelBasePath(modelPath));
       tfServing.setVersion(getVersion(modelPath));
       try {
         tfServingFacade.updateServingVersion(tfServing);
       } catch (DatabaseException dbe) {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Unable to swap model due to database error.");
       }
 
     } else {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
               "Can't change version of a model currently running");
     }
 
@@ -463,7 +487,7 @@ public class TfServingService {
       }
 
       if (tfServing.getStatus().equals(TfServingStatusEnum.RUNNING)) {
-        int exitCode = tfServingProcessFacade.killServingAsServingUser(tfServing);
+        int exitCode = TfServingProcessMgr.killServingAsServingUser(tfServing);
 
         if(exitCode == 0) {
           tfServing.setStatus(TfServingStatusEnum.STOPPED);
@@ -474,11 +498,11 @@ public class TfServingService {
 
           //removeDirectory and reset serving to normal
         } else {
-          throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                   "Serving with id " + servingId + " could not be stopped");
         }
       } else {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
                 "Attempting to stop serving with status " + tfServing.getStatus());
       }
 

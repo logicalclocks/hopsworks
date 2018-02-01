@@ -441,6 +441,9 @@ public class JupyterConfigFilesGenerator {
       
       sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_USER_NAME", new ConfigProperty(
           "hdfs_user", IGNORE, this.hdfsUser));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.REST_ENDPOINT", new ConfigProperty(
+              "rest_endpoint", IGNORE, settings.getRestEndpoint()));
   
       sparkMagicParams.put("spark.yarn.appMasterEnv.HDFS_BASE_DIR", new ConfigProperty(
           "spark_yarn_appMasterEnv_HDFS_BASE_DIR", IGNORE,
@@ -465,6 +468,9 @@ public class JupyterConfigFilesGenerator {
       
       sparkMagicParams.put("spark.executorEnv.MPI_NP", new ConfigProperty(
           "spark_executorEnv_MPI_NP", IGNORE, (isHorovod) ? Integer.toString(js.getNumMpiNp()) : ""));
+
+      sparkMagicParams.put("spark.executorEnv.REST_ENDPOINT", new ConfigProperty(
+              "rest_endpoint", IGNORE, settings.getRestEndpoint()));
       
       sparkMagicParams.put("spark.executorEnv.HADOOP_USER_NAME", new ConfigProperty(
           "hdfs_user", IGNORE, this.hdfsUser));
