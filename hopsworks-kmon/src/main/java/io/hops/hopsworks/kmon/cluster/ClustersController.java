@@ -47,14 +47,14 @@ public class ClustersController {
   }
  
   public String getNameNodesString() {
-    String hosts = "";
+    StringBuilder hosts = new StringBuilder();
     List<HostServices> hostServices = hostServicesFacade.findServices("namenode");
     if (hostServices != null && !hostServices.isEmpty()) {
-      hosts = hosts + hostServices.get(0).getHost();
+      hosts.append(hostServices.get(0).getHost().getHostname());
       for (int i = 1; i < hostServices.size(); i++) {
-        hosts = hosts + "," + hostServices.get(i).getHost();
+        hosts.append(",").append(hostServices.get(i).getHost().getHostname());
       }
     }
-    return hosts;
+    return hosts.toString();
   }
 }
