@@ -1,15 +1,20 @@
-/*!
- * jQuery JavaScript Library v1.8.2
- * http://jquery.com/
+/*
+ * This file is part of HopsWorks
  *
- * Includes Sizzle.js
- * http://sizzlejs.com/
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved.
  *
- * Copyright 2012 jQuery Foundation and other contributors
- * Released under the MIT license
- * http://jquery.org/license
+ * HopsWorks is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Date: Thu Sep 20 2012 21:13:05 GMT-0400 (Eastern Daylight Time)
+ * HopsWorks is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with HopsWorks.  If not, see <http://www.gnu.org/licenses/>.
  */
 function textWrap(e, t) {
   var n = e.attr("text"), r = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";

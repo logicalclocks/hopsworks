@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of HopsWorks
  *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved.

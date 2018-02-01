@@ -1,14 +1,20 @@
 /*
- * qTip2 - Pretty powerful tooltips - v2.2.1
- * http://qtip2.com
+ * This file is part of HopsWorks
  *
- * Copyright (c) 2014 
- * Released under the MIT licenses
- * http://jquery.org/license
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved.
  *
- * Date: Sun Sep 7 2014 12:09 GMT+0100+0100
- * Plugins: tips modal viewport svg imagemap ie6
- * Styles: core basic css3
+ * HopsWorks is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * HopsWorks is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with HopsWorks.  If not, see <http://www.gnu.org/licenses/>.
  */
 .qtip{
 	position: absolute;
