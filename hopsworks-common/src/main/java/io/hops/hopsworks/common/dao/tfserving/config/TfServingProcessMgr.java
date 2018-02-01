@@ -68,9 +68,9 @@ import javax.ws.rs.core.Response;
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 @DependsOn("Settings")
-public class TfServingProcessFacade {
+public class TfServingProcessMgr {
 
-  private static final Logger logger = Logger.getLogger(TfServingProcessFacade.class.getName());
+  private static final Logger logger = Logger.getLogger(TfServingProcessMgr.class.getName());
 
   @EJB
   private Settings settings;
@@ -120,13 +120,13 @@ public class TfServingProcessFacade {
     // use pidfile to kill any running servers
     port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-    String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + tfServing.getSecret();
+    String secretDir = settings.getStagingDir() + Settings.SERVING_DIRS + tfServing.getSecret();
 
     String[] command = new String[]{"/usr/bin/sudo", prog, "start", tfServing.getModelName(),
               tfServing.getVersion() + "", tfServing.getHdfsModelPath(), port.toString(),
         secretDir, Boolean.toString(tfServing.getEnableBatching())};
 
-    logger.log(Level.SEVERE, Arrays.toString(command));
+    logger.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
 
     try {
@@ -170,11 +170,11 @@ public class TfServingProcessFacade {
     String prog = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
     int exitValue;
 
-    String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + tfServing.getSecret();
+    String secretDir = settings.getStagingDir() + Settings.SERVING_DIRS + tfServing.getSecret();
 
     String[] command = {"/usr/bin/sudo", prog, "kill", tfServing.getModelName(), tfServing.getPid().toString(),
     tfServing.getPort().toString(), secretDir};
-    logger.log(Level.SEVERE, Arrays.toString(command));
+    logger.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
@@ -211,7 +211,7 @@ public class TfServingProcessFacade {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
-    String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + tfServing.getSecret();
+    String secretDir = settings.getStagingDir() + Settings.SERVING_DIRS + tfServing.getSecret();
     String logFile = secretDir + "/tfserving/logs/" + tfServing.getModelName() + "-" + tfServing.getPort() + ".log";
 
     String[] command = {"/usr/bin/sudo", prog, "logs", tfServing.getHostIp(), logFile};

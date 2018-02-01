@@ -73,7 +73,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessFacade;
+import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -183,7 +183,7 @@ public class ProjectController {
   @EJB
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
-  private TfServingProcessFacade tfServingProcessFacade;
+  private TfServingProcessMgr tfServingProcessMgr;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -1442,7 +1442,7 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
 
-        tfServingProcessFacade.removeProject(project);
+        tfServingProcessMgr.removeProject(project);
 
         try {
           removeAnacondaEnv(project);
@@ -2304,7 +2304,7 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeTfServing(Project project) throws AppException {
     LOGGER.log(Level.SEVERE, "PLEASE REMOVE TF SERVINGS");
-    tfServingProcessFacade.removeProject(project);
+    tfServingProcessMgr.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

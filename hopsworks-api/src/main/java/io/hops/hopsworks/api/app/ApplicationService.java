@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.GET;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -130,7 +129,6 @@ public class ApplicationService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
         build();
-
   }
 
   //when do we need this endpoint? It's used when the Kafka clients want to access
@@ -157,7 +155,7 @@ public class ApplicationService {
         entity(schemaDto).build();
   }
 
-  @GET
+  @POST
   @Path("tfserving")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)

@@ -528,6 +528,8 @@ public class Settings implements Serializable {
    */
   public static String PRIVATE_DIRS = "/private_dirs/";
 
+  public static String SERVING_DIRS = "/serving/";
+
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
   public static final String HOPS_VERSION = "2.4.0";

@@ -106,20 +106,20 @@
                 <table class="table table-hover">
                   <thead style="border:none;">
                   <th style="width: 10%"></th>
-                  <th style="width: 7%">Model</th>
-                  <th style="width: 7%">Version</th>
-                  <th style="width: 7%">Batching</th>
-                  <th style="width: 7%">Status</th>
-                  <th style="width: 7%">Host</th>
-                  <th style="width: 7%">Port</th>
-                  <th style="width: 15%">Created</th>
+                  <th style="width: 6%">Model</th>
+                  <th style="width: 6%">Version</th>
+                  <th style="width: 6%">Batching</th>
+                  <th style="width: 6%">Status</th>
+                  <th style="width: 6%">Host</th>
+                  <th style="width: 6%">Port</th>
+                  <th style="width: 7%">Created</th>
+                  <th style="width: 14%">Creator</th>
                   <th style="width: 33%">Actions</th>
                   </thead>
                   <tbody>
                     <tr dir-paginate="serving in tfservingCtrl.servings| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize">
                       <td>
                         <div class="btn-group" role="group" ng-if="serving.status === 'Created' || serving.status === 'Stopped' || serving.status === 'Starting'">
-
 
                           <button style="border-color: #20AD28; max-width: 80px;"
                                   ng-click="tfservingCtrl.startServing(serving); $event.stopPropagation();"
@@ -144,6 +144,7 @@
                       <td> {{serving.hostIp}} </td>
                       <td> {{serving.port}} </td>
                       <td> {{serving.created| date:'medium'}} </td>
+                      <td> {{serving.creator.fname}} {{serving.creator.lname}} </td>
                       <td>
                         <div class="btn-group" role="group" ng-if="serving.status === 'Created'">
 
