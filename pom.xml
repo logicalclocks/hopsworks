@@ -4,7 +4,7 @@
 
   <groupId>io.hops</groupId>
   <artifactId>hopsworks</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hopsworks</name>
   <description>Hopsworks parent project</description>
