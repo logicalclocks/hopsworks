@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +39,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+import java.util.ArrayList;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -446,7 +446,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
           AuthenticationInfo subject) {
     logger.warn("Get Note revisions feature isn't supported in {}", this.
             getClass().toString());
-    return Collections.emptyList();
+    return new ArrayList<Revision>();
   }
 
   @Override
@@ -472,7 +472,7 @@ public class HDFSNotebookRepo implements NotebookRepo {
 
     repoSetting.name = "Notebook Path";
     repoSetting.type = NotebookRepoSettingsInfo.Type.INPUT;
-    repoSetting.value = Collections.emptyList();
+    repoSetting.value =new ArrayList<Map<String, String>>();
     repoSetting.selected = getNotebookDirPath();
 
     settings.add(repoSetting);

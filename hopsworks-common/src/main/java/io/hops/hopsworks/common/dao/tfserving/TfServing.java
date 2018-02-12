@@ -99,10 +99,9 @@ public class TfServing implements Serializable {
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
-  @JoinColumn(name = "creator",
-          referencedColumnName = "email")
-  @ManyToOne(optional = false)
-  private Users creator;
+
+  @Basic(optional = false)
+  private String creator;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
@@ -206,12 +205,12 @@ public class TfServing implements Serializable {
     this.created = created;
   }
 
-  public Users getCreator() {
-    return creator;
-  }
-
+//  public Users getCreator() {
+//    return creator;
+//  }
+//
   public void setCreator(Users creator) {
-    this.creator = creator;
+    this.creator = creator.getEmail();
   }
 
   public String getModelName() {

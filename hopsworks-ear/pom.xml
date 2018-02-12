@@ -33,7 +33,7 @@
   <version>0.3.0</version>
   <packaging>ear</packaging>
 
-  <name>hopsworks-ear:0.3.0-SNAPSHOT</name>
+  <name>hopsworks-ear:0.3.0</name>
   
   <build>
     <plugins>
