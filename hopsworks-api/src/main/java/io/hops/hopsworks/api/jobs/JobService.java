@@ -627,14 +627,21 @@ public class JobService {
 
         int nbExecutors = 0;
         HashMap<Integer, List<String>> executorInfo = new HashMap<>();
-
-        if (queryResult != null && queryResult.getResults() != null
-            && queryResult.getResults().get(0) != null && queryResult.
-            getResults().get(0).getSeries() != null) {
-          List<List<Object>> values = queryResult.getResults().get(0).getSeries().get(0).getValues();
-          nbExecutors = values.size();
-          for (int i = 0; i < nbExecutors; i++) {
-            executorInfo.put(i, Stream.of(Objects.toString(values.get(i).get(1))).collect(Collectors.toList()));
+        int index=0;
+        if (queryResult != null && queryResult.getResults() != null){
+          for(QueryResult.Result res: queryResult.getResults()){
+            if(res.getSeries()!=null){
+              for(QueryResult.Series series : res.getSeries()){
+                List<List<Object>> values = series.getValues();
+                if(values!=null){
+                  nbExecutors += values.size();
+                  for(List<Object> l: values){
+                    executorInfo.put(index,Stream.of(Objects.toString(l.get(1))).collect(Collectors.toList()));
+                    index++;
+                  }
+                }
+              }
+            }
           }
         }
 
