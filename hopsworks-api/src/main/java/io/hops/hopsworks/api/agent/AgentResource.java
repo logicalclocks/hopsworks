@@ -160,7 +160,7 @@ public class AgentResource {
       host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
       host.setPrivateIp(json.getString("private-ip"));
       host.setDiskCapacity(json.getJsonNumber("disk-capacity").longValue());
-      if (previousDiskUsed < host.getDiskUsed() && ((float) host.getDiskUsed()) / host.getDiskCapacity() > 0.8) {
+      if (((float) previousDiskUsed) / host.getDiskCapacity() < 0.8 && ((float) host.getDiskUsed()) / host.getDiskCapacity() > 0.8) {
         String subject = "alert: hard drive full on " + host.getHostname();
         String body = host.getHostname() + " hard drive utilisation is " + host.getDiskUsageInfo();
         emailAlert(subject, body);
