@@ -181,7 +181,7 @@
 
       <c:if test="#{serviceInstancesController.serviceWithMetrics}">
         <p:outputPanel>
-          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.service}" width="98%" height="1500px" align="middle"></iframe> 
+          <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=#{serviceInstancesController.group}" width="98%" height="1500px" align="middle"></iframe> 
         </p:outputPanel>
       </c:if>
 
