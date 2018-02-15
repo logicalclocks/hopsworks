@@ -295,12 +295,12 @@ public class JupyterService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
         }
-        HopsUtils.materializeCertificatesForUser(project.getName(), project_user[1], settings.getHopsworksTmpCertDir(),
-            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings);
+        HopsUtils.materializeCertificatesForUser(project.getName(), project_user[1], settings.getHdfsTmpCertDir(),
+            dfso, certificateMaterializer, settings);
       } catch (InterruptedException | IOException ex) {
         Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null, ex);
         try {
-          HopsUtils.cleanupCertificatesForUser(project_user[1], project.getName(), settings.getHdfsTmpCertDir(), dfso,
+          HopsUtils.cleanupCertificatesForUser(project_user[1], project.getName(), settings.getHdfsTmpCertDir(),
               certificateMaterializer);
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
@@ -391,8 +391,7 @@ public class JupyterService {
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
       HopsUtils.cleanupCertificatesForUser(project_user[1], project
-          .getName(), settings.getHdfsTmpCertDir(), dfso,
-          certificateMaterializer);
+          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {

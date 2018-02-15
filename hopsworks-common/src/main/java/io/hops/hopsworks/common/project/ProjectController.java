@@ -87,8 +87,8 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.message.MessageController;
-import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -937,9 +937,8 @@ public class ProjectController {
     }
 
     cleanup(project, sessionId);
-    certificateMaterializer.forceRemoveCertificates(user.getUsername(),
-        project.getName(), true);
-
+    
+    certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
     if (settings.isPythonKernelEnabled()) {
       jupyterProcessFacade.removePythonKernelsForProject(project.getName());
     }
@@ -2022,9 +2021,8 @@ public class ProjectController {
 
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
         ActivityFacade.FLAG_PROJECT, user, project);
-
-    certificateMaterializer.forceRemoveCertificates(userToBeRemoved
-        .getUsername(), project.getName(), false);
+    
+    certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     certificatesController.deleteUserSpecificCertificates(project, userToBeRemoved);
   }
 

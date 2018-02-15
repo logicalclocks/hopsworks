@@ -1615,14 +1615,13 @@ public class NotebookServerImpl implements
       try {
         dfso = dfsService.getDfsOps();
         HopsUtils.materializeCertificatesForProject(project.getName(),
-            settings.getHopsworksTmpCertDir(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer,
             settings);
       } catch (IOException ex) {
         LOG.log(Level.SEVERE, "Error while materializing certificates for Zeppelin", ex);
         certificateMaterializer.closedInterpreter(project.getId());
-        HopsUtils.cleanupCertificatesForProject(project.getName(),
-            settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
+        HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(),
+            certificateMaterializer);
         throw ex;
       } finally {
         if (null != dfso) {

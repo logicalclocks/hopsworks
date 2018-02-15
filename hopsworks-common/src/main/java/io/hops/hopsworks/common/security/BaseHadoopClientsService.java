@@ -140,7 +140,7 @@ public class BaseHadoopClientsService {
             " specific, nor project generic!");
       }
       
-      return cryptoMaterial.getPassword();
+      return new String(cryptoMaterial.getPassword());
     }
     
     throw new RuntimeException("Username cannot be null!");
@@ -164,7 +164,7 @@ public class BaseHadoopClientsService {
       if (pguMatcher.matches()) {
         String pguUsername = pguMatcher.group(1);
         try {
-          certificateMaterializer.materializeCertificates(pguUsername);
+          certificateMaterializer.materializeCertificatesLocal(pguUsername);
         } catch (IOException ex) {
           throw new RuntimeException("Error while materializing project " +
               "generic user certificates " + ex.getMessage(), ex);
@@ -173,7 +173,7 @@ public class BaseHadoopClientsService {
         String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
         if (tokens.length == 2) {
           try {
-            certificateMaterializer.materializeCertificates(tokens[1], tokens[0]);
+            certificateMaterializer.materializeCertificatesLocal(tokens[1], tokens[0]);
           } catch (IOException ex) {
             throw new RuntimeException("Error while materializing " +
                 "user certificates " + ex.getMessage(), ex);
@@ -191,11 +191,11 @@ public class BaseHadoopClientsService {
       Matcher pguMatcher = projectGenericUserPatter.matcher(username);
       if (pguMatcher.matches()) {
         String pguUsername = pguMatcher.group(1);
-        certificateMaterializer.removeCertificate(pguUsername);
+        certificateMaterializer.removeCertificatesLocal(pguUsername);
       } else if (username.matches(HopsSSLSocketFactory.USERNAME_PATTERN)) {
         String[] tokens = username.split(HdfsUsersController.USER_NAME_DELIMITER, 2);
         if (tokens.length == 2) {
-          certificateMaterializer.removeCertificate(tokens[1], tokens[0]);
+          certificateMaterializer.removeCertificatesLocal(tokens[1], tokens[0]);
         }
       } else {
         throw new RuntimeException("User <" + username +"> is neither project" +

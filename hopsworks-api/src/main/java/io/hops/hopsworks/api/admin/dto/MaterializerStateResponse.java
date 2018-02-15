@@ -22,47 +22,59 @@ package io.hops.hopsworks.api.admin.dto;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 @XmlRootElement
 public class MaterializerStateResponse implements Serializable {
   private static final long serialVersionUID = 1L;
   
-  private List<CryptoMaterial> materializedState;
-  private Set<String> scheduledRemovals;
+  private List<CryptoMaterial> localMaterializedState;
+  private List<CryptoMaterial> remoteMaterializedState;
+  private List<CryptoMaterial> scheduledRemovals;
   
   public MaterializerStateResponse(
-      List<CryptoMaterial> materializedState, Set<String> scheduledRemovals) {
-    this.materializedState = materializedState;
+      List<CryptoMaterial> localMaterializedState, List<CryptoMaterial> remoteMaterializedState,
+      List<CryptoMaterial> scheduledRemovals) {
+    this.localMaterializedState = localMaterializedState;
+    this.remoteMaterializedState = remoteMaterializedState;
     this.scheduledRemovals = scheduledRemovals;
   }
   
   public MaterializerStateResponse() {
   }
   
-  public List<CryptoMaterial> getMaterializedState() {
-    return materializedState;
+  public List<CryptoMaterial> getLocalMaterializedState() {
+    return localMaterializedState;
   }
   
-  public void setMaterializedState(
-      List<CryptoMaterial> materializedState) {
-    this.materializedState = materializedState;
+  public void setLocalMaterializedState(
+      List<CryptoMaterial> localMaterializedState) {
+    this.localMaterializedState = localMaterializedState;
   }
   
-  public Set<String> getScheduledRemovals() {
+  public List<CryptoMaterial> getRemoteMaterializedState() {
+    return remoteMaterializedState;
+  }
+  
+  public void setRemoteMaterializedState(List<CryptoMaterial> remoteMaterializedState) {
+    this.remoteMaterializedState = remoteMaterializedState;
+  }
+  
+  public List<CryptoMaterial> getScheduledRemovals() {
     return scheduledRemovals;
   }
   
-  public void setScheduledRemovals(Set<String> scheduledRemovals) {
+  public void setScheduledRemovals(List<CryptoMaterial> scheduledRemovals) {
     this.scheduledRemovals = scheduledRemovals;
   }
   
   public static class CryptoMaterial {
     private String user;
+    private String path;
     private Integer references;
     
-    public CryptoMaterial(String user, Integer references) {
+    public CryptoMaterial(String user, String path, Integer references) {
       this.user = user;
+      this.path = path;
       this.references = references;
     }
     
@@ -75,6 +87,14 @@ public class MaterializerStateResponse implements Serializable {
     
     public void setUser(String user) {
       this.user = user;
+    }
+    
+    public String getPath() {
+      return path;
+    }
+    
+    public void setPath(String path) {
+      this.path = path;
     }
     
     public Integer getReferences() {

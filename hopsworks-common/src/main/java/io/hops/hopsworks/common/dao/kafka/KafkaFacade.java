@@ -42,8 +42,8 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
@@ -947,7 +947,7 @@ public class KafkaFacade {
             + brokerAddress, ex);
       }
     } finally {
-      certificateMaterializer.removeCertificate(user.getUsername(), project.getName());
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
     Collections.sort(partitionDetails, (PartitionDetailsDTO c1, PartitionDetailsDTO c2) -> {
         if (c1.getId() < c2.getId()) {

@@ -62,13 +62,9 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
-import java.io.File;
-import java.nio.file.Files;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -864,23 +860,16 @@ public class ProjectService {
       throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Access to the certificat has been forbidden.");
     }
     Project project = projectController.findProjectById(id);
-    String keyStorePath;
-    String trustStorePath;
     String keyStore = "";
     String trustStore = "";
     try {
       //Read certs from database and stream them out
-      certificateMaterializer.materializeCertificates(user.getUsername(), project.getName());
-      keyStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectKeystoreName(project.
-          getName(), user.getUsername());
-      trustStorePath = settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.
-          getProjectTruststoreName(project.getName(), user.getUsername());
-      keyStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(keyStorePath)));
-      trustStore = Base64.encodeBase64String(Files.readAllBytes(Paths.get(trustStorePath)));
-      //Send email with decrypted password to user
-      String certPwd = projectController.getProjectSpecificCertPw(user, project.getName(),
-          Base64.encodeBase64String(certsFacade.findUserCert(project.getName(), user.getUsername()).getUserKey()))
-          .getKeyPw();
+      certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
+      CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
+          project.getName());
+      keyStore = Base64.encodeBase64String(material.getKeyStore().array());
+      trustStore = Base64.encodeBase64String(material.getTrustStore().array());
+      String certPwd = new String(material.getPassword());
       //Pop-up a message from admin
       messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
@@ -893,6 +882,8 @@ public class ProjectService {
     } catch (Exception ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
+    } finally {
+      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
     CertsDTO certsDTO = new CertsDTO("jks", keyStore, trustStore);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();

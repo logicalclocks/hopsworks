@@ -628,14 +628,13 @@ public class NotebookRestApi {
           if (certificateMaterializer.openedInterpreter(project.getId())) {
             try {
               HopsUtils.materializeCertificatesForProject(project.getName(),
-                  settings.getHopsworksTmpCertDir(), settings.getHdfsTmpCertDir(),
-                  dfso, certificateMaterializer, settings);
+                  settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings);
             } catch (IOException ex) {
               LOG.warn("Could not materialize certificates for user: " +
                   project.getName() + "__" + username);
               certificateMaterializer.closedInterpreter(project.getId());
               HopsUtils.cleanupCertificatesForProject(project.getName(),
-                  settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
+                  settings.getHdfsTmpCertDir(), certificateMaterializer);
               throw ex;
             }
           }

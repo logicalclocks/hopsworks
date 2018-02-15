@@ -31,7 +31,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -264,14 +263,12 @@ public class InterpreterRestApi {
   }
   
   private void cleanUserCertificates(Project project) {
-    DistributedFileSystemOps dfso = null;
     try {
       if (!areRunningInterpretersForProject(project)) {
         
-        dfso = dfsService.getDfsOps();
         HopsUtils
             .cleanupCertificatesForProject(project.getName(),
-                settings.getHdfsTmpCertDir(), dfso, certificateMaterializer);
+                settings.getHdfsTmpCertDir(), certificateMaterializer);
         certificateMaterializer.closedInterpreter(project.getId());
       }
     } catch (IOException ex) {
@@ -279,17 +276,12 @@ public class InterpreterRestApi {
     } catch (AppException ex) {
       logger.error("Exception while trying to get running interpreters for project: " + project.getName()
           + " Cleaning certificates...", ex);
-      dfso = dfsService.getDfsOps();
       try {
         certificateMaterializer.closedInterpreter(project.getId());
-        HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(), dfso,
+        HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(),
             certificateMaterializer);
       } catch (IOException ex1) {
         logger.error("Could not clean certificates!", ex1);
-      }
-    } finally {
-      if (null != dfso) {
-        dfso.close();
       }
     }
   }
