@@ -178,10 +178,10 @@ public class YarnRunner {
     List<LocalResourceDTO> materialResources = new ArrayList<>(2);
     Map<String, String> systemProperties = new HashMap<>(2);
 
-    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
+    HopsUtils.copyProjectUserCerts(project, username,
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), jobType,
-        dfso, materialResources, systemProperties,
+        dfso, materialResources, systemProperties, services.getSettings().getGlassfishTrustStoreHdfs(),
         applicationId, services.getCertificateMaterializer(),
         services.getSettings().getHopsRpcTls());
 
@@ -659,7 +659,7 @@ public class YarnRunner {
     env.put(Settings.HADOOP_HOME_KEY, hadoopDir);
     //Put some environment vars in env
     env.put(Settings.HADOOP_COMMON_HOME_KEY, hadoopDir);
-    env.put(Settings.HADOOP_CONF_DIR_KEY, Settings.getHadoopConfDir(hadoopDir));
+    env.put(Settings.HADOOP_CONF_DIR_KEY, services.getSettings().getHadoopConfDir(hadoopDir));
     env.put(Settings.HADOOP_HDFS_HOME_KEY, hadoopDir);
     env.put(Settings.HADOOP_YARN_HOME_KEY, hadoopDir);
   }

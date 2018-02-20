@@ -38,7 +38,6 @@ import io.hops.hopsworks.dela.old_dto.KafkaDetails;
 import io.hops.hopsworks.dela.old_dto.KafkaEndpoint;
 import io.hops.hopsworks.dela.old_dto.KafkaResource;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
-import io.hops.hopsworks.dela.util.DatasetHelper;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
@@ -89,7 +88,7 @@ public class DelaWorkerController {
     delaHdfsCtrl.writeManifest(project, dataset, user);
 
     long datasetSize = delaHdfsCtrl.datasetSize(project, dataset, user);
-    String publicDSId = null; 
+    String publicDSId;
     try {
       publicDSId = hopsSiteCtrl.performAsUser(user, new HopsSite.UserFunc<String>() {
         @Override
@@ -114,7 +113,7 @@ public class DelaWorkerController {
 
   private void delaCtrlUpload(Project project, Dataset dataset, Users user, String publicDSId)
     throws ThirdPartyException {
-    String datasetPath = DatasetHelper.getDatasetPath(project, dataset);
+    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
     HDFSResource resource = new HDFSResource(datasetPath, Settings.MANIFEST_FILE);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath(), hdfsUser);
@@ -157,7 +156,7 @@ public class DelaWorkerController {
 
   private void delaCtrlStartDownload(Project project, Dataset dataset, Users user,
     HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
-    String datasetPath = DatasetHelper.getDatasetPath(project, dataset);
+    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
     HDFSResource resource = new HDFSResource(datasetPath, "manifest.json");
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath(), hdfsUser);
@@ -176,7 +175,7 @@ public class DelaWorkerController {
   private void delaCtrlAdvanceDownload(Project project, Dataset dataset, Users user,
     HopsworksTransferDTO.Download downloadDTO, String sessionId, KafkaEndpoint kafkaEndpoint)
     throws ThirdPartyException {
-    String datasetPath = DatasetHelper.getDatasetPath(project, dataset);
+    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
     JSONObject fileTopics = new JSONObject(downloadDTO.getTopics());
     LinkedList<HdfsDetails> hdfsResources = new LinkedList<>();
     LinkedList<KafkaDetails> kafkaResources = new LinkedList<>();

@@ -522,11 +522,11 @@ public abstract class AbstractYarnClusterDescriptor implements
     GetNewApplicationResponse appResponse = yarnApplication.
         getNewApplicationResponse();
   
-    Map<String, String> jobSystemProperties = new HashMap<>(2);
+    Map<String, String> jobSystemProperties = new HashMap<>(3);
   
     // Certificates are materialized locally so DFSClient can be set to null
     // LocalResources are not used by Flink, so set it null
-    HopsUtils.copyUserKafkaCerts(services.getUserCerts(), project, username,
+    HopsUtils.copyProjectUserCerts(project, username,
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), JobType.FLINK,
         null, null, jobSystemProperties,

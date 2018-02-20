@@ -160,7 +160,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String projectPath = Settings.getProjectPath(this.project.getName());
+    String projectPath = settings.getProjectPath(this.project.getName());
   }
 
   public Integer getProjectId() {

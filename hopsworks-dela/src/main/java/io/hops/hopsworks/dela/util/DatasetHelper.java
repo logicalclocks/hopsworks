@@ -30,17 +30,12 @@ import java.io.File;
 
 public class DatasetHelper {
 
-  public static String getOwningDatasetPath(Dataset dataset, InodeFacade inodeFacade, ProjectFacade projectFacade) {
+  public static String getOwningDatasetPath(Dataset dataset, InodeFacade inodeFacade, ProjectFacade projectFacade,
+      Settings settings) {
     Project owningProject = getOwningProject(dataset, inodeFacade, projectFacade);
-    String path = Settings.getProjectPath(owningProject.getName()) + File.separator + dataset.getName();
-    return path;
+    return settings.getProjectPath(owningProject.getName()) + File.separator + dataset.getName();
   }
-
-  public static String getDatasetPath(Project project, Dataset dataset) {
-    String path = Settings.getProjectPath(project.getName()) + File.separator + dataset.getName();
-    return path;
-  }
-
+  
   public static Project getOwningProject(Dataset ds, InodeFacade inodeFacade, ProjectFacade projectFacade) {
     // If the dataset is not a shared one, just return the project
     if (!ds.isShared()) {

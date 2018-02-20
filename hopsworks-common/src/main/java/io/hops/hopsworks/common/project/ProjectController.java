@@ -23,7 +23,12 @@ package io.hops.hopsworks.common.project;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -37,6 +42,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
@@ -288,11 +296,11 @@ public class ProjectController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "An error occured when creating the project");
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
       verifyProject(project, dfso, sessionId);
 
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
       //create certificate for this user
       // User's certificates should be created before making any call to
@@ -316,7 +324,7 @@ public class ProjectController {
             getStatusCode(), "wrong user name");
       }
 
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): {0}", System.currentTimeMillis() - startTime);
 
       //all the verifications have passed, we can now create the project  
       //create the project folder
@@ -328,7 +336,7 @@ public class ProjectController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "problem creating project folder");
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): {0}", System.currentTimeMillis() - startTime);
       if (projectPath == null) {
         cleanup(project, sessionId, certsGenerationFuture);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -347,7 +355,7 @@ public class ProjectController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "An error occured when creating the project");
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): {0}", System.currentTimeMillis() - startTime);
 
       //set payment and quotas
       try {
@@ -358,7 +366,7 @@ public class ProjectController {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "could not set folder quota");
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
 
       try {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
@@ -373,7 +381,7 @@ public class ProjectController {
         cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
 
       // enable services
       for (ProjectServiceEnum service : projectServices) {
@@ -394,7 +402,7 @@ public class ProjectController {
         cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
 
       //Create Template for this project in elasticsearch
       try {
@@ -403,7 +411,7 @@ public class ProjectController {
         LOGGER.log(Level.SEVERE, "Error while adding elasticsearch service for project:" + projectName, ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic): {0}", System.currentTimeMillis() - startTime);
 
       try {
         if (certsGenerationFuture != null) {
@@ -420,7 +428,7 @@ public class ProjectController {
       if (dfso != null) {
         dfso.close();
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 11 (close): " + (System.currentTimeMillis() - startTime));
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 11 (close): {0}", System.currentTimeMillis() - startTime);
     }
 
   }
@@ -667,7 +675,7 @@ public class ProjectController {
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
-          Path resourceDir = new Path(Settings.getProjectPath(project.getName()),
+          Path resourceDir = new Path(settings.getProjectPath(project.getName()),
               ds.getName());
           Path subDirPath = new Path(resourceDir, sub);
           datasetController.createSubDirectory(project, subDirPath, -1,
@@ -987,9 +995,9 @@ public class ProjectController {
         // Kill Zeppelin jobs
         try {
           killZeppelin(project.getId(), sessionId);
-          cleanupLogger.logError("Error when killing Zeppelin during project cleanup");
           cleanupLogger.logSuccess("Killed Zeppelin");
         } catch (Exception ex) {
+          LOGGER.log(Level.SEVERE, "Error when killing Zeppelin during project cleanup", ex);
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1359,21 +1367,47 @@ public class ProjectController {
       }
     }
   }
-
+  
+  private static class InsecureHostnameVerifier implements HostnameVerifier {
+    static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
+    
+    InsecureHostnameVerifier() {
+    }
+    
+    @Override
+    public boolean verify(String string, SSLSession ssls) {
+      return true;
+    }
+  }
+  
   private void killZeppelin(Integer projectId, String sessionId) throws AppException {
-    Response resp = ClientBuilder.newClient()
-        .target(settings.getRestEndpoint()
-            + "/hopsworks-api/api/zeppelin/" + projectId
-            + "/interpreter/check")
-        .request()
-        .cookie("SESSION", sessionId)
-        .method("GET");
-    LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
+    Client client;
+    Response resp;
+    try (FileInputStream trustStoreIS = new FileInputStream(settings.getGlassfishTrustStore())) {
+      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      trustStore.load(trustStoreIS, null);
+      
+      client = ClientBuilder.newBuilder()
+          .trustStore(trustStore)
+          .hostnameVerifier(InsecureHostnameVerifier.INSTANCE)
+          .build();
+      
+      resp = client
+          .target(settings.getRestEndpoint())
+          .path("/hopsworks-api/api/zeppelin/" + projectId + "/interpreter/check")
+          .request()
+          .cookie("SESSION", sessionId)
+          .method("GET");
+      LOGGER.log(Level.FINE, "Zeppelin check resp:{0}", resp.getStatus());
+    } catch (CertificateException | NoSuchAlgorithmException | IOException | KeyStoreException e) {
+      LOGGER.log(Level.WARNING, "Could not close zeppelin interpreters, please wait 60 seconds to retry", e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not close zeppelin interpreters, please wait 60 seconds to retry");
+    }
     if (resp.getStatus() == 200) {
-      resp = ClientBuilder.newClient()
-          .target(settings.getRestEndpoint()
-              + "/hopsworks-api/api/zeppelin/" + projectId
-              + "/interpreter/restart")
+      resp = client
+          .target(settings.getRestEndpoint() + "/hopsworks-api/api/zeppelin/" + projectId + "/interpreter/restart")
           .request()
           .cookie("SESSION", sessionId)
           .method("GET");
@@ -1780,8 +1814,8 @@ public class ProjectController {
     }
 
     QuotasDTO quotas = getQuotasInternal(project);
-
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas);
+    
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas, settings.getHopsExamplesFilename());
   }
 
   /**
@@ -1847,7 +1881,7 @@ public class ProjectController {
       Long hiveDbSpaceQuotaInMb, DistributedFileSystemOps dfso)
       throws IOException {
 
-    dfso.setHdfsSpaceQuotaInMBs(new Path(Settings.getProjectPath(project.getName())),
+    dfso.setHdfsSpaceQuotaInMBs(new Path(settings.getProjectPath(project.getName())),
         diskspaceQuotaInMB);
 
     if (hiveDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
@@ -2190,7 +2224,7 @@ public class ProjectController {
                 + "/spark-examples.jar"), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
@@ -2198,10 +2232,10 @@ public class ProjectController {
           break;
         case KAFKA:
           // Get the JAR from /user/<super user>
-          String kafkaExampleSrc = "/user/" + settings.getHopsworksUser() + "/"
-              + settings.getKafkaTourFilename();
+          String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
+              + settings.getHopsExamplesFilename();
           String kafkaExampleDst = "/" + Settings.DIR_ROOT + "/" + project.getName()
-              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getKafkaTourFilename();
+              + "/" + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
             String datasetGroup = hdfsUsersBean.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
@@ -2210,6 +2244,7 @@ public class ProjectController {
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Something went wrong when adding the tour files to the project", ex);
             throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
                 getStatusCode(),
                 "Something went wrong when adding the tour files to the project");
@@ -2335,7 +2370,7 @@ public class ProjectController {
         + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
         + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}},\n"
         + "\"_ttl\": {\n" + "\"enabled\": true,\n" + "\"default\": \""
-        + Settings.getJobLogsExpiration() + "s\"\n" + "}}}}");
+        + settings.getJobLogsExpiration() + "s\"\n" + "}}}}");
 
     JSONObject resp = elasticController.sendElasticsearchReq(params);
     boolean templateCreated = false;
@@ -2666,7 +2701,7 @@ public class ProjectController {
             equals(currentQuotas.getHdfsQuotaInBytes()) || !quotas.getHdfsNsQuota().equals(currentQuotas.
             getHdfsNsQuota()))) {
 
-          dfso.setHdfsQuotaBytes(new Path(Settings.getProjectPath(currentProject.getName())),
+          dfso.setHdfsQuotaBytes(new Path(settings.getProjectPath(currentProject.getName())),
               quotas.getHdfsNsQuota(), quotas.getHdfsQuotaInBytes());
           quotaChanged = true;
 

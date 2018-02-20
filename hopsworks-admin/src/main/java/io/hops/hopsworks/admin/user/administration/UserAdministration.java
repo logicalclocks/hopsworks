@@ -42,27 +42,20 @@ import javax.faces.event.ActionEvent;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.FormatUtils;
+import org.elasticsearch.common.Strings;
 
 import javax.faces.bean.RequestScoped;
 
@@ -465,59 +458,18 @@ public class UserAdministration implements Serializable {
       MessagesController.addSecurityErrorMessage("User is null.");
       return;
     }
-    if (this.role == null || this.role.isEmpty()) {
-      this.role = "HOPS_USER";
+    if (role == null || role.isEmpty()) {
+      role = "HOPS_USER";
     }
 
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
         getCurrentInstance().getExternalContext().getRequest();
-    try {
-
-      BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(this.role);
-
-      userTransaction.begin();
-
-      if (bbcGroup != null) {
-        usersController.registerGroup(user1, bbcGroup.getGid());
-        auditManager.registerRoleChange(sessionState.getLoggedInUser(),
-            RolesAuditAction.ROLE_ADDED.name(),
-            RolesAuditAction.SUCCESS.name(), bbcGroup.getGroupName(),
-            user1, httpServletRequest);
-      } else {
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-            UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-            RolesAuditAction.FAILED.name(), "Role could not be granted.",
-            user1, httpServletRequest);
-        MessagesController.addSecurityErrorMessage("Role could not be granted.");
-        return;
-      }
-
-      try {
-        usersController.updateStatus(user1, UserAccountStatus.ACTIVATED_ACCOUNT);
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-            UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-            UserAuditActions.SUCCESS.name(), "", user1, httpServletRequest);
-      } catch (ApplicationException | IllegalArgumentException ex) {
-        auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-            UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-            RolesAuditAction.FAILED.name(), "User could not be activated.",
-            user1, httpServletRequest);
-        MessagesController.addSecurityErrorMessage(
-            "Account activation problem not be granted.");
-      }
-
-      userTransaction.commit();
-
-    } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
-        | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-      MessagesController.addSecurityErrorMessage("Could not activate user. "
-          + e.getMessage());
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(),
-          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-          UserAuditActions.FAILED.name(), "", user1, httpServletRequest);
-      return;
+    String message = usersController.activateUser(role, user1, sessionState.getLoggedInUser(), httpServletRequest);
+    if(Strings.isNullOrEmpty(message)){
+      MessagesController.addInfoMessage("User {0} activated successfully", message);
+    } else {
+      MessagesController.addSecurityErrorMessage(message);
     }
-
     try {
       //send confirmation email
       emailBean.sendEmail(user1.getEmail(), RecipientType.TO,

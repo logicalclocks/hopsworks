@@ -110,9 +110,9 @@ angular.module('hopsWorksApp')
                   return true;
                 };
 
-                tourService.getKafkaGuideJarPath = function (projectName) {
+                tourService.getKafkaGuideJarPath = function (projectName, filename) {
                   return "hdfs:///Projects/" + projectName +
-                   "/TestJob/hops-spark.jar";
+                   "/TestJob/" + filename;
                 };
 
                 tourService.resetTours = function () {

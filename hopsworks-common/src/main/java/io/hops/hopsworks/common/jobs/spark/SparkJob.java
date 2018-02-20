@@ -43,25 +43,10 @@ import org.elasticsearch.common.Strings;
 public class SparkJob extends YarnJob {
 
   private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
-  private final String sparkDir;
-  private final String sparkUser;
   protected SparkYarnRunnerBuilder runnerbuilder;
 
-  /**
-   *
-   * @param job
-   * @param user
-   * @param services
-   * @param hadoopDir
-   * @param sparkDir
-   * @param sparkUser
-   * @param jobUser
-   * @param jobsMonitor
-   * @param settings
-   */
   public SparkJob(Jobs job, AsynchronousJobExecutor services,
       Users user, final String hadoopDir,
-      final String sparkDir, String sparkUser,
       String jobUser, YarnJobsMonitor jobsMonitor, Settings settings) {
     super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
@@ -69,8 +54,6 @@ public class SparkJob extends YarnJob {
           "JobDescription must contain a SparkJobConfiguration object. Received: "
           + job.getJobConfig().getClass());
     }
-    this.sparkDir = sparkDir;
-    this.sparkUser = sparkUser;
   }
 
   @Override
@@ -138,9 +121,7 @@ public class SparkJob extends YarnJob {
     try {
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject().getName(),
-              sparkUser, jobUser, sparkDir, services, services
-                  .getFileOperations(hdfsUser.getUserName()), yarnClient,
-              settings);
+              jobUser, services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 
     } catch (IOException e) {
       LOG.log(Level.WARNING,

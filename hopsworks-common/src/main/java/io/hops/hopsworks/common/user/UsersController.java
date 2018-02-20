@@ -33,7 +33,9 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
+import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
@@ -95,6 +97,8 @@ public class UsersController {
   private Settings settings;
   @EJB
   private AuthController authController;
+  @EJB
+  private AccountAuditFacade auditManager;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -132,7 +136,40 @@ public class UsersController {
     }
     return qrCode;
   }
-
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public String activateUser(String role, Users user1, Users loggedInUser, HttpServletRequest httpServletRequest) {
+    BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
+    if (bbcGroup != null) {
+      registerGroup(user1, bbcGroup.getGid());
+      auditManager.registerRoleChange(loggedInUser,
+          RolesAuditAction.ROLE_ADDED.name(),
+          RolesAuditAction.SUCCESS.name(), bbcGroup.getGroupName(),
+          user1, httpServletRequest);
+    } else {
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          RolesAuditAction.FAILED.name(), "Role could not be granted.",
+          user1, httpServletRequest);
+      return "Role could not be granted.";
+    }
+    
+    try {
+      updateStatus(user1, UserAccountStatus.ACTIVATED_ACCOUNT);
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          UserAuditActions.SUCCESS.name(), "", user1, httpServletRequest);
+    } catch (ApplicationException | IllegalArgumentException ex) {
+      auditManager.registerAccountChange(loggedInUser,
+          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          RolesAuditAction.FAILED.name(), "User could not be activated.",
+          user1, httpServletRequest);
+      return "User could not be activated.";
+    }
+    
+    return null;
+  }
+  
   /**
    * Create a new user
    *

@@ -70,13 +70,15 @@ public class DelaHdfsController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private Settings settings;
 
   public long datasetSize(Project project, Dataset dataset, Users user) throws ThirdPartyException {
-    return length(project, user, DatasetHelper.getDatasetPath(project, dataset));
+    return length(project, user, settings.getProjectPath(project.getName()) + File.separator + dataset.getName());
   }
 
   public ManifestJSON readManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
-    String datasetPath = DatasetHelper.getOwningDatasetPath(dataset, inodeFacade, projectFacade);
+    String datasetPath = DatasetHelper.getOwningDatasetPath(dataset, inodeFacade, projectFacade, settings);
     String manifestPath = datasetPath + File.separator + Settings.MANIFEST_FILE;
     byte[] manifestBytes = read(project, user, manifestPath);
     ManifestJSON manifest = ManifestHelper.unmarshall(manifestBytes);
@@ -90,20 +92,24 @@ public class DelaHdfsController {
     }
     LOG.log(Settings.DELA_DEBUG, "{0} - writing manifest", dataset.getPublicDsId());
     ManifestJSON manifest = createManifest(project, dataset, user);
-    String manifestPath = DatasetHelper.getDatasetPath(project, dataset) + File.separator + Settings.MANIFEST_FILE;
+    String manifestPath = settings.getProjectPath(project.getName())
+        + File.separator + dataset.getName()
+        + File.separator + Settings.MANIFEST_FILE;
     delete(project, user, manifestPath);
     write(project, user, manifestPath, ManifestHelper.marshall(manifest));
     return manifest;
   }
 
   public void deleteManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
-    String manifestPath = DatasetHelper.getDatasetPath(project, dataset) + File.separator + Settings.MANIFEST_FILE;
+    String manifestPath = settings.getProjectPath(project.getName()) + File.separator + dataset + File.separator +
+        Settings.MANIFEST_FILE;
     delete(project, user, manifestPath);
   }
 
   public String getReadme(Project project, Dataset dataset, Users user) throws ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
-    String readmePath = DatasetHelper.getDatasetPath(project, dataset) + File.separator + Settings.README_FILE;
+    String readmePath = settings.getProjectPath(project.getName()) + File.separator + dataset + File.separator +
+        Settings.README_FILE;
     String result = new String(read(project, user, readmePath));
     LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme:done");
     return result;
@@ -112,7 +118,8 @@ public class DelaHdfsController {
   public FilePreviewDTO getPublicReadme(Dataset dataset) throws ThirdPartyException {
     LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
     Project ownerProject = DatasetHelper.getOwningProject(dataset, inodeFacade, projectFacade);
-    String readmePath = DatasetHelper.getDatasetPath(ownerProject, dataset) + File.separator + Settings.README_FILE;
+    String readmePath = settings.getProjectPath(ownerProject.getName()) + File.separator + dataset + File.separator +
+        Settings.README_FILE;
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO result = new FilePreviewDTO("text", "md", new String(read(dfso, readmePath)));
     LOG.log(Settings.DELA_DEBUG, "dela:hdfs:readme");
@@ -122,7 +129,7 @@ public class DelaHdfsController {
   private ManifestJSON createManifest(Project project, Dataset dataset, Users user) throws ThirdPartyException {
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
     DistributedFileSystemOps dfso = dfs.getDfsOps(hdfsUser);
-    String datasetPath = DatasetHelper.getDatasetPath(project, dataset);
+    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
 
     ManifestJSON manifest = new ManifestJSON();
     manifest.setDatasetName(dataset.getName());

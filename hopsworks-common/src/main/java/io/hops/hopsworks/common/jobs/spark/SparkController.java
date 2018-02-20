@@ -99,8 +99,8 @@ public class SparkController {
       sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
         @Override
         public SparkJob run() throws Exception {
-          return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(), settings.getSparkDir(),
-              settings.getSparkUser(), job.getProject().getName() + "__"
+          return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
+              job.getProject().getName() + "__"
               + user.getUsername(), jobsMonitor, settings);
         }
       });
@@ -137,8 +137,7 @@ public class SparkController {
           "Job configuration is not a Spark job configuration.");
     }
 
-    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(), settings.getSparkDir(),
-        settings.getSparkUser(),
+    SparkJob sparkjob = new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
         hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings);
     submitter.stopExecution(sparkjob, appid);
 

@@ -1080,7 +1080,7 @@ public class JobService {
     boolean status = (type.equals("log") ? e.getFinalStatus().equals(JobFinalStatus.SUCCEEDED) : true);
     String hdfsPath = "hdfs://" + path;
     if (path != null && !path.isEmpty() && dfso.exists(hdfsPath)) {
-      if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > Settings.getJobLogsDisplaySize()) {
+      if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > settings.getJobLogsDisplaySize()) {
         stdPath = path.split(this.project.getName())[1];
         int fileIndex = stdPath.lastIndexOf("/");
         String stdDirPath = stdPath.substring(0, fileIndex);
@@ -1353,13 +1353,7 @@ public class JobService {
         LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});
 
-//        for (Iterator<Execution> execsIter = job.getExecutionCollection().iterator(); execsIter.hasNext();) {
-//          if (execsIter.next().getState() == JobState.RUNNING) {
-//            throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-//                "Job is still running, please stop it first by clicking the Stop button");
-//          }
-//        }
-        elasticController.deleteJobLogs(project.getName(), "logs", Settings.getJobLogsIdField(), job.getId());
+        elasticController.deleteJobLogs(project.getName(), "logs", settings.getJobLogsIdField(), job.getId());
         jobFacade.removeJob(job);
         LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});

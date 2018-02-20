@@ -72,14 +72,10 @@ public class TensorFlowYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner(String project, String tfUser,
-      String jobUser, final String hadoopDir,
+      String jobUser,
       final DistributedFileSystemOps dfsClient, YarnClient yarnClient,
       AsynchronousJobExecutor services, Settings settings) throws IOException, Exception {
 
-//    if (!serviceProps.isAnacondaEnabled()) {
-//      //Throw error in Hopswors UI to notify user to enable Anaconda
-//      throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
-//    }
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.SPARK_AM_MAIN);
     JobType jobType = ((TensorFlowJobConfiguration) job.getJobConfig()).getType();
     builder.setJobType(jobType);
@@ -126,10 +122,10 @@ public class TensorFlowYarnRunnerBuilder {
         "hdfs:///Projects");
     client.setMain(appPath);
     client.setArguments(jobArgs.stream().toArray(String[]::new));
-    client.setAmJar(Settings.getTensorFlowJarPath(tfUser));
+    client.setAmJar(settings.getTensorFlowJarPath(tfUser));
     //client.setPython(serviceProps.getAnaconda().getEnvPath());
     client.setAllocationTimeout(15000);
-    client.setProjectDir("hdfs://" + Settings.getHdfsRootPath(project));
+    client.setProjectDir("hdfs://" + Settings.DIR_ROOT + "/" +project);
     builder.setTfClient(client);
     return builder.build(null, JobType.TENSORFLOW, services);
   }

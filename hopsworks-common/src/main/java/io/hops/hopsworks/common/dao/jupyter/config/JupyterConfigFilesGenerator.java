@@ -23,6 +23,7 @@ package io.hops.hopsworks.common.dao.jupyter.config;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.templates.AppendConfigReplacementPolicy;
@@ -345,7 +346,12 @@ public class JupyterConfigFilesGenerator {
           .append("\"hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
           .append("__tstore.jks#").append(Settings.T_CERTIFICATE).append("\",")
-          .append("\"" + Settings.getSparkLog4JPath(settings.getSparkUser()) + "\"");
+          .append("\"").append(settings.getSparkLog4JPath()).append("\",")
+          // Glassfish domain truststore
+          .append("\"").append(settings.getGlassfishTrustStoreHdfs()).append("#").append(Settings.DOMAIN_CA_TRUSTSTORE)
+          .append("\",")
+          // Add HopsUtil
+          .append("\"").append(settings.getHopsUtilHdfsPath()).append("\"");
 
       // If RPC TLS is enabled, password file would be injected by the
       // NodeManagers. We don't need to add it as LocalResource
@@ -377,8 +383,18 @@ public class JupyterConfigFilesGenerator {
       boolean isHorovod = js.getMode().compareToIgnoreCase("horovod") == 0;
       boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
-          + ",jupyter,notebook,?";
-      String extraClassPath = settings.getHopsLeaderElectionJarPath();
+          + ",jupyter,notebook,?"
+          + " -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=" + JobType.SPARK
+          + " -D" + Settings.KAFKA_BROKERADDR_PROPERTY + "=" + settings.getKafkaBrokersStr()
+          + " -D" + Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY + "=" + settings.getRestEndpoint()
+          + " -D" + Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY + "=" + settings.getElasticRESTEndpoint()
+          + " -D" + Settings.HOPSWORKS_PROJECTID_PROPERTY + "=" + project.getId()
+          + " -D" + Settings.HOPSWORKS_PROJECTNAME_PROPERTY + "=" + project.getName()
+          + " -Dlog4j.configuration=./log4j.properties";
+          
+      String extraClassPath = settings.getHopsLeaderElectionJarPath()
+          + File.pathSeparator
+          +  settings.getHopsUtilFilename();
   
       // Map of default/system Spark(Magic) properties <Property_Name, ConfigProperty>
       // Property_Name should be either the SparkMagic property name or Spark property name
@@ -506,8 +522,8 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.executorEnv.HADOOP_VERSION", new ConfigProperty(
           "hadoop_version", IGNORE, this.settings.getHadoopVersion()));
       
-      sparkMagicParams.put("spark.executorEnv.extraJavaOptions", new ConfigProperty(
-          "spark_executorEnv_extraJavaOptions", APPEND, extraJavaOptions));
+      sparkMagicParams.put("spark.executor.extraJavaOptions", new ConfigProperty(
+          "spark_executor_extraJavaOptions", APPEND, extraJavaOptions));
       
       sparkMagicParams.put("spark.executorEnv.HDFS_BASE_DIR", new ConfigProperty(
           "spark_executorEnv_HDFS_BASE_DIR", IGNORE,

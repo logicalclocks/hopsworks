@@ -151,7 +151,7 @@ public class YarnExecutionFinalizer {
    * Removes the marker file for streaming jobs if it exists, after a non FINISHED/SUCCEEDED job.
    */
   private void removeMarkerFile(Execution exec, DistributedFileSystemOps dfso) {
-    String marker = Settings.getJobMarkerFile(exec.getJob(), exec.getAppId());
+    String marker = settings.getJobMarkerFile(exec.getJob(), exec.getAppId());
     try {
       if (dfso.exists(marker)) {
         dfso.rm(new org.apache.hadoop.fs.Path(marker), false);

@@ -21,40 +21,39 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
-import java.security.Key;
-import java.security.SecureRandom;
-import java.util.Random;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.net.util.Base64;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Paths;
+import java.security.Key;
+import java.security.SecureRandom;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility methods.
@@ -63,13 +62,10 @@ import org.apache.commons.net.util.Base64;
 public class HopsUtils {
 
   private static final Logger LOG = Logger.getLogger(HopsUtils.class.getName());
-  public static final int ROOT_DIR_PARTITION_KEY = 0;
+  private static final int ROOT_DIR_PARTITION_KEY = 0;
   public static final short ROOT_DIR_DEPTH = 0;
-  public static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
+  private static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
   public static int ROOT_INODE_ID = 1;
-  public static int PROJECTS_DIR_DEPTH = 1;
-  public static String PROJECTS_DIR_NAME = "Projects";
-  
   private static final FsPermission materialPermissions = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
   
   /**
@@ -87,15 +83,6 @@ public class HopsUtils {
       }
     }
     return false;
-  }
-
-  public static int fileOrDirPartitionId(int parentId, String name) {
-    return parentId;
-  }
-
-  public static int projectPartitionId(String name) {
-    return calculatePartitionId(ROOT_INODE_ID, PROJECTS_DIR_NAME,
-        PROJECTS_DIR_DEPTH);
   }
 
   public static int dataSetPartitionId(Inode parent, String name) {
@@ -127,7 +114,7 @@ public class HopsUtils {
    * Retrieves the global hadoop classpath.
    *
    * @param params
-   * @return
+   * @return hadoop global classpath
    */
   public static String getHadoopClasspathGlob(String... params) {
     ProcessBuilder pb = new ProcessBuilder(params);
@@ -181,23 +168,21 @@ public class HopsUtils {
     return project + HdfsUsersController.USER_NAME_DELIMITER + user + "__cert.key";
   }
   
-  public static void copyUserKafkaCerts(CertsFacade userCerts,
-      Project project, String username,
-      String localTmpDir, String remoteTmpDir, CertificateMaterializer
+  public static void copyProjectUserCerts(Project project, String username,
+                                          String localTmpDir, String remoteTmpDir, CertificateMaterializer
       certMat, boolean isRpcTlsEnabled) {
-    copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
+    copyProjectUserCerts(project, username, localTmpDir, remoteTmpDir,
         null, null, null, null, null, null, certMat, isRpcTlsEnabled);
   }
 
-  public static void copyUserKafkaCerts(CertsFacade userCerts,
-      Project project, String username,
+  public static void copyProjectUserCerts(Project project, String username,
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
       Map<String, String> jobSystemProperties,
       String applicationId, CertificateMaterializer certMat,
       boolean isRpcTlsEnabled) {
-    copyUserKafkaCerts(userCerts, project, username, localTmpDir, remoteTmpDir,
+    copyProjectUserCerts(project, username, localTmpDir, remoteTmpDir,
         jobType, dfso, projectLocalResources, jobSystemProperties,
         null, applicationId, certMat, isRpcTlsEnabled);
   }
@@ -344,11 +329,10 @@ public class HopsUtils {
   }
 
   /**
-   * Utility method that copies Kafka user certificates from the Database, to
+   * Utility method that copies project user certificates from the Database, to
    * either hdfs to be passed as LocalResources to the YarnJob or to used
    * by another method.
    *
-   * @param userCerts
    * @param project
    * @param username
    * @param localTmpDir
@@ -360,8 +344,7 @@ public class HopsUtils {
    * @param flinkCertsDir
    * @param applicationId
    */
-  public static void copyUserKafkaCerts(CertsFacade userCerts,
-      Project project, String username,
+  public static void copyProjectUserCerts(Project project, String username,
       String localTmpDir, String remoteTmpDir, JobType jobType,
       DistributedFileSystemOps dfso,
       List<LocalResourceDTO> projectLocalResources,
@@ -381,59 +364,21 @@ public class HopsUtils {
       throw new RuntimeException("Could not materialize user certificates", ex);
     }
     
-    //Pull the certificate of the client
-    /*UserCerts userCert = userCerts.findUserCert(project.getName(),
-        username);*/
     //Check if the user certificate was actually retrieved
     if (userCert.getUserCert() != null && userCert.getUserCert().length > 0
-        && userCert.getUserKey() != null && userCert.getUserKey().length
-        > 0) {
+        && userCert.getUserKey() != null && userCert.getUserKey().length > 0) {
     
-      Map<String, byte[]> kafkaCertFiles = new HashMap<>();
-      kafkaCertFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
-      kafkaCertFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
+      Map<String, byte[]> certFiles = new HashMap<>();
+      certFiles.put(Settings.T_CERTIFICATE, userCert.getUserCert());
+      certFiles.put(Settings.K_CERTIFICATE, userCert.getUserKey());
       
-      //Create tmp cert directory if not exists for certificates to be copied to hdfs.
-      //Certificates will later be deleted from this directory when copied to HDFS.
-      
-      // This is done in CertificateMaterializer
-      /*File certDir = new File(localTmpDir);
-      if (!certDir.exists()) {
-        try {
-          certDir.setExecutable(false);
-          certDir.setReadable(true, true);
-          certDir.setWritable(true, true);
-          certDir.mkdir();
-        } catch (SecurityException ex) {
-          LOG.log(Level.SEVERE, ex.getMessage());//handle it
-        }
-      }*/
-      Map<String, File> kafkaCerts = new HashMap<>();
       try {
-        String kCertName = HopsUtils.getProjectKeystoreName(project.getName(),
-            username);
-        String tCertName = HopsUtils.getProjectTruststoreName(project.
-            getName(), username);
-        String passName = getProjectMaterialPasswordName(project.getName(),
-            username);
-        // if file doesnt exists, then create it
+        String kCertName = HopsUtils.getProjectKeystoreName(project.getName(), username);
+        String tCertName = HopsUtils.getProjectTruststoreName(project.getName(), username);
+        String passName = getProjectMaterialPasswordName(project.getName(), username);
+
         try {
-          if (jobType == null) {
-            // This is done in CertificateMaterializer
-            
-            //Copy the certificates in the local tmp dir
-            /*File kCert = new File(localTmpDir
-                + File.separator + kCertName);
-            File tCert = new File(localTmpDir
-                + File.separator + tCertName);
-            if (!kCert.exists()) {
-              Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                  kCert);
-              Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                  tCert);
-            }*/
-          } else //If it is a Flink job, copy the certificates into the config dir
-          {
+          if (jobType != null) {
             switch (jobType) {
               case FLINK:
                 File appDir = Paths.get(flinkCertsDir, applicationId).toFile();
@@ -452,12 +397,10 @@ public class HopsUtils {
                 t_k_cert.setExecutable(false);
                 t_k_cert.setReadable(true, true);
                 t_k_cert.setWritable(false);
-                
+
                 if (!f_k_cert.exists()) {
-                  Files.write(kafkaCertFiles.get(Settings.K_CERTIFICATE),
-                      f_k_cert);
-                  Files.write(kafkaCertFiles.get(Settings.T_CERTIFICATE),
-                      t_k_cert);
+                  Files.write(certFiles.get(Settings.K_CERTIFICATE), f_k_cert);
+                  Files.write(certFiles.get(Settings.T_CERTIFICATE), t_k_cert);
                 }
   
                 // If RPC TLS is enabled, password file would be injected by the
@@ -480,23 +423,20 @@ public class HopsUtils {
               case PYSPARK:
               case TFSPARK:
               case SPARK:
-                kafkaCerts.put(Settings.K_CERTIFICATE, new File(
+                Map<String, File> certs = new HashMap<>();
+                certs.put(Settings.K_CERTIFICATE, new File(
                     localTmpDir + File.separator + kCertName));
-                kafkaCerts.put(Settings.T_CERTIFICATE, new File(
+                certs.put(Settings.T_CERTIFICATE, new File(
                     localTmpDir + File.separator + tCertName));
                 // If RPC TLS is enabled, password file would be injected by the
                 // NodeManagers. We don't need to add it as LocalResource
                 if (!isRpcTlsEnabled) {
-                  kafkaCerts.put(Settings.CRYPTO_MATERIAL_PASSWORD, new File(
+                  certs.put(Settings.CRYPTO_MATERIAL_PASSWORD, new File(
                       localTmpDir + File.separator + passName));
                 }
-                for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
-                  /*if (!entry.getValue().exists()) {
-                    entry.getValue().createNewFile();
-                  }*/
-                
+                for (Map.Entry<String, File> entry : certs.entrySet()) {
                   //Write the actual file(cert) to localFS
-                  //Create HDFS kafka certificate directory. This is done
+                  //Create HDFS certificate directory. This is done
                   //So that the certificates can be used as LocalResources
                   //by the YarnJob
                   if (!dfso.exists(remoteTmpDir)) {
@@ -506,17 +446,14 @@ public class HopsUtils {
                             FsAction.ALL, FsAction.ALL));
                   }
                   //Put project certificates in its own dir
-                  String certUser = project.getName() + "__"
-                      + username;
-                  String remoteTmpProjDir = remoteTmpDir + File.separator
-                      + certUser;
+                  String certUser = project.getName() + "__" + username;
+                  String remoteTmpProjDir = remoteTmpDir + File.separator + certUser;
                   if (!dfso.exists(remoteTmpProjDir)) {
                     dfso.mkdir(
                         new Path(remoteTmpProjDir),
                         new FsPermission(FsAction.ALL,
                             FsAction.ALL, FsAction.NONE));
-                    dfso.setOwner(new Path(remoteTmpProjDir),
-                        certUser, certUser);
+                    dfso.setOwner(new Path(remoteTmpProjDir), certUser, certUser);
                   }
                 
                   String remoteProjAppDir = remoteTmpProjDir + File.separator
@@ -529,12 +466,9 @@ public class HopsUtils {
                     dfso.setOwner(remoteProjAppPath, certUser, certUser);
                   }
                 
-                  /*Files.write(kafkaCertFiles.get(entry.getKey()), entry.
-                      getValue());*/
                   dfso.copyToHDFSFromLocal(false, entry.getValue().
                           getAbsolutePath(),
-                      remoteProjAppDir + File.separator
-                          + entry.getValue().getName());
+                      remoteProjAppDir + File.separator + entry.getValue().getName());
                 
                   dfso.setPermission(new Path(remoteProjAppDir
                           + File.separator
@@ -557,17 +491,10 @@ public class HopsUtils {
             }
           }
         } catch (IOException ex) {
-          LOG.log(Level.SEVERE,
-              "Error writing Kakfa certificates to local fs", ex);
+          LOG.log(Level.SEVERE, "Error writing project user certificates to local fs", ex);
         }
       
       } finally {
-        //In case the certificates where not removed
-        /*for (Map.Entry<String, File> entry : kafkaCerts.entrySet()) {
-          if (entry.getValue().exists()) {
-            entry.getValue().delete();
-          }
-        }*/
         if (jobType != null) {
           certMat.removeCertificatesLocal(username, project.getName());
         }

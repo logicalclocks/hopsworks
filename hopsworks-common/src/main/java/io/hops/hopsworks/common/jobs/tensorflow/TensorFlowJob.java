@@ -94,7 +94,7 @@ public class TensorFlowJob extends YarnJob {
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
-      runner = runnerbuilder.getYarnRunner(jobs.getProject().getName(), tfUser, jobUser, hadoopDir,
+      runner = runnerbuilder.getYarnRunner(jobs.getProject().getName(), tfUser, jobUser,
           services.getFileOperations(hdfsUser.getUserName()), yarnClient,
           services, settings);
 

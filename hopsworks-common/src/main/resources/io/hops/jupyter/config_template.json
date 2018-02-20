@@ -80,7 +80,7 @@
       "spark.executorEnv.LD_LIBRARY_PATH": "%%spark_executorEnv_LD_LIBRARY_PATH%%",
       "spark.executorEnv.HADOOP_HDFS_HOME": "%%hadoop_home%%",
       "spark.executorEnv.HADOOP_VERSION": "%%hadoop_version%%",
-      "spark.executorEnv.extraJavaOptions": "%%spark_executorEnv_extraJavaOptions%%",
+      "spark.executor.extraJavaOptions": "%%spark_executor_extraJavaOptions%%",
       "spark.executorEnv.HDFS_BASE_DIR": "%%spark_executorEnv_HDFS_BASE_DIR%%",
       "spark.pyspark.python": "%%pyspark_bin%%",
       "spark.shuffle.service.enabled": "true",

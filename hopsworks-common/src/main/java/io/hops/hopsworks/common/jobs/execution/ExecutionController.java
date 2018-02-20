@@ -166,7 +166,7 @@ public class ExecutionController {
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     try {
       udfso = dfs.getDfsOps(username);
-      String marker = Settings.getJobMarkerFile(job, appId);
+      String marker = settings.getJobMarkerFile(job, appId);
       if (udfso.exists(marker)) {
         udfso.rm(new org.apache.hadoop.fs.Path(marker), false);
       } else {

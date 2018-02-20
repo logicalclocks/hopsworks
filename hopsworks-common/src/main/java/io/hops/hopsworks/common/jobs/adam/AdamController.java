@@ -99,7 +99,6 @@ public class AdamController {
         @Override
         public AdamJob run() throws Exception {
           return new AdamJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
-                  settings.getSparkDir(), settings.getAdamUser(),
                   hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                           getCreator()),
                   settings.getAdamJarHdfsPath(), jobsMonitor, settings);
@@ -139,8 +138,6 @@ public class AdamController {
     }
 
     AdamJob adamJob = new AdamJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
-            settings.
-            getSparkDir(), settings.getAdamUser(),
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.
                     getCreator()),
             settings.getAdamJarHdfsPath(), jobsMonitor, settings);

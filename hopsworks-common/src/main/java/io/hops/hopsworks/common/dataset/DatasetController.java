@@ -509,7 +509,7 @@ public class DatasetController {
     switch (ds.getType()) {
       case DATASET:
         Project owningProject = getOwningProject(ds);
-        path = new Path(Settings.getProjectPath(owningProject.getName()),
+        path = new Path(settings.getProjectPath(owningProject.getName()),
             ds.getInode().getInodePK().getName());
         break;
       case HIVEDB:
