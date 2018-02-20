@@ -35,11 +35,12 @@ public class JupyterDTO {
   private long pid=0;
   private String hostIp="";
   private String secret="";
-
+  private String certificatesDir;
+  
   public JupyterDTO() {
   }
 
-  public JupyterDTO(int port, String token, long pid, String secret) {
+  public JupyterDTO(int port, String token, long pid, String secret, String certificatesDir) {
     this.port = port;
     this.token = token;
     this.pid = pid;
@@ -49,6 +50,7 @@ public class JupyterDTO {
     } catch (UnknownHostException ex) {
       Logger.getLogger(JupyterDTO.class.getName()).log(Level.SEVERE, null, ex);
     }
+    this.certificatesDir = certificatesDir;
   }
 
   public String getHostIp() {
@@ -91,4 +93,7 @@ public class JupyterDTO {
     this.secret = secret;
   }
   
+  public String getCertificatesDir() {
+    return certificatesDir;
+  }
 }

@@ -21,6 +21,8 @@
 package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -285,9 +287,8 @@ public class JupyterService {
       HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
 
       String configSecret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
-      JupyterDTO dto;
+      JupyterDTO dto = null;
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
 
       try {
         jupyterSettingsFacade.update(jupyterSettings);
@@ -296,13 +297,26 @@ public class JupyterService {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
         }
-        HopsUtils.materializeCertificatesForUser(project.getName(), project_user[1], settings.getHdfsTmpCertDir(),
-            dfso, certificateMaterializer, settings);
+        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
+                .getHdfsTmpCertDir(),
+            dfso, certificateMaterializer, settings, dto.getCertificatesDir());
+        // When Livy launches a job it will look in the standard directory for the certificates
+        // We materialize them twice but most probably other operations will need them too, so it is OK
+        // Remember to remove both when stopping Jupyter server or an exception is thrown
+        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (InterruptedException | IOException ex) {
-        Logger.getLogger(JupyterService.class.getName()).log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         try {
-          HopsUtils.cleanupCertificatesForUser(project_user[1], project.getName(), settings.getHdfsTmpCertDir(),
-              certificateMaterializer);
+          certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+          if (dto != null) {
+            HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+                settings.getHdfsTmpCertDir(),
+                certificateMaterializer, dto.getCertificatesDir());
+          } else {
+            LOGGER.log(Level.SEVERE, "Could not identify local directory to clean certificates. Manual cleanup " +
+                "needed");
+            throw new IOException("Could not identify local directory to clean certificates");
+          }
         } catch (IOException e) {
           LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
         }
@@ -391,8 +405,10 @@ public class JupyterService {
     String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
     DistributedFileSystemOps dfso = dfsService.getDfsOps();
     try {
-      HopsUtils.cleanupCertificatesForUser(project_user[1], project
-          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer);
+      String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
+      HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
+          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir);
+      certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
     } finally {

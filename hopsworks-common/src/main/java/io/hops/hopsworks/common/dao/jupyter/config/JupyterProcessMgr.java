@@ -214,7 +214,7 @@ public class JupyterProcessMgr {
             jc.getSettings().getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion(), settings.getJavaHome(),
             settings.getAnacondaProjectDir(project.getName()), port.
             toString(),
-            hdfsUser + "-" + port + ".log", secretDir};
+            hdfsUser + "-" + port + ".log", secretDir, jc.getCertificatesDir()};
       logger.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
       String pidfile = jc.getRunDirPath() + "/jupyter.pid";
@@ -282,7 +282,7 @@ public class JupyterProcessMgr {
       jc.setToken(token);
     }
 
-    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), secretConfig);
+    return new JupyterDTO(jc.getPort(), jc.getToken(), jc.getPid(), secretConfig, jc.getCertificatesDir());
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -303,7 +303,6 @@ public class JupyterProcessMgr {
   /**
    * This method both stops any jupyter server for a proj_user
    *
-   * @param hdfsUser
    * @throws AppException
    */
 //  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

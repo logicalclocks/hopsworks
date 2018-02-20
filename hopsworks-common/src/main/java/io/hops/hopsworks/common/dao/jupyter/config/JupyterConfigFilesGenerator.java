@@ -90,6 +90,7 @@ public class JupyterConfigFilesGenerator {
   private final String runDirPath;
   private final String logDirPath;
   private final int port;
+  private final String certificatesDir;
   private long pid;
   private String secret;
   private String token;
@@ -113,6 +114,7 @@ public class JupyterConfigFilesGenerator {
     confDirPath = notebookPath + File.separator + "conf";
     logDirPath = notebookPath + File.separator + "logs";
     runDirPath = notebookPath + File.separator + "run";
+    certificatesDir = notebookPath + File.separator + "certificates";
     this.token = token;
     try {
       blacklistedSparkProperties = readBlacklistedSparkProperties();
@@ -256,6 +258,7 @@ public class JupyterConfigFilesGenerator {
     new File(confDirPath + "/custom").mkdirs();
     new File(runDirPath).mkdirs();
     new File(logDirPath).mkdirs();
+    new File(certificatesDir).mkdirs();
     return true;
   }
 
@@ -746,4 +749,7 @@ public class JupyterConfigFilesGenerator {
     return notebookPath;
   }
 
+  public String getCertificatesDir() {
+    return certificatesDir;
+  }
 }

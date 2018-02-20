@@ -244,14 +244,20 @@ public class HopsUtils {
    * @param certificateMaterializer
    * @throws IOException
    */
-  public static void cleanupCertificatesForUser(String username,
-      String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer) throws IOException {
+  public static void cleanupCertificatesForUserCustomDir(String username,
+      String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer, String directory) throws
+      IOException {
 
-    certificateMaterializer.removeCertificatesLocal(username, projectName);
+    certificateMaterializer.removeCertificatesLocalCustomDir(username, projectName, directory);
     String projectSpecificUsername = projectName + HdfsUsersController
         .USER_NAME_DELIMITER + username;
     String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectSpecificUsername;
     certificateMaterializer.removeCertificatesRemote(username, projectName, remoteDirectory);
+  }
+  
+  public static void cleanupCertificatesForUser(String username, String projectName, String remoteFSDir,
+      CertificateMaterializer certificateMaterializer) throws IOException {
+    cleanupCertificatesForUserCustomDir(username, projectName, remoteFSDir, certificateMaterializer, null);
   }
   
   /**
@@ -264,19 +270,26 @@ public class HopsUtils {
    * @param settings
    * @throws IOException
    */
-  public static void materializeCertificatesForUser(String projectName, String userName, String remoteFSDir,
+  public static void materializeCertificatesForUserCustomDir(String projectName, String userName, String remoteFSDir,
       DistributedFileSystemOps dfso, CertificateMaterializer
-      certificateMaterializer, Settings settings) throws
+      certificateMaterializer, Settings settings, String directory) throws
       IOException {
 
     String projectSpecificUsername = projectName + "__" + userName;
   
-    certificateMaterializer.materializeCertificatesLocal(userName, projectName);
+    certificateMaterializer.materializeCertificatesLocalCustomDir(userName, projectName, directory);
     
     
     String remoteDirectory = createRemoteDirectory(remoteFSDir, projectSpecificUsername, projectSpecificUsername, dfso);
     certificateMaterializer.materializeCertificatesRemote(userName, projectName, projectSpecificUsername,
         projectSpecificUsername, materialPermissions, remoteDirectory);
+  }
+  
+  public static void materializeCertificatesForUser(String projectName, String userName, String remoteFSDir,
+      DistributedFileSystemOps dfso, CertificateMaterializer certificateMaterializer, Settings settings)
+    throws IOException {
+    materializeCertificatesForUserCustomDir(projectName, userName, remoteFSDir, dfso, certificateMaterializer,
+        settings, null);
   }
   
   /**
