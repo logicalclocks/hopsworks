@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -42,7 +41,6 @@ import javax.faces.event.ActionEvent;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-import javax.transaction.UserTransaction;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
@@ -85,10 +83,6 @@ public class UserAdministration implements Serializable {
   @ManagedProperty("#{param.userMail}")
   private String userMail;
 
-  @Resource
-  private UserTransaction userTransaction;
-
-//  private Users user;
   private String secAnswer;
 
   private List<Users> filteredUsers;
@@ -466,7 +460,7 @@ public class UserAdministration implements Serializable {
         getCurrentInstance().getExternalContext().getRequest();
     String message = usersController.activateUser(role, user1, sessionState.getLoggedInUser(), httpServletRequest);
     if(Strings.isNullOrEmpty(message)){
-      MessagesController.addInfoMessage("User {0} activated successfully", message);
+      MessagesController.addInfoMessage("User "+user1.getEmail()+ " activated successfully", message);
     } else {
       MessagesController.addSecurityErrorMessage(message);
     }
@@ -488,11 +482,10 @@ public class UserAdministration implements Serializable {
   }
 
   public boolean notVerified(Users user) {
-    if (user == null || user.getBbcGroupCollection() == null || user.
-        getBbcGroupCollection().isEmpty() == false) {
-      return false;
-    }
-    if (user.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
+    if (user == null
+        || user.getBbcGroupCollection() == null
+        || !user.getBbcGroupCollection().isEmpty()
+        || user.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
       return false;
     }
     return true;

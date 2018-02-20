@@ -50,7 +50,7 @@ public enum UserAccountStatus {
   @XmlEnumValue("BLOCKED_ACCOUNT")
   BLOCKED_ACCOUNT(4),
 
-  // For scenrios where mobile device is compromised/lost
+  // For scenarios where mobile device is compromised/lost
   @XmlEnumValue("LOST_MOBILE")
   LOST_MOBILE(5),
 
