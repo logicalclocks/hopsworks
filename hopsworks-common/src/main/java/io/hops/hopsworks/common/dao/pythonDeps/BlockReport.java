@@ -30,16 +30,22 @@ public class BlockReport {
 
     private final String lib;
     private final String channelUrl;
+    private final String installType;
     private final String version;
 
-    public Lib(String lib, String channelUrl, String version) {
+    public Lib(String lib, String channelUrl, String installType, String version) {
       this.lib = lib;
       this.channelUrl = channelUrl;
+      this.installType = installType;
       this.version = version;
     }
 
     public String getChannelUrl() {
       return channelUrl;
+    }
+
+    public String getInstallType() {
+      return installType;
     }
 
     public String getLib() {
@@ -60,6 +66,9 @@ public class BlockReport {
       }
       if (this.channelUrl.compareTo(t.getRepoUrl().getUrl()) != 0) {
         return -3;
+      }
+      if (this.installType.compareTo(t.getInstallType().toString()) != 0) {
+        return -4;
       }
       
       return 0;
@@ -90,8 +99,8 @@ public class BlockReport {
   }
 
 
-  public void addLib(String lib, String channelUrl, String version) {
-    this.libs.put(lib, new Lib(lib, channelUrl, version));
+  public void addLib(String lib, String channelUrl, String installType, String version) {
+    this.libs.put(lib, new Lib(lib, channelUrl, installType, version));
   }
 
   public void setProject(String project) {

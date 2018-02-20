@@ -40,22 +40,28 @@ angular.module('hopsWorksApp')
 
             $scope.activeForm;
 
-            self.resultsMsgShowing = false;
+            self.condaResultsMsgShowing = false;
 
-            self.resultsMsg = "";
+            self.condaResultsMsg = "";
+
+            self.pipResultsMsgShowing = false;
+
+            self.pipResultsMsg = "";
 
             self.pythonVersionOpen = false;
 
             $scope.sortType = 'preinstalled';
 
-            self.searchText = "";
-            self.searching = false;
+
+            self.pipSearching = false;
+            self.condaSearching = false;
             self.installing = {};
             self.uninstalling = {};
             self.upgrading = {};
             self.enabling = false;
 
-            self.searchResults = [];
+            self.condaSearchResults = [];
+            self.pipSearchResults = [];
             self.installedLibs = [];
             self.opsStatus = [];
             self.selectedInstallStatus = {};
@@ -74,8 +80,49 @@ angular.module('hopsWorksApp')
             self.condaUrl = "defaults";
             self.selectedLibs = {};
 
-            self.selectedLib = {"channelUrl": self.condaChannel,
+            self.machineTypeALL = true;
+            self.machineTypeCPU = false;
+            self.machineTypeGPU = false;
+            self.machineTypeVal = "ALL"
+
+            self.pipSelectedLib = {"channelUrl": self.condaChannel, "installType": "",
               "lib": "", "version": ""};
+            self.condaSelectedLib = {"channelUrl": self.condaChannel, "installType": "",
+                          "lib": "", "version": ""};
+
+            self.select = function(machineType) {
+
+                // can't remove all default
+                if(self.machineTypeALL === true && machineType === "ALL") {
+                    return;
+                }
+                // you selected CPU only
+                if(self.machineTypeCPU === false && machineType === "CPU") {
+                    self.machineTypeVal = "CPU";
+                    self.machineTypeCPU = true;
+                    self.machineTypeGPU = false;
+                    self.machineTypeALL = false;
+                // you selected GPU only
+                } else if(self.machineTypeGPU === false && machineType === "GPU") {
+                    self.machineTypeVal = "GPU";
+                    self.machineTypeCPU = false;
+                    self.machineTypeGPU = true;
+                    self.machineTypeALL = false;
+                // you unchecked CPU
+                } else if(self.machineTypeGPU === true && machineType === "GPU") {
+                    self.machineTypeVal = "ALL";
+                    self.machineTypeCPU = false;
+                    self.machineTypeGPU = false;
+                    self.machineTypeALL = true;
+                // you unchecked GPU
+                } else {
+
+                    self.machineTypeVal = "ALL";
+                    self.machineTypeCPU = false;
+                    self.machineTypeGPU = false;
+                    self.machineTypeALL = true;
+                }
+            };
 
             self.progress = function () {
               var percent = ((self.numEnvs - self.numEnvsNotEnabled) / self.numEnvs) * 100;
@@ -91,13 +138,22 @@ angular.module('hopsWorksApp')
                         self.opsStatus = success.data;
 
                         if (self.opsStatus.length === 0) {
-                          if (self.resultsMessageShowing === true) {
+                          if (self.condaResultsMessageShowing === true) {
                             // If there were operations outstanding, but now there are no outstanding ops, 
                             // then refresh installed libraries
                             self.getInstalled();
                           }
-                          self.resultsMessageShowing = false;
+                          self.condaResultsMessageShowing = false;
                         }
+
+                        if (self.opsStatus.length === 0) {
+                          if (self.pipResultsMessageShowing === true) {
+                            // If there were operations outstanding, but now there are no outstanding ops,
+                            // then refresh installed libraries
+                            self.getInstalled();
+                          }
+                          self.pipResultsMessageShowing = false;
+                             }
 
                         var firstRun = false;
                         if (self.numEnvsNotEnabled === 0) {
@@ -238,6 +294,7 @@ angular.module('hopsWorksApp')
               PythonDepsService.index(self.projectId).then(
                       function (success) {
                         self.installedLibs = success.data;
+                        console.log(self.installedLibs);
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
               });
@@ -274,40 +331,75 @@ angular.module('hopsWorksApp')
             };
 
 
-            self.search = function () {
+            self.condaSearch = function () {
 
-              if (self.selectedLib.lib.length < 3) {
+              if (self.condaSelectedLib.lib.length < 3) {
                 return;
               }
-              self.selectedLib.channelUrl = self.condaChannel;
-              self.searching = true;
-              self.resultsMsg = "Conda searching can take a good few seconds......bear with us.";
-              self.resultsMessageShowing = true;
+              self.condaSelectedLib.channelUrl = self.condaChannel;
+              self.condaSearching = true;
+              self.condaResultsMsg = "Conda search can take a good few seconds... bear with us.";
+              self.condaResultsMessageShowing = true;
 
-              PythonDepsService.search(self.projectId, self.selectedLib).then(
+              PythonDepsService.condaSearch(self.projectId, self.condaSelectedLib).then(
                       function (success) {
-                        self.searching = false;
-                        self.searchResults = success.data;
-                        if (self.searchResults.length === 0) {
-                          self.resultsMsg = "No results found.";
+                        self.condaSearching = false;
+                        self.condaSearchResults = success.data;
+                        if (self.condaSearchResults.length === 0) {
+                          self.condaResultsMsg = "No results found.";
                         } else {
-                          self.resultsMessageShowing = false;
+                          self.condaResultsMessageShowing = false;
                         }
-                        for (var i = 0; i < self.searchResults.length; i++) {
-                          self.selectedLibs[self.searchResults[i].lib] = {"version": {"version": self.searchResults[i].versions[0].version,
-                              "status": self.searchResults[i].versions[0].status}, "installing": false};
+                        for (var i = 0; i < self.condaSearchResults.length; i++) {
+                          self.condaSelectedLib[self.condaSearchResults[i].lib] = {"version": {"version": self.condaSearchResults[i].versions[0].version,
+                              "status": self.condaSearchResults[i].versions[0].status}, "installing": false};
                         }
 
                       }, function (error) {
-                self.searching = false;
+                self.condaSearching = false;
                 if (error.status == 204) {
-                  self.resultsMsg = "No results found.";
+                  self.condaResultsMsg = "No results found.";
                 } else {
-                  self.resultsMessageShowing = false;
+                  self.condaResultsMessageShowing = false;
                   growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
                 }
               });
             };
+
+                        self.pipSearch = function () {
+
+                          if (self.pipSelectedLib.lib.length < 3) {
+                            return;
+                          }
+                          self.pipSelectedLib.channelUrl = self.condaChannel;
+                          self.pipSearching = true;
+                          self.pipResultsMsg = "Pip search can take a good few seconds... bear with us.";
+                          self.pipResultsMessageShowing = true;
+
+                          PythonDepsService.pipSearch(self.projectId, self.pipSelectedLib).then(
+                                  function (success) {
+                                    self.pipSearching = false;
+                                    self.pipSearchResults = success.data;
+                                    if (self.pipSearchResults.length === 0) {
+                                      self.pipResultsMsg = "No results found.";
+                                    } else {
+                                      self.pipResultsMessageShowing = false;
+                                    }
+                                    for (var i = 0; i < self.pipSearchResults.length; i++) {
+                                      self.pipSelectedLib[self.pipSearchResults[i].lib] = {"version": {"version": self.pipSearchResults[i].versions[0].version,
+                                          "status": self.pipSearchResults[i].versions[0].status}, "installing": false};
+                                    }
+
+                                  }, function (error) {
+                            self.pipSearching = false;
+                            if (error.status == 204) {
+                              self.pipResultsMsg = "No results found.";
+                            } else {
+                              self.pipResultsMessageShowing = false;
+                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
+                            }
+                          });
+                        };
 
 
             self.installOneHost = function (lib, version, host) {
@@ -332,21 +424,28 @@ angular.module('hopsWorksApp')
 
             };
 
-            self.install = function (lib, version) {
+
+
+            self.install = function (lib, installType, machineType, version) {
 
               if (version.version === undefined || version.version === null || version.version.toUpperCase() === "NONE") {
                 growl.error("Select a version to install from the dropdown list", {title: 'Error', ttl: 3000});
                 return;
               }
               self.installing[lib] = true;
-
-              var data = {"channelUrl": self.condaChannel, "lib": lib, "version": version.version};
+              if (installType === "CONDA") {
+                var data = {"channelUrl": self.condaChannel, "installType": installType, "machineType": machineType, "lib": lib, "version": version.version};
+              } else {
+                var data = {"channelUrl": "PyPi", "installType": installType, "machineType": machineType, "lib": lib, "version": version.version};
+              }
 
               PythonDepsService.install(self.projectId, data).then(
                       function (success) {
                         growl.success("Click on the 'Installed Python Libraries' tab for more info.", {title: 'Installing', ttl: 5000});
-                        self.resultsMessageShowing = false;
-                        self.searchResults = [];
+                        self.pipResultsMessageShowing = false;
+                        self.condaResultsMessageShowing = false;
+                        self.pipSearchResults = [];
+                        self.condaSearchResults = [];
                         self.getInstalled();
                         $scope.activeForm = 2;
                       }, function (error) {
@@ -355,9 +454,11 @@ angular.module('hopsWorksApp')
               });
             };
 
-            self.uninstall = function (condaChannel, lib, version) {
+            self.uninstall = function (condaChannel, machineType, installType, lib, version) {
+
+
               self.uninstalling[lib] = true;
-              var data = {"channelUrl": condaChannel, "lib": lib, "version": version};
+              var data = {"channelUrl": condaChannel, "installType": installType, "machineType": machineType, "lib": lib, "version": version};
 
               PythonDepsService.clearCondaOps(self.projectId, data).then(
                       function (success) {
@@ -365,15 +466,9 @@ angular.module('hopsWorksApp')
                         growl.info("Clearing conda operations", {title: 'Clearing Conda Commands and Uninstalling Library', ttl: 3000});
                         PythonDepsService.uninstall(self.projectId, data).then(
                                 function (success) {
-//                                  self.getInstalled();
+                                  self.getInstalled();
                                   self.uninstalling[lib] = false;
-//                                  growl.info("Uninstalling conda library", {title: 'Uninstalling', ttl: 2000});
-                                  PythonDepsService.clearCondaOps(self.projectId, data).then(
-                                          function (success) {
-                                            self.getInstalled();
-                                          }, function (error) {
-                                    // do nothing
-                                  });
+
                                 }, function (error) {
                           self.uninstalling[lib] = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 3000});
@@ -385,11 +480,10 @@ angular.module('hopsWorksApp')
             };
 
 
-
-            self.upgrade = function (condaChannel, lib, version) {
+            self.upgrade = function (condaChannel, machineType, installType, lib, version) {
               self.upgrading[lib] = true;
-
-              var data = {"channelUrl": condaChannel, "lib": lib, "version": version};
+              growl.success("VAL: " + machineType, {title: 'ERROR', ttl: 3000});
+              var data = {"channelUrl": condaChannel, "installType": installType, "machineType": machineType, "lib": lib, "version": version};
               PythonDepsService.upgrade(self.projectId, data).then(
                       function (success) {
                         growl.success("Sending command to update: " + lib, {title: 'Updating', ttl: 3000});

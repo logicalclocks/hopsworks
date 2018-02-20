@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class PythonDepJson {
 
   private String channelUrl;
+  private String installType;
+  private String machineType;
   private String lib;
   private String version;
   private String status = "Not Installed";
@@ -34,24 +36,26 @@ public class PythonDepJson {
   public PythonDepJson() {
   }
   /**
-   * 
+   *
    * @param channelUrl
    * @param lib
-   * @param version 
-   * @param status 
+   * @param version
+   * @param status
    */
-  public PythonDepJson(String channelUrl, String lib, String version, String 
+  public PythonDepJson(String channelUrl, String installType, String machineType, String lib, String version, String
           preinstalled, String status) {
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
     this.preinstalled = preinstalled;
     this.status = status;
+    this.installType = installType;
+    this.machineType = machineType;
   }
-  
-  public PythonDepJson(String channelUrl, String lib, String version, String 
+
+  public PythonDepJson(String channelUrl, String installType, String machineType, String lib, String version, String
           preinstalled) {
-    this(channelUrl, lib, version, preinstalled, "Not Installed");
+    this(channelUrl, installType, machineType, lib, version, preinstalled, "Not Installed");
   }
   
   public PythonDepJson(PythonDep pd) {
@@ -59,6 +63,8 @@ public class PythonDepJson {
     this.lib = pd.getDependency();
     this.version = pd.getVersion();
     this.status = pd.getStatus().toString();
+    this.installType = pd.getInstallType().name();
+    this.machineType = pd.getMachineType().name();
     this.preinstalled = Boolean.toString(pd.isPreinstalled());
   }
 
@@ -68,6 +74,22 @@ public class PythonDepJson {
 
   public void setChannelUrl(String channelUrl) {
     this.channelUrl = channelUrl;
+  }
+
+  public String getInstallType() {
+    return installType;
+  }
+
+  public void setInstallType(String installType) {
+    this.installType = installType;
+  }
+
+  public String getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(String machineType) {
+    this.machineType = machineType;
   }
 
   public String getLib() {
@@ -107,16 +129,22 @@ public class PythonDepJson {
     if (o instanceof PythonDepJson) {
       PythonDepJson pd = (PythonDepJson) o;
       if (pd.getChannelUrl().compareToIgnoreCase(this.channelUrl) == 0
+              && pd.getInstallType().compareToIgnoreCase(this.installType) == 0
               && pd.getLib().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion().compareToIgnoreCase(this.version) == 0) {
+              && pd.getVersion().compareToIgnoreCase(this.version) == 0
+              && pd.getMachineType().compareToIgnoreCase(this.machineType) == 0
+              && pd.getPreinstalled().compareToIgnoreCase(this.preinstalled) == 0) {
         return true;
       }
     }
     if (o instanceof PythonDep) {
       PythonDep pd = (PythonDep) o;
       if (pd.getRepoUrl().getUrl().compareToIgnoreCase(this.channelUrl) == 0
+              && pd.getInstallType().toString().compareToIgnoreCase(this.installType) == 0
               && pd.getDependency().compareToIgnoreCase(this.lib) == 0
-              && pd.getVersion().compareToIgnoreCase(this.version) == 0) {
+              && pd.getVersion().compareToIgnoreCase(this.version) == 0
+              && pd.getMachineType().name().compareToIgnoreCase(this.machineType) == 0
+              && Boolean.toString(pd.isPreinstalled()).compareToIgnoreCase(this.preinstalled) == 0) {
         return true;
       }
     }

@@ -216,7 +216,7 @@ public class TfServingProcessMgr {
     String logFile = secretDir + "/tfserving/logs/" + tfServing.getModelName() + "-" + tfServing.getPort() + ".log";
 
     String[] command = {"/usr/bin/sudo", prog, "logs", tfServing.getHostIp(), logFile};
-    logger.log(Level.SEVERE, "CMD: " + Arrays.toString(command));
+    logger.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
 
     try {

@@ -34,6 +34,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -77,7 +78,7 @@ public class PythonDepsFacade {
   @Resource(lookup = "concurrent/kagentExecutorService")
   ManagedExecutorService kagentExecutorService;
 
-  public static enum CondaOp {
+  public enum CondaOp {
     CLONE,
     CREATE,
     REMOVE,
@@ -96,10 +97,22 @@ public class PythonDepsFacade {
     }
   }
 
+  public enum CondaInstallType {
+    ENVIRONMENT,
+    CONDA,
+    PIP
+  }
+
   public enum CondaStatus {
     SUCCESS,
     ONGOING,
     FAILED
+  }
+
+  public enum MachineType {
+    ALL,
+    CPU,
+    GPU
   }
 
   public class AnacondaTask implements Runnable {
@@ -241,12 +254,15 @@ public class PythonDepsFacade {
     return repo;
   }
 
-  private PythonDep getDep(AnacondaRepo repo, String dependency, String version,
-      boolean create, boolean preinstalled) throws AppException {
+  public PythonDep getDep(AnacondaRepo repo, MachineType machineType, CondaInstallType installType, String dependency,
+                          String version, boolean create, boolean preinstalled) throws AppException {
     TypedQuery<PythonDep> deps = em.createNamedQuery(
-        "PythonDep.findByDependencyAndVersion", PythonDep.class);
+        "PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
     deps.setParameter("version", version);
+    deps.setParameter("installType", installType);
+    deps.setParameter("repoUrl", repo);
+    deps.setParameter("machineType", machineType);
     PythonDep dep = null;
     try {
       dep = deps.getSingleResult();
@@ -257,6 +273,8 @@ public class PythonDepsFacade {
         dep.setDependency(dependency);
         dep.setVersion(version);
         dep.setPreinstalled(preinstalled);
+        dep.setInstallType(installType);
+        dep.setMachineType(machineType);
         em.persist(dep);
         em.flush();
       }
@@ -295,7 +313,8 @@ public class PythonDepsFacade {
             }
           }
           if (!alreadyAdded) {
-            libs.add(new OpStatus(cc.getOp().toString(), cc.getChannelUrl(), libName, version));
+            libs.add(new OpStatus(cc.getOp().toString(), cc.getInstallType().name(),
+                    cc.getMachineType().name(), cc.getChannelUrl(), libName, version));
           }
         }
       }
@@ -392,6 +411,18 @@ public class PythonDepsFacade {
     return depVers;
   }
 
+  public void removePythonDepsForProject(Project proj) throws AppException {
+    Collection<PythonDep> deps = new ArrayList();
+    proj.setPythonDepCollection(deps);
+    projectFacade.update(proj);
+  }
+
+  public void addPythonDepsForProject(Project proj, Collection<PythonDep> pythonDeps) throws AppException {
+    proj.setPythonDepCollection(pythonDeps);
+    projectFacade.update(proj);
+  }
+
+
   private void removePythonForProject(Project proj) throws AppException {
     Collection<PythonDep> deps = proj.getPythonDepCollection();
     proj.setPythonDepCollection(new ArrayList<PythonDep>());
@@ -451,7 +482,8 @@ public class PythonDepsFacade {
     for (Hosts h : getHosts()) {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-          op, CondaStatus.ONGOING, proj, pythonVersion, "", "defaults", new Date(), arg);
+          op, CondaStatus.ONGOING, CondaInstallType.ENVIRONMENT, MachineType.ALL, proj, pythonVersion, "",
+              "defaults", new Date(), arg);
       em.persist(cc);
     }
   }
@@ -526,6 +558,8 @@ public class PythonDepsFacade {
           os.setChannelUrl(cc.getChannelUrl());
           os.setLib(cc.getLib());
           os.setVersion(cc.getVersion());
+          os.setInstallType(cc.getInstallType().name());
+          os.setMachineType(cc.getMachineType().name());
           Hosts h = cc.getHostId();
           os.addHost(new HostOpStatus(h.getHostname(), cc.getStatus().toString()));
           if (cc.getStatus() == CondaStatus.FAILED) {
@@ -557,18 +591,17 @@ public class PythonDepsFacade {
     }
   }
 
-  public void addLibrary(Project proj, String channelUrl,
-      String dependency,
-      String version) throws AppException {
+  public void addLibrary(Project proj, CondaInstallType installType, MachineType machineType,
+      String channelUrl, String dependency, String version) throws AppException {
     checkForOngoingEnvOp(proj);
-    condaOp(CondaOp.INSTALL, proj, channelUrl, dependency, version);
+    condaOp(CondaOp.INSTALL, installType, machineType, proj, channelUrl, dependency, version);
   }
 
-  public void upgradeLibrary(Project proj, String channelUrl,
+  public void upgradeLibrary(Project proj, CondaInstallType installType, MachineType machineType, String channelUrl,
       String dependency,
       String version) throws AppException {
     checkForOngoingEnvOp(proj);
-    condaOp(CondaOp.UPGRADE, proj, channelUrl, dependency, version);
+    condaOp(CondaOp.UPGRADE, installType, machineType, proj, channelUrl, dependency, version);
   }
 
   public void clearCondaOps(Project proj, String channelUrl,
@@ -582,27 +615,34 @@ public class PythonDepsFacade {
     }
   }
 
-  public void uninstallLibrary(Project proj, String channelUrl,
+  public void uninstallLibrary(Project proj, CondaInstallType installType, MachineType machineType, String channelUrl,
       String dependency,
       String version) throws AppException {
     checkForOngoingEnvOp(proj);
     try {
-      condaOp(CondaOp.UNINSTALL, proj, channelUrl, dependency, version);
+      condaOp(CondaOp.UNINSTALL, installType, machineType, proj, channelUrl, dependency, version);
     } catch (AppException ex) {
       // do nothing - already uninstalled
     }
   }
 
-  private void condaOp(CondaOp op, Project proj, String channelUrl,
-      String lib, String version) throws AppException {
+  private void condaOp(CondaOp op, CondaInstallType installType, MachineType machineType, Project proj,
+                       String channelUrl, String lib, String version) throws AppException {
 
-    List<Hosts> hosts = new ArrayList<>();
+    List<Hosts> hosts = hostsFacade.find();
+
+    hosts = filterHosts(hosts, machineType);
+
+    if(hosts.size() == 0) {
+      throw new AppException(Response.Status.NOT_FOUND,
+              "No hosts with the desired capability: " + machineType.name());
+    }
     PythonDep dep = null;
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = getRepo(proj, channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
-      dep = getDep(repo, lib, version, true, false);
+      dep = getDep(repo, machineType, installType, lib, version, true, false);
 
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
@@ -627,11 +667,9 @@ public class PythonDepsFacade {
       // This flush keeps the transaction state alive - don't want it to timeout
       em.flush();
 
-      // 4. Mark that the operation is executing at all hosts
-      hosts = hostsFacade.find();
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-            op, CondaStatus.ONGOING, proj, lib,
+            op, CondaStatus.ONGOING, installType, machineType, proj, lib,
             version, channelUrl, new Date(), "");
         em.persist(cc);
       }
@@ -644,14 +682,42 @@ public class PythonDepsFacade {
 
   }
 
+  private List<Hosts> filterHosts(List<Hosts> hosts, MachineType machineType) {
+
+    if(machineType.equals(MachineType.ALL)) {
+      return hosts;
+    }
+
+    List<Hosts> filteredHosts = new ArrayList<>();
+
+    if(machineType.equals(MachineType.CPU)) {
+
+      for(Hosts host: hosts) {
+        if(host.getNumGpus() == 0) {
+          filteredHosts.add(host);
+        }
+      }
+    }
+
+    else if(machineType.equals(MachineType.GPU)) {
+
+      for(Hosts host: hosts) {
+        if(host.getNumGpus() > 0) {
+          filteredHosts.add(host);
+        }
+      }
+    }
+
+    return filteredHosts;
+  }
+
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void blockingCondaOp(int hostId, CondaOp op,
-      Project proj, String channelUrl,
-      String lib, String version) throws AppException {
+  public void blockingCondaOp(int hostId, CondaOp op, CondaInstallType condaInstallType,
+      MachineType machineType, Project proj, String channelUrl, String lib, String version) throws AppException {
     Hosts host = em.find(Hosts.class, hostId);
 
     AnacondaRepo repo = getRepo(proj, channelUrl, false);
-    PythonDep dep = getDep(repo, lib, version, false, false);
+    PythonDep dep = getDep(repo, machineType, condaInstallType, lib, version, false, false);
     Future<?> f = kagentExecutorService.submit(new PythonDepsFacade.CondaTask(
         this.web, proj, host, op, dep));
     try {
@@ -747,8 +813,9 @@ public class PythonDepsFacade {
 //    updateCondaComamandStatus(commandId, s, arg);
 //  }
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateCondaComamandStatus(int commandId, CondaStatus condaStatus,
-      String arg, String proj, CondaOp opType, String lib, String version) {
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, CondaInstallType installType,
+      MachineType machineType, String arg, String proj, CondaOp opType, String lib, String version,
+      String channel) throws AppException {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -765,8 +832,12 @@ public class PythonDepsFacade {
               getCondaCommandsCollection();
           boolean finished = true;
           for (CondaCommands c : ongoingCommands) {
-            if (c.getOp().compareTo(opType) == 0 && c.getLib().compareTo(lib)
-                == 0 && c.getVersion().compareTo(version) == 0) {
+            if (c.getOp().compareTo(opType) == 0
+                    && c.getLib().compareTo(lib) == 0
+                    && c.getVersion().compareTo(version) == 0
+                    && c.getInstallType().name().compareTo(installType.name()) == 0
+                    && c.getChannelUrl().compareTo(channel) == 0
+                    && c.getMachineType().name().compareTo(machineType.name()) == 0) {
               finished = false;
               break;
             }
@@ -775,8 +846,11 @@ public class PythonDepsFacade {
 //          findPythonDeps(lib, version);
             Collection<PythonDep> deps = p.getPythonDepCollection();
             for (PythonDep pd : deps) {
-              if (pd.getDependency().compareTo(lib) == 0 && pd.getVersion().
-                  compareTo(version) == 0) {
+              if (pd.getDependency().compareTo(lib) == 0
+                      && pd.getVersion().compareTo(version) == 0
+                      && pd.getInstallType().name().compareTo(installType.name()) == 0
+                      && pd.getRepoUrl().getUrl().compareTo(channel) == 0
+                      && pd.getMachineType().name().compareTo(machineType.name()) == 0) {
                 pd.setStatus(condaStatus);
                 em.merge(pd);
                 break;

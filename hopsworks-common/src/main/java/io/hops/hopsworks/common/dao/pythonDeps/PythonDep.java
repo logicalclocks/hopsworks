@@ -58,9 +58,10 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "PythonDep.findByDependency",
           query
           = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency"),
-  @NamedQuery(name = "PythonDep.findByDependencyAndVersion",
+  @NamedQuery(name = "PythonDep.findUniqueDependency",
           query
-          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version"),
+          = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version " +
+                  "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType"),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version")})
@@ -95,34 +96,24 @@ public class PythonDep implements Serializable {
   @ManyToOne(optional = false)
   private AnacondaRepo repoUrl;
 
+  @Column(name = "status")
   @Enumerated(EnumType.ORDINAL)
   private PythonDepsFacade.CondaStatus status
           = PythonDepsFacade.CondaStatus.ONGOING;
+
+  @Column(name = "install_type")
+  @Enumerated(EnumType.ORDINAL)
+  private PythonDepsFacade.CondaInstallType installType;
+
+  @Column(name = "machine_type")
+  @Enumerated(EnumType.ORDINAL)
+  private PythonDepsFacade.MachineType machineType;
 
   public PythonDep() {
   }
 
   public PythonDep(Integer id) {
     this.id = id;
-  }
-
-  public PythonDep(String dependency, String version) {
-    this.dependency = dependency;
-    this.version = version;
-  }
-
-  public PythonDep(AnacondaRepo repoUrl, String dependency, String version) {
-    this.dependency = dependency;
-    this.version = version;
-    this.repoUrl = repoUrl;
-  }
-
-  public PythonDep(AnacondaRepo repoUrl, String dependency, String version,
-          boolean preinstalled) {
-    this.dependency = dependency;
-    this.version = version;
-    this.repoUrl = repoUrl;
-    this.preinstalled = preinstalled;
   }
 
   public Integer getId() {
@@ -167,12 +158,28 @@ public class PythonDep implements Serializable {
     this.repoUrl = repoUrl;
   }
 
+  public void setInstallType(PythonDepsFacade.CondaInstallType installType) {
+    this.installType = installType;
+  }
+
+  public PythonDepsFacade.CondaInstallType getInstallType() {
+    return installType;
+  }
+
   public void setStatus(PythonDepsFacade.CondaStatus status) {
     this.status = status;
   }
 
   public PythonDepsFacade.CondaStatus getStatus() {
     return status;
+  }
+
+  public void setMachineType(PythonDepsFacade.MachineType machineType) {
+    this.machineType = machineType;
+  }
+
+  public PythonDepsFacade.MachineType getMachineType() {
+    return machineType;
   }
 
   public boolean isPreinstalled() {

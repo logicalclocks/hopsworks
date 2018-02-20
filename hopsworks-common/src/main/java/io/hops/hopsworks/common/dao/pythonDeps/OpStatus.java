@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class OpStatus {
 
   private String channelUrl = "default";
+  private String installType;
+  private String machineType;
   private String lib;
   private String version;
   private String op;
@@ -37,8 +39,10 @@ public class OpStatus {
   public OpStatus() {
   }
 
-  public OpStatus(String op, String channelUrl, String lib, String version) {
+  public OpStatus(String op, String installType, String machineType, String channelUrl, String lib, String version) {
     this.op = op;
+    this.installType = installType;
+    this.machineType = machineType;
     this.channelUrl = channelUrl;
     this.lib = lib;
     this.version = version;
@@ -78,6 +82,22 @@ public class OpStatus {
 
   public void setChannelUrl(String channelUrl) {
     this.channelUrl = channelUrl;
+  }
+
+  public String getInstallType() {
+    return installType;
+  }
+
+  public void setInstallType(String installType) {
+    this.installType = installType;
+  }
+
+  public String getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(String machineType) {
+    this.machineType = machineType;
   }
 
   public String getLib() {

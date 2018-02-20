@@ -101,18 +101,27 @@ public class PythonDepsService {
     return project;
   }
 
-  Collection<PythonDepJson> preInstalledPythonDeps = new ArrayList<>();
+  //User upgradable libraries we installed for them
+  public static final ArrayList<String> providedLibraryNames = new ArrayList<String>() {
+    {
+      add("hops");
+      add("tfspark");
+      add("pandas");
+      add("tensorflow-serving-api");
+      add("hopsfacets");
+    }
+  };
 
-  public PythonDepsService() {
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "pydoop", "0.4", "true", "Installed"));
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tfspark", "0.1.5", "true", "Installed"));
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "tensorflow", "1.4.0", "true", "Installed"));
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hops", "1.4.3", "true", "Installed"));
-    preInstalledPythonDeps.add(new PythonDepJson("pip installed", "hopsfacets", "0.0.1", "true", "Installed"));
-//    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "protobuf", "3.4.0", "true", "Installed"));
-//    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "numpy", "1.13.1", "true", "Installed"));
-//    preInstalledPythonDeps.add(new PythonDepJson("conda installed", "pandas", "0.20.3", "true", "Installed"));
-  }
+  //Libraries we preinstalled users should not mess with
+  public static final ArrayList<String> preInstalledLibraryNames = new ArrayList<String>() {
+    {
+      add("tensorflow-gpu");
+      add("tensorflow");
+      add("horovod");
+      add("pydoop");
+      add("pyspark");
+    }
+  };
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -124,10 +133,6 @@ public class PythonDepsService {
     List<PythonDepJson> jsonDeps = new ArrayList<>();
     for (PythonDep pd : pythonDeps) {
       jsonDeps.add(new PythonDepJson(pd));
-    }
-
-    for (PythonDepJson pdj : preInstalledPythonDeps) {
-      jsonDeps.add(pdj);
     }
 
     GenericEntity<Collection<PythonDepJson>> deps = new GenericEntity<Collection<PythonDepJson>>(jsonDeps) {
@@ -149,7 +154,7 @@ public class PythonDepsService {
   @GET
   @Path("/destroyAnaconda")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response removeAnacondEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
+  public Response removeAnacondaEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
 
     pythonDepsFacade.removeProject(project);
 
@@ -219,9 +224,15 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response remove(PythonDepJson library) throws AppException {
 
-    pythonDepsFacade.uninstallLibrary(project,
-        library.getChannelUrl(),
-        library.getLib(), library.getVersion());
+    if(preInstalledLibraryNames.contains(library.getLib())) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not uninstall " + library.getLib() + ", it is a mandatory dependency");
+    }
+
+    pythonDepsFacade.uninstallLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
+        PythonDepsFacade.MachineType.valueOf(library.getMachineType()), library.getChannelUrl(),
+            library.getLib(), library.getVersion());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -244,6 +255,13 @@ public class PythonDepsService {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
+    if(preInstalledLibraryNames.contains(library.getLib())) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not install " + library.getLib() + ", it is already pre-installed");
+
+    }
+
     if (project.getName().startsWith("demo_tensorflow")) {
       List<OpStatus> opStatuses = pythonDepsFacade.opStatus(project);
       int counter = 0;
@@ -257,8 +275,10 @@ public class PythonDepsService {
         counter++;
       }
     }
-    pythonDepsFacade.addLibrary(project, library.getChannelUrl(), library.
-        getLib(), library.getVersion());
+
+    pythonDepsFacade.addLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
+        PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
+            library.getChannelUrl(), library.getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -272,9 +292,14 @@ public class PythonDepsService {
       @PathParam("hostId") String hostId,
       PythonDepJson library) throws AppException {
     pythonDepsFacade.blockingCondaOp(Integer.parseInt(hostId),
-        PythonDepsFacade.CondaOp.INSTALL, project, library.getChannelUrl(), library.getLib(), library.getVersion());
+        PythonDepsFacade.CondaOp.INSTALL, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
+            PythonDepsFacade.MachineType.valueOf(library.getMachineType()), project,
+            library.getChannelUrl(), library.getLib(), library.getVersion());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+
+
+/* Disable UPGRADE for now
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
@@ -282,10 +307,24 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response upgrade(PythonDepJson library) throws AppException {
 
-    pythonDepsFacade.upgradeLibrary(project, library.getChannelUrl(), library.getLib(), library.getVersion());
+    if(preInstalledLibraryNames.contains(library.getLib())) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not upgrade " + library.getLib());
+    }
+
+    logger.log(Level.SEVERE,"INSTALL TYPE " + library.getInstallType());
+    logger.log(Level.SEVERE,"MACHINE TYPE " + library.getMachineType());
+
+
+    pythonDepsFacade.upgradeLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
+            PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
+            library.getChannelUrl(), library.getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+
+  */
 
   @GET
   @Path("/clone/{projectName}")
@@ -374,16 +413,16 @@ public class PythonDepsService {
    * @throws AppException
    */
   @POST
-  @Path("/search")
+  @Path("/pipSearch")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response search(@Context SecurityContext sc,
+  public Response pipSearch(@Context SecurityContext sc,
       @Context HttpServletRequest req,
       @Context HttpHeaders httpHeaders,
       PythonDepJson lib) throws AppException {
 
-    Collection<LibVersions> response = findCondaLib(lib);
+    Collection<LibVersions> response = findPipLib(lib);
     List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
 
     // 1. Reverse version numbers to have most recent first.
@@ -412,6 +451,57 @@ public class PythonDepsService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         libsFound).build();
+  }
+
+  /**
+   *
+   * @param sc
+   * @param req
+   * @param httpHeaders
+   * @param lib
+   * @return 204 if no results found, results if successful, 500 if an error
+   * occurs.
+   * @throws AppException
+   */
+  @POST
+  @Path("/condaSearch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response condaSearch(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
+                         @Context HttpHeaders httpHeaders,
+                         PythonDepJson lib) throws AppException {
+
+    Collection<LibVersions> response = findCondaLib(lib);
+    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
+
+    // 1. Reverse version numbers to have most recent first.
+    // 2. Check installation status of each version
+    // Check which of these libraries found are already installed.
+    // This code is O(N^2) in the number of hits and installed libs, so
+    // it is not optimal
+    for (LibVersions l : response) {
+      l.reverseVersionList();
+      for (PythonDep pd : installedDeps) {
+        if (l.getLib().compareToIgnoreCase(pd.getDependency()) == 0) {
+          List<Version> allVs = l.getVersions();
+          for (Version v : allVs) {
+            if (pd.getVersion().compareToIgnoreCase(v.getVersion()) == 0) {
+              v.setStatus(pd.getStatus().toString().toLowerCase());
+              l.setStatus(pd.getStatus().toString().toLowerCase());
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    GenericEntity<Collection<LibVersions>> libsFound
+            = new GenericEntity<Collection<LibVersions>>(response) { };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            libsFound).build();
   }
 
   private Collection<LibVersions> findCondaLib(PythonDepJson lib) throws
@@ -507,4 +597,79 @@ public class PythonDepsService {
     }
   }
 
+  private Collection<LibVersions> findPipLib(PythonDepJson lib) throws
+          AppException {
+    String envName = project.getName();
+    String library = lib.getLib();
+    List<LibVersions> all = new ArrayList<>();
+
+    String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
+    ProcessBuilder pb = new ProcessBuilder(prog, library, envName);
+    try {
+      Process process = pb.start();
+
+      BufferedReader br = new BufferedReader(new InputStreamReader(process.
+              getInputStream()));
+      String line;
+      library = library.toLowerCase();
+
+      // Sample pip search format
+      // go-defer (1.0.1)      - Go's defer for Python
+      String[] lineSplit = null;
+
+      while ((line = br.readLine()) != null) {
+
+        // line could be a continuation of a comment
+        // currently it is indented
+        lineSplit = line.split(" +");
+
+        if(line.length() == 0 || lineSplit.length < 2) {
+          continue;
+        }
+
+        LibVersions lv = new LibVersions();
+
+        // remove all paranthesis
+        line = line.replaceAll("[()]", "");
+
+        // split on multiple spaces
+        lineSplit = line.split(" +");
+
+        if(lineSplit.length >= 2) {
+
+          String libName = lineSplit[0];
+
+          if (!libName.toLowerCase().startsWith(library)) {
+            continue;
+          }
+
+          lv.setLib(libName);
+
+          lv.addVersion(new Version(lineSplit[1]));
+
+          all.add(lv);
+
+        }
+      }
+      int errCode = process.waitFor();
+      if (errCode == 2) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Problem listing libraries with pip - report a bug.");
+      } else if (errCode == 1) {
+        throw new AppException(Response.Status.NO_CONTENT.
+                getStatusCode(),
+                "No results found.");
+      }
+      return all;
+
+    } catch (IOException | InterruptedException ex) {
+      Logger.getLogger(HopsUtils.class
+              .getName()).log(Level.SEVERE, null, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Problem listing libraries, pip interrupted on this webserver.");
+
+    }
+  }
 }

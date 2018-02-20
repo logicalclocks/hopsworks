@@ -128,7 +128,20 @@ public class CondaCommands implements Serializable {
   @Column(name = "status")
   @Enumerated(EnumType.STRING)
   private PythonDepsFacade.CondaStatus status;
-
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 52)
+  @Column(name = "install_type")
+  @Enumerated(EnumType.STRING)
+  private PythonDepsFacade.CondaInstallType installType;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 52)
+  @Column(name = "machine_type")
+  @Enumerated(EnumType.STRING)
+  private PythonDepsFacade.MachineType machineType;
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
@@ -147,8 +160,9 @@ public class CondaCommands implements Serializable {
   }
 
   public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
-          PythonDepsFacade.CondaStatus status, Project project, String lib,
-          String version, String channelUrl,  Date created, String arg) {
+          PythonDepsFacade.CondaStatus status, PythonDepsFacade.CondaInstallType installType,
+          PythonDepsFacade.MachineType machineType, Project project, String lib, String version, String channelUrl,
+                       Date created, String arg) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -158,6 +172,8 @@ public class CondaCommands implements Serializable {
     this.proj = project.getName();
     this.projectId = project;
     this.status = status;
+    this.installType = installType;
+    this.machineType = machineType;
     this.created = created;
     this.channelUrl = channelUrl;
     this.lib = lib;
@@ -260,6 +276,22 @@ public class CondaCommands implements Serializable {
 
   public void setStatus(PythonDepsFacade.CondaStatus status) {
     this.status = status;
+  }
+
+  public PythonDepsFacade.CondaInstallType getInstallType() {
+    return installType;
+  }
+
+  public void setInstallType(PythonDepsFacade.CondaInstallType installType) {
+    this.installType = installType;
+  }
+
+  public PythonDepsFacade.MachineType getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(PythonDepsFacade.MachineType machineType) {
+    this.machineType = machineType;
   }
 
   
