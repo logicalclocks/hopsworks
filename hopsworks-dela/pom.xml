@@ -24,12 +24,12 @@
   <parent>
     <artifactId>hopsworks</artifactId>
     <groupId>io.hops</groupId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-dela</artifactId>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   <packaging>ejb</packaging>
 
   <name>hopsworks-dela</name>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.4.0-SNAPSHOT</version>
+      <version>0.5.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
       <exclusions>
