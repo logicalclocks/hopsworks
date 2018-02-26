@@ -413,17 +413,25 @@ public class PythonDepsService {
    * @throws AppException
    */
   @POST
-  @Path("/pipSearch")
+  @Path("/search")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response pipSearch(@Context SecurityContext sc,
+  public Response search(@Context SecurityContext sc,
       @Context HttpServletRequest req,
       @Context HttpHeaders httpHeaders,
       PythonDepJson lib) throws AppException {
 
-    Collection<LibVersions> response = findPipLib(lib);
-    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
+    Collection<LibVersions> response = null;
+    List<PythonDep> installedDeps = null;
+
+    if(lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.PIP.name())) {
+      response = findPipLib(lib);
+      installedDeps = pythonDepsFacade.listProject(project);
+    } else if(lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.CONDA.name())) {
+      response = findCondaLib(lib);
+      installedDeps = pythonDepsFacade.listProject(project);
+    }
 
     // 1. Reverse version numbers to have most recent first.
     // 2. Check installation status of each version 
@@ -451,57 +459,6 @@ public class PythonDepsService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         libsFound).build();
-  }
-
-  /**
-   *
-   * @param sc
-   * @param req
-   * @param httpHeaders
-   * @param lib
-   * @return 204 if no results found, results if successful, 500 if an error
-   * occurs.
-   * @throws AppException
-   */
-  @POST
-  @Path("/condaSearch")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response condaSearch(@Context SecurityContext sc,
-                         @Context HttpServletRequest req,
-                         @Context HttpHeaders httpHeaders,
-                         PythonDepJson lib) throws AppException {
-
-    Collection<LibVersions> response = findCondaLib(lib);
-    List<PythonDep> installedDeps = pythonDepsFacade.listProject(project);
-
-    // 1. Reverse version numbers to have most recent first.
-    // 2. Check installation status of each version
-    // Check which of these libraries found are already installed.
-    // This code is O(N^2) in the number of hits and installed libs, so
-    // it is not optimal
-    for (LibVersions l : response) {
-      l.reverseVersionList();
-      for (PythonDep pd : installedDeps) {
-        if (l.getLib().compareToIgnoreCase(pd.getDependency()) == 0) {
-          List<Version> allVs = l.getVersions();
-          for (Version v : allVs) {
-            if (pd.getVersion().compareToIgnoreCase(v.getVersion()) == 0) {
-              v.setStatus(pd.getStatus().toString().toLowerCase());
-              l.setStatus(pd.getStatus().toString().toLowerCase());
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    GenericEntity<Collection<LibVersions>> libsFound
-            = new GenericEntity<Collection<LibVersions>>(response) { };
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            libsFound).build();
   }
 
   private Collection<LibVersions> findCondaLib(PythonDepJson lib) throws
