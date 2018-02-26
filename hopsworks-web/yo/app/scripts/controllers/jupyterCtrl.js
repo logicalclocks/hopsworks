@@ -284,18 +284,6 @@ angular.module('hopsWorksApp')
               $location.path('/#!/project/' + self.projectId + '/jupyter');
             };
 
-
-            var installTourLibs = function () {
-              //Install numpy
-              var data = {"channelUrl": "default", "lib": "numpy", "version": "1.13.1"};
-              PythonDepsService.install(self.projectId, data).then(
-                      function (success) {
-                        console.log("success numpy");
-                        growl.info("Preparing Python Anaconda environment, please wait...", {ttl: 10000});
-                      }, function (error) {
-                console.log("failure numpy");
-              });
-            };
             var init = function () {
               JupyterService.running(self.projectId).then(
                       function (success) {
@@ -327,7 +315,6 @@ angular.module('hopsWorksApp')
                             growl.info("Preparing Python Anaconda environment, please wait...", {ttl: 20000});
                             PythonDepsService.enable(self.projectId, "2.7", "true").then(
                                     function (success) {
-                                      setTimeout(installTourLibs, 20000);
 
                                     }, function (error) {
                               growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});

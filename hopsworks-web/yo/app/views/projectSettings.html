@@ -250,7 +250,7 @@
                     <div class="col-md-1">
                       <div class="checkbox c-checkbox">
                         <label style="margin-left: 10px; margin-top: -5px;">
-                          <input name="Batching" ng-checked="pythonDepsCtrl.machineTypeALL" ng-click="pythonDepsCtrl.select('ALL')"
+                          <input name="Batching" ng-disabled="pythonDepsCtrl.machineTypeVal === 'ALL'" ng-checked="pythonDepsCtrl.machineTypeALL" ng-click="pythonDepsCtrl.select('ALL')"
                                  type="checkbox">
                           <span class="fa fa-check"></span>
                         </label>
@@ -317,7 +317,7 @@
                         </div>
                         <div class="col-md-5">
                           <div class="btn-group row">
-                            <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.condaSearch()"
+                            <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.search('CONDA')"
                                     ng-disabled="pythonDepsCtrl.condaSearching">
                               <i ng-if="pythonDepsCtrl.condaSearching" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                               Search <i class="fa fa-search"></i>
@@ -448,7 +448,7 @@
                     <div class="col-md-1">
                       <div class="checkbox c-checkbox">
                         <label style="margin-left: 10px; margin-top: -5px;">
-                          <input name="Batching" ng-checked="pythonDepsCtrl.machineTypeALL" ng-click="pythonDepsCtrl.select('ALL')"
+                          <input name="Batching" ng-disabled="pythonDepsCtrl.machineTypeVal === 'ALL'" ng-checked="pythonDepsCtrl.machineTypeALL" ng-click="pythonDepsCtrl.select('ALL')"
                                  type="checkbox">
                           <span class="fa fa-check"></span>
                         </label>
@@ -497,7 +497,7 @@
                         </div>
                         <div class="col-md-5">
                           <div class="btn-group row">
-                            <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.pipSearch()"
+                            <button class="btn btn-primary button-sm" type="submit" ng-click="pythonDepsCtrl.search('PIP')"
                                     ng-disabled="pythonDepsCtrl.pipSearching">
                               <i ng-if="pythonDepsCtrl.pipSearching" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                               Search <i class="fa fa-search"></i>

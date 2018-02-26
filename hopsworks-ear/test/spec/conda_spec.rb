@@ -1,20 +1,20 @@
 =begin
-This file is part of HopsWorks
+Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
 
-Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the "Software"), to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
 
-HopsWorks is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
 
-HopsWorks is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with HopsWorks.  If not, see <http://www.gnu.org/licenses/>.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
 describe 'conda' do
@@ -40,10 +40,11 @@ describe 'conda' do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
         expect_status(200)
 
-        # wait until anaconda is enabled, don't have a clue how long it will take...
-        # 4 minutes is sufficient to get a cup of coffee
-        sleep 300
-
+        wait_for do
+          response = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
+          hops_library = json_body.detect { |library| library[:lib] == "hops" }
+          !hops_library.nil?
+        end
       end
 
       it 'install libraries' do
@@ -84,17 +85,17 @@ describe 'conda' do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/remove", {lib: "imageio", version: "2.2.0", channelUrl: "defaults", installType: "CONDA", machineType: "CPU"}
         expect_status(200)
 
-        sleep 60
+        wait_for do
+            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps"
+            imageio_library = json_body.detect { |library| library[:lib] == "imageio" }
+            imageio_library.nil?
+        end
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps"
-
-        tflearn_library = json_body.detect { |library| library[:lib] == "tflearn" }
-        imageio_library = json_body.detect { |library| library[:lib] == "imageio" }
-        hops_library = json_body.detect { |library| library[:lib] == "hops" }
-
-        expect(tflearn_library).not_to be_present
-        expect(imageio_library).not_to be_present
-        expect(hops_library).to be_present
+        wait_for do
+            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps"
+            tflearn_library = json_body.detect { |library| library[:lib] == "tflearn" }
+            tflearn_library.nil?
+        end
 
       end
 

@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 require 'airborne'
 require 'byebug'
 require 'active_record'
+
 #require 'launchy'
 
 require 'dotenv'
@@ -55,6 +56,7 @@ RSpec.configure do |config|
   config.include FactoryHelper
   config.include DatasetHelper
   config.include VariablesHelper
+  config.include CondaHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {

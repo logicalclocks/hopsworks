@@ -94,20 +94,10 @@ angular.module('hopsWorksApp')
                 };
                 return $http(regReq);
               },
-              condaSearch: function (projectId, data) {
-                              var regReq = {
-                                method: 'POST',
-                                url: '/api/project/' + projectId + '/pythonDeps/condaSearch',
-                                headers: {'Content-Type': 'application/json'},
-                                data: data,
-                                dataType: "json"
-                              };
-                              return $http(regReq);
-                            },
-              pipSearch: function (projectId, data) {
+              search: function (projectId, data) {
                 var regReq = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/pythonDeps/pipSearch',
+                  url: '/api/project/' + projectId + '/pythonDeps/search',
                   headers: {'Content-Type': 'application/json'},
                   data: data,
                   dataType: "json"
