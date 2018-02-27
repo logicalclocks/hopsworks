@@ -140,13 +140,13 @@ public class JupyterSettings implements Serializable {
   protected JupyterSettingsPK jupyterSettingsPK;
   @Basic(optional = false)
   @Column(name = "num_tf_ps")
-  private int numTfPs = 0;
+  private int numTfPs = 1;
   @Basic(optional = false)
   @Column(name = "num_tf_gpus")
   private int numTfGpus = 0;
   @Basic(optional = false)
   @Column(name = "num_mpi_np")
-  private int numMpiNp = 0;
+  private int numMpiNp = 1;
   @Basic(optional = false)
   @Column(name = "appmaster_cores")
   private int appmasterCores = 1;
