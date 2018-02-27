@@ -43,6 +43,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 import org.apache.hadoop.security.UserGroupInformation;
 
 public class DistributedFileSystemOps {
@@ -657,5 +658,10 @@ public class DistributedFileSystemOps {
   public long getDatasetSize(Path datasetPath) throws IOException {
     ContentSummary cs = dfs.getContentSummary(datasetPath);
     return cs.getLength();
+  }
+  
+  public long getLastUpdatedDatasetSize(Path datasetPath) throws IOException {
+    LastUpdatedContentSummary cs = dfs.getLastUpdatedContentSummary(datasetPath);
+    return cs.getSpaceConsumed();
   }
 }

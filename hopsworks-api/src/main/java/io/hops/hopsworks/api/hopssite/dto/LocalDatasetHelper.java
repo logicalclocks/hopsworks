@@ -39,7 +39,7 @@ public class LocalDatasetHelper {
       Path path = datasetCtrl.getDatasetPath(d);
       long size;
       try {
-        size = dfso.getDatasetSize(path);
+        size = dfso.getLastUpdatedDatasetSize(path);
       } catch (IOException ex) {
         size = -1;
       }
