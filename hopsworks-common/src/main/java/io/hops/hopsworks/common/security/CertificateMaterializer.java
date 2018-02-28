@@ -799,15 +799,6 @@ public class CertificateMaterializer {
       if (materialBag.getCount(materializationDirectory) <= 0) {
         scheduleFileRemover(key, materializationDirectory);
       }
-      
-      // No more references to that crypto material
-      if (materialBag.isEmpty()) {
-        materializedCerts.remove(key);
-        CryptoMaterial material = materialCache.remove(key);
-        if (material != null) {
-          material.wipePassword();
-        }
-      }
     }
   }
   
@@ -1241,6 +1232,22 @@ public class CertificateMaterializer {
         if (materialRemovers.isEmpty()) {
           fileRemovers.remove(key);
         }
+  
+        // No more references to that crypto material, wipe out password
+        try {
+          localWriteLock.lock();
+          Bag materialBag = materializedCerts.get(key);
+          if (materialBag.isEmpty()) {
+            materializedCerts.remove(key);
+            CryptoMaterial material = materialCache.remove(key);
+            if (material != null) {
+              material.wipePassword();
+            }
+          }
+        } finally {
+          localWriteLock.unlock();
+        }
+        
         LOG.log(Level.FINEST, "Deleted crypto material for <" + key.getExtendedUsername() + "> from directory "
             + materializationDirectory);
       }

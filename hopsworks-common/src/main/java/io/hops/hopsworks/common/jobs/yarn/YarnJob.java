@@ -183,6 +183,10 @@ public abstract class YarnJob extends HopsJob {
       }
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
+    } finally {
+      if (runner != null) {
+        runner.stop(services.getFsService());
+      }
     }
   }
 
