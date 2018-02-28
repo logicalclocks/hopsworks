@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.JobCreationException;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.adam.AdamCommand;
 import io.hops.hopsworks.common.jobs.adam.AdamCommandDTO;
@@ -163,7 +164,7 @@ public class AdamService {
    * @param sc
    * @param req
    * @return
-   * @throws se.kth.hopsworks.rest.AppException
+   * @throws io.hops.hopsworks.common.exception.AppException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
@@ -186,11 +187,15 @@ public class AdamService {
       if (Strings.isNullOrEmpty(config.getAppName())) {
         config.setAppName("Untitled ADAM job");
       }
-      Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
-              getName(), project, email);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(created).build();
+      try {
+        Jobs created = jobController.createJob(user, project, config);
+        activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+            entity(created).build();
+      } catch (JobCreationException e) {
+        throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+      }
+      
     }
   }
 }

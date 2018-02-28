@@ -474,7 +474,7 @@ angular.module('hopsWorksApp')
                           self.removed = true;
                         }
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                growl.error(error.data.errorMsg, {ttl: 10000});
               });
             };
 
@@ -494,8 +494,7 @@ angular.module('hopsWorksApp')
                   if(self.projectName.startsWith("demo_tensorflow")){
                     self.jobname = "Mnist-training-QueueRunners";
                   } else {
-                    var date = new Date().getTime() / 1000;
-                    self.jobname = "Job-" + date;
+                    self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
                   }
                 }
                 self.phase = 1;
@@ -911,6 +910,10 @@ angular.module('hopsWorksApp')
                   self.tfOnSpark = true;
                 }
                 self.jobname = stored.jobname;
+                if(typeof self.jobname !== "undefined"){
+                  self.jobname = self.jobname  + "." + Math.floor(Math.random() * 10);
+                  stored.accordion1.value = " - " + self.jobname;
+                }
                 self.localResources = stored.runConfig.localResources;
                 if(typeof self.localResources === "undefined"){
                   self.localResources = [];

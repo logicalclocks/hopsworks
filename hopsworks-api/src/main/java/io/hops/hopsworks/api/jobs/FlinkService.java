@@ -42,6 +42,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+
+import io.hops.hopsworks.common.exception.JobCreationException;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -204,10 +206,13 @@ public class FlinkService {
             "Invalid charater(s) in job name, the following characters (including space) are now allowed:"
             + Settings.FILENAME_DISALLOWED_CHARS);
       }
-      Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(created).build();
+      try{
+        Jobs created = jobController.createJob(user, project, config);
+        activityFacade.persistActivity(ActivityFacade.CREATED_JOB, project, email);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();
+      } catch (JobCreationException e) {
+        throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+      }
     }
   }
 }

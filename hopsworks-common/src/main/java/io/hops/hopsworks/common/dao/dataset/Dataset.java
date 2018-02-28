@@ -76,7 +76,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT d FROM Dataset d WHERE d.name = :name"),
   @NamedQuery(name = "Dataset.findByNameAndProjectId",
           query
-          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :projectId"),
+          = "SELECT d FROM Dataset d WHERE d.name = :name AND d.project = :project"),
   @NamedQuery(name = "Dataset.findSharedWithProject",
           query
           = "SELECT d FROM Dataset d WHERE d.project = :projectId AND "

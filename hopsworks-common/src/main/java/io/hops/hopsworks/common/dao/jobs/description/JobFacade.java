@@ -128,7 +128,22 @@ public class JobFacade extends AbstractFacade<Jobs> {
   public Jobs findById(Integer id) {
     return em.find(Jobs.class, id);
   }
-
+  
+  /**
+   * Checks if a job with the given name exists in this project.
+   * @param project project to search.
+   * @param name name of job.
+   * @return true if at least one job with that name was found.
+   */
+  public boolean jobNameExists(Project project, String name) {
+    TypedQuery<Jobs> query = em.createNamedQuery("Jobs.findByNameAndProject", Jobs.class);
+    query.setParameter("name", name).setParameter("project", project);
+    if(query.getResultList() != null && !query.getResultList().  isEmpty()) {
+      return true;
+    }
+    return false;
+  }
+  
   /**
    *
    * @param job

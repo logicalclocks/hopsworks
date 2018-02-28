@@ -111,7 +111,7 @@ public class DatasetFacade extends AbstractFacade<Dataset> {
     TypedQuery<Dataset> query = em.createNamedQuery(
       "Dataset.findByNameAndProjectId",
       Dataset.class);
-    query.setParameter("name", name).setParameter("projectId", project);
+    query.setParameter("name", name).setParameter("project", project);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {

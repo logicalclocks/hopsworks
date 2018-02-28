@@ -42,6 +42,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+
+import io.hops.hopsworks.common.exception.JobCreationException;
 import org.apache.hadoop.security.AccessControlException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -198,7 +200,7 @@ public class SparkService {
       }
 
       if (Strings.isNullOrEmpty(config.getAppName())) {
-        config.setAppName("Untitled Spark job");
+        throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(), "Job name is empty");
       } else if (!HopsUtils.jobNameValidator(config.getAppName(), Settings.FILENAME_DISALLOWED_CHARS)) {
         throw new AppException(Response.Status.NOT_ACCEPTABLE.getStatusCode(),
             "Invalid charater(s) in job name, the following characters (including space) are now allowed:"
@@ -207,11 +209,13 @@ public class SparkService {
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
-      Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.
-          getName(), project, email);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(created).build();
+      try{
+        Jobs created = jobController.createJob(user, project, config);
+        activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();
+      } catch (JobCreationException e) {
+        throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+      }
     }
   }
 }

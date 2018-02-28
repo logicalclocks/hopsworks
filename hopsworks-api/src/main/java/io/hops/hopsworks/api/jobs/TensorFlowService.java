@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.JobCreationException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -180,10 +181,13 @@ public class TensorFlowService {
       if (Strings.isNullOrEmpty(config.getAnacondaDir())) {
         config.setAnacondaDir(settings.getAnacondaProjectDir(project.getName()));
       }
-      Jobs created = jobController.createJob(user, project, config);
-      activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(created).build();
+      try{
+        Jobs created = jobController.createJob(user, project, config);
+        activityFacade.persistActivity(ActivityFacade.CREATED_JOB + created.getName(), project, email);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(created).build();
+      } catch (JobCreationException e) {
+        throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+      }
     }
   }
 

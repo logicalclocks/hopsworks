@@ -21,9 +21,14 @@
 package io.hops.hopsworks.common.dao.jobs.description;
 
 import com.google.common.base.Strings;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -47,13 +52,9 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 
 /**
  * Description of work to be executed. If the work is executed, this
@@ -78,6 +79,9 @@ import io.hops.hopsworks.common.jobs.configuration.JsonReduceableConverter;
   @NamedQuery(name = "Jobs.findByProject",
           query
           = "SELECT j FROM Jobs j WHERE j.project = :project"),
+  @NamedQuery(name = "Jobs.findByNameAndProject",
+          query
+          = "SELECT j FROM Jobs j WHERE j.name = :name AND j.project = :project"),
   @NamedQuery(name = "Jobs.updateConfig",
           query
           = "UPDATE Jobs j SET j.jobConfig = :jobconfig  WHERE j.id = :id"),

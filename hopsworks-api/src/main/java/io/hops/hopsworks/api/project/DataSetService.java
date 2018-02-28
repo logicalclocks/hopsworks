@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.JobCreationException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -1332,7 +1333,13 @@ public class DataSetService {
     ecConfig.setFilePath(fullPath.toString());
 
     //persist the job in the database
-    Jobs jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    Jobs jobdesc = null;
+    try {
+      jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    } catch (JobCreationException e) {
+      logger.log(Level.FINE, e.getMessage());
+      throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+    }
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);
