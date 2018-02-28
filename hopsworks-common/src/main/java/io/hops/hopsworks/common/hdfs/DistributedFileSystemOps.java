@@ -343,6 +343,10 @@ public class DistributedFileSystemOps {
     Path location = new Path(path);
     return dfs.exists(location);
   }
+  
+  public boolean exists(Path path) throws IOException {
+    return dfs.exists(path);
+  }
 
   /**
    * Copy a file within HDFS. Largely taken from Hadoop code.
@@ -378,6 +382,10 @@ public class DistributedFileSystemOps {
       dfs.mkdirs(dirsPath);
     }
     return dfs.create(dstPath);
+  }
+  
+  public FSDataOutputStream create(Path path) throws IOException {
+    return create(path.toString());
   }
 
   /**
@@ -655,6 +663,10 @@ public class DistributedFileSystemOps {
     return -1;
   }
 
+  public long getLength(Path path) throws IOException {
+    return dfs.getLength(path);
+  }
+  
   public long getDatasetSize(Path datasetPath) throws IOException {
     ContentSummary cs = dfs.getContentSummary(datasetPath);
     return cs.getLength();

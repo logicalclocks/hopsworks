@@ -60,7 +60,7 @@ public class Cluster {
     AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
     boolean autoValidate = clusterState.bypassActivationLink();
-    clusterController.register(cluster, req, autoValidate);
+    clusterController.registerClusterNewUser(cluster, req, autoValidate);
     JsonResponse res = new JsonResponse();
     res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
@@ -74,7 +74,8 @@ public class Cluster {
   public Response registerExisting(ClusterDTO cluster, @Context HttpServletRequest req) throws MessagingException, 
       AppException {
     LOGGER.log(Level.INFO, "Registering : {0}", cluster.getEmail());
-    clusterController.registerCluster(cluster, req);
+    boolean autoValidate = clusterState.bypassActivationLink();
+    clusterController.registerClusterWithUser(cluster, req, autoValidate);
     JsonResponse res = new JsonResponse();
     res.setStatusCode(Response.Status.OK.getStatusCode());
     res.setSuccessMessage("Cluster registerd. Please validate your email within "
