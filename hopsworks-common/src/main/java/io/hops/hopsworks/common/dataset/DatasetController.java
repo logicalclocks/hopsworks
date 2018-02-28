@@ -46,7 +46,6 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;

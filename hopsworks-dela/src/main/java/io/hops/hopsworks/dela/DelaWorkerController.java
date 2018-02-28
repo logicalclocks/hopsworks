@@ -23,6 +23,7 @@ package io.hops.hopsworks.dela;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopsworks.HopsworksTransferDTO;
@@ -38,7 +39,6 @@ import io.hops.hopsworks.dela.old_dto.KafkaDetails;
 import io.hops.hopsworks.dela.old_dto.KafkaEndpoint;
 import io.hops.hopsworks.dela.old_dto.KafkaResource;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
-import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,6 +51,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
+import org.apache.hadoop.fs.Path;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -60,6 +61,8 @@ public class DelaWorkerController {
 
   private Logger LOG = Logger.getLogger(DelaWorkerController.class.getName());
 
+  @EJB
+  private DatasetController datasetCtrl;
   @EJB
   private Settings settings;
   @EJB
@@ -113,10 +116,10 @@ public class DelaWorkerController {
 
   private void delaCtrlUpload(Project project, Dataset dataset, Users user, String publicDSId)
     throws ThirdPartyException {
-    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
-    HDFSResource resource = new HDFSResource(datasetPath, Settings.MANIFEST_FILE);
+    Path datasetPath = datasetCtrl.getDatasetPath(dataset);
+    HDFSResource resource = new HDFSResource(datasetPath.toString(), Settings.MANIFEST_FILE);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-    HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath(), hdfsUser);
+    HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath().toString(), hdfsUser);
     HopsDatasetDetailsDTO details = new HopsDatasetDetailsDTO(dataset.getName(), project.getId(), dataset.getId());
     delaCtrl.upload(publicDSId, details, resource, endpoint);
   }
@@ -156,10 +159,10 @@ public class DelaWorkerController {
 
   private void delaCtrlStartDownload(Project project, Dataset dataset, Users user,
     HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
-    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
-    HDFSResource resource = new HDFSResource(datasetPath, "manifest.json");
+    Path datasetPath = datasetCtrl.getDatasetPath(dataset);
+    HDFSResource resource = new HDFSResource(datasetPath.toString(), Settings.MANIFEST_FILE);
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-    HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath(), hdfsUser);
+    HDFSEndpoint endpoint = new HDFSEndpoint(getHDFSXmlPath().toString(), hdfsUser);
     HopsDatasetDetailsDTO details = new HopsDatasetDetailsDTO(downloadDTO.getName(), project.getId(), dataset.getId());
     delaCtrl.startDownload(downloadDTO.getPublicDSId(), details, resource, endpoint, downloadDTO.getBootstrap());
   }
@@ -175,7 +178,7 @@ public class DelaWorkerController {
   private void delaCtrlAdvanceDownload(Project project, Dataset dataset, Users user,
     HopsworksTransferDTO.Download downloadDTO, String sessionId, KafkaEndpoint kafkaEndpoint)
     throws ThirdPartyException {
-    String datasetPath = settings.getProjectPath(project.getName()) + File.separator + dataset;
+    Path datasetPath = datasetCtrl.getDatasetPath(dataset);
     JSONObject fileTopics = new JSONObject(downloadDTO.getTopics());
     LinkedList<HdfsDetails> hdfsResources = new LinkedList<>();
     LinkedList<KafkaDetails> kafkaResources = new LinkedList<>();
@@ -188,13 +191,13 @@ public class DelaWorkerController {
         if (!value.equals("") && kafkaEndpoint != null) {
           kafkaResources.add(new KafkaDetails(key, new KafkaResource(sessionId, value)));
         }
-        hdfsResources.add(new HdfsDetails(key, new HDFSResource(datasetPath, key)));
+        hdfsResources.add(new HdfsDetails(key, new HDFSResource(datasetPath.toString(), key)));
       } catch (JSONException e) {
         // Something went wrong!
       }
     }
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-    HDFSEndpoint hdfsEndpoint = new HDFSEndpoint(getHDFSXmlPath(), hdfsUser);
+    HDFSEndpoint hdfsEndpoint = new HDFSEndpoint(getHDFSXmlPath().toString(), hdfsUser);
     ExtendedDetails details = new ExtendedDetails(hdfsResources, kafkaResources);
     delaCtrl.advanceDownload(downloadDTO.getPublicDSId(), hdfsEndpoint, kafkaEndpoint, details);
   }
@@ -206,7 +209,7 @@ public class DelaWorkerController {
     return categories;
   }
 
-  private String getHDFSXmlPath() {
-    return settings.getHadoopConfDir() + File.separator + Settings.DEFAULT_HADOOP_CONFFILE_NAME;
+  private Path getHDFSXmlPath() {
+    return new Path(settings.getHadoopConfDir(), Settings.DEFAULT_HADOOP_CONFFILE_NAME);
   }
 }
