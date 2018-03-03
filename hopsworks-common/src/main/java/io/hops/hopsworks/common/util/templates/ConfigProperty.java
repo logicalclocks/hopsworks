@@ -61,4 +61,13 @@ public class ConfigProperty {
       LOG.log(Level.WARNING, "Replacement policy is NULL");
     }
   }
+  
+  @Override
+  public String toString() {
+    return "ConfigProperty{" +
+        "replacementPattern='" + replacementPattern + '\'' +
+        ", replacementPolicy=" + replacementPolicy +
+        ", value='" + value + '\'' +
+        '}';
+  }
 }
