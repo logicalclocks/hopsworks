@@ -77,15 +77,13 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
 
-/**
+/**d
  * <p>
  */
 public class YarnRunner {
 
-  private static final Logger logger = Logger.getLogger(YarnRunner.class.
-      getName());
-  public static final String APPID_PLACEHOLDER = "$APPID";
-  private static final String APPID_REGEX = "\\$APPID";
+  private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
+  public static final String APPID_PLACEHOLDER = "**APPID";
   public static final String KEY_CLASSPATH = "CLASSPATH";
   private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
@@ -448,27 +446,27 @@ public class YarnRunner {
   //------------------------- UTILITY METHODS ---------------------------------
   //---------------------------------------------------------------------------
   private void fillInAppid(String id) {
-    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id).replace("\\", "");
-    appName = appName.replaceAll(APPID_REGEX, id);
+    localResourcesBasePath = localResourcesBasePath.replace(APPID_PLACEHOLDER, id);
+    appName = appName.replace(APPID_PLACEHOLDER, id);
     if (amArgs != null) {
-      amArgs = amArgs.replaceAll(APPID_REGEX, id);
+      amArgs = amArgs.replace(APPID_PLACEHOLDER, id);
     }
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
         entrySet()) {
       entry.getValue().setName(entry.getValue().getName().
-          replaceAll(APPID_REGEX, id));
+          replace(APPID_PLACEHOLDER, id));
     }
     //TODO(Theofilos): thread-safety?
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
-      entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
+      entry.setValue(entry.getValue().replace(APPID_PLACEHOLDER, id));
     }
     for (ListIterator<String> i = javaOptions.listIterator(); i.hasNext();) {
-      i.set(i.next().replaceAll(APPID_REGEX, id));
+      i.set(i.next().replace(APPID_PLACEHOLDER, id));
     }
     
     //Loop through files to remove
     for (ListIterator<String> i = filesToRemove.listIterator(); i.hasNext();) {
-      i.set(i.next().replaceAll(APPID_REGEX, id));
+      i.set(i.next().replace(APPID_PLACEHOLDER, id));
     }
   }
 
@@ -975,9 +973,6 @@ public class YarnRunner {
       this.amMemory = config.getAmMemory();
       this.amVCores = config.getAmVCores();
       this.appName = config.getAppName();
-//      for (LocalResourceDTO dto : config.getLocalResources()) {
-//        addLocalResource(dto,false);
-//      }
       return this;
     }
 

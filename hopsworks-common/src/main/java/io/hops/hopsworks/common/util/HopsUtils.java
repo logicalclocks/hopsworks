@@ -30,7 +30,13 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.templates.AppendConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.IgnoreConfigReplacementPolicy;
+import io.hops.hopsworks.common.util.templates.OverwriteConfigReplacementPolicy;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -48,12 +54,17 @@ import java.nio.file.Paths;
 import java.security.Key;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility methods.
@@ -67,6 +78,12 @@ public class HopsUtils {
   private static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
   public static int ROOT_INODE_ID = 1;
   private static final FsPermission materialPermissions = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
+  private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
+  // e.x. spark.files=hdfs://someFile,hdfs://anotherFile
+  private static final Pattern SPARK_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
+  public static final ConfigReplacementPolicy OVERWRITE = new OverwriteConfigReplacementPolicy();
+  public static final ConfigReplacementPolicy IGNORE = new IgnoreConfigReplacementPolicy();
+  public static final ConfigReplacementPolicy APPEND = new AppendConfigReplacementPolicy();
   
   /**
    *
@@ -683,4 +700,124 @@ public class HopsUtils {
 
     return quotaSeconds;
   }
+  
+  /**
+   * Parse configuration properties defined by the user in Jupyter dashboard or Job Service.
+   *
+   * @param sparkProps Spark properties in one string
+   * @return Map of property name and value
+   */
+  public static Map<String, String> parseSparkProperties(String sparkProps) {
+    Map<String, String> sparkProperties = new HashMap<>();
+    if (sparkProps != null) {
+      Arrays.asList(NEW_LINE_PATTERN.split(sparkProps)).stream()
+          .map(l -> l.trim())
+          .forEach(l -> {
+            // User defined properties should be in the form of property_name=value
+              Matcher propMatcher = SPARK_PROPS_PATTERN.matcher(l);
+              if (propMatcher.matches()) {
+                sparkProperties.put(propMatcher.group(1), propMatcher.group(2));
+              }
+            });
+    }
+    if (LOG.isLoggable(Level.FINE)) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("User defined spark properties are: ");
+      if (sparkProperties.isEmpty()) {
+        sb.append("NONE");
+        LOG.log(Level.FINE, sb.toString());
+      } else {
+        for (Map.Entry<String, String> prop : sparkProperties.entrySet()) {
+          sb.append(prop.getKey()).append("=").append(prop.getValue()).append("\n");
+        }
+        LOG.log(Level.FINE, sb.toString());
+      }
+    }
+    return sparkProperties;
+  }
+  
+  /**
+   * Validate user defined properties against a list of blacklisted Spark properties
+   * @param sparkProps Parsed user defined properties
+   * @param sparkDir spark installation directory
+   */
+  public static Map<String, String> validateUserProperties(String sparkProps, String sparkDir) throws IOException {
+    Map<String, String> userProperties = parseSparkProperties(sparkProps);
+    Set<String> blackListedProps = readBlacklistedSparkProperties(sparkDir);
+    for (String userProperty : userProperties.keySet()) {
+      if (blackListedProps.contains(userProperty)) {
+        throw new IllegalArgumentException("User defined property <" + userProperty + "> is blacklisted!");
+      }
+    }
+    return userProperties;
+  }
+  
+  /**
+   * Read blacklisted Spark properties from file
+   * @return Blacklisted Spark properties
+   * @throws IOException
+   */
+  private static Set<String> readBlacklistedSparkProperties(String sparkDir) throws IOException {
+    File sparkBlacklistFile = Paths.get(sparkDir, Settings.SPARK_BLACKLISTED_PROPS).toFile();
+    LineIterator lineIterator = FileUtils.lineIterator(sparkBlacklistFile);
+    Set<String> blacklistedProps = new HashSet<>();
+    try {
+      while (lineIterator.hasNext()) {
+        String line = lineIterator.nextLine();
+        if (!line.startsWith("#")) {
+          blacklistedProps.add(line);
+        }
+      }
+      return blacklistedProps;
+    } finally {
+      LineIterator.closeQuietly(lineIterator);
+    }
+  }
+  
+  /**
+   * Merge system and user defined configuration properties based on the replacement policy of each property
+   * @param hopsworksParams System/default properties
+   * @param userParameters User defined properties parsed by parseSparkProperties(String sparkProps)
+   * @return A map with the replacement pattern and value for each property
+   */
+  public static Map<String, String> mergeHopsworksAndUserParams(Map<String, ConfigProperty> hopsworksParams,
+      Map<String, String> userParameters, boolean isJob) {
+    Map<String, String> finalParams = new HashMap<>();
+    Set<String> notReplacedUserParams = new HashSet<>();
+    
+    for (Map.Entry<String, String> userParam : userParameters.entrySet()) {
+      if (hopsworksParams.containsKey(userParam.getKey())) {
+        ConfigProperty prop = hopsworksParams.get(userParam.getKey());
+        prop.replaceValue(userParam.getValue());
+        finalParams.put(prop.getReplacementPattern(), prop.getValue());
+      } else {
+        notReplacedUserParams.add(userParam.getKey());
+        if(isJob){
+          finalParams.put(userParam.getKey(), userParam.getValue());
+        }
+      }
+    }
+    
+    String userParamsStr = "";
+    if (!notReplacedUserParams.isEmpty()) {
+      StringBuilder userParamsSb = new StringBuilder();
+      userParamsSb.append(",\n");
+      notReplacedUserParams.stream()
+          .forEach(p ->
+              userParamsSb.append("\"").append(p).append("\": ").append("\"").append(userParameters.get(p))
+                  .append("\"," + "\n"));
+      
+      userParamsStr = userParamsSb.toString();
+      // Remove last comma and add a new line char
+      userParamsStr = userParamsStr.trim().substring(0, userParamsStr.length() - 2) + "\n";
+    }
+    finalParams.put("spark_user_defined_properties", userParamsStr);
+    
+    for (ConfigProperty configProperty : hopsworksParams.values()) {
+      finalParams.putIfAbsent(configProperty.getReplacementPattern(), configProperty.getValue());
+    }
+    
+    return finalParams;
+  }
+  
 }
