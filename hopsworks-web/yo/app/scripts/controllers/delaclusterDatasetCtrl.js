@@ -34,6 +34,8 @@ angular.module('hopsWorksApp')
             self.loadingDisplayCategories = false;
             self.loadingSelectedCategory = false;
             self.loadingReadme = false;
+            self.publicDSId = $rootScope.publicDSId;
+            $rootScope.publicDSId = undefined; //reset
 
             var getDisplayCategories = function () {
               self.loadingDisplayCategories = true;

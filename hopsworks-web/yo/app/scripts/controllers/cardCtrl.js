@@ -110,16 +110,24 @@ angular.module('hopsWorksApp')
             self.gotoPublicDataset = function (content) {
               if ($rootScope.isDelaEnabled) {
                 if (content.publicId === undefined) {
-                  return;
+                  if (content.id === undefined) {
+                    return;
+                  }
+                  $rootScope['publicDSId'] = content.id;
+                } else {
+                  $rootScope['publicDSId'] = content.publicId;
                 }
-                $rootScope['publicDSId'] = content.publicId;
               } else {
                 if (content.id === undefined) {
                   return;
                 }
                 $rootScope['publicDSId'] = content.id;
               }
-              $location.path('/publicDataset');
+              if(content.localDataset) {
+                $location.path('/delaclusterDataset');
+              } else {
+                $location.path('/delahopsDataset');
+              }
             };
             
           }]);
