@@ -22,6 +22,8 @@ package io.hops.hopsworks.common.dao.command;
 import io.hops.hopsworks.common.dao.host.Hosts;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -66,7 +68,11 @@ public class SystemCommandFacade {
     entityManager.merge(command);
   }
   
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void delete(SystemCommand command) {
-    entityManager.remove(command);
+    SystemCommand deleteCommand = entityManager.find(SystemCommand.class, command.getId());
+    if (deleteCommand != null) {
+      entityManager.remove(deleteCommand);
+    }
   }
 }

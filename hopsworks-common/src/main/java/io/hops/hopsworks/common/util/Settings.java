@@ -40,14 +40,18 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -80,7 +84,18 @@ public class Settings implements Serializable {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
+  
+  private static final Map<String, TimeUnit> TIME_SUFFIXES;
+  static {
+    TIME_SUFFIXES = new HashMap<>(5);
+    TIME_SUFFIXES.put("ms", TimeUnit.MILLISECONDS);
+    TIME_SUFFIXES.put("s", TimeUnit.SECONDS);
+    TIME_SUFFIXES.put("m", TimeUnit.MINUTES);
+    TIME_SUFFIXES.put("h", TimeUnit.HOURS);
+    TIME_SUFFIXES.put("d", TimeUnit.DAYS);
+  }
+  private static final Pattern TIME_CONF_PATTERN = Pattern.compile("([0-9]+)([a-z]+)?");
+  
   @PostConstruct
   private void init() {
     try {
@@ -420,6 +435,7 @@ public class Settings implements Serializable {
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
+      serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -2430,10 +2446,39 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_LDAP_GROUPDN;
   }
-
+  
   public synchronized int getLdapAccountStatus() {
     checkCache();
     return LDAP_ACCOUNT_STATUS;
   }
   //----------------------------END LDAP------------------------------------
+  
+  // Service key rotation interval
+  private static final String SERVICE_KEY_ROTATION_INTERVAL_KEY = "service_key_rotation_interval";
+  private String serviceKeyRotationInterval = "3d";
+  
+  public synchronized String getServiceKeyRotationInterval() {
+    checkCache();
+    return serviceKeyRotationInterval;
+  }
+  
+  public static Long getConfTimeValue(String configurationTime) {
+    Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
+    }
+    return Long.parseLong(matcher.group(1));
+  }
+  
+  public static TimeUnit getConfTimeTimeUnit(String configurationTime) {
+    Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
+    }
+    String timeUnitStr = matcher.group(2);
+    if (null != timeUnitStr && !TIME_SUFFIXES.containsKey(timeUnitStr.toLowerCase())) {
+      throw new IllegalArgumentException("Invalid time suffix in configuration: " + configurationTime);
+    }
+    return timeUnitStr == null ? TimeUnit.MINUTES : TIME_SUFFIXES.get(timeUnitStr.toLowerCase());
+  }
 }

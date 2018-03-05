@@ -22,6 +22,7 @@ package io.hops.hopsworks.admin.maintenance;
 import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.File;
@@ -61,6 +62,8 @@ public class NodesBean implements Serializable {
   private HostsFacade hostsFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   private List<Hosts> allNodes;
   private final Map<String, Object> dialogOptions;
@@ -231,5 +234,11 @@ public class NodesBean implements Serializable {
         MessagesController.addErrorMessage("Could not delete node");
       }
     }
+  }
+  
+  public void rotateKeys() {
+    certificatesMgmService.issueServiceKeyRotationCommand();
+    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate keys on hosts");
+    logger.log(Level.INFO, "Issued key rotation command");
   }
 }

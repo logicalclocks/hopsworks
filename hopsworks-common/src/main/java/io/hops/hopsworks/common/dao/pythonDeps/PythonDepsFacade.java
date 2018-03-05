@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
+
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -625,7 +626,7 @@ public class PythonDepsFacade {
       // do nothing - already uninstalled
     }
   }
-
+  
   private void condaOp(CondaOp op, CondaInstallType installType, MachineType machineType, Project proj,
                        String channelUrl, String lib, String version) throws AppException {
 

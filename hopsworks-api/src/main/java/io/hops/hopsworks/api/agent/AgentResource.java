@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.dao.alert.Alert;
 import io.hops.hopsworks.common.dao.alert.AlertEJB;
 import io.hops.hopsworks.common.dao.command.KagentCommands;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.Health;
 
 
@@ -109,6 +110,8 @@ public class AgentResource {
   private Settings settings;
   @EJB
   private EmailBean emailBean;
+  @EJB
+  private SystemCommandFacade systemCommandFacade;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -143,6 +146,7 @@ public class AgentResource {
     // Commands are sent back to the kagent as a response to this heartbeat.
     // Kagent then executes the commands received in order.
     List<CondaCommands> commands = new ArrayList<>();
+    List<SystemCommand> systemCommands = new ArrayList<>();
 
     try {
 
@@ -261,6 +265,7 @@ public class AgentResource {
         JsonArray systemOps = commandsReply.getJsonArray("systemCommands");
         
         processCondaCommands(condaOps);
+        processSystemCommands(systemOps);
       }
 
       List<CondaCommands> differenceList = new ArrayList<>();
@@ -300,15 +305,32 @@ public class AgentResource {
       }
       commands.addAll(commandsToExec);
       commands.addAll(differenceList);
-
-
+      
+      List<SystemCommand> pendingCommands = systemCommandFacade.findByHost(host);
+      for (SystemCommand pendingCommand : pendingCommands) {
+        if (pendingCommand.getStatus().equals(SystemCommandFacade.STATUS.ONGOING)) {
+          systemCommands.add(pendingCommand);
+        }
+      }
+      
     } catch (Exception ex) {
       logger.log(Level.SEVERE, ex.getMessage());
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
     Collections.sort(commands, new CondaCommandsComparator());
-    List<SystemCommand> systemCommands = new ArrayList<>();
+    Collections.sort(systemCommands, new Comparator<SystemCommand>() {
+      @Override
+      public int compare(SystemCommand command0, SystemCommand command1) {
+        if (command0.getId() > command1.getId()) {
+          return 1;
+        } else if (command0.getId() < command1.getId()) {
+          return -1;
+        }
+        return 0;
+      }
+    });
+    
     KagentCommands kagentCommands = new KagentCommands(systemCommands, commands);
     
     GenericEntity<KagentCommands> kcs = new GenericEntity<KagentCommands>(kagentCommands) {};
@@ -316,6 +338,36 @@ public class AgentResource {
         kcs).build();
   }
 
+  private void processSystemCommands(JsonArray systemOps) {
+    for (int i = 0; i < systemOps.size(); ++i) {
+      JsonObject jsonCommand = systemOps.getJsonObject(i);
+      Integer id = jsonCommand.getInt("id");
+      String opStr = jsonCommand.getString("op");
+      String statusStr = jsonCommand.getString("status");
+      
+      SystemCommandFacade.OP op = SystemCommandFacade.OP.valueOf(opStr.toUpperCase());
+      SystemCommandFacade.STATUS status = SystemCommandFacade.STATUS.valueOf(statusStr.toUpperCase());
+      
+      SystemCommand systemCommand = systemCommandFacade.findById(id);
+      if (systemCommand == null) {
+        throw new IllegalArgumentException("System command with ID: " + id + " is not in the system");
+      }
+      
+      if (op.equals(SystemCommandFacade.OP.SERVICE_KEY_ROTATION)) {
+        processServiceKeyRotationCommand(systemCommand, status);
+      }
+    }
+  }
+  
+  private void processServiceKeyRotationCommand(SystemCommand command, SystemCommandFacade.STATUS status) {
+    if (status.equals(SystemCommandFacade.STATUS.FINISHED)) {
+      systemCommandFacade.delete(command);
+    } else if (status.equals(SystemCommandFacade.STATUS.FAILED)) {
+      command.setStatus(SystemCommandFacade.STATUS.FAILED);
+      systemCommandFacade.update(command);
+    }
+  }
+  
   private void processCondaCommands(JsonArray condaOps) throws AppException {
     for (int j = 0; j < condaOps.size(); j++) {
       JsonObject entry = condaOps.getJsonObject(j);

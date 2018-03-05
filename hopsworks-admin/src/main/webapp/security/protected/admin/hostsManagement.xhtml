@@ -71,12 +71,20 @@
                                     style="float:left"/>
                     </div>
                   </div>
+		  
                   <div class="ui-g-12 ui-md-2">
+		    <p:commandButton value="Rotate host keys"
+                                     style="float:right" 
+                                     actionListener="#{nodesBean.rotateKeys}"
+				     icon="ui-icon-arrowrefresh-1-w"
+				     update=":manageClusterNodes:growl">
+		    </p:commandButton>
                     <p:commandButton value="Zip Anaconda Libraries"
                                      style="float:right" 
                                      actionListener="#{nodesBean.zipUpAnacondaLibs}" ajax ="true" update="@all">
                     </p:commandButton>
                   </div>
+		  
                 </div>
 
                 <p:dataTable id="nodesTable" var="node"

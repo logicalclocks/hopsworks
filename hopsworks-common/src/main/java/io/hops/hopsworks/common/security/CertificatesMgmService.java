@@ -22,8 +22,12 @@ package io.hops.hopsworks.common.security;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.ProjectGenericUserCerts;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
+import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
+import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -43,6 +47,8 @@ import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,6 +83,10 @@ public class CertificatesMgmService {
   private ClusterCertificateFacade clusterCertificateFacade;
   @EJB
   private MessageController messageController;
+  @EJB
+  private SystemCommandFacade systemCommandFacade;
+  @EJB
+  private HostsFacade hostsFacade;
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
@@ -216,6 +226,15 @@ public class CertificatesMgmService {
       LOG.log(Level.SEVERE, errorMsg, ex);
       callRollbackHandlers();
       sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
+    }
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void issueServiceKeyRotationCommand() {
+    List<Hosts> allHosts = hostsFacade.find();
+    for (Hosts host : allHosts) {
+      SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.SERVICE_KEY_ROTATION);
+      systemCommandFacade.persist(rotateCommand);
     }
   }
   

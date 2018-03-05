@@ -40,6 +40,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -89,25 +91,17 @@ public class CertSigningService {
           throws AppException {
     logger.log(Level.INFO, "Request to sign host certificate: \n{0}", jsonString);
     JSONObject json = new JSONObject(jsonString);
-    String pubAgentCert = "no certificate";
-    String caPubCert = "no certificate";
+    String hostId = json.getString("host-id");
+    CsrDTO responseDto = null;
     if (json.has("csr")) {
       String csr = json.getString("csr");
-      try {
-        
-        pubAgentCert = PKIUtils.signCertificate(settings, csr, true);
-        logger.info("Signed host certificate.");        
-        caPubCert = Files.toString(new File(settings.getIntermediateCaDir()
-            + "/certs/ca-chain.cert.pem"), Charsets.UTF_8);
-      } catch (IOException | InterruptedException ex) {
-        logger.log(Level.SEVERE, "Cert signing error: {0}", ex.getMessage());
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), ex.toString());
-      }
+      responseDto = signCSR(hostId, csr);
+    } else {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
+          " provided");
     }
 
-    if (json.has("host-id") && json.has("agent-password")) {
-      String hostId = json.getString("host-id");
+    if (json.has("agent-password")) {
       Hosts host;
       try {
         host = hostsFacade.findByHostname(hostId);
@@ -120,11 +114,41 @@ public class CertSigningService {
       }
     }
 
-    CsrDTO dto = new CsrDTO(caPubCert, pubAgentCert, settings.getHadoopVersionedDir());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        dto).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
+  }
+  
+  @POST
+  @Path("/rotate")
+  @RolesAllowed({"AGENT"})
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response keyRotate(@Context HttpServletRequest request, String jsonString) throws AppException {
+    JSONObject json = new JSONObject(jsonString);
+    String hostId = json.getString("host-id");
+    CsrDTO responseDto = null;
+    if (json.has("csr")) {
+      String csr = json.getString("csr");
+      responseDto = signCSR(hostId, csr);
+    } else {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
+          " provided");
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
   }
 
+  private CsrDTO signCSR(String hostId, String csr) throws AppException {
+    try {
+      String agentCert = PKIUtils.signCertificate(settings, csr, true, true);
+      File caCertFile = Paths.get(settings.getIntermediateCaDir(), "certs", "ca-chain.cert.pem").toFile();
+      String caCert = Files.toString(caCertFile, Charset.defaultCharset());
+      return new CsrDTO(caCert, agentCert, settings.getHadoopVersionedDir());
+    } catch (IOException | InterruptedException ex) {
+      String errorMsg = "Error while signing CSR for host " + hostId + " Reason: " + ex.getMessage();
+      logger.log(Level.SEVERE, errorMsg, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMsg);
+    }
+  }
+  
   @POST
   @Path("/hopsworks")
   @AllowCORS
@@ -143,7 +167,7 @@ public class CertSigningService {
       String csr = json.getString("csr");
       clusterCert = checkCSR(user, csr);
       try {
-        pubAgentCert = PKIUtils.signCertificate(settings, csr, true);
+        pubAgentCert = PKIUtils.signCertificate(settings, csr, true, false);
         caPubCert = Files.toString(new File(settings.getCertsDir() + "/certs/ca.cert.pem"), Charsets.UTF_8);
         intermediateCaPubCert = Files.toString(
             new File(settings.getIntermediateCaDir() + "/certs/intermediate.cert.pem"), Charsets.UTF_8);

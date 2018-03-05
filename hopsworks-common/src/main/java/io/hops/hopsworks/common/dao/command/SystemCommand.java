@@ -88,6 +88,13 @@ public class SystemCommand implements Serializable {
           length = 50)
   private String execUser;
   
+  public SystemCommand(Hosts host, SystemCommandFacade.OP op) {
+    this.status = SystemCommandFacade.STATUS.ONGOING;
+    this.priority = 0;
+    this.host = host;
+    this.op = op;
+  }
+  
   public SystemCommand() {
     this.status = SystemCommandFacade.STATUS.ONGOING;
     this.priority = 0;
@@ -95,6 +102,10 @@ public class SystemCommand implements Serializable {
   
   public Integer getId() {
     return id;
+  }
+  
+  public void setId(Integer id) {
+    this.id = id;
   }
   
   public Hosts getHost() {

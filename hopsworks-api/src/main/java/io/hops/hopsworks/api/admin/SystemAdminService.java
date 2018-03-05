@@ -254,4 +254,14 @@ public class SystemAdminService {
     GenericEntity<Hosts> response = new GenericEntity<Hosts>(finalNode){};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
   }
+  
+  @POST
+  @Path("/rotate")
+  public Response serviceKeyRotate(@Context SecurityContext sc, @Context HttpServletRequest request)
+    throws AppException {
+    certificatesMgmService.issueServiceKeyRotationCommand();
+    JsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
+        "issued");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
+  }
 }
