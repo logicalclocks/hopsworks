@@ -101,8 +101,6 @@ public class ClusterController {
       sendEmail(cluster, req, clusterCert.getId() + clusterCert.getValidationKey(), clusterAgent,
         AccountsAuditActions.REGISTRATION.name());
     }
-    userBean.persist(clusterAgent);
-    clusterCertFacade.save(clusterCert);
     LOGGER.log(Level.INFO, "New cluster added with email: {0}, and username: {1}", new Object[]{clusterAgent.getEmail(),
       clusterAgent.getUsername()});
   }
@@ -121,8 +119,6 @@ public class ClusterController {
       sendEmail(cluster, req, clusterCert.getId() + clusterCert.getValidationKey(), clusterAgent.get(),
         AccountsAuditActions.REGISTRATION.name());
     }
-    clusterCertFacade.save(clusterCert);
-
     LOGGER.log(Level.INFO, "New cluster added with email: {0}, and username: {1}", 
       new Object[]{clusterAgent.get().getEmail(), clusterAgent.get().getUsername()});
   }
@@ -144,6 +140,7 @@ public class ClusterController {
     Users clusterAgent = usersCtrl.createNewAgent(cluster.getEmail(), CLUSTER_NAME_PREFIX, "007",
       cluster.getChosenPassword(), "Mrs");
     clusterAgent.setBbcGroupCollection(bbcGroups());
+    userBean.persist(clusterAgent);
     return clusterAgent;
   }
 
@@ -157,6 +154,7 @@ public class ClusterController {
     }
     if (clusterAgent.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
       clusterAgent.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
+      userBean.update(clusterAgent);
       return;
     }
     throw new IllegalStateException("Trying to activate account in state:" + clusterAgent.getStatus());
@@ -187,6 +185,7 @@ public class ClusterController {
       RegistrationStatusEnum.REGISTRATION_PENDING, clusterAgent);
     clusterCert.setValidationKey(SecurityUtils.getRandomPassword(VALIDATION_KEY_LEN));
     clusterCert.setValidationKeyDate(new Date());
+    clusterCertFacade.save(clusterCert);
     return clusterCert;
   }
 
