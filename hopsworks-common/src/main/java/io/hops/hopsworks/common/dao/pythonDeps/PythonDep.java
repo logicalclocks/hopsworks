@@ -99,7 +99,7 @@ public class PythonDep implements Serializable {
   @Column(name = "status")
   @Enumerated(EnumType.ORDINAL)
   private PythonDepsFacade.CondaStatus status
-          = PythonDepsFacade.CondaStatus.ONGOING;
+          = PythonDepsFacade.CondaStatus.NEW;
 
   @Column(name = "install_type")
   @Enumerated(EnumType.ORDINAL)

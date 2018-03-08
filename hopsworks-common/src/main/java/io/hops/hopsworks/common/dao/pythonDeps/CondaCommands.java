@@ -81,7 +81,9 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT c FROM CondaCommands c WHERE c.status = :status"),
   @NamedQuery(name = "CondaCommands.findByCreated",
           query
-          = "SELECT c FROM CondaCommands c WHERE c.created = :created")})
+          = "SELECT c FROM CondaCommands c WHERE c.created = :created"),
+  @NamedQuery(name = "CondaCommands.findByHost",
+          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;

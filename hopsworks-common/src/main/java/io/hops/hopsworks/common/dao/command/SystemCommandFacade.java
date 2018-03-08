@@ -37,6 +37,7 @@ public class SystemCommandFacade {
   }
   
   public enum STATUS {
+   NEW,
    ONGOING,
    FINISHED,
    FAILED

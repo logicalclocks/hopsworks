@@ -105,6 +105,7 @@ public class PythonDepsFacade {
   }
 
   public enum CondaStatus {
+    NEW,
     SUCCESS,
     ONGOING,
     FAILED
@@ -333,7 +334,7 @@ public class PythonDepsFacade {
         }
       }
       for (CondaCommands cc : failedCCs) {
-        cc.setStatus(CondaStatus.ONGOING);
+        cc.setStatus(CondaStatus.NEW);
         em.merge(cc);
       }
     }
@@ -483,7 +484,7 @@ public class PythonDepsFacade {
     for (Hosts h : getHosts()) {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-          op, CondaStatus.ONGOING, CondaInstallType.ENVIRONMENT, MachineType.ALL, proj, pythonVersion, "",
+          op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, MachineType.ALL, proj, pythonVersion, "",
               "defaults", new Date(), arg);
       em.persist(cc);
     }
@@ -670,7 +671,7 @@ public class PythonDepsFacade {
 
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-            op, CondaStatus.ONGOING, installType, machineType, proj, lib,
+            op, CondaStatus.NEW, installType, machineType, proj, lib,
             version, channelUrl, new Date(), "");
         em.persist(cc);
       }
@@ -808,6 +809,14 @@ public class PythonDepsFacade {
     }
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public List<CondaCommands> findByHost(Hosts host) {
+    TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByHost",
+        CondaCommands.class);
+    query.setParameter("host", host);
+    return query.getResultList();
+  }
+  
 //  public void updateCondaComamandStatus(int commandId, String status, String arg) {
 //    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
 //            status.toUpperCase());

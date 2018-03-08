@@ -89,14 +89,14 @@ public class SystemCommand implements Serializable {
   private String execUser;
   
   public SystemCommand(Hosts host, SystemCommandFacade.OP op) {
-    this.status = SystemCommandFacade.STATUS.ONGOING;
+    this.status = SystemCommandFacade.STATUS.NEW;
     this.priority = 0;
     this.host = host;
     this.op = op;
   }
   
   public SystemCommand() {
-    this.status = SystemCommandFacade.STATUS.ONGOING;
+    this.status = SystemCommandFacade.STATUS.NEW;
     this.priority = 0;
   }
   
