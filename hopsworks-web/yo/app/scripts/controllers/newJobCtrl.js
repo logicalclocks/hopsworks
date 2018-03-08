@@ -60,6 +60,7 @@ angular.module('hopsWorksApp')
             self.selectedTopics = [];
             self.projectName = "";
             self.tfOnSpark = false;
+            self.sparkTourParamsFilledIn = false;
             self.getAllTopics = function () {
               if (self.kafkaSelected) {
                 if (typeof self.runConfig.kafka !== "undefined" &&
@@ -447,6 +448,12 @@ angular.module('hopsWorksApp')
               if(self.getJobType() === "TFSPARK" && self.tfOnSpark === true){
                 self.runConfig.tfOnSpark = true;
               }
+              if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK"){
+                  if(typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass==="" ){
+                      growl.warning( "Please specify main class first", {ttl: 5000});
+                      return;
+                  }
+              }
               if (self.tourService.currentStep_TourFour > -1) {
                 //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
@@ -617,9 +624,10 @@ angular.module('hopsWorksApp')
             };
 
             self.chooseParameters = function () {
-              if (self.jobtype === 1 && !self.runConfig.mainClass && !self.runConfig.args) {
+              if (self.jobtype === 1 &&  self.projectIsGuide && !self.sparkTourParamsFilledIn) {
                   self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
                   self.runConfig.args = '10';
+                  self.sparkTourParamsFilledIn = true;
               }
               // For Kafka tour
               if (self.projectIsGuide) {
