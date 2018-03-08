@@ -103,6 +103,7 @@ public class HostsFacade implements Serializable {
       host.setPrivateIp(h.getPrivateIp());
       host.setPublicIp(h.getPublicIp());
       host.setCores(h.getCores());
+      host.setNumGpus(h.getNumGpus());
       host.setId(h.getId());
       em.merge(host);
     }
