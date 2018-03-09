@@ -24,6 +24,12 @@
       <version>4.4.3-SNAPSHOT</version>
     </dependency>
     
+	<dependency>
+		<groupId>com.auth0</groupId>
+		<artifactId>java-jwt</artifactId>
+		<version>3.2.0</version>
+	</dependency>
+    
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
@@ -179,6 +185,12 @@
       <artifactId>javaee-api</artifactId>
       <version>7.0</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>bijection-avro_2.10</artifactId>
+      <version>0.9.2</version>
+      <type>jar</type>
     </dependency>
   </dependencies>
   <build>

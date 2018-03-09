@@ -1,0 +1,50 @@
+
+<div class="modal-header">
+  <button class="close" ng-click="editDeviceCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Edit Device</h2>
+</div>
+<div growl reference="21" class="pull-right"></div>
+<div class="modal-body">
+  <form role="form" name="editDeviceForm"
+        ng-submit="editDeviceCtrl.editDevice()" novalidate
+        class="form-validate">
+    <div class="view-info">
+      <div class="col-md-12">
+        <label class="control-label">Device UUID</label><br>
+        <div class="col-sm-12">
+          <input type="text" class="form-control" id="deviceUuid" ng-model="editDeviceCtrl.deviceUuid" disabled>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <label class="control-label">Alias</label><br>
+        <div class="col-sm-12">
+          <input type="text" class="form-control" id="alias" ng-model="editDeviceCtrl.alias" placeholder="alias">
+        </div>
+      </div>
+      <div class="row" style="padding-left: 30px">
+        <div class="col-sm-6">
+          <label class="control-label">State</label><br>
+          <ui-select style="min-width: 100px;" name="device_state" theme="select2"
+                     style="margin-left: 10px" ng-model="editDeviceCtrl.state"  required>
+            <ui-select-match placeholder="Select state for the device">{{$select.selected}}</ui-select-match>
+            <ui-select-choices repeat="item in editDeviceCtrl.states | filter: $select.search">
+              <div ng-bind-html="item | highlight: $select.search"></div>
+            </ui-select-choices>
+          </ui-select><br>
+        </div>
+      </div>
+      <br>
+    </div>
+    <div class="row"></div>
+    <!--<hr />-->
+    <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px" id="editDeviceWnd">
+      <button class="btn btn-default" type="button" ng-click="editDeviceCtrl.close()">Cancel</button>
+      <button class="btn btn-primary" type="submit" id="editDeviceBtn">
+        <i ng-if="editDeviceCtrl.working" style="margin-top: 2px"
+           class="fa fa-spinner fa-spin pull-right"></i>
+        Save
+      </button>
+    </div>
+  </form>
+</div>

@@ -27,6 +27,8 @@
     <class>io.hops.hopsworks.common.dao.command.Command</class>
     <class>io.hops.hopsworks.common.dao.dataset.Dataset</class>
     <class>io.hops.hopsworks.common.dao.dataset.DatasetRequest</class>
+    <class>io.hops.hopsworks.common.dao.device.ProjectDevice</class>
+    <class>io.hops.hopsworks.common.dao.device.ProjectDevicesSettings</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.Inode</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeEncodingStatus</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeOps</class>

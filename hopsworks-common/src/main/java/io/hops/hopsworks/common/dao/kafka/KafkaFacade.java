@@ -1,5 +1,7 @@
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.dao.device.AckRecordDTO;
+import io.hops.hopsworks.common.dao.project.cert.CertPwDTO;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.Project;
 import java.io.File;
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -22,6 +26,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.ws.rs.core.Response;
 
+import io.hops.hopsworks.common.device.DeviceResponseBuilder;
+import io.hops.hopsworks.common.exception.DeviceServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
@@ -39,7 +45,10 @@ import org.apache.avro.SchemaParseException;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
@@ -50,6 +59,11 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import java.util.Collections;
+
+import com.twitter.bijection.Injection;
+import com.twitter.bijection.avro.GenericAvroCodecs;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericData;
 
 @Stateless
 public class KafkaFacade {
@@ -132,7 +146,7 @@ public class KafkaFacade {
 
   public List<PartitionDetailsDTO> getTopicDetails(Project project, Users user,
       String topicName)
-      throws AppException, Exception {
+          throws AppException, Exception {
     List<TopicDTO> topics = findTopicsByProject(project.getId());
     if (topics.isEmpty()) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
@@ -140,8 +154,8 @@ public class KafkaFacade {
     }
     for (TopicDTO topic : topics) {
       if (topic.getName().equalsIgnoreCase(topicName)) {
-        List<PartitionDetailsDTO> topicDetailDTO
-            = getTopicDetailsfromKafkaCluster(project, user, topicName);
+        List<PartitionDetailsDTO> topicDetailDTO = 
+            getTopicDetailsfromKafkaCluster(project, user, topicName);
         return topicDetailDTO;
       }
     }
@@ -222,7 +236,7 @@ public class KafkaFacade {
     if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Topic replication factor can be a maximum of" + brokerEndpoints.
-              size());
+          size());
     }
 
     // create the topic in kafka 
@@ -325,14 +339,14 @@ public class KafkaFacade {
       try {
         zkConnection.close();
       } catch (InterruptedException ex) {
-        Logger.getLogger(KafkaFacade.class.getName()).
-            log(Level.SEVERE, null, ex);
+        Logger.getLogger(
+            KafkaFacade.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
   }
 
   public void removeAllTopicsFromProject(Project project) throws
-      InterruptedException, AppException {
+  InterruptedException, AppException {
 
     TypedQuery<ProjectTopics> query = em.createNamedQuery(
         "ProjectTopics.findByProjectId", ProjectTopics.class);
@@ -789,6 +803,30 @@ public class KafkaFacade {
     return schemaDto;
   }
 
+  public SchemaDTO getSchemaForProjectTopic(Integer projectId, String topicName) throws AppException {
+
+    ProjectTopics topic = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, projectId));
+
+    if (topic == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), "Topic not found");
+    }
+
+    SchemaTopics schema = em.find(SchemaTopics.class,
+            new SchemaTopicsPK(
+                    topic.getSchemaTopics().getSchemaTopicsPK().getName(),
+                    topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
+
+    if (schema == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(), "topic has not schema");
+    }
+    return new SchemaDTO(
+            schema.getSchemaTopicsPK().getName(),
+            schema.getContents(),
+            schema.getSchemaTopicsPK().getVersion());
+  }
+
+
+
   public List<SchemaDTO> listSchemasForTopics() {
     //get all schemas, and return the DTO
     Map<String, List<Integer>> schemas = new HashMap<>();
@@ -886,6 +924,7 @@ public class KafkaFacade {
           certificateMaterializer, settings.getHopsRpcTls());
       String projectSpecificUser = hdfsUsersController.getHdfsUserName(project,
           user);
+
       String certPassword = baseHadoopService.getProjectSpecificUserCertPassword(projectSpecificUser);
       //Get information from first broker, all of them will have the same information once they are synced
       String brokerAddress = brokers.iterator().next().split("://")[1];
@@ -946,6 +985,137 @@ public class KafkaFacade {
         return 0;
       });
     return partitionDetails;
+  }
+
+  private String getAllKafkaBootstrapServers() throws Exception {
+    // Get all the Kafka broker endpoints (Protocol, IP, port number) from Zookeeper and
+    // returns a String with a bunch of IP:port pairs separated with the character ','
+    Iterator<String> iterator = settings.getBrokerEndpoints().iterator();
+    String servers = "";
+    while (iterator.hasNext()) {
+      servers += iterator.next().split("://")[1];
+      if (iterator.hasNext()){
+        servers += ",";
+      }
+    }
+    return servers;
+  }
+
+  private KafkaProducer<byte[], byte[]> getKafkaProducer(Project project, Users user, CertPwDTO certPwDTO){
+    try {
+
+      // TODO: Change Trust store and Keys store Location for the certificates (if need be)
+      String trustStoreFilePath = settings.getHopsworksTmpCertDir() + File.separator +
+        HopsUtils.getProjectTruststoreName(project.getName(), user.getUsername());
+
+      String keyStoreFilePath = settings.getHopsworksTmpCertDir() + File.separator +
+        HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername());
+
+      Properties props = new Properties();
+      props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getAllKafkaBootstrapServers());
+      props.put(
+        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
+      props.put(
+        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
+      //configure the ssl parameters
+      props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+      props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStoreFilePath);
+      props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,keyStoreFilePath);
+      props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, certPwDTO.getTrustPw());
+      props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, certPwDTO.getKeyPw());
+      props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, certPwDTO.getKeyPw());
+      return new KafkaProducer<>(props);
+    } catch (Exception e) {
+      e.printStackTrace();
+      LOG.warning(e.getMessage());
+      return null;
+    }
+
+
+  }
+
+
+  public List<AckRecordDTO> produce(boolean synchronous, Project project, Users user, CertPwDTO certPwDTO,
+                                    String deviceUuid, String topic, String schemaContents,
+                                    List<GenericData.Record> avroRecords) throws DeviceServiceException{
+
+    // Gets the Kafka Producer
+    KafkaProducer<byte[], byte[]> producer = null;
+    try {
+      producer = getKafkaProducer(project, user, certPwDTO);
+    }catch (Exception ex) {
+      LOG.log(Level.SEVERE, "Kafka produce - Kafka producer could not be initialized.", ex);
+      throw new DeviceServiceException(new DeviceResponseBuilder().PRODUCE_FAILED);
+    }
+
+    // Parses the schema contents
+    Injection<GenericRecord, byte[]>  recordInjection = null;
+    try {
+      Schema.Parser parser = new Schema.Parser();
+      Schema schema = parser.parse(schemaContents);
+      recordInjection = GenericAvroCodecs.toBinary(schema);
+    }catch (Exception ex) {
+      LOG.log(Level.SEVERE, "Kafka produce - Schema Contents could not be parsed.", ex);
+      if (producer != null) {
+        producer.close();
+      }
+      throw new DeviceServiceException(new DeviceResponseBuilder().PRODUCE_FAILED);
+    }
+
+    // Validates the records with the schema (Additional fields will be ignored)
+    List<ProducerRecord<byte[], byte[]>> kafkaRecords = new ArrayList<>();
+    try {
+      for (GenericData.Record avroRecord: avroRecords) {
+        byte[] record = recordInjection.apply(avroRecord);
+        kafkaRecords.add(new ProducerRecord<byte[], byte[]>(topic, deviceUuid.getBytes(), record));
+      }
+    }catch (Exception ex) {
+      LOG.log(Level.WARNING, "Kafka produce - Produced data do not conform with the schema.", ex);
+      if (producer != null) {
+        producer.close();
+      }
+      throw new DeviceServiceException(new DeviceResponseBuilder().PRODUCE_DATA_MALFORMED);
+    }
+
+    // Sends records to Kafka
+    List<Future<RecordMetadata>> metaRecords = new ArrayList<>();
+    try {
+      for(ProducerRecord<byte[], byte[]> kafkaRecord : kafkaRecords){
+        metaRecords.add(producer.send(kafkaRecord));
+      }
+    }catch (Exception ex) {
+      LOG.log(Level.SEVERE, "Kafka produce - Error occurred during the produce phase.", ex);
+      if (producer != null) {
+        producer.close();
+      }
+      throw new DeviceServiceException(new DeviceResponseBuilder().PRODUCE_FAILED);
+    }
+
+    try {
+      // If Synchronous we need to flush the buffer and gather the received acks.
+      if (synchronous){
+        // Flushes the buffer of the produced records to the Kafka cluster/broker.
+        producer.flush();
+        List<AckRecordDTO> acks = new ArrayList<>();
+        for (Future<RecordMetadata> meta: metaRecords){
+          try{
+            meta.get(10, TimeUnit.MILLISECONDS);
+            acks.add(new AckRecordDTO(true));
+          }catch(Exception e){
+            acks.add(new AckRecordDTO(false));
+          }
+        }
+        return acks;
+      }
+      // If asynchronous produce we return null since no acknowledgement is required.
+      return null;
+    }catch (Exception ex) {
+      LOG.log(Level.SEVERE, "Kafka produce - Error occurred during flushing of the produced records.", ex);
+      if (producer != null) {
+        producer.close();
+      }
+      throw new DeviceServiceException(new DeviceResponseBuilder().PRODUCE_FAILED);
+    }
   }
 
 }
