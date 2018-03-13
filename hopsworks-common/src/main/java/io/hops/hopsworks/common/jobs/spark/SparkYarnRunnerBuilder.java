@@ -196,23 +196,6 @@ public class SparkYarnRunnerBuilder {
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
       if (jobType == JobType.TFSPARK) {
-        LocalResourceDTO pythonZip = new LocalResourceDTO(
-            Settings.TFSPARK_PYTHON_NAME,
-            settings.getPySparkLibsPath() + File.separator
-            + Settings.TFSPARK_PYTHON_ZIP,
-            LocalResourceVisibility.APPLICATION.toString(),
-            LocalResourceType.ARCHIVE.toString(), null);
-
-        builder.addLocalResource(pythonZip, false);
-        extraFiles.add(pythonZip);
-        LocalResourceDTO tfsparkZip = new LocalResourceDTO(
-            Settings.TFSPARK_ZIP,
-            settings.getPySparkLibsPath() + File.separator
-            + Settings.TFSPARK_ZIP,
-            LocalResourceVisibility.APPLICATION.toString(),
-            LocalResourceType.ARCHIVE.toString(), null);
-        builder.addLocalResource(tfsparkZip, false);
-        extraFiles.add(tfsparkZip);
         if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
           jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
               new ConfigProperty(
