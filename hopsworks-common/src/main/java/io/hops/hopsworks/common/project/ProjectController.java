@@ -100,11 +100,11 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -218,6 +218,8 @@ public class ProjectController {
   private MessageController messageController;
   @EJB
   private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
+  @EJB
+  private OpensslOperations opensslOperations;
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -634,9 +636,7 @@ public class ProjectController {
   }
 
   private boolean noExistingCertificates(String projectName) {
-    boolean result = !LocalhostServices.isPresentProjectCertificates(settings.
-        getIntermediateCaDir(),
-        projectName);
+    boolean result = !opensslOperations.isPresentProjectCertificates(projectName);
 
     if (!result) {
       LOGGER.log(Level.WARNING, "certificates existing for project {0}",
@@ -1250,7 +1250,7 @@ public class ProjectController {
 
         // Remove Certificates
         try {
-          LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(), projectName);
+          opensslOperations.deleteProjectCertificate(projectName);
           userCertsFacade.removeAllCertsOfAProject(projectName);
           cleanupLogger.logSuccess("Deleted certificates");
         } catch (IOException ex) {

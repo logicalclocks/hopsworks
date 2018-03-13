@@ -213,7 +213,7 @@ public class DataSetService {
     commands.add(fullPath);
     commands.add(hdfsUser);
 
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     settings.addUnzippingState(fullPath);
     try {

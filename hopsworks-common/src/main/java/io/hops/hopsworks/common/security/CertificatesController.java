@@ -25,7 +25,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.AsyncResult;
@@ -61,6 +60,8 @@ public class CertificatesController {
   private CertsFacade certsFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private OpensslOperations opensslOperations;
   
   /**
    * Creates x509 certificates for a project specific user and project generic
@@ -82,8 +83,8 @@ public class CertificatesController {
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
       lock.lock();
-      LocalhostServices.createUserCertificates(settings.getIntermediateCaDir(),
-          project.getName(),
+      
+      opensslOperations.createUserCertificate(project.getName(),
           user.getUsername(),
           user.getAddress().getCountry(),
           user.getAddress().getCity(),
@@ -102,8 +103,7 @@ public class CertificatesController {
     if (generateProjectWideCerts) {
       try {
         lock.lock();
-        LocalhostServices.createServiceCertificates(settings.getIntermediateCaDir(),
-            project.getProjectGenericUser(),
+        opensslOperations.createServiceCertificate(project.getProjectGenericUser(),
             user.getAddress().getCountry(),
             user.getAddress().getCity(),
             user.getOrganization().getOrgName(),
@@ -129,8 +129,7 @@ public class CertificatesController {
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
       lock.lock();
-      LocalhostServices.deleteProjectCertificates(settings.getIntermediateCaDir(),
-          projectName);
+      opensslOperations.deleteProjectCertificate(projectName);
     } finally {
       lock.unlock();
     }
@@ -149,8 +148,7 @@ public class CertificatesController {
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
       lock.lock();
-      LocalhostServices.deleteUserCertificates(settings.getIntermediateCaDir(),
-          hdfsUsername);
+      opensslOperations.deleteUserCertificate(hdfsUsername);
     } finally {
       lock.unlock();
     }

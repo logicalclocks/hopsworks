@@ -649,7 +649,7 @@ public class DatasetsResource {
     commands.add(fullPath.toString());
     commands.add(hdfsUser);
     
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     settings.addUnzippingState(fullPath.toString());
     try {

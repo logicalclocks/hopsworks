@@ -20,30 +20,29 @@
 
 package io.hops.hopsworks.common.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class SystemCommandExecutor {
 
   private List<String> commandInformation;
+  private final boolean redirectErrorStream;
   private String adminPassword;
   private ThreadedStreams inputStreamHandler;
   private ThreadedStreams errorStreamHandler;
 
-  private static final Logger logger = LoggerFactory
-          .getLogger(SystemCommandExecutor.class);
+  private final static Logger LOG = Logger.getLogger(SystemCommandExecutor.class.getName());
 
-  public SystemCommandExecutor(final List<String> commandInformation) {
+  public SystemCommandExecutor(final List<String> commandInformation, final boolean redirectErrorStream) {
     if (commandInformation == null) {
       throw new NullPointerException("The commandInformation is required.");
     }
     this.commandInformation = commandInformation;
     this.adminPassword = null;
+    this.redirectErrorStream = redirectErrorStream;
   }
 
   public int executeCommand()
@@ -52,6 +51,7 @@ public class SystemCommandExecutor {
 
     try {
       ProcessBuilder pb = new ProcessBuilder(commandInformation);
+      pb.redirectErrorStream(redirectErrorStream);
       Process process = pb.start();
 
       // you need this if you're going to write something to the command's input stream

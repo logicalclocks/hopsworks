@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.security.PKIUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -81,6 +82,8 @@ public class CertSigningService {
   private UserFacade userBean;
   @EJB
   private ClusterCertFacade clusterCertFacade;
+  @EJB
+  private OpensslOperations opensslOperations;
 
   @POST
   @Path("/register")
@@ -138,11 +141,11 @@ public class CertSigningService {
 
   private CsrDTO signCSR(String hostId, String csr) throws AppException {
     try {
-      String agentCert = PKIUtils.signCertificate(settings, csr, true, true);
+      String agentCert = opensslOperations.signCertificateRequest(csr, true, true);
       File caCertFile = Paths.get(settings.getIntermediateCaDir(), "certs", "ca-chain.cert.pem").toFile();
       String caCert = Files.toString(caCertFile, Charset.defaultCharset());
       return new CsrDTO(caCert, agentCert, settings.getHadoopVersionedDir());
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
       String errorMsg = "Error while signing CSR for host " + hostId + " Reason: " + ex.getMessage();
       logger.log(Level.SEVERE, errorMsg, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMsg);
@@ -167,7 +170,7 @@ public class CertSigningService {
       String csr = json.getString("csr");
       clusterCert = checkCSR(user, csr);
       try {
-        pubAgentCert = PKIUtils.signCertificate(settings, csr, true, false);
+        pubAgentCert = opensslOperations.signCertificateRequest(csr, true, false);
         caPubCert = Files.toString(new File(settings.getCertsDir() + "/certs/ca.cert.pem"), Charsets.UTF_8);
         intermediateCaPubCert = Files.toString(
             new File(settings.getIntermediateCaDir() + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
@@ -189,9 +192,9 @@ public class CertSigningService {
     File certFile;
     try {
       certFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
-      String crl = PKIUtils.createCRL(settings, true);
+      String crl = opensslOperations.createAndReadCRL(true);
       FileUtils.writeStringToFile(certFile, crl);
-    } catch (IOException | InterruptedException ex) {
+    } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(ex.getMessage()).build();
     }
