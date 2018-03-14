@@ -56,7 +56,9 @@ public class ServiceCertificateRotationTimer {
         intervalTimeunit.name());
     
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createTimer(intervalValue, intervalValue, "Service certificate rotation");
+    if (settings.isServiceKeyRotationEnabled()) {
+      timerService.createTimer(intervalValue, intervalValue, "Service certificate rotation");
+    }
   }
   
   @Timeout

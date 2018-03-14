@@ -435,6 +435,7 @@ public class Settings implements Serializable {
       RECOVERY_PATH = setStrVar(VARIABLE_RECOVERY_PATH, RECOVERY_PATH);
       FIRST_TIME_LOGIN = setStrVar(VARIABLE_FIRST_TIME_LOGIN, FIRST_TIME_LOGIN);
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
+      serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       populateDelaCache();
       populateLDAPCache();
@@ -2449,6 +2450,14 @@ public class Settings implements Serializable {
     return LDAP_ACCOUNT_STATUS;
   }
   //----------------------------END LDAP------------------------------------
+  
+  // Service key rotation enabled
+  private static final String SERVICE_KEY_ROTATION_ENABLED_KEY = "service_key_rotation_enabled";
+  private boolean serviceKeyRotationEnabled = false;
+  public synchronized boolean isServiceKeyRotationEnabled() {
+    checkCache();
+    return serviceKeyRotationEnabled;
+  }
   
   // Service key rotation interval
   private static final String SERVICE_KEY_ROTATION_INTERVAL_KEY = "service_key_rotation_interval";
