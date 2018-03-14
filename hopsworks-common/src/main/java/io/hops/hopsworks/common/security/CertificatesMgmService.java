@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -87,6 +88,8 @@ public class CertificatesMgmService {
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private HostsFacade hostsFacade;
+  @EJB
+  private OpensslOperations opensslOperations;
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
@@ -235,6 +238,16 @@ public class CertificatesMgmService {
     for (Hosts host : allHosts) {
       SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.SERVICE_KEY_ROTATION);
       systemCommandFacade.persist(rotateCommand);
+    }
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void deleteServiceCertificate(Hosts host) throws IOException {
+    opensslOperations.revokeCertificate(host.getHostname(), ".cert.pem.TO_BE_REVOKED", true, true);
+    File certificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", host.getHostname()
+        + ".cert.pem.TO_BE_REVOKED").toFile();
+    if (certificateFile.exists()) {
+      certificateFile.delete();
     }
   }
   

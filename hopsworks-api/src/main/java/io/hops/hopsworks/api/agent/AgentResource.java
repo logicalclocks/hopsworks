@@ -66,6 +66,7 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -112,6 +113,8 @@ public class AgentResource {
   private EmailBean emailBean;
   @EJB
   private SystemCommandFacade systemCommandFacade;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -360,6 +363,11 @@ public class AgentResource {
   
   private void processServiceKeyRotationCommand(SystemCommand command, SystemCommandFacade.STATUS status) {
     if (status.equals(SystemCommandFacade.STATUS.FINISHED)) {
+      try {
+        certificatesMgmService.deleteServiceCertificate(command.getHost());
+      } catch (IOException ex) {
+        logger.log(Level.WARNING, "Could not revoke certificate for host: " + command.getHost().getHostname(), ex);
+      }
       systemCommandFacade.delete(command);
     } else {
       command.setStatus(status);

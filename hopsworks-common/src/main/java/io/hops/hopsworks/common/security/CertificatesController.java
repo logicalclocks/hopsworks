@@ -21,6 +21,7 @@ package io.hops.hopsworks.common.security;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -129,8 +130,19 @@ public class CertificatesController {
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
       lock.lock();
+      // Iterate through Project members and delete their certificates
+      for (ProjectTeam team : project.getProjectTeamCollection()) {
+        String certificateIdentifier = projectName + HdfsUsersController.USER_NAME_DELIMITER + team.getUser()
+            .getUsername();
+        // Ordering here is important
+        // *First* revoke and *then* delete the certificate
+        opensslOperations.revokeCertificate(certificateIdentifier, true, false);
+        opensslOperations.deleteUserCertificate(certificateIdentifier);
+      }
+      opensslOperations.revokeCertificate(project.getProjectGenericUser(), true, false);
       opensslOperations.deleteProjectCertificate(projectName);
     } finally {
+      opensslOperations.createCRL(true);
       lock.unlock();
     }
     
@@ -148,6 +160,9 @@ public class CertificatesController {
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
       lock.lock();
+      // Ordering here is important
+      // *First* revoke and *then* delete the certificate
+      opensslOperations.revokeCertificate(hdfsUsername, true, true);
       opensslOperations.deleteUserCertificate(hdfsUsername);
     } finally {
       lock.unlock();

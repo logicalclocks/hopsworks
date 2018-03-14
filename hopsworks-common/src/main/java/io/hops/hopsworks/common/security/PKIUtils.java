@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -192,7 +193,24 @@ public class PKIUtils {
     }
     return lines.toString();
   }
-
+  
+  public static HashMap<String, String> getKeyValuesFromSubject(String subject) {
+    if (subject == null || subject.isEmpty()) {
+      return null;
+    }
+    String[] parts = subject.split("/");
+    String[] keyVal;
+    HashMap<String, String> keyValStore = new HashMap<>();
+    for (String part : parts) {
+      keyVal = part.split("=");
+      if (keyVal.length < 2) {
+        continue;
+      }
+      keyValStore.put(keyVal[0], keyVal[1]);
+    }
+    return keyValStore;
+  }
+  
   public static String getSerialNumberFromCert(String cert) throws IOException, InterruptedException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
     FileUtils.writeStringToFile(csrFile, cert);

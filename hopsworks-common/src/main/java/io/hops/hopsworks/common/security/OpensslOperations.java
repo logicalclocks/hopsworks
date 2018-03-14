@@ -32,11 +32,14 @@ import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,6 +48,7 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 @AccessTimeout(value = 120000)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class OpensslOperations {
   private final static Logger LOG = Logger.getLogger(OpensslOperations.class.getName());
   private final static String SUDO = "/usr/bin/sudo";
@@ -133,16 +137,28 @@ public class OpensslOperations {
     FileUtils.writeStringToFile(csrFile, csr);
     
     if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, isIntermediate, isServiceCertificate);
+      return signCSR(csrFile, csr, isIntermediate, isServiceCertificate);
     }
     return null;
   }
   
   @Lock(LockType.WRITE)
-  public void revokeCertificate(String certificateIdentifier, boolean isIntermediate) throws IOException {
-    LOG.log(Level.FINE, "Revoking certificate " + certificateIdentifier + ".cert.pem");
+  public void revokeCertificate(String certificateIdentifier, boolean isIntermediate, boolean createCRL)
+      throws IOException {
+    revokeCertificate(certificateIdentifier, ".cert.pem", isIntermediate, createCRL);
+  }
+  
+  @Lock(LockType.WRITE)
+  public void revokeCertificate(String certificateIdentifier, String fileSuffix, boolean isIntermediate,
+      boolean createCRL) throws IOException {
+    LOG.log(Level.FINE, "Revoking certificate " + certificateIdentifier + fileSuffix);
     String openSslConfig = getOpensslConf(isIntermediate);
-    
+    String certsDir;
+    if (isIntermediate) {
+      certsDir = Paths.get(settings.getIntermediateCaDir(), "certs").toString();
+    } else {
+      certsDir = Paths.get(settings.getCaDir(), "certs").toString();
+    }
     List<String> commands = new ArrayList<>();
     commands.add(OPENSSL);
     commands.add("ca");
@@ -152,9 +168,12 @@ public class OpensslOperations {
     commands.add("-passin");
     commands.add("pass:" + settings.getHopsworksMasterPasswordSsl());
     commands.add("-revoke");
-    commands.add(certificateIdentifier + "cert.pem");
+    commands.add(Paths.get(certsDir, certificateIdentifier + fileSuffix).toString());
     
     executeCommand(commands, false);
+    if (createCRL) {
+      createCRL(isIntermediate);
+    }
   }
   
   @Lock(LockType.WRITE)
@@ -233,7 +252,8 @@ public class OpensslOperations {
     return false;
   }
   
-  private String signCSR(File csr, boolean isIntermediate, boolean isServiceCertificate) throws IOException {
+  private String signCSR(File csr, String csrStr, boolean isIntermediate, boolean isServiceCertificate)
+      throws IOException {
     LOG.log(Level.FINE, "Signing Certificate Signing Request...");
     String opensslConfFile = getOpensslConf(isIntermediate);
     String effectiveExtension;
@@ -244,7 +264,22 @@ public class OpensslOperations {
     }
     String hopsMasterPassword = settings.getHopsworksMasterPasswordSsl();
     String signScript = Paths.get(settings.getHopsworksDomainDir(), "bin", "global-ca-sign-csr.sh").toString();
-    File signedCertificateFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".cert.pem");
+    String commonName;
+    try {
+      String subjectStr = PKIUtils.getSubjectFromCSR(csrStr);
+      Map<String, String> subject = PKIUtils.getKeyValuesFromSubject(subjectStr);
+      commonName = subject.get("CN");
+    } catch (InterruptedException ex) {
+      LOG.log(Level.SEVERE, "Error while extracting CN out of CSR", ex);
+      throw new IOException(ex);
+    }
+    File signedCertificateFile;
+    if (isIntermediate) {
+      signedCertificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", commonName + ".cert.pem")
+          .toFile();
+    } else {
+      signedCertificateFile = Paths.get(settings.getCaDir(), "certs", commonName + ".cert.pem").toFile();
+    }
     
     long valueInDays = 3650;
     if (isServiceCertificate) {

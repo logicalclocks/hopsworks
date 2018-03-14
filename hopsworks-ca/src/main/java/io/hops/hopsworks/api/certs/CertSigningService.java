@@ -61,6 +61,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
@@ -98,7 +100,7 @@ public class CertSigningService {
     CsrDTO responseDto = null;
     if (json.has("csr")) {
       String csr = json.getString("csr");
-      responseDto = signCSR(hostId, csr);
+      responseDto = signCSR(hostId, csr, false);
     } else {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
           " provided");
@@ -131,7 +133,7 @@ public class CertSigningService {
     CsrDTO responseDto = null;
     if (json.has("csr")) {
       String csr = json.getString("csr");
-      responseDto = signCSR(hostId, csr);
+      responseDto = signCSR(hostId, csr, true);
     } else {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
           " provided");
@@ -139,8 +141,23 @@ public class CertSigningService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
   }
 
-  private CsrDTO signCSR(String hostId, String csr) throws AppException {
+  private CsrDTO signCSR(String hostId, String csr, boolean rotation) throws AppException {
     try {
+      // If there is a certificate already for that host, rename it to .to_be_revoked
+      // When AgentResource has received a successful response for the key rotation, revoke and delete it
+      if (rotation) {
+        File certFile = Paths.get(settings.getIntermediateCaDir(), "certs", hostId + ".cert.pem").toFile();
+        if (certFile.exists()) {
+          File destination = Paths.get(settings.getIntermediateCaDir(), "certs", hostId + ".cert.pem.TO_BE_REVOKED")
+              .toFile();
+          try {
+            FileUtils.moveFile(certFile, destination);
+          } catch (FileExistsException ex) {
+            FileUtils.deleteQuietly(destination);
+            FileUtils.moveFile(certFile, destination);
+          }
+        }
+      }
       String agentCert = opensslOperations.signCertificateRequest(csr, true, true);
       File caCertFile = Paths.get(settings.getIntermediateCaDir(), "certs", "ca-chain.cert.pem").toFile();
       String caCert = Files.toString(caCertFile, Charset.defaultCharset());
@@ -239,7 +256,7 @@ public class CertSigningService {
     ClusterCert clusterCert;
     //subject=/C=se/CN=bbc.sics.se/ST=stockholm/L=kista/O=hopsworks/OU=hs/emailAddress=dela1@kth.se
     String subject = PKIUtils.getSubjectFromCSR(csr);
-    HashMap<String, String> keyVal = getKeyValuesFromSubject(subject);
+    HashMap<String, String> keyVal = PKIUtils.getKeyValuesFromSubject(subject);
     String email = keyVal.get("emailAddress");
     String commonName = keyVal.get("CN");
     String organizationName = keyVal.get("O");
@@ -272,23 +289,6 @@ public class CertSigningService {
       throw new IllegalArgumentException("Cluster not registerd for user.");
     }
     return clusterCert;
-  }
-
-  private HashMap<String, String> getKeyValuesFromSubject(String subject) {
-    if (subject == null || subject.isEmpty()) {
-      return null;
-    }
-    String[] parts = subject.split("/");
-    String[] keyVal;
-    HashMap<String, String> keyValStore = new HashMap<>();
-    for (String part : parts) {
-      keyVal = part.split("=");
-      if (keyVal.length < 2) {
-        continue;
-      }
-      keyValStore.put(keyVal[0], keyVal[1]);
-    }
-    return keyValStore;
   }
 
   private String getSerialNumFromCert(String pubAgentCert) throws IOException, InterruptedException {
