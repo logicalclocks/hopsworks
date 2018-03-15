@@ -95,27 +95,30 @@
                 <p:column id="actionColumn" headerText="Action">
                   <h:panelGrid columns="3" style="width: auto">                                                    
                     <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{userAdministration.rejectUser(req)}"
+                                   action="#{userAdministration.rejectUser}"
                                    update="@form">
                       <p:confirm header="Reject user" 
                                  message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-check" 
                                    rendered="#{userAdministration.notVerified(req) == false}"
-                                   actionListener="#{userAdministration.activateUser(req)}" 
+                                   actionListener="#{userAdministration.activateUser}"
                                    update="@form">
                       <p:confirm header="Activate user" 
                                  message="Activate #{req.email} ?" 
                                  icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
                     <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
                                    rendered="#{userAdministration.notVerified(req)}"
-                                   actionListener="#{userAdministration.resendAccountVerificationEmail(req)}" 
+                                   actionListener="#{userAdministration.resendAccountVerificationEmail}"
                                    update="@form">
                       <p:confirm header="Resend Email" 
                                  message="Resend Account Validation Email to #{req.email} ?"
                                  icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink> 
 
                   </h:panelGrid>
