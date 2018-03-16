@@ -22,10 +22,16 @@ package io.hops.hopsworks.common.util;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.security.KeyManagementException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -224,8 +230,14 @@ public class ClientWrapper<T extends Object> {
   }
 
   public static <T> ClientWrapper<T> httpsInstance(Class<T> resultClass) {
-    Client client = ClientBuilder.newBuilder().hostnameVerifier(InsecureHostnameVerifier.INSTANCE).build();
-    return new ClientWrapper(client, resultClass);
+    try {
+      SSLContext sc = SSLContext.getInstance("SSL");
+      sc.init(null, trustAllCerts(), new java.security.SecureRandom());
+      Client client = ClientBuilder.newBuilder().sslContext(sc).hostnameVerifier(acceptAnyHost()).build();
+      return new ClientWrapper(client, resultClass);
+    } catch (NoSuchAlgorithmException | KeyManagementException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 
   public static <T> ClientWrapper httpInstance(Class<T> resultClass) {
@@ -233,16 +245,31 @@ public class ClientWrapper<T extends Object> {
     return new ClientWrapper(client, resultClass);
   }
 
-  private static class InsecureHostnameVerifier implements HostnameVerifier {
+  private static TrustManager[] trustAllCerts() {
+    return new TrustManager[]{
+      new X509TrustManager() {
+        @Override
+        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+          return null;
+        }
 
-    static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
+        @Override
+        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+        }
 
-    InsecureHostnameVerifier() {
-    }
+        @Override
+        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+        }
+      }
+    };
+  }
 
-    @Override
-    public boolean verify(String string, SSLSession ssls) {
-      return true;
-    }
+  private static HostnameVerifier acceptAnyHost() {
+    return new HostnameVerifier() {
+      @Override
+      public boolean verify(String string, SSLSession ssls) {
+        return true;
+      }
+    };
   }
 }

@@ -1972,6 +1972,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DELA_CLUSTER_IP = "dela_cluster_ip";
   private static final String VARIABLE_DELA_CLUSTER_HTTP_PORT = "dela_cluster_http_port";
   private static final String VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT = "dela_hopsworks_public_port";
+  private static final String VARIABLE_PUBLIC_HTTPS_PORT = "public_https_port";
   private static final String VARIABLE_DELA_SEARCH_ENDPOINT = "dela_search_endpoint";
   private static final String VARIABLE_DELA_TRANSFER_ENDPOINT = "dela_transfer_endpoint";
 
@@ -1985,8 +1986,9 @@ public class Settings implements Serializable {
   private long HOPSSITE_HEARTBEAT_INTERVAL = 10 * 60 * 1000l;//10min
 
   private String DELA_TRANSFER_IP = "localhost";
-  private String DELA_TRANSFER_HTTP_PORT = "8080";
-  private String DELA_PUBLIC_HOPSWORK_PORT = "5081";
+  private String DELA_TRANSFER_HTTP_PORT = "42000";
+  private String DELA_PUBLIC_HOPSWORK_PORT = "8080";
+  private String PUBLIC_HTTPS_PORT = "8181";
 
   //set on registration after Dela is contacted to detect public port
   private String DELA_SEARCH_ENDPOINT = "";
@@ -2014,6 +2016,7 @@ public class Settings implements Serializable {
     DELA_SEARCH_ENDPOINT = setStrVar(VARIABLE_DELA_SEARCH_ENDPOINT, DELA_SEARCH_ENDPOINT);
     DELA_TRANSFER_ENDPOINT = setStrVar(VARIABLE_DELA_TRANSFER_ENDPOINT, DELA_TRANSFER_ENDPOINT);
     DELA_PUBLIC_HOPSWORK_PORT = setStrVar(VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT, DELA_PUBLIC_HOPSWORK_PORT);
+    PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
     DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
   }
 
@@ -2065,6 +2068,11 @@ public class Settings implements Serializable {
     checkCache();
     return DELA_PUBLIC_HOPSWORK_PORT;
   }
+  
+  public synchronized String getPUBLIC_HTTPS_PORT() {
+    checkCache();
+    return PUBLIC_HTTPS_PORT;
+  }
 
   public synchronized AddressJSON getDELA_PUBLIC_ENDPOINT() {
     return DELA_PUBLIC_ENDPOINT;
@@ -2097,8 +2105,8 @@ public class Settings implements Serializable {
   public synchronized void setDELA_PUBLIC_ENDPOINT(AddressJSON endpoint) {
     DELA_PUBLIC_ENDPOINT = endpoint;
 
-    String delaSearchEndpoint = "http://" + endpoint.getIp() + ":"
-        + getDELA_HOPSWORKS_PORT() + "/hopsworks-api/api";
+    String delaSearchEndpoint = "https://" + endpoint.getIp() + ":"
+      + getPUBLIC_HTTPS_PORT() + "/hopsworks-api/api";
     String delaTransferEndpoint = endpoint.getIp() + ":" + endpoint.getPort() + "/" + endpoint.getId();
 
     if (getDELA_SEARCH_ENDPOINT() == null) {

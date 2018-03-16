@@ -50,11 +50,13 @@ import io.hops.hopsworks.dela.old_dto.HopsContentsSummaryJSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -208,18 +210,43 @@ public class DelaService {
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets readme file from a provided list of peers")
-  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON) 
+  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON)
     throws ThirdPartyException {
+    Optional<FilePreviewDTO> readme = tryReadmeLocally(publicDSId);
+    if (!readme.isPresent()) {
+      readme = tryReadmeRemotely(publicDSId, peersJSON);
+    }
+    if (!readme.isPresent()) {
+      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "readme retrieval fail",
+        ThirdPartyException.Source.REMOTE_DELA, "no local or remote version of readme found");
+    }
+    return success(readme.get());
+  }
+  
+  private Optional<FilePreviewDTO> tryReadmeLocally(String publicDSId) throws ThirdPartyException {
+    Optional<Dataset> dataset = delaDatasetCtrl.isPublicDatasetLocal(publicDSId);
+    if(dataset.isPresent()) {
+      try {
+        FilePreviewDTO readme = delaDatasetCtrl.getLocalReadmeForPublicDataset(dataset.get());
+        return Optional.of(readme);
+      } catch (IOException | IllegalAccessException ex) {
+        throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "readme access problem",
+          ThirdPartyException.Source.HDFS, "filesystem access problem");
+      }
+    }
+    return Optional.empty();
+  }
+  
+  private Optional<FilePreviewDTO> tryReadmeRemotely(String publicDSId, BootstrapDTO peersJSON) {
     for(ClusterAddressDTO peer : peersJSON.getBootstrap()) {
       try {
         FilePreviewDTO readme = remoteDelaCtrl.readme(publicDSId, peer);
-        return success(readme);
+        return Optional.of(readme);
       } catch (ThirdPartyException ex) {
         continue;
       }
     }
-    throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "communication fail",
-        ThirdPartyException.Source.REMOTE_DELA, "all peers for:" + publicDSId);
+    return Optional.empty();
   }
   //********************************************************************************************************************
   private Response success(Object content) {

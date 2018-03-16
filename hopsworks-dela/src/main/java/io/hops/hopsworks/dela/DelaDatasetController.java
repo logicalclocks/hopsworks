@@ -21,18 +21,21 @@
 package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -132,5 +135,19 @@ public class DelaDatasetController {
   
   public List<Dataset> getLocalPublicDatasets() {
     return datasetFacade.findAllDatasetsByState(Dataset.SharedState.HOPS.state, false);
+  }
+  
+  public Optional<Dataset> isPublicDatasetLocal(String publicDsId) {
+    return datasetFacade.findByPublicDsId(publicDsId);
+  }
+  
+  public FilePreviewDTO getLocalReadmeForPublicDataset(Dataset dataset) throws IOException, IllegalAccessException {
+    if(!dataset.isPublicDs()) {
+      throw new IllegalAccessException("dataset is not public");
+    }
+    Path datasetPath = datasetCtrl.getDatasetPath(dataset);
+    Path readmePath = new Path(datasetPath, Settings.README_FILE);
+    FilePreviewDTO filePreviewDTO = datasetCtrl.getReadme(readmePath.toString(), dfs.getDfsOps());
+    return filePreviewDTO;
   }
 }
