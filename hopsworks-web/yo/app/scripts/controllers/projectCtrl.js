@@ -24,9 +24,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route',  '$timeout', 'UtilsService',
+        .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'FileSaver', 'Blob', 
+          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'FileSaver', 'Blob',
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
                   StorageService, CertService, FileSaver, Blob) {
@@ -44,6 +44,27 @@ angular.module('hopsWorksApp')
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
+
+            self.pia = {
+              "id": "",
+              "personalData": "",
+              "howDataCollected": "",
+              "specifiedExplicitLegitimate": 0,
+              "consentProcess": "",
+              "consentBasis": "",
+              "dataMinimized": 0,
+              "dataUptodate": 0,
+              "usersInformed_how": "",
+              "userControlsDataCollectionRetention": "",
+              "dataEncrypted": 0,
+              "dataAnonymized": 0,
+              "dataPseudonymized": 0,
+              "dataBackedup": 0,
+              "dataSecurityMeasures": "",
+              "dataPortabilityMeasure": "",
+              "subjectAccessRights": "",
+              "risks": ""
+            };
 
             self.role = "";
 
@@ -169,9 +190,17 @@ angular.module('hopsWorksApp')
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
 
-                      }, function (error) {
-                $location.path('/');
-              }
+                        ProjectService.getPia({id: self.projectId}).$promise.then(
+                          function (success) {
+//                                  ProjectService.query().$promise.then(
+//                                          function (success) {
+                            self.pia = success.data;
+//                                          }, function (error) {
+                          }, function (error) {
+                            growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
+                            $location.path('/');
+                        });
+                      }
               );
             };
 
@@ -237,6 +266,30 @@ angular.module('hopsWorksApp')
               });
             };
 
+
+            self.savePia = function () {
+              var forms = document.getElementsByClassName('needs-validation');
+              Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                  if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }
+                  form.classList.add('was-validated');
+                }, false);
+              });
+
+
+              ProjectService.savePia({id: self.currentProject.projectId}, self.pia)
+                      .$promise.then(
+                              function (success) {
+                                growl.success("Saved Pia", {title: 'Saved', ttl: 2000});
+                              }, function (error) {
+                        self.working = false;
+                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                      }
+                      );
+            };
 
             self.saveProject = function () {
               self.working = true;
@@ -318,44 +371,45 @@ angular.module('hopsWorksApp')
 //              if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
 //                self.goToUrl('jupyter');
 //              } else {
-                self.enabling = true;
-                PythonDepsService.enabled(self.projectId).then(function (success) {
+              self.enabling = true;
+              PythonDepsService.enabled(self.projectId).then(function (success) {
+                self.goToUrl('jupyter');
+              }, function (error) {
+                if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
                   self.goToUrl('jupyter');
-                }, function (error) {
-                  if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
-                    self.goToUrl('jupyter');
-                  } else {
-                      ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable anaconda before running Jupyter!')
-                              .then(function (success) {
-                                self.goToUrl('settings');
-                              }, function (error) {
-                                self.goToUrl('jupyter');
-                              });
-                            }
-                    });
+                } else {
+                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable anaconda before running Jupyter!')
+                          .then(function (success) {
+                            self.goToUrl('settings');
+                          }, function (error) {
+                            self.goToUrl('jupyter');
+                          });
+                }
+              });
             };
 
             self.goToZeppelin = function () {
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then( function (success) {
+              PythonDepsService.enabled(self.projectId).then(function (success) {
+                self.goToUrl('zeppelin');
+              }, function (error) {
+                if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
                   self.goToUrl('zeppelin');
-                }, function (error) {
-                  if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
-                    self.goToUrl('zeppelin');
-                  } else {
-                   ModalService.confirm('sm', 'Enable anaconda', 'You need to enable anaconda to use pyspark!')
-                      .then(function (success) {
-                        self.goToUrl('settings');
-                      }, function (error) {
-                        self.goToUrl('zeppelin');
-                   });
-                 }
+                } else {
+                  ModalService.confirm('sm', 'Enable anaconda', 'You need to enable anaconda to use pyspark!')
+                          .then(function (success) {
+                            self.goToUrl('settings');
+                          }, function (error) {
+                            self.goToUrl('zeppelin');
+                          });
+                }
               });
             };
 
 
             self.goToWorklows = function () {
-              self.goToUrl('workflows');f
+              self.goToUrl('workflows');
+              f
             };
 
             self.goToTensorflow = function () {
@@ -459,7 +513,7 @@ angular.module('hopsWorksApp')
               return showService("Kafka");
             };
 
-            self.showDela = function(){
+            self.showDela = function () {
               if (!$rootScope.isDelaEnabled) {
                 return false;
               }
@@ -602,36 +656,36 @@ angular.module('hopsWorksApp')
               return Math.round(n) / multiplicator;
             };
 
-            self.tourDone = function(tour){
-              StorageService.store("hopsworks-tourdone-"+tour,true);
+            self.tourDone = function (tour) {
+              StorageService.store("hopsworks-tourdone-" + tour, true);
             };
 
-            self.isTourDone = function(tour){
-              var isDone = StorageService.get("hopsworks-tourdone-"+tour);
+            self.isTourDone = function (tour) {
+              var isDone = StorageService.get("hopsworks-tourdone-" + tour);
             };
-            
+
             self.getCerts = function () {
               ModalService.certs('sm', 'Certificates Download', 'Please type your password', self.projectId)
-                .then(function (successPwd) {
-                  CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
-                    .then(function (success) {
-                      var certs = success.data;
-                      download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
-                      download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
-                    }, function (error) {
-                      growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
-                  });
-                }, function (error) {
+                      .then(function (successPwd) {
+                        CertService.downloadProjectCert(self.currentProject.projectId, successPwd)
+                                .then(function (success) {
+                                  var certs = success.data;
+                                  download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
+                                  download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
+                                }, function (error) {
+                                  growl.error(error.data.errorMsg, {title: 'Failed', ttl: 5000});
+                                });
+                      }, function (error) {
 
-                });
+                      });
             };
-            
+
             var download = function (text, fileName) {
               var bytes = toByteArray(text);
               var data = new Blob([bytes], {type: 'application/octet-binary'});
               FileSaver.saveAs(data, fileName);
             };
-            
+
             var toByteArray = function (text) {
               var l = text.length;
               var bytes = new Uint8Array(l);
@@ -641,9 +695,9 @@ angular.module('hopsWorksApp')
               return bytes;
             };
 
-            self.isServiceEnabled = function(service) {
-                var idx = self.projectTypes.indexOf(service);
-                return idx === -1;
+            self.isServiceEnabled = function (service) {
+              var idx = self.projectTypes.indexOf(service);
+              return idx === -1;
             };
 
           }]);

@@ -25,7 +25,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
 import com.google.common.collect.Lists;
-import io.hops.hopsworks.admin.lims.ClientSessionState;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;

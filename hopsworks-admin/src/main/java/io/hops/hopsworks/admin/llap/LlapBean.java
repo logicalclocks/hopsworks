@@ -19,7 +19,7 @@
  */
 package io.hops.hopsworks.admin.llap;
 
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.admin.llap.LlapClusterFacade;
 import io.hops.hopsworks.common.admin.llap.LlapClusterLifecycle;
 import io.hops.hopsworks.common.admin.llap.LlapClusterStatus;

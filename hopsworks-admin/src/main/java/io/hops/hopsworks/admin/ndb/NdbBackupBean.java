@@ -19,7 +19,7 @@
  */
 package io.hops.hopsworks.admin.ndb;
 
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.ndb.NdbBackup;
 import io.hops.hopsworks.common.dao.ndb.NdbBackupFacade;
 import io.hops.hopsworks.common.util.Settings;

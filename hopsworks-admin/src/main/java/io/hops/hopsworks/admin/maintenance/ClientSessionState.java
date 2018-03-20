@@ -18,7 +18,7 @@
  *
  */
 
-package io.hops.hopsworks.admin.lims;
+package io.hops.hopsworks.admin.maintenance;
 
 import java.io.Serializable;
 import javax.ejb.EJB;

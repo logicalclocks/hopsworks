@@ -84,6 +84,15 @@ angular.module('hopsWorksApp')
                 url: '/api/project/:id/getInodeInfo/:inodeId',
                 'method': 'GET'                  
               },
+              "getPia":{
+               url: '/api/project/:id/pia',
+               'method': 'GET'
+                      },
+              "savePia": {
+                'method': 'PUT',
+                headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                 url: '/api/project/:id/pia'
+              },
               "importPublicDataset": {
                 url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
                 'method': 'GET'                  

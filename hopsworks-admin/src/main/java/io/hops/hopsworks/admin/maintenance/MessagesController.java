@@ -18,7 +18,7 @@
  *
  */
 
-package io.hops.hopsworks.admin.lims;
+package io.hops.hopsworks.admin.maintenance;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;

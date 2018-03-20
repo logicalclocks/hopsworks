@@ -19,7 +19,6 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
-import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
@@ -162,6 +161,7 @@ public class NodesBean implements Serializable {
     return lastModifiedFileDate(file);
   }
 
+  
   public void zipUpAnacondaLibs() {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-prepare.sh";

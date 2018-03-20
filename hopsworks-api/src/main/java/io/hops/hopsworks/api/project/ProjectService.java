@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
@@ -42,6 +41,8 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.pia.Pia;
+import io.hops.hopsworks.common.dao.project.pia.PiaFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -97,7 +98,8 @@ import org.apache.hadoop.security.AccessControlException;
 
 @Path("/project")
 @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Project Service", description = "Project Service")
+@Api(value = "Project Service",
+    description = "Project Service")
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -155,6 +157,8 @@ public class ProjectService {
   private EmailBean emailBean;
   @EJB
   private AuthController authController;
+  @EJB
+  private PiaFacade piaFacade;
   @Inject
   private DelaProjectService delaService;
   @Inject
@@ -173,7 +177,7 @@ public class ProjectService {
     String email = sc.getUserPrincipal().getName();
     List<ProjectTeam> list = projectController.findProjectByUser(email);
     GenericEntity<List<ProjectTeam>> projects
-        = new GenericEntity<List<ProjectTeam>>(list) {};
+        = new GenericEntity<List<ProjectTeam>>(list) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         projects).build();
@@ -187,7 +191,7 @@ public class ProjectService {
       @Context HttpServletRequest req) {
 
     List<Project> list = projectFacade.findAll();
-    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {};
+    GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         projects).build();
@@ -202,7 +206,6 @@ public class ProjectService {
       @Context HttpServletRequest req) throws AppException {
 
     ProjectDTO proj = projectController.getProjectByName(projectName);
-    
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         proj).build();
@@ -216,7 +219,7 @@ public class ProjectService {
     MoreInfoDTO info = null;
     if (id != null) {
       String errorMsg;
-      switch (type){
+      switch (type) {
         case "proj":
           Project proj = projectFacade.find(id);
           if (proj == null) {
@@ -232,7 +235,7 @@ public class ProjectService {
           info = datasetInfo(id);
           if (info == null) {
             errorMsg = "Dataset with id <" + id
-              + "> could not be found";
+                + "> could not be found";
             logger.log(Level.WARNING, errorMsg);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 errorMsg);
@@ -253,7 +256,7 @@ public class ProjectService {
     MoreInfoDTO info = null;
     if (id != null) {
       String errorMsg;
-      switch (type){
+      switch (type) {
         case "proj":
           Project proj = projectFacade.find(id);
           if (proj == null) {
@@ -281,7 +284,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         info).build();
   }
-  
+
   @GET
   @Path("/readme/byInodeId/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -319,7 +322,7 @@ public class ProjectService {
       return null;
     }
     List<Dataset> ds = datasetFacade.findByInode(inode);
-    if(ds !=null && !ds.isEmpty() && !ds.get(0).isSearchable()){
+    if (ds != null && !ds.isEmpty() && !ds.get(0).isSearchable()) {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
@@ -329,7 +332,7 @@ public class ProjectService {
     info.setPath(inodes.getPath(inode));
     return info;
   }
-  
+
   private MoreInfoDTO inodeInfo(Integer inodeId, Integer projectId) {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
@@ -337,7 +340,7 @@ public class ProjectService {
     }
     String group = inode.getHdfsGroup().getName();
     Project project = projectFacade.find(projectId);
-    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
+    if (project != null && !project.getName().equals(hdfsUsersBean.getProjectName(group))) {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
@@ -347,7 +350,7 @@ public class ProjectService {
     info.setPath(inodes.getPath(inode));
     return info;
   }
-  
+
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -399,7 +402,7 @@ public class ProjectService {
     }
     String group = inode.getHdfsGroup().getName();
     Project project = projectFacade.find(projectId);
-    if(project!=null && !project.getName().equals(hdfsUsersBean.getProjectName(group))){
+    if (project != null && !project.getName().equals(hdfsUsersBean.getProjectName(group))) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_PUBLIC);
     }
@@ -408,7 +411,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         dataset).build();
   }
-  
+
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -445,15 +448,14 @@ public class ProjectService {
     boolean updated = false;
 
     if (projectController.updateProjectDescription(project,
-        projectDTO.getDescription(), user)){
+        projectDTO.getDescription(), user)) {
       json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
       updated = true;
     }
 
     if (projectController.updateProjectRetention(project,
-        projectDTO.getRetentionPeriod(), user)){
-      json.setSuccessMessage(json.getSuccessMessage() + "\n" +
-          ResponseMessages.PROJECT_RETENTON_CHANGED);
+        projectDTO.getRetentionPeriod(), user)) {
+      json.setSuccessMessage(json.getSuccessMessage() + "\n" + ResponseMessages.PROJECT_RETENTON_CHANGED);
       updated = true;
     }
 
@@ -522,7 +524,7 @@ public class ProjectService {
       projectServices.add(service.name());
     }
   }
-  
+
   @POST
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -607,16 +609,15 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
         entity(project).build();
   }
-  
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response createProject(
-          ProjectDTO projectDTO,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+      ProjectDTO projectDTO,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
 
     //check the user
     String owner = sc.getUserPrincipal().getName();
@@ -624,9 +625,9 @@ public class ProjectService {
     if (user == null) {
       logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
+          ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
     }
-    
+
     List<String> failedMembers = null;
     projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
 
@@ -634,7 +635,7 @@ public class ProjectService {
     json.setStatus("201");// Created
     StringBuilder message = new StringBuilder();
     message.append(ResponseMessages.PROJECT_CREATED);
-    message.append("<br>You have ").append(user.getMaxNumProjects()- user.getNumCreatedProjects()).
+    message.append("<br>You have ").append(user.getMaxNumProjects() - user.getNumCreatedProjects()).
         append(" project(s) left that you can create");
     json.setSuccessMessage(message.toString());
 
@@ -642,18 +643,18 @@ public class ProjectService {
       json.setFieldErrors(failedMembers);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
-            entity(json).build();
+        entity(json).build();
   }
-  
+
   @POST
   @Path("{id}/delete")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeProjectAndFiles(
-          @PathParam("id") Integer id,
-          @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+      @PathParam("id") Integer id,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException,
+      AccessControlException {
 
     String userMail = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
@@ -677,7 +678,7 @@ public class ProjectService {
 
     json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-            entity(json).build();
+        entity(json).build();
 
   }
 
@@ -771,8 +772,7 @@ public class ProjectService {
     List<YarnPriceMultiplicator> multiplicatorsList = projectController.getYarnMultiplicators();
 
     GenericEntity<List<YarnPriceMultiplicator>> multiplicators = new GenericEntity<List<YarnPriceMultiplicator>>(
-        multiplicatorsList) {
-    };
+        multiplicatorsList) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(multiplicators).build();
   }
 
@@ -848,7 +848,7 @@ public class ProjectService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
   }
-  
+
   @POST
   @Path("{id}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
@@ -856,9 +856,10 @@ public class ProjectService {
   public Response downloadCerts(@PathParam("id") Integer id, @FormParam("password") String password,
       @Context HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(req.getRemoteUser());
-    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePwd(user, password, req)
-        ) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "Access to the certificat has been forbidden.");
+    if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || 
+        !authController.validatePwd(user, password, req)) {
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), 
+          "Access to the certificat has been forbidden.");
     }
     Project project = projectController.findProjectById(id);
     String keyStore = "";
@@ -903,7 +904,7 @@ public class ProjectService {
 
     return this.kafka;
   }
-  
+
   @Path("{id}/jupyter")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public JupyterService jupyter(
@@ -921,11 +922,11 @@ public class ProjectService {
   @Path("{id}/tfserving")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TfServingService tfServingService(
-          @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     this.tfServingService.setProjectId(id);
 
@@ -951,23 +952,60 @@ public class ProjectService {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     this.delaService.setProjectId(id);
 
     return this.delaService;
   }
-  
+
   @Path("{id}/delacluster")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-        ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     this.delaclusterService.setProjectId(id);
 
     return this.delaclusterService;
   }
+
+  @PUT
+  @Path("{id}/pia")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response updatePia(
+      Pia pia,
+      @PathParam("id") Integer projectId,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+    
+    piaFacade.mergeUpdate(pia, projectId);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("{id}/pia")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  public Response getPia(@Context SecurityContext sc,
+      @PathParam("id") Integer projectId,
+      @Context HttpServletRequest req) throws AppException {
+    
+    Project project = projectController.findProjectById(projectId);
+    if (project == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          ResponseMessages.PROJECT_NOT_FOUND);
+    }
+    Pia pia = piaFacade.findByProject(projectId);
+//    Pia pia = piaFacade.findByProject(project);
+    // set the project to 'null', so that it is not exposed to the client
+//    pia.setProjectId(null);
+    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
+  }
+
 }

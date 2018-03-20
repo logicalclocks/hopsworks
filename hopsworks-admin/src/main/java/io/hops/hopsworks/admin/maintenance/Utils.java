@@ -18,7 +18,7 @@
  *
  */
 
-package io.hops.hopsworks.admin.lims;
+package io.hops.hopsworks.admin.maintenance;
 
 import com.google.common.base.CharMatcher;
 import java.io.File;

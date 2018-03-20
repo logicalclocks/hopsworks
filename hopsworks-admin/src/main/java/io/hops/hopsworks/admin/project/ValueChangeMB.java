@@ -20,7 +20,7 @@
 
 package io.hops.hopsworks.admin.project;
 
-import io.hops.hopsworks.admin.lims.ClientSessionState;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import java.io.Serializable;

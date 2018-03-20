@@ -19,7 +19,7 @@
  */
 package io.hops.hopsworks.admin.project;
 
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;

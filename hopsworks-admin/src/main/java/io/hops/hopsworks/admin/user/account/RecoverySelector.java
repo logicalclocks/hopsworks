@@ -21,7 +21,7 @@
 package io.hops.hopsworks.admin.user.account;
 
 import com.google.zxing.WriterException;
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.EmailBean;

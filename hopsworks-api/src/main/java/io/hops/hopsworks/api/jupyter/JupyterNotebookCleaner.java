@@ -17,15 +17,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.util.LivyController;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -33,6 +39,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Timer;
 import java.sql.Date;
 import java.util.List;
+import java.util.logging.Level;
 
 @Singleton
 public class JupyterNotebookCleaner {
@@ -49,7 +56,13 @@ public class JupyterNotebookCleaner {
   @EJB
   private JupyterFacade jupyterFacade;
   @EJB
+  private JupyterSettingsFacade jupyterSettingsFacade;
+  @EJB
   private JupyterProcessMgr jupyterProcessFacade;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private UserFacade usersFacade;
 
   public JupyterNotebookCleaner() {
   }
@@ -75,20 +88,20 @@ public class JupyterNotebookCleaner {
         }
         // 3a. TODO - Check if there is an active Python kernel for the notebook
 
-        // If notebook hasn't been used in the last 2 hours, kill it.
+        HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
+        Users user = usersFacade.findByUsername(hdfsUser.getUsername());
+        JupyterSettings js = jupyterSettingsFacade.findByProjectUser(jp.getProjectId().getId(), user.getEmail());
+
+        // If notebook hasn't been used in the last X hours, kill it.
         if (jp.getLastAccessed().before(
-            new Date(System.currentTimeMillis() - (2 * 60 * 60 * 1000)))) {
-        }
-
-      }
-
-      List<JupyterProject> notebooks = jupyterProcessFacade.getAllNotebooks();
-      for (JupyterProject jp : notebooks) {
-        if (!jupyterProcessFacade.pingServerJupyterUser(jp.getPid())) {
-//          jupyterProcessFacade.killOrphanedWithPid(jp.getPid());
-          int hdfsId = jp.getHdfsUserId();
-//          String hdfsUser = hdfsUsersFacade.
-//          jupyterProcessFacade.stopCleanly();
+            new Date(System.currentTimeMillis() - (js.getShutdownLevel() * 60 * 60 * 1000)))) {
+          String jupyterHomePath;
+          try {
+            jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser.getName(), jp);
+            jupyterProcessFacade.killServerJupyterUser(hdfsUser.getName(), jupyterHomePath, jp.getPid(), jp.getPort());
+          } catch (AppException ex) {
+            Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.SEVERE, null, ex);
+          }
         }
       }
 

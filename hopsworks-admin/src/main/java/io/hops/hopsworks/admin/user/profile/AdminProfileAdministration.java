@@ -20,8 +20,8 @@
 
 package io.hops.hopsworks.admin.user.profile;
 
-import io.hops.hopsworks.admin.lims.ClientSessionState;
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.util.EmailBean;
 import java.io.IOException;
 import java.io.Serializable;

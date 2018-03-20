@@ -304,6 +304,24 @@
                     </ui-select>
                   </div>
                 </div>
+                
+                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
+                  <div class="text-right col-md-6">Auto Shutdown (hrs)<i class="fa fa-info-circle"
+                                                                uib-tooltip="Shutdown this notebook automatically after this number of hours." 
+                                                                style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-2 jupyter-left">
+                    <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
+                               on-select="jupyterCtrl.changeShutdownLevel()">
+                      <ui-select-match >
+                        <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
+                      </ui-select-match>
+                      <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
+                        <span ng-bind="level.name | highlight: $select.search"></span>
+                      </ui-select-choices>
+                    </ui-select>
+                  </div>
+                </div>
 
                 
                 <div class="row clusterparams">

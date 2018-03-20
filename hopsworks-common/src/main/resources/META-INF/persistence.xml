@@ -99,6 +99,7 @@
     <class>io.hops.hopsworks.common.dao.user.security.UserGroup</class>
     <class>io.hops.hopsworks.common.security.dao.RemoteMaterialReferences</class>
     <class>io.hops.hopsworks.common.dao.command.SystemCommand</class>
+    <class>io.hops.hopsworks.common.dao.project.pia.Pia</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.tfserving.TfServingStatusConverter</class>
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>

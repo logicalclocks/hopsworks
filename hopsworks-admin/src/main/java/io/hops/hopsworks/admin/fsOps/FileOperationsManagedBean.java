@@ -32,8 +32,8 @@ import javax.faces.bean.RequestScoped;
 import org.apache.hadoop.fs.Path;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import io.hops.hopsworks.admin.lims.MessagesController;
-import io.hops.hopsworks.admin.lims.Utils;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
+import io.hops.hopsworks.admin.maintenance.Utils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 

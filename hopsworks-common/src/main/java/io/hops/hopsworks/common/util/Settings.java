@@ -202,6 +202,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ANACONDA_USER = "anaconda_user";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_INSTALLED = "anaconda_enabled";
+  private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
 
   private static final String VARIABLE_HOPSUTIL_VERSION = "hopsutil_version";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
@@ -220,6 +221,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
+  private static final String VARIABLE_CERTIFICATE_USER_VALID_DAYS = "certificate_user_valid_days";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -366,6 +368,7 @@ public class Settings implements Serializable {
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
           HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
+      CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
@@ -419,6 +422,7 @@ public class Settings implements Serializable {
       ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_ENV = setStrVar(VARIABLE_ANACONDA_ENV, ANACONDA_ENV);
+      ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_INSTALLED = Boolean.parseBoolean(setStrVar(
           VARIABLE_ANACONDA_INSTALLED, ANACONDA_INSTALLED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
@@ -703,6 +707,15 @@ public class Settings implements Serializable {
     return HIVE_SUPERUSER;
   }
 
+  private String ANACONDA_DEFAULT_REPO = "defaults";
+
+  public synchronized String getCondaDefaultRepo() {
+    checkCache();
+    return ANACONDA_DEFAULT_REPO;
+  }
+  
+  
+  
   private String HIVE_WAREHOUSE = "/apps/hive/warehouse";
 
   public synchronized String getHiveWarehouse() {
@@ -1152,6 +1165,15 @@ public class Settings implements Serializable {
     return CERTIFICATE_MATERIALIZER_DELAY;
   }
 
+  private String CERTIFICATE_USER_VALID_DAYS = "12";
+
+  public synchronized String getCertificateUserValidDays() {
+    checkCache();
+    return CERTIFICATE_USER_VALID_DAYS;
+  }
+  
+  
+  
   // Spark
   private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
 

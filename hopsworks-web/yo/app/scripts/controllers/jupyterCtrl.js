@@ -61,6 +61,17 @@ angular.module('hopsWorksApp')
             ];
             self.logLevelSelected;
 
+            self.shutdown_levels = [
+              {id: 1, name: '1'},
+              {id: 2, name: '6'},
+              {id: 3, name: '12'},
+              {id: 4, name: '24'},
+              {id: 4, name: '72'},
+              {id: 5, name: '168'},
+              {id: 5, name: '1000'}
+            ];
+            self.shutdownLevelSelected;
+
 
 //  (Group/World readable, not writable)
 //  (Group readable and writable)
@@ -84,6 +95,10 @@ angular.module('hopsWorksApp')
 
             self.changeLogLevel = function () {
               self.val.logLevel = self.logLevelSelected.name;
+            };
+            
+            self.changeShutdownLevel = function () {
+              self.val.shutdownLevel = self.shutdownLevelSelected.name;
             };
 
             self.changeUmask = function () {
@@ -337,6 +352,25 @@ angular.module('hopsWorksApp')
                         } else {
                           self.logLevelSelected = self.log_levels[2];
                         }
+                        
+                        if (self.val.shutdownLevel === "1") {
+                          self.shutdownLevelSelected = self.shutdown_levels[0];
+                        } else if (self.val.shutdownLevel === "6") {
+                          self.shutdownLevelSelected = self.shutdown_levels[1];
+                        } else if (self.val.shutdownLevel === "12") {
+                          self.shutdownLevelSelected = self.shutdown_levels[2];
+                        } else if (self.val.shutdownLevel === "24") {
+                          self.shutdownLevelSelected = self.shutdown_levels[3];
+                        } else if (self.val.shutdownLevel === "72") {
+                          self.shutdownLevelSelected = self.shutdown_levels[4];
+                        } else if (self.val.shutdownLevel === "168") {
+                          self.shutdownLevelSelected = self.shutdown_levels[5];
+                        } else if (self.val.shutdownLevel === "1000") {
+                          self.shutdownLevelSelected = self.shutdown_levels[6];
+                        } else {
+                          self.shutdownLevelSelected = self.shutdown_levels[0];
+                        }
+                        
                         if (self.val.umask === "022") {
                           self.umask = self.umasks[0];
                         } else if (self.val.umask === "007") {
@@ -435,11 +469,10 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.toggleValue = true;
                         self.config = success.data;
-
+                        growl.info("Starting.....notebook will close automatically in " + self.val.shutdownLevel + " hours.", {title: 'Info', ttl: 3000});
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
-
                       }, function (error) {
                 if (error.data !== undefined && error.status === 404) {
                   growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");

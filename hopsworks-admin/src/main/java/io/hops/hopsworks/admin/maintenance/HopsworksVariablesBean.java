@@ -19,7 +19,6 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
-import io.hops.hopsworks.admin.lims.MessagesController;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.util.Settings;
 import org.primefaces.context.RequestContext;

@@ -20,8 +20,8 @@
 
 package io.hops.hopsworks.admin.user.profile;
 
-import io.hops.hopsworks.admin.lims.ClientSessionState;
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.ClientSessionState;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.io.Serializable;
 import java.util.List;

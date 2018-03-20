@@ -17,7 +17,7 @@
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   ~
-  -->
+-->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -34,6 +34,17 @@
       #{settingsController.name} - Hosts
     </ui:define>
     <ui:define name="content">
+
+
+
+      <!-- Progress Dialog -->
+      <p:ajaxStatus onstart="PF('dlgAction').show()" onsuccess="PF('dlgAction').hide()" />
+
+      <p:dialog widgetVar="dlgAction" header="Ongoing Operation" modal="true" draggable="false" closable="false" resizable="false" showHeader="false">
+        <p:graphicImage library="images"  name="ajaxloadingbar.gif" />
+      </p:dialog>           
+
+      <!-- Progress Dialog - End -->
 
       <!--Navigation Bar - Begin -->
       <h:form styleClass="styleNav">
@@ -88,10 +99,16 @@
                 <p:column>#{host.load15}</p:column>
               </p:dataTable>
             </p:column>
+            <p:column headerText="Restart Kagent">
+              <p:commandButton value="Restart Kagent"
+                               style="float:center" 
+                               actionListener="#{servicesController.restartKagent(host.hostname)}" ajax ="true" update="@all">
+              </p:commandButton>              
+            </p:column>  
           </p:dataTable>  
         </h:form> 
-        
-       
+
+
       </p:panel>
 
     </ui:define>

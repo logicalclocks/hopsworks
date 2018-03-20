@@ -303,6 +303,10 @@ public class JupyterProcessMgr {
   /**
    * This method both stops any jupyter server for a proj_user
    *
+   * @param hdfsUsername
+   * @param jupyterHomePath
+   * @param pid
+   * @param port
    * @throws AppException
    */
 //  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -378,7 +382,7 @@ public class JupyterProcessMgr {
     try {
       jupyterFacade.removeNotebookServer(hdfsUsername);
     } catch (Exception e) {
-      logger.warning("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
+      logger.severe("Problem when removing jupyter notebook entry from jupyter_project table: " + jupyterHomePath);
     }
 
     // 2. Then kill the jupyter notebook server. If this step isn't 
