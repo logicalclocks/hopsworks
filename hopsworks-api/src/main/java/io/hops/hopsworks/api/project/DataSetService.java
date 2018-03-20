@@ -176,38 +176,24 @@ public class DataSetService {
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
 
+
     Response.Status resp = Response.Status.OK;
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
-
-
-    // HDFS_USERNAME is the next param to the bash script
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
 
     String localDir = DigestUtils.sha256Hex(fullPath);
     String stagingDir = settings.getStagingDir() + File.separator + localDir;
 
     File unzipDir = new File(stagingDir);
     unzipDir.mkdirs();
+    settings.addUnzippingState(fullPath);
 
-//    Set<PosixFilePermission> perms = new HashSet<>();
-//    //add owners permission
-//    perms.add(PosixFilePermission.OWNER_READ);
-//    perms.add(PosixFilePermission.OWNER_WRITE);
-//    perms.add(PosixFilePermission.OWNER_EXECUTE);
-//    //add group permissions
-//    perms.add(PosixFilePermission.GROUP_READ);
-//    perms.add(PosixFilePermission.GROUP_WRITE);
-//    perms.add(PosixFilePermission.GROUP_EXECUTE);
-//    //add others permissions
-//    perms.add(PosixFilePermission.OTHERS_READ);
-//    perms.add(PosixFilePermission.OTHERS_WRITE);
-//    perms.add(PosixFilePermission.OTHERS_EXECUTE);
-//    Files.setPosixFilePermissions(Paths.get(unzipDir), perms);
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
     List<String> commands = new ArrayList<>();
-//    commands.add("/bin/bash");
-//    commands.add("-c");
+
     commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
     commands.add(stagingDir);
     commands.add(fullPath);
@@ -215,7 +201,6 @@ public class DataSetService {
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
-    settings.addUnzippingState(fullPath);
     try {
       int result = commandExecutor.executeCommand();
       stdout = commandExecutor.getStandardOutputFromCommand();
@@ -232,14 +217,77 @@ public class DataSetService {
                 "Could not unzip the file at path: " + fullPath);
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      logger.log(Level.FINE, null, e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "Interrupted exception. Could not unzip the file at path: " + fullPath);
     } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "IOException. Could not unzip the file at path: " + fullPath);
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(resp).build();
+  }
+
+  @GET
+  @Path("zip/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response zip(@PathParam("path") String path,
+                        @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+
+    Response.Status resp = Response.Status.OK;
+    DsPath dsPath = pathValidator.validatePath(this.project, path);
+    String fullPath = dsPath.getFullPath().toString();
+
+    String localDir = DigestUtils.sha256Hex(fullPath);
+    String stagingDir = settings.getStagingDir() + File.separator + localDir;
+
+    File zipDir = new File(stagingDir);
+    zipDir.mkdirs();
+    settings.addZippingState(fullPath);
+
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
+    List<String> commands = new ArrayList<>();
+
+    commands.add(settings.getHopsworksDomainDir() + "/bin/zip-background.sh");
+    commands.add(stagingDir);
+    commands.add(fullPath);
+    commands.add(hdfsUser);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result == 2) {
+        throw new AppException(Response.Status.EXPECTATION_FAILED.
+                getStatusCode(),
+                "Not enough free space on the local scratch directory to download and zip this file."
+                        + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
+      }
+      if (result != 0) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Could not zip the file at path: " + fullPath);
+      }
+    } catch (InterruptedException e) {
+      logger.log(Level.FINE, null, e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Interrupted exception. Could not zip the file at path: " + fullPath);
+    } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "IOException. Could not zip the file at path: " + fullPath);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(resp).build();
@@ -304,7 +352,7 @@ public class DataSetService {
         //Get project of project__user the inode is owned by
         inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
       }
-      inodeView.setUnzippingState(settings.getUnzippingState(
+      inodeView.setZipState(settings.getZipState(
               fullPath + "/" + i.getInodePK().getName()));
       Users user = userFacade.findByUsername(inodeView.getOwner());
       if (user != null) {
@@ -334,7 +382,7 @@ public class DataSetService {
 
     InodeView inodeView = new InodeView(inode, fullPath+ "/" + inode.getInodePK().
             getName());
-    inodeView.setUnzippingState(settings.getUnzippingState(
+    inodeView.setZipState(settings.getZipState(
             fullPath+ "/" + inode.getInodePK().getName()));
     Users user = userFacade.findByUsername(inodeView.getOwner());
     if (user != null) {

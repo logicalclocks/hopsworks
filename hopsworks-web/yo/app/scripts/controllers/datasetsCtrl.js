@@ -462,9 +462,26 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.zip = function (filename) {
+              var pathArray = self.pathArray.slice(0);
+//              pathArray.push(self.selected);
+              pathArray.push(filename);
+              var filePath = getPath(pathArray);
+
+              growl.info("Started zipping...",
+                      {title: 'Zipping Started', ttl: 2000, referenceId: 4});
+              dataSetService.zip(filePath).then(
+                      function (success) {
+                        growl.success("Refresh your browser when finished",
+                                {title: 'Zipping in Background', ttl: 5000, referenceId: 4});
+                      }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error zipping file', ttl: 5000, referenceId: 4});
+              });
+            };
+
             self.isZippedfile = function () {
 
-// https://stackoverflow.com/questions/680929/how-to-extract-extension-from-filename-string-in-javascript
+              // https://stackoverflow.com/questions/680929/how-to-extract-extension-from-filename-string-in-javascript
               var re = /(?:\.([^.]+))?$/;
               var ext = re.exec(self.selected)[1];
               switch (ext) {
@@ -485,6 +502,14 @@ angular.module('hopsWorksApp')
               }
 
               return false;
+            };
+
+            self.isDirectory = function () {
+                if (!(self.selected == null)) {
+                    return (self.selected).dir;
+                } else {
+                    return false;
+                }
             };
 
             self.convertIPythonNotebook = function (filename) {

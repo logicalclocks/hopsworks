@@ -36,6 +36,14 @@ angular.module('hopsWorksApp')
                unzip: function (fileName) {
                   return $http.get('/api/project/' + id + '/dataset/unzip/' + fileName);
                 },
+                /**
+                 *
+                 * @param {type} fileName
+                 * @returns json
+                 */
+               zip: function (fileName) {
+                  return $http.get('/api/project/' + id + '/dataset/zip/' + fileName);
+                },
                  
                 /**
                  * Get the listing of all datasets under the current project.

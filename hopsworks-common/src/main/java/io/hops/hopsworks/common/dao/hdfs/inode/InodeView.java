@@ -55,8 +55,8 @@ public final class InodeView {
   private int publicDs = 0;
   private int sharedWith = 0;
   private boolean searchable = false;
-  // FSM states: STAGING, UNZIPPING, UPLOADING, CHOWNING, SUCCESS, FAILED
-  private String unzippingState = "NONE";
+  // FSM states: STAGING, ZIPPING, UNZIPPING, UPLOADING, CHOWNING, SUCCESS, FAILED
+  private String zipState = "NONE";
   private String publicId;
 
   public InodeView() {
@@ -334,12 +334,12 @@ public final class InodeView {
     this.searchable = searchable;
   }
 
-  public String getUnzippingState() {
-    return unzippingState;
+  public String getZipState() {
+    return zipState;
   }
 
-  public void setUnzippingState(String unzippingState) {
-    this.unzippingState = unzippingState;
+  public void setZipState(String zipState) {
+    this.zipState = zipState;
   }
     
   public String getPublicId() {

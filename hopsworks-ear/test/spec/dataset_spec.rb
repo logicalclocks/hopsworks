@@ -389,4 +389,49 @@ describe 'dataset' do
       end
     end
   end
+
+  describe "#zip_unzip" do
+    context 'with authentication and sufficient privileges' do
+      before :all do
+        with_valid_project
+        with_valid_dataset
+      end
+
+      it 'create directory to zip' do
+        ds1name = @dataset[:inode_name]
+
+        ds2name = ds1name + "/testDir"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds2name, description: "test dataset", searchable: false, generateReadme: false}
+        expect_status(200)
+
+        ds3name = ds2name + "/subDir"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds3name, description: "test dataset", searchable: false, generateReadme: false}
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds1name}"
+        ds = json_body.detect { |d| d[:name] == "testDir" }
+        expect(ds).to be_present
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds2name}"
+        ds = json_body.detect { |d| d[:name] == "subDir" }
+        expect(ds).to be_present
+      end
+
+      it 'zip directory' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/zip/#{@dataset[:inode_name]}/testDir"
+        expect_status(200)
+
+        wait_for do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{@dataset[:inode_name]}"
+          ds = json_body.detect { |d| d[:name] == "testDir.zip" }
+          !ds.nil?
+        end
+      end
+
+      it 'unzip directory' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/unzip/#{@dataset[:inode_name]}/testDir.zip"
+        expect_status(200)
+      end
+    end
+  end
 end

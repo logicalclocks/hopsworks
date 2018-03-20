@@ -23,6 +23,19 @@ module DatasetHelper
       @dataset = create_dataset
     end
   end
+
+  def wait_for
+    timeout = 600
+    start = Time.now
+    x = yield
+    until x
+      if Time.now - start > timeout
+        raise "Timed out waiting for Dataset action to finish. Timeout #{timeout} sec"
+      end
+      sleep(1)
+      x = yield
+    end
+  end
   
   def create_dataset
     with_valid_project

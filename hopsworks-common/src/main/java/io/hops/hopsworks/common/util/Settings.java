@@ -95,7 +95,7 @@ public class Settings implements Serializable {
     TIME_SUFFIXES.put("d", TimeUnit.DAYS);
   }
   private static final Pattern TIME_CONF_PATTERN = Pattern.compile("([0-9]+)([a-z]+)?");
-  
+
   @PostConstruct
   private void init() {
     try {
@@ -1905,32 +1905,57 @@ public class Settings implements Serializable {
 
   // For performance reasons, we have an in-memory cache of files being unzipped
   // Lazily remove them from the cache, when we check the FS and they aren't there.
+  private Set<String> zippingFiles = new HashSet<>();
+
+  public synchronized void addZippingState(String hdfsPath) {
+    zippingFiles.add(hdfsPath);
+  }
   private Set<String> unzippingFiles = new HashSet<>();
 
   public synchronized void addUnzippingState(String hdfsPath) {
     unzippingFiles.add(hdfsPath);
   }
 
-  public synchronized String getUnzippingState(String hdfsPath) {
+  public synchronized String getZipState(String hdfsPath) {
 
-    if (!unzippingFiles.contains(hdfsPath)) {
+    boolean zipOperation = false;
+    boolean unzipOperation = false;
+
+    if (zippingFiles.contains(hdfsPath)) {
+      zipOperation = true;
+    } else if(unzippingFiles.contains(hdfsPath)) {
+      unzipOperation = true;
+    } else {
       return "NONE";
     }
+
     String hashedPath = DigestUtils.sha256Hex(hdfsPath);
-    String fsmPath = getStagingDir() + "/fsm-" + hashedPath + ".txt";
+    String fsmPath = getStagingDir() + File.separator + hashedPath + "/fsm.txt";
     String state = "NOT_FOUND";
     try {
       state = new String(java.nio.file.Files.readAllBytes(Paths.get(fsmPath)));
       state = state.trim();
     } catch (IOException ex) {
-      state = "NONE";
-      // lazily remove the file, probably because it has finished unzipping
-      unzippingFiles.remove(hdfsPath);
+
+      String stagingDir = getStagingDir() + File.separator + hashedPath;
+      if(!java.nio.file.Files.exists(Paths.get(stagingDir))) {
+        state = "NONE";
+        // lazily remove the file, probably because it has finished zipping/unzipping
+        if(zipOperation) {
+          zippingFiles.remove(hdfsPath);
+        } else if(unzipOperation) {
+          unzippingFiles.remove(hdfsPath);
+        }
+      }
     }
     // If a terminal state has been reached, removed the entry and the file.
     if (state.isEmpty() || state.compareTo("FAILED") == 0 || state.compareTo("SUCCESS") == 0) {
       try {
-        unzippingFiles.remove(hdfsPath);
+        if(zipOperation) {
+          zippingFiles.remove(hdfsPath);
+        } else if(unzipOperation) {
+          unzippingFiles.remove(hdfsPath);
+        }
         java.nio.file.Files.deleteIfExists(Paths.get(fsmPath));
       } catch (IOException ex) {
         Logger.getLogger(Settings.class.getName()).log(Level.SEVERE, null, ex);

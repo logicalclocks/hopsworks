@@ -391,13 +391,16 @@ md-backdrop.md-sidenav-backdrop {
 }
 
 .table-hover > tbody > tr.staging {
-  background-color:#FFE6E6;
+  background-color:#F2FFF2;
+}
+.table-hover > tbody > tr.zipping {
+  background-color:#EFFAFF;
 }
 .table-hover > tbody > tr.unzipping {
   background-color:#EFFAFF;
 }
 .table-hover > tbody > tr.uploading {
-  background-color:#F2F8FF;
+  background-color:#FFF1FF;
 }
 .table-hover > tbody > tr.failed {
   background-color:#FFE6E6;
