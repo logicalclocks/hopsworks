@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.security.PKIUtils;
+import io.hops.hopsworks.common.security.ServiceCertificateRotationTimer;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 import java.io.File;
@@ -86,6 +87,8 @@ public class CertSigningService {
   private ClusterCertFacade clusterCertFacade;
   @EJB
   private OpensslOperations opensslOperations;
+  @EJB
+  private ServiceCertificateRotationTimer serviceCertificateRotationTimer;
 
   @POST
   @Path("/register")
@@ -100,7 +103,7 @@ public class CertSigningService {
     CsrDTO responseDto = null;
     if (json.has("csr")) {
       String csr = json.getString("csr");
-      responseDto = signCSR(hostId, csr, false);
+      responseDto = signCSR(hostId, null, csr, false);
     } else {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
           " provided");
@@ -133,7 +136,11 @@ public class CertSigningService {
     CsrDTO responseDto = null;
     if (json.has("csr")) {
       String csr = json.getString("csr");
-      responseDto = signCSR(hostId, csr, true);
+      String commandId = "-1";
+      if (json.has("id")) {
+        commandId = json.getString("id");
+      }
+      responseDto = signCSR(hostId, commandId, csr, true);
     } else {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR" +
           " provided");
@@ -141,15 +148,15 @@ public class CertSigningService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
   }
 
-  private CsrDTO signCSR(String hostId, String csr, boolean rotation) throws AppException {
+  private CsrDTO signCSR(String hostId, String commandId, String csr, boolean rotation) throws AppException {
     try {
-      // If there is a certificate already for that host, rename it to .to_be_revoked
+      // If there is a certificate already for that host, rename it to .TO_BE_REVOKED.COMMAND_ID
       // When AgentResource has received a successful response for the key rotation, revoke and delete it
       if (rotation) {
         File certFile = Paths.get(settings.getIntermediateCaDir(), "certs", hostId + ".cert.pem").toFile();
         if (certFile.exists()) {
-          File destination = Paths.get(settings.getIntermediateCaDir(), "certs", hostId + ".cert.pem.TO_BE_REVOKED")
-              .toFile();
+          File destination = Paths.get(settings.getIntermediateCaDir(), "certs",
+              hostId + serviceCertificateRotationTimer.getToBeRevokedSuffix(commandId)).toFile();
           try {
             FileUtils.moveFile(certFile, destination);
           } catch (FileExistsException ex) {

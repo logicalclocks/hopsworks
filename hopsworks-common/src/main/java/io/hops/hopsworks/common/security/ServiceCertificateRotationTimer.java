@@ -30,6 +30,8 @@ import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,6 +41,7 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class ServiceCertificateRotationTimer {
   private final static Logger LOG = Logger.getLogger(ServiceCertificateRotationTimer.class.getName());
+  private final static String TO_BE_REVOKED = ".cert.pem.TO_BE_REVOKED.{COMMAND_ID}";
   
   @Resource
   private TimerService timerService;
@@ -65,5 +68,10 @@ public class ServiceCertificateRotationTimer {
   public void rotate(Timer timer) {
     LOG.log(Level.FINEST, "Rotating service certificates");
     certificatesMgmService.issueServiceKeyRotationCommand();
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public String getToBeRevokedSuffix(String commandId) {
+    return TO_BE_REVOKED.replaceAll("\\{COMMAND_ID\\}", commandId);
   }
 }

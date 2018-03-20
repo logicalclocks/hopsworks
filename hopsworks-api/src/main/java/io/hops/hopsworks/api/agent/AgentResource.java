@@ -364,7 +364,7 @@ public class AgentResource {
   private void processServiceKeyRotationCommand(SystemCommand command, SystemCommandFacade.STATUS status) {
     if (status.equals(SystemCommandFacade.STATUS.FINISHED)) {
       try {
-        certificatesMgmService.deleteServiceCertificate(command.getHost());
+        certificatesMgmService.deleteServiceCertificate(command.getHost(), command.getId());
       } catch (IOException ex) {
         logger.log(Level.WARNING, "Could not revoke certificate for host: " + command.getHost().getHostname(), ex);
       }

@@ -90,6 +90,8 @@ public class CertificatesMgmService {
   private HostsFacade hostsFacade;
   @EJB
   private OpensslOperations opensslOperations;
+  @EJB
+  private ServiceCertificateRotationTimer serviceCertificateRotationTimer;
   
   private File masterPasswordFile;
   private final Map<Class, MasterPasswordChangeHandler> handlersMap = new ConcurrentHashMap<>();
@@ -242,11 +244,11 @@ public class CertificatesMgmService {
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void deleteServiceCertificate(Hosts host) throws IOException {
-    opensslOperations.revokeCertificate(host.getHostname(), ".cert.pem.TO_BE_REVOKED", true, true);
-    File certificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", host.getHostname()
-        + ".cert.pem.TO_BE_REVOKED").toFile();
+  public void deleteServiceCertificate(Hosts host, Integer commandId) throws IOException {
+    String suffix = serviceCertificateRotationTimer.getToBeRevokedSuffix(Integer.toString(commandId));
+    File certificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", host.getHostname() + suffix).toFile();
     if (certificateFile.exists()) {
+      opensslOperations.revokeCertificate(host.getHostname(), suffix, true, true);
       certificateFile.delete();
     }
   }
