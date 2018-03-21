@@ -192,10 +192,7 @@ angular.module('hopsWorksApp')
 
                         ProjectService.getPia({id: self.projectId}).$promise.then(
                           function (success) {
-//                                  ProjectService.query().$promise.then(
-//                                          function (success) {
-                            self.pia = success.data;
-//                                          }, function (error) {
+                            self.pia = success;
                           }, function (error) {
                             growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
                             $location.path('/');
