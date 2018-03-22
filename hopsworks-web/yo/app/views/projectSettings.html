@@ -222,7 +222,7 @@
                   <h2>Install Python libraries using conda in Anaconda environment </h2><span style="pull-right">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>
 
                   <div class="row">
-                    <div class="col-md-offset-1 col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
+                    <div class="col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
                       <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                            aria-valuenow="{{pythonDepsCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
                         Installing Anaconda environment on all hosts
@@ -246,7 +246,7 @@
 
 
                   <fieldset>
-                    <div class="control-group col-md-offset-1">
+                    <div class="control-group">
                       <div class="row"></div>
                       <form name="nestedForm">
                         <div class="form-group row" style="margin-top: 40px;">
@@ -272,7 +272,9 @@
 
                   <div class="col-md-offset-1" ng-show="pythonDepsCtrl.condaResultsMessageShowing">{{pythonDepsCtrl.condaResultsMsg}}</div>
 
+                </div>
 		  <div ng-show="pythonDepsCtrl.condaSearchResults.length > 0">
+                  <div class="col-md-offset-1">
                     <h2>Installation mode<i class="fa fa-info-circle" uib-tooltip="Install library in Anaconda environment on hosts with specific capability." style="margin-left: 10px"></i></h2>
                     <div class="row">
 
@@ -315,7 +317,7 @@
                         </div>
                       </div>
                     </div>
-
+                 </div>
 
 		  
                   <table ng-show="pythonDepsCtrl.enabled" st-table="rowCollection" class="table table-striped">
@@ -339,14 +341,14 @@
                             <div class="form-group">
                               <label class="col-sm-3 control-label" style="margin-top: 5px;">Version</label>
                               <div class="col-sm-8">
-                                <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
+                                <ui-select ng-model="pythonDepsCtrl.condaSelectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
                                   <ui-select-match placeholder="Select a version from the list...">{{$select.selected.version}}</ui-select-match>
                                   <ui-select-choices repeat="v in row.versions | orderBy:'v.version' : false | filter: $select.search">
                                     <div ng-bind-html="v.version | highlight: $select.search"></div>
                                     <small ng-bind-html="v.status | highlight: $select.search"></small>
                                   </ui-select-choices>
                                 </ui-select>
-                              </div>                              
+                              </div>
 
                             </div>
                           </div>
@@ -356,14 +358,13 @@
                         </td>
                         <td class="col-sm-2">
                           <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'SUCCESS'"
-                                  ng-click="pythonDepsCtrl.install(row.lib, 'CONDA', pythonDepsCtrl.machineTypeVal, pythonDepsCtrl.selectedLibs[row.lib].version); active = 4">
+                                  ng-click="pythonDepsCtrl.install(row.lib, 'CONDA', pythonDepsCtrl.machineTypeVal, pythonDepsCtrl.condaSelectedLibs[row.lib].version); active = 4">
                             <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                             Install</button>
                         </td>
                       </tr>
                   </table>
                   </div>
-                </div>
 
 
               </uib-tab>
@@ -408,7 +409,7 @@
 
 
                   <div class="row">
-                    <div class="col-md-offset-1 col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
+                    <div class="col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
                       <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
                            aria-valuenow="{{pythonDepsCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
                         Installing Anaconda environment on all hosts
@@ -426,7 +427,7 @@
                   </div>
 		  
                   <fieldset>
-                    <div class="control-group col-md-offset-1">
+                    <div class="control-group">
 
                       <div class="row"></div>
                       <form name="nestedForm">
@@ -453,6 +454,7 @@
 
                   <div class="col-md-offset-1" ng-show="pythonDepsCtrl.pipResultsMessageShowing">{{pythonDepsCtrl.pipResultsMsg}}</div>
 
+                </div>
 
 		  <div ng-show="pythonDepsCtrl.pipSearchResults.length > 0">
                     <div class="col-md-offset-1">
@@ -522,7 +524,7 @@
                               <div class="form-group">
 				<label class="col-sm-3 control-label" style="margin-top: 5px;">Version</label>
 				<div class="col-sm-8">
-                                  <ui-select ng-model="pythonDepsCtrl.selectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
+                                  <ui-select ng-model="pythonDepsCtrl.pipSelectedLibs[row.lib].version" theme="select2" class="form-control" title="Choose a version">
                                     <ui-select-match placeholder="Select a version from the list...">{{$select.selected.version}}</ui-select-match>
                                     <ui-select-choices repeat="v in row.versions | orderBy:'v.version' : false | filter: $select.search">
                                       <div ng-bind-html="v.version | highlight: $select.search"></div>
@@ -539,14 +541,14 @@
                           </td>
                           <td class="col-sm-2">
                             <button type="submit" class="btn btn-primary" ng-disabled="row.status === 'SUCCESS'"
-                                    ng-click="pythonDepsCtrl.install(row.lib, 'PIP', pythonDepsCtrl.machineTypeVal, pythonDepsCtrl.selectedLibs[row.lib].version); active = 4">
+                                    ng-click="pythonDepsCtrl.install(row.lib, 'PIP', pythonDepsCtrl.machineTypeVal, pythonDepsCtrl.pipSelectedLibs[row.lib].version); active = 4">
                               <i ng-if="pythonDepsCtrl.installing[row.lib]" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                               Install</button>
                           </td>
 			</tr>
                     </table>
                   </div>		  
-                </div>		  
+
               </uib-tab>
               <uib-tab index="3" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed"
                        ng-click="pythonDepsCtrl.getInstalled()">
@@ -567,10 +569,16 @@
                       <th st-sort="depName" class="col-sm-2">
                         <a ng-click="sortType = 'lib'">Library<span ng-show="sortType == 'lib'" class="fa fa-caret-down"></span></a>                      
                       </th>
-                      <th class="col-sm-2">Version</th>
-                      <th class="col-sm-1">Install</th>
-                      <th class="col-sm-1">Machine</th>
-                      <th class="col-sm-2">
+                      <th st-sort="depName" class="col-sm-2">
+                        <a ng-click="sortType = 'version'">Version<span ng-show="sortType == 'version'" class="fa fa-caret-down"></span></a>
+                      </th>
+                      <th st-sort="depName" class="col-sm-2">
+                        <a ng-click="sortType = 'installType'">Package Manager<span ng-show="sortType == 'installType'" class="fa fa-caret-down"></span></a>
+                      </th>
+                      <th st-sort="depName" class="col-sm-1">
+                        <a ng-click="sortType = 'machineType'">MachineType<span ng-show="sortType == 'machineType'" class="fa fa-caret-down"></span></a>
+                      </th>
+                      <th class="col-sm-1">
                         <a ng-click="sortType = 'status'">Status<span ng-show="sortType == 'status'" class="fa fa-caret-down"></span></a>                      
                       </th>
                       <th class="col-sm-2"><a ng-click="sortType = 'preinstalled'">User-Installed<span ng-show="sortType == 'preinstalled'" class="fa fa-caret-down"></span></th>
@@ -588,13 +596,13 @@
                       <td class="col-sm-2">
                         <div class="row" style="margin-left: 10px;"><b>{{row.version}}</b></div>
                       </td>
-                      <td class="col-sm-1">
+                      <td class="col-sm-2">
                         <div class="row" style="margin-left: 10px;"><b>{{row.installType}}</b></div>
                       </td>
                       <td class="col-sm-1">
                         <div class="row" style="margin-left: 10px;"><b>{{row.machineType}}</b></div>
                       </td>
-                      <td class="col-sm-2">
+                      <td class="col-sm-1">
                         <div ng-show="row.status !== 'ONGOING'" class="row" style="margin-left: 10px;"><b>{{row.status}}</b></div>
                         <div ng-show="row.status === 'ONGOING'" class="row">
                           <div class="dialog-demo-content" layout="row" layout-wrap layout-margin>

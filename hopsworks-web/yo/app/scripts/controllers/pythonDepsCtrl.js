@@ -75,7 +75,9 @@ angular.module('hopsWorksApp')
 
             //            https://repo.continuum.io/pkgs/free/linux-64/
             self.condaChannel = "defaults";
-            self.selectedLibs = {};
+
+            self.condaSelectedLibs = {};
+            self.pipSelectedLibs = {};
 
             self.machineTypeALL = true;
             self.machineTypeCPU = false;
@@ -396,13 +398,14 @@ angular.module('hopsWorksApp')
                         function (success) {
                           self.pipSearching = false;
                           self.pipSearchResults = success.data;
+                          self.pipSelectedLibs = {};
                           if (self.pipSearchResults.length === 0) {
                             self.pipResultsMsg = "No results found.";
                           } else {
                             self.pipResultsMessageShowing = false;
                           }
                           for (var i = 0; i < self.pipSearchResults.length; i++) {
-                            self.pipSelectedLib[self.pipSearchResults[i].lib] = {
+                            self.pipSelectedLibs[self.pipSearchResults[i].lib] = {
                               "version": {
                                 "version": self.pipSearchResults[i].versions[0].version,
                                 "status": self.pipSearchResults[i].versions[0].status
@@ -438,13 +441,14 @@ angular.module('hopsWorksApp')
                         function (success) {
                           self.condaSearching = false;
                           self.condaSearchResults = success.data;
+                          self.condaSelectedLibs = {};
                           if (self.condaSearchResults.length === 0) {
                             self.condaResultsMsg = "No results found.";
                           } else {
                             self.condaResultsMessageShowing = false;
                           }
                           for (var i = 0; i < self.condaSearchResults.length; i++) {
-                            self.condaSelectedLib[self.condaSearchResults[i].lib] = {
+                            self.condaSelectedLibs[self.condaSearchResults[i].lib] = {
                               "version": {
                                 "version": self.condaSearchResults[i].versions[0].version,
                                 "status": self.condaSearchResults[i].versions[0].status

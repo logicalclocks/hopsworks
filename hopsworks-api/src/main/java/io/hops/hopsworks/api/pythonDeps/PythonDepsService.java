@@ -109,6 +109,7 @@ public class PythonDepsService {
       add("pandas");
       add("tensorflow-serving-api");
       add("hopsfacets");
+      add("numpy");
     }
   };
 
@@ -120,6 +121,7 @@ public class PythonDepsService {
       add("horovod");
       add("pydoop");
       add("pyspark");
+      add("tensorboard");
     }
   };
 
@@ -433,6 +435,8 @@ public class PythonDepsService {
       installedDeps = pythonDepsFacade.listProject(project);
     }
 
+
+
     // 1. Reverse version numbers to have most recent first.
     // 2. Check installation status of each version 
     // Check which of these libraries found are already installed.
@@ -504,11 +508,12 @@ public class PythonDepsService {
         if (key.compareToIgnoreCase("Loading") == 0 || value.compareToIgnoreCase("channels:") == 0) {
           continue;
         }
+
         // First row is sometimes empty
         if (key.isEmpty()) {
           continue;
         }
-        if (key.compareToIgnoreCase("Name") == 0) {
+        if (key.contains("Name") || key.contains("#")) {
           continue;
         }
         char c = key.charAt(0);
