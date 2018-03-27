@@ -282,7 +282,7 @@ public class OpensslOperations {
     }
     
     long valueInDays = 3650;
-    if (isServiceCertificate) {
+    if (settings.isServiceKeyRotationEnabled() && isServiceCertificate) {
       String serviceKeyRotationIntervalRaw = settings.getServiceKeyRotationInterval();
       Long intervalValue = Settings.getConfTimeValue(serviceKeyRotationIntervalRaw);
       TimeUnit intervalTimeUnit = Settings.getConfTimeTimeUnit(serviceKeyRotationIntervalRaw);
