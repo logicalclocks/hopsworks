@@ -169,8 +169,8 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>mobUsers</from-outcome>
-      <to-view-id>/security/protected/admin/mobileUsers.xhtml</to-view-id>
+      <from-outcome>newUsers</from-outcome>
+      <to-view-id>/security/protected/admin/newUsers.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>

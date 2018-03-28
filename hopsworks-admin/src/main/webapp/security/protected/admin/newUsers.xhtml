@@ -22,11 +22,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-
   <h:head>
     <title><ui:insert name="title">HopsWorks</ui:insert></title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
@@ -41,77 +41,89 @@
       <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
     </ui:insert>
 
-    <p:layout styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
+    <p:layout id="UserMgmLayout" styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
 
-      <p:layoutUnit  position="center">
+      <p:growl autoUpdate="true" showDetail="true"/>
+      <p:layoutUnit id="centerLayout" position="center">
 
         <div class="container">
           <div align="left">
-            <h2>Invalidated or Spam Accounts</h2>
+            <h2>New User Administration</h2>
           </div>
 
           <div class="content">
-            <h:form id="spamReuests">
-              <p:dataTable id="spamUserReqTable" var="req" 
-                           value="#{userAdministration.spamUsers}" 
-                           widgetVar="spamReqsTable" 
+            <h:form id="reqdataForm">
+              <p:dataTable id="userReqTable" var="req"
+                           value="#{userAdministration.allRequests}" 
+                           widgetVar="reqsTable"
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
-                           selection="#{userAdministration.selectedUsers}"
-                           editable="true" 
-                           editMode="cell"
+                           selection="#{userAdministration.selectedUsers}" 
+                           editable="true" editMode="cell"
                            rows="25"
                            paginator="true"
                            paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                           rowsPerPageTemplate="15,25,35,45,55"
-                           >
+                           rowsPerPageTemplate="15,25,35,45,55">
 
-                <p:column id="snameColumn" headerText="First Name"  
+
+                <p:column id="nameColumn" headerText="First Name"  
                           filterBy="#{req.fname}">
                   <h:outputText value="#{req.fname}"  />
                 </p:column>
-                <p:column id="slnameCol" headerText="Last Name" 
+                <p:column id="lnameCol" headerText="Last Name" 
                           filterBy="#{req.lname}">
                   <h:outputText value="#{req.lname}" />
                 </p:column>
 
-                <p:column id="semailColumn" headerText="Email" 
+                <p:column id="emailColumn" headerText="Email" 
                           filterBy="#{req.email}">
                   <h:outputText value="#{req.email}" />
                 </p:column>
 
-                <p:column id="sorgColumn" headerText="Organization"  
-                          filterBy="#{req.organization.orgName}">
-                  <h:outputText value="#{req.organization.orgName}" />
+                <p:column id="roleColumn" headerText="Role">
+                  <p:selectOneMenu id="roleToChoose" 
+                                   rendered="#{userAdministration.notVerified(req) == false}"
+                                   value="#{userAdministration.role}"
+                                   editable="false">
+                    <f:selectItem itemLabel="Select Role"
+                                  itemValue="#{userAdministration.role}"/>
+                    <f:selectItems value="#{userAdministration.actGroups}"/>
+                  </p:selectOneMenu>
+                  <h:outputText value="Not yet verified." rendered="#{userAdministration.notVerified(req) == true}"/>
                 </p:column>
 
-
-                <p:column id="sdeptColumn" headerText="Department"  
-                          filterBy="#{req.organization.department}">
-                  <h:outputText value="#{req.organization.department}" />
-                </p:column>
-
-
-                <p:column id="sactionColumn" headerText="Action">
-                  <h:panelGrid columns="2" style="width: auto">                                                    
-                    <p:commandLink id="deleteUser"
-                                   styleClass="ui-button-remove fa fa-ban" 
-                                   action="#{userAdministration.deleteUser(req)}" 
-                                   update="@form">
-                      <p:confirm header="Remove user" 
-                                 message="Are you sure you want to remove this user?" 
+                <p:column id="actionColumn" headerText="Action">
+                  <h:panelGrid columns="3" style="width: auto" styleClass="actionTable">                                                    
+                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                   action="#{userAdministration.rejectUser}"
+                                   update="@form"
+                                   title="Reject request">
+                      <p:confirm header="Reject user" 
+                                 message="Are you sure you want to reject #{req.email} ?" 
                                  icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
-                    <p:commandLink id="removeFromSpam"
-                                   styleClass="ui-button-allow fa fa-check" 
-                                   action="#{userAdministration.removeFromSpam(req)}" 
-                                   update="@form">
-                      <p:confirm header="Remove user from spam" 
-                                 message="Are you sure you want to remove this user from spam list?" 
+                    <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                   rendered="#{userAdministration.notVerified(req) == false}"
+                                   actionListener="#{userAdministration.activateUser}"
+                                   update="@form"
+                                   title="Accept request">
+                      <p:confirm header="Activate user" 
+                                 message="Activate #{req.email} ?" 
                                  icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
                     </p:commandLink>
-                    <p:tooltip id="tooltip_deleteUser" for="deleteUser" value="Delete user from system."/>
-                    <p:tooltip id="tooltip_removeFromSpam" for="removeFromSpam" value="Remove user from spam list."/>
+                    <p:commandLink styleClass="ui-button-allow fa fa-envelope" 
+                                   rendered="#{userAdministration.notVerified(req)}"
+                                   actionListener="#{userAdministration.resendAccountVerificationEmail}"
+                                   update="@form"
+                                   title="Resend Email">
+                      <p:confirm header="Resend Email" 
+                                 message="Resend Account Validation Email to #{req.email} ?"
+                                 icon="ui-icon-alert"/>
+                      <f:param name="userMail" value="#{req.email}"/>
+                    </p:commandLink> 
+
                   </h:panelGrid>
                 </p:column>
               </p:dataTable>

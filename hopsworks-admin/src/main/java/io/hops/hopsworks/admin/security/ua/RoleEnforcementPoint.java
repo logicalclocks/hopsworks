@@ -122,11 +122,11 @@ public class RoleEnforcementPoint implements Serializable {
   public String openRequests() {
     this.tabIndex = 1;
     if (!userFacade.findAllMobileRequests().isEmpty()) {
-      return "mobUsers";
+      return "newUsers";
     } else if (!userFacade.findAllByStatus(UserAccountStatus.SPAM_ACCOUNT).isEmpty()) {
       return "spamUsers";
     }
-    return "mobUsers";
+    return "newUsers";
   }
 
   public String logOut() {

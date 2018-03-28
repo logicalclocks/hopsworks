@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.admin.user.profile;
 
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
@@ -76,6 +75,8 @@ public class AdminProfileAdministration implements Serializable {
 
   @EJB
   private EmailBean emailBean;
+  @EJB
+  private AccountAuditFacade auditManager;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -146,7 +147,7 @@ public class AdminProfileAdministration implements Serializable {
   public void setEditingUser(Users editingUser) {
     this.editingUser = editingUser;
   }
-  
+
   public String accountTypeStr() {
     switch (this.editingUser.getMode()) {
       case M_ACCOUNT_TYPE:
@@ -239,10 +240,15 @@ public class AdminProfileAdministration implements Serializable {
     }
 
     editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("editinguser");
-    address = editingUser.getAddress();
-
-    login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext()
-        .getSessionMap().get("editinguser_logins");
+    if (editingUser != null) {
+      address = editingUser.getAddress();
+      login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get(
+          "editinguser_logins");
+    } else {
+      String email = FacesContext.getCurrentInstance().getExternalContext().getRemoteUser();
+      editingUser = userFacade.findByEmail(email);
+      login = auditManager.getLastUserLogin(editingUser);
+    }
 
   }
 
@@ -392,7 +398,7 @@ public class AdminProfileAdministration implements Serializable {
 
   public void setMaxNumProjs(String maxNumProjs) {
     int num = Integer.parseInt(maxNumProjs);
-    if(num > -1){
+    if (num > -1) {
       usersController.updateMaxNumProjs(editingUser, num);
     }
   }

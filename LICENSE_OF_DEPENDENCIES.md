@@ -75,6 +75,7 @@ Frontend dependencies
 * github.com/karma-runner/karma-phantomjs-launcher [MIT](https://github.com/karma-runner/karma-phantomjs-launcher/blob/master/LICENSE)
 * github.com/sindresorhus/load-grunt-tasks [MIT](https://github.com/sindresorhus/load-grunt-tasks/blob/master/license)
 * github.com/sindresorhus/time-grunt [MIT](https://github.com/sindresorhus/time-grunt/blob/master/license)
+* github.com/FortAwesome/Font-Awesome [MIT, SIL OLF, and CC BY licenses](https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt)
 
 
 Backend Dependecies

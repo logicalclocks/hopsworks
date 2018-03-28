@@ -26,15 +26,14 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
       >
   <f:view contentType="text/html">
 
     <h:head>
       <title><ui:insert name="title">HopsWorks</ui:insert></title>
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
@@ -45,7 +44,7 @@
       </ui:insert>
 
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
+      <p:layout id="UserMgmLayout" styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
 
         <p:layoutUnit id="centerLayout" position="center">
 

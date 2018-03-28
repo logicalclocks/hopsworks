@@ -31,12 +31,9 @@
 
     <h:head>
         <title><ui:insert name="title">LLAP Management</ui:insert></title>
-            <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/component.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+        <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
         <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=/hopsworks/#!/login"/>
     </h:head>
 
@@ -54,7 +51,7 @@
             </h:panelGrid>
         </pe:blockUI>
 
-        <ui:insert name="titleBar" style="width=100%">
+        <ui:insert name="titleBar">
             <ui:include src="/security/protected/admin/admintitleBar.xhtml" />
         </ui:insert>
 

@@ -515,6 +515,18 @@ public class UserAdministration implements Serializable {
     MessagesController.addInfoMessage("User successfully modified for " + user1.getEmail());
     return "admin_profile";
   }
+  
+  public String showProfile() {
+    String email = FacesContext.getCurrentInstance().getExternalContext().getRemoteUser();
+    Users user1 = userFacade.findByEmail(email);
+    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user1);
+
+    Userlogins login = auditManager.getLastUserLogin(user1);
+    FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser_logins", login);
+
+    MessagesController.addInfoMessage("User successfully modified for " + user1.getEmail());
+    return "admin_profile";
+  }
 
   public List<Users> getSpamUsers() {
     return spamUsers = userFacade.findAllByStatus(UserAccountStatus.SPAM_ACCOUNT);
