@@ -172,7 +172,6 @@ ul.dropdown-messages .dropdown-header {
 }
 .ds-sidenav.open {
     width: 20%;
-    min-width: 380px;
 }
 
 .ds-sidenav-table > tbody > tr > td {

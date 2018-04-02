@@ -298,11 +298,11 @@
           </div><!--content wrapper -->
 
           <div ng-if="!mainCtrl.showSearchPage">
-            <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+            <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}" style="margin-top:10px;">
               <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 100%;">
-                <div class="file-manager" style="height: 100%;">
+                <div style="height: 100%;">
                   <md-content class="md-padding" style="padding-top: 0px; height: 100%;">
-                    <md-tabs  md-border-bottom style="min-height: 100%;">
+                    <md-tabs  md-border-bottom md-no-pagination="true" md-center-tabs="true" style="min-height: 100%;">
                       <md-tab label="Details">
                         <div ng-show="datasetsCtrl.selected === null">
                           <div class="file" style="text-align: center;">
@@ -312,7 +312,7 @@
                             Click on a DataSet's name to view its details.
                           </div>
                         </div>
-                        <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-bordred table-striped" style="margin-top: 16px;">
+                        <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-striped" style="margin-top: 16px; font-size:12px;">
                           <tr style="background-color: #fafafa; border-top: none;">
                             <td style="color: grey;">Name</td>
                             <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].name}}</td>

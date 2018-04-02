@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
             self.shared = undefined;
             self.status = undefined;
 
-            self.tgState = true;
+            self.tgState = false;
 
             self.onSuccess = function (e) {
               growl.success("Copied to clipboard", {title: '', ttl: 1000});
@@ -266,7 +266,7 @@ angular.module('hopsWorksApp')
               }
               getDirContents();
 
-              self.tgState = true;
+              self.tgState = false;
             };
 
             init();
@@ -902,6 +902,7 @@ angular.module('hopsWorksApp')
                 var newPathArray = self.pathArray.slice(0);
                 newPathArray.push(file.name);
                 getDirContents(newPathArray);
+                self.tgState = false;
               } else if (!file.underConstruction) {
                 ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
                         function (success) {
@@ -947,6 +948,7 @@ angular.module('hopsWorksApp')
               var newPathArray = self.pathArray.slice(0);
               newPathArray.splice(index, newPathArray.length - index);
               getDirContents(newPathArray);
+              self.tgState = false;
             };
 
             self.menustyle = {
@@ -973,6 +975,7 @@ angular.module('hopsWorksApp')
               if (self.isSelectedFiles() > 0) {
                 self.selected = null;
               } else {
+                self.tgState = true;
                 self.selected = file.name;
               }
               self.selectedFiles[file.name] = file;
@@ -1064,6 +1067,7 @@ angular.module('hopsWorksApp')
                 self.selected = Object.keys(self.selectedFiles)[0];
               }
               self.all_selected = false;
+              self.tgState = false;
 
             };
 
