@@ -79,15 +79,31 @@ public class PythonDepsFacade {
   @Resource(lookup = "concurrent/kagentExecutorService")
   ManagedExecutorService kagentExecutorService;
 
+  public boolean isEnvironmentReady(Project project) {
+    CondaOp operation = null;
+    CondaStatus status = null;
+    List<CondaCommands> ops = getCommandsForProject(project);
+    for(CondaCommands condaCommand: ops) {
+      operation = condaCommand.getOp();
+      if(operation.equals(CondaOp.CREATE)) {
+        status = condaCommand.getStatus();
+        if(status.equals(CondaStatus.NEW) || status.equals(CondaStatus.ONGOING)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   public enum CondaOp {
-    CLONE,
-    CREATE,
-    REMOVE,
-    LIST,
-    INSTALL,
-    UNINSTALL,
-    LIB_SYNC,
-    UPGRADE;
+  CLONE,
+  CREATE,
+  REMOVE,
+  LIST,
+  INSTALL,
+  UNINSTALL,
+  LIB_SYNC,
+  UPGRADE;
 
     public static boolean isEnvOp(CondaOp arg) {
       if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE)
@@ -425,7 +441,7 @@ public class PythonDepsFacade {
   }
 
 
-  private void removePythonForProject(Project proj) throws AppException {
+  private void removePythonForProject(Project proj) {
     Collection<PythonDep> deps = proj.getPythonDepCollection();
     proj.setPythonDepCollection(new ArrayList<PythonDep>());
     proj.setPythonVersion("");
@@ -433,7 +449,7 @@ public class PythonDepsFacade {
     projectFacade.update(proj);
   }
 
-  public void removeCommandsForProject(Project proj) throws AppException {
+  public void removeCommandsForProject(Project proj) {
     List<CondaCommands> commands = getCommandsForProject(proj);
     for (CondaCommands cc : commands) {
       // First, remove any old commands for the project in conda_commands
@@ -441,7 +457,7 @@ public class PythonDepsFacade {
     }
   }
 
-  public List<CondaCommands> getCommandsForProject(Project proj) throws AppException {
+  public List<CondaCommands> getCommandsForProject(Project proj) {
     TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByProj", CondaCommands.class);
     query.setParameter("projectId", proj);
     return query.getResultList();

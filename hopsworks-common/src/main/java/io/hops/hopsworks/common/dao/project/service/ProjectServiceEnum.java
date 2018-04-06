@@ -31,7 +31,8 @@ public enum ProjectServiceEnum {
   JUPYTER("Jupyter"),
   JOBS("Jobs"),
   HIVE("Hive"),
-  SERVING("Serving");
+  SERVING("Serving"),
+  PYTHON("Python");
 
   private final String readable;
 

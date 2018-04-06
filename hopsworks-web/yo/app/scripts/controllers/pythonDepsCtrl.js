@@ -238,6 +238,8 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            getInstallationStatus();
+
             //this might be a bit to frequent for refresh rate
             var getInstallationStatusInterval = $interval(function () {
               getInstallationStatus();
@@ -249,7 +251,6 @@ angular.module('hopsWorksApp')
             $scope.$on("$destroy", function () {
               $interval.cancel(getInstallationStatusInterval);
             });
-
 
             self.init = function () {
               PythonDepsService.enabled(self.projectId).then(

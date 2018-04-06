@@ -375,15 +375,16 @@ angular.module('hopsWorksApp')
                 if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
                   self.goToUrl('jupyter');
                 } else {
-                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable anaconda before running Jupyter!')
+                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
                           .then(function (success) {
-                            self.goToUrl('settings');
+                            self.goToUrl('python');
                           }, function (error) {
                             self.goToUrl('jupyter');
                           });
                 }
               });
             };
+
 
             self.goToZeppelin = function () {
               self.enabling = true;
@@ -393,9 +394,9 @@ angular.module('hopsWorksApp')
                 if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
                   self.goToUrl('zeppelin');
                 } else {
-                  ModalService.confirm('sm', 'Enable anaconda', 'You need to enable anaconda to use pyspark!')
+                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda to use PySpark!')
                           .then(function (success) {
-                            self.goToUrl('settings');
+                            self.goToUrl('python');
                           }, function (error) {
                             self.goToUrl('zeppelin');
                           });
@@ -406,7 +407,6 @@ angular.module('hopsWorksApp')
 
             self.goToWorklows = function () {
               self.goToUrl('workflows');
-              f
             };
 
             self.goToTensorflow = function () {
@@ -415,6 +415,10 @@ angular.module('hopsWorksApp')
 
             self.goToTfServing = function () {
               self.goToUrl('tfserving');
+            };
+
+            self.goToPython = function () {
+              self.goToUrl('python');
             };
 
             self.goToKafka = function () {

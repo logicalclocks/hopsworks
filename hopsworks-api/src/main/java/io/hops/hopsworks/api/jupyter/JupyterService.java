@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.project.PaymentType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -95,6 +96,8 @@ public class JupyterService {
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
   private JupyterFacade jupyterFacade;
+  @EJB
+  private PythonDepsFacade pythonDepsFacade;
   @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
   @EJB
@@ -268,17 +271,17 @@ public class JupyterService {
           "Could not find your username. Report a bug.");
     }
 
-    boolean enabled = project.getConda();
-    if (!enabled) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "First enable Anaconda. Click on 'Settings -> Python'");
-    }
-
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
       if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
         throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "This project is out of credits.");
       }
+    }
+
+    boolean enabled = project.getConda();
+    if (!enabled) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "First enable Anaconda. Click on 'Python' -> Pick a version'");
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);

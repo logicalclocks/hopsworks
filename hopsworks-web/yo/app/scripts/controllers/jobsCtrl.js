@@ -299,7 +299,7 @@ angular.module('hopsWorksApp')
                                             JobService.runJob(self.projectId, jobId).then(
                                                     function (success) {
                                                       self.toggle(job, index);
-                                                      //self.buttonClickedToggle(job.id, true);
+                                                      self.buttonClickedToggle(job.id, true);
                                                       StorageService.store(self.projectId + "_jobstopclicked_" + job.id, "running");
 //                                            self.stopbuttonClickedToggle(job.id, false);
                                                       self.getRunStatus();

@@ -34,14 +34,33 @@
           </div>
         </div>
 
-
         <div class="content-wrapper">                      
           <div growl reference="10" class="pull-right" ></div>
           <h3>
-            <div class="col-md-4 col-lg-4" style="margin-top:-17px;"> 
+            <div class="col-md-4 col-lg-4" style="margin-top:-17px;">
+
+              <div class="row">
+                <div class="col-md-2 col-lg-2">
+
               <img height="30" src="images/jupyter.png"/>
+                </div>
+
+
+                <div class="col-md-10 col-lg-10">
+              <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:5px;">
+                <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Anaconda environment installing...
+
+              </div>
+
+              <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled === false" style="margin-top:6px;">
+                <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
+
+              </div>
+                </div>
             </div>
-            <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-17px;" ng-if="jupyterCtrl.ui === ''">
+            </div>
+
+            <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
               <button class="btn btn-success" ng-click="jupyterCtrl.start()" type="button" id="newNotebook">
                 Start Jupyter 
               </button>
@@ -51,7 +70,7 @@
             </div>
             <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-17px;">
               <li class="pull-left" 
-                  ng-class="{'connected-space' : jupyterCtrl.connectedStatus, 'disconnected-space':!jupyterCtrl.connectedStatus}">
+                  ng-class="{'connected-space' : jupyterCtrl.connectedStatus, 'disconnected-space':!jupyterCtrl.connectedStatus}" style="margin-top:-8px;">
               <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-click="jupyterCtrl.deselect()">
               </hamburger-toggle>
               </li>
@@ -63,11 +82,14 @@
               </li>
             </ul>
           </h3>
+
+
           <div ng-init="(iscollapsed$index) = true; jupyterCtrl.tgState = true;"
                class="ds-content col-lg-12" ng-class="{'sidenav-open': jupyterCtrl.tgState}" style="margin-top: 5px;">
             <div class="row row-no-margin-left" style="margin-top: 15px;">
             </div>
           </div>
+
 
           <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''">
             <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:20px; margin-left: 0px;'>

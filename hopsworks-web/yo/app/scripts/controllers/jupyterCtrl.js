@@ -22,8 +22,8 @@
 
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-          'growl', 'ModalService', 'JupyterService', 'TensorFlowService', 'SparkService', 'StorageService', '$location', '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
-          function ($scope, $routeParams, $route, growl, ModalService, JupyterService, TensorFlowService, SparkService, StorageService,
+          'growl', 'ModalService', '$interval', 'JupyterService', 'TensorFlowService', 'SparkService', 'StorageService', '$location', '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
+          function ($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService, TensorFlowService, SparkService, StorageService,
                   $location, $timeout, $window, $sce, PythonDepsService, TourService) {
 
             var self = this;
@@ -42,10 +42,13 @@ angular.module('hopsWorksApp')
             self.sparkStatic = false;
             self.sparkDynamic = false;
             self.tensorflow = false;
+            self.condaEnabled = true;
             $scope.sessions = null;
             self.val = {};
             $scope.tgState = true;
             self.config = {};
+            self.numNotEnabledEnvs = 0;
+            self.opsStatus = {};
             self.dirs = [
               {id: 1, name: '/'},
               {id: 2, name: '/Jupyter/'}
@@ -139,6 +142,8 @@ angular.module('hopsWorksApp')
 
             };
 
+
+
             self.showLivyUI = function (appId) {
               self.job.type = "TENSORFLOW";
               self.job.appId = appId;
@@ -146,6 +151,45 @@ angular.module('hopsWorksApp')
               $location.path('project/' + self.projectId + '/jobMonitor-app/' + appId + "/true/jupyter");
 
             };
+
+            self.checkCondaEnabled = function () {
+              PythonDepsService.enabled(self.projectId).then(
+                      function (success) {
+                        self.condaEnabled = true;
+                      },
+                      function (error) {
+                        self.condaEnabled = false;
+                      });
+            };
+
+            var getCondaCommands = function () {
+            PythonDepsService.status(self.projectId).then(
+              function (success) {
+                self.opsStatus = success.data;
+                self.tempEnvs = 0;
+                for (var i = 0; i < self.opsStatus.length; i++) {
+                  if (self.opsStatus[i].op === "CREATE" && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
+                     self.tempEnvs += 1;
+                     break;
+                  }
+                }
+                self.checkCondaEnabled()
+                self.numNotEnabledEnvs = self.tempEnvs;
+
+              }, function (error) {
+
+              }
+              );
+            };
+
+            getCondaCommands();
+
+            var startPolling = function () {
+              self.poller = $interval(function () {
+              getCondaCommands();
+              }, 5000);
+            };
+            startPolling();
 
             self.sliderVisible = false;
 
@@ -421,9 +465,6 @@ angular.module('hopsWorksApp')
                 stopLoading();
               }
               );
-
-
-
             };
 
             self.stopDataOwner = function (hdfsUsername) {
@@ -458,7 +499,9 @@ angular.module('hopsWorksApp')
 
             init();
 
-
+            var navigateToPython = function () {
+                $location.path('/#!/project/' + self.projectId + '/python');
+            };
 
             self.start = function () {
               startLoading("Connecting to Jupyter...");
@@ -469,7 +512,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.toggleValue = true;
                         self.config = success.data;
-                        growl.info("Starting.....notebook will close automatically in " + self.val.shutdownLevel + " hours.", {title: 'Info', ttl: 3000});
+                        growl.info("Starting... notebook will close automatically in " + self.val.shutdownLevel + " hours.", {title: 'Info', ttl: 3000});
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
