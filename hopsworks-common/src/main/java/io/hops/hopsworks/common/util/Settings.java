@@ -173,6 +173,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TWOFACTOR_EXCLUD = "twofactor-excluded-groups";
   private static final String VARIABLE_KAFKA_DIR = "kafka_dir";
   private static final String VARIABLE_KAFKA_USER = "kafka_user";
+  private static final String VARIABLE_KAFKA_MAX_NUM_TOPICS = "kafka_max_num_topics";
   private static final String VARIABLE_ZK_DIR = "zk_dir";
   private static final String VARIABLE_ZK_USER = "zk_user";
   private static final String VARIABLE_ZK_IP = "zk_ip";
@@ -394,6 +395,7 @@ public class Settings implements Serializable {
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
       DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
+      KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
       KAFKA_DEFAULT_NUM_PARTITIONS = setDirVar(VARIABLE_KAFKA_NUM_PARTITIONS,
@@ -1868,6 +1870,15 @@ public class Settings implements Serializable {
     }
   }
 
+  private int KAFKA_MAX_NUM_TOPICS = 10;
+
+  public synchronized int getKafkaMaxNumTopics() {
+    checkCache();
+    return KAFKA_MAX_NUM_TOPICS;
+  }
+  
+  
+  
   private int MAX_STATUS_POLL_RETRY = 5;
 
   public synchronized int getMaxStatusPollRetry() {

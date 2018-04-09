@@ -109,6 +109,7 @@ public class PythonDepsService {
       add("pandas");
       add("tensorflow-serving-api");
       add("hopsfacets");
+      add("mml");
       add("numpy");
     }
   };

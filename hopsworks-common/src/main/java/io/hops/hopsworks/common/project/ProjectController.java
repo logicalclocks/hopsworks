@@ -517,6 +517,7 @@ public class ProjectController {
     //Create a new project object
     Date now = new Date();
     Project project = new Project(projectName, user, now, PaymentType.PREPAID);
+    project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
 
     // set retention period to next 10 years by default
@@ -1167,6 +1168,7 @@ public class ProjectController {
         Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
         Users user = userFacade.findByEmail(userEmail);
         Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
+        toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
         try {
           if (!dfso.exists(tmpInodePath.toString())) {
@@ -1911,6 +1913,7 @@ public class ProjectController {
   public QuotasDTO getQuotasInternal(Project project) {
     Long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L, dbhdfsQuota = -1L,
         dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L;
+    Integer kafkaQuota = project.getKafkaMaxNumTopics();
     Float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
 
     // Yarn Quota
@@ -1954,7 +1957,7 @@ public class ProjectController {
     }
 
     return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
-        dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount);
+        dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, kafkaQuota);
   }
 
   /**
@@ -2733,7 +2736,11 @@ public class ProjectController {
         yarnProjectsQuotaFacade.changeYarnQuota(currentProject.getName(), quotas.getYarnQuotaInSecs());
         quotaChanged = true;
       }
-
+      if (quotas.getKafkaMaxNumTopics() != null) {
+        projectFacade.changeKafkaQuota(currentProject, quotas.getKafkaMaxNumTopics());
+        quotaChanged = true;
+      }
+ 
       // Register time of last quota change in the project entry
       if (quotaChanged) {
         projectFacade.setTimestampQuotaUpdate(currentProject, new Date());

@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.common.dao.kafka;
 
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -228,6 +227,17 @@ public class KafkaFacade {
     if (!res.isEmpty()) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
           "Kafka topic already exists in database. Pick a different topic name.");
+    }
+
+    TypedQuery<ProjectTopics> projQuery = em.createNamedQuery(
+        "ProjectTopics.findByProjectId", ProjectTopics.class);
+    projQuery.setParameter("projectId", project.getId());
+    List<ProjectTopics> topicsInProject = projQuery.getResultList();
+
+    if (topicsInProject != null && (topicsInProject.size() >= project.getKafkaMaxNumTopics())) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+          "Topic limit reached. Contact your administrator to increase the number "
+          + "of topics that can be created for this project.");
     }
 
     //check if the replication factor is not greater than the 
@@ -939,7 +949,7 @@ public class KafkaFacade {
             inSyncReplicas.get(id).add(node.host());
           }
 
-          partitionDetails.add(new PartitionDetailsDTO(id, leaders.get(id),replicas.get(id), replicas.get(id)));
+          partitionDetails.add(new PartitionDetailsDTO(id, leaders.get(id), replicas.get(id), replicas.get(id)));
         }
       } catch (Exception ex) {
         LOG.log(Level.SEVERE, null, ex);

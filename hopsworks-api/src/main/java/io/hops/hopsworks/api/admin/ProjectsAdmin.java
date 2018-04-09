@@ -76,6 +76,8 @@ public class ProjectsAdmin {
   private NoCacheResponse noCacheResponse;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private Settings settings;
   
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
@@ -207,6 +209,7 @@ public class ProjectsAdmin {
 
     // Build the new project state as Project object
     Project project = new Project();
+    project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setName(projectAdminInfoDTO.getProjectName());
     project.setArchived(projectAdminInfoDTO.getArchived());
     project.setPaymentType(projectAdminInfoDTO.getPaymentType());

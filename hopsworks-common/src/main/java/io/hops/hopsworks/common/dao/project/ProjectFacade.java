@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.common.dao.project;
 
 import java.util.Date;
@@ -134,7 +133,6 @@ public class ProjectFacade extends AbstractFacade<Project> {
     Users user = query.getSingleResult();
     return findByNameAndOwner(projectname, user);
   }
-
 
   /**
    * Get the owner of the given project.
@@ -308,4 +306,10 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(project);
     em.flush();
   }
+
+  public void changeKafkaQuota(Project project, int numTopics) {
+    project.setKafkaMaxNumTopics(numTopics);
+    em.merge(project);
+  }
+
 }

@@ -79,6 +79,8 @@ public class YarnProjectsQuotaFacade extends
       em.merge(project);
     }
   }
+  
+  
 
   public YarnPriceMultiplicator getMultiplicator(PriceMultiplicator.MultiplicatorType multiplicatorType) {
     try {

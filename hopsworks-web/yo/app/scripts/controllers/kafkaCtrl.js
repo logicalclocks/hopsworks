@@ -223,10 +223,6 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.createTopic = function () {
-              if(self.topics.length >10){
-                  growl.info("Topic Creation aborted", {title: 'Topic limit reached', ttl: 2000});
-                  return;
-              }
               ModalService.createTopic('lg', self.projectId, self.projectIsGuide)
               .then(
                       function (success) {
@@ -236,7 +232,7 @@ angular.module('hopsWorksApp')
                             self.tourService.currentStep_TourThree = 4;
                           }
                       }, function (error) {
-                //The user changed their mind.
+                      growl.error(error.data.errorMsg, {title: 'Failure to create topic', ttl: 5000, referenceId: 10});
               });
               self.getAllTopics();
 

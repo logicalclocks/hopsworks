@@ -38,6 +38,7 @@ public class QuotasDTO implements Serializable {
   private Long hiveHdfsNsQuota = null;
   private Float yarnQuotaInSecs = null;
   private Float yarnUsedQuotaInSecs = null;
+  private Integer kafkaMaxNumTopics = null;
 
   public QuotasDTO() {
   }
@@ -46,7 +47,7 @@ public class QuotasDTO implements Serializable {
                    Long hdfsQuotaInBytes, Long hdfsUsageInBytes,
                    Long hdfsNsQuota, Long hdfsNsCount,
                    Long hiveHdfsQuotaInBytes, Long hiveHdfsUsageInBytes,
-                   Long hiveHdfsNsQuota, Long hiveHdfsNsCount) {
+                   Long hiveHdfsNsQuota, Long hiveHdfsNsCount, Integer kafkaMaxNumTopics) {
     this.yarnQuotaInSecs = yarnQuotaInSecs;
     this.yarnUsedQuotaInSecs = yarnUsedQuotaInSecs;
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
@@ -57,15 +58,17 @@ public class QuotasDTO implements Serializable {
     this.hiveHdfsUsageInBytes = hiveHdfsUsageInBytes;
     this.hiveHdfsNsCount = hiveHdfsNsCount;
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
+    this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
 
   public QuotasDTO(Long hdfsQuotaInBytes, Long hdfsNsQuota,
-                   Long hiveHdfsQuotaInBytes, Long hiveHdfsNsQuota, Float yarnQuotaInSecs) {
+                   Long hiveHdfsQuotaInBytes, Long hiveHdfsNsQuota, Float yarnQuotaInSecs, Integer numKafkaTopics) {
     this.hdfsQuotaInBytes = hdfsQuotaInBytes;
     this.hdfsNsQuota = hdfsNsQuota;
     this.hiveHdfsQuotaInBytes = hiveHdfsQuotaInBytes;
     this.hiveHdfsNsQuota = hiveHdfsNsQuota;
     this.yarnQuotaInSecs = yarnQuotaInSecs;
+    this.kafkaMaxNumTopics = numKafkaTopics;
   }
 
   public Long getHdfsQuotaInBytes() {
@@ -148,6 +151,14 @@ public class QuotasDTO implements Serializable {
     this.yarnUsedQuotaInSecs = yarnUsedQuotaInSecs;
   }
 
+  public Integer getKafkaMaxNumTopics() {
+    return kafkaMaxNumTopics;
+  }
+
+  public void setKafkaMaxNumTopics(Integer kafkaMaxNumTopics) {
+    this.kafkaMaxNumTopics = kafkaMaxNumTopics;
+  }
+  
   @Override
   public String toString() {
     return "QuotasDTO{" +
@@ -161,6 +172,7 @@ public class QuotasDTO implements Serializable {
         ", hiveHdfsNsQuota=" + hiveHdfsNsQuota +
         ", yarnQuotaInSecs=" + yarnQuotaInSecs +
         ", yarnUsedQuotaInSecs =" + yarnUsedQuotaInSecs +
+        ", kafkaMaxNumTopics =" + kafkaMaxNumTopics +
         '}';
   }
 }
