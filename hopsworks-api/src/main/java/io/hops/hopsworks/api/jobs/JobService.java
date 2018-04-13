@@ -427,7 +427,7 @@ public class JobService {
 
   }
 
-  private List<YarnAppUrlsDTO> getTensorboardUrls(String hdfsUser, String appId) throws AppException {
+  private List<YarnAppUrlsDTO> getTensorBoardUrls(String hdfsUser, String appId) throws AppException {
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
 
     DistributedFileSystemOps client = null;
@@ -435,10 +435,10 @@ public class JobService {
     try {
       client = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
-          getName() + "/Logs/TensorFlow/" + appId + "/tensorboard.exec*"));
+          getName() + "/Logs/TensorFlow/" + appId + "/TensorBoard.task*"));
       DistributedFileSystem fs = client.getFilesystem();
       for (FileStatus status : statuses) {
-        LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
+        //LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
         FSDataInputStream in = null;
         try {
           in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
@@ -471,7 +471,7 @@ public class JobService {
     return urls;
   }
 
-  
+
   /**
    * Get the Job UI url for the specified job
    * <p>
@@ -510,7 +510,7 @@ public class JobService {
         YarnApplicationstate appStates;
         appStates = appStateBean.findByAppId(appId);
         if (appStates != null && appStates.getAppname().toUpperCase().contains("TENSORFLOW")) {
-          urls.addAll(getTensorboardUrls(hdfsUser, appId));
+          urls.addAll(getTensorBoardUrls(hdfsUser, appId));
         }
       }
 

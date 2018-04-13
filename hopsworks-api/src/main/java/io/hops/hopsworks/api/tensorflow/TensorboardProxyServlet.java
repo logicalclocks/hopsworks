@@ -133,7 +133,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       }
       if (appState.getAppsmstate() != null && (appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.FINISHED.
           toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
-        sendErrorResponse(servletResponse, "This tensorboard has finished running");
+        sendErrorResponse(servletResponse, "This TensorBoard has finished running");
         return;
       }
       targetUri = uriToFinish;
@@ -156,7 +156,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       try {
         super.service(servletRequest, servletResponse);
       } catch (IOException ex) {
-        sendErrorResponse(servletResponse, "This tensorboard is not running right now");
+        sendErrorResponse(servletResponse, "This TensorBoard is not running right now");
         return;
       }
     } else {

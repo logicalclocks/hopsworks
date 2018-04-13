@@ -82,17 +82,17 @@
                                           ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW' && jobUICtrl.job.jobType !== 'FLINK'"> Vizops
                                   </button>
                                 </span>-->
-                <span ng-if="jobUICtrl.sessions.length === 2" class="field-info"  ng-repeat="tf in jobUICtrl.sessions" uib-tooltip="Show tensorboard"
+                <span ng-if="jobUICtrl.sessions.length === 2" class="field-info"  ng-repeat="tf in jobUICtrl.sessions" uib-tooltip="Show TensorBoard"
                       style="padding-top: 5px;padding-left:3px">
                   <button ng-if="$index > 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"
-                          class="btn btn-primary btn-md fa fa-cubes">
+                          class="btn btn-primary btn-md fa fa-line-chart">
                     {{tf.name}}
                   </button>
                 </span>
                 <span ng-if="jobUICtrl.sessions.length > 2" class="field-info" style="padding-top: 5px;padding-left:5px; padding-right: 5px;">
                   <ui-select name="tfId" theme="select2" ng-model="jobUICtrl.session" on-select="jobUICtrl.tfUI(jobUICtrl.session)" style="width: 400px">
                     <ui-select-match>
-                      <span ng-if="jobUICtrl.current !== 'tensorboardUI'">Select a Tensorboard Server</span>
+                      <span ng-if="jobUICtrl.current !== 'tensorboardUI'">Select a TensorBoard Server</span>
                       <span ng-if="jobUICtrl.current === 'tensorboardUI'">{{$select.selected.name}}</span>
                     </ui-select-match>
                     <ui-select-choices repeat="id in jobUICtrl.sessions">
