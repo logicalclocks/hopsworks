@@ -30,13 +30,13 @@ angular.module('hopsWorksApp')
 
             var init = function (content) {
               DelaService.getDetails(content.publicId).then(function (success) {
-//                console.log("init", success);
                 content["leechers"] = success.data.dataset.datasetHealth.leechers;
                 content["seeders"] = success.data.dataset.datasetHealth.seeders;
                 content["bootstrap"] = success.data.bootstrap;
               }, function (error) {
-                return [];
                 console.log("init", error);
+                return [];
+
               });
             };
 

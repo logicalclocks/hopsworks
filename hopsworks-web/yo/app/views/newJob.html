@@ -106,12 +106,12 @@
               <div class="row" ng-show="newJobCtrl.jobtype !== 4 && newJobCtrl.jobtype !== 5 && newJobCtrl.jobtype !== 6">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text"
-                                             ng-model="newJobCtrl.runConfig.mainClass" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                                             ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
               </div>
               <div class="row">
                 <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" uib-tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text"
-                                             ng-model="newJobCtrl.runConfig.args" class="form-control" ng-change="newJobCtrl.chooseParameters()"></div>
+                                             ng-model="newJobCtrl.runConfig.args" class="form-control" ></div>
               </div>
             </div>
             <!-- Adam -->
@@ -150,81 +150,81 @@
 
           </div>
           <!--Pre-configuration uib-accordion visible only for Spark jobs-->
-          <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}"
-               is-open="newJobCtrl.accordion6.isOpen"
-               ng-show="newJobCtrl.accordion6.visible && (newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)"
-               id="preConfig">
-            <div>
-              <div class="row" style="float: left;width: 100%;" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)">
-                <div style="float: left;width: 150px;">
-                  <div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">
-                    <button style="width: 100%;" ng-click="newJobCtrl.autoConfig(false)" title="Search for the analysis results when you set new input attributes." class="btn btn-default glyphicon glyphicon-refresh">  Search  </button>
-                  </div>
-                  <div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">
-                    <button style="width: 100%;" ng-click="newJobCtrl.autoConfig(true)" title="Filter by your own suffessfully executed jobs" class="btn btn-default glyphicon glyphicon-filter">  Filter  </button>
-                  </div>
-                </div>
-                <div>
-                  <div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="newJobCtrl.configAlert">
-                    <p style="margin-top: 15px;margin-left: 20px; color:red; ">* Please set all the required job parameters in order to get a pre-configuration proposal.</p>
-                  </div>
-                </div>
-                <div ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults != '0'">
-                  <div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="!newJobCtrl.configAlert">
-                    <p style="margin-top: 15px;margin-left: 20px">
-                      After the analysis, {{newJobCtrl.autoConfigResult.numberOfResults}} result(s) was/were found with {{newJobCtrl.autoConfigResult.degreeOfSimilarity}} similarity.
-                      <i class="glyphicon glyphicon-info-sign"
-                         uib-tooltip="Similarity refers to the attributes (Main Class Name, Job Arguments etc) likeness of the current job with previously analized jobs."
-                         tooltip-placement="bottom"
-                         style="margin-left: 10px"></i>
-                    </p>
-                    <p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length == 1"> Due to limited results we can't propose a Premium Configuration.</p>
-                    <p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length > 1"> Please select one of the following configuration options:</p>
-                  </div>
-                  <div style="float: left" ng-show="!newJobCtrl.configAlert">
-                    <div class="panel panel-info pull-left" ng-repeat="e in newJobCtrl.autoConfigResult.jobProposedConfig" style="width: 32%; margin-left: 10px; margin-top: 10px">
-                      <div class="panel-heading">
-                        <label class="panel-title"><input type="radio" name="optradio" value="{{e.configType}}" ng-click="selectConfig(e.configType)" ng-checked="checkRadio(e.configType)" ng-init="selectConfig('Minimal')"> &nbsp &nbsp {{e.configType}} Configuration &nbsp {{e.message}}</label>
-                      </div>
-                      <div class="panel-body">
-                        <div class="row" style="margin-top: 10px">
-                          <div class="text-right col-md-9">Application master memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amMemory">{{e.amMemory}}</div>
-                          <div class="text-right col-md-9">Application master Vcores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amVCores">{{e.amVcores}}</div>
-                          <div class="text-right col-md-9">Resource Manager queue <i class="fa fa-info-circle" uib-tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amQueue">default</div>
-                          <div class="text-right col-md-9">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.numberOfExecutors">{{e.numOfExecutors}}</div>
-                          <div class="text-right col-md-9">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorCores">{{e.executorCores}}</div>
-                          <div class="text-right col-md-9">Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorMemory">{{e.executorMemory}}</div>
-                          <div class="text-right col-md-9" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">Estimated execution duration <i class="fa fa-info-circle" uib-tooltip="The execution duration is also related to the system load." style="margin-left: 5px"></i></div>
-                          <div class="text-left col-md-3" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">{{e.estimatedExecutionTime}}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults == null && newJobCtrl.isSpin">
-                  <p style="text-align: center">
-                    <i class="fa fa-spinner fa-pulse fa-3x fa-fw" style="font-size:24px; text-align: center"></i> &nbsp &nbsp Please wait.. </p>
-                </div>
-                <div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults == '0' && !newJobCtrl.configAlert">
-                  <p style="text-align: center">There are no similar applications. Please use the next panel and configure your job manually.</p>
-                </div>
-              </div>
-            </div>
-            <!-- Creation button -->
-            <div class="row" style="float: left;width: 150px;">
-              <button style="float: left; margin-bottom: 0px;margin-left: 10px;margin-top: 10px"
-                      ng-click="newJobCtrl.createJob()" ng-show="newJobCtrl.autoConfigResult.numberOfResults >= 1" class="btn btn-warning">
-                Create job
-              </button>
-            </div>
+          <!--<div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}"-->
+               <!--is-open="newJobCtrl.accordion6.isOpen"-->
+               <!--ng-show="newJobCtrl.accordion6.visible && (newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)"-->
+               <!--id="preConfig">-->
+            <!--<div>-->
+              <!--<div class="row" style="float: left;width: 100%;" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)">-->
+                <!--<div style="float: left;width: 150px;">-->
+                  <!--<div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">-->
+                    <!--<button style="width: 100%;" ng-click="newJobCtrl.autoConfig(false)" title="Search for the analysis results when you set new input attributes." class="btn btn-default glyphicon glyphicon-refresh">  Search  </button>-->
+                  <!--</div>-->
+                  <!--<div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">-->
+                    <!--<button style="width: 100%;" ng-click="newJobCtrl.autoConfig(true)" title="Filter by your own suffessfully executed jobs" class="btn btn-default glyphicon glyphicon-filter">  Filter  </button>-->
+                  <!--</div>-->
+                <!--</div>-->
+                <!--<div>-->
+                  <!--<div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="newJobCtrl.configAlert">-->
+                    <!--<p style="margin-top: 15px;margin-left: 20px; color:red; ">* Please set all the required job parameters in order to get a pre-configuration proposal.</p>-->
+                  <!--</div>-->
+                <!--</div>-->
+                <!--<div ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults != '0'">-->
+                  <!--<div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="!newJobCtrl.configAlert">-->
+                    <!--<p style="margin-top: 15px;margin-left: 20px">-->
+                      <!--After the analysis, {{newJobCtrl.autoConfigResult.numberOfResults}} result(s) was/were found with {{newJobCtrl.autoConfigResult.degreeOfSimilarity}} similarity.-->
+                      <!--<i class="glyphicon glyphicon-info-sign"-->
+                         <!--uib-tooltip="Similarity refers to the attributes (Main Class Name, Job Arguments etc) likeness of the current job with previously analized jobs."-->
+                         <!--tooltip-placement="bottom"-->
+                         <!--style="margin-left: 10px"></i>-->
+                    <!--</p>-->
+                    <!--<p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length == 1"> Due to limited results we can't propose a Premium Configuration.</p>-->
+                    <!--<p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length > 1"> Please select one of the following configuration options:</p>-->
+                  <!--</div>-->
+                  <!--<div style="float: left" ng-show="!newJobCtrl.configAlert">-->
+                    <!--<div class="panel panel-info pull-left" ng-repeat="e in newJobCtrl.autoConfigResult.jobProposedConfig" style="width: 32%; margin-left: 10px; margin-top: 10px">-->
+                      <!--<div class="panel-heading">-->
+                        <!--<label class="panel-title"><input type="radio" name="optradio" value="{{e.configType}}" ng-click="selectConfig(e.configType)" ng-checked="checkRadio(e.configType)" ng-init="selectConfig('Minimal')"> &nbsp &nbsp {{e.configType}} Configuration &nbsp {{e.message}}</label>-->
+                      <!--</div>-->
+                      <!--<div class="panel-body">-->
+                        <!--<div class="row" style="margin-top: 10px">-->
+                          <!--<div class="text-right col-md-9">Application master memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amMemory">{{e.amMemory}}</div>-->
+                          <!--<div class="text-right col-md-9">Application master Vcores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amVCores">{{e.amVcores}}</div>-->
+                          <!--<div class="text-right col-md-9">Resource Manager queue <i class="fa fa-info-circle" uib-tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amQueue">default</div>-->
+                          <!--<div class="text-right col-md-9">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.numberOfExecutors">{{e.numOfExecutors}}</div>-->
+                          <!--<div class="text-right col-md-9">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorCores">{{e.executorCores}}</div>-->
+                          <!--<div class="text-right col-md-9">Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorMemory">{{e.executorMemory}}</div>-->
+                          <!--<div class="text-right col-md-9" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">Estimated execution duration <i class="fa fa-info-circle" uib-tooltip="The execution duration is also related to the system load." style="margin-left: 5px"></i></div>-->
+                          <!--<div class="text-left col-md-3" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">{{e.estimatedExecutionTime}}</div>-->
+                        <!--</div>-->
+                      <!--</div>-->
+                    <!--</div>-->
+                  <!--</div>-->
+                <!--</div>-->
+                <!--<div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults == null && newJobCtrl.isSpin">-->
+                  <!--<p style="text-align: center">-->
+                    <!--<i class="fa fa-spinner fa-pulse fa-3x fa-fw" style="font-size:24px; text-align: center"></i> &nbsp &nbsp Please wait.. </p>-->
+                <!--</div>-->
+                <!--<div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults == '0' && !newJobCtrl.configAlert">-->
+                  <!--<p style="text-align: center">There are no similar applications. Please use the next panel and configure your job manually.</p>-->
+                <!--</div>-->
+              <!--</div>-->
+            <!--</div>-->
+            <!--&lt;!&ndash; Creation button &ndash;&gt;-->
+            <!--<div class="row" style="float: left;width: 150px;">-->
+              <!--<button style="float: left; margin-bottom: 0px;margin-left: 10px;margin-top: 10px"-->
+                      <!--ng-click="newJobCtrl.createJob()" ng-show="newJobCtrl.autoConfigResult.numberOfResults >= 1" class="btn btn-warning">-->
+                <!--Create job-->
+              <!--</button>-->
+            <!--</div>-->
 
-          </div>
+          <!--</div>-->
           <!-- Set some run configuration -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}"
                is-open="newJobCtrl.accordion5.isOpen"
@@ -503,7 +503,7 @@
                                       || projectCtrl.tourService.tipsOnly)">
       <virtual-step
         class="ng-scope"
-        tourtip="Click Next OR give a name to your job kafka"
+        tourtip="Click Next OR give a name to your Kafka job"
         tourtip-step="0"
         tourtip-element="#inputJobName"
         tourtip-placement="bottom"

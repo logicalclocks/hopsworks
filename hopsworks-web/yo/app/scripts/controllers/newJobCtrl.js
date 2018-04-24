@@ -60,7 +60,6 @@ angular.module('hopsWorksApp')
             self.selectedTopics = [];
             self.projectName = "";
             self.tfOnSpark = false;
-            self.sparkTourParamsFilledIn = false;
             self.getAllTopics = function () {
               if (self.kafkaSelected) {
                 if (typeof self.runConfig.kafka !== "undefined" &&
@@ -234,11 +233,11 @@ angular.module('hopsWorksApp')
               "visible": false,
               "value": "",
               "title": "Configure and create"};
-            this.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
-              "isOpen": false,
-              "visible": false,
-              "value": "",
-              "title": "Pre-Configuration"};
+            // this.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
+            //   "isOpen": false,
+            //   "visible": false,
+            //   "value": "",
+            //   "title": "Pre-Configuration"};
 
             this.undoable = false; //Signify if a clear operation can be undone.
 
@@ -257,7 +256,7 @@ angular.module('hopsWorksApp')
                 "flinkState": self.flinkState,
                 "tensorflowState" : self.tensorflowState,
                 "adamState": self.adamState,
-                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5, self.accordion6]
+                "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5/*, self.accordion6*/]
               };
               self.undoneState = state;
               self.undoable = true;
@@ -306,11 +305,11 @@ angular.module('hopsWorksApp')
                 "visible": false,
                 "value": "",
                 "title": "Configure and create"};
-              self.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
-                "isOpen": false,
-                "visible": false,
-                "value": "",
-                "title": "Pre-Configuration"};
+              // self.accordion6 = {//Contains the pre-configuration and proposals for auto-configuration
+              //   "isOpen": false,
+              //   "visible": false,
+              //   "value": "",
+              //   "title": "Pre-Configuration"};
             };
 
             self.exitToJobs = function () {
@@ -336,7 +335,7 @@ angular.module('hopsWorksApp')
                 self.accordion3 = self.undoneState.accordions[2];
                 self.accordion4 = self.undoneState.accordions[3];
                 self.accordion5 = self.undoneState.accordions[4];
-                self.accordion6 = self.undoneState.accordions[4];
+                //self.accordion6 = self.undoneState.accordions[4];
               }
               self.unodeState = null;
               self.undoable = false;
@@ -519,10 +518,12 @@ angular.module('hopsWorksApp')
 
             self.guideSetJobName = function () {
               var jobState = self.tourService.kafkaJobCreationState;
-              if (angular.equals('producer', jobState)) {
-                self.jobname = "KafkaDemoProducer";
-              } else {
-                self.jobname = "KafkaDemoConsumer";
+              if((typeof self.jobname === 'undefined' || self.jobname === '')){
+                if (angular.equals('producer', jobState)) {
+                      self.jobname = "KafkaDemoProducer";
+                  } else {
+                      self.jobname = "KafkaDemoConsumer";
+                  }
               }
             };
 
@@ -582,7 +583,7 @@ angular.module('hopsWorksApp')
               self.accordion4.isOpen = false; //Close job setup
               self.accordion4.visible = false; //Hide job setup
               self.accordion5.visible = false; // Hide job configuration
-              self.accordion6.visible = false; // Hide job pre-configuration
+              //self.accordion6.visible = false; // Hide job pre-configuration
               self.accordion3.value = ""; //Reset selected file
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 4;
@@ -624,10 +625,13 @@ angular.module('hopsWorksApp')
             };
 
             self.chooseParameters = function () {
-              if (self.jobtype === 1 &&  self.projectIsGuide && !self.sparkTourParamsFilledIn) {
+              if (self.jobtype === 1 &&  self.projectIsGuide &&
+                  (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === '')) {
                   self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
+              }
+              if (self.jobtype === 1 &&  self.projectIsGuide &&
+                  (typeof self.runConfig.args === 'undefined' || self.runConfig.args === '')) {
                   self.runConfig.args = '10';
-                  self.sparkTourParamsFilledIn = true;
               }
               // For Kafka tour
               if (self.projectIsGuide) {
@@ -691,7 +695,7 @@ angular.module('hopsWorksApp')
               self.accordion4.isOpen = true; // Open job setup
               self.accordion4.visible = true; // Show job setup
               self.accordion5.visible = true; // Show job config
-              self.accordion6.visible = true; // Show job config
+              //self.accordion6.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
             };
@@ -814,8 +818,8 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
-              self.accordion6.visible = false;
-              self.accordion6.isOpen = false;
+              //self.accordion6.visible = false;
+              //self.accordion6.isOpen = false;
               if (reason.toUpperCase() === "ADAM") {
                 self.adamState.processparameter = parameter;
               }
@@ -901,7 +905,7 @@ angular.module('hopsWorksApp')
                 "accordion3": self.accordion3,
                 "accordion4": self.accordion4,
                 "accordion5": self.accordion5,
-                "accordion6": self.accordion6
+                //"accordion6": self.accordion6
               };
               StorageService.store(self.newJobName, state);
             });
@@ -998,7 +1002,7 @@ angular.module('hopsWorksApp')
                 self.accordion3 = stored.accordion3;
                 self.accordion4 = stored.accordion4;
                 self.accordion5 = stored.accordion5;
-                self.accordion6 = stored.accordion6;
+                //self.accordion6 = stored.accordion6;
               }
 
               // Check if it's a guide project

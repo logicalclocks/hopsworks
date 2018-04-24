@@ -77,5 +77,4 @@ angular.module('hopsWorksApp')
               }
 
             };
-            return service;
           }]);
