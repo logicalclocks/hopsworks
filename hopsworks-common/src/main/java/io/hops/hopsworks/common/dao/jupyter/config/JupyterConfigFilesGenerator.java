@@ -557,9 +557,6 @@ public class JupyterConfigFilesGenerator {
           (isTensorFlowOnSpark) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
               "60s"));
       
-      sparkMagicParams.put("spark.metrics.conf", new ConfigProperty(
-          "spark_metrics_conf", HopsUtils.OVERWRITE, settings.getSparkMetricsPath()));
-      
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
           "spark_task_maxFailures", HopsUtils.OVERWRITE,
           (isHorovod || isTensorFlow || isTensorFlowOnSpark) ? "1": "4"));
