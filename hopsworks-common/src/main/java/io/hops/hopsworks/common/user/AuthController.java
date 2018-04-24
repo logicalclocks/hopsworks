@@ -220,21 +220,22 @@ public class AuthController {
    * Validate security question and update false login attempts
    *
    * @param user
-   * @param securityQuestion
+   * @param securityQ
    * @param securityAnswer
    * @param req
    * @return
-   * @throws AppException
    */
-  public boolean validateSecurityQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req)
-      throws AppException {
+  public boolean validateSecurityQA(Users user, String securityQ, String securityAnswer, HttpServletRequest req) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (user.getMode().equals(UserAccountType.LDAP_ACCOUNT_TYPE)) {
       throw new IllegalArgumentException("Operation not allowed for LDAP account.");
     }
-    if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQuestion)
+    if (securityQ == null || securityQ.isEmpty() || securityAnswer == null || securityAnswer.isEmpty()) {
+      return false;
+    }
+    if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQ)
         || !user.getSecurityAnswer().equals(DigestUtils.sha256Hex(securityAnswer.toLowerCase()))) {
       registerFalseLogin(user, req);
       LOGGER.log(Level.WARNING, "False Security Question attempt by user: {0}", user.getEmail());

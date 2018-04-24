@@ -32,14 +32,14 @@
     <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
     <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
   </h:head>
-
   <h:body >
-
     <h:form> 
-      <div class="GenericMenue" align="center" style="color: gray">
-        <h3> Security question changed successfully! </h3>
-        <p:commandLink  value="Back to login profile" action="profile"/>
-      </div>
+      <p:panel id="loginPnl" header="Security question reset" style="width: 350px; margin: 150px auto;">
+        <div align="center" style="color: gray">
+          <h3> Security question changed successfully! </h3>
+          <p:commandLink  value="Back to login profile" action="profile"/>
+        </div>
+      </p:panel>
     </h:form>
   </h:body>
 </html>

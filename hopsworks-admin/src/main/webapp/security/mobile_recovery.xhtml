@@ -35,43 +35,34 @@
   </h:head>
 
   <h:body >
-
     <h:form >
-      <div class="ForgotPassword" align="center">
-
-        <p:inputText id="runame" required="true"  
-                     requiredMessage="Enter your email address."
-                     validatorMessage="Invalid email format"
-                     value="#{recoverySelector.uname}"
-                     >
-
-          <f:validateRegex
-            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-
-        </p:inputText>
-        <p:watermark for="runame" value="Enter your email" />
-
-        <p:password id="curpwd" value="#{recoverySelector.passwd}"  
-                    required="true" 
-                    size="40"  
-                    requiredMessage="Enter password"/>
-        <p:watermark for="curpwd" value="******" />
-
-        <p:watermark for="curpwd" value="Enter password " />
-
-
+      <p:panel id="loginPnl" header="Password reset" style="width: 400px; margin: 150px auto;">
+        <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
+          <h:outputText value="Email" />
+          <p:inputText id="runame" required="true"  
+                       requiredMessage="Enter your email address."
+                       validatorMessage="Invalid email format"
+                       value="#{recoverySelector.uname}">
+            <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+          </p:inputText>
+          <p:watermark for="runame" value="Enter your email" />
+          <h:outputText value="Password"/>
+          <p:password id="curpwd" value="#{recoverySelector.passwd}"  
+                      required="true" feedback="false" 
+                      requiredMessage="Enter password"/>
+          <p:watermark for="curpwd" value="Enter password " />
+        </h:panelGrid>
         <p:messages id="messages" autoUpdate="true" closable="true"/>
-
-        <h:panelGrid columns="2" style="margin-top: 20px"> 
-          <p:commandButton type="submit"
-                           value="Submit" 
-                           ajax="false"
-                           action="#{recoverySelector.sendQrCode()}"/>
-          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
-        </h:panelGrid>   
-
-      </div>
+        <div style="margin-left: 215px;">
+          <h:panelGrid columns="2"> 
+            <p:commandButton type="submit"
+                             value="Submit" 
+                             ajax="false"
+                             action="#{recoverySelector.sendQrCode()}"/>
+            <p:commandButton type="submit" value="Cancel" action="#{facesContext.externalContext.redirect('/hopsworks')}" process="@this"/>
+          </h:panelGrid>  
+        </div>
+      </p:panel>
     </h:form>
-
   </h:body>
 </html>

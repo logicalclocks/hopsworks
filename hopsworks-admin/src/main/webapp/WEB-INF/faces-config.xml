@@ -218,22 +218,22 @@
     </navigation-case>
     <navigation-case>
       <from-outcome>logout</from-outcome>
-      <to-view-id>/../hopsworks/#!/</to-view-id>
+      <to-view-id>/login.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>login</from-outcome>
-      <to-view-id>/../hopsworks/#!/login</to-view-id>
+      <to-view-id>/login.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>welcome</from-outcome>
-      <to-view-id>/../hopsworks/#!/</to-view-id>
+      <to-view-id>/login.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     <navigation-case>
       <from-outcome>home</from-outcome>
-      <to-view-id>/../hopsworks/#!/</to-view-id>
+      <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
     </navigation-case> 
     <navigation-case>

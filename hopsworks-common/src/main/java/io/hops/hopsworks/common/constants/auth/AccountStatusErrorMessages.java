@@ -22,7 +22,7 @@ package io.hops.hopsworks.common.constants.auth;
 
 public class AccountStatusErrorMessages {
 
-  public final static String INCCORCT_CREDENTIALS = "The email or password is incorrect.";
+  public final static String INCORRECT_CREDENTIALS = "The email or password is incorrect.";
 
   public final static String INTERNAL_ERROR = "Internal servor error.";
   

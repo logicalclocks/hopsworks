@@ -35,26 +35,26 @@
   </h:head>
 
   <h:body >
-
     <h:form>
-      <p:growl id="messages" showDetail="false" autoUpdate="true" />
-      <div class="content" align="center" >
-        <p:selectOneRadio id="loginIssueRadio"  
-                          value="#{recoverySelector.console}" 
-                          layout="grid" columns="1" required="true" 
-                          requiredMessage="Please select one option.">
-          content<f:selectItem itemLabel="Forgot password" itemValue="Password" />
-          <f:selectItem itemLabel="Lost smartphone (or QR code)" itemValue="Mobile" />
-        </p:selectOneRadio>
-        <p:spacer height="10"></p:spacer>
-        <div class="register_actions">
-          <p:commandButton id="submitButton" value="Continue"
-                           action="#{recoverySelector.redirect()}" update="@form">
-          </p:commandButton>
-          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this" />
+      <p:panel id="loginPnl" header="Security Question" style="width: 400px; margin: 150px auto;">
+        <h:panelGrid id="loginPanel" columns="2" cellpadding="5">
+          <p:selectOneRadio id="loginIssueRadio"  
+                            value="#{recoverySelector.console}" 
+                            layout="grid" columns="1" required="true" 
+                            requiredMessage="Please select one option.">
+            <f:selectItem itemLabel="Forgot password" itemValue="Password" />
+            <f:selectItem itemLabel="Lost smartphone (or QR code)" itemValue="Mobile" />
+          </p:selectOneRadio>
+          <p:spacer height="10"></p:spacer>
+        </h:panelGrid>
+        <div style="margin-left: 215px;">
+          <h:panelGrid columns="2">
+            <p:commandButton id="submitButton" value="Continue" action="#{recoverySelector.redirect()}" update="@form">
+            </p:commandButton>
+            <p:commandButton type="submit" value="Cancel" action="#{facesContext.externalContext.redirect('/hopsworks')}" process="@this" />
+          </h:panelGrid>
         </div>
-      </div>
+      </p:panel>
     </h:form>
-
   </h:body>
 </html>

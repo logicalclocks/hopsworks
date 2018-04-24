@@ -27,38 +27,34 @@
       xmlns:p="http://primefaces.org/ui">
 
   <h:head>
-    <title>Hopsworks - Password reset</title>
+    <title>Hopsworks - Validate code</title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
     <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
     <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />   
   </h:head>
-
-  <h:body >
-
-    <div class="CSQ" align="center">
-      <h:form >
-        <h:outputLabel for="tcode" 
-                       value="Enter the code sent to your email" 
-                       />
-        <p:password id="tcode" 
-                    value="#{recoverySelector.tmpCode}" 
-                    label="Password 1" 
-                    required="true" 
-                    requiredMessage="Enter the temporay code"/>
-
-        <p:watermark for="tcode" value="e.g. 138cf9" />
-
-        <p:messages id="messages"  autoUpdate="true" closable="true"/>
-
-        <h:panelGrid columns="2" style="margin-top: 20px;">
-          <p:commandButton type="submit"
-                           value="Save"
-                           ajax="false"
-                           action="#{recoverySelector.validateTmpCode()}"/>
-          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
+  <h:body>
+    <h:form>
+      <p:panel id="loginPnl" header="Validate code" style="width: 440px; margin: 150px auto;">
+        <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
+          <h:outputLabel for="tcode" value="Enter the code sent to your email"/>
+          <p:password id="tcode" 
+                      value="#{recoverySelector.tmpCode}" 
+                      label="Password 1" 
+                      required="true" 
+                      requiredMessage="Enter the temporay code"/>
+          <p:watermark for="tcode" value="e.g. 138cf9" />
         </h:panelGrid>
-      </h:form>
-    </div>
-
+        <p:messages id="messages"  autoUpdate="true" closable="true"/>
+        <div style="margin-left: 255px;">
+          <h:panelGrid columns="2">
+            <p:commandButton type="submit"
+                             value="Send"
+                             ajax="false"
+                             action="#{recoverySelector.validateTmpCode()}"/>
+            <p:commandButton type="submit" value="Cancel" action="#{facesContext.externalContext.redirect('/hopsworks')}" process="@this"/>
+          </h:panelGrid>
+        </div>
+      </p:panel>
+    </h:form>
   </h:body>
 </html>

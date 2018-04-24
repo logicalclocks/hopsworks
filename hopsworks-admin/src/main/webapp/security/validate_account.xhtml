@@ -23,7 +23,8 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="http://java.sun.com/jsf/html">
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
 
   <h:head>
     <title>Hopsworks - Email Address Verification</title>
@@ -32,9 +33,8 @@
     <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
   </h:head>
   <h:body >
-
-    <div class="container">
-      <div class="ForgotPassword">
+    <h:form>
+      <p:panel id="loginPnl" header="Email Address Verification" style="width: 650px; margin: 150px auto;"> 
         <h:panelGroup layout="block" rendered="#{accountVerification.valid}">
           <p>You have successfully validated your email address, but your account still has to be approved 
             by an administrator. Hopefully soon!</p>
@@ -57,7 +57,7 @@
         <h:panelGroup layout="block" rendered="#{!accountVerification.valid} and #{!accountVerification.dbDown} and #{!accountVerification.userNotFound}">
           <p>Email validation failed!</p> 
         </h:panelGroup>
-      </div>
-    </div>
+      </p:panel>
+    </h:form>
   </h:body>  
 </html>

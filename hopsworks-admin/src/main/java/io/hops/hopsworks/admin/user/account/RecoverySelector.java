@@ -41,7 +41,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
@@ -49,6 +48,8 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import org.primefaces.model.DefaultStreamedContent;
@@ -69,6 +70,9 @@ public class RecoverySelector implements Serializable {
 
   @EJB
   private AccountAuditFacade am;
+  
+  @EJB
+  private AuthController authController;
 
   private Users people;
 
@@ -167,42 +171,19 @@ public class RecoverySelector implements Serializable {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
         getCurrentInstance().getExternalContext().getRequest();
     try {
-
-      if (people != null && people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
-
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus().equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
-          MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
-          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
-              "", people, httpServletRequest);
-
-          return "";
-        }
-
-        if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
-          MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
-              "", people, httpServletRequest);
-          return "";
-        }
+      if (people != null && authController.checkPasswordAndStatus(people, passwd, httpServletRequest)) {
 
         // generate a randome secret of legth 6
         String random = SecurityUtils.getRandomPassword(passwordLength);
         usersController.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-        email.sendEmail(people.getEmail(), RecipientType.TO,
-            UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-
+        email.sendEmail(people.getEmail(), RecipientType.TO,UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.name(),
             "Reset QR code.", people, httpServletRequest);
 
         return "validate_code";
       } else {
-        MessagesController.addSecurityErrorMessage(
-            AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_CREDENTIALS);
         if (people != null) {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
               "", people, httpServletRequest);
@@ -213,10 +194,11 @@ public class RecoverySelector implements Serializable {
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
           "", people, httpServletRequest);
 
+    } catch (AppException ex) {
+      Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
     }
 
-    MessagesController.addSecurityErrorMessage(
-        AccountStatusErrorMessages.INTERNAL_ERROR);
+    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INTERNAL_ERROR);
     return "";
   }
 
