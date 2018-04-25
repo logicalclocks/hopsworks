@@ -101,7 +101,10 @@ public class YarnLogUtil {
           writer.print("The log aggregation failed");
           break;
         case TIME_OUT:
-          writer.print("The log aggregation timedout.");
+          writer.print("*** WARNING: Log aggregation has timed-out for some of the containers\n\n\n");
+          for (String desiredLogType : desiredLogTypes) {
+            writeLogs(dfs, srcs, writer, desiredLogType);
+          }
           break;
         case SUCCEEDED:
           for (String desiredLogType : desiredLogTypes) {
@@ -109,7 +112,7 @@ public class YarnLogUtil {
           }
           break;
         default :
-          writer.print("something went wrond durring the log aggregation.");
+          writer.print("Something went wrong during log aggregation phase!");
       }
     } catch (Exception ex) {
       if (writer != null) {
@@ -146,7 +149,7 @@ public class YarnLogUtil {
         return true;
     }
   }
-
+  
   private static void writeLogs(DistributedFileSystemOps dfs, String[] srcs,
           PrintStream writer, String desiredLogType) {
     ArrayList<AggregatedLogFormat.LogKey> containerNames = new ArrayList<>();

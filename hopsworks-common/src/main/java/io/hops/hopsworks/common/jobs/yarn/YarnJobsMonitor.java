@@ -47,7 +47,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 @Singleton
 @DependsOn("Settings")
@@ -107,7 +106,7 @@ public class YarnJobsMonitor {
     for (String appID : executions.keySet()) {
       YarnMonitor monitor = monitors.get(appID);
       if (monitor == null) {
-        ApplicationId appId = ConverterUtils.toApplicationId(appID);
+        ApplicationId appId = ApplicationId.fromString(appID);
         YarnClientWrapper newYarnclientWrapper = ycs.getYarnClientSuper(settings
             .getConfiguration());
         monitor = new YarnMonitor(appId, newYarnclientWrapper, ycs);
