@@ -98,8 +98,15 @@
       "spark.dynamicAllocation.minExecutors": "%%spark_dynamicAllocation_minExecutors%%",
       "spark.dynamicAllocation.maxExecutors": "%%spark_dynamicAllocation_maxExecutors%%",
       "spark.dynamicAllocation.executorIdleTimeout": "%%spark_dynamicAllocation_executorIdleTimeout%%",
-      "spark.metrics.conf": "%%spark_metrics_conf%%",
-      "spark.task.maxFailures": "%%spark_task_maxFailures%%"%%spark_user_defined_properties%%
+      "spark.blacklist.enabled": "%%spark_blacklist_enabled%%",
+      "spark.blacklist.task.maxTaskAttemptsPerExecutor": "%%spark_max_task_attempts_per_executor%%",
+      "spark.blacklist.task.maxTaskAttemptsPerNode": "%%spark_max_task_attempts_per_node%%",
+      "spark.blacklist.stage.maxFailedTasksPerExecutor": "%%spark_stage_max_failed_tasks_per_executor%%",
+      "spark.blacklist.stage.maxFailedExecutorsPerNode": "%%spark_stage_max_failed_executors_per_node%%",
+      "spark.blacklist.application.maxFailedTasksPerExecutor": "%%spark_application_max_failed_tasks_per_executor%%",
+      "spark.blacklist.application.maxFailedExecutorsPerNode": "%%spark_application_max_failed_executors_per_node%%",
+      "spark.blacklist.killBlacklistedExecutors": "%%spark_kill_blacklisted_executors%%",
+      "spark.task.maxFailures": "%%spark_task_max_failures%%"%%spark_user_defined_properties%%
     }
   },
   "use_auto_viz": true,

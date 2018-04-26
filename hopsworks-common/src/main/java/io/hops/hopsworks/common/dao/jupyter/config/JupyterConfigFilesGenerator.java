@@ -556,10 +556,48 @@ public class JupyterConfigFilesGenerator {
           "spark_dynamicAllocation_executorIdleTimeout", HopsUtils.OVERWRITE,
           (isTensorFlowOnSpark) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
               "60s"));
-      
+
+
+      // Blacklisting behaviour for TensorFlow on Spark (e.g. Hyperparameter search) to make it robust
+      // Allow many failures on a particular node before blacklisting the node
+      // Blacklist executor instantly
+
+      sparkMagicParams.put("spark.blacklist.enabled", new ConfigProperty(
+              "spark_blacklist_enabled", HopsUtils.OVERWRITE,
+              (isTensorFlow) ? "true": "false"));
+
+      // If any task fails on an executor - kill it instantly (need fresh working directory for each task)
+      sparkMagicParams.put("spark.blacklist.task.maxTaskAttemptsPerExecutor", new ConfigProperty(
+              "spark_max_task_attempts_per_executor", HopsUtils.OVERWRITE, "1"));
+
+      // Blacklist node after 2 tasks fails on it
+      sparkMagicParams.put("spark.blacklist.task.maxTaskAttemptsPerNode", new ConfigProperty(
+              "spark_max_task_attempts_per_node", HopsUtils.OVERWRITE, "2"));
+
+      // If any task fails on an executor within a stage - blacklist it
+      sparkMagicParams.put("spark.blacklist.stage.maxFailedTasksPerExecutor", new ConfigProperty(
+              "spark_stage_max_failed_tasks_per_executor", HopsUtils.OVERWRITE, "1"));
+
+      // Blacklist node after 2 tasks within a stage fails on it
+      sparkMagicParams.put("spark.blacklist.stage.maxFailedExecutorsPerNode", new ConfigProperty(
+              "spark_stage_max_failed_executors_per_node", HopsUtils.OVERWRITE, "2"));
+
+      // If any task fails on an executor within an application - blacklist it
+      sparkMagicParams.put("spark.blacklist.application.maxFailedTasksPerExecutor", new ConfigProperty(
+              "spark_application_max_failed_tasks_per_executor", HopsUtils.OVERWRITE, "1"));
+
+      // If 2 task fails on a node within an application - blacklist it
+      sparkMagicParams.put("spark.blacklist.application.maxFailedExecutorsPerNode", new ConfigProperty(
+              "spark_application_max_failed_executors_per_node", HopsUtils.OVERWRITE, "2"));
+
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
-          "spark_task_maxFailures", HopsUtils.OVERWRITE,
-          (isHorovod || isTensorFlow || isTensorFlowOnSpark) ? "1": "4"));
+              "spark_task_max_failures", HopsUtils.OVERWRITE, (isTensorFlow) ? "3" :
+              ((isHorovod || isTensorFlowOnSpark) ? "1" : "4")));
+
+      // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
+      sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(
+              "spark_kill_blacklisted_executors", HopsUtils.OVERWRITE,
+              (isTensorFlow) ? "true": "false"));
       
       // Merge system and user defined properties
       Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkMagicParams,
