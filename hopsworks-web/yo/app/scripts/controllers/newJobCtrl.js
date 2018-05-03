@@ -160,7 +160,7 @@ angular.module('hopsWorksApp')
               max: 10,
               options: {
                 floor: 0,
-                ceil: 500
+                ceil: 1500
               },
               getPointerColor: function (value) {
                 return '#4b91ea';

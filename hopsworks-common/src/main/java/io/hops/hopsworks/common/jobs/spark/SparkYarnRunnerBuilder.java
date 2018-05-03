@@ -272,7 +272,8 @@ public class SparkYarnRunnerBuilder {
       } else {
         if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
           //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
-          //github.com/apache/spark/blob/v2.1.0/yarn/src/main/scala/org/apache/spark/deploy/yarn/Client.scala#L624
+          /*https://github.com/hopshadoop/spark/blob/v2.3.0-hops/resource-managers/yarn/src/main/scala/org/apache
+          /spark/deploy/yarn/Client.scala#L803*/
           if (dto.getName().endsWith(".py")) {
             dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
           } else {
@@ -756,7 +757,7 @@ public class SparkYarnRunnerBuilder {
   public void setNumberOfExecutorsMax(int numberOfExecutorsMax) {
     if (numberOfExecutorsMax > Settings.SPARK_MAX_EXECS) {
       throw new IllegalArgumentException(
-          "Maximum number of  executors cannot be greate than:"
+          "Maximum number of  executors cannot be greater than:"
           + Settings.SPARK_MAX_EXECS);
     }
     this.numberOfExecutorsMax = numberOfExecutorsMax;

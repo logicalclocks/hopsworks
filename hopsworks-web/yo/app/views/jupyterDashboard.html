@@ -349,37 +349,38 @@
                 <div class="row clusterparams">
                   <div class="text-right col-md-6">
                     <label for="archives">
-                      <button uib-tooltip='Comma-separated quoted list of .zip or .tgz files, this option corresponds to --archives option in Spark.' id="selectArchiveButton" class="btn btn-default" ng-click="jupyterCtrl.selectFile('archives')">
+                      <button uib-tooltip='Comma-separated list of .zip or .tgz files, this option corresponds to --archives option in Spark.' id="selectArchiveButton" class="btn btn-default" ng-click="jupyterCtrl.selectFile('archives')">
                         <span>Add archive file</span>
                       </button>  
                     </label>
-                    <i class="fa fa-info-circle" uib-tooltip='Comma-separated quoted list of .zip or .tgz files, this option corresponds to --archives option in Spark.' style="margin-left: 10px"></i>
+                    <i class="fa fa-info-circle" uib-tooltip='Comma-separated list of .zip or .tgz files, this option corresponds to --archives option in Spark.' style="margin-left: 10px"></i>
                   </div>
                   <div class="col-md-4 jupyter-left">
-                    <input uib-tooltip="Comma-separated quoted list of .zip or .tgz files, this option corresponds to --archives option in Spark." ng-init="jupyterCtrl.val.archives = ''" type="text" class="form-control"
+                    <input uib-tooltip="Comma-separated list of .zip or .tgz files, this option corresponds to --archives option in Spark." ng-init="jupyterCtrl.val.archives = ''" type="text" class="form-control"
                            id="archives" ng-model="jupyterCtrl.val.archives">
                   </div>
                 </div>
                 <div class="row">
                   <div class="text-right col-md-6">
                     <label for="jars">
-                      <button uib-tooltip='Comma-separated quoted list of .jar files, this option corresponds to --jars option in Spark.' id="selectJarButton" class="btn btn-default"
+                      <button uib-tooltip='Comma-separated list of .jar files, this option corresponds to --jars option in Spark.' id="selectJarButton" class="btn btn-default"
                               ng-click="jupyterCtrl.selectFile('jars')">
                         <span>Add jar file</span>
                       </button>  
                     </label>
-                    <i class="fa fa-info-circle" uib-tooltip='Comma-separated quoted list of .jar files, this option corresponds to --jars option in Spark.' style="margin-left: 10px"></i>
+                    <i class="fa fa-info-circle" uib-tooltip='Comma-separated list of .jar files, this option corresponds to --jars option in Spark.' style="margin-left: 10px"></i>
                   </div>
                   <div class="col-md-4 jupyter-left">
-                    <input uib-tooltip="Comma-separated quoted list of .jar files, this option corresponds to --jars option in Spark." ng-init="jupyterCtrl.val.jars = ''"
+                    <input uib-tooltip="Comma-separated list of .jar files, this option corresponds to --jars option in Spark." ng-init="jupyterCtrl.val.jars = ''"
                            type="text" class="form-control" id="jars" ng-model="jupyterCtrl.val.jars">
                   </div>
                 </div>
 
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow' || jupyterCtrl.val.mode === 'distributedTensorFlow' || jupyterCtrl.val.mode === 'horovod'">
+                <div class="row">
                   <div class="text-right col-md-6">
                     <label for="pyFiles">
-                      <button uib-tooltip='Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. ' id="selectPyFileButton" class="btn btn-default"
+                      <button
+                              uib-tooltip='Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. ' id="selectPyFileButton" class="btn btn-default"
                               ng-click="jupyterCtrl.selectFile('pyfiles')">
                         <span>Add python file</span>
                       </button>
@@ -388,7 +389,8 @@
                   </div>
                   <div class="col-md-4 jupyter-left">
 
-                    <input uib-tooltip="Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. "
+                    <input
+                            uib-tooltip="Comma-separated list of .py, .zip or .egg files that should be added to PYTHONPATH. This option corresponds to --pyFiles option in Spark. "
                            ng-init="jupyterCtrl.val.pyFiles = ''" type="text" class="form-control"
                            id="pyFiles" ng-model="jupyterCtrl.val.pyFiles">
                   </div>
