@@ -979,9 +979,14 @@ public class CertificateMaterializer {
     RemoteMaterialRefID identifier = new RemoteMaterialRefID(key.getExtendedUsername(), remoteDirectory);
     
     int retries = 0;
+    boolean deletedMaterial = false;
     while (materialRef == null && retries < MAX_NUMBER_OF_RETRIES) {
       try {
-        materialRef = remoteMaterialReferencesFacade.acquireLock(identifier, lock_id);
+        if (force) {
+          materialRef = new RemoteMaterialReferences(identifier);
+        } else {
+          materialRef = remoteMaterialReferencesFacade.acquireLock(identifier, lock_id);
+        }
         
         if (materialRef != null) {
           materialRef.decrementReferences();
@@ -995,6 +1000,7 @@ public class CertificateMaterializer {
                   + "> could not be removed from HDFS. You SHOULD clean them manually!");
             }
             remoteMaterialReferencesFacade.delete(materialRef.getIdentifier());
+            deletedMaterial = true;
           } else {
             materialRef.decrementReferences();
             remoteMaterialReferencesFacade.update(materialRef);
@@ -1018,7 +1024,9 @@ public class CertificateMaterializer {
         }
       } finally {
         try {
-          remoteMaterialReferencesFacade.releaseLock(identifier, lock_id);
+          if (!deletedMaterial) {
+            remoteMaterialReferencesFacade.releaseLock(identifier, lock_id);
+          }
         } catch (AcquireLockException ex) {
           LOG.log(Level.SEVERE, "Cannot release lock for " + identifier, ex);
         }
