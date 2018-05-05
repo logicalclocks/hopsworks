@@ -103,20 +103,11 @@
 
             <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfHosts}"/></p:column>
             <p:column headerText="Cores"><h:outputText value="#{cluster.totalCores}"/></p:column>
+            <p:column headerText="GPUs"><h:outputText value="#{cluster.totalGPUs}"/></p:column>
             <p:column headerText="Disk Capacity"><h:outputText value="#{cluster.totalDiskCapacity}"/></p:column>
             <p:column headerText="Memory Capacity"><h:outputText value="#{cluster.totalMemoryCapacity}"/></p:column> 
 
-            <!--                        <p:column headerText="Actions" style="width:10%">
-                                        <p:menuButton value="Actions" disabled="true">  
-                                            <p:menuitem disabled="true" value="Delete cluster" 
-                                                        update=":formServices:messages" 
-                                                        actionListener="#{serviceController.stopService()}" />  
-                                            <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
-                                            <p:separator />  
-                                            <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
-                                        </p:menuButton>  
-                                    </p:column>-->
-          </p:dataTable>  
+          </p:dataTable>
 
           <p:panel>
             <iframe id="grafana_iframe"  src="/hopsworks-api/grafana/dashboard/script/admin.js?hostname=#{clustersController.nameNodesString}&amp;services=HDFS,YARN" width="98%" height="1500px" align="middle"></iframe> 

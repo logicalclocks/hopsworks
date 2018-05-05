@@ -135,6 +135,11 @@ import javax.validation.constraints.Size;
       = "SELECT SUM(h2.cores) FROM Hosts h2 WHERE h2.hostname IN (SELECT h.hostname FROM HostServices r, Hosts h "
       + "WHERE r.host = h AND r.cluster = :cluster GROUP BY h.hostname)")
   ,
+  @NamedQuery(name = "HostServices.TotalGPUs",
+      query
+      = "SELECT SUM(h2.numGpus) FROM Hosts h2 WHERE h2.hostname IN (SELECT h.hostname FROM HostServices r, Hosts h "
+      + "WHERE r.host = h AND r.cluster = :cluster GROUP BY h.hostname)")
+  ,
   @NamedQuery(name = "HostServices.TotalMemoryCapacity",
       query
       = "SELECT SUM(h2.memoryCapacity) FROM Hosts h2 WHERE h2.hostname IN "

@@ -59,6 +59,7 @@ public class ClustersController {
       ClusterInfo clusterInfo = new ClusterInfo(cluster);
       clusterInfo.setNumberOfHosts(hostServicesFacade.countHosts(cluster));
       clusterInfo.setTotalCores(hostServicesFacade.totalCores(cluster));
+      clusterInfo.setTotalGPUs(hostServicesFacade.totalGPUs(cluster));
       clusterInfo.setTotalMemoryCapacity(hostServicesFacade.totalMemoryCapacity(cluster));
       clusterInfo.setTotalDiskCapacity(hostServicesFacade.totalDiskCapacity(cluster));
       clusterInfo.addServices(hostServicesFacade.findHostServicesByCluster(cluster));

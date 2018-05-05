@@ -35,6 +35,7 @@ public class ClusterInfo {
   private String name;
   private Long numberOfHosts;
   private Long totalCores;
+  private Long totalGPUs;
   private Long totalMemoryCapacity;
   private Long totalDiskCapacity;
   private Set<String> groups = new HashSet<>();
@@ -77,6 +78,14 @@ public class ClusterInfo {
 
   public void setTotalCores(Long totalCores) {
     this.totalCores = totalCores;
+  }
+
+  public Long getTotalGPUs() {
+    return totalGPUs;
+  }
+
+  public void setTotalGPUs(Long totalGPUs) {
+    this.totalGPUs = totalGPUs;
   }
 
   public Integer serviceCount(String service) {

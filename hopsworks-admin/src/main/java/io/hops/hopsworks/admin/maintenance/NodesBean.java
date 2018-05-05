@@ -124,10 +124,12 @@ public class NodesBean implements Serializable {
       storedHost.setPrivateIp(host.getPrivateIp());
       storedHost.setAgentPassword(host.getAgentPassword());
       storedHost.setRegistered(host.isRegistered());
-      hostsFacade.storeHost(storedHost, true);
+      storedHost.setCondaEnabled(host.getCondaEnabled());
+      hostsFacade.storeHost(storedHost);
       MessagesController.addInfoMessage("Updated host");
       logger.log(Level.FINE, "Updated Host with ID: " + host.getHostname() + " Hostname: " + host.getHostIp()
-          + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp());
+          + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp()
+          + " Conda Enabled: " + host.getCondaEnabled());
     }
   }
 
@@ -213,8 +215,9 @@ public class NodesBean implements Serializable {
         Hosts newNode = new Hosts();
         newNode.setHostname(newNodeHostname);
         newNode.setHostIp(newNodeHostIp);
+        newNode.setCondaEnabled(false);
         allNodes.add(newNode);
-        hostsFacade.storeHost(newNode, true);
+        hostsFacade.storeHost(newNode);
         logger.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostname());
         MessagesController.addInfoMessage("New node added", "Now click the button 'Zip Anaconda Libraries' before "
             + "installing the new node.");

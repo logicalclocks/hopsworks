@@ -22,8 +22,6 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
@@ -38,7 +36,6 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -82,12 +79,8 @@ public class PythonDepsService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-  @EJB
-  private HostsFacade hostsFacade;
-  // No @EJB annotation for Project, it's injected explicitly in ProjectService.
+ // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -183,15 +176,6 @@ public class PythonDepsService {
     projectFacade.update(project);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  private Users getUser(String email) throws ThirdPartyException {
-    Users user = userFacade.findByEmail(email);
-    if (user == null) {
-      throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
-          ThirdPartyException.Source.LOCAL, "exception");
-    }
-    return user;
   }
 
   @GET

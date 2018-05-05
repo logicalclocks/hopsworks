@@ -116,7 +116,7 @@ public class CertSigningService {
         String agentPassword = json.getString("agent-password");
         host.setAgentPassword(agentPassword);
         host.setRegistered(true);
-        hostsFacade.storeHost(host, true);
+        hostsFacade.storeHost(host);
       } catch (Exception ex) {
         logger.log(Level.SEVERE, "Host storing error while Cert signing: {0}", ex.getMessage());
       }

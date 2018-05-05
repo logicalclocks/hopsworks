@@ -53,7 +53,6 @@ describe 'conda' do
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install", {lib: "tflearn", version: "0.3.2", channelUrl: "PyPi", installType: "PIP", machineType: "ALL"}
         expect_status(200)
-
       end
 
 
@@ -104,6 +103,98 @@ describe 'conda' do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
         expect_status(200)
 
+      end
+    end
+  end
+
+  describe "#Creation not executed on non-conda hosts" do
+    context 'with admin rights' do
+      before :each do
+        with_valid_project
+      end
+
+      it 'should be able to disable conda on a host' do
+        with_admin_session
+        put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+        expect_status(204)
+      end
+
+      it 'should fail to create an environment (single machine test)' do
+        create_session(@user[:email], "Pass123")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+        expect_status(500)
+      end
+
+      it 'should not have created any conda_commands in the db' do
+        expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
+      end
+
+      it 'should be able to re-enable conda on a host' do
+        with_admin_session
+        put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+        expect_status(204)
+      end
+
+      it 'should be able to create an environment' do
+        create_session(@user[:email], "Pass123")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+        expect_status(200)
+
+        wait_for do
+          response = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
+          hops_library = json_body.detect { |library| library[:lib] == "hops" }
+          !hops_library.nil?
+        end
+      end
+    end
+  end
+
+  describe "#Library installation not executed on non-conda hosts" do
+    context 'with admin rights' do
+      before :all do
+        with_valid_project
+      end
+
+      it 'should create an environment ' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enable/2.7/true"
+        expect_status(200)
+
+        wait_for do
+          response = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
+          hops_library = json_body.detect { |library| library[:lib] == "hops" }
+          !hops_library.nil?
+        end
+      end
+
+      it 'should be able to disable conda on a host' do
+        with_admin_session
+        put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "false"}
+        expect_status(204)
+      end
+
+      it 'should fail to install a library' do
+        create_session(@user[:email], "Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install", {lib: "imageio", version: "2.2.0", channelUrl: "defaults", installType: "CONDA", machineType: "CPU"}
+        expect_status(404)
+      end
+
+      it 'should not have created any conda_commands in the db' do
+        expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
+      end
+
+      it 'should be able to re-enable conda on a host' do
+        with_admin_session
+        put "#{ENV['HOPSWORKS_API']}/admin/hosts", {hostname: "hopsworks0", condaEnabled: "true"}
+        expect_status(204)
+      end
+
+      it 'should be able to install a library' do
+        create_session(@user[:email], "Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/install", {lib: "imageio", version: "2.2.0", channelUrl: "defaults", installType: "CONDA", machineType: "CPU"}
+        expect_status(200)
+
+        # Check that the command has been register into the table and it will be eventually sent to the agent
+        expect(CondaCommands.find_by(proj: @project[:projectname])).not_to be nil
       end
     end
   end

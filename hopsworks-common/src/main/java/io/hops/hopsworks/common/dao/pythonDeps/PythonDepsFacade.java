@@ -226,12 +226,10 @@ public class PythonDepsFacade {
 
   /**
    * Get all the Python Deps for the given project and channel
-   * <p/>
-   * @param projectId
+   * @param channelUrl
    * @return
    */
-  public List<PythonDep> findInstalledPythonDepsByCondaChannel(String channelUrl)
-      throws AppException {
+  public List<PythonDep> findInstalledPythonDepsByCondaChannel(String channelUrl) {
     TypedQuery<AnacondaRepo> query = em.createNamedQuery(
         "AnacondaRepo.findByUrl",
         AnacondaRepo.class);
@@ -356,18 +354,6 @@ public class PythonDepsFacade {
     }
   }
 
-  private List<Hosts> getHosts() throws AppException {
-    List<Hosts> hosts = new ArrayList<>();
-    try {
-      hosts = hostsFacade.find();
-    } catch (Exception ex) {
-      Logger.getLogger(PythonDepsFacade.class.getName()).log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "Problem adding the project python deps.");
-    }
-    return hosts;
-  }
-
   /**
    *
    * @param proj
@@ -477,8 +463,7 @@ public class PythonDepsFacade {
   }
 
   /**
-   *
-   * @param project
+   * @param srcProject
    * @throws AppException
    */
   public void cloneProject(Project srcProject, Project destProj) throws
@@ -487,17 +472,21 @@ public class PythonDepsFacade {
   }
 
   /**
-   * Asycnrhonous execution of conda operations
+   * Asynchronous execution of conda operations
    *
    * @param op
    * @param proj
    * @param pythonVersion
    * @param arg
-   * @param hosts
    * @throws AppException
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, String arg) throws AppException {
-    for (Hosts h : getHosts()) {
+    List<Hosts> hosts = hostsFacade.getCondaHosts(MachineType.ALL);
+    if (hosts.size() == 0) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR, "No conda machine enabled. Contact the admin.");
+    }
+
+    for (Hosts h : hosts) {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
           op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, MachineType.ALL, proj, pythonVersion, "",
@@ -522,7 +511,6 @@ public class PythonDepsFacade {
    *
    * @param op
    * @param proj
-   * @param pythonVersion
    * @param arg
    * @param hosts
    * @throws AppException
@@ -539,13 +527,7 @@ public class PythonDepsFacade {
     for (Future f : waiters) {
       try {
         f.get(10, TimeUnit.SECONDS);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(PythonDepsFacade.class.getName()).
-            log(Level.SEVERE, null, ex);
-      } catch (ExecutionException ex) {
-        Logger.getLogger(PythonDepsFacade.class.getName()).
-            log(Level.SEVERE, null, ex);
-      } catch (TimeoutException ex) {
+      } catch (InterruptedException | ExecutionException | TimeoutException ex) {
         Logger.getLogger(PythonDepsFacade.class.getName()).
             log(Level.SEVERE, null, ex);
       }
@@ -647,33 +629,28 @@ public class PythonDepsFacade {
   private void condaOp(CondaOp op, CondaInstallType installType, MachineType machineType, Project proj,
                        String channelUrl, String lib, String version) throws AppException {
 
-    List<Hosts> hosts = hostsFacade.find();
-
-    hosts = filterHosts(hosts, machineType);
-
+    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if(hosts.size() == 0) {
       throw new AppException(Response.Status.NOT_FOUND,
               "No hosts with the desired capability: " + machineType.name());
     }
-    PythonDep dep = null;
+
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = getRepo(proj, channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
-      dep = getDep(repo, machineType, installType, lib, version, true, false);
+      PythonDep dep = getDep(repo, machineType, installType, lib, version, true, false);
 
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
       if (depsInProj.contains(dep)) {
         if (op == CondaOp.INSTALL) {
-          throw new AppException(Response.Status.NOT_MODIFIED.
-              getStatusCode(),
+          throw new AppException(Response.Status.NOT_MODIFIED.getStatusCode(),
               "This python library is already installed on this project");
         }
         depsInProj.remove(dep);
       } else if (op == CondaOp.UNINSTALL || op == CondaOp.UPGRADE) {
-        throw new AppException(Response.Status.NOT_MODIFIED.
-            getStatusCode(),
+        throw new AppException(Response.Status.NOT_MODIFIED.getStatusCode(),
             "This python library is not installed for this project. Cannot remove/upgrade "
             + op);
       }
@@ -693,40 +670,9 @@ public class PythonDepsFacade {
       }
 //      kagentCalls(hosts, op, proj, dep);
     } catch (Exception ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           ex.getMessage());
     }
-
-  }
-
-  private List<Hosts> filterHosts(List<Hosts> hosts, MachineType machineType) {
-
-    if(machineType.equals(MachineType.ALL)) {
-      return hosts;
-    }
-
-    List<Hosts> filteredHosts = new ArrayList<>();
-
-    if(machineType.equals(MachineType.CPU)) {
-
-      for(Hosts host: hosts) {
-        if(host.getNumGpus() == 0) {
-          filteredHosts.add(host);
-        }
-      }
-    }
-
-    else if(machineType.equals(MachineType.GPU)) {
-
-      for(Hosts host: hosts) {
-        if(host.getNumGpus() > 0) {
-          filteredHosts.add(host);
-        }
-      }
-    }
-
-    return filteredHosts;
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -740,17 +686,10 @@ public class PythonDepsFacade {
         this.web, proj, host, op, dep));
     try {
       f.get(100, TimeUnit.SECONDS);
-    } catch (InterruptedException ex) {
-      Logger.getLogger(PythonDepsFacade.class.getName()).
-          log(Level.SEVERE, null, ex);
-    } catch (ExecutionException ex) {
-      Logger.getLogger(PythonDepsFacade.class.getName()).
-          log(Level.SEVERE, null, ex);
-    } catch (TimeoutException ex) {
+    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
       Logger.getLogger(PythonDepsFacade.class.getName()).
           log(Level.SEVERE, null, ex);
     }
-
   }
 
   public void agentResponse(int commandId, String status,
@@ -759,54 +698,6 @@ public class PythonDepsFacade {
     PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
         status.toUpperCase());
 
-  }
-
-//  public void agentResponse(String proj, String op, String channelUrl,
-//          String dependency, String version, String status, int hostId, String arg) {
-//
-//    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.
-//            valueOf(status);
-//    try {
-//      Project p = projectFacade.findByName(proj);
-//      if (p == null) {
-//        CondaCommands kc = new CondaCommands();
-//        kc.setCreated(Date.from(Instant.now()));
-//        kc.setProj(proj);
-//        kc.setOp(CondaOp.REMOVE);
-//        kc.setUser(settings.getSparkUser());
-//        kc.setArg(arg);
-//        em.persist(kc);
-//      } else if (isAnacondaOp(op)) {
-//
-//      } else {
-////        AnacondaRepo repo = getRepo(p, channelUrl, false);
-////        PythonDep dep = getDep(repo, dependency, version, false);
-////        PythonDepHostStatusPK pk = new PythonDepHostStatusPK(p.getId(), dep.
-////                getId(), repo.getId(), hostId);
-////        PythonDepHostStatus phs = new PythonDepHostStatus(pk, CondaOp.valueOf(
-////                op.toUpperCase()), s);
-////        em.merge(phs);
-//
-//      }
-////      em.flush();
-//    } catch (Exception ex) {
-//      // TODO - if i can't find a project, tell the node that there is a problem
-//      // and to delete the project locally. Do this by putting a command in an
-//      // row in a table (entity bean)
-//      logger.log(Level.WARNING,
-//              "Problem persisting heartbeat about new python dependencies at kagents.."
-//              + ex.getMessage());
-//      // Do nothing
-//    }
-//
-//  }
-  private boolean isAnacondaOp(String op) {
-    CondaOp condaOp = CondaOp.valueOf(op.toUpperCase());
-    if (condaOp == CondaOp.CLONE || condaOp == CondaOp.CREATE || condaOp
-        == CondaOp.LIST) {
-      return true;
-    }
-    return false;
   }
 
   public CondaCommands findCondaCommand(int commandId) {
@@ -833,11 +724,7 @@ public class PythonDepsFacade {
     return query.getResultList();
   }
   
-//  public void updateCondaComamandStatus(int commandId, String status, String arg) {
-//    PythonDepsFacade.CondaStatus s = PythonDepsFacade.CondaStatus.valueOf(
-//            status.toUpperCase());
-//    updateCondaComamandStatus(commandId, s, arg);
-//  }
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, CondaInstallType installType,
       MachineType machineType, String arg, String proj, CondaOp opType, String lib, String version,

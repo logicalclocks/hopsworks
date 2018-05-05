@@ -92,6 +92,7 @@
               </div>
             </p:column> 
             <p:column headerText="Cores"><h:outputText value="#{host.cores}" rendered="#{not empty host.cores}"/></p:column>
+            <p:column headerText="# GPUs"><h:outputText value="#{host.numGpus}" rendered="#{not empty host.numGpus}"/></p:column>
             <p:column headerText="Load Average">
               <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
                 <p:column>#{host.load1}</p:column>

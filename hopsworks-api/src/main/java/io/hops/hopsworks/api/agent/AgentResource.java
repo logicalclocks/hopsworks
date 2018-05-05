@@ -57,7 +57,6 @@ import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.BlockReport;
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
@@ -76,9 +75,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -171,8 +168,7 @@ public class AgentResource {
       host.setLoad1(json.getJsonNumber("load1").doubleValue());
       host.setLoad5(json.getJsonNumber("load5").doubleValue());
       host.setLoad15(json.getJsonNumber("load15").doubleValue());
-      Integer numGpus = json.getJsonNumber("num-gpus").intValue();
-      host.setNumGpus(numGpus);  // '1' means has a GPU, '0' means doesn't have one.
+      host.setNumGpus(json.getJsonNumber("num-gpus").intValue());
       Long previousDiskUsed = host.getDiskUsed() == null ? 0l : host.getDiskUsed();
       host.setDiskUsed(json.getJsonNumber("disk-used").longValue());
       host.setMemoryUsed(json.getJsonNumber("memory-used").longValue());
@@ -186,7 +182,7 @@ public class AgentResource {
       }
       host.setMemoryCapacity(json.getJsonNumber("memory-capacity").longValue());
       host.setCores(json.getInt("cores"));
-      hostFacade.storeHost(host, false);
+      hostFacade.storeHost(host);
 
       JsonArray roles = json.getJsonArray("services");
       for (int i = 0; i < roles.size(); i++) {
@@ -271,31 +267,6 @@ public class AgentResource {
         processSystemCommands(systemOps);
       }
 
-      List<CondaCommands> differenceList = new ArrayList<>();
-
-      if (json.containsKey("block-report")) {
-        // Map<'project', 'installed-libs'>
-        Map<String, BlockReport> mapReports = new HashMap<>();
-
-        JsonObject envs = json.getJsonObject("block-report");
-        for (String s : envs.keySet()) {
-          JsonArray installedLibs = envs.getJsonArray(s);
-
-          String projName = s;
-          BlockReport br = new BlockReport();
-          mapReports.put(projName, br);
-          br.setProject(projName);
-          for (int k = 0; k < installedLibs.size(); k++) {
-            JsonObject libObj = installedLibs.getJsonObject(k);
-            String libName = libObj.getString("name");
-            String libUrl = libObj.getString("channel");
-            String libInstallType = libObj.getString("installType");
-            String libVersion = libObj.getString("version");
-            br.addLib(libName, libUrl, libInstallType, libVersion);
-          }
-        }
-      }
-      
       List<CondaCommands> allCommandsForHost = pythonDepsFacade.findByHost(host);
 
       Collection<CondaCommands> commandsToExec = new ArrayList<>();
@@ -306,8 +277,7 @@ public class AgentResource {
         }
       }
       commands.addAll(commandsToExec);
-      commands.addAll(differenceList);
-      
+
       List<SystemCommand> pendingCommands = systemCommandFacade.findByHost(host);
       for (SystemCommand pendingCommand : pendingCommands) {
         if (pendingCommand.getStatus().equals(SystemCommandFacade.STATUS.NEW)) {

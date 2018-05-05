@@ -184,6 +184,14 @@
                     </p:cellEditor>
                   </p:column>
 
+                  <p:column id="condaEnabled" headerText="Conda enabled">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:selectBooleanCheckbox value="#{node.condaEnabled}" disabled="true"/></f:facet>
+                      <f:facet name="input"><p:selectBooleanCheckbox value="#{node.condaEnabled}"/></f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
                   <p:column style="width:32px">
                     <p:rowEditor />
                   </p:column>

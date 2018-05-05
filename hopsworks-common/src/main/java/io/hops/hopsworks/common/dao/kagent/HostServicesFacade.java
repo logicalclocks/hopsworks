@@ -155,6 +155,13 @@ public class HostServicesFacade {
     return query.getSingleResult();
   }
 
+  public Long totalGPUs(String cluster) {
+    TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalGPUs",
+        Long.class)
+        .setParameter("cluster", cluster);
+    return query.getSingleResult();
+  }
+
   public Long totalMemoryCapacity(String cluster) {
     TypedQuery<Long> query = em.createNamedQuery("HostServices.TotalMemoryCapacity",
         Long.class)

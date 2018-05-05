@@ -50,8 +50,12 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query = "SELECT h FROM Hosts h"),
   @NamedQuery(name = "Hosts.findBy-Id",
           query = "SELECT h FROM Hosts h WHERE h.id = :id"),
-  @NamedQuery(name = "Hosts.findBy-hasGpus",
-          query = "SELECT h FROM Hosts h WHERE h.numGpus = :numGpus"),
+  @NamedQuery(name = "Hosts.findBy-conda-enabled",
+        query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true"),
+  @NamedQuery(name = "Hosts.findBy-conda-enabled-gpu",
+          query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus > 0"),
+  @NamedQuery(name = "Hosts.findBy-conda-enabled-cpu",
+        query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus = 0"),
   @NamedQuery(name = "Hosts.findBy-Hostname",
           query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
   @NamedQuery(name = "Hosts.findBy-HostIp",
@@ -128,11 +132,14 @@ public class Hosts implements Serializable {
   @Column(name = "memory_used")
   private Long memoryUsed;
 
-  @Column(name = "has_gpus")
+  @Column(name = "num_gpus")
   private int numGpus = 0;
 
   @Column(name = "registered")
   private boolean registered;
+
+  @Column(name = "conda_enabled")
+  private Boolean condaEnabled;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "hostId")
@@ -272,6 +279,10 @@ public class Hosts implements Serializable {
     this.registered = registered;
   }
 
+  public Boolean getCondaEnabled() { return condaEnabled; }
+
+  public void setCondaEnabled(Boolean condaEnabled) { this.condaEnabled = condaEnabled; }
+
   public String getPublicOrPrivateIp() {
     // Prefer private IP, but return a public IP if the private ip is null
     if (publicIp == null || publicIp.isEmpty() || (publicIp != null && privateIp
@@ -409,6 +420,4 @@ public class Hosts implements Serializable {
   public String toString() {
     return this.hostIp + "(" + this.hostname + ")";
   }
-
-
 }
