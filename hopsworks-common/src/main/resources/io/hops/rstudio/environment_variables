@@ -1,0 +1,16 @@
+https://stat.ethz.ch/R-manual/R-devel/library/base/html/Startup.html
+
+
+
+R_PROFILE_USER
+
+R_ENVIRON - name of the site file
+R_ENVIRON_USER - name of the user
+
+
+R_HOME - set to the user private directory
+
+ --no-init-file was given, R searches for a user profile
+
+	
+You can use the .Rprofile.site file to run R commands for all users when their R session starts. 

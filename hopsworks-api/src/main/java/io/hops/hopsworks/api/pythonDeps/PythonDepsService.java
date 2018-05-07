@@ -102,7 +102,7 @@ public class PythonDepsService {
       add("pandas");
       add("tensorflow-serving-api");
       add("hopsfacets");
-      add("mml");
+      add("mmlspark");
       add("numpy");
     }
   };
@@ -184,7 +184,7 @@ public class PythonDepsService {
   @Produces(MediaType.TEXT_PLAIN)
   public Response installed() throws AppException {
     String defaultRepo = settings.getCondaDefaultRepo();
-    if (settings.isAnacondaInstalled()) {
+    if (settings.isAnacondaEnabled()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
           .entity(defaultRepo).build();
     }

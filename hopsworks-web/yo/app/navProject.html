@@ -87,12 +87,13 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToWorklows()" style="margin-top:40px;"  ng-show="projectCtrl.showWorkflows()">
+
+      <li ng-click="projectCtrl.goToRStudio()" ng-show="projectCtrl.showRStudio()">
         <a>
-          Oozie<span class="sub_icon fa fa-code-fork fa-lg pull-right"></span>
+          RStudio<img class="pull-right" style="margin-right:15px" height="25" src="images/rstudio.png">
         </a>
       </li>
-
+      
       <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()">
         <a class="left-right" id="servingTab">
           Model Serving
@@ -100,6 +101,7 @@
         </a>
       </li>
 
+      
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>

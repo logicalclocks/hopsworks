@@ -33,7 +33,7 @@
       <span style="color: #4285f4" class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span> Tail</button>
 </div>
 <div class="modal-body content" ng-show="filePreviewCtrl.type === 'image'">
-  <img class="img-responsive" src="data:image/{{filePreviewCtrl.extension}};base64,{{filePreviewCtrl.content}}" alt="Waiting for image download...">
+  <img class="img-preview" src="data:image/{{filePreviewCtrl.extension}};base64,{{filePreviewCtrl.content}}" alt="Waiting for image download...">
 </div>
 <div class="modal-body " ng-show="filePreviewCtrl.type === 'text'">
   <p class="filepreview">{{filePreviewCtrl.content}}</p>

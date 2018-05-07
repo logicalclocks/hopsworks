@@ -61,6 +61,17 @@ angular.module('hopsWorksApp')
               startServing: function (projectId, servingId) {
                              return $http.post('/api/project/' + projectId + '/tfserving/start/' + servingId);
                             },
+              transformGraph: function (projectId, servingId, transformGraph) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/tfserving/transform/' + servingId,
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: transformGraph
+                };
+                return $http(req);
+                            },
               changeVersion: function (projectId, servingConfig) {
               var req = {
                                 method: 'PUT',

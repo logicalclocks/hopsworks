@@ -128,6 +128,10 @@ public class TfServing implements Serializable {
   @NotNull
   @Column(name = "enable_batching")
   private boolean enableBatching;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "optimized")
+  private boolean optimized;
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
@@ -140,7 +144,7 @@ public class TfServing implements Serializable {
   }
 
   public TfServing(Integer id, TfServingStatusEnum status, int hdfsUserId, Date created,
-                   String modelName, String hdfsModelPath, int version, boolean enableBatching) {
+                   String modelName, String hdfsModelPath, int version, boolean enableBatching, boolean optimized) {
     this.id = id;
     this.status = status;
     this.hdfsUserId = hdfsUserId;
@@ -149,6 +153,7 @@ public class TfServing implements Serializable {
     this.hdfsModelPath = hdfsModelPath;
     this.version = version;
     this.enableBatching = enableBatching;
+    this.optimized = optimized;
   }
 
   public Integer getId() {
@@ -255,6 +260,14 @@ public class TfServing implements Serializable {
     this.enableBatching = enableBatching;
   }
 
+  public boolean isOptimized() {
+    return optimized;
+  }
+
+  public void setOptimized(boolean optimized) {
+    this.optimized = optimized;
+  }
+  
   public Project getProject() {
     return project;
   }

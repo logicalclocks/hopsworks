@@ -231,7 +231,7 @@ public class TfServingService {
       }
 
       tfServing.setHdfsUserId(user.getId());
-
+      
       String secret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
       tfServing.setSecret(secret);
 
@@ -380,6 +380,17 @@ public class TfServingService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
+  @POST
+  @Path("/transform/{servingId}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response transformGraph(@PathParam("servingId") int servingId,
+                                      @Context SecurityContext sc,
+                                      @Context HttpServletRequest req) throws AppException {
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+  
+  
   @PUT
   @Path("/version")
   @Consumes(MediaType.APPLICATION_JSON)

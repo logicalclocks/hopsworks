@@ -16,7 +16,7 @@
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   ~
-  -->
+-->
 
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
@@ -42,22 +42,22 @@
               <div class="row">
                 <div class="col-md-2 col-lg-2">
 
-              <img height="30" src="images/jupyter.png"/>
+                  <img height="30" src="images/jupyter.png"/>
                 </div>
 
 
                 <div class="col-md-10 col-lg-10">
-              <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:5px;">
-                <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Anaconda environment installing...
+                  <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:5px;">
+                    <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Anaconda environment installing...
 
-              </div>
+                  </div>
 
-              <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled === false" style="margin-top:6px;">
-                <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
+                  <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled === false" style="margin-top:6px;">
+                    <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
 
-              </div>
+                  </div>
                 </div>
-            </div>
+              </div>
             </div>
 
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
@@ -91,7 +91,7 @@
           </div>
 
 
-          <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''">
+          <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
             <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:20px; margin-left: 0px;'>
 
               <!-- STYLE THIS (TENSORFLOW : SPARK) -->
@@ -107,10 +107,13 @@
                            ng-click="jupyterCtrl.val.mode = 'distributedTensorFlow'">
                       <input type="radio" name="distributedTensorFlow" id="distributedTensorFlow" autocomplete="off"> TensorFlowOnSpark
                     </label>
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'horovod', focus: jupyterCtrl.val.mode === 'horovod'}"
-                           ng-click="jupyterCtrl.val.mode = 'horovod'">
-                      <input type="radio" name="horovod" id="horovod" autocomplete="off"> Horovod
-                    </label>
+                    <div ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
+
+                      <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'horovod', focus: jupyterCtrl.val.mode === 'horovod'}"
+                             ng-click="jupyterCtrl.val.mode = 'horovod'">
+                        <input type="radio" name="horovod" id="horovod" autocomplete="off"> Horovod
+                      </label>
+                    </div>
                     <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkStatic', focus: jupyterCtrl.val.mode === 'sparkStatic'}"
                            ng-click="jupyterCtrl.val.mode = 'sparkStatic'">
                       <input type="radio" name="sparks" id="sparkStatic" autocomplete="off"> Spark (Static)
@@ -189,7 +192,7 @@
                       <input type="number" ng-init="1"  ng-model="jupyterCtrl.val.numMpiNp" min="1" class="form-control">
                     </div>
                   </div>
-                  <div class="row clusterparams">
+                  <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-6">GPUs per process<i class="fa fa-info-circle"
                                                                         uib-tooltip="The number of GPUs accessible for each process (0 or 1)."
                                                                         style="margin-left: 10px"></i>
@@ -287,8 +290,8 @@
                     <div class="col-md-2 jupyter-left"><input type="number" min="1" step="1" ng-model="jupyterCtrl.val.numExecutorCores" class="form-control"></div>
                   </div>
                 </div>
-                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'">
-                  <div class="row clusterparams">
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'" >
+                  <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-6">Executor GPUs<i class="fa fa-info-circle"
                                                                      uib-tooltip="The number of GPUs allocated for each Spark executor in this job."
                                                                      style="margin-left: 10px"></i>
@@ -298,7 +301,7 @@
                 </div>
                 <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorFlow'">
 
-                  <div class="row clusterparams">
+                  <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
                     <div class="text-right col-md-6">GPUs per worker<i class="fa fa-info-circle"
                                                                        uib-tooltip="The number of GPUs allocated for each worker. Parameter servers do not have access to a GPU."
                                                                        style="margin-left: 10px"></i>
@@ -308,7 +311,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
                   <div class="text-right col-md-6">Log Level <i class="fa fa-info-circle"
                                                                 uib-tooltip="Log4j log level for this job." 
@@ -326,11 +329,11 @@
                     </ui-select>
                   </div>
                 </div>
-                
+
                 <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
                   <div class="text-right col-md-6">Auto Shutdown (hrs)<i class="fa fa-info-circle"
-                                                                uib-tooltip="Shutdown this notebook automatically after this number of hours." 
-                                                                style="margin-left: 10px"></i>
+                                                                         uib-tooltip="Shutdown this notebook automatically after this number of hours." 
+                                                                         style="margin-left: 10px"></i>
                   </div>
                   <div class="col-md-2 jupyter-left">
                     <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
@@ -345,7 +348,7 @@
                   </div>
                 </div>
 
-                
+
                 <div class="row clusterparams">
                   <div class="text-right col-md-6">
                     <label for="archives">
@@ -412,69 +415,69 @@
                   </div>
                 </div>
 
-              <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
-                <div class="text-right col-md-6">More Spark Properties <i class="fa fa-info-circle"
-                                                                          uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
-                                                                          style="margin-left: 10px"></i>
-                </div>
-                <div class="col-md-5 jupyter-left">
-                  <textarea style="width: 100%;" id="TextArea" ng-model="jupyterCtrl.val.sparkParams" 
-                            ng-keyup="autoExpand($event)" 
-                            title="spark.yarn.am.port=12242&#10;spark.driver.extraLibraryPath=/path/to/extra/library">
-                  </textarea>
-                </div>
+                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
+                  <div class="text-right col-md-6">More Spark Properties <i class="fa fa-info-circle"
+                                                                            uib-tooltip="Enter additional line-separated Spark properties here. Use the equality symbol to separate parameters from values." 
+                                                                            style="margin-left: 10px"></i>
+                  </div>
+                  <div class="col-md-5 jupyter-left">
+                    <textarea style="width: 100%;" id="TextArea" ng-model="jupyterCtrl.val.sparkParams" 
+                              ng-keyup="autoExpand($event)" 
+                              title="spark.yarn.am.port=12242&#10;spark.driver.extraLibraryPath=/path/to/extra/library">
+                    </textarea>
+                  </div>
 
-                <!--                <div class="col-md-2 jupyter-left">
-                                                  <fieldset  data-ng-repeat="jupyterCtrl.sparkParamsSelected in sparkParams">
-                                    <select>
-                                      <option>spark.yarn.</option>
-                                      <option>Office</option>
-                                      <option>Home</option>
-                                    </select>
-                                    <input type="text" ng-model="jupyterCtrl.sparkParamsSelected.name" name="" 
-                                           placeholder="Additional Spark Parameters">
-                                    <button class="remove" ng-show="$last" ng-click="jupyterCtrl.removeSparkParam()">-</button>
-                                  </fieldset>
-                                  <button class="addfields" ng-click="jupyterCtrl.addSparkParam()">Add fields</button>
-                
-                                  <div id="choicesDisplay">
-                                    {{ sparkParams}}
-                                  </div>                      
-                
-                                  <ui-select ng-model="jupyterCtrl.sparkParamsSelected" theme="bootstrap"
-                                             on-select="jupyterCtrl.changeSparkParam()">
-                                    <ui-select-match >
-                                      <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
-                                    </ui-select-match>
-                                    <ui-select-choices repeat="level in (jupyterCtrl.log_levels | filter: $select.search) track by level.name">
-                                      <span ng-bind="level.name | highlight: $select.search"></span>
-                                    </ui-select-choices>
-                                  </ui-select>
-                                </div>
-                              </div>-->
+                  <!--                <div class="col-md-2 jupyter-left">
+                                                    <fieldset  data-ng-repeat="jupyterCtrl.sparkParamsSelected in sparkParams">
+                                      <select>
+                                        <option>spark.yarn.</option>
+                                        <option>Office</option>
+                                        <option>Home</option>
+                                      </select>
+                                      <input type="text" ng-model="jupyterCtrl.sparkParamsSelected.name" name="" 
+                                             placeholder="Additional Spark Parameters">
+                                      <button class="remove" ng-show="$last" ng-click="jupyterCtrl.removeSparkParam()">-</button>
+                                    </fieldset>
+                                    <button class="addfields" ng-click="jupyterCtrl.addSparkParam()">Add fields</button>
+                  
+                                    <div id="choicesDisplay">
+                                      {{ sparkParams}}
+                                    </div>                      
+                  
+                                    <ui-select ng-model="jupyterCtrl.sparkParamsSelected" theme="bootstrap"
+                                               on-select="jupyterCtrl.changeSparkParam()">
+                                      <ui-select-match >
+                                        <span ng-bind="jupyterCtrl.logLevelSelected.name"></span>
+                                      </ui-select-match>
+                                      <ui-select-choices repeat="level in (jupyterCtrl.log_levels | filter: $select.search) track by level.name">
+                                        <span ng-bind="level.name | highlight: $select.search"></span>
+                                      </ui-select-choices>
+                                    </ui-select>
+                                  </div>
+                                </div>-->
+                </div>
+              </div>
+
+              <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
+                <div class="text-right col-md-6">Umask (output files) <i class="fa fa-info-circle"
+                                                                         uib-tooltip="022 - Group readable/not-writable : 007 Group readable/writable : 077 - Group not-readable/not-writable" 
+                                                                         style="margin-left: 10px"></i>
+                </div>
+                <div class="col-md-2 jupyter-left">
+                  <ui-select ng-model="jupyterCtrl.umask" theme="bootstrap"
+                             on-select="jupyterCtrl.changeUmask()">
+                    <ui-select-match >
+                      <span ng-bind="jupyterCtrl.umask.name"></span>
+                    </ui-select-match>
+                    <ui-select-choices repeat="level in (jupyterCtrl.umasks | filter: $select.search) track by level.name">
+                      <span ng-bind="level.name | highlight: $select.search"></span>
+                    </ui-select-choices>
+                  </ui-select>
+                </div>
               </div>
             </div>
-                
-                <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
-                  <div class="text-right col-md-6">Umask (output files) <i class="fa fa-info-circle"
-                                                                           uib-tooltip="022 - Group readable/not-writable : 007 Group readable/writable : 077 - Group not-readable/not-writable" 
-                                                                           style="margin-left: 10px"></i>
-                  </div>
-                  <div class="col-md-2 jupyter-left">
-                    <ui-select ng-model="jupyterCtrl.umask" theme="bootstrap"
-                               on-select="jupyterCtrl.changeUmask()">
-                      <ui-select-match >
-                        <span ng-bind="jupyterCtrl.umask.name"></span>
-                      </ui-select-match>
-                      <ui-select-choices repeat="level in (jupyterCtrl.umasks | filter: $select.search) track by level.name">
-                        <span ng-bind="level.name | highlight: $select.search"></span>
-                      </ui-select-choices>
-                    </ui-select>
-                  </div>
-                </div>
-              </div>
-                
-                
+
+
           </div>
         </div>
 

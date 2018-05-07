@@ -371,7 +371,7 @@ public class WebCommunication {
     return response;
   }
 
-  public int anaconda(String hostAddress, String agentPassword, String op,
+  public Object anaconda(String hostAddress, String agentPassword, String op,
           String project, String arg) throws Exception {
 
     String path = "anaconda/" + settings.getAnacondaUser() + '/' + op.toLowerCase()
@@ -393,13 +393,13 @@ public class WebCommunication {
     int code = response.getStatus();
     Family res = Response.Status.Family.familyOf(code);
     if (res == Response.Status.Family.SUCCESSFUL) {
-      return response.getStatus();
+      return response.getEntity();
     }
     throw new RuntimeException("Error. Failed to execute anaconda command " + op
             + " on " + project + ". Result was: " + res);
   }
 
-  public int conda(String hostAddress, String agentPassword, String op,
+  public Object conda(String hostAddress, String agentPassword, String op,
           String project, String channel, String lib, String version) throws
           Exception {
 
@@ -423,7 +423,7 @@ public class WebCommunication {
     int code = response.getStatus();
     Family res = Response.Status.Family.familyOf(code);
     if (res == Response.Status.Family.SUCCESSFUL) {
-      return response.getStatus();
+      return response.getEntity();
     }
     throw new RuntimeException("Error. Failed to execute conda command " + op
             + " on " + project + ". Result was: " + res);

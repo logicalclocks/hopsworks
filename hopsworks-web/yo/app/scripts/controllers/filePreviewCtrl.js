@@ -31,6 +31,8 @@ angular.module('hopsWorksApp')
             self.extension;
             self.fileDetails;
             self.mode; //Head or Tail the file
+            self.imgHeight=400;
+            self.imgWidth=400;
             self.fetchFile = function (mode) {
               var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
               dataSetService.filePreview(filePath, mode).then(
@@ -49,11 +51,19 @@ angular.module('hopsWorksApp')
                         self.type = self.fileDetails.filePreviewDTO[0].type;
                         self.content = self.fileDetails.filePreviewDTO[0].content;
                         self.extension = self.fileDetails.filePreviewDTO[0].extension;
+                        self.getImageWidthHeight();
                       }, function (error) {
                 growl.error(error.data.errorMsg, {title: 'Could not get file contents', ttl: 5000, referenceId: 23});
               });
             };
             self.fetchFile(mode);
+            
+            self.getImageWidthHeight = function() {
+              var myImg = document.querySelector("#image");
+              self.imgWidth = myImg.naturalWidth;
+              self.imgHeight = myImg.naturalHeight;
+            };
+                        
 
             self.close = function () {
               $uibModalInstance.dismiss('cancel');

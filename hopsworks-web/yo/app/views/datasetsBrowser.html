@@ -41,6 +41,7 @@
                 <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - 1 - datasetsCtrl.breadcrumbLen()) track by $index">
                   <span> / </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
                 </span>
+                <span> &nbsp; <a ng-click="datasetsCtrl.goToFolder(datasetsCtrl.pathArray.length)"> <span class="fa fa-refresh"></span></a></span>
               </div>               
               <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>

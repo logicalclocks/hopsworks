@@ -413,3 +413,8 @@ md-backdrop.md-sidenav-backdrop {
   overflow: auto;
   height: 88%;
 }
+
+.img-preview {
+    max-height: 800 !important;
+    max-width: 800 !important;
+}

@@ -198,3 +198,11 @@ ui-panelgrid td {
   border: none !important;
   padding: 0px !important;
 }
+
+.condaSync {
+ /*background-color: lightgreen;*/ 
+}
+
+.condaOutOfSync {
+ background-color: red; 
+}

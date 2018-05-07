@@ -17,21 +17,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.common.dao.project.service;
 
 public enum ProjectServiceEnum {
 
   ZEPPELIN("Zeppelin"),
-  SSH("Ssh"),
   KAFKA("Kafka"),
-  WORKFLOWS("Workflows"),
   HISTORY("History"),
   DELA("Dela"),
   JUPYTER("Jupyter"),
   JOBS("Jobs"),
   HIVE("Hive"),
   SERVING("Serving"),
+  RSTUDIO("RStudio"),
   PYTHON("Python");
 
   private final String readable;

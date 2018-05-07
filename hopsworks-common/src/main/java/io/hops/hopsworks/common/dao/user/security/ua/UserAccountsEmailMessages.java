@@ -54,8 +54,7 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of blocked acouunt
    */
-  public final static String HOPSWORKS_SUPPORT_EMAIL
-          = "support@hops.io";
+  public static String HOPSWORKS_SUPPORT_EMAIL = "support@hops.io";
 
   /*
    * Subject of profile update

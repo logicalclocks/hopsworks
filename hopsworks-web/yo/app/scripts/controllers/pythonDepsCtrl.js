@@ -253,14 +253,6 @@ angular.module('hopsWorksApp')
             });
 
             self.init = function () {
-              PythonDepsService.enabled(self.projectId).then(
-                      function (success) {
-                        self.enabled = true;
-                        self.pythonVersion = success.data;
-                      },
-                      function (error) {
-                        self.enabled = false;
-                      });
               PythonDepsService.installed(self.projectId).then(
                       function (success) {
                         self.condaChannel = success.data;
@@ -268,6 +260,14 @@ angular.module('hopsWorksApp')
                       },
                       function (error) {
                         self.installed = false;
+                      });
+              PythonDepsService.enabled(self.projectId).then(
+                      function (success) {
+                        self.enabled = true;
+                        self.pythonVersion = success.data;
+                      },
+                      function (error) {
+                        self.enabled = false;
                       });
             };
             self.init();

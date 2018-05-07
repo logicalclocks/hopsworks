@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tfserving.TfServing;
 import io.hops.hopsworks.common.dao.tfserving.TfServingFacade;
+import io.hops.hopsworks.common.dao.tfserving.TransformGraphDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 
 import io.hops.hopsworks.common.exception.AppException;
@@ -100,6 +101,27 @@ public class TfServingProcessMgr {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public TfServing transformGraph(String hdfsUser, TfServing tfServing, TransformGraphDTO dto)
+          throws AppException, IOException, InterruptedException {
+    String prog = settings.getHopsworksDomainDir() + "/bin/tensorflow_transform_graph.sh";
+    
+    HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
+    if (user == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "Could not find hdfs user. Not starting serving.");
+    }
+
+
+    Process process = null;
+    String transform_rules = "";
+    String inputs="";
+    String outputs = "";
+
+    return null;
+  }  
+  
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TfServingDTO startTfServingAsTfServingUser(String hdfsUser,
                                              TfServing tfServing)
           throws AppException, IOException, InterruptedException {
@@ -150,9 +172,7 @@ public class TfServingProcessMgr {
       String pidfile = secretDir + "/tfserving/tfserving-" + port.toString() + ".pid";
 
       // Read the pid for TensorFlow Serving server
-      String pidContents = com.google.common.io.Files.readFirstLine(
-              new File(
-                      pidfile), Charset.defaultCharset());
+      String pidContents = com.google.common.io.Files.readFirstLine(new File(pidfile), Charset.defaultCharset());
       pid = BigInteger.valueOf(Long.parseLong(pidContents));
 
     } catch (Exception ex) {

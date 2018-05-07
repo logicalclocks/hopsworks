@@ -109,13 +109,14 @@
                   <th style="width: 10%"></th>
                   <th style="width: 6%">Model</th>
                   <th style="width: 6%">Version</th>
+                  <th style="width: 6%">Optimized</th>
                   <th style="width: 6%">Batching</th>
                   <th style="width: 6%">Status</th>
                   <th style="width: 6%">Host</th>
-                  <th style="width: 6%">Port</th>
+                  <th style="width: 5%">Port</th>
                   <th style="width: 7%">Created</th>
-                  <th style="width: 14%">Creator</th>
-                  <th style="width: 33%">Actions</th>
+                  <th style="width: 12%">Creator</th>
+                  <th style="width: 30%">Actions</th>
                   </thead>
                   <tbody>
                     <tr dir-paginate="serving in tfservingCtrl.servings| orderBy :sortKey:reverse| filter:jobsCtrl.jobFilter:false | itemsPerPage:pageSize">
@@ -140,6 +141,18 @@
                       </td>
                       <td> {{serving.modelName}} </td>
                       <td> {{serving.version}} </td>
+<!--                      <td> 
+                        <div class="btn-group" role="group">
+                          <button style="border-color: #20AD28; max-width: 80px;"
+                                  ng-click="tfservingCtrl.transformGraph(serving); $event.stopPropagation();"
+                                  class="btn btn-default btn-sm btn-block">
+                            <span ng-show="serving.status !== 'Optimizing'" style="color: #20AD28" class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                            <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="serving.status === 'Optimizing'" ></span>
+                            <span ng-show="serving.status !== 'Optimizing'">Optimize</span>
+                            <span ng-show="serving.status === 'Optimizing'">Optimizing</span>
+                          </button>
+                        </div>
+                      </td>-->
                       <td> {{serving.enableBatching}} </td>
                       <td> {{serving.status}} </td>
                       <td> {{serving.hostIp}} </td>

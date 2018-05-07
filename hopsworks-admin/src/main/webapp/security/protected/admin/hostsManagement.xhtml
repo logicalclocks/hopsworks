@@ -46,6 +46,16 @@
 
       <p:layout id="UserMgmLayout" styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
 
+        <h:form rendered="#{nodesBean.isOutput()}">
+          <p:outputPanel style="margin-left: 10px;">
+            <h3>Logs</h3>
+            <h:inputTextarea readonly="#{nodesBean.isOutput()}" 
+                             value="#{nodesBean.getOutput()}" class="form-control" 
+                             style="margin-left: 30px; min-width: 80%" rows="6"></h:inputTextarea>
+          </p:outputPanel>
+        </h:form>
+
+
         <p:layoutUnit id="centerLayout" position="center">
 
           <div class="container">
@@ -59,8 +69,8 @@
 
 
                 <div class="ui-g">
-                  <div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>
-                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
+                  <!--<div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>-->
+<!--                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
                     <div class="ui-g-12">
                       <h:outputText value="Anaconda package:  #{nodesBean.anacondaLastSynchronized()}"
                                     style="float:left"/>
@@ -69,21 +79,17 @@
                       <h:outputText value="Gpu Anaconda package: #{nodesBean.anacondaGpuLastSynchronized()}"
                                     style="float:left"/>
                     </div>
-                  </div>
-		  
+                  </div>-->
+
                   <div class="ui-g-12 ui-md-2">
-		    <p:commandButton value="Rotate host keys"
+                    <p:commandButton value="Rotate host keys"
                                      style="float:right" 
                                      actionListener="#{nodesBean.rotateKeys}"
-				     icon="ui-icon-arrowrefresh-1-w"
-				     update=":manageClusterNodes:growl">
-		    </p:commandButton>
-                    <p:commandButton value="Zip Anaconda Libraries"
-                                     style="float:right" 
-                                     actionListener="#{nodesBean.zipUpAnacondaLibs}" ajax ="true" update="@all">
+                                     icon="ui-icon-arrowrefresh-1-w"
+                                     update=":manageClusterNodes:growl">
                     </p:commandButton>
                   </div>
-		  
+
                 </div>
 
                 <p:dataTable id="nodesTable" var="node"
@@ -196,6 +202,13 @@
                     <p:rowEditor />
                   </p:column>
 
+                  <p:column id="rsync" headerText="Synchronize Conda" styleClass="#{nodesBean.condaStyle(node.hostname)}">
+                                        <p:commandButton value="Sync up Anaconda"
+                                     style="float:right" 
+                                     actionListener="#{nodesBean.rsyncAnacondaLibs(node.hostIp)}" ajax ="true" update="@all">
+                    </p:commandButton>
+                  </p:column>
+                  
                 </p:dataTable>
 
                 <p:contextMenu for="nodesTable">

@@ -46,7 +46,7 @@
       <div align="center">
         <h:form>
 
-          <h:panelGrid columns="4" cellpadding="50" styleClass="iconsTable">
+          <h:panelGrid columns="5" cellpadding="30" styleClass="iconsTable">
 
             <p:column >
               <h:commandLink  action="userMgmt">
@@ -174,7 +174,7 @@
               <h:commandLink action="#{facesContext.externalContext.redirect('/hopsworks-api/hdfsui')}">
                 <p:graphicImage id="hdfs"
                                 value="/resources/images/users/hdfs-logo.jpg"
-                                width="100"
+                                width="150"
                                 height="100"
                                 title="HDFS Administration"
                                 >
@@ -226,6 +226,21 @@
               <p:outputLabel style="text-align: left"  value="Manage cluster nodes"></p:outputLabel>
             </p:column>
 
+            <p:column>
+              <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-kmon/monitor/anaconda.xhtml')}">
+
+                <p:graphicImage id="conda"
+                                value="/resources/images/python_logo.png"
+                                width="100"
+                                height="100"
+                                title="Manage Conda">
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Manage Conda"></p:outputLabel>
+            </p:column>
+            
+            
           </h:panelGrid>
         </h:form>
       </div>

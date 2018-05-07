@@ -20,48 +20,11 @@
 
 package io.hops.hopsworks.common.dao.tfserving;
 
+import javax.xml.bind.annotation.XmlRootElement;
 
-import javax.xml.bind.annotation.XmlEnumValue;
+@XmlRootElement
+public class TransformGraphDTO {
 
-public enum TfServingStatusEnum {
-  @XmlEnumValue("Created")
-  CREATED("Created"),
-  @XmlEnumValue("Running")
-  RUNNING("Running"),
-  @XmlEnumValue("Stopped")
-  STOPPED("Stopped"),
-  @XmlEnumValue("Starting")
-  STARTING("Starting"),
-  @XmlEnumValue("Transforming")
-  TRANSFORMING("Transforming")
-  ;
-
-  private final String readable;
-
-  private TfServingStatusEnum(String readable) {
-    this.readable = readable;
-  }
-
-  public static TfServingStatusEnum fromString(String shortName) {
-    switch (shortName) {
-      case "Created":
-        return TfServingStatusEnum.CREATED;
-      case "Running":
-        return TfServingStatusEnum.RUNNING;
-      case "Stopped":
-        return TfServingStatusEnum.STOPPED;
-      case "Starting":
-        return TfServingStatusEnum.STARTING;
-      case "Transforming":
-        return TfServingStatusEnum.TRANSFORMING;
-      default:
-        throw new IllegalArgumentException("ShortName [" + shortName + "] not supported.");
-    }
-  }
-
-  @Override
-  public String toString() {
-    return this.readable;
-  }
+  private int tfServingId;
 
 }

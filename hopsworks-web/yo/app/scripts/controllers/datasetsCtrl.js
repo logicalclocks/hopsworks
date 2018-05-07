@@ -528,6 +528,7 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error converting notebook', ttl: 5000, referenceId: 4});
               });
             };
+           
 
             self.isIPythonNotebook = function () {
               if (self.selected === null || self.selected === undefined) {

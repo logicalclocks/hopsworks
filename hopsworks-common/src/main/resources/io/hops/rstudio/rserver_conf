@@ -1,0 +1,10 @@
+# /etc/rstudio/rserver.conf
+
+www-port=%%rstudio_port%%
+www-address=%%rstudio_ip%%
+
+#rsession-which-r=/bin/R
+
+rsession-ld-library-path=%%hadoop_home%%/lib/native:/usr/local/cuda/lib64:/lib64
+
+auth-required-user-group=rstudio_users
