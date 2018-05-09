@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.security.HopsUtil;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
@@ -38,10 +39,9 @@ import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.concurrent.Future;
@@ -180,34 +180,36 @@ public class CertificatesController {
   public String extractCNFromCertificate(byte[] rawKeyStore,
       char[] keystorePwd, String certificateAlias) throws AppException {
     try {
-      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      InputStream inStream = new ByteArrayInputStream(rawKeyStore);
-      keyStore.load(inStream, keystorePwd);
       
-      if (certificateAlias == null) {
-        Enumeration<String> aliases = keyStore.aliases();
-        while (aliases.hasMoreElements()) {
-          certificateAlias = aliases.nextElement();
-          if (!certificateAlias.equals("caroot")) {
-            break;
-          }
-        }
+      X509Certificate certificate = getCertificateFromKeyStore(rawKeyStore, keystorePwd, certificateAlias);
+      if (certificate == null) {
+        throw new GeneralSecurityException("Could not get certificate from keystore");
       }
-      
-      X509Certificate certificate = (X509Certificate) keyStore
-          .getCertificate(certificateAlias.toLowerCase());
       String subjectDN = certificate.getSubjectX500Principal()
           .getName("RFC2253");
-      String[] dnTokens = subjectDN.split(",");
-      String[] cnTokens = dnTokens[0].split("=", 2);
-      
-      return cnTokens[1];
-    } catch (KeyStoreException | IOException | NoSuchAlgorithmException
-        | CertificateException ex) {
+      String cn = HopsUtil.extractCNFromSubject(subjectDN);
+      if (cn == null) {
+        throw new KeyStoreException("Could not extract CN from client certificate");
+      }
+      return cn;
+    } catch (GeneralSecurityException | IOException ex) {
       LOG.log(Level.SEVERE, "Error while extracting CN from certificate", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR
           .getStatusCode(), ex.getMessage());
     }
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public String validateCertificate(byte[] rawKeyStore, char[] keyStorePassword)
+      throws GeneralSecurityException, IOException {
+  
+    X509Certificate certificate = getCertificateFromKeyStore(rawKeyStore, keyStorePassword, null);
+    if (certificate == null) {
+      throw new GeneralSecurityException("Could not get certificate from keystore");
+    }
+  
+    opensslOperations.validateCertificate(certificate);
+    return certificate.getSubjectX500Principal().getName("RFC2253");
   }
   
   public class CertsResult {
@@ -226,5 +228,24 @@ public class CertificatesController {
     public String getUsername() {
       return username;
     }
+  }
+  
+  private X509Certificate getCertificateFromKeyStore(byte[] rawKeyStore, char[] keyStorePwd, String certificateAlias)
+    throws GeneralSecurityException, IOException {
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    InputStream inStream = new ByteArrayInputStream(rawKeyStore);
+    keyStore.load(inStream, keyStorePwd);
+  
+    if (certificateAlias == null) {
+      Enumeration<String> aliases = keyStore.aliases();
+      while (aliases.hasMoreElements()) {
+        certificateAlias = aliases.nextElement();
+        if (!certificateAlias.equals("caroot")) {
+          break;
+        }
+      }
+    }
+  
+    return (X509Certificate) keyStore.getCertificate(certificateAlias.toLowerCase());
   }
 }

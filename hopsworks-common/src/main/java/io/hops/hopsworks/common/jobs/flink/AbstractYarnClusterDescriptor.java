@@ -524,15 +524,18 @@ public abstract class AbstractYarnClusterDescriptor implements
   
     Map<String, String> jobSystemProperties = new HashMap<>(3);
   
+    // When Hops RPC TLS is enabled, Yarn will take care of application certificate
     // Certificates are materialized locally so DFSClient can be set to null
     // LocalResources are not used by Flink, so set it null
-    HopsUtils.copyProjectUserCerts(project, username,
-        services.getSettings().getHopsworksTmpCertDir(),
-        services.getSettings().getHdfsTmpCertDir(), JobType.FLINK,
-        null, null, jobSystemProperties,
-        services.getSettings().getFlinkKafkaCertDir(),
-        appResponse.getApplicationId().toString(),
-        services.getCertificateMaterializer(), services.getSettings().getHopsRpcTls());
+    if (!services.getSettings().getHopsRpcTls()) {
+      HopsUtils.copyProjectUserCerts(project, username,
+          services.getSettings().getHopsworksTmpCertDir(),
+          services.getSettings().getHdfsTmpCertDir(), JobType.FLINK,
+          null, null, jobSystemProperties,
+          services.getSettings().getFlinkKafkaCertDir(),
+          appResponse.getApplicationId().toString(),
+          services.getCertificateMaterializer(), services.getSettings().getHopsRpcTls());
+    }
   
     StringBuilder tmpBuilder = new StringBuilder();
     for (Map.Entry<String, String> prop : jobSystemProperties.entrySet()) {

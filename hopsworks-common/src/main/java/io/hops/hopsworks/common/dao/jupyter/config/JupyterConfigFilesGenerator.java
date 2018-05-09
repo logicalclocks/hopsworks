@@ -320,16 +320,6 @@ public class JupyterConfigFilesGenerator {
   
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
-          // Keystore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__kstore.jks#").append(Settings.K_CERTIFICATE)
-          .append(",")
-          // TrustStore
-          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-          .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-          .append("__tstore.jks#").append(Settings.T_CERTIFICATE)
-          .append(",")
           //Log4j.properties
           .append(settings.getSparkLog4JPath())
           .append(",")
@@ -338,17 +328,6 @@ public class JupyterConfigFilesGenerator {
           .append(",")
           // Add HopsUtil
           .append(settings.getHopsUtilHdfsPath());
-  
-      // If RPC TLS is enabled, password file would be injected by the
-      // NodeManagers. We don't need to add it as LocalResource
-      if (!settings.getHopsRpcTls()) {
-        sparkFiles
-            .append(",")
-            // File with crypto material password
-            .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-            .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
-            .append("__cert.key#").append(Settings.CRYPTO_MATERIAL_PASSWORD);
-      }
   
       if (!js.getFiles().equals("")) {
         //Split the comma-separated string and append it to sparkFiles
@@ -371,6 +350,26 @@ public class JupyterConfigFilesGenerator {
         }
       }
   
+      // If Hops RPC TLS is enabled, password file would be injected by the
+      // NodeManagers. We don't need to add it as LocalResource
+      if (!settings.getHopsRpcTls()) {
+        sparkFiles
+            // Keystore
+            .append(",hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+            .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
+            .append("__kstore.jks#").append(Settings.K_CERTIFICATE)
+            .append(",")
+            // TrustStore
+            .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+            .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
+            .append("__tstore.jks#").append(Settings.T_CERTIFICATE)
+            .append(",")
+            // File with crypto material password
+            .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+            .append(this.hdfsUser).append(File.separator).append(this.hdfsUser)
+            .append("__cert.key#").append(Settings.CRYPTO_MATERIAL_PASSWORD);
+      }
+      
       //Prepare pyfiles
       StringBuilder pyFilesBuilder = new StringBuilder();
       if (!Strings.isNullOrEmpty(js.getPyFiles())) {

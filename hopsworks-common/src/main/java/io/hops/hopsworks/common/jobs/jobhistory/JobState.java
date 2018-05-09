@@ -38,7 +38,8 @@ public enum JobState {
   AGGREGATING_LOGS("Aggregating logs"),
   FRAMEWORK_FAILURE("Framework failure"),
   STARTING_APP_MASTER("Starting Application Master"),
-  APP_MASTER_START_FAILED("Failed starting AM");
+  APP_MASTER_START_FAILED("Failed starting AM"),
+  GENERATING_CERTS("Generating certificate");
 
   private final String readable;
 
@@ -69,6 +70,8 @@ public enum JobState {
         return JobState.NEW_SAVING;
       case SUBMITTED:
         return JobState.SUBMITTED;
+      case GENERATING_CERTS:
+        return JobState.GENERATING_CERTS;
       default:
         throw new IllegalArgumentException("Invalid enum constant"); // can never happen        
     }

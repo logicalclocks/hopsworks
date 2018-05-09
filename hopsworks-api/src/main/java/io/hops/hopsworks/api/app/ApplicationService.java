@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dao.app.ServingEndpointJsonDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 
+import java.security.GeneralSecurityException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -55,15 +56,17 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.security.HopsUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -104,6 +107,8 @@ public class ApplicationService {
   private ExecutionFacade executionFacade;
   @EJB
   private TfServingFacade tfServingFacade;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
 
   @POST
   @Path("mail")
@@ -265,16 +270,41 @@ public class ApplicationService {
    */
   private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd)
       throws AppException {
-    String commonName = certificatesController.extractCNFromCertificate(keyStore, keyStorePwd);
-
-    UserCerts userCert = certificateBean.findUserCert(hdfsUserBean.
-        getProjectName(commonName), hdfsUserBean.getUserName(commonName));
-
-    if (!Arrays.equals(userCert.getUserKey(), keyStore)) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "Certificate error!");
+    
+    try {
+      String dn = certificatesController.validateCertificate(keyStore, keyStorePwd);
+      String commonName = HopsUtil.extractCNFromSubject(dn);
+  
+      UserCerts userCert = certificateBean.findUserCert(hdfsUserBean.
+          getProjectName(commonName), hdfsUserBean.getUserName(commonName));
+  
+      if (userCert.getUserKey() == null || userCert.getUserKey().length == 0) {
+        throw new GeneralSecurityException("Could not find certificates for user " + commonName);
+      }
+      
+      String username = hdfsUserBean.getUserName(commonName);
+      Users user = userFacade.findByUsername(username);
+      if (user == null) {
+        String errorMsg = "Could not find user " + commonName;
+        LOGGER.log(Level.WARNING, errorMsg);
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), errorMsg);
+      }
+      
+      String decryptedPassword = HopsUtils.decrypt(user.getPassword(), userCert.getUserKeyPwd(),
+          certificatesMgmService.getMasterEncryptionPassword());
+      
+      String storedCN = certificatesController.extractCNFromCertificate(userCert.getUserKey(),
+          decryptedPassword.toCharArray(), commonName);
+      if (!storedCN.equals(commonName)) {
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Could not authenticate user " +
+            commonName);
+      }
+      
+      return commonName;
+    } catch (Exception ex) {
+      LOGGER.log(Level.WARNING, "Could not authenticate user");
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Could not authenticate user");
     }
-    return commonName;
   }
 
   private void assertAdmin(String projectUser) throws AppException {

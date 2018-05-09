@@ -887,16 +887,13 @@ public class CertificateMaterializer {
             writeToHDFS(dfso, trustStore, material.getKeyStore().array());
             dfso.setOwner(trustStore, ownerName, groupName);
             dfso.setPermission(trustStore, permissions);
-            
-            // If RPC TLS is enabled, password file is injected automatically by the NodeManager
-            if (!settings.getHopsRpcTls()) {
-              Path passwordFile = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
-                  + CERT_PASS_SUFFIX);
-              writeToHDFS(dfso, passwordFile, new String(material.getPassword()));
-              dfso.setOwner(passwordFile, ownerName, groupName);
-              dfso.setPermission(passwordFile, permissions);
-            }
-            
+  
+            Path passwordFile = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
+                + CERT_PASS_SUFFIX);
+            writeToHDFS(dfso, passwordFile, new String(material.getPassword()));
+            dfso.setOwner(passwordFile, ownerName, groupName);
+            dfso.setPermission(passwordFile, permissions);
+  
             // Cache should be flushed otherwise NN will raise permission exceptions
             dfso.flushCache(ownerName, groupName);
           } finally {

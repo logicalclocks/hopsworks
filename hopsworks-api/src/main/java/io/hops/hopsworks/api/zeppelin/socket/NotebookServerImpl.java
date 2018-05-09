@@ -1622,7 +1622,7 @@ public class NotebookServerImpl implements
         LOG.log(Level.SEVERE, "Error while materializing certificates for Zeppelin", ex);
         certificateMaterializer.closedInterpreter(project.getId());
         HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(),
-            certificateMaterializer);
+            certificateMaterializer, settings);
         throw ex;
       } finally {
         if (null != dfso) {

@@ -314,7 +314,7 @@ public class JupyterService {
           if (dto != null) {
             HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
                 settings.getHdfsTmpCertDir(),
-                certificateMaterializer, dto.getCertificatesDir());
+                certificateMaterializer, dto.getCertificatesDir(), settings);
           } else {
             LOGGER.log(Level.SEVERE, "Could not identify local directory to clean certificates. Manual cleanup " +
                 "needed");
@@ -410,7 +410,7 @@ public class JupyterService {
     try {
       String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
       HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
-          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir);
+          .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
       certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);

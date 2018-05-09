@@ -268,7 +268,7 @@ public class InterpreterRestApi {
         
         HopsUtils
             .cleanupCertificatesForProject(project.getName(),
-                settings.getHdfsTmpCertDir(), certificateMaterializer);
+                settings.getHdfsTmpCertDir(), certificateMaterializer, settings);
         certificateMaterializer.closedInterpreter(project.getId());
       }
     } catch (IOException ex) {
@@ -279,7 +279,7 @@ public class InterpreterRestApi {
       try {
         certificateMaterializer.closedInterpreter(project.getId());
         HopsUtils.cleanupCertificatesForProject(project.getName(), settings.getHdfsTmpCertDir(),
-            certificateMaterializer);
+            certificateMaterializer, settings);
       } catch (IOException ex1) {
         logger.error("Could not clean certificates!", ex1);
       }

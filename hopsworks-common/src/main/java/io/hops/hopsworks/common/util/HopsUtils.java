@@ -203,24 +203,6 @@ public class HopsUtils {
         jobType, dfso, projectLocalResources, jobSystemProperties,
         null, applicationId, certMat, isRpcTlsEnabled);
   }
-  
-  private static boolean checkUserMatCertsInHDFS(String username, String remoteFSDir,
-      DistributedFileSystemOps dfso, Settings settings) throws IOException {
-    Path kstoreU = new Path(remoteFSDir + Path.SEPARATOR +
-        username + Path.SEPARATOR + username + "__kstore.jks");
-    Path tstoreU = new Path(remoteFSDir + Path.SEPARATOR +
-        username + Path.SEPARATOR + username + "__tstore.jks");
-    Path passwdU = new Path(remoteFSDir + Path.SEPARATOR +
-        username + Path.SEPARATOR + username + "__cert.key");
-
-    if (!settings.getHopsRpcTls()) {
-      return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString())
-          && dfso.exists(passwdU.toString());
-    }
-
-    return dfso.exists(kstoreU.toString()) && dfso.exists(tstoreU.toString());
-  }
-
 
   /**
    * Remote user generic project certificates materialized both from the local
@@ -231,11 +213,15 @@ public class HopsUtils {
    * @throws IOException
    */
   public static void cleanupCertificatesForProject(String projectName,
-      String remoteFSDir, CertificateMaterializer certificateMaterializer) throws IOException {
+      String remoteFSDir, CertificateMaterializer certificateMaterializer, Settings settings) throws IOException {
     
     certificateMaterializer.removeCertificatesLocal(projectName);
-    String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
-    certificateMaterializer.removeCertificatesRemote(null, projectName, remoteDirectory);
+    
+    // If Hops RPC TLS is enabled then we haven't put them in HDFS, so we should not delete them
+    if (!settings.getHopsRpcTls()) {
+      String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
+      certificateMaterializer.removeCertificatesRemote(null, projectName, remoteDirectory);
+    }
   }
 
   /**
@@ -247,19 +233,22 @@ public class HopsUtils {
    * @throws IOException
    */
   public static void cleanupCertificatesForUserCustomDir(String username,
-      String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer, String directory) throws
-      IOException {
+      String projectName, String remoteFSDir, CertificateMaterializer certificateMaterializer, String directory,
+      Settings settings) throws IOException {
 
     certificateMaterializer.removeCertificatesLocalCustomDir(username, projectName, directory);
     String projectSpecificUsername = projectName + HdfsUsersController
         .USER_NAME_DELIMITER + username;
-    String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectSpecificUsername;
-    certificateMaterializer.removeCertificatesRemote(username, projectName, remoteDirectory);
+    // If Hops RPC TLS is enabled, we haven't put user certificates in HDFS, so we shouldn't try to remove them
+    if (!settings.getHopsRpcTls()) {
+      String remoteDirectory = remoteFSDir + Path.SEPARATOR + projectSpecificUsername;
+      certificateMaterializer.removeCertificatesRemote(username, projectName, remoteDirectory);
+    }
   }
   
   public static void cleanupCertificatesForUser(String username, String projectName, String remoteFSDir,
-      CertificateMaterializer certificateMaterializer) throws IOException {
-    cleanupCertificatesForUserCustomDir(username, projectName, remoteFSDir, certificateMaterializer, null);
+      CertificateMaterializer certificateMaterializer, Settings settings) throws IOException {
+    cleanupCertificatesForUserCustomDir(username, projectName, remoteFSDir, certificateMaterializer, null, settings);
   }
   
   /**
@@ -281,10 +270,13 @@ public class HopsUtils {
   
     certificateMaterializer.materializeCertificatesLocalCustomDir(userName, projectName, directory);
     
-    
-    String remoteDirectory = createRemoteDirectory(remoteFSDir, projectSpecificUsername, projectSpecificUsername, dfso);
-    certificateMaterializer.materializeCertificatesRemote(userName, projectName, projectSpecificUsername,
-        projectSpecificUsername, materialPermissions, remoteDirectory);
+    // When Hops RPC TLS is enabled, Yarn will take care of application certificate
+    if (!settings.getHopsRpcTls()) {
+      String remoteDirectory =
+          createRemoteDirectory(remoteFSDir, projectSpecificUsername, projectSpecificUsername, dfso);
+      certificateMaterializer.materializeCertificatesRemote(userName, projectName, projectSpecificUsername,
+          projectSpecificUsername, materialPermissions, remoteDirectory);
+    }
   }
   
   public static void materializeCertificatesForUser(String projectName, String userName, String remoteFSDir,
@@ -315,10 +307,14 @@ public class HopsUtils {
     
     String projectGenericUser = projectName + Settings.PROJECT_GENERIC_USER_SUFFIX;
   
-    String remoteDirectory = createRemoteDirectory(remoteFSDir, projectGenericUser, projectGenericUser, dfso);
-    
-    certificateMaterializer.materializeCertificatesRemote(null, projectName, projectGenericUser,
-        projectGenericUser, materialPermissions, remoteDirectory);
+    // When Hops RPC TLS is enabled, Yarn will take care of application certificate
+    // so we don't need them in HDFS
+    if (!settings.getHopsRpcTls()) {
+      String remoteDirectory = createRemoteDirectory(remoteFSDir, projectGenericUser, projectGenericUser, dfso);
+  
+      certificateMaterializer.materializeCertificatesRemote(null, projectName, projectGenericUser,
+          projectGenericUser, materialPermissions, remoteDirectory);
+    }
   }
   
   private static String createRemoteDirectory(String remoteFSDir, String certsSpecificDir, String owner,
@@ -420,19 +416,16 @@ public class HopsUtils {
                   Files.write(certFiles.get(Settings.T_CERTIFICATE), t_k_cert);
                 }
   
-                // If RPC TLS is enabled, password file would be injected by the
-                // NodeManagers. We don't need to add it as LocalResource
-                if (!isRpcTlsEnabled) {
-                  File certPass = new File(appDir.toString() + File.separator +
-                      passName);
-                  certPass.setExecutable(false);
-                  certPass.setReadable(true, true);
-                  certPass.setWritable(false);
-                  FileUtils.writeStringToFile(certPass, userCert
-                      .getUserKeyPwd(), false);
-                  jobSystemProperties.put(Settings.CRYPTO_MATERIAL_PASSWORD,
-                      certPass.toString());
-                }
+  
+                File certPass = new File(appDir.toString() + File.separator +
+                    passName);
+                certPass.setExecutable(false);
+                certPass.setReadable(true, true);
+                certPass.setWritable(false);
+                FileUtils.writeStringToFile(certPass, userCert
+                    .getUserKeyPwd(), false);
+                jobSystemProperties.put(Settings.CRYPTO_MATERIAL_PASSWORD,
+                    certPass.toString());
                 jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
                 jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
                 break;
@@ -445,12 +438,9 @@ public class HopsUtils {
                     localTmpDir + File.separator + kCertName));
                 certs.put(Settings.T_CERTIFICATE, new File(
                     localTmpDir + File.separator + tCertName));
-                // If RPC TLS is enabled, password file would be injected by the
-                // NodeManagers. We don't need to add it as LocalResource
-                if (!isRpcTlsEnabled) {
-                  certs.put(Settings.CRYPTO_MATERIAL_PASSWORD, new File(
-                      localTmpDir + File.separator + passName));
-                }
+                certs.put(Settings.CRYPTO_MATERIAL_PASSWORD, new File(
+                    localTmpDir + File.separator + passName));
+                
                 for (Map.Entry<String, File> entry : certs.entrySet()) {
                   //Write the actual file(cert) to localFS
                   //Create HDFS certificate directory. This is done

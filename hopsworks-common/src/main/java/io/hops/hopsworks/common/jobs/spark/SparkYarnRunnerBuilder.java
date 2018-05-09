@@ -21,7 +21,6 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
@@ -134,17 +133,6 @@ public class SparkYarnRunnerBuilder {
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
     builder.setJobUser(jobUser);
-    if (settings.getHopsRpcTls()) {
-      try {
-        String password = services.getBaseHadoopClientsService()
-            .getProjectSpecificUserCertPassword(jobUser);
-        builder.setKeyStorePassword(password);
-        builder.setTrustStorePassword(password);
-      } catch (CryptoPasswordNotFoundException ex) {
-        LOG.log(Level.SEVERE, ex.getMessage(), ex);
-        throw new IOException(ex);
-      }
-    }
     
     /*** 1. Set stagingPath ***/
     

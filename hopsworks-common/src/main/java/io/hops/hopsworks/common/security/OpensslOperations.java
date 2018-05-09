@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
 import org.apache.commons.io.FileUtils;
+import sun.security.provider.X509Factory;
 
 import javax.ejb.AccessTimeout;
 import javax.ejb.ConcurrencyManagement;
@@ -35,9 +36,13 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +58,7 @@ public class OpensslOperations {
   private final static Logger LOG = Logger.getLogger(OpensslOperations.class.getName());
   private final static String SUDO = "/usr/bin/sudo";
   private final static String OPENSSL = "openssl";
+  private final Base64.Encoder b64encoder = Base64.getEncoder();
   
   @EJB
   private Settings settings;
@@ -131,15 +137,19 @@ public class OpensslOperations {
   }
   
   @Lock(LockType.WRITE)
-  public String signCertificateRequest(String csr, boolean isIntermediate, boolean isServiceCertificate)
-      throws IOException {
+  public String signCertificateRequest(String csr, boolean isIntermediate, boolean isServiceCertificate,
+      boolean isAppCertificate) throws IOException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
-    FileUtils.writeStringToFile(csrFile, csr);
-    
-    if (verifyCSR(csrFile)) {
-      return signCSR(csrFile, csr, isIntermediate, isServiceCertificate);
+    try {
+      FileUtils.writeStringToFile(csrFile, csr);
+  
+      if (verifyCSR(csrFile)) {
+        return signCSR(csrFile, csr, isIntermediate, isServiceCertificate, isAppCertificate);
+      }
+      return null;
+    } finally {
+      csrFile.delete();
     }
-    return null;
   }
   
   @Lock(LockType.WRITE)
@@ -232,6 +242,32 @@ public class OpensslOperations {
     LOG.log(Level.FINE, "Created CRL");
   }
   
+  @Lock(LockType.WRITE)
+  public void validateCertificate(X509Certificate certificate) throws IOException {
+    File tmpCertFile = File.createTempFile("cert-", ".pem");
+    try (FileWriter fw = new FileWriter(tmpCertFile, false)) {
+      fw.write(X509Factory.BEGIN_CERT);
+      fw.write("\n");
+      fw.write(b64encoder.encodeToString(certificate.getEncoded()));
+      fw.write("\n");
+      fw.write(X509Factory.END_CERT);
+      fw.flush();
+  
+  
+      List<String> commands = new ArrayList<>();
+      commands.add(OPENSSL);
+      commands.add("verify");
+      commands.add("-CAfile");
+      commands.add(Paths.get(settings.getIntermediateCaDir(), "certs", "ca-chain.cert.pem").toString());
+      commands.add(tmpCertFile.getAbsolutePath());
+      executeCommand(commands, false);
+    } catch (GeneralSecurityException ex) {
+      throw new IOException(ex);
+    } finally {
+      tmpCertFile.delete();
+    }
+  }
+  
   private boolean verifyCSR(File csr) throws IOException {
     LOG.log(Level.FINE, "Verifying Certificate Signing Request...");
     List<String> commands = new ArrayList<>(6);
@@ -252,8 +288,8 @@ public class OpensslOperations {
     return false;
   }
   
-  private String signCSR(File csr, String csrStr, boolean isIntermediate, boolean isServiceCertificate)
-      throws IOException {
+  private String signCSR(File csr, String csrStr, boolean isIntermediate, boolean isServiceCertificate,
+      boolean isAppCertificate) throws IOException {
     LOG.log(Level.FINE, "Signing Certificate Signing Request...");
     String opensslConfFile = getOpensslConf(isIntermediate);
     String effectiveExtension;
@@ -264,21 +300,24 @@ public class OpensslOperations {
     }
     String hopsMasterPassword = settings.getHopsworksMasterPasswordSsl();
     String signScript = Paths.get(settings.getHopsworksDomainDir(), "bin", "global-ca-sign-csr.sh").toString();
-    String commonName;
+    String fileName;
     try {
       String subjectStr = PKIUtils.getSubjectFromCSR(csrStr);
       Map<String, String> subject = PKIUtils.getKeyValuesFromSubject(subjectStr);
-      commonName = subject.get("CN");
+      fileName = subject.get("CN");
+      if (isAppCertificate) {
+        fileName = fileName + "__" + subject.get("O");
+      }
     } catch (InterruptedException ex) {
       LOG.log(Level.SEVERE, "Error while extracting CN out of CSR", ex);
       throw new IOException(ex);
     }
     File signedCertificateFile;
     if (isIntermediate) {
-      signedCertificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", commonName + ".cert.pem")
+      signedCertificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", fileName + ".cert.pem")
           .toFile();
     } else {
-      signedCertificateFile = Paths.get(settings.getCaDir(), "certs", commonName + ".cert.pem").toFile();
+      signedCertificateFile = Paths.get(settings.getCaDir(), "certs", fileName + ".cert.pem").toFile();
     }
     
     long valueInDays = 3650;

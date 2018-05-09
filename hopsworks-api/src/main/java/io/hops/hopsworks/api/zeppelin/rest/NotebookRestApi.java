@@ -635,7 +635,7 @@ public class NotebookRestApi {
                   project.getName() + "__" + username);
               certificateMaterializer.closedInterpreter(project.getId());
               HopsUtils.cleanupCertificatesForProject(project.getName(),
-                  settings.getHdfsTmpCertDir(), certificateMaterializer);
+                  settings.getHdfsTmpCertDir(), certificateMaterializer, settings);
               throw ex;
             }
           }

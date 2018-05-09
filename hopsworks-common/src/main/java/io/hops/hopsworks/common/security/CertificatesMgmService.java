@@ -72,6 +72,8 @@ import java.util.logging.Logger;
 public class CertificatesMgmService {
   private final Logger LOG = Logger.getLogger(CertificatesMgmService.class.getName());
   
+  public static final String CERTIFICATE_SUFFIX = ".cert.pem";
+  
   @EJB
   private Settings settings;
   @EJB

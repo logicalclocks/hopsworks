@@ -512,39 +512,29 @@ public class ZeppelinConfig {
         + settings.getHopsUtilFilename();
     
     StringBuilder distFiles = new StringBuilder();
-    distFiles
-        // KeyStore
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(projectName)
-        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
-        .append(File.separator)
-        .append(projectName)
-        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
-        .append("__kstore.jks#")
-        .append(Settings.K_CERTIFICATE).append(",")
-        // TrustStore
-        .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
-        .append(projectName)
-        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
-        .append(File.separator)
-        .append(projectName)
-        .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
-        .append("__tstore.jks#")
-        .append(Settings.T_CERTIFICATE)
-        .append(",")
-        // Glassfish domain truststore
-        .append(settings.getGlassfishTrustStoreHdfs())
-        .append("#").append(Settings.DOMAIN_CA_TRUSTSTORE)
-        .append(",")
-        // Add HopsUtil
-        .append(settings.getHopsUtilHdfsPath()).append("#").append(settings.getHopsUtilFilename());
-    
-    // If RPC TLS is enabled, password file would be injected by the
-    // NodeManagers. We don't need to add it as LocalResource
+    // When Hops RPC TLS is enabled, Yarn will take care of application certificate
     if (!settings.getHopsRpcTls()) {
       distFiles
-          // File with crypto material password
+          // KeyStore
+          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append(File.separator)
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append("__kstore.jks#")
+          .append(Settings.K_CERTIFICATE).append(",")
+          // TrustStore
+          .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append(File.separator)
+          .append(projectName)
+          .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
+          .append("__tstore.jks#")
+          .append(Settings.T_CERTIFICATE)
           .append(",")
+          // Material password
           .append("hdfs://").append(settings.getHdfsTmpCertDir()).append(File.separator)
           .append(projectName)
           .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
@@ -552,8 +542,17 @@ public class ZeppelinConfig {
           .append(projectName)
           .append(Settings.PROJECT_GENERIC_USER_SUFFIX)
           .append("__cert.key#")
-          .append(Settings.CRYPTO_MATERIAL_PASSWORD);
+          .append(Settings.CRYPTO_MATERIAL_PASSWORD)
+          .append(",");
     }
+    distFiles
+        // Glassfish domain truststore
+        .append(settings.getGlassfishTrustStoreHdfs())
+        .append("#").append(Settings.DOMAIN_CA_TRUSTSTORE)
+        .append(",")
+        // Add HopsUtil
+        .append(settings.getHopsUtilHdfsPath()).append("#").append(settings.getHopsUtilFilename());
+    
 
     if (interpreterConf == null) {
       StringBuilder interpreter_json = ConfigFileGenerator.
