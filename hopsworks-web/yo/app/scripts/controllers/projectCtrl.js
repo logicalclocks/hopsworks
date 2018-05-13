@@ -26,10 +26,10 @@
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
           'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
-          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'FileSaver', 'Blob',
+          'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
-                  StorageService, CertService, FileSaver, Blob) {
+                  StorageService, CertService, VariablesService, FileSaver, Blob) {
 
             var self = this;
             self.loadedView = false;
@@ -44,6 +44,7 @@ angular.module('hopsWorksApp')
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
+            self.versions = [];
 
             self.pia = {
               "id": "",
@@ -192,14 +193,15 @@ angular.module('hopsWorksApp')
                         self.getRole();
 
                         ProjectService.getPia({id: self.projectId}).$promise.then(
-                          function (success) {
-                            self.pia = success;
-                          }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
-                            $location.path('/');
+                                function (success) {
+                                  self.pia = success;
+                                }, function (error) {
+                          growl.error(error.data.errorMsg, {title: 'Error getting Pia', ttl: 5000});
+                          $location.path('/');
                         });
                       }
               );
+
             };
 
 
@@ -340,7 +342,7 @@ angular.module('hopsWorksApp')
             self.goToDatasets = function () {
               self.goToUrl('datasets');
             };
-            
+
             self.goToRStudio = function () {
               self.goToUrl('rstudio');
             };
@@ -710,5 +712,19 @@ angular.module('hopsWorksApp')
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
             };
+
+            var getVersions = function () {
+              if (self.versions.length === 0) {
+
+                VariablesService.getVersions()
+                        .then(function (success) {
+                          self.versions = success.data;
+
+                        }, function (error) {
+                          console.log("Failed to get versions");
+                        });
+              }
+            };
+            getVersions();
 
           }]);

@@ -36,6 +36,9 @@ angular.module('hopsWorksApp')
               getAuthStatus: function () {
                 return $http.get('/api/variables/authStatus');
               },
+              getVersions: function () {
+                return $http.get('/api/variables/versions');
+              },
               getVariable: function (id) {
                 return $http.get('/api/variables/' + id);
               }

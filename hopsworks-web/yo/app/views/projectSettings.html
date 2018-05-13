@@ -221,12 +221,12 @@
 
                   <div class="form-group">
                     <input type="checkbox" ng-model="projectCtrl.pia.dataMinimized"  name="data_minimized"
-                            ng-true-value="1" ng-false-value="0">
+                           ng-true-value="1" ng-false-value="0">
                     <label for="data_minimized" class="control-label"> Is the data minimized to what is explicitly required?</label>
                   </div>
                   <div class="form-group">
                     <input type="checkbox" ng-model="projectCtrl.pia.dataUptodate"  name="data_uptodate"
-                            ng-true-value="1" ng-false-value="0">
+                           ng-true-value="1" ng-false-value="0">
                     <label for="data_uptodate" class="control-label">Is the data collection and processing specified, explicit, and legitimate?</label>
                   </div>
                   <div class="form-group">
@@ -243,7 +243,7 @@
                   </div>
                   <div class="form-group">
                     <input type="checkbox" ng-model="projectCtrl.pia.dataEncrypted"  name="data_encrypted"
-                            ng-true-value="1" ng-false-value="0">
+                           ng-true-value="1" ng-false-value="0">
                     <label for="data_encrypted" class="control-label">Is the data encrypted?</label>
                   </div>
 
@@ -273,7 +273,7 @@
                   </div>
                   <div class="form-group">
                     <input type="checkbox" ng-model="projectCtrl.pia.dataBackedup"  name="data_backedup"
-                            ng-true-value="1" ng-false-value="0">
+                           ng-true-value="1" ng-false-value="0">
                     <label for="data_backedup" class="control-label">Is the data backed up at a remote location/project?</label>
                   </div>
                   <div class="form-group">
@@ -309,6 +309,29 @@
                     <button type="submit" class="btn btn-primary">Save</button>
                   </div>
                 </form>
+              </uib-tab>
+
+              <uib-tab index="2" heading="Versions">
+
+                <h3>Hopsworks Software Versions</h3>
+                <table st-table="rowCollection" class="table table-striped" ng-show="projectCtrl.versions.length > 0">
+                  <thead>
+                    <tr>
+                      <th class="col-sm-3">Software</th>
+                      <th class="col-sm-9">Version</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="version in projectCtrl.versions" class="row">
+                      <td class="col-sm-3 pull-left">
+                        <div style="margin-left: 10px;"><b>{{version.software}}</b></div>
+                      </td>                
+                      <td class="col-sm-9">
+                        <div style="margin-left: 10px;"><b>{{version.version}}</b></div>
+                      </td>                
+                    </tr>
+                  </tbody>
+                </table>
               </uib-tab>
 
             </uib-tabset>
