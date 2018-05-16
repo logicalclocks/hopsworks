@@ -8,7 +8,7 @@
     "angular-md5": "~0.1.7",
     "angular-messages": "^1.6.3",
     "angular-touch": "^1.6.2",
-    "angular-sanitize": "^1.6.3",
+    "angular-sanitize": "1.6.3",
     "angular-resource": "^1.6.3",
     "angular-route": "^1.6.3",
     "angular-hamburger-toggle": "0.2.0",
