@@ -48,8 +48,9 @@ angular.module('hopsWorksApp')
 
             self.pythonVersionOpen = false;
 
-            $scope.sortType = 'preinstalled';
+            self.exporting = false;
 
+            $scope.sortType = 'preinstalled';
 
             self.pipSearching = false;
             self.condaSearching = false;
@@ -70,7 +71,7 @@ angular.module('hopsWorksApp')
 
             self.pythonKernelEnabled = "true";
 
-            self.pythonVersion = "";
+            self.pythonVersion = "0.0";
 
 
             //            https://repo.continuum.io/pkgs/free/linux-64/
@@ -83,6 +84,10 @@ angular.module('hopsWorksApp')
             self.machineTypeCPU = false;
             self.machineTypeGPU = false;
             self.machineTypeVal = "ALL"
+
+            self.environmentTypes = {};
+
+            self.environmentYmlDef = {};
 
             self.pipSelectedLib = {
               "channelUrl": self.condaChannel,
@@ -200,6 +205,7 @@ angular.module('hopsWorksApp')
                             "installing": false
                           };
                           if (self.opsStatus[i].op === "CREATE" ||
+                                  self.opsStatus[i].op === "YML" ||
                                   self.opsStatus[i].op === "REMOVE" ||
                                   self.opsStatus[i].op === "CLONE") {
                             self.numEnvsNotEnabled += 1;
@@ -294,7 +300,6 @@ angular.module('hopsWorksApp')
                       });
             };
 
-
             self.destroyAnaconda = function () {
 
               ModalService.confirm('sm', 'Remove Conda Environment?',
@@ -361,6 +366,64 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.exportEnvironment = function() {
+                self.exporting = true;
+                PythonDepsService.exportEnvironment(self.projectId).then(
+                      function (success) {
+                        self.exporting = false;
+                        growl.success("Exporting environment completed successfully. Check your Resources dataset for the .yml file(s)", {
+                          title: 'Done',
+                          ttl: 20000
+                        });
+                      },
+                      function (error) {
+                        self.exporting = false;
+                        growl.error(error.data.errorMsg, {
+                          title: 'Error',
+                          ttl: 5000
+                        });
+                      });
+            }
+
+            //Set some (semi-)constants
+            self.selectFileRegexes = {
+              "yml": /.yml\b/
+            };
+
+            self.selectFileErrorMsgs = {
+              "yml": "Please select a .yml file. It should have be processable by 'conda env create' command"
+            };
+
+            this.selectYmlFile = function () {
+              ModalService.selectEnvironmentYml('lg', self.selectFileRegexes['yml'.toUpperCase()], self.selectFileErrorMsgs['yml'.toUpperCase()]).then(
+                      function (success) {
+
+                      self.environmentYmlDef = success;
+                      self.enabling = true;
+
+                      PythonDepsService.enableYml(self.projectId, self.environmentYmlDef).then(
+                          function (success) {
+                            self.enabled = true;
+                            self.enabling = false;
+                            self.getInstallationStatus();
+                            self.pythonVersion = '0.0';
+                            growl.success("Anaconda initialized for this project.", {
+                                                            title: 'Done',
+                                                            ttl: 5000
+                                                            });
+                          }, function (error) {
+                            self.enabling = false;
+                            growl.error(error.data.errorMsg, {
+                            title: 'Error',
+                            ttl: 5000
+                          });
+                      });
+
+                      },
+                      function (error) {
+                        //The user changed their mind.
+                      });
+            };
 
             self.retryFailedCondaOps = function () {
               self.isRetryingFailedCondaOps = true;
@@ -636,7 +699,15 @@ angular.module('hopsWorksApp')
                       });
             };
 
-
-
+            PythonDepsService.environmentTypes(self.projectId).then(
+                      function (success) {
+                        self.environmentTypes = success.data;
+                      },
+                      function (error) {
+                        growl.error('Could not get the environment types', {
+                          title: 'Error',
+                          ttl: 3000
+                        });
+                      });
           }
         ]);

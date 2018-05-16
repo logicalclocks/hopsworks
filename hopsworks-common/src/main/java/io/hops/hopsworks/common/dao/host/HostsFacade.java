@@ -86,6 +86,27 @@ public class HostsFacade implements Serializable {
     return query.getResultList();
   }
 
+  public String findCPUHost() {
+    List<Hosts> hosts = find();
+    for(Hosts host: hosts){
+      if(host.getNumGpus() == 0 && host.getCondaEnabled()){
+        return host.getHostname();
+      }
+    }
+    return null;
+  }
+
+  public String findGPUHost() {
+    List<Hosts> hosts = find();
+    for(Hosts host: hosts){
+      if(host.getNumGpus() > 0 && host.getCondaEnabled()){
+        return host.getHostname();
+      }
+    }
+    return null;
+  }
+
+
   public boolean hostExists(String hostId) {
     try {
       return findByHostname(hostId) != null;

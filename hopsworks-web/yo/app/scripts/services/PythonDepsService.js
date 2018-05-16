@@ -36,6 +36,16 @@ angular.module('hopsWorksApp')
               enable: function (projectId, version, pythonKernel) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps/enable/' + version + "/" + pythonKernel);
               },
+              enableYml: function (projectId, data) {
+                var regReq = {
+                                  method: 'POST',
+                                  url: '/api/project/' + projectId + '/pythonDeps/enableYml',
+                                  headers: {'Content-Type': 'application/json'},
+                                  data: data,
+                                  dataType: "json"
+                                };
+                return $http(regReq);
+              },
               destroyAnaconda: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps/destroyAnaconda');
               },
@@ -53,6 +63,12 @@ angular.module('hopsWorksApp')
               },
               status: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/pythonDeps/status');
+              },
+              environmentTypes: function (projectId) {
+               return $http.get('/api/project/' + projectId + '/pythonDeps/environmentTypes');
+              },
+              exportEnvironment: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/pythonDeps/export');
               },
               install: function (projectId, data) {
                 var regReq = {

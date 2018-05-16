@@ -84,7 +84,7 @@ public class PythonDepsFacade {
     List<CondaCommands> ops = getCommandsForProject(project);
     for (CondaCommands condaCommand : ops) {
       operation = condaCommand.getOp();
-      if (operation.equals(CondaOp.CREATE)) {
+      if (operation.equals(CondaOp.CREATE) || operation.equals(CondaOp.YML)) {
         status = condaCommand.getStatus();
         if (status.equals(CondaStatus.NEW) || status.equals(CondaStatus.ONGOING)) {
           return false;
@@ -102,14 +102,16 @@ public class PythonDepsFacade {
     LIST,
     INSTALL,
     UNINSTALL,
-    UPGRADE;
+    UPGRADE,
+    YML;
 
     public boolean isEnvOp() {
       return CondaOp.isEnvOp(this);
     }
     public static boolean isEnvOp(CondaOp arg) {
       if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE)
-          == 0 || arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.BACKUP) == 0) {
+          == 0 || arg.compareTo(CondaOp.YML) == 0|| arg.compareTo(CondaOp.REMOVE) == 0
+              || arg.compareTo(CondaOp.BACKUP) == 0) {
         return true;
       }
       return false;
@@ -219,16 +221,23 @@ public class PythonDepsFacade {
     return query.getSingleResult();
   }
 
-  public Collection<PythonDep> createProjectInDb(Project project,
-      Map<String, String> libs, String pythonVersion, boolean enablePythonKernel) throws AppException {
-    if (pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
+  public Collection<PythonDep> createProjectInDb(Project project, Map<String, String> libs,
+                     String pythonVersion, boolean enablePythonKernel, MachineType machineType,
+                                                 String environmentYml) throws AppException {
+
+    if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
         compareToIgnoreCase("3.5") != 0 && pythonVersion.
         compareToIgnoreCase("3.6") != 0 && pythonVersion.contains("X") == false) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Invalid version of python " + pythonVersion
           + " (valid: '2.7', and '3.5', and '3.6'");
     }
-    condaEnvironmentOp(CondaOp.CREATE, pythonVersion, project, pythonVersion);
+
+    if(environmentYml == null) {
+      condaEnvironmentOp(CondaOp.CREATE, pythonVersion, project, pythonVersion, machineType, environmentYml);
+    } else {
+      condaEnvironmentOp(CondaOp.YML, pythonVersion, project, pythonVersion, machineType, environmentYml);
+    }
 
     List<PythonDep> all = new ArrayList<>();
     projectFacade.enableConda(project);
@@ -498,8 +507,9 @@ public class PythonDepsFacade {
    * @param arg
    * @throws AppException
    */
-  private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, String arg) throws AppException {
-    List<Hosts> hosts = hostsFacade.getCondaHosts(MachineType.ALL);
+  private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj,
+                                  String arg, MachineType machineType, String environmentYml) throws AppException {
+    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.size() == 0) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR, "No conda machine enabled. Contact the admin.");
     }
@@ -507,18 +517,18 @@ public class PythonDepsFacade {
     for (Hosts h : hosts) {
       // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
       CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-          op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, MachineType.ALL, proj, pythonVersion, "",
-          "defaults", new Date(), arg);
+          op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, machineType, proj, pythonVersion, "",
+          "defaults", new Date(), arg, environmentYml);
       em.persist(cc);
     }
   }
 
   private void condaEnvironmentRemove(Project proj) throws AppException {
-    condaEnvironmentOp(CondaOp.REMOVE, "", proj, "");
+    condaEnvironmentOp(CondaOp.REMOVE, "", proj, "", MachineType.ALL, null);
   }
 
   private void condaEnvironmentClone(Project srcProj, Project destProj) throws AppException {
-    condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName());
+    condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName(), MachineType.ALL, null);
   }
 
   /**
@@ -681,7 +691,7 @@ public class PythonDepsFacade {
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
             op, CondaStatus.NEW, installType, machineType, proj, lib,
-            version, channelUrl, new Date(), "");
+            version, channelUrl, new Date(), "", null);
         em.persist(cc);
       }
 //      kagentCalls(hosts, op, proj, dep);

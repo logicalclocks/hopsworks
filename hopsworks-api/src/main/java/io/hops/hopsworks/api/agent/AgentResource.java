@@ -380,7 +380,7 @@ public class AgentResource {
         }
 
         //sync local libs as the ones installed
-        if (command.getOp().equals(CondaOp.CREATE)) {
+        if (command.getOp().equals(CondaOp.CREATE) || command.getOp().equals(CondaOp.YML)) {
 
           //only sync on hopsworks server
           if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {

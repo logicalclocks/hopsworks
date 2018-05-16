@@ -160,6 +160,10 @@ public class CondaCommands implements Serializable {
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Hosts hostId;
+  @Size(min = 1,
+          max = 10000)
+  @Column(name = "environment_yml")
+  private String environmentYml;
 
   public CondaCommands() {
   }
@@ -167,7 +171,7 @@ public class CondaCommands implements Serializable {
   public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
           PythonDepsFacade.CondaStatus status, PythonDepsFacade.CondaInstallType installType,
           PythonDepsFacade.MachineType machineType, Project project, String lib, String version, String channelUrl,
-                       Date created, String arg) {
+                       Date created, String arg,  String environmentYml) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -184,6 +188,7 @@ public class CondaCommands implements Serializable {
     this.lib = lib;
     this.version = version;
     this.arg = arg;
+    this.environmentYml = environmentYml;
   }
 
   public Integer getId() {
@@ -299,7 +304,14 @@ public class CondaCommands implements Serializable {
     this.machineType = machineType;
   }
 
-  
+  public String getEnvironmentYml() {
+    return environmentYml;
+  }
+
+  public void setEnvironmentYml(String environmentYml) {
+    this.environmentYml = environmentYml;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;

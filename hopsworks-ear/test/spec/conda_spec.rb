@@ -17,7 +17,7 @@ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
-describe 'conda' do
+describe '#Conda basic operations'  do
   after (:all){clean_projects}
   describe "#create" do
     context 'without authentication' do
@@ -78,9 +78,6 @@ describe 'conda' do
 
       it 'uninstall libraries' do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/remove", {lib: "tflearn", version: "0.3.2", channelUrl: "PyPi", installType: "PIP", machineType: "ALL"}
-        expect_status(200)
-
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/remove", {lib: "imageio", version: "2.2.0", channelUrl: "defaults", installType: "CONDA", machineType: "CPU"}
         expect_status(200)
 
@@ -90,11 +87,12 @@ describe 'conda' do
             imageio_library.nil?
         end
 
-        wait_for do
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps"
-            tflearn_library = json_body.detect { |library| library[:lib] == "tflearn" }
-            tflearn_library.nil?
-        end
+      end
+
+      it 'export environment' do
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/export"
+        expect_status(200)
 
       end
 
@@ -103,6 +101,21 @@ describe 'conda' do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/destroyAnaconda"
         expect_status(200)
 
+        # Sleep so Kagent gets time to pickup command
+        sleep(20)
+
+      end
+
+      it 'enable environment from yml' do
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/enableYml", {pythonKernelEnable: "true", allYmlPath: "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", cpuYmlPath: "", gpuYmlPath: ""}
+        expect_status(200)
+
+        wait_for do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps"
+          hops_library = json_body.detect { |library| library[:lib] == "hops" }
+          hops_library.nil?
+      end
       end
     end
   end

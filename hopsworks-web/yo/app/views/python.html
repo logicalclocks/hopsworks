@@ -47,19 +47,21 @@
                   <div class="jumbotron" style="margin-top: 30px;">
                     <div class="col-md-offset-1">
                       <h1 class="display-3">Anaconda</h1>
-                      <p class="lead">Jupyter requires an Anaconda installation. Click on the button below to install Anaconda for this project.</p>
-                      <p>You can change the version of python at a later stage by recreating the Anaconda environment.</p>
+                      <p class="lead">Jupyter requires an Anaconda installation. Select one of the two options below.</p>
+                      <br />
+                      <p class="lead"><b> Option 1 (Recommended for new users): </b> Create a default environment with pre-installed libraries.</p>
+                      <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
                       <p class="lead">
-                      <div><span> <label>Enable Python Kernel: 
-                            <input type="checkbox" ng-init="pythonDepsCtrl.pythonKernelEnabled = true" ng-model="pythonDepsCtrl.pythonKernelEnabled"></label>
-                          <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonDepsCtrl.pythonKernelEnabled == true, 'fa-info' : pythonDepsCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project." 
-                             style="margin-left: 10px"></i></span>
+                      <div><span> <label>Enable Python Kernel:
+                              <input type="checkbox" ng-init="pythonDepsCtrl.pythonKernelEnabled = true" ng-model="pythonDepsCtrl.pythonKernelEnabled"></label>
+                            <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonDepsCtrl.pythonKernelEnabled == true, 'fa-info' : pythonDepsCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project."
+                               style="margin-left: 10px"></i></span>
                       </div>
 
                       <div>
                         <div class="btn-group" uib-dropdown is-open="pythonDepsCtrl.pythonVersionOpen">
-                          <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button" 
-                                  class="btn btn-success btn-lg" 
+                          <button ng-disabled="pythonDepsCtrl.enabling" id="single-button" type="button"
+                                  class="btn btn-success btn-lg"
                                   uib-dropdown-toggle >
                             Activate Anaconda &nbsp;<span class="caret"></span>
                           </button>
@@ -71,13 +73,22 @@
                         </div>
                       </div>
                       </p>
-                    </div>                  
-                  </div>                  
+                      <br />
+                      <p><b> Option 2: </b> Create environment from Anaconda .yml file.</p>
+
+                      <button ng-disabled="pythonDepsCtrl.enabling" class="btn btn-success btn-lg" type="button"
+                              ng-click="pythonDepsCtrl.selectYmlFile()">
+                        Select .yml
+                      </button>
+                    </div>
+                  </div>
                   <div class="row"></div>
 
                 </div>
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
-                  <h2>Install Python libraries using conda in Anaconda environment </h2><span style="pull-right">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>
+                  <h2>Install Python libraries using conda in Anaconda environment </h2>
+
+                  <span style="pull-right" ng-show="pythonDepsCtrl.pythonVersion != '0.0'">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>
 
                   <div class="row">
                     <div class="col-md-5 progress" ng-if="pythonDepsCtrl.numEnvsNotEnabled > 0">
@@ -132,7 +143,7 @@
 
                 </div>
 		  <div ng-show="pythonDepsCtrl.condaSearchResults.length > 0">
-                  <div class="col-md-offset-1">
+                  <div class="col-md-offset-1" ng-show="!((pythonDepsCtrl.environmentTypes['CPU'] && !pythonDepsCtrl.environmentTypes['GPU']) || (!pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']))">
                     <h2>Installation mode<i class="fa fa-info-circle" uib-tooltip="Install library in Anaconda environment on hosts with specific capability." style="margin-left: 10px"></i></h2>
                     <div class="row">
 
@@ -233,8 +244,10 @@
                   <div class="jumbotron" style="margin-top: 30px;">
                     <div class="col-md-offset-1">
                       <h1 class="display-3">Anaconda</h1>
-                      <p class="lead">Jupyter requires an Anaconda installation. Click on the button below to install Anaconda for this project.</p>
-                      <p>You can change the version of python at a later stage by recreating the Anaconda environment.</p>
+                      <p class="lead">Jupyter requires an Anaconda installation. Select one of the two options below.</p>
+                      <br />
+                      <p class="lead"><b> Option 1 (Recommended for new users): </b> Create a default environment with pre-installed libraries.</p>
+                      <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
                       <p class="lead">
 			<div><span> <label>Enable Python Kernel:
                               <input type="checkbox" ng-init="pythonDepsCtrl.pythonKernelEnabled = true" ng-model="pythonDepsCtrl.pythonKernelEnabled"></label>
@@ -257,13 +270,21 @@
                           </div>
 			</div>
                       </p>
+                      <br />
+                      <p><b> Option 2: </b> Create environment from Anaconda .yml file.</p>
+
+                        <button ng-disabled="pythonDepsCtrl.enabling" class="btn btn-success btn-lg" type="button"
+                                ng-click="pythonDepsCtrl.selectYmlFile()">
+                            Select .yml
+                        </button>
                     </div>
                   </div>
                   <div class="row"></div>
 
                 </div>
                 <div class="col-md-offset-1" ng-show="pythonDepsCtrl.enabled">
-                  <h2>Install Python libraries using pip in Anaconda environment </h2><span style="pull-right">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>
+                  <h2>Install Python libraries using pip in Anaconda environment </h2>
+                  <span style="pull-right" ng-show="pythonDepsCtrl.pythonVersion != '0.0'">Python Version is {{pythonDepsCtrl.pythonVersion}}</span>
 
 
                   <div class="row">
@@ -315,7 +336,7 @@
                 </div>
 
 		  <div ng-show="pythonDepsCtrl.pipSearchResults.length > 0">
-                    <div class="col-md-offset-1">
+                    <div class="col-md-offset-1" ng-show="!((pythonDepsCtrl.environmentTypes['CPU'] && !pythonDepsCtrl.environmentTypes['GPU']) || (!pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']))">
                       <h2>Installation mode<i class="fa fa-info-circle" uib-tooltip="Install library in Anaconda environment on hosts with specific capability." style="margin-left: 10px"></i></h2>
                       <div class="row">
 
@@ -410,7 +431,16 @@
               </uib-tab>
               <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonDepsCtrl.enabled && pythonDepsCtrl.installed"
                        ng-click="pythonDepsCtrl.getInstalled()">
-                <h2>Uninstall/Upgrade Python Libraries</h2>
+                <div>
+                <h2>Uninstall/Upgrade Python Libraries
+
+                  <button class="btn btn-success" style="float:right" type="button"
+                          ng-click="pythonDepsCtrl.exportEnvironment()">
+                  <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="pythonDepsCtrl.exporting" ></span>
+                    Export Environment
+                  </button>
+                </h2>
+                </div>
                 <!--                <div class="row pull-left">
                                   <div class="dialog-demo-content" layout="row" layout-wrap layout-margin layout-align="center">
                                     <md-button class="md-primary md-hue-1" ng-click="pythonDepsCtrl.showAlert($event)"   >
@@ -526,7 +556,7 @@
                       <td class="col-sm-4">
                         <div class="row" style="margin-left: 10px;"><b>{{row.op}}</b></div>
                       </td>
-                      <td class="col-sm-2">{{row.lib}}
+                      <td class="col-sm-2"><div ng-if="row.lib !== '0.0'">{{row.lib}}</div><div ng-if="row.lib === '0.0'">Creating environment from .yml file</div>
                       </td>
                       <td class="col-sm-2">{{row.version}}
                       </td>

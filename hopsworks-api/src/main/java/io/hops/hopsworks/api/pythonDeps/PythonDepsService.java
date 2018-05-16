@@ -22,29 +22,44 @@ package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.api.project.util.PathValidator;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
-import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
+import io.hops.hopsworks.common.dao.pythonDeps.EnvironmentYmlJson;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
+import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
+import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
+
 import java.util.ArrayList;
+
+import java.io.IOException;
+import java.io.DataInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.File;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
@@ -53,6 +68,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
@@ -76,6 +92,8 @@ public class PythonDepsService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
+  private HostsFacade hostsFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
@@ -85,6 +103,12 @@ public class PythonDepsService {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private PathValidator pathValidator;
+  @EJB
+  private InodeFacade inodes;
+  @EJB
+  private DistributedFsService dfs;
 
   public void setProject(Project project) {
     this.project = project;
@@ -170,13 +194,73 @@ public class PythonDepsService {
       // 'X' indicates that the python kernel should not be enabled in Conda
       version = version + "X";
     }
-    pythonDepsFacade.createProjectInDb(project, deps, version, enablePythonKernel);
+    pythonDepsFacade.createProjectInDb(project, deps, version,
+            enablePythonKernel, PythonDepsFacade.MachineType.ALL, null);
 
     project.setPythonVersion(version);
     projectFacade.update(project);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
+
+  @POST
+  @Path("/enableYml")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response enableYml(@Context SecurityContext sc,
+          @Context HttpServletRequest req, EnvironmentYmlJson environmentYmlJson) throws AppException {
+
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersController.getHdfsUserName(project, user);
+
+    String version = "0.0";
+    Boolean enablePythonKernel = Boolean.parseBoolean(environmentYmlJson.getPythonKernelEnable());
+    if (!enablePythonKernel) {
+          // 'X' indicates that the python kernel should not be enabled in Conda
+      version = version + "X";
+    }
+    String allYmlPath = environmentYmlJson.getAllYmlPath();
+    String cpuYmlPath = environmentYmlJson.getCpuYmlPath();
+    String gpuYmlPath = environmentYmlJson.getGpuYmlPath();
+
+    if (allYmlPath != null && !allYmlPath.isEmpty()) {
+      if(!allYmlPath.substring(allYmlPath.length() -4, allYmlPath.length()).equals(".yml")) {
+        throw new AppException(Response.Status.BAD_REQUEST.
+                  getStatusCode(),
+                  "Can only create Anaconda environment from a valid .yml file");
+      }
+      String allYml = getYmlFromPath(allYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+                PythonDepsFacade.MachineType.ALL, allYml);
+    } else if(cpuYmlPath != null || gpuYmlPath != null || !cpuYmlPath.isEmpty() || !gpuYmlPath.isEmpty()) {
+
+      if(!cpuYmlPath.substring(cpuYmlPath.length() -4, cpuYmlPath.length()).equals(".yml") ||
+         !gpuYmlPath.substring(gpuYmlPath.length() -4, gpuYmlPath.length()).equals(".yml")     ) {
+        throw new AppException(Response.Status.BAD_REQUEST.
+                    getStatusCode(),
+                    "Can only create Anaconda environment from valid .yml files");
+      }
+
+      String cpuYml = getYmlFromPath(cpuYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+                    PythonDepsFacade.MachineType.CPU, cpuYml);
+
+      String gpuYml = getYmlFromPath(gpuYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+                   PythonDepsFacade.MachineType.GPU, gpuYml);
+
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.
+                getStatusCode(),
+                "Could not create Anaconda environment due to invalid .yml files");
+    }
+
+    project.setPythonVersion(version);
+    projectFacade.update(project);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
 
   @GET
   @Path("/installed")
@@ -190,6 +274,38 @@ public class PythonDepsService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(
         Response.Status.SERVICE_UNAVAILABLE).build();
+  }
+
+  @GET
+  @Path("/environmentTypes")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response environmentTypes() throws AppException {
+
+    JsonObjectBuilder response = Json.createObjectBuilder();
+
+    String cpuHost = hostsFacade.findCPUHost();
+
+    if (cpuHost != null) {
+      response.add("CPU", true);
+    } else {
+      response.add("CPU", false);
+    }
+
+    String gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost != null) {
+      response.add("GPU", true);
+    } else {
+      response.add("GPU", false);
+    }
+
+    if (cpuHost == null && gpuHost == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not find any CPU or GPU host");
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response.build()).build();
   }
 
   @GET
@@ -344,6 +460,28 @@ public class PythonDepsService {
   public Response removeEnv(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
 
     pythonDepsFacade.removeProject(project);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
+  @Path("/export")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response export(@Context SecurityContext sc,
+                           @Context HttpServletRequest req,
+                           @Context HttpHeaders httpHeaders) throws AppException {
+
+    String hdfsUser = getHdfsUser(sc);
+
+    String cpuHost = hostsFacade.findCPUHost();
+    if (cpuHost != null) {
+      exportEnvironment(cpuHost, "environment_cpu.yml", hdfsUser);
+    }
+
+    String gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost != null) {
+      exportEnvironment(gpuHost, "environment_gpu.yml", hdfsUser);
+    }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -617,6 +755,74 @@ public class PythonDepsService {
               getStatusCode(),
               "Problem listing libraries, pip interrupted on this webserver.");
 
+    }
+  }
+
+  private String getYmlFromPath(String path, String username) throws AppException {
+
+    DsPath ymlPath = pathValidator.validatePath(this.project, path);
+    ymlPath.validatePathExists(inodes,false);
+    org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
+    String ymlFileName = fullPath.getName();
+
+    DistributedFileSystemOps udfso = null;
+    FSDataInputStream is = null;
+
+    try {
+      udfso = dfs.getDfsOps(username);
+      //tests if the user have permission to access this path
+      is = udfso.open(fullPath);
+
+      long fileSize = udfso.getFileStatus(fullPath).getLen();
+      byte[] ymlFileInBytes = new byte[(int) fileSize];
+
+      if (fileSize < 10000) {
+        try (DataInputStream dis = new DataInputStream(is)) {
+          dis.readFully(ymlFileInBytes, 0, (int)fileSize);
+          String ymlFileContents = new String(ymlFileInBytes);
+          return ymlFileContents;
+        }
+      } else{
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                ".yml file too large. Maximum size is 10000 bytes.");
+      }
+
+    } catch(IOException ioe) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(),
+                  "Failed to create Anaconda environment from .yml file.");
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+
+
+  private void exportEnvironment(String host, String environmentFile, String hdfsUser) throws AppException {
+
+    String secretDir = DigestUtils.sha256Hex(project.getName() + hdfsUser);
+    String exportPath = settings.getStagingDir() + Settings.PRIVATE_DIRS + secretDir;
+    File exportDir = new File(exportPath);
+    exportDir.mkdirs();
+
+    String prog = settings.getHopsworksDomainDir() + "/bin/condaexport.sh";
+    ProcessBuilder pb = new ProcessBuilder("/usr/bin/sudo", prog,
+            exportPath, project.getName(), host, environmentFile, hdfsUser);
+
+    try {
+      Process process = pb.start();
+      process.waitFor(180l, TimeUnit.SECONDS);
+      int exitCode = process.exitValue();
+      if(exitCode != 0) {
+        throw new IOException("A problem occurred when exporting the environment. ");
+      }
+    } catch (IOException | InterruptedException ex) {
+      logger.log(Level.SEVERE, "Error exporting Anaconda environment as .yml", ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                  getStatusCode(),
+                  "Failed to export Anaconda environment as .yml");
     }
   }
 }

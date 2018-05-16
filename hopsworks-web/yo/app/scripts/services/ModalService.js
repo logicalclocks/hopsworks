@@ -527,6 +527,33 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              selectEnvironmentYml: function (size, regex, errorMsg) {
+                              var modalInstance = $uibModal.open({
+                                templateUrl: 'views/selectEnvYml.html',
+                                controller: 'SelectEnvYmlCtrl as selectEnvYmlCtrl',
+                                size: size,
+                                resolve: {
+                                  auth: ['$q', '$location', 'AuthService',
+                                    function ($q, $location, AuthService) {
+                                      return AuthService.session().then(
+                                              function (success) {
+                                              },
+                                              function (err) {
+                                                $location.path('/login');
+                                                $location.replace();
+                                                return $q.reject(err);
+                                              });
+                                    }],
+                                  regex: function () {
+                                    return regex;
+                                  },
+                                  errorMsg: function () {
+                                    return errorMsg;
+                                  }
+                                }
+                              });
+                              return modalInstance.result;
+                            },
               selectDir: function (size, regex, errorMsg) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/selectDir.html',
