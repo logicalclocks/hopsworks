@@ -418,6 +418,10 @@ angular.module('hopsWorksApp')
               self.goToUrl('python');
             };
 
+            self.goToExperiments = function () {
+              self.goToUrl('experiments');
+            };
+
             self.goToKafka = function () {
               self.goToUrl('kafka');
               if (self.tourService.currentStep_TourTwo > -1) {
@@ -497,6 +501,10 @@ angular.module('hopsWorksApp')
 
             self.showJobs = function () {
               return showService("Jobs");
+            };
+
+            self.showExperiments = function () {
+              return showService("Experiments");
             };
 
             self.showSsh = function () {

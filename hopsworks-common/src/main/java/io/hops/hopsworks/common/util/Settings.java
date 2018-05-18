@@ -489,6 +489,7 @@ public class Settings implements Serializable {
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
           applicationCertificateValidityPeriod);
+      tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -615,6 +616,8 @@ public class Settings implements Serializable {
   public static final String PRIVATE_DIRS = "/private_dirs/";
 
   public static final String SERVING_DIRS = "/serving/";
+
+  public static final String TENSORBOARD_DIRS = "/tensorboard/";
 
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
@@ -2614,7 +2617,16 @@ public class Settings implements Serializable {
     checkCache();
     return applicationCertificateValidityPeriod;
   }
-  
+
+  // TensorBoard kill rotation interval in milliseconds
+  private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
+  private int tensorBoardMaxLastAccessed = 1800000;
+
+  public synchronized int getTensorBoardMaxLastAccessed() {
+    checkCache();
+    return tensorBoardMaxLastAccessed;
+  }
+
   public static Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {

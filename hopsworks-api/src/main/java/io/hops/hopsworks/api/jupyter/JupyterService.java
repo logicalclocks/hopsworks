@@ -49,6 +49,9 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -73,6 +76,7 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -97,6 +101,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.GenericEntity;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -132,6 +138,8 @@ public class JupyterService {
   private DistributedFsService dfsService;
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
+  @EJB
+  private ElasticController elasticController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -288,6 +296,13 @@ public class JupyterService {
           Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "Could not find your username. Report a bug.");
     }
+    String loggedinemail = sc.getUserPrincipal().getName();
+    Users hopsworksUser = userFacade.findByEmail(loggedinemail);
+    if (hopsworksUser == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+              "You are not authorized for this invocation.");
+    }
+    String realName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
 
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
@@ -313,7 +328,7 @@ public class JupyterService {
 
       try {
         jupyterSettingsFacade.update(jupyterSettings);
-        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, jupyterSettings);
+        dto = jupyterProcessFacade.startServerAsJupyterUser(project, configSecret, hdfsUser, realName, jupyterSettings);
         if (dto == null) {
           throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Incomplete request!");
@@ -388,7 +403,7 @@ public class JupyterService {
   public Response stopDataOwner(@PathParam("hdfsUsername") String hdfsUsername,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    stop(hdfsUsername);
+    stop(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -399,11 +414,11 @@ public class JupyterService {
   public Response stopNotebookServer(@Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
     String hdfsUsername = getHdfsUser(sc);
-    stop(hdfsUsername);
+    stop(hdfsUsername, sc.getUserPrincipal().getName());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private void stop(String hdfsUser) throws AppException {
+  private void stop(String hdfsUser, String loggedinemail) throws AppException {
     if (projectId == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Incomplete request!");
@@ -415,7 +430,30 @@ public class JupyterService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Could not find Jupyter entry for user: " + hdfsUser);
     }
+
+    Users user = userFacade.findByEmail(loggedinemail);
+
+    List<LivyMsg.Session> sessions = livyService.
+        getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER);
+
     livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+
+    int retries = 3;
+    while(retries > 0) {
+      if (livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+        LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
+            " user " + hdfsUser + ", retrying...");
+        livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+      } else {
+        break;
+      }
+      try {
+        Thread.sleep(1000);
+      } catch(InterruptedException ie) {
+        LOGGER.log(Level.SEVERE, "Interrupted while sleeping");
+      }
+      retries--;
+    }
     String jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser, jp);
 
     // stop the server, remove the user in this project's local dirs
@@ -436,6 +474,32 @@ public class JupyterService {
       if (dfso != null) {
         dfsService.closeDfsClient(dfso);
       }
+    }
+
+    try {
+      String experimentsIndex = this.project.getName() + "_experiments";
+      // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
+      for (LivyMsg.Session session : sessions) {
+        String sessionAppId = session.getAppId();
+
+        String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
+
+        JSONObject json = new JSONObject(experiment);
+        json = json.getJSONObject("hits");
+        JSONArray hits = json.getJSONArray("hits");
+        for(int i = 0; i < hits.length(); i++) {
+          JSONObject obj = (JSONObject)hits.get(i);
+          JSONObject source = obj.getJSONObject("_source");
+          String status = source.getString("status");
+
+          if(status.equals("RUNNING")) {
+            source.put("status", "KILLED");
+            elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
+          }
+        }
+      }
+    } catch(Exception e) {
+      LOGGER.log(Level.WARNING, "Exception while updating RUNNING status to KILLED on experiments", e);
     }
   }
 
@@ -515,6 +579,23 @@ public class JupyterService {
     js.setShutdownLevel(jupyterSettings.getShutdownLevel());
     jupyterSettingsFacade.update(js);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
+  }
+
+  private JSONObject getApplicationFromRM(String appId) {
+
+    Response response = null;
+    String rmUrl = "http://" + settings.getRmIp() + ":" + settings.getRmPort() + "/ws/v1/cluster/apps/" + appId;
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(rmUrl);
+    try {
+      response = target.request().get();
+    } catch (Exception ex) {
+      LOGGER.log(Level.WARNING, "Unable to get information about app " + appId);
+    } finally {
+      client.close();
+    }
+    return new JSONObject(response.readEntity(String.class));
+
   }
 
 }

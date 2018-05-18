@@ -269,7 +269,10 @@ public class ResponseMessages {
       + "Jupyter will not work properly. "
       + "Try recreating the following dir manually:";
   public final static String HIVE_ADD_FAILURE = "Failed to create the Hive database";
+
   public final static String JOBS_ADD_FAILURE = "Failed to create the Elastic/Kibana index for jobs";
+
+  public final static String EXPERIMENTS_ADD_FAILURE = "Failed to create the Elastic/Kibana index for experiments";
 
   // LLAP
   public final static String LLAP_STATUS_INVALID = "Unrecognized new LLAP status";

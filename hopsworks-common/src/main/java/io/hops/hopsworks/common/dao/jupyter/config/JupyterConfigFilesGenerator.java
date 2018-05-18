@@ -90,6 +90,7 @@ public class JupyterConfigFilesGenerator {
   private final Settings settings;
   private final Project project;
   private final String hdfsUser;
+  private final String realName;
   private final String projectUserPath;
   private final String notebookPath;
   private final String confDirPath;
@@ -102,12 +103,13 @@ public class JupyterConfigFilesGenerator {
   private String token;
   private String nameNodeEndpoint;
 
-  JupyterConfigFilesGenerator(Project project, String secretConfig, String hdfsUser,
+  JupyterConfigFilesGenerator(Project project, String secretConfig, String hdfsUser, String realName,
       String nameNodeEndpoint, Settings settings, int port, String token,
       JupyterSettings js)
       throws AppException {
     this.project = project;
     this.hdfsUser = hdfsUser;
+    this.realName = realName;
     this.nameNodeEndpoint = nameNodeEndpoint;
     boolean newDir = false;
     boolean newFile = false;
@@ -476,6 +478,13 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.yarn.appMasterEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
               HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.ELASTIC_ENDPOINT", new ConfigProperty("elastic_endpoint",
+              HopsUtils.IGNORE, this.settings.getElasticRESTEndpoint()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HOPSWORKS_USER", new ConfigProperty("hopsworks_user",
+              HopsUtils.IGNORE, this.realName));
+
       // Spark properties
       sparkMagicParams.put(this.settings.SPARK_EXECUTORENV_PATH, new ConfigProperty("spark_executorEnv_PATH",
           HopsUtils.APPEND_PATH, this.settings.getAnacondaProjectDir(project.getName())
@@ -603,6 +612,12 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.executorEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
               HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
+
+      sparkMagicParams.put("spark.executorEnv.ELASTIC_ENDPOINT", new ConfigProperty("elastic_endpoint",
+              HopsUtils.IGNORE, this.settings.getElasticRESTEndpoint()));
+
+      sparkMagicParams.put("spark.executorEnv.HOPSWORKS_USER", new ConfigProperty("hopsworks_user",
+              HopsUtils.IGNORE, this.realName));
       
       sparkMagicParams.put(this.settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, new ConfigProperty(
           "spark_executor_extraJavaOptions", HopsUtils.APPEND_SPACE, extraJavaOptions));
