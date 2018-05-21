@@ -56,6 +56,8 @@ module CondaHelper
     end
   end
 
+  module_function :wait_for
+
   def conda_exists
     conda_var = Variables.find_by(id: "anaconda_dir")
     if not conda_var
