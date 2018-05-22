@@ -1371,8 +1371,6 @@ public class JobService {
       try {
         LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});
-
-        elasticController.deleteJobLogs(project.getName(), "logs", settings.getJobLogsIdField(), job.getId());
         jobFacade.removeJob(job);
         LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});

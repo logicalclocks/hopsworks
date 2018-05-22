@@ -273,7 +273,7 @@ public class JupyterConfigFilesGenerator {
     File jupyter_kernel_file = new File(confDirPath + JUPYTER_CUSTOM_KERNEL);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
-    File log4j_file = new File(confDirPath + LOG4J_PROPS);
+//    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     boolean createdJupyter = false;
     boolean createdKernel = false;
     boolean createdSparkmagic = false;
@@ -327,16 +327,16 @@ public class JupyterConfigFilesGenerator {
     }
     if (!sparkmagic_config_file.exists()) {
   
-      // TODO: Add this local file to 'spark: file' to copy it to hdfs and localize it.
-      StringBuilder log4j_sb
-          = ConfigFileGenerator.instantiateFromTemplate(
-          ConfigFileGenerator.LOG4J_TEMPLATE_JUPYTER,
-          "logstash_ip", settings.getLogstashIp(),
-          "logstash_port", settings.getLogstashPort().toString(),
-          "log_level", js.getLogLevel().toUpperCase()
-      );
-      ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
-  
+//      // TODO: Add this local file to 'spark: file' to copy it to hdfs and localize it.
+//      StringBuilder log4j_sb
+//          = ConfigFileGenerator.instantiateFromTemplate(
+//          ConfigFileGenerator.LOG4J_TEMPLATE_JUPYTER,
+//          "logstash_ip", settings.getLogstashIp(),
+//          "logstash_port", settings.getLogstashPort().toString(),
+//          "log_level", js.getLogLevel().toUpperCase()
+//      );
+//      ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
+//  
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
           //Log4j.properties
