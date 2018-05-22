@@ -74,6 +74,8 @@ angular.module('hopsWorksApp')
               {id: 5, name: '1000'}
             ];
             self.shutdownLevelSelected;
+            self.timeLeftInMinutes = 0;
+            self.addShutdownHours;
 
 
 //  (Group/World readable, not writable)
@@ -99,15 +101,53 @@ angular.module('hopsWorksApp')
             self.changeLogLevel = function () {
               self.val.logLevel = self.logLevelSelected.name;
             };
-            
+
             self.changeShutdownLevel = function () {
               self.val.shutdownLevel = self.shutdownLevelSelected.name;
             };
 
+            self.updateShutdownLevel = function () {
+              var currentHours = self.val.shutdownLevel;
+
+              self.val.shutdownLevel = Number(currentHours) + Number(self.shutdownLevelSelected.name);
+
+              self.loadingText = "Updating Jupyter Shutdown Time";
+              JupyterService.update(self.projectId, self.val).then(
+                      function (success) {
+                        self.val.shutdownLevel = success.data.shutdownLevel;
+                        growl.info("Updated... notebook will close automatically in " + self.val.shutdownLevel + " hours.",
+                                {title: 'Info', ttl: 3000});
+                        timeToShutdown();
+                      }, function (error) {
+                growl.error("Could not update shutdown time for Jupyter notebook. If this problem persists please contact your system administrator.");
+              }
+              );
+            };
+
+            var timeToShutdown = function () {
+              if ('lastAccessed' in self.config) {
+                if ('shutdownLevel' in self.val) {
+                  var d = new Date();
+                  var currentTimeMs = d.getTime();
+                  var lastTimeMs = new Date(self.config.lastAccessed)
+                  var timeSinceLastAccess = currentTimeMs - lastTimeMs.valueOf();
+                  if (timeSinceLastAccess < 0) {
+                    timeSinceLastAccess = 0;
+                  }
+                  console.log("lastAccessed " + self.config.lastAccessed);
+                  console.log("lastAccessed " + lastTimeMs);
+                  console.log("timeSinceLast " + timeSinceLastAccess);
+                  console.log("currentTimeMs " + currentTimeMs);
+                  console.log("shutdownLevel " + self.val.shutdownLevel);
+                  self.timeLeftInMinutes = (((self.val.shutdownLevel * 60 * 60 * 1000) - timeSinceLastAccess) / (60 * 1000)).toFixed(1);
+                }
+              }
+            };
+
+
             self.changeUmask = function () {
               self.val.umask = self.umask.name;
             };
-
 
             self.changeBaseDir = function () {
               self.val.baseDir = self.selected.name;
@@ -142,8 +182,6 @@ angular.module('hopsWorksApp')
 
             };
 
-
-
             self.showLivyUI = function (appId) {
               self.job.type = "TENSORFLOW";
               self.job.appId = appId;
@@ -163,20 +201,20 @@ angular.module('hopsWorksApp')
             };
 
             var getCondaCommands = function () {
-            PythonDepsService.status(self.projectId).then(
-              function (success) {
-                self.opsStatus = success.data;
-                self.tempEnvs = 0;
-                for (var i = 0; i < self.opsStatus.length; i++) {
-                  if (self.opsStatus[i].op === "CREATE" && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
-                     self.tempEnvs += 1;
-                     break;
-                  }
-                }
-                self.checkCondaEnabled()
-                self.numNotEnabledEnvs = self.tempEnvs;
+              PythonDepsService.status(self.projectId).then(
+                      function (success) {
+                        self.opsStatus = success.data;
+                        self.tempEnvs = 0;
+                        for (var i = 0; i < self.opsStatus.length; i++) {
+                          if (self.opsStatus[i].op === "CREATE" && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
+                            self.tempEnvs += 1;
+                            break;
+                          }
+                        }
+                        self.checkCondaEnabled()
+                        self.numNotEnabledEnvs = self.tempEnvs;
 
-              }, function (error) {
+                      }, function (error) {
 
               }
               );
@@ -186,7 +224,7 @@ angular.module('hopsWorksApp')
 
             var startPolling = function () {
               self.poller = $interval(function () {
-              getCondaCommands();
+                getCondaCommands();
               }, 5000);
             };
             startPolling();
@@ -349,7 +387,9 @@ angular.module('hopsWorksApp')
                         self.config = success.data;
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         self.toggleValue = true;
+                        timeToShutdown();
                       }, function (error) {
+                        self.val.shutdownLevel = 4;
                 // nothing to do
               }
               );
@@ -397,24 +437,22 @@ angular.module('hopsWorksApp')
                           self.logLevelSelected = self.log_levels[2];
                         }
                         
-                        if (self.val.shutdownLevel === "1") {
+                        if (self.val.shutdownLevel <= "1") {
                           self.shutdownLevelSelected = self.shutdown_levels[0];
-                        } else if (self.val.shutdownLevel === "6") {
+                          } else if (self.val.shutdownLevel <= "6") {
                           self.shutdownLevelSelected = self.shutdown_levels[1];
-                        } else if (self.val.shutdownLevel === "12") {
+                        } else if (self.val.shutdownLevel <= "12") {
                           self.shutdownLevelSelected = self.shutdown_levels[2];
-                        } else if (self.val.shutdownLevel === "24") {
+                        } else if (self.val.shutdownLevel <= "24") {
                           self.shutdownLevelSelected = self.shutdown_levels[3];
-                        } else if (self.val.shutdownLevel === "72") {
+                        } else if (self.val.shutdownLevel <= "72") {
                           self.shutdownLevelSelected = self.shutdown_levels[4];
-                        } else if (self.val.shutdownLevel === "168") {
+                        } else if (self.val.shutdownLevel <= "168") {
                           self.shutdownLevelSelected = self.shutdown_levels[5];
-                        } else if (self.val.shutdownLevel === "1000") {
-                          self.shutdownLevelSelected = self.shutdown_levels[6];
                         } else {
-                          self.shutdownLevelSelected = self.shutdown_levels[0];
+                          self.shutdownLevelSelected = self.shutdown_levels[6];
                         }
-                        
+
                         if (self.val.umask === "022") {
                           self.umask = self.umasks[0];
                         } else if (self.val.umask === "007") {
@@ -422,9 +460,11 @@ angular.module('hopsWorksApp')
                         } else if (self.val.umask === "077") {
                           self.umask = self.umasks[2];
                         } else {
-                          self.umask = self.umasks[0];                          
+                          self.umask = self.umasks[0];
                         }
-                        
+
+                        timeToShutdown();
+
                       }, function (error) {
                 growl.error("Could not get Jupyter Notebook Server Settings.");
               }
@@ -433,8 +473,11 @@ angular.module('hopsWorksApp')
 
             };
 
+
+
             self.openWindow = function () {
               $window.open(self.ui, '_blank');
+              timeToShutdown();
             }
 
 
@@ -500,7 +543,7 @@ angular.module('hopsWorksApp')
             init();
 
             var navigateToPython = function () {
-                $location.path('/#!/project/' + self.projectId + '/python');
+              $location.path('/#!/project/' + self.projectId + '/python');
             };
 
             self.start = function () {
@@ -516,6 +559,7 @@ angular.module('hopsWorksApp')
                         self.ui = "/hopsworks-api/jupyter/" + self.config.port + "/?token=" + self.config.token;
                         $window.open(self.ui, '_blank');
                         $timeout(stopLoading(), 5000);
+                        timeToShutdown();
                       }, function (error) {
                 if (error.data !== undefined && error.status === 404) {
                   growl.error("Anaconda not enabled yet - retry starting Jupyter again in a few seconds.");

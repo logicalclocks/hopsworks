@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -281,7 +280,7 @@ public class JupyterService {
     boolean enabled = project.getConda();
     if (!enabled) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "First enable Anaconda. Click on 'Python' -> Pick a version'");
+          "First enable Anaconda. Click on 'Python' -> Pick a version'");
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -301,7 +300,7 @@ public class JupyterService {
               "Incomplete request!");
         }
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
-                .getHdfsTmpCertDir(),
+            .getHdfsTmpCertDir(),
             dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         // When Livy launches a job it will look in the standard directory for the certificates
         // We materialize them twice but most probably other operations will need them too, so it is OK
@@ -316,8 +315,8 @@ public class JupyterService {
                 settings.getHdfsTmpCertDir(),
                 certificateMaterializer, dto.getCertificatesDir(), settings);
           } else {
-            LOGGER.log(Level.SEVERE, "Could not identify local directory to clean certificates. Manual cleanup " +
-                "needed");
+            LOGGER.log(Level.SEVERE, "Could not identify local directory to clean certificates. Manual cleanup "
+                + "needed");
             throw new IOException("Could not identify local directory to clean certificates");
           }
         } catch (IOException e) {
@@ -472,6 +471,31 @@ public class JupyterService {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     return hdfsUsername;
+  }
+
+  @POST
+  @Path("/update")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response updateNotebookServer(JupyterSettings jupyterSettings,
+      @Context SecurityContext sc,
+      @Context HttpServletRequest req) throws AppException {
+
+    if (projectId == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId, sc.getUserPrincipal().getName());
+
+    if (js == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not find Jupyter Settings.");
+    }
+    js.setShutdownLevel(jupyterSettings.getShutdownLevel());
+    jupyterSettingsFacade.update(js);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
   }
 
 }

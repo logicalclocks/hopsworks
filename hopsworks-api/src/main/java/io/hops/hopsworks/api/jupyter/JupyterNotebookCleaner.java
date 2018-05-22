@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -62,6 +63,8 @@ public class JupyterNotebookCleaner {
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
+  private HdfsUsersController hdfsUserscontroller;
+  @EJB
   private UserFacade usersFacade;
 
   public JupyterNotebookCleaner() {
@@ -81,14 +84,22 @@ public class JupyterNotebookCleaner {
       // then get the Livy sessions for that project_user
       for (JupyterProject jp : servers) {
         List<Session> sessions = livyService.getLivySessions(jp.getProjectId(), ProjectServiceEnum.JUPYTER);
+
+        HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
         // 3. If there is an active livy session, update the lastModified column
         if (!sessions.isEmpty()) {
-          jp.setLastAccessed(new Date(System.currentTimeMillis()));
-          jupyterFacade.update(jp);
+          for (Session s : sessions) {
+            String h = s.getProxyUser();
+            if (h != null) {
+              if (h.compareTo(hdfsUser.getUsername()) == 0) {
+                jp.setLastAccessed(new Date(System.currentTimeMillis()));
+                jupyterFacade.update(jp);
+              }
+            }
+          }
         }
         // 3a. TODO - Check if there is an active Python kernel for the notebook
 
-        HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
         Users user = usersFacade.findByUsername(hdfsUser.getUsername());
         JupyterSettings js = jupyterSettingsFacade.findByProjectUser(jp.getProjectId().getId(), user.getEmail());
 

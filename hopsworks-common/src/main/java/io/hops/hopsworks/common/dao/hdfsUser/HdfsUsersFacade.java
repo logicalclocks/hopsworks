@@ -43,7 +43,7 @@ public class HdfsUsersFacade extends AbstractFacade<HdfsUsers> {
     return em;
   }
 
-  public HdfsUsers findHdfsUser(byte[] id) {
+  public HdfsUsers findById(int id) {
     return em.find(HdfsUsers.class, id);
   }
 

@@ -43,6 +43,17 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
+              update: function (projectId, config) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/jupyter/update',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: config
+                };
+                return $http(req);
+              },
               livySessions: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/jupyter/livy/sessions');
               },
