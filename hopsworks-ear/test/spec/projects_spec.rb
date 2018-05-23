@@ -24,7 +24,7 @@ describe 'projects' do
         reset_session
       end
       it "should fail" do
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: "Client not authorized for this invocation")
         expect_status(401)
       end
@@ -38,14 +38,14 @@ describe 'projects' do
         check_project_limit
       end
       it 'should work with valid params' do
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: "project_#{Time.now.to_i}", description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
       end
       it 'should create resources and logs datasets with right permissions and owner' do
         projectname = "project_#{Time.now.to_i}"
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
@@ -64,7 +64,7 @@ describe 'projects' do
       end
       it 'should create JUPYTER and ZEPPELIN notebook datasets with right permissions and owner' do
         projectname = "project_#{Time.now.to_i}"
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE", "JUPYTER"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: ->(value){ expect(value).to be_empty})
         expect_json(successMessage: regex("Project created successfully.*"))
         expect_status(201)
@@ -84,7 +84,7 @@ describe 'projects' do
       it 'should fail to create a project with an existing name' do
         with_valid_project
         projectname = "#{@project[:projectname]}"
-        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","ZEPPELIN"], projectTeam:[], retentionPeriod: ""}
+        post "#{ENV['HOPSWORKS_API']}/project", {projectName: projectname, description: "", status: 0, services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
         expect_json(errorMsg: "Project with the same name already exists.")
         expect_status(400)
       end

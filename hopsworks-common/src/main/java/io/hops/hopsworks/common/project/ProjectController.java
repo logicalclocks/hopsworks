@@ -753,16 +753,14 @@ public class ProjectController {
 
     boolean toPersist;
     switch (service) {
-      case ZEPPELIN:
-        toPersist = addServiceDataset(project, user,
-            Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
-        break;
       case JUPYTER:
         toPersist = addServiceDataset(project, user,
             Settings.ServiceDataset.JUPYTER, dfso, udfso);
         break;
       case HIVE:
-        toPersist = addServiceHive(project, user, dfso);
+        addServiceHive(project, user, dfso);
+        //HOPSWORKS-198: Enable Zeppelin at the same time as Hive
+        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
         toPersist= addServiceDataset(project, user,
@@ -770,6 +768,7 @@ public class ProjectController {
         break;
       default:
         toPersist = true;
+        break;
     }
 
     if (toPersist) {
@@ -777,6 +776,11 @@ public class ProjectController {
       projectServicesFacade.addServiceForProject(project, service);
       logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
           ActivityFacade.FLAG_PROJECT, user, project);
+      if (service == ProjectServiceEnum.HIVE) {
+        projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
+        logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
+            ActivityFacade.FLAG_PROJECT, user, project);
+      }
     } else {
       // either addServiceZeppelin or addServiceHive failed. Throw ServiceException to
       // signal it to the view

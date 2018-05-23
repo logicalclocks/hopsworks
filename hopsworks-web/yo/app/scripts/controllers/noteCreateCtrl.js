@@ -38,9 +38,6 @@ angular.module('hopsWorksApp')
                 if(value.interpreter.defaultInterpreter === true){
                    self.note.defaultInterpreter = value.interpreter;
                 }
-//                if(value.interpreter.name === "livy"){
-//                   self.note.defaultInterpreter = value.interpreter;
-//                }
               });
             };
 

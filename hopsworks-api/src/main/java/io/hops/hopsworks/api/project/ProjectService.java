@@ -496,6 +496,7 @@ public class ProjectService {
               break;
             default:
               error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
+              break;
           }
           json.setErrorMsg(json.getErrorMsg() + "\n" + error);
         }
@@ -1000,9 +1001,6 @@ public class ProjectService {
           ResponseMessages.PROJECT_NOT_FOUND);
     }
     Pia pia = piaFacade.findByProject(projectId);
-//    Pia pia = piaFacade.findByProject(project);
-    // set the project to 'null', so that it is not exposed to the client
-//    pia.setProjectId(null);
     GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();

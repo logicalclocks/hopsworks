@@ -74,9 +74,9 @@ angular.module('hopsWorksApp')
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
               // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
             } else {
-              self.projectTypes = ['JOBS', 'ZEPPELIN', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
             }
 
             $scope.activeService = "home";
@@ -249,15 +249,6 @@ angular.module('hopsWorksApp')
                       });
             };
 
-//        self.projectSettingModal = function () {
-//          ModalService.projectSettings('md').then(
-//              function (success) {
-//                getAllActivities();
-//                getCurrentProject();
-//              }, function (error) {
-//            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
-//          });
-//        };
 
             self.membersModal = function () {
               ModalService.projectMembers('lg', self.projectId).then(
@@ -395,20 +386,7 @@ angular.module('hopsWorksApp')
 
             self.goToZeppelin = function () {
               self.enabling = true;
-              PythonDepsService.enabled(self.projectId).then(function (success) {
-                self.goToUrl('zeppelin');
-              }, function (error) {
-                if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
-                  self.goToUrl('zeppelin');
-                } else {
-                  ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda to use PySpark!')
-                          .then(function (success) {
-                            self.goToUrl('python');
-                          }, function (error) {
-                            self.goToUrl('zeppelin');
-                          });
-                }
-              });
+              self.goToUrl('zeppelin');
             };
 
 

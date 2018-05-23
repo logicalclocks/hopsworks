@@ -30,16 +30,6 @@
              id="noteName" ng-model="noteCreateCtrl.note.name"
              ng-enter="noteCreateCtrl.handleNameEnter()">
     </div>
-    <br>
-    <div class="interpreters-group">
-      <label for="defaultInterpreter">Default Interpreter</label>
-      <select id="defaultInterpreter"
-              name="defaultInterpreter"
-              class="form-control"
-              ng-model="noteCreateCtrl.note.defaultInterpreter"
-              ng-options="option.name for option in noteCreateCtrl.interpreterSettings">
-      </select>
-    </div>
   </div>
   <br>
   <div class="panel panel-default">
