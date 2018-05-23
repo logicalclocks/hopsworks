@@ -245,6 +245,11 @@ public class JupyterSettings implements Serializable {
   @Column(name = "umask")
   private String umask = "022";
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "fault_tolerant")
+  private boolean faultTolerant;
+
   @JoinColumn(name = "team_member",
       referencedColumnName = "email",
       insertable = false,
@@ -275,7 +280,8 @@ public class JupyterSettings implements Serializable {
   public JupyterSettings(JupyterSettingsPK jupyterSettingsPK, int numTfPs, int numTfGpus, int numMpiNp,
       int appmasterCores, int appmasterMemory, int numExecutors, int numExecutorCores, int executorMemory,
       int dynamicInitialExecutors, int dynamicMinExecutors, int dynamicMaxExecutors, String secret, String mode,
-      boolean advanced, String archives, String jars, String files, String pyFiles, String sparkParams, String umask) {
+      boolean advanced, String archives, String jars, String files, String pyFiles, String sparkParams, String umask,
+                         boolean faultTolerant) {
     this.jupyterSettingsPK = jupyterSettingsPK;
     this.numTfPs = numTfPs;
     this.numTfGpus = numTfGpus;
@@ -297,6 +303,7 @@ public class JupyterSettings implements Serializable {
     this.pyFiles = pyFiles;
     this.sparkParams = sparkParams;
     this.umask = umask;
+    this.faultTolerant = faultTolerant;
   }
 
   public JupyterSettings(int projectId, String email) {
@@ -546,4 +553,11 @@ public class JupyterSettings implements Serializable {
     this.shutdownLevel = shutdownLevel;
   }
 
+  public boolean getFaultTolerant() {
+    return faultTolerant;
+  }
+
+  public void setFaultTolerant(boolean faultTolerant) {
+    this.faultTolerant = faultTolerant;
+  }
 }

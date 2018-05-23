@@ -603,7 +603,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.blacklist.enabled", new ConfigProperty(
               "spark_blacklist_enabled", HopsUtils.OVERWRITE,
-              (isTensorFlow) ? "true": "false"));
+              (isTensorFlow && js.getFaultTolerant()) ? "true": "false"));
 
       // If any task fails on an executor - kill it instantly (need fresh working directory for each task)
       sparkMagicParams.put("spark.blacklist.task.maxTaskAttemptsPerExecutor", new ConfigProperty(
@@ -630,8 +630,9 @@ public class JupyterConfigFilesGenerator {
               "spark_application_max_failed_executors_per_node", HopsUtils.OVERWRITE, "2"));
 
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
-              "spark_task_max_failures", HopsUtils.OVERWRITE, (isTensorFlow) ? "3" :
-              ((isHorovod || isTensorFlowOnSpark) ? "1" : "4")));
+              "spark_task_max_failures", HopsUtils.OVERWRITE,
+              (isTensorFlow && js.getFaultTolerant()) ? "3" :
+                      ((isHorovod || isTensorFlowOnSpark || isTensorFlow) ? "1" : "4")));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
       sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(

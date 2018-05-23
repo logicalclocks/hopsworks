@@ -299,6 +299,15 @@
                     <div class="col-md-2 jupyter-left"><input type="number" ng-init="0"  ng-model="jupyterCtrl.val.numTfGpus" min="0" class="form-control"></div>
                   </div>
                 </div>
+                <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'" >
+                  <div class="row clusterparams">
+                    <div class="text-right col-md-6">Fault-tolerant mode<i class="fa fa-info-circle"
+                                                                     uib-tooltip="Whether to retry on failure and enable machine/executor blacklisting. This setting should be disabled during development and enabled during training."
+                                                                     style="margin-left: 10px"></i>
+                    </div>
+                    <div class="col-md-2 jupyter-left"><input type="checkbox" ng-init="false" ng-model="jupyterCtrl.val.faultTolerant"></div>
+                  </div>
+                </div>
                 <div class="row"  ng-if="jupyterCtrl.val.mode === 'distributedTensorFlow'">
 
                   <div class="row clusterparams" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
