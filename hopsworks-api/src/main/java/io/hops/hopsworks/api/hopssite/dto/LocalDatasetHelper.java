@@ -23,7 +23,6 @@ package io.hops.hopsworks.api.hopssite.dto;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,11 +37,10 @@ public class LocalDatasetHelper {
       Date date = new Date(d.getInode().getModificationTime().longValue());
       Path path = datasetCtrl.getDatasetPath(d);
       long size;
-      try {
-        size = dfso.getLastUpdatedDatasetSize(path);
-      } catch (IOException ex) {
-        size = -1;
-      }
+        //TODO Alex - if we want to still get size, it should either be immutable for dataset, 
+        //or updated periodically into the db and provide this approximate version when requested
+      size = -1;
+//        size = dfso.getLastUpdatedDatasetSize(path);
       localDS.add(new LocalDatasetDTO(d.getInodeId(), d.getName(), d.getDescription(), d.getProject().getName(), date,
         date, size));
     }

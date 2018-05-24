@@ -217,6 +217,9 @@ angular.module('hopsWorksApp')
               if (fileSizeInBytes === undefined) {
                 return '--';
               }
+              if (fileSizeInBytes === -1) {
+                return '--';
+              }
               return convertSize(fileSizeInBytes);
             };
 
