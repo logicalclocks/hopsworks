@@ -60,8 +60,11 @@ describe '#Conda basic operations'  do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/pythonDeps/"
 
         tflearn_library = json_body.detect { |library| library[:lib] == "tflearn" }
+        serving_library = json_body.detect { |library| library[:lib] == "tensorflow-serving-api" }
         hops_library = json_body.detect { |library| library[:lib] == "hops" }
         imageio_library = json_body.detect { |library| library[:lib] == "imageio" }
+
+        expect(serving_library[:machineType]).to eq ("ALL")
 
         expect(tflearn_library[:machineType]).to eq ("ALL")
         expect(tflearn_library[:installType]).to eq ("PIP")
