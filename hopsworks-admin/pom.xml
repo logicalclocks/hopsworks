@@ -25,13 +25,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>0.5.0</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-admin</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.5.0</version>
   <packaging>war</packaging>
   <description>Hopsworks admin panel</description>
   <name>hopsworks-admin</name>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.5.0</version>
       <type>ejb</type>
       <scope>provided</scope>
       <exclusions>
