@@ -124,7 +124,7 @@ public class JupyterConfigFilesGenerator {
           "Could not configure Jupyter. Report a bug.");
     }
   }
-  
+
   public String getProjectUserPath() {
     return projectUserPath;
   }
@@ -431,7 +431,32 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("name", new ConfigProperty("spark_magic_name", HopsUtils.IGNORE,
           "remotesparkmagics-jupyter-" + js.getMode()));
       sparkMagicParams.put("queue", new ConfigProperty("yarn_queue", HopsUtils.IGNORE, "default"));
-      
+
+      // Export versions of software
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.LIVY_VERSION", new ConfigProperty("livy_version",
+              HopsUtils.IGNORE, this.settings.getLivyVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.SPARK_VERSION", new ConfigProperty("spark_version",
+              HopsUtils.IGNORE, this.settings.getSparkVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.KAFKA_VERSION", new ConfigProperty("kafka_version",
+              HopsUtils.IGNORE, this.settings.getKafkaVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.TENSORFLOW_VERSION", new ConfigProperty("tensorflow_version",
+              HopsUtils.IGNORE, this.settings.getTensorflowVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.CUDA_VERSION", new ConfigProperty("cuda_version",
+              HopsUtils.IGNORE, this.settings.getCudaVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HOPSWORKS_VERSION", new ConfigProperty("hopsworks_version",
+              HopsUtils.IGNORE, this.settings.getHopsworksVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_VERSION", new ConfigProperty("hadoop_version",
+              HopsUtils.IGNORE, this.settings.getHadoopVersion()));
+
+      sparkMagicParams.put("spark.yarn.appMasterEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
+              HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
       // Spark properties
       sparkMagicParams.put("spark.executorEnv.PATH", new ConfigProperty("spark_executorEnv_PATH",
           HopsUtils.APPEND, this.settings.getAnacondaProjectDir(project.getName())
@@ -461,9 +486,6 @@ public class JupyterConfigFilesGenerator {
       
       sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_HDFS_HOME", new ConfigProperty(
           "hadoop_home", HopsUtils.IGNORE, this.settings.getHadoopSymbolicLinkDir()));
-  
-      sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_VERSION", new ConfigProperty(
-          "hadoop_version", HopsUtils.IGNORE, this.settings.getHadoopVersion()));
       
       sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_USER_NAME", new ConfigProperty(
           "hdfs_user", HopsUtils.IGNORE, this.hdfsUser));
@@ -536,9 +558,32 @@ public class JupyterConfigFilesGenerator {
       
       sparkMagicParams.put("spark.executorEnv.HADOOP_HDFS_HOME", new ConfigProperty(
           "hadoop_home", HopsUtils.IGNORE, this.settings.getHadoopSymbolicLinkDir()));
-      
-      sparkMagicParams.put("spark.executorEnv.HADOOP_VERSION", new ConfigProperty(
-          "hadoop_version", HopsUtils.IGNORE, this.settings.getHadoopVersion()));
+
+      // Export versions of software
+
+      sparkMagicParams.put("spark.executorEnv.LIVY_VERSION", new ConfigProperty("livy_version",
+              HopsUtils.IGNORE, this.settings.getLivyVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.SPARK_VERSION", new ConfigProperty("spark_version",
+              HopsUtils.IGNORE, this.settings.getSparkVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.KAFKA_VERSION", new ConfigProperty("kafka_version",
+              HopsUtils.IGNORE, this.settings.getKafkaVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.TENSORFLOW_VERSION", new ConfigProperty("tensorflow_version",
+              HopsUtils.IGNORE, this.settings.getTensorflowVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.CUDA_VERSION", new ConfigProperty("cuda_version",
+              HopsUtils.IGNORE, this.settings.getCudaVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.HOPSWORKS_VERSION", new ConfigProperty("hopsworks_version",
+              HopsUtils.IGNORE, this.settings.getHopsworksVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.HADOOP_VERSION", new ConfigProperty("hadoop_version",
+              HopsUtils.IGNORE, this.settings.getHadoopVersion()));
+
+      sparkMagicParams.put("spark.executorEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
+              HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
       
       sparkMagicParams.put("spark.executor.extraJavaOptions", new ConfigProperty(
           "spark_executor_extraJavaOptions", HopsUtils.APPEND, extraJavaOptions));
