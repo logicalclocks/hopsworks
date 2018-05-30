@@ -458,8 +458,8 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.yarn.appMasterEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
               HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
       // Spark properties
-      sparkMagicParams.put("spark.executorEnv.PATH", new ConfigProperty("spark_executorEnv_PATH",
-          HopsUtils.APPEND, this.settings.getAnacondaProjectDir(project.getName())
+      sparkMagicParams.put(this.settings.SPARK_EXECUTORENV_PATH, new ConfigProperty("spark_executorEnv_PATH",
+          HopsUtils.APPEND_PATH, this.settings.getAnacondaProjectDir(project.getName())
           + "/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"));
       
       sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK_PYTHON", new ConfigProperty("pyspark_bin",
@@ -471,16 +471,16 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.yarn.appMasterEnv.PYSPARK3_PYTHON", new ConfigProperty("pyspark_bin",
           HopsUtils.IGNORE, this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
   
-      sparkMagicParams.put("spark.yarn.appMasterEnv.LD_LIBRARY_PATH", new ConfigProperty(
-          "spark_yarn_appMaster_LD_LIBRARY_PATH", HopsUtils.APPEND,
+      sparkMagicParams.put(this.settings.SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH, new ConfigProperty(
+          "spark_yarn_appMaster_LD_LIBRARY_PATH", HopsUtils.APPEND_PATH,
           this.settings.getJavaHome() + "/jre/lib/amd64/server:" + this.settings.getCudaDir()
               + "/lib64:" + this.settings.getHadoopSymbolicLinkDir() + "/lib/native"));
       
       sparkMagicParams.put("spark.yarn.appMasterEnv.HADOOP_HOME", new ConfigProperty("hadoop_home",
           HopsUtils.IGNORE, this.settings.getHadoopSymbolicLinkDir()));
       
-      sparkMagicParams.put("spark.yarn.appMasterEnv.LIBHDFS_OPTS", new ConfigProperty(
-          "spark_yarn_appMasterEnv_LIBHDFS_OPTS", HopsUtils.APPEND,
+      sparkMagicParams.put(this.settings.SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS, new ConfigProperty(
+          "spark_yarn_appMasterEnv_LIBHDFS_OPTS", HopsUtils.APPEND_SPACE,
           "-Xmx96m -Dlog4j.configuration=" + this.settings.getHadoopSymbolicLinkDir()
               +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA"));
       
@@ -497,7 +497,7 @@ public class JupyterConfigFilesGenerator {
           "spark_yarn_appMasterEnv_HDFS_BASE_DIR", HopsUtils.IGNORE,
           "hdfs://Projects/" + this.project.getName() + js.getBaseDir()));
       
-      sparkMagicParams.put("spark.yarn.stagingDir", new ConfigProperty(
+      sparkMagicParams.put(this.settings.SPARK_DRIVER_STAGINGDIR_ENV, new ConfigProperty(
           "spark_yarn_stagingDir", HopsUtils.IGNORE,
           "hdfs:///Projects/" + this.project.getName() + "/Resources"));
   
@@ -513,18 +513,18 @@ public class JupyterConfigFilesGenerator {
           "spark_yarn_dist_pyFiles", HopsUtils.IGNORE,
           pyFilesBuilder.toString()));
     
-      sparkMagicParams.put("spark.driver.extraLibraryPath", new ConfigProperty(
-          "spark_driver_extraLibraryPath", HopsUtils.APPEND,
+      sparkMagicParams.put(this.settings.SPARK_DRIVER_EXTRALIBRARYPATH, new ConfigProperty(
+          "spark_driver_extraLibraryPath", HopsUtils.APPEND_PATH,
           this.getSettings().getCudaDir() + "/lib64"));
       
-      sparkMagicParams.put("spark.driver.extraJavaOptions", new ConfigProperty(
-          "spark_driver_extraJavaOptions", HopsUtils.APPEND, extraJavaOptions));
+      sparkMagicParams.put(this.settings.SPARK_DRIVER_EXTRAJAVAOPTIONS, new ConfigProperty(
+          "spark_driver_extraJavaOptions", HopsUtils.APPEND_SPACE, extraJavaOptions));
       
-      sparkMagicParams.put("spark.driver.extraClassPath", new ConfigProperty(
-          "spark_driver_extraClassPath", HopsUtils.APPEND, extraClassPath));
+      sparkMagicParams.put(this.settings.SPARK_DRIVER_EXTRACLASSPATH, new ConfigProperty(
+          "spark_driver_extraClassPath", HopsUtils.APPEND_PATH, extraClassPath));
   
-      sparkMagicParams.put("spark.executor.extraClassPath", new ConfigProperty(
-          "spark_executor_extraClassPath", HopsUtils.APPEND, extraClassPath));
+      sparkMagicParams.put(this.settings.SPARK_EXECUTOR_EXTRACLASSPATH, new ConfigProperty(
+          "spark_executor_extraClassPath", HopsUtils.APPEND_PATH, extraClassPath));
       
       sparkMagicParams.put("spark.executorEnv.MPI_NP", new ConfigProperty(
           "spark_executorEnv_MPI_NP", HopsUtils.IGNORE, (isHorovod) ? Integer.toString(js.getNumMpiNp()) : ""));
@@ -532,14 +532,14 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.executorEnv.REST_ENDPOINT", new ConfigProperty(
               "rest_endpoint", HopsUtils.IGNORE, settings.getRestEndpoint()));
       
-      sparkMagicParams.put("spark.executorEnv.HADOOP_USER_NAME", new ConfigProperty(
+      sparkMagicParams.put(this.settings.SPARK_EXECUTORENV_HADOOP_USER_NAME, new ConfigProperty(
           "hdfs_user", HopsUtils.IGNORE, this.hdfsUser));
       
       sparkMagicParams.put("spark.executorEnv.HADOOP_HOME", new ConfigProperty(
           "hadoop_home", HopsUtils.IGNORE, this.settings.getHadoopSymbolicLinkDir()));
       
-      sparkMagicParams.put("spark.executorEnv.LIBHDFS_OPTS", new ConfigProperty(
-          "spark_executorEnv_LIBHDFS_OPTS", HopsUtils.APPEND,
+      sparkMagicParams.put(this.settings.SPARK_EXECUTORENV_LIBHDFS_OPTS, new ConfigProperty(
+          "spark_executorEnv_LIBHDFS_OPTS", HopsUtils.APPEND_SPACE,
           "-Xmx96m -Dlog4j.configuration=" + this.settings.getHadoopSymbolicLinkDir() +
               "/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA"));
       
@@ -551,8 +551,8 @@ public class JupyterConfigFilesGenerator {
           "pyspark_bin", HopsUtils.IGNORE,
           this.settings.getAnacondaProjectDir(project.getName()) + "/bin/python"));
       
-      sparkMagicParams.put("spark.executorEnv.LD_LIBRARY_PATH", new ConfigProperty(
-          "spark_executorEnv_LD_LIBRARY_PATH", HopsUtils.APPEND,
+      sparkMagicParams.put(this.settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH, new ConfigProperty(
+          "spark_executorEnv_LD_LIBRARY_PATH", HopsUtils.APPEND_PATH,
           this.settings.getJavaHome() + "/jre/lib/amd64/server:" + this.settings
               .getCudaDir() + "/lib64:" + this.settings.getHadoopSymbolicLinkDir() + "/lib/native"));
       
@@ -585,8 +585,8 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.executorEnv.KAFKA_BROKERS", new ConfigProperty("kafka_brokers",
               HopsUtils.IGNORE, this.settings.getKafkaBrokersStr()));
       
-      sparkMagicParams.put("spark.executor.extraJavaOptions", new ConfigProperty(
-          "spark_executor_extraJavaOptions", HopsUtils.APPEND, extraJavaOptions));
+      sparkMagicParams.put(this.settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS, new ConfigProperty(
+          "spark_executor_extraJavaOptions", HopsUtils.APPEND_SPACE, extraJavaOptions));
       
       sparkMagicParams.put("spark.executorEnv.HDFS_BASE_DIR", new ConfigProperty(
           "spark_executorEnv_HDFS_BASE_DIR", HopsUtils.IGNORE,

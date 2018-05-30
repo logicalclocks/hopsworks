@@ -83,7 +83,13 @@ public class HopsUtils {
   private static final Pattern SPARK_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
   public static final ConfigReplacementPolicy OVERWRITE = new OverwriteConfigReplacementPolicy();
   public static final ConfigReplacementPolicy IGNORE = new IgnoreConfigReplacementPolicy();
-  public static final ConfigReplacementPolicy APPEND = new AppendConfigReplacementPolicy();
+  public static final ConfigReplacementPolicy APPEND_SPACE = new AppendConfigReplacementPolicy(
+      AppendConfigReplacementPolicy.Delimiter.SPACE);
+  public static final ConfigReplacementPolicy APPEND_PATH = new AppendConfigReplacementPolicy(
+      AppendConfigReplacementPolicy.Delimiter.PATH_SEPARATOR);
+  public static final ConfigReplacementPolicy APPEND_COMMA = new AppendConfigReplacementPolicy(
+      AppendConfigReplacementPolicy.Delimiter.COMMA);
+  
   
   /**
    *
