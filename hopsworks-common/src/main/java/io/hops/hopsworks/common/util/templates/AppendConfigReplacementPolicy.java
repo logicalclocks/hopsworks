@@ -19,13 +19,48 @@
  */
 package io.hops.hopsworks.common.util.templates;
 
+import java.io.File;
+
 /**
  * Replacement policy for configuration templates that appends the new value to the end of the old separated by a
  * white-space character.
  */
 public class AppendConfigReplacementPolicy implements ConfigReplacementPolicy {
+  
+  private Delimiter delimiter;
+  
+  public AppendConfigReplacementPolicy(Delimiter delimiter) {
+    this.delimiter = delimiter;
+  }
+  
   @Override
   public String replace(String originalValue, String userValue) {
-    return originalValue + " " + userValue;
+    //Check if the property is related to classpath setting and set the path separator
+    return originalValue + delimiter.getValue() + userValue;
+  }
+  
+  /**
+   * Delimiter when appending user defined spark properties. For properties related to classpaths, we need
+   * to change the value to the path separator.
+   */
+  public enum Delimiter {
+    
+    SPACE(" "),
+    PATH_SEPARATOR(File.pathSeparator),
+    COMMA(",");
+    
+    private String value;
+    
+    Delimiter(String value) {
+      this.value = value;
+    }
+    
+    public String getValue() {
+      return value;
+    }
+    
+    public void setValue(String value) {
+      this.value = value;
+    }
   }
 }

@@ -188,13 +188,13 @@ public class SparkYarnRunnerBuilder {
           jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
               new ConfigProperty(
                   Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                  HopsUtils.APPEND,
+                  HopsUtils.APPEND_PATH,
                   System.getenv("LD_LIBRARY_PATH")));
         } else {
           jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
               new ConfigProperty(
                   Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                  HopsUtils.APPEND,
+                  HopsUtils.APPEND_PATH,
                   "$JAVA_HOME/jre/lib/amd64/server"));
         }
       }
@@ -331,7 +331,7 @@ public class SparkYarnRunnerBuilder {
       jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
           new ConfigProperty(
               Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-              HopsUtils.APPEND,
+              HopsUtils.APPEND_PATH,
               libCuda + ":" + libJVM + ":" + libHDFS));
     }
 
@@ -342,19 +342,19 @@ public class SparkYarnRunnerBuilder {
     jobHopsworksProps.put(Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
         new ConfigProperty(
             Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
-            HopsUtils.APPEND,
+            HopsUtils.APPEND_PATH,
             extraClassPathFiles.toString().substring(0, extraClassPathFiles.length() - 1)));
     jobHopsworksProps.put(Settings.SPARK_DRIVER_EXTRACLASSPATH,
         new ConfigProperty(
             Settings.SPARK_DRIVER_EXTRACLASSPATH,
-            HopsUtils.APPEND,
+            HopsUtils.APPEND_PATH,
             settings.getHopsLeaderElectionJarPath()));
     
     if (secondaryJars.length() > 0) {
       jobHopsworksProps.put(Settings.SPARK_YARN_SECONDARY_JARS,
           new ConfigProperty(
               Settings.SPARK_YARN_SECONDARY_JARS,
-              HopsUtils.APPEND,
+              HopsUtils.APPEND_PATH,
               secondaryJars.toString().substring(0, secondaryJars.length() - 1)));
     }
 
@@ -610,7 +610,7 @@ public class SparkYarnRunnerBuilder {
     jobHopsworksProps.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS,
         new ConfigProperty(
             Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS,
-            HopsUtils.APPEND,
+            HopsUtils.APPEND_SPACE,
             extraJavaOptionsSb.toString().trim()));
     
     Map<String, String> userSparkProperties = null;

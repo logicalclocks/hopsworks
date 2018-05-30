@@ -616,12 +616,19 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
-  public static final String SPARK_DRIVER_STAGINGDIR_ENV
-      = "spark.yarn.stagingDir";
+  public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
   public static final String SPARK_MAX_APP_ATTEMPTS = "spark.yarn.maxAppAttempts";
   public static final String SPARK_EXECUTOR_EXTRA_JAVA_OPTS = "spark.executor.extraJavaOptions";
-
+  public static final String SPARK_EXECUTORENV_PATH="spark.executorEnv.PATH";
+  public static final String SPARK_YARN_APPMASTERENV_LD_LIBRARY_PATH="spark.yarn.appMasterEnv.LD_LIBRARY_PATH";
+  public static final String SPARK_YARN_APPMASTERENV_LIBHDFS_OPTS="spark.yarn.appMasterEnv.LIBHDFS_OPTS";
+  public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS="spark.executorEnv.LIBHDFS_OPTS";
+  public static final String SPARK_DRIVER_EXTRALIBRARYPATH="spark.driver.extraLibraryPath";
+  public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS="spark.driver.extraJavaOptions";
+  
+  
+  
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
