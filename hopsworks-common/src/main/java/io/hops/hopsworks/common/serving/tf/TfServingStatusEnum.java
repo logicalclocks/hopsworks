@@ -36,24 +36,26 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.common.serving.tf;
 
-package io.hops.hopsworks.common.dao.tfserving;
 
-
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 
+@XmlEnum
 public enum TfServingStatusEnum {
-  @XmlEnumValue("Created")
-  CREATED("Created"),
   @XmlEnumValue("Running")
   RUNNING("Running"),
   @XmlEnumValue("Stopped")
   STOPPED("Stopped"),
   @XmlEnumValue("Starting")
   STARTING("Starting"),
+  @XmlEnumValue("Updating")
+  UPDATING("Updating"),
+  @XmlEnumValue("Stopping")
+  STOPPING("Stopping"),
   @XmlEnumValue("Transforming")
-  TRANSFORMING("Transforming")
-  ;
+  TRANSFORMING("Transforming");
 
   private final String readable;
 
@@ -63,14 +65,16 @@ public enum TfServingStatusEnum {
 
   public static TfServingStatusEnum fromString(String shortName) {
     switch (shortName) {
-      case "Created":
-        return TfServingStatusEnum.CREATED;
       case "Running":
         return TfServingStatusEnum.RUNNING;
       case "Stopped":
         return TfServingStatusEnum.STOPPED;
       case "Starting":
         return TfServingStatusEnum.STARTING;
+      case "Updating":
+        return TfServingStatusEnum.UPDATING;
+      case "Stopping":
+        return TfServingStatusEnum.STOPPING;
       case "Transforming":
         return TfServingStatusEnum.TRANSFORMING;
       default:
@@ -82,5 +86,5 @@ public enum TfServingStatusEnum {
   public String toString() {
     return this.readable;
   }
-
 }
+

@@ -69,6 +69,11 @@ public class CSRView {
     this.rootCaCert = rootCaCert;
   }
 
+  public CSRView(String rootCaCert, String intermediateCaCert) {
+    this.intermediateCaCert = intermediateCaCert;
+    this.rootCaCert = rootCaCert;
+  }
+
   @ApiModelProperty(value = "String containing the certificate signing request", required = true)
   public String getCsr() {
     return csr;

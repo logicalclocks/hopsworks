@@ -58,6 +58,8 @@ public class CertificatesResource {
   private AppCertsResource appCertsResource;
   @EJB
   private DelaTrackerCertsResource delaTrackerCertsResource;
+  @EJB
+  private KubeCertsResource kubeCertsResource;
 
   @Path("/host")
   public HostCertsResource getHostCertsResource() {
@@ -75,4 +77,8 @@ public class CertificatesResource {
     return delaTrackerCertsResource;
   }
 
+  @Path("/kube")
+  public KubeCertsResource getKubeCertsResource() {
+    return kubeCertsResource;
+  }
 }

@@ -39,22 +39,12 @@
 
 package io.hops.hopsworks.api.tensorflow;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
-import javax.servlet.http.HttpServletRequest;
 
-
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.DELETE;
@@ -63,526 +53,164 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.project.PaymentType;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-
-import io.hops.hopsworks.common.dao.tfserving.TfServing;
-import io.hops.hopsworks.common.dao.tfserving.TfServingFacade;
-import io.hops.hopsworks.common.dao.tfserving.TfServingStatusEnum;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingDTO;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
-import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.serving.tf.TfServingCommands;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.serving.tf.TfServingController;
+import io.hops.hopsworks.common.serving.tf.TfServingException;
+import io.hops.hopsworks.common.serving.tf.TfServingWrapper;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
-import org.apache.commons.codec.digest.DigestUtils;
+import java.util.ArrayList;
+import java.util.List;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@Api(value = "TensorFlow Serving service", description = "Manage TFServing instances")
 public class TfServingService {
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private TfServingFacade tfServingFacade;
+
+  @Inject
+  private TfServingController tfServingController;
+
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
-  @EJB
-  private TfServingProcessMgr TfServingProcessMgr;
-  @EJB
-  private InodeFacade inodes;
 
+  /*
+    @POST
+    project/id/serving/
 
+    TFserving {
+      model_dir
+      model_name
+    }
 
-  private Integer projectId;
+    Get @GET  project/id/serving/
+    Get Single @GET project/id/serving/12
+    Delete @Delete project/id/serving/12
+    POST project/id/serving/12 {action: start | stop}
+   */
+
   private Project project;
+  private Users user;
 
-  public TfServingService(){
+  public TfServingService(){ }
 
+  public void setProject(Project project) {
+    this.project = project;
   }
 
-  public void setProjectId(Integer projectId) {
-    this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId);
-  }
-
-  public Integer getProjectId() {
-    return projectId;
-  }
-
-  private final static Logger LOGGER = Logger.getLogger(TfServingService.class.getName());
-
-
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getAllTfServings(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    List<TfServing> tfServingCollection = tfServingFacade.findForProject(project);
-    GenericEntity<List<TfServing>> tfServingList
-            = new GenericEntity<List<TfServing>>(tfServingCollection) { };
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tfServingList).build();
+  public void setUser(Users user) {
+    this.user = user;
   }
 
   @GET
-  @Path("/logs/{servingId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response getLogs(@PathParam("servingId") int servingId,
-                         @Context SecurityContext sc, @Context HttpServletRequest req) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+  @ApiOperation(value = "Get the list of TfServing instances for the project",
+      response = TfServingView.class,
+      responseContainer = "List")
+  public Response getTfServings() throws TfServingException {
+    List<TfServingWrapper> servingDAOList = tfServingController.getTfServings(project);
+
+
+    ArrayList<TfServingView> servingViewList = new ArrayList<>();
+    for (TfServingWrapper tfServingWrapper : servingDAOList) {
+      servingViewList.add(new TfServingView(tfServingWrapper));
     }
 
-    String hdfsUser = getHdfsUser(sc);
-    if (hdfsUser == null) {
-      throw new AppException(
-              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Could not find your username. Report a bug.");
-    }
+    GenericEntity<ArrayList<TfServingView>> genericListTfView =
+        new GenericEntity<ArrayList<TfServingView>>(servingViewList){};
 
-    HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
-    if(user == null) {
-      throw new AppException(
-              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Possible inconsistency - could not find your user.");
-    }
-
-    HdfsUsers servingHdfsUser = hdfsUsersFacade.findByName(hdfsUser);
-    if(!hdfsUser.equals(servingHdfsUser.getName())) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Attempting to start a serving not created by current user");
-    }
-
-    TfServing tfServing= tfServingFacade.findById(servingId);
-    if (!tfServing.getProject().equals(project)) {
-      return noCacheResponse.
-              getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
-    }
-
-    String logString = TfServingProcessMgr.getLogs(tfServing);
-
-    JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
-    if(logString != null) {
-      arrayObjectBuilder.add("stdout", logString);
-    } else {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Could not get the logs for serving");
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(arrayObjectBuilder.build()).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+        .entity(genericListTfView)
+        .build();
   }
 
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
+  @GET
+  @Path("/{servingId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response createTfServing(TfServing tfServing,
-                                        @Context SecurityContext sc,
-                                        @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+  @ApiOperation(value = "Get info about a TfServing instance for the project", response = TfServingView.class)
+  public Response getTfserving(
+      @ApiParam(value = "Id of the TfServing instance", required = true) @PathParam("servingId") Integer servingId)
+      throws TfServingException {
+    if (servingId == null) {
+      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
     }
-    String hdfsUser = getHdfsUser(sc);
-    if (hdfsUser == null) {
-      throw new AppException(
-              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Could not find your username. Report a bug.");
-    }
+    TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId);
 
-    try {
-      HdfsUsers user = hdfsUsersFacade.findByName(hdfsUser);
+    TfServingView tfServingView = new TfServingView(tfServingWrapper);
+    GenericEntity<TfServingView> tfServingEntity = new GenericEntity<TfServingView>(tfServingView){};
 
-      if(user == null) {
-        throw new AppException(
-                Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "Possible inconsistency - could not find your user.");
-      }
-
-      String modelPath = tfServing.getHdfsModelPath();
-
-      if(modelPath.startsWith("hdfs://")) {
-        int projectsIndex = modelPath.indexOf("/Projects");
-        modelPath = modelPath.substring(projectsIndex, modelPath.length());
-      }
-
-      if(!inodes.existsPath(modelPath)) {
-        throw new AppException(
-                Response.Status.NOT_FOUND.getStatusCode(),
-                "Could not find .pb file in the path " + modelPath);
-      }
-
-      if(modelPath.equals("")) {
-        throw new AppException(
-                Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "Select your .pb file corresponding to the model to be served in the Models dataset.");
-      }
-
-      tfServing.setHdfsUserId(user.getId());
-      
-      String secret = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
-      tfServing.setSecret(secret);
-
-      tfServing.setModelName(getModelName(modelPath));
-      int version = -1;
-      String basePath = null;
-      try {
-        version = getVersion(modelPath);
-        basePath = getModelBasePath(modelPath);
-      } catch (Exception e) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                ".pb file should be located in Models/{model_name}/{version}");
-      }
-
-      String email = sc.getUserPrincipal().getName();
-
-      tfServing.setVersion(version);
-      tfServing.setProject(project);
-      tfServing.setHdfsModelPath(basePath);
-      tfServing.setStatus(TfServingStatusEnum.CREATED);
-      tfServing.setCreator(userFacade.findByEmail(email));
-      tfServingFacade.persist(tfServing);
-
-    } catch (DatabaseException dbe) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                dbe.getMessage());
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tfServing).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+        .entity(tfServingEntity)
+        .build();
   }
 
   @DELETE
   @Path("/{servingId}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiOperation(value = "Delete a TfServing instance")
+  public Response deleteTfServing(
+      @ApiParam(value = "Id of the TfServing instance", required = true) @PathParam("servingId") Integer servingId)
+      throws TfServingException {
+    if (servingId == null) {
+      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
+    }
+
+    tfServingController.deleteTfServing(project, servingId);
+
+    return Response.ok().build();
+  }
+
+  @PUT
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response deleteTfServing(@PathParam("servingId") int servingId,
-                            @Context SecurityContext sc,
-                            @Context HttpServletRequest req) throws AppException {
-
-    TfServing tfServing = tfServingFacade.findById(servingId);
-
-    try {
-
-      if (tfServing == null) {
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-        //Users outside the project shouldn't be able to delete a serving
-      } else if (!tfServing.getProject().equals(project)) {
-        return noCacheResponse.
-                getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
-        //Running serving should not be possible to shutdown
-      } else if (tfServing.getStatus().equals(TfServingStatusEnum.RUNNING)) {
-        return noCacheResponse.
-                getNoCacheResponseBuilder(Response.Status.FORBIDDEN).build();
-        //Serving is CREATED or STOPPED and safe to delete
-      } else {
-        tfServingFacade.remove(tfServing);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-      }
-    } catch (DatabaseException ex) {
-      LOGGER.log(Level.WARNING,
-              "Serving could not be deleted with id: " + tfServing.getId());
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ex.getMessage());
+  @ApiOperation(value = "Create or update a TfServing instance")
+  public Response createOrUpdate(
+      @ApiParam(value = "TfServing specification", required = true) TfServingView tfServing)
+      throws TfServingException {
+    if (tfServing == null) {
+      throw new TfServingException(TfServingException.TfServingExceptionErrors.SPECNOTPROVIDED);
     }
 
-  }
+    tfServingController.createOrUpdate(project, user, tfServing.getTfServingDAO());
 
-
-  @POST
-  @Path("/start/{servingId}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response startTfServing(@PathParam("servingId") int servingId,
-                                      @Context SecurityContext sc,
-                                      @Context HttpServletRequest req) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    String hdfsUser = getHdfsUser(sc);
-    if (hdfsUser == null) {
-      throw new AppException(
-         Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Could not find your username.");
-    }
-
-    TfServing tfServing = tfServingFacade.findById(servingId);
-
-    if (!tfServing.getProject().equals(project)) {
-      //In this case, a user is trying to access a job outside its project!!!
-      return Response.status(Response.Status.FORBIDDEN).build();
-    }
-
-    HdfsUsers servingHdfsUser = hdfsUsersFacade.findByName(hdfsUser);
-
-    if(!hdfsUser.equals(servingHdfsUser.getName())) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Attempting to start a serving not created by current user");
-    }
-
-    if(project.getPaymentType().equals(PaymentType.PREPAID)) {
-      YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
-      if (projectQuota == null || projectQuota.getQuotaRemaining() < 0) {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), "This project is out of credits.");
-      }
-    }
-
-    TfServingStatusEnum status = tfServing.getStatus();
-    if (status.equals(TfServingStatusEnum.CREATED) ||
-      status.equals(TfServingStatusEnum.STOPPED)) {
-
-      try {
-
-        tfServing.setStatus(TfServingStatusEnum.STARTING);
-        tfServingFacade.updateRunningState(tfServing);
-
-        TfServingDTO tfServingDTO = TfServingProcessMgr.startTfServingAsTfServingUser(hdfsUser, tfServing);
-
-        if(tfServingDTO.getExitValue() != 0) {
-
-          tfServing.setStatus(status);
-          tfServingFacade.updateRunningState(tfServing);
-
-          throw new AppException(
-                  Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Internal error - could not start serving "
-                  + tfServing.getModelName()+".");
-        }
-
-        tfServing.setPid(tfServingDTO.getPid());
-        tfServing.setPort(tfServingDTO.getPort());
-        tfServing.setHostIp(tfServingDTO.getHostIp());
-        tfServing.setStatus(TfServingStatusEnum.RUNNING);
-
-        tfServingFacade.updateRunningState(tfServing);
-
-      } catch (IOException | InterruptedException | DatabaseException  e) {
-        LOGGER.log(Level.SEVERE, "Could not start serving " + tfServing.getModelName(), e);
-        throw new AppException(
-                Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Internal error - could not start serving "
-                + tfServing.getModelName()+".");
-      }
-
-    } else {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                  "Attempting to start an already running serving.");
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return Response.status(Response.Status.CREATED).build();
   }
 
   @POST
-  @Path("/transform/{servingId}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response transformGraph(@PathParam("servingId") int servingId,
-                                      @Context SecurityContext sc,
-                                      @Context HttpServletRequest req) throws AppException {
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-  
-  
-  @PUT
-  @Path("/version")
+  @Path("/{servingId}")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response changeTfServingVersion(TfServing tfServing,
-                                 @Context SecurityContext sc,
-                                 @Context HttpServletRequest req) throws AppException {
+  @ApiOperation(value = "Start or stop a TfServing instance")
+  public Response startOrStop(
+      @ApiParam(value = "ID of the TfServing instance to start/stop", required = true)
+      @PathParam("servingId") Integer servingId,
+      @ApiParam(value = "Action", required = true) @QueryParam("action") TfServingCommands servingCommand)
+      throws TfServingException {
 
-    String modelPath = tfServing.getHdfsModelPath();
-    int servingId = tfServing.getId();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+    if (servingId == null) {
+      throw new TfServingException(TfServingException.TfServingExceptionErrors.INSTANCENOTFOUND);
     }
 
-    String hdfsUser = getHdfsUser(sc);
-    if (hdfsUser == null) {
-      throw new AppException(
-              Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Could not find your username.");
+    if (servingCommand == null) {
+      throw new TfServingException(TfServingException.TfServingExceptionErrors.COMMANDNOTPROVIDED);
     }
 
-    tfServing = tfServingFacade.findById(servingId);
+    tfServingController.startOrStop(project, user, servingId, servingCommand);
 
-    if (!tfServing.getProject().equals(project)) {
-      //In this case, a user is trying to access a job outside its project!!!
-      LOGGER.log(Level.SEVERE,"A user is trying to start a serving outside their project!");
-      return Response.status(Response.Status.FORBIDDEN).build();
-    }
-
-    //Validate model path
-
-    String modelName = getModelName(modelPath);
-
-    if(!tfServing.getModelName().equals(modelName)) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-              "Can only change version of the same model.");
-    }
-
-    TfServingStatusEnum status = tfServing.getStatus();
-    if (status.equals(TfServingStatusEnum.CREATED) ||
-            status.equals(TfServingStatusEnum.STOPPED)) {
-
-      if(modelPath.startsWith("hdfs://")) {
-        int projectsIndex = modelPath.indexOf("/Projects");
-        modelPath = modelPath.substring(projectsIndex, modelPath.length());
-      }
-
-      if(!inodes.existsPath(modelPath)) {
-        throw new AppException(
-                Response.Status.NOT_FOUND.getStatusCode(),
-                "Could not find .pb file in the path " + modelPath);
-      }
-
-
-      tfServing.setHdfsModelPath(getModelBasePath(modelPath));
-      tfServing.setVersion(getVersion(modelPath));
-      try {
-        tfServingFacade.updateServingVersion(tfServing);
-      } catch (DatabaseException dbe) {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "Unable to swap model due to database error.");
-      }
-
-    } else {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-              "Can't change version of a model currently running");
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return Response.ok().build();
   }
-
-  @POST
-  @Path("/stop/{servingId}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response stopTfServing(@PathParam("servingId") int servingId,
-                                 @Context SecurityContext sc,
-                                 @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    try {
-      String hdfsUser = getHdfsUser(sc);
-      if (hdfsUser == null) {
-        throw new AppException(
-                Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "Could not find your username.");
-      }
-
-      HdfsUsers servingHdfsUser = hdfsUsersFacade.findByName(hdfsUser);
-
-      if(!hdfsUser.equals(servingHdfsUser.getName())) {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-                "Attempting to stop a serving not started by current user");
-      }
-
-      TfServing tfServing = tfServingFacade.findById(servingId);
-
-      if (!tfServing.getProject().equals(project)) {
-        //In this case, a user is trying to access a job outside its project!!!
-        LOGGER.log(Level.SEVERE,"A user is trying to create a serving outside their project!");
-        return Response.status(Response.Status.FORBIDDEN).build();
-      }
-
-      if (tfServing.getStatus().equals(TfServingStatusEnum.RUNNING)) {
-        int exitCode = TfServingProcessMgr.killServingAsServingUser(tfServing);
-
-        if(exitCode == 0) {
-          tfServing.setStatus(TfServingStatusEnum.STOPPED);
-          tfServing.setPid(null);
-          tfServing.setPort(null);
-          tfServing.setHostIp(null);
-          tfServingFacade.updateRunningState(tfServing);
-
-          //removeDirectory and reset serving to normal
-        } else {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                  "Serving with id " + servingId + " could not be stopped");
-        }
-      } else {
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-                "Attempting to stop serving with status " + tfServing.getStatus());
-      }
-
-    } catch (DatabaseException dbe) {
-      LOGGER.log(Level.WARNING, "Serving with id " + servingId + " could not be stopped");
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), dbe.getMessage());
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  private String getHdfsUser(SecurityContext sc) throws AppException {
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-    String loggedinemail = sc.getUserPrincipal().getName();
-    Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-              "You are not authorized for this invocation.");
-    }
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-
-    return hdfsUsername;
-  }
-
-  private String getModelName(String modelPath) {
-    String[] modelPathSplit = modelPath.split("/");
-    return modelPathSplit[modelPathSplit.length-3];
-  }
-
-  private int getVersion(String modelPath) {
-    String[] modelPathSplit = modelPath.split("/");
-    String versionString = modelPathSplit[modelPathSplit.length-2];
-    int version = Integer.parseInt(versionString);
-    return version;
-  }
-
-  private String getModelBasePath(String modelPath) {
-    StringBuilder modelBasePathSB = new StringBuilder();
-
-    String [] modelPathSplit = modelPath.split("/");
-
-    for(int i = 0; i < modelPathSplit.length -3; i++) {
-      modelBasePathSB.append(modelPathSplit[i] + "/");
-    }
-    return modelBasePathSB.toString();
-  }
-
 }

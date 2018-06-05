@@ -94,15 +94,16 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.hops.hopsworks.common.util.Settings.CERT_PASS_SUFFIX;
+import static io.hops.hopsworks.common.util.Settings.KEYSTORE_SUFFIX;
+import static io.hops.hopsworks.common.util.Settings.TRUSTSTORE_SUFFIX;
+
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 @DependsOn("Settings")
 public class CertificateMaterializer {
   private static final Logger LOG = Logger.getLogger(CertificateMaterializer.class.getName());
   
-  private final static String KEYSTORE_SUFFIX = "__kstore.jks";
-  private final static String TRUSTSTORE_SUFFIX = "__tstore.jks";
-  private final static String CERT_PASS_SUFFIX = "__cert.key";
   private final static Pattern HDFS_SCHEME = Pattern.compile("^hdfs://.*");
   private final static int MAX_NUMBER_OF_RETRIES = 3;
   private final static long RETRY_WAIT_TIMEOUT = 10;

@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.dao.app.EmailJsonDTO;
 import io.hops.hopsworks.common.dao.app.JobWorkflowDTO;
 import io.hops.hopsworks.common.dao.app.TopicJsonDTO;
 import io.hops.hopsworks.common.dao.app.KeystoreDTO;
-import io.hops.hopsworks.common.dao.app.ServingEndpointJsonDTO;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -57,8 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
 
 import javax.ws.rs.Consumes;
@@ -72,13 +69,10 @@ import javax.ws.rs.core.Response;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.tfserving.TfServing;
-import io.hops.hopsworks.common.dao.tfserving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -132,10 +126,6 @@ public class ApplicationService {
   private ExecutionController executionController;
   @EJB
   private JobFacade jobFacade;
-  @EJB
-  private ExecutionFacade executionFacade;
-  @EJB
-  private TfServingFacade tfServingFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
   @EJB
@@ -194,8 +184,9 @@ public class ApplicationService {
         entity(schemaDto).build();
   }
 
-  @POST
-  @Path("tfserving")
+  // TODO(Fabio) fix this code.
+  /*@POST
+  @Path("serving")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getServingEndpoint(@Context SecurityContext sc,
@@ -237,7 +228,7 @@ public class ApplicationService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.UNAUTHORIZED).
               build();
     }
-  }
+  } */
 
   @POST
   @Path("notebook")

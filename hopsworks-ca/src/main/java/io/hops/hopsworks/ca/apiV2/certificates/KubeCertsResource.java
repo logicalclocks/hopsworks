@@ -53,6 +53,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -63,12 +64,12 @@ import java.io.IOException;
 
 import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.BADREVOKATIONREQUEST;
 import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.BADSIGNREQUEST;
-import static io.hops.hopsworks.common.security.CertificateType.HOST;
+import static io.hops.hopsworks.common.security.CertificateType.KUBE;
 
 @Stateless
 @RolesAllowed({"AGENT"})
-@Api(value = "Host certificate service", description = "Manage host certificates")
-public class HostCertsResource {
+@Api(value = "Kubernetes certificate service", description = "Manage Kubernetes certificates")
+public class KubeCertsResource{
 
   @EJB
   private OpensslOperations opensslOperations;
@@ -77,33 +78,42 @@ public class HostCertsResource {
   @EJB
   private PKI pki;
 
-  @ApiOperation(value = "Sing Host CSR with IntermediateHopsCA", response = CSRView.class)
+  @ApiOperation(value = "Sign Kubernetes certificate with KubeCA", response = CSRView.class)
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response signCSR(CSRView csrView) throws IOException, CAException {
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
-      throw new CAException(BADSIGNREQUEST, HOST);
+      throw new CAException(BADSIGNREQUEST, KUBE);
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), HOST);
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(HOST));
-
+    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), KUBE);
+    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(KUBE));
     CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
     GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
   }
 
-  @ApiOperation(value = "Revoke Host certificate")
+  @ApiOperation(value = "Sign Kubernetes certificate with KubeCA", response = CSRView.class)
   @DELETE
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
       throws IOException, CAException {
     if (certId == null || certId.isEmpty()) {
-      throw new CAException(BADREVOKATIONREQUEST, HOST);
+      throw new CAException(BADREVOKATIONREQUEST, KUBE);
     }
 
-    opensslOperations.revokeCertificate(certId, HOST, true, true);
+    opensslOperations.revokeCertificate(certId, KUBE, true, true);
     return Response.ok().build();
+  }
+
+  @ApiOperation(value = "Sign Kubernetes certificate with KubeCA", response = CSRView.class)
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getCACert() throws IOException {
+    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(KUBE));
+    CSRView csrView = new CSRView(chainOfTrust.getValue0(), chainOfTrust.getValue1());
+    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(csrView) { };
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
   }
 }

@@ -42,9 +42,16 @@
  * Service allowing fetching topic history objects by type.
  */
 angular.module('hopsWorksApp')
-
-        .factory('TfServingService', ['$http', function ($http) {
+        .factory('ServingService', ['$http', function ($http) {
             return {
+
+              /**
+               * Get UI configuration form the backend
+               * @returns {HttpPromise}
+               */
+              getConfiguration: function() {
+                return $http.get('/api/servingconf');
+              },
 
               /**
                * Get all the tfservings
@@ -52,18 +59,27 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of tf serving objects.
                */
               getAllServings: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/tfserving');
+                return $http.get('/api/project/' + projectId + '/serving');
               },
+
+              /**
+               * Get information about a serving object
+               * @param {int} projectId
+               */
+              getServing: function(projectId, servingId) {
+                return $http.get('/api/project/' + projectId + '/serving/' + servingId);
+              },
+
               /**
                * Create a new Serving Tf server in the given project, of the given type.
                * @param {type} projectId
                * @param {type} servingDetails The configuration of the newly created topic.
                * @returns {undefined} The newly created tf server object.
                */
-              createNewServing: function (projectId, servingConfig) {
+              createOrUpdate: function (projectId, servingConfig) {
                 var req = {
-                  method: 'POST',
-                  url: '/api/project/' + projectId + '/tfserving/',
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/serving/',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -71,15 +87,22 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
-              deleteServing: function (projectId, servingId) {
-               return $http.delete('/api/project/' + projectId + '/tfserving/' + servingId);
+
+              /**
+               * Start or stop a serving instance.
+               */
+              startOrStop: function (projectId, servingId, action) {
+                var req = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/serving/' + servingId + '?action=' + action
+                };
+                return $http(req);
               },
-              stopServing: function (projectId, servingId) {
-                             return $http.post('/api/project/' + projectId + '/tfserving/stop/' + servingId);
-                            },
-              startServing: function (projectId, servingId) {
-                             return $http.post('/api/project/' + projectId + '/tfserving/start/' + servingId);
-                            },
+
+              deleteServing: function (projectId, servingId) {
+               return $http.delete('/api/project/' + projectId + '/serving/' + servingId);
+              },
+
               transformGraph: function (projectId, servingId, transformGraph) {
                 var req = {
                   method: 'POST',
@@ -90,21 +113,6 @@ angular.module('hopsWorksApp')
                   data: transformGraph
                 };
                 return $http(req);
-                            },
-              changeVersion: function (projectId, servingConfig) {
-              var req = {
-                                method: 'PUT',
-                                url: '/api/project/' + projectId + '/tfserving/version/',
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                data: servingConfig
-                              };
-                              return $http(req);
-                            },
-              getLogs: function (projectId, servingId) {
-                              return $http.get('/api/project/' + projectId + '/tfserving/logs/' + servingId);
-              }
-
+              },
             };
           }]);
