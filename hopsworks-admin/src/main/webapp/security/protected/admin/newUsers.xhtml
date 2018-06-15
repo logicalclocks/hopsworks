@@ -54,7 +54,8 @@
           <div class="content">
             <h:form id="reqdataForm">
               <p:dataTable id="userReqTable" var="req"
-                           value="#{userAdministration.allRequests}" 
+                           value="#{userAdministration.allRequests}"
+			   resizableColumns="true" liveResize="true"
                            widgetVar="reqsTable"
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 

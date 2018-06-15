@@ -54,7 +54,8 @@
             <h:form id="spamReuests">
               <p:dataTable id="spamUserReqTable" var="req" 
                            value="#{userAdministration.spamUsers}" 
-                           widgetVar="spamReqsTable" 
+                           widgetVar="spamReqsTable"
+			   resizableColumns="true" liveResize="true"
                            emptyMessage="No open user requests"
                            rowKey="#{req.email}" 
                            selection="#{userAdministration.selectedUsers}"
