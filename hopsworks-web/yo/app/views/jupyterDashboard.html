@@ -107,13 +107,10 @@
                            ng-click="jupyterCtrl.val.mode = 'distributedTensorFlow'">
                       <input type="radio" name="distributedTensorFlow" id="distributedTensorFlow" autocomplete="off"> TensorFlowOnSpark
                     </label>
-                    <div ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
-
-                      <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'horovod', focus: jupyterCtrl.val.mode === 'horovod'}"
-                             ng-click="jupyterCtrl.val.mode = 'horovod'">
-                        <input type="radio" name="horovod" id="horovod" autocomplete="off"> Horovod
-                      </label>
-                    </div>
+                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'horovod', focus: jupyterCtrl.val.mode === 'horovod'}"
+                           ng-click="jupyterCtrl.val.mode = 'horovod'" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
+                      <input type="radio" name="horovod" id="horovod" autocomplete="off"> Horovod
+                    </label>
                     <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkStatic', focus: jupyterCtrl.val.mode === 'sparkStatic'}"
                            ng-click="jupyterCtrl.val.mode = 'sparkStatic'">
                       <input type="radio" name="sparks" id="sparkStatic" autocomplete="off"> Spark (Static)
