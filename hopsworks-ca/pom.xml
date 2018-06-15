@@ -25,13 +25,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ca</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1-SNAPSHOT</version>
   <packaging>war</packaging>
   <description>Hopsworks Certificate Authority</description>
   <name>hopsworks-ca</name>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>0.5.0</version>
+      <version>0.5.1-SNAPSHOT</version>
       <type>ejb</type>
       <!--<scope>provided</scope>-->
       <exclusions>

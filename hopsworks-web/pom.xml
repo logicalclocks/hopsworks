@@ -25,13 +25,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-web</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1-SNAPSHOT</version>
   <packaging>war</packaging>
   <description>Hopsworks web app</description>
   <name>hopsworks-web</name>
