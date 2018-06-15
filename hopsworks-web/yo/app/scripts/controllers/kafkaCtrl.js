@@ -36,7 +36,7 @@ angular.module('hopsWorksApp')
             self.topics = [];
             self.sharedTopics = [];
             self.topicDetails = {};
-            self.maxNumTopics = 10;
+            self.maxNumTopics = 100;
             self.numTopicsUsed = 0;
 
             self.currentTopic = "";
