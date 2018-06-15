@@ -990,7 +990,7 @@ public class ProjectService {
   @GET
   @Path("{id}/pia")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getPia(@Context SecurityContext sc,
       @PathParam("id") Integer projectId,
       @Context HttpServletRequest req) throws AppException {
