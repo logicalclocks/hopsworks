@@ -26,9 +26,11 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -66,6 +68,8 @@ public class CondaController implements Serializable {
   private List<CondaCommands> newCommands;
 
   private String output;
+  
+  private String diskUsage = "Press button to calculate.";
 
   private boolean showFailed = true;
   private boolean showNew = true;
@@ -317,7 +321,7 @@ public class CondaController implements Serializable {
     this.showFailed = show;
     this.showNew = show;
   }
-  
+
   public boolean getShowAll() {
     return (this.showOngoing || this.showFailed || this.showNew);
   }
@@ -325,4 +329,34 @@ public class CondaController implements Serializable {
   public void message(String msg) {
     FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Conda Command " + msg));
   }
+
+  public String calculateDiskUsage() {
+    try {
+      diskUsage = LocalhostServices.du(new File(settings.getAnacondaDir()));
+    } catch (Exception e) {
+      logger.warning("Problem calculating disk usage for Anaconda");
+      logger.warning(e.getMessage());
+      message("Error in calculating disk usage for anaconda");
+      diskUsage = "Error calculating disk usage. See Hopsworks logs.";
+    }
+    return diskUsage;
+  }
+  
+  public void cleanupConda() {
+    try {
+      pythonDepsFacade.cleanupConda();
+    } catch (Exception e) {
+      logger.warning("Problem cleaning up Conda");
+      logger.warning(e.getMessage());
+      message(e.getMessage());
+    }
+  }
+  
+  public void cleanupAnaconda() {
+  }
+
+  public String getDiskUsage() {
+    return diskUsage;
+  }
+
 }

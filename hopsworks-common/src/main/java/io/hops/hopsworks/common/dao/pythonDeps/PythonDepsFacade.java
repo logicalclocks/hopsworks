@@ -103,15 +103,17 @@ public class PythonDepsFacade {
     INSTALL,
     UNINSTALL,
     UPGRADE,
+    CLEAN,
     YML;
 
     public boolean isEnvOp() {
       return CondaOp.isEnvOp(this);
     }
+
     public static boolean isEnvOp(CondaOp arg) {
       if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE)
-          == 0 || arg.compareTo(CondaOp.YML) == 0|| arg.compareTo(CondaOp.REMOVE) == 0
-              || arg.compareTo(CondaOp.BACKUP) == 0) {
+          == 0 || arg.compareTo(CondaOp.YML) == 0 || arg.compareTo(CondaOp.REMOVE) == 0
+          || arg.compareTo(CondaOp.BACKUP) == 0 || arg.compareTo(CondaOp.CLEAN) == 0) {
         return true;
       }
       return false;
@@ -222,8 +224,8 @@ public class PythonDepsFacade {
   }
 
   public Collection<PythonDep> createProjectInDb(Project project, Map<String, String> libs,
-                     String pythonVersion, boolean enablePythonKernel, MachineType machineType,
-                                                 String environmentYml) throws AppException {
+      String pythonVersion, boolean enablePythonKernel, MachineType machineType,
+      String environmentYml) throws AppException {
 
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
         compareToIgnoreCase("3.5") != 0 && pythonVersion.
@@ -233,7 +235,7 @@ public class PythonDepsFacade {
           + " (valid: '2.7', and '3.5', and '3.6'");
     }
 
-    if(environmentYml == null) {
+    if (environmentYml == null) {
       condaEnvironmentOp(CondaOp.CREATE, pythonVersion, project, pythonVersion, machineType, environmentYml);
     } else {
       condaEnvironmentOp(CondaOp.YML, pythonVersion, project, pythonVersion, machineType, environmentYml);
@@ -248,6 +250,7 @@ public class PythonDepsFacade {
 
   /**
    * Get all the Python Deps for the given project and channel
+   *
    * @param channelUrl
    * @return
    */
@@ -508,7 +511,7 @@ public class PythonDepsFacade {
    * @throws AppException
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj,
-                                  String arg, MachineType machineType, String environmentYml) throws AppException {
+      String arg, MachineType machineType, String environmentYml) throws AppException {
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.size() == 0) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR, "No conda machine enabled. Contact the admin.");
@@ -656,7 +659,7 @@ public class PythonDepsFacade {
       String channelUrl, String lib, String version) throws AppException {
 
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if(hosts.size() == 0) {
+    if (hosts.size() == 0) {
       throw new AppException(Response.Status.NOT_FOUND,
           "No hosts with the desired capability: " + machineType.name());
     }
@@ -813,6 +816,16 @@ public class PythonDepsFacade {
       logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
           commandId);
     }
+  }
+
+  public void cleanupConda() throws AppException {
+    List<Project> projects = projectFacade.findAll();
+    if (projects == null || projects.size() == 0) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "There are no projects in the system. You must have a project first before you can cleanup conda.");
+    }
+    Project project = projects.get(0);
+    condaEnvironmentOp(CondaOp.CLEAN, "", project, "", MachineType.ALL, "");
   }
 
 }

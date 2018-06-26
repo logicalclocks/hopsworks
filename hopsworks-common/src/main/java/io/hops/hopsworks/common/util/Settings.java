@@ -385,8 +385,7 @@ public class Settings implements Serializable {
       ZEPPELIN_DIR = setDirVar(VARIABLE_ZEPPELIN_DIR, ZEPPELIN_DIR);
       ZEPPELIN_PROJECTS_DIR = setDirVar(VARIABLE_ZEPPELIN_PROJECTS_DIR,
           ZEPPELIN_PROJECTS_DIR);
-      ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL,
-          ZEPPELIN_SYNC_INTERVAL);
+      ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL, ZEPPELIN_SYNC_INTERVAL);
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
@@ -519,6 +518,10 @@ public class Settings implements Serializable {
 
   public synchronized void updateVariable(String variableName, String variableValue) {
     updateVariableInternal(variableName, variableValue);
+    refreshCache();
+  }
+  public synchronized void updateVariable(String variableName, Long variableValue) {
+    updateVariableInternal(variableName, variableValue.toString());
     refreshCache();
   }
 

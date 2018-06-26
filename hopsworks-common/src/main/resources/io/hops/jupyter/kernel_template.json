@@ -13,7 +13,7 @@
     "HADOOP_HDFS_HOME": "%%hadoop_home%%",
     "HADOOP_CONF_DIR": "%%hadoop_home%%/etc/hadoop",
     "PDIR": "%%secret_dir%%",
-    "HADOOP_USER_NAME": "%%hdfs_user%%",     
+    "HADOOP_USER_NAME": "%%hdfs_user%%",
     "LIBHDFS_OPTS": "-Xmx96m",
     "HADOOP_VERSION": "%%hadoop_version%%"
   }

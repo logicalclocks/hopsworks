@@ -17,18 +17,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.common.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LocalhostServices {
 
+  private static final Logger logger = Logger.getLogger(LocalhostServices.class.getName());
+
   public static String createUserAccount(String username, String projectName,
-          List<String> sshKeys) throws IOException {
+      List<String> sshKeys) throws IOException {
 
     String user = getUsernameInProject(username, projectName);
     String home = Settings.HOPS_USERS_HOMEDIR + user;
@@ -44,7 +51,7 @@ public class LocalhostServices {
     commands.add("-c");
     // Need to enclose public keys in quotes here.
     commands.add("sudo /srv/mkuser.sh " + user + " \"" + publicKeysAsString.
-            toString() + "\"");
+        toString() + "\"");
 
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
@@ -59,14 +66,14 @@ public class LocalhostServices {
     } catch (InterruptedException e) {
       e.printStackTrace();
       throw new IOException("Interrupted. Could not create user: " + home
-              + " - " + stderr);
+          + " - " + stderr);
     }
 
     return stdout;
   }
 
   public static String deleteUserAccount(String username, String projectName)
-          throws IOException {
+      throws IOException {
     // Run using a bash script the following with sudo '/usr/sbin/deluser johnny'
 
     String user = getUsernameInProject(username, projectName);
@@ -93,7 +100,7 @@ public class LocalhostServices {
     } catch (InterruptedException e) {
       e.printStackTrace();
       throw new IOException("Interrupted. Could not delete user: " + home
-              + " - " + stderr);
+          + " - " + stderr);
     }
     return stdout;
   }
@@ -109,7 +116,7 @@ public class LocalhostServices {
   }
 
   public static String unzipHdfsFile(String hdfsFile, String localFolder,
-          String domainsDir) throws IOException {
+      String domainsDir) throws IOException {
 
     List<String> commands = new ArrayList<>();
     commands.add(domainsDir + "/bin/" + Settings.UNZIP_FILES_SCRIPTNAME);
@@ -117,7 +124,7 @@ public class LocalhostServices {
     commands.add(localFolder);
 
     AsyncSystemCommandExecutor commandExecutor = new AsyncSystemCommandExecutor(
-            commands);
+        commands);
     String stdout = "", stderr = "";
     try {
       int result = commandExecutor.executeCommand();
@@ -129,18 +136,18 @@ public class LocalhostServices {
       }
     } catch (InterruptedException e) {
       throw new IOException("Interrupted. Could not generate the certificates: "
-              + stderr);
+          + stderr);
     }
     return stdout;
   }
-  
+
   //Dela Certificates
   public static void generateHopsSiteKeystore(Settings settings, String userKeyPwd) throws IOException {
     List<String> commands = new ArrayList<>();
     commands.add("/usr/bin/sudo");
     commands.add(settings.getHopsSiteCaScript());
     commands.add(userKeyPwd);
-    
+
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     try {
@@ -156,4 +163,42 @@ public class LocalhostServices {
     }
   }
   //Dela Certificates end
+
+  /**
+   *
+   * @param base - root directory for calculating disk usage for the subtree
+   * @return the disk usage in Bytes for the subtree rooted at base.
+   */
+  public static String du(File base) throws IOException {
+
+// This java implementation is like 100 times slower than calling 'du -sh'
+//    long totalBytes = base.length();    
+//    if (base.isDirectory()) {           
+//      for (String child : base.list()) {      
+//        File inode = new File(base, child);       
+//        totalBytes += du(inode);                 
+//      }
+//    }
+//    return totalBytes;
+    StringBuilder sb = new StringBuilder();
+
+    String[] command = {"du", "-sh", base.getCanonicalPath()};
+    logger.log(Level.INFO, Arrays.toString(command));
+    ProcessBuilder pb = new ProcessBuilder(command);
+    try {
+      Process process = pb.start();
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+          process.getInputStream(), Charset.forName("UTF8")));
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line).append(System.lineSeparator());
+      }
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Problem getting logs: {0}", ex.
+          toString());
+    }
+    return sb.toString();
+  }
+
 }

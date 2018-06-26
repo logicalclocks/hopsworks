@@ -242,6 +242,9 @@ public class ProjectController {
       List<String> failedMembers, String sessionId) throws AppException {
 
     Long startTime = System.currentTimeMillis();
+    
+//    String pluginClassname = settings.getPluginClassname();
+//    Class<ProjectPlugin> plugin = Class.forName(pluginClassname);
 
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
