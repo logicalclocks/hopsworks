@@ -126,8 +126,8 @@ public class OpStatus {
         .append(",").append(status)
         .append(",(");
     hosts.forEach((h) -> {
-        sb.append(h.toString());
-      });
+      sb.append(h.toString());
+    });
     sb.append(")]");
     return sb.toString();
   }

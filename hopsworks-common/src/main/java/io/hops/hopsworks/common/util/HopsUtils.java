@@ -707,14 +707,14 @@ public class HopsUtils {
     Map<String, String> sparkProperties = new HashMap<>();
     if (sparkProps != null) {
       Arrays.asList(NEW_LINE_PATTERN.split(sparkProps)).stream()
-          .map(l -> l.trim())
-          .forEach(l -> {
-            // User defined properties should be in the form of property_name=value
-              Matcher propMatcher = SPARK_PROPS_PATTERN.matcher(l);
-              if (propMatcher.matches()) {
-                sparkProperties.put(propMatcher.group(1), propMatcher.group(2));
-              }
-            });
+        .map(l -> l.trim())
+        .forEach(l -> {
+          // User defined properties should be in the form of property_name=value
+          Matcher propMatcher = SPARK_PROPS_PATTERN.matcher(l);
+          if (propMatcher.matches()) {
+            sparkProperties.put(propMatcher.group(1), propMatcher.group(2));
+          }
+        });
     }
     if (LOG.isLoggable(Level.FINE)) {
       StringBuilder sb = new StringBuilder();

@@ -961,14 +961,14 @@ public class KafkaFacade {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
     Collections.sort(partitionDetails, (PartitionDetailsDTO c1, PartitionDetailsDTO c2) -> {
-        if (c1.getId() < c2.getId()) {
-          return -1;
-        }
-        if (c1.getId() > c2.getId()) {
-          return 1;
-        }
-        return 0;
-      });
+      if (c1.getId() < c2.getId()) {
+        return -1;
+      }
+      if (c1.getId() > c2.getId()) {
+        return 1;
+      }
+      return 0;
+    });
     return partitionDetails;
   }
 

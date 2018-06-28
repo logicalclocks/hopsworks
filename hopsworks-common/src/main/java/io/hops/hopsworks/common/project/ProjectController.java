@@ -2213,8 +2213,8 @@ public class ProjectController {
               + "/";
           try {
             File dir = new File(exampleDir);
-            File[] file = dir.listFiles((File dir1, String name)
-                -> name.matches("spark-examples(.*).jar"));
+            File[] file = dir.listFiles((File dir1, String name) ->
+               name.matches("spark-examples(.*).jar"));
             if (file.length == 0) {
               throw new IllegalStateException("No spark-examples*.jar was found in "
                   + dir.getAbsolutePath());
