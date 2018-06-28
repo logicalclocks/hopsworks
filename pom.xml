@@ -46,7 +46,7 @@
       <id>cluster</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation> 
+      </activation>
       <modules>
         <module>hopsworks-cluster</module>
       </modules>
@@ -55,7 +55,7 @@
       <id>web</id>
       <activation>
         <activeByDefault>true</activeByDefault>
-      </activation> 
+      </activation>
       <modules>
         <module>hopsworks-web</module>
       </modules>
@@ -64,14 +64,14 @@
 
   <properties>
     <java.version>1.8</java.version>
-    <hops.version>2.8.2.4-SNAPSHOT</hops.version>
+    <hops.version>2.8.2.5-SNAPSHOT</hops.version>
     <dependency.plugin.version>2.8</dependency.plugin.version>
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    
+
     <glassfish.hostname>localhost</glassfish.hostname>
     <glassfish.admin>adminuser</glassfish.admin>
-    <glassfish.passwd>adminpw</glassfish.passwd>           
+    <glassfish.passwd>adminpw</glassfish.passwd>
     <glassfish.port>8080</glassfish.port>
     <glassfish.admin_port>4848</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
@@ -218,6 +218,6 @@
     </site>
     <downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
   </distributionManagement>
-  
+
 </project>
 
