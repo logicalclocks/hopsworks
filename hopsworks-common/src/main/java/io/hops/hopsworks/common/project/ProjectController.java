@@ -427,6 +427,9 @@ public class ProjectController {
             + "generation thread to finish. Will try to cleanup...", ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
+      
+      logProject(project, OperationType.Add);
+      
       return project;
 
     } finally {
@@ -544,7 +547,6 @@ public class ProjectController {
     this.projectFacade.persistProject(project);
     this.projectFacade.flushEm();
     usersController.increaseNumCreatedProjects(user.getUid());
-    logProject(project, OperationType.Add);
     return project;
   }
 
