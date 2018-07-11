@@ -307,9 +307,14 @@ public class OpensslOperations {
       fileName = subject.get("CN");
       if (isAppCertificate) {
         fileName = fileName + "__" + subject.get("O");
+        // OU field serves as the application certificate version
+        String ou = subject.get("OU");
+        if (ou != null) {
+          fileName += "__" + ou;
+        }
       }
     } catch (InterruptedException ex) {
-      LOG.log(Level.SEVERE, "Error while extracting CN out of CSR", ex);
+      LOG.log(Level.SEVERE, "Error while extracting Subject fields out of CSR", ex);
       throw new IOException(ex);
     }
     File signedCertificateFile;
@@ -323,11 +328,11 @@ public class OpensslOperations {
     long valueInDays = 3650;
     if (settings.isServiceKeyRotationEnabled() && isServiceCertificate) {
       String serviceKeyRotationIntervalRaw = settings.getServiceKeyRotationInterval();
-      Long intervalValue = Settings.getConfTimeValue(serviceKeyRotationIntervalRaw);
-      TimeUnit intervalTimeUnit = Settings.getConfTimeTimeUnit(serviceKeyRotationIntervalRaw);
-      valueInDays = TimeUnit.DAYS.convert(intervalValue, intervalTimeUnit);
-      // Add four more days to interval just to be sure
-      valueInDays += 4;
+    // Add four more days to interval just to be sure
+      valueInDays = getCertificateValidityInDays(serviceKeyRotationIntervalRaw) + 4;
+    } else if (isAppCertificate) {
+      String appCertificateValidityRaw = settings.getApplicationCertificateValidityPeriod();
+      valueInDays = getCertificateValidityInDays(appCertificateValidityRaw);
     }
     
     List<String> commands = new ArrayList<>();
@@ -345,6 +350,12 @@ public class OpensslOperations {
     LOG.log(Level.INFO, "Signed CSR");
     
     return FileUtils.readFileToString(signedCertificateFile);
+  }
+  
+  private long getCertificateValidityInDays(String rawConfigurationProperty) {
+    Long timeValue = Settings.getConfTimeValue(rawConfigurationProperty);
+    TimeUnit unitValue = Settings.getConfTimeTimeUnit(rawConfigurationProperty);
+    return TimeUnit.DAYS.convert(timeValue, unitValue);
   }
   
   private String executeCommand(List<String> commands, boolean redirectErrorStream) throws IOException {

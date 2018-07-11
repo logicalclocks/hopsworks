@@ -471,6 +471,8 @@ public class Settings implements Serializable {
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
+      applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
+          applicationCertificateValidityPeriod);
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -2591,6 +2593,14 @@ public class Settings implements Serializable {
     return serviceKeyRotationInterval;
   }
 
+  private static final String APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY = "application_certificate_validity_period";
+  private String applicationCertificateValidityPeriod = "3d";
+  
+  public synchronized String getApplicationCertificateValidityPeriod() {
+    checkCache();
+    return applicationCertificateValidityPeriod;
+  }
+  
   public static Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
