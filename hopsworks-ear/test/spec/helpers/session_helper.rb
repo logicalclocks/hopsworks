@@ -32,7 +32,17 @@ module SessionHelper
     create_admin_role(user)
     create_session(user.email, "Pass123")
   end
-  
+
+  def with_agent_session
+    create_session("agent@hops.io", "admin")
+  end
+
+  def with_cluster_agent_session
+    create_role_type("CLUSTER_AGENT")
+    create_cluster_agent_role(User.find_by(email: "agent@hops.io"))
+    create_session("agent@hops.io", "admin")
+  end
+
   def reset_and_create_session()
     reset_session
     user = create_user
@@ -113,6 +123,21 @@ module SessionHelper
   def create_agent_role(user)
     group = BbcGroup.find_by(group_name: "AGENT")
     UserGroup.create(uid: user.uid, gid: group.gid)
+  end
+
+  def create_cluster_agent_role(user)
+    group = BbcGroup.find_by(group_name: "CLUSTER_AGENT")
+    user_mapping = UserGroup.find_by(uid: user.uid, gid: group.gid)
+    if user_mapping.nil?
+      UserGroup.create(uid: user.uid, gid: group.gid)
+    end
+  end
+
+  def create_role_type(role_type)
+    type = BbcGroup.find_by(group_name: role_type)
+    if type.nil?
+      BbcGroup.create(group_name: role_type, gid: Random.rand(1000))
+    end
   end
   
   def create_user(params={})

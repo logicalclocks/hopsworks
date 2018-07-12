@@ -38,6 +38,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
@@ -45,9 +46,13 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static io.hops.hopsworks.common.security.CAException.CAExceptionErrors.CERTNOTFOUND;
+import static io.hops.hopsworks.common.security.CertificatesMgmService.CERTIFICATE_SUFFIX;
+
+//TODO: Can we make concurrent modifications on different CAs?
 
 @Singleton
 @DependsOn("Settings")
@@ -62,6 +67,8 @@ public class OpensslOperations {
   
   @EJB
   private Settings settings;
+  @EJB
+  private PKI pki;
   
   @Lock(LockType.WRITE)
   public String createUserCertificate(String projectName, String userName, String countryCode, String city, String
@@ -74,9 +81,11 @@ public class OpensslOperations {
   @Lock(LockType.WRITE)
   public String createServiceCertificate(String service, String countryCode, String city, String organization,
       String email, String orcid, String userKeyPassword) throws IOException {
-    String intermediateCADir = settings.getIntermediateCaDir();
-    File certificateFile = Paths.get(intermediateCADir, "certs", service + ".cert.pem").toFile();
-    File keyFile = Paths.get(intermediateCADir, "private", service + ".key.pem").toFile();
+
+    String intermediateCADir = pki.getCAParentPath(PKI.CAType.INTERMEDIATE);
+    File certificateFile = pki.getCertPath(PKI.CAType.INTERMEDIATE, service).toFile();
+    File keyFile = pki.getKeyPath(PKI.CAType.INTERMEDIATE, service).toFile();
+
     if (certificateFile.exists() || keyFile.exists()) {
       String errorMsg = "X.509 key-pair already exists in " + certificateFile.getAbsolutePath() + " and " +
           keyFile.getAbsolutePath();
@@ -102,7 +111,7 @@ public class OpensslOperations {
   
   @Lock(LockType.WRITE)
   public String deleteUserCertificate(String projectSpecificUsername) throws IOException {
-    String intermediateCADir = settings.getIntermediateCaDir();
+    String intermediateCADir = pki.getCAParentPath(PKI.CAType.INTERMEDIATE);
     List<String> commands = new ArrayList<>(3);
     commands.add(SUDO);
     commands.add(Paths.get(intermediateCADir, Settings.SSL_DELETE_CERT_SCRIPTNAME).toString());
@@ -113,7 +122,7 @@ public class OpensslOperations {
   
   @Lock(LockType.WRITE)
   public String deleteProjectCertificate(String projectName) throws IOException {
-    String intermediateCADir = settings.getIntermediateCaDir();
+    String intermediateCADir = pki.getCAParentPath(PKI.CAType.INTERMEDIATE);
     List<String> commands = new ArrayList<>(3);
     commands.add(SUDO);
     commands.add(Paths.get(intermediateCADir, Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME).toString());
@@ -123,8 +132,7 @@ public class OpensslOperations {
   }
   
   public boolean isPresentProjectCertificates(String projectName) {
-    String intermediateCADir = settings.getIntermediateCaDir();
-    File certFolder = Paths.get(intermediateCADir, "certs").toFile();
+    File certFolder = pki.getCACertPath(PKI.CAType.INTERMEDIATE).toFile();
     String[] certs = certFolder.list();
     if (certs != null && certs.length > 0) {
       for (String certFile : certs) {
@@ -137,14 +145,14 @@ public class OpensslOperations {
   }
   
   @Lock(LockType.WRITE)
-  public String signCertificateRequest(String csr, boolean isIntermediate, boolean isServiceCertificate,
-      boolean isAppCertificate) throws IOException {
+  public String signCertificateRequest(String csr, CertificateType certType)
+      throws IOException {
     File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
     try {
       FileUtils.writeStringToFile(csrFile, csr);
   
       if (verifyCSR(csrFile)) {
-        return signCSR(csrFile, csr, isIntermediate, isServiceCertificate, isAppCertificate);
+        return signCSR(csrFile, csr, certType);
       }
       return null;
     } finally {
@@ -153,22 +161,26 @@ public class OpensslOperations {
   }
   
   @Lock(LockType.WRITE)
-  public void revokeCertificate(String certificateIdentifier, boolean isIntermediate, boolean createCRL)
-      throws IOException {
-    revokeCertificate(certificateIdentifier, ".cert.pem", isIntermediate, createCRL);
+  public void revokeCertificate(String certificateIdentifier, CertificateType certType,
+                                boolean createCRL, boolean deleteCert) throws IOException, CAException {
+    revokeCertificate(certificateIdentifier, CERTIFICATE_SUFFIX, certType, createCRL, deleteCert);
   }
   
   @Lock(LockType.WRITE)
-  public void revokeCertificate(String certificateIdentifier, String fileSuffix, boolean isIntermediate,
-      boolean createCRL) throws IOException {
+  public void revokeCertificate(String certificateIdentifier, String fileSuffix,
+                                CertificateType certType, boolean createCRL, boolean deleteCert)
+      throws IOException, CAException {
     LOG.log(Level.FINE, "Revoking certificate " + certificateIdentifier + fileSuffix);
-    String openSslConfig = getOpensslConf(isIntermediate);
-    String certsDir;
-    if (isIntermediate) {
-      certsDir = Paths.get(settings.getIntermediateCaDir(), "certs").toString();
-    } else {
-      certsDir = Paths.get(settings.getCaDir(), "certs").toString();
+    PKI.CAType caType = pki.getResponsibileCA(certType);
+    String openSslConfig = pki.getCAConfPath(caType).toString();
+    String certsDir = pki.getCACertsDir(caType).toString();
+
+    Path certificatePath = Paths.get(certsDir, certificateIdentifier + fileSuffix);
+    File certificateFile = certificatePath.toFile();
+    if (!certificateFile.exists()) {
+      throw new CAException(CERTNOTFOUND, certType);
     }
+
     List<String> commands = new ArrayList<>();
     commands.add(OPENSSL);
     commands.add("ca");
@@ -176,20 +188,24 @@ public class OpensslOperations {
     commands.add("-config");
     commands.add(openSslConfig);
     commands.add("-passin");
-    commands.add("pass:" + settings.getHopsworksMasterPasswordSsl());
+    commands.add("pass:" + pki.getCAKeyPassword(caType));
     commands.add("-revoke");
-    commands.add(Paths.get(certsDir, certificateIdentifier + fileSuffix).toString());
+    commands.add(certificatePath.toString());
     
     executeCommand(commands, false);
     if (createCRL) {
-      createCRL(isIntermediate);
+      createCRL(caType);
+    }
+
+    if (deleteCert) {
+      certificateFile.delete();
     }
   }
   
   @Lock(LockType.WRITE)
-  public void pruneDatabase(boolean isIntermediate) throws IOException {
+  public void pruneDatabase(PKI.CAType caType) throws IOException {
     LOG.log(Level.FINE, "Pruning OpenSSL database");
-    String openSslConf = getOpensslConf(isIntermediate);
+    String openSslConf = pki.getCAConfPath(caType).toString();
     List<String> commands = new ArrayList<>();
     commands.add(OPENSSL);
     commands.add("ca");
@@ -198,35 +214,26 @@ public class OpensslOperations {
     commands.add(openSslConf);
     commands.add("-updatedb");
     commands.add("-passin");
-    commands.add("pass:" + settings.getHopsworksMasterPasswordSsl());
+    commands.add("pass:" + pki.getCAKeyPassword(caType));
     
     executeCommand(commands, false);
   }
   
   @Lock(LockType.WRITE)
-  public String createAndReadCRL(boolean isIntermediate) throws IOException {
-    createCRL(isIntermediate);
-    File crl;
-    if (isIntermediate) {
-      crl = Paths.get(settings.getIntermediateCaDir(), "crl", "intermediate.crl.pem").toFile();
-    } else {
-      crl = Paths.get(settings.getCaDir(), "crl", "ca.crl.pem").toFile();
-    }
-    
+  public String createAndReadCRL(PKI.CAType caType) throws IOException {
+    createCRL(caType);
+    File crl = pki.getCACRLPath(caType).toFile();
+
     return FileUtils.readFileToString(crl);
   }
   
   @Lock(LockType.WRITE)
-  public void createCRL(boolean isIntermediate) throws IOException {
-    pruneDatabase(isIntermediate);
+  public void createCRL(PKI.CAType caType) throws IOException {
+    pruneDatabase(caType);
     LOG.log(Level.FINE, "Creating Certificate Revocation List");
-    String openSslConfig = getOpensslConf(isIntermediate);
-    String crlFile;
-    if (isIntermediate) {
-      crlFile = Paths.get(settings.getIntermediateCaDir(), "crl", "intermediate.crl.pem").toString();
-    } else {
-      crlFile = Paths.get(settings.getCaDir(), "crl", "ca.crl.pem").toString();
-    }
+    String openSslConfig = pki.getCAConfPath(caType).toString();
+    String crlFile = pki.getCACRLPath(caType).toString();
+
     List<String> commands = new ArrayList<>(10);
     commands.add(OPENSSL);
     commands.add("ca");
@@ -235,7 +242,7 @@ public class OpensslOperations {
     commands.add(openSslConfig);
     commands.add("-gencrl");
     commands.add("-passin");
-    commands.add("pass:" + settings.getHopsworksMasterPasswordSsl());
+    commands.add("pass:" + pki.getCAKeyPassword(caType));
     commands.add("-out");
     commands.add(crlFile);
     executeCommand(commands, false);
@@ -243,7 +250,7 @@ public class OpensslOperations {
   }
   
   @Lock(LockType.WRITE)
-  public void validateCertificate(X509Certificate certificate) throws IOException {
+  public void validateCertificate(X509Certificate certificate, PKI.CAType caType) throws IOException {
     File tmpCertFile = File.createTempFile("cert-", ".pem");
     try (FileWriter fw = new FileWriter(tmpCertFile, false)) {
       fw.write(X509Factory.BEGIN_CERT);
@@ -258,7 +265,10 @@ public class OpensslOperations {
       commands.add(OPENSSL);
       commands.add("verify");
       commands.add("-CAfile");
-      commands.add(Paths.get(settings.getIntermediateCaDir(), "certs", "ca-chain.cert.pem").toString());
+      commands.add(pki.getChainOfTrustFilePath(caType).toString());
+      commands.add("-crl_check");
+      commands.add("-CRLfile");
+      commands.add(pki.getCACRLPath(caType).toString());
       commands.add(tmpCertFile.getAbsolutePath());
       executeCommand(commands, false);
     } catch (GeneralSecurityException ex) {
@@ -288,58 +298,32 @@ public class OpensslOperations {
     return false;
   }
   
-  private String signCSR(File csr, String csrStr, boolean isIntermediate, boolean isServiceCertificate,
-      boolean isAppCertificate) throws IOException {
+  private String signCSR(File csr, String csrStr, CertificateType certType) throws IOException {
     LOG.log(Level.FINE, "Signing Certificate Signing Request...");
-    String opensslConfFile = getOpensslConf(isIntermediate);
-    String effectiveExtension;
-    if (isIntermediate) {
-      effectiveExtension = "usr_cert";
-    } else {
-      effectiveExtension = "v3_intermediate_ca";
-    }
-    String hopsMasterPassword = settings.getHopsworksMasterPasswordSsl();
+    PKI.CAType caType = pki.getResponsibileCA(certType);
+    String opensslConfFile = pki.getCAConfPath(caType).toString();
+    String effectiveExtension = pki.getEffectiveExtensions(caType);
+
     String signScript = Paths.get(settings.getHopsworksDomainDir(), "bin", "global-ca-sign-csr.sh").toString();
     String fileName;
     try {
-      String subjectStr = PKIUtils.getSubjectFromCSR(csrStr);
-      Map<String, String> subject = PKIUtils.getKeyValuesFromSubject(subjectStr);
-      fileName = subject.get("CN");
-      if (isAppCertificate) {
-        fileName = fileName + "__" + subject.get("O");
-        // OU field serves as the application certificate version
-        String ou = subject.get("OU");
-        if (ou != null) {
-          fileName += "__" + ou;
-        }
-      }
-    } catch (InterruptedException ex) {
-      LOG.log(Level.SEVERE, "Error while extracting Subject fields out of CSR", ex);
-      throw new IOException(ex);
+      String subjectStr = getSubjectFromCSR(csrStr);
+      Map<String, String> subject = pki.getKeyValuesFromSubject(subjectStr);
+      fileName = pki.getCertFileName(certType, subject);
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, "Error while extracting CN out of CSR", ex);
+      throw ex;
     }
-    File signedCertificateFile;
-    if (isIntermediate) {
-      signedCertificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", fileName + ".cert.pem")
-          .toFile();
-    } else {
-      signedCertificateFile = Paths.get(settings.getCaDir(), "certs", fileName + ".cert.pem").toFile();
-    }
-    
-    long valueInDays = 3650;
-    if (settings.isServiceKeyRotationEnabled() && isServiceCertificate) {
-      String serviceKeyRotationIntervalRaw = settings.getServiceKeyRotationInterval();
-    // Add four more days to interval just to be sure
-      valueInDays = getCertificateValidityInDays(serviceKeyRotationIntervalRaw) + 4;
-    } else if (isAppCertificate) {
-      String appCertificateValidityRaw = settings.getApplicationCertificateValidityPeriod();
-      valueInDays = getCertificateValidityInDays(appCertificateValidityRaw);
-    }
-    
+
+    long valueInDays = pki.getValidityPeriod(certType);
+
+    File signedCertificateFile = pki.getCertPath(caType, fileName).toFile();
+
     List<String> commands = new ArrayList<>();
     commands.add(SUDO);
     commands.add(signScript);
     commands.add(opensslConfFile);
-    commands.add(hopsMasterPassword);
+    commands.add(pki.getCAKeyPassword(caType));
     commands.add(effectiveExtension);
     commands.add(csr.getAbsolutePath());
     commands.add(signedCertificateFile.getAbsolutePath());
@@ -351,19 +335,45 @@ public class OpensslOperations {
     
     return FileUtils.readFileToString(signedCertificateFile);
   }
-  
-  private long getCertificateValidityInDays(String rawConfigurationProperty) {
-    Long timeValue = Settings.getConfTimeValue(rawConfigurationProperty);
-    TimeUnit unitValue = Settings.getConfTimeTimeUnit(rawConfigurationProperty);
-    return TimeUnit.DAYS.convert(timeValue, unitValue);
+
+  @Lock(LockType.WRITE)
+  public String getSerialNumberFromCert(String cert) throws IOException {
+    File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".pem");
+    FileUtils.writeStringToFile(csrFile, cert);
+    List<String> cmds = new ArrayList<>();
+    //openssl x509 -in certs-dir/hops-site-certs/pub.pem -noout -serial
+    cmds.add(OPENSSL);
+    cmds.add("x509");
+    cmds.add("-in");
+    cmds.add(csrFile.getAbsolutePath());
+    cmds.add("-noout");
+    cmds.add("-serial");
+
+    return executeCommand(cmds, true);
   }
-  
+
+  @Lock(LockType.WRITE)
+  public String getSubjectFromCSR(String csr) throws IOException {
+    File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
+    FileUtils.writeStringToFile(csrFile, csr);
+    List<String> cmds = new ArrayList<>();
+    //openssl req -in certs-dir/hops-site-certs/csr.pem -noout -subject
+    cmds.add(OPENSSL);
+    cmds.add("req");
+    cmds.add("-in");
+    cmds.add(csrFile.getAbsolutePath());
+    cmds.add("-noout");
+    cmds.add("-subject");
+
+    return executeCommand(cmds, true);
+  }
+
   private String executeCommand(List<String> commands, boolean redirectErrorStream) throws IOException {
     SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, redirectErrorStream);
     try {
       int returnValue = commandExecutor.executeCommand();
-      String stdout = commandExecutor.getStandardOutputFromCommand();
-      String stderr = commandExecutor.getStandardErrorFromCommand();
+      String stdout = commandExecutor.getStandardOutputFromCommand().trim(); // Remove \n from the string
+      String stderr = commandExecutor.getStandardErrorFromCommand().trim(); // Remove \n from the string
       if (returnValue != 0) {
         throw new IOException(stderr);
       }
@@ -372,12 +382,5 @@ public class OpensslOperations {
       LOG.log(Level.SEVERE, "Error while waiting for OpenSSL command to execute");
       throw new IOException(ex);
     }
-  }
-  
-  private String getOpensslConf(boolean isIntermediate) {
-    if (isIntermediate) {
-      return Paths.get(settings.getIntermediateCaDir(), "openssl-intermediate.cnf").toString();
-    }
-    return Paths.get(settings.getCaDir(), "openssl-ca.cnf").toString();
   }
 }

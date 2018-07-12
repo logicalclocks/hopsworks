@@ -53,7 +53,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -246,12 +245,13 @@ public class CertificatesMgmService {
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void deleteServiceCertificate(Hosts host, Integer commandId) throws IOException {
+  public void deleteServiceCertificate(Hosts host, Integer commandId) throws IOException, CAException {
     String suffix = serviceCertificateRotationTimer.getToBeRevokedSuffix(Integer.toString(commandId));
-    File certificateFile = Paths.get(settings.getIntermediateCaDir(), "certs", host.getHostname() + suffix).toFile();
-    if (certificateFile.exists()) {
-      opensslOperations.revokeCertificate(host.getHostname(), suffix, true, true);
-      certificateFile.delete();
+    try {
+      opensslOperations.revokeCertificate(host.getHostname(), suffix, CertificateType.HOST,
+          true, true);
+    } catch (IllegalArgumentException e) {
+      // Do nothing
     }
   }
   

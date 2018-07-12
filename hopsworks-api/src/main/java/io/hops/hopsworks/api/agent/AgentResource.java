@@ -63,6 +63,7 @@ import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade.CondaStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
@@ -333,7 +334,7 @@ public class AgentResource {
     if (status.equals(SystemCommandFacade.STATUS.FINISHED)) {
       try {
         certificatesMgmService.deleteServiceCertificate(command.getHost(), command.getId());
-      } catch (IOException ex) {
+      } catch (IOException | CAException ex) {
         logger.log(Level.WARNING, "Could not revoke certificate for host: " + command.getHost().getHostname(), ex);
       }
       systemCommandFacade.delete(command);

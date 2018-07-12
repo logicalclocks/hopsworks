@@ -58,37 +58,6 @@
         </exclusion>
       </exclusions> 
     </dependency>
-    <!--Zeppelin dependencies -->
-    <!-- CDI bug. Zeppelin-interpreter includes org.sonatype.guice.**
-    which has CDI annotated beans, causing deployment of hopsworks to fail. Because Zeppelin-interpreter
-    is a 3rd party jar, Glassfish won't exclude from scanning beans/paths we put in beans.xml 
-    -->
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-bean</artifactId>
-      <version>2.6.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
-      <version>2.6.0</version>
-    </dependency>
-    <!-- Apache Shiro -->
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-core</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-web</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.quartz-scheduler</groupId>
-      <artifactId>quartz</artifactId>
-      <version>2.2.1</version>
-    </dependency>
 
     <!--End of Zeppelin dependencies -->
     <!-- jersey dependencies -->
@@ -115,6 +84,7 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
   <build>
     <finalName>hopsworks-ca</finalName>
     <plugins>

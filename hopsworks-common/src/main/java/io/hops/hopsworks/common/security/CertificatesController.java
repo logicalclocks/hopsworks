@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.security.HopsUtil;
 
 import javax.ejb.AsyncResult;
@@ -55,8 +54,6 @@ public class CertificatesController {
   private final static Logger LOG = Logger.getLogger
       (CertificatesController.class.getName());
   
-  @EJB
-  private Settings settings;
   @EJB
   private CertsFacade certsFacade;
   @EJB
@@ -125,7 +122,7 @@ public class CertificatesController {
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void deleteProjectCertificates(Project project) throws IOException {
+  public void deleteProjectCertificates(Project project) throws CAException, IOException {
     String projectName = project.getName();
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
     try {
@@ -136,13 +133,15 @@ public class CertificatesController {
             .getUsername();
         // Ordering here is important
         // *First* revoke and *then* delete the certificate
-        opensslOperations.revokeCertificate(certificateIdentifier, true, false);
+        opensslOperations.revokeCertificate(certificateIdentifier, CertificateType.PROJECT_USER,
+            false, false);
         opensslOperations.deleteUserCertificate(certificateIdentifier);
       }
-      opensslOperations.revokeCertificate(project.getProjectGenericUser(), true, false);
+      opensslOperations.revokeCertificate(project.getProjectGenericUser(), CertificateType.PROJECT_USER,
+          false, false);
       opensslOperations.deleteProjectCertificate(projectName);
     } finally {
-      opensslOperations.createCRL(true);
+      opensslOperations.createCRL(PKI.CAType.INTERMEDIATE);
       lock.unlock();
     }
     
@@ -154,7 +153,7 @@ public class CertificatesController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void deleteUserSpecificCertificates(Project project, Users user)
-      throws IOException {
+      throws CAException, IOException {
     String hdfsUsername = project.getName() + HdfsUsersController
         .USER_NAME_DELIMITER + user.getUsername();
     ReentrantLock lock = certificatesMgmService.getOpensslLock();
@@ -162,7 +161,7 @@ public class CertificatesController {
       lock.lock();
       // Ordering here is important
       // *First* revoke and *then* delete the certificate
-      opensslOperations.revokeCertificate(hdfsUsername, true, true);
+      opensslOperations.revokeCertificate(hdfsUsername, CertificateType.PROJECT_USER, true, false);
       opensslOperations.deleteUserCertificate(hdfsUsername);
     } finally {
       lock.unlock();
@@ -208,7 +207,7 @@ public class CertificatesController {
       throw new GeneralSecurityException("Could not get certificate from keystore");
     }
   
-    opensslOperations.validateCertificate(certificate);
+    opensslOperations.validateCertificate(certificate, PKI.CAType.INTERMEDIATE);
     return certificate.getSubjectX500Principal().getName("RFC2253");
   }
   

@@ -18,22 +18,31 @@
  *
  */
 
-package io.hops.hopsworks.api.certs;
+package io.hops.hopsworks.ca.api;
 
-import javax.ejb.Stateless;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
+import io.swagger.annotations.Api;
+import org.glassfish.jersey.server.ResourceConfig;
 
-@Stateless
-public class NoCacheResponse {
+@Api
+@javax.ws.rs.ApplicationPath("ca")
+public class ApplicationConfig extends ResourceConfig {
 
-  public ResponseBuilder getNoCacheResponseBuilder(Response.Status status) {
-    CacheControl cc = new CacheControl();
-    cc.setNoCache(true);
-    cc.setMaxAge(-1);
-    cc.setMustRevalidate(true);
-
-    return Response.status(status).cacheControl(cc);
+  /**
+   * adding manually all the restful services of the application.
+   */
+  public ApplicationConfig() {
+    register(io.hops.hopsworks.ca.api.certs.CertSigningService.class);
+    
+    register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+    
+    //response filters
+    register(io.hops.hopsworks.ca.api.filter.CORSFilter.class);
+    
+    //Exception mappers
+    register(io.hops.hopsworks.ca.api.exception.mapper.EJBExceptionMapper.class);
+ 
+    //swagger
+    register(io.swagger.jaxrs.listing.ApiListingResource.class);
+    register(io.swagger.jaxrs.listing.SwaggerSerializers.class);
   }
 }

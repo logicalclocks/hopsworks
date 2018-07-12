@@ -17,61 +17,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.hops.hopsworks.api.exception.mapper;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+package io.hops.hopsworks.ca.apiV2.annotation;
 
-@XmlRootElement
-public class JsonResponse {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.ws.rs.NameBinding;
 
-  private String status;
-  private Integer statusCode;
-  private String errorMsg;
-  private String successMessage;
-
-  public JsonResponse() {
-  }
-
-  public JsonResponse(String status) {
-    this.status = status;
-  }
-
-  public JsonResponse(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public Integer getStatusCode() {
-    return statusCode;
-  }
-
-  public void setStatusCode(Integer statusCode) {
-    this.statusCode = statusCode;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  @XmlElement
-  public String getErrorMsg() {
-    return errorMsg;
-  }
-
-  public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg;
-  }
-
-  public String getSuccessMessage() {
-    return successMessage;
-  }
-
-  public void setSuccessMessage(String successMessage) {
-    this.successMessage = successMessage;
-  }
-
+@NameBinding
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AllowCORS {
+  
 }

@@ -17,7 +17,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.hops.hopsworks.api.exception.mapper;
+package io.hops.hopsworks.ca.api.exception.mapper;
 
 import java.security.AccessControlException;
 import java.util.Set;

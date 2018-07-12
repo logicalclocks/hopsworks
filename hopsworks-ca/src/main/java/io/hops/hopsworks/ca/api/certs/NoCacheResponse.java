@@ -18,17 +18,22 @@
  *
  */
 
-package io.hops.hopsworks.api.annotation;
+package io.hops.hopsworks.ca.api.certs;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import javax.ws.rs.NameBinding;
+import javax.ejb.Stateless;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
-@NameBinding
-@Target({ ElementType.TYPE, ElementType.METHOD })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface AllowCORS {
-  
+@Stateless
+public class NoCacheResponse {
+
+  public ResponseBuilder getNoCacheResponseBuilder(Response.Status status) {
+    CacheControl cc = new CacheControl();
+    cc.setNoCache(true);
+    cc.setMaxAge(-1);
+    cc.setMustRevalidate(true);
+
+    return Response.status(status).cacheControl(cc);
+  }
 }

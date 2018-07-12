@@ -96,6 +96,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.message.MessageController;
+import io.hops.hopsworks.common.security.CAException;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
@@ -1081,8 +1082,12 @@ public class ProjectController {
         try {
           certificatesController.deleteProjectCertificates(project);
           cleanupLogger.logSuccess("Removed certificates");
+        } catch (CAException ex) {
+          if (ex.getError() != CAException.CAExceptionErrors.CERTNOTFOUND) {
+            cleanupLogger.logError("Error when removing certificates during project cleanup");
+          }
         } catch (IOException ex) {
-          cleanupLogger.logError("Error when removing certificates during project cleanup");          
+          cleanupLogger.logError("Error when removing certificates during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1525,7 +1530,7 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
       throws IOException, InterruptedException, ExecutionException,
-      AppException {
+      AppException, CAException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1552,6 +1557,12 @@ public class ProjectController {
 
       try {
         certificatesController.deleteProjectCertificates(project);
+      } catch (CAException ex) {
+        if (ex.getError() != CAException.CAExceptionErrors.CERTNOTFOUND) {
+          LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
+              + ". Manual cleanup is needed!!!", ex);
+          throw ex;
+        }
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
             + ". Manual cleanup is needed!!!", ex);
@@ -1742,9 +1753,8 @@ public class ProjectController {
                 if (certsResultFuture != null) {
                   certsResultFuture.get();
                 }
-                certificatesController.deleteUserSpecificCertificates(project,
-                    newMember);
-              } catch (IOException | InterruptedException | ExecutionException e) {
+                certificatesController.deleteUserSpecificCertificates(project, newMember);
+              } catch (IOException | InterruptedException | ExecutionException | CAException e) {
                 String failedUser = project.getName() + HdfsUsersController.USER_NAME_DELIMITER + newMember.
                     getUsername();
                 LOGGER.log(Level.SEVERE,

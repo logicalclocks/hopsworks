@@ -18,9 +18,9 @@
  *
  */
 
-package io.hops.hopsworks.api.filter;
+package io.hops.hopsworks.ca.apiV2.filter;
 
-import io.hops.hopsworks.api.annotation.AllowCORS;
+import io.hops.hopsworks.ca.api.annotation.AllowCORS;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import javax.ws.rs.container.ContainerRequestContext;
