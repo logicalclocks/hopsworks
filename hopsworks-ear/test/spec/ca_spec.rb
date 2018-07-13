@@ -118,18 +118,18 @@ describe "#CA certificates" do
 
         # Check that the certificate is on the local fs. this assumes you are running the
         # tests on a proper vm
-        check_certificate_exists(@certs_dir + "/intermediate/", "test__SE", @subject)
+        check_certificate_exists(@certs_dir + "/intermediate/", "test__SE__1", @subject)
       end
 
       it 'should succeed to revoke the certificate' do
-        delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE"
+        delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE__1"
         expect_status(200)
 
-        check_certificate_revoked(@certs_dir + "/intermediate/", "test__SE", @subject)
+        check_certificate_revoked(@certs_dir + "/intermediate/", "test__SE__1", @subject)
       end
 
       it 'should return no-content if the revokation is triggered twice' do
-        delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE"
+        delete "#{ENV['HOPSWORKS_CA']}/certificate/app?certId=test__SE__1"
         expect_status(204)
       end
     end

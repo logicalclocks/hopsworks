@@ -51,7 +51,7 @@ public class PKI {
   public String getCertFileName(CertificateType certType, Map<String, String> subject) {
     switch (certType) {
       case APP:
-        return subject.get("CN") + "__" + subject.get("O");
+        return subject.get("CN") + "__" + subject.get("O") + "__" + subject.get("OU");
       case HOST:
         return subject.get("CN") + "__" + subject.get("OU");
       default:

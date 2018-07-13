@@ -32,13 +32,14 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.security.PKIUtils;
+import io.hops.hopsworks.common.security.CAException;
+import io.hops.hopsworks.common.security.CertificateType;
+import io.hops.hopsworks.common.security.OpensslOperations;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -87,6 +88,8 @@ public class ClusterController {
   private AuthController authController;
   @EJB
   private UsersController usersCtrl;
+  @EJB
+  private OpensslOperations opensslOperations;
 
   public void registerClusterNewUser(ClusterDTO cluster, HttpServletRequest req, boolean autoValidate) 
     throws MessagingException, AppException {
@@ -257,7 +260,7 @@ public class ClusterController {
       clusterCert.setRegistrationStatus(RegistrationStatusEnum.REGISTERED);
       clusterCertFacade.update(clusterCert);
     } else if (clusterCert.getRegistrationStatus().equals(RegistrationStatusEnum.UNREGISTRATION_PENDING)) {
-      revokeCert(clusterCert, true);
+      revokeCert(clusterCert);
       removeClusterCert(clusterCert);
     }
   }
@@ -483,17 +486,19 @@ public class ClusterController {
     return TimeUnit.MILLISECONDS.toHours(diff);
   }
 
-  private void revokeCert(ClusterCert clusterCert, boolean intermediate) throws FileNotFoundException, IOException,
-    InterruptedException, CertificateException {
+  private void revokeCert(ClusterCert clusterCert) throws IOException {
     if (clusterCert == null || clusterCert.getSerialNumber() == null) {
       return;
     }
-    String agentP = intermediate ? settings.getIntermediateCaDir() : settings.getCertsDir();
-    File agentPem = new File(agentP + "/newcerts/" + clusterCert.getSerialNumber() + ".pem");
-    if (!agentPem.exists()) {
-      LOGGER.log(Level.WARNING, "Could not find cert to be revoked at path: {0}", agentPem.getPath());
-    }
-    PKIUtils.revokeCert(settings, agentPem.getPath(), intermediate);
-  }
 
+    try {
+      opensslOperations.revokeCertificate(clusterCert.getCommonName(), CertificateType.DELA,
+          true, true);
+    } catch (CAException cae){
+      if (cae.getError() == CAException.CAExceptionErrors.CERTNOTFOUND) {
+        LOGGER.log(Level.WARNING, "Could not find certificate with CN: " +
+            clusterCert.getCommonName() + " to be revoked");
+      }
+    }
+  }
 }
