@@ -82,7 +82,7 @@ public class PythonDepsFacade {
 
   private final static Logger logger = Logger.getLogger(PythonDepsFacade.class.
       getName());
-
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 

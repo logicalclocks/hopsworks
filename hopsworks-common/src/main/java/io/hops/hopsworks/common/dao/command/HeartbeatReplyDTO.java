@@ -41,21 +41,16 @@ package io.hops.hopsworks.common.dao.command;
 
 import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 import java.util.List;
 
-@XmlRootElement
-public class KagentCommands implements Serializable {
-  private static final long serialVersionUID = 1L;
+public class HeartbeatReplyDTO {
   
-  private List<SystemCommand> systemCommands;
-  private List<CondaCommands> condaCommands;
+  private final List<SystemCommand> systemCommands;
+  private final List<CondaCommands> condaCommands;
   
-  public KagentCommands() {
-  }
   
-  public KagentCommands(List<SystemCommand> systemCommands, List<CondaCommands> condaCommands) {
+  public HeartbeatReplyDTO(final List<SystemCommand> systemCommands,
+      final List<CondaCommands> condaCommands) {
     this.systemCommands = systemCommands;
     this.condaCommands = condaCommands;
   }
@@ -64,15 +59,7 @@ public class KagentCommands implements Serializable {
     return systemCommands;
   }
   
-  public void setSystemCommands(List<SystemCommand> systemCommands) {
-    this.systemCommands = systemCommands;
-  }
-  
   public List<CondaCommands> getCondaCommands() {
     return condaCommands;
-  }
-  
-  public void setCondaCommands(List<CondaCommands> condaCommands) {
-    this.condaCommands = condaCommands;
   }
 }

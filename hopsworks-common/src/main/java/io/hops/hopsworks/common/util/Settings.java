@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.util;
 
+import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
@@ -519,6 +520,11 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+      PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
+      PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
+          ",");
 
       cached = true;
     }
@@ -2649,6 +2655,32 @@ public class Settings implements Serializable {
     return timeUnitStr == null ? TimeUnit.MINUTES : TIME_SUFFIXES.get(timeUnitStr.toLowerCase());
   }
 
+  private Set<String> toSetFromCsv(String csv, String separator) {
+    return new HashSet<>(Splitter.on(separator).trimResults().splitToList(csv));
+  }
+  
+  // User upgradable libraries we installed for them
+  private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
+  private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
+      "hops, tfspark, pandas, tensorflow-serving-api, horovod, hopsfacets, mmlspark, numpy";
+  
+  public synchronized Set<String> getProvidedPythonLibraryNames() {
+    checkCache();
+    return PROVIDED_PYTHON_LIBRARY_NAMES;
+  }
+  
+  // Libraries we preinstalled users should not mess with
+  private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
+  private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
+      "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
+  
+  public synchronized Set<String> getPreinstalledPythonLibraryNames() {
+    checkCache();
+    return PREINSTALLED_PYTHON_LIBRARY_NAMES;
+  }
+  
   private String HOPSWORKS_VERSION;
 
   public synchronized String getHopsworksVersion() {

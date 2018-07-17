@@ -41,7 +41,6 @@ package io.hops.hopsworks.ca.api.certs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import io.hops.hopsworks.ca.api.annotation.AllowCORS;
-import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kafka.CsrDTO;
 import io.hops.hopsworks.common.exception.AppException;
@@ -106,43 +105,6 @@ public class CertSigningService {
   private DelaTrackerCertController delaTrackerCertController;
   @EJB
   private ServiceCertificateRotationTimer serviceCertificateRotationTimer;
-  
-  @POST
-  @Path("/register")
-  @RolesAllowed({"AGENT"})
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response register(@Context HttpServletRequest req, String jsonString)
-      throws AppException {
-    logger.log(Level.INFO, "Request to sign host certificate: \n{0}", jsonString);
-    JSONObject json = new JSONObject(jsonString);
-    String hostId = json.getString("host-id");
-    CsrDTO responseDto = null;
-    if (json.has("csr")) {
-      String csr = json.getString("csr");
-      responseDto = signCSR(hostId, null, csr, false, CertificateType.HOST);
-    } else {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR"
-          + " provided");
-    }
-    
-    if (json.has("agent-password")) {
-      Hosts host;
-      try {
-        host = hostsFacade.findByHostname(hostId);
-        String agentPassword = json.getString("agent-password");
-        host.setAgentPassword(agentPassword);
-        host.setRegistered(true);
-// We set the hostnmae as hopsworks::default pre-populates with the hostname, but it's not the correct hostname for GCE.
-        host.setHostname(hostId);   
-        hostsFacade.storeHost(host);
-      } catch (Exception ex) {
-        logger.log(Level.SEVERE, "Host storing error while Cert signing: {0}", ex.getMessage());
-      }
-    }
-    
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
-  }
   
   @POST
   @Path("/rotate")
