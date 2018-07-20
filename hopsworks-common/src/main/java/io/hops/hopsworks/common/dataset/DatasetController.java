@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.util.Settings;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -299,8 +300,8 @@ public class DatasetController {
   public boolean deleteDatasetDir(Dataset dataset, Path location,
       DistributedFileSystemOps udfso) throws IOException {
     OperationsLog log = new OperationsLog(dataset, OperationType.Delete);
-    boolean success;
-    success = udfso.rm(location, true);
+    udfso.unsetMetaEnabled(location);
+    boolean success = udfso.rm(location, true);
     if (success) {
       operationsLogFacade.persist(log);
     }
@@ -576,4 +577,15 @@ public class DatasetController {
     }
     return false;
   }
+  
+  public void unsetMetaEnabledForAllDatasets(DistributedFileSystemOps dfso, Project project) throws IOException {
+    Collection<Dataset> datasets = project.getDatasetCollection();
+    for (Dataset dataset : datasets) {
+      if (dataset.isSearchable() && !dataset.isShared()) {
+        Path dspath = getDatasetPath(dataset);
+        dfso.unsetMetaEnabled(dspath);
+      }
+    }
+  }
+  
 }

@@ -587,9 +587,29 @@ public class DistributedFileSystemOps {
    */
   public void setMetaEnabled(String location) throws IOException {
     Path path = new Path(location);
+    setMetaEnabled(path);
+  }
+  
+  /**
+   * Marks a file/folder in location as metadata enabled
+   * <p/>
+   * @param path
+   * @throws IOException
+   */
+  public void setMetaEnabled(Path path) throws IOException {
     this.dfs.setMetaEnabled(path, true);
   }
 
+  /**
+   * Unset Metadata enabled flag on a given path
+   * <p/>
+   * @param path
+   * @throws IOException
+   */
+  public void unsetMetaEnabled(Path path) throws IOException {
+    this.dfs.setMetaEnabled(path, false);
+  }
+  
   /**
    * Returns the number of blocks of a file in the given path.
    * The path has to resolve to a file.

@@ -389,6 +389,8 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
 
+      logProject(project, OperationType.Add);
+      
       // enable services
       for (ProjectServiceEnum service : projectServices) {
         try {
@@ -428,8 +430,6 @@ public class ProjectController {
             + "generation thread to finish. Will try to cleanup...", ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
-      
-      logProject(project, OperationType.Add);
       
       return project;
 
@@ -955,7 +955,7 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
     }
-
+    
     cleanup(project, sessionId);
     
     certificateMaterializer.forceRemoveLocalMaterial(user.getUsername(), project.getName(), null, true);
@@ -1534,7 +1534,9 @@ public class ProjectController {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
-
+      
+      datasetController.unsetMetaEnabledForAllDatasets(dfso, project);
+      
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
       //change the owner and group of the project folder to hdfs super user
