@@ -27,9 +27,11 @@ import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
@@ -67,7 +69,9 @@ public class HiveController {
   private BaseHadoopClientsService bhcs;
   @EJB
   private ProjectFacade projectFacade;
-
+  @EJB
+  private DatasetController datasetController;
+  
   private final static String driver = "org.apache.hive.jdbc.HiveDriver";
   private final static Logger logger = Logger.getLogger(HiveController.class.getName());
 
@@ -137,8 +141,12 @@ public class HiveController {
     // the directory editable by default
     dbDataset.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
     dbDataset.setDescription(buildDescription(project.getName()));
+    dbDataset.setSearchable(true);
     datasetFacade.persistDataset(dbDataset);
-
+    
+    dfso.setMetaEnabled(dbPath);
+    datasetController.logDataset(dbDataset, OperationType.Add);
+    
     try {
       // Assign database directory to the user and project group
       hdfsUsersBean.addDatasetUsersGroups(user, project, dbDataset, dfso);
