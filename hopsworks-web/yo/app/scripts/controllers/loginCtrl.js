@@ -21,7 +21,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 
+        .controller('LoginCtrl', ['$location', '$cookies', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5',
           function ($location, $cookies, growl, TourService, AuthService, BannerService, md5) {
 
             var self = this;
@@ -43,7 +43,7 @@ angular.module('hopsWorksApp')
             self.ldapEnabled = $cookies.get('ldap') === 'true';
 
 
-            self.showDefaultPassword = function() {
+            self.showDefaultPassword = function () {
               if (self.firstTime === false || self.adminPasswordChanged === true ||
                       self.user.email !== 'admin@kth.se') {
                 return false;
@@ -80,8 +80,12 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.adminPasswordChanged = true;
                       }, function (error) {
-                self.adminPasswordChanged = false;
-                self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                      if (error.status === 404) {
+                        self.announcement = "Hopsworks REST Endpoint unavailable. Is MySQL down? Is the Hopsworks App installed?"
+                      } else {
+                        self.adminPasswordChanged = false;
+                        self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                      }
               });
             };
             self.enterAdminPassword = function () {
