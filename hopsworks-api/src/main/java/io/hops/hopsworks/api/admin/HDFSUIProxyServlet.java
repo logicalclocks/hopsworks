@@ -254,10 +254,10 @@ public class HDFSUIProxyServlet extends ProxyServlet {
   private String hopify(String ui, String source) {
 
     ui = ui.replaceAll("<a href='http://hadoop.apache.org/core'>Hadoop</a>, 2018.", "");
-    ui = ui.replaceAll("(?<=(url=))(?=[a-z])", "/hopsworks-api/hdfsui/");
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(url=))(?=[a-zA-Z])", "/hopsworks-api/hdfsui/");
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
         "/hopsworks-api/hdfsui/" + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
         "/hopsworks-api/hdfsui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/hdfsui/");
     ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/hdfsui/");
@@ -265,11 +265,11 @@ public class HDFSUIProxyServlet extends ProxyServlet {
         "/hopsworks-api/hdfsui/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=(http|https))",
         "/hopsworks-api/hdfsui/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
         "/hopsworks-api/hdfsui/" + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
         "/hopsworks-api/hdfsui/" + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=)/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=)/(?=[a-zA-Z])",
         "/hopsworks-api/hdfsui/" + source + "/");
     ui = ui.replaceAll("(?<=(action)=\")(?=[a-zA-Z/]*.jsp)", "/hopsworks-api/hdfsui/" + source + "/");
     return ui;
@@ -304,7 +304,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
-        "/http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+        "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
       
       // Remove '/' from the beginning of the path
       String target = servletRequest.getPathInfo().substring(1);
