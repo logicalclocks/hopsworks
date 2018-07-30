@@ -153,7 +153,7 @@ public class HiveController {
     Path dbPath = getDbPath(project.getName());
     Inode dbInode = inodeFacade.getInodeAtPath(dbPath.toString());
 
-    // Persist Hive db as dataset in the HopsWorks database
+    // Persist Hive db as dataset in the Hopsworks database
     Dataset dbDataset = new Dataset(dbInode, project);
     dbDataset.setType(DatasetType.HIVEDB);
     // As we are running Zeppelin as projectGenericUser, we have to make
@@ -223,8 +223,8 @@ public class HiveController {
         "Url: jdbc:hive2://" + settings.getHiveServerHostName(true) + "/" + projectName + "<br>" +
         "Authentication: noSasl<br>" +
         "SSL: enabled - TrustStore and its password<br>" +
-        "Username: your HopsWorks email address<br>" +
-        "Password: your HopsWorks password";
+        "Username: your Hopsworks email address<br>" +
+        "Password: your Hopsworks password";
   }
 
 

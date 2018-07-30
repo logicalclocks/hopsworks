@@ -75,7 +75,7 @@ import org.json.JSONObject;
 
 /**
  *
- * Authorizes HopsWorks users to access particular elasticsearch indices
+ * Authorizes Hopsworks users to access particular elasticsearch indices
  * to be displayed by Kibana.
  * <p>
  */

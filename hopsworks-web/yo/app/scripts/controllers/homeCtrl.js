@@ -65,8 +65,8 @@ angular.module('hopsWorksApp')
             self.sortBy='-project.created';
             self.getTours = function () {
               self.tours = [
-                {'name': 'Spark', 'tip': 'Take a tour of HopsWorks by creating a project and running a Spark job!'},
-                {'name': 'Kafka', 'tip': 'Take a tour of HopsWorks by creating a project and running a Kafka job!'},
+                {'name': 'Spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'},
+                {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'},
                 {'name': 'TensorFlow', 'tip': 'Take a tour by creating a project and running a TensorFlow notebook!'}
 //                {'name': 'Distributed TensorFlow', 'tip': 'Take a tour by creating a project and running a distributed TensorFlow Mnist job!'}
 //                {'name': 'zeppelin', 'tip': 'Take a tour of Zeppelin by creating a Hopsworks project and running a Zeppelin notebook for Spark!'}
