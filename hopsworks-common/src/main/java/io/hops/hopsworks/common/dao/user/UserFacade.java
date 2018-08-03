@@ -148,7 +148,7 @@ public class UserFacade extends AbstractFacade<Users> {
     } catch (NoResultException e) {
       return null;
     } catch (Exception e) {
-      throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), e.getMessage());
+      throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), "Problem accessing database.");
     }
   }
 

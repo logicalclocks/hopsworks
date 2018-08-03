@@ -81,7 +81,9 @@ angular.module('hopsWorksApp')
                         self.adminPasswordChanged = true;
                       }, function (error) {
                       if (error.status === 503) {
-                        self.announcement = "Hopsworks unavailable. Is MySQL down? Is the Hopsworks App installed?"
+                        self.announcement = "Hopsworks unavailable. Is MySQL down?"
+                      } else if (error.status === 404) {
+                        self.announcement = "Hopsworks unavailable. Is the Hopsworks App installed?"
                       } else {
                         self.adminPasswordChanged = false;
                         self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
