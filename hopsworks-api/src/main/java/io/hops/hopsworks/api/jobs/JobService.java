@@ -739,7 +739,7 @@ public class JobService {
     }
     try {
       String trackingUrl;
-      if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+      if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
         trackingUrl = param;
       } else {
         trackingUrl = "http://" + param;
@@ -863,11 +863,11 @@ public class JobService {
 
     ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
 
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/"
         + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/"
         + source + "/");
@@ -881,10 +881,10 @@ public class JobService {
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/" + param);
     return ui;

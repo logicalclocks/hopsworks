@@ -244,9 +244,9 @@ public class YarnUIProxyServlet extends ProxyServlet {
 
   private String hopify(String ui, String source) {
 
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
         "/hopsworks-api/yarnui/" + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
         "/hopsworks-api/yarnui/" + source + "/");
     ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/yarnui/");
@@ -254,12 +254,12 @@ public class YarnUIProxyServlet extends ProxyServlet {
         "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
         "/hopsworks-api/yarnui/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
         "/hopsworks-api/yarnui/" + source + "/" );
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
         "/hopsworks-api/yarnui/" + source + "/" );
-    ui = ui.replaceAll("(?<=(url: '))/(?=[a-z])", "/hopsworks-api/yarnui/");
-    ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-z])", "/hopsworks-api/yarnui/");
+    ui = ui.replaceAll("(?<=(url: '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
+    ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     return ui;
 
   }
@@ -267,7 +267,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
-        "/http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+        "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
       String target = "http://" + servletRequest.getPathInfo().substring(7);
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
       uri.append(target);
