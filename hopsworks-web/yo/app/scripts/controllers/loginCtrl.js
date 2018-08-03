@@ -85,8 +85,6 @@ angular.module('hopsWorksApp')
                       }, function (error) {
                       if (error.status === 503) { // service_unavailable
                         $scope.announcement = "Hopsworks unavailable. Is MySQL down?"
-                      } else if (error.status === 404) { 
-                        $scope.announcement = "Hopsworks unavailable. Is the Hopsworks App installed?"
                       } else {
                         self.adminPasswordChanged = false;
                         $scope.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
