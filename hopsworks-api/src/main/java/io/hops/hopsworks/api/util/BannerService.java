@@ -98,7 +98,11 @@ public class BannerService {
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response firstLogin(@Context HttpServletRequest req) throws AppException {
-    settings.updateVariable("first_time_login", "0");
+    try {
+      settings.updateVariable("first_time_login", "0");
+    } catch (Exception e) {
+      throw new AppException(Response.Status.SERVICE_UNAVAILABLE, "Hopsworks unavailable. Is the DB down?");
+    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
