@@ -1506,7 +1506,7 @@ public class Settings implements Serializable {
     ADMIN_PWD = "changed";
   }
 
-  public synchronized boolean isDefaultAdminPasswordChanged() {
+  public synchronized boolean isDefaultAdminPasswordChanged() throws Exception {
     if (ADMIN_PWD.compareTo(DEFAULT_ADMIN_PWD) != 0) {
       return true;
     }
