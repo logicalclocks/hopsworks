@@ -1180,7 +1180,17 @@ public class ProjectController {
         // with the same name at the same time
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-        Users user = userFacade.findByEmail(userEmail);
+        Users user = null;
+        try {
+          user = userFacade.findByEmail(userEmail);
+        } catch (AppException ex) {
+          Logger.getLogger(ProjectController.class.getName()).log(Level.SEVERE, null, ex);
+          cleanupLogger.logError("Could not connect to DB to get the user: " + userEmail);
+        }
+        if (user == null) {
+          user = new Users(0); // try and delete the project with a 'nobody' user.
+          cleanupLogger.logError("Could not find the user in the DB: " + userEmail);
+        }
         Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
@@ -1294,8 +1304,12 @@ public class ProjectController {
       ycs.closeYarnClient(yarnClientWrapper);
       LOGGER.log(Level.INFO, cleanupLogger.getSuccessLog().toString());
       LOGGER.log(Level.SEVERE, cleanupLogger.getErrorLog().toString());
-      sendInbox(cleanupLogger.getSuccessLog().append("\n")
-          .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
+      try {
+        sendInbox(cleanupLogger.getSuccessLog().append("\n")
+            .append(cleanupLogger.getErrorLog()).append("\n").toString(), userEmail);
+      } catch (AppException ex) {
+        cleanupLogger.logError("Problem resolving a user from the database. Is the database down?");
+      }
     }
     String[] logs = new String[2];
     logs[0] = cleanupLogger.getSuccessLog().toString();
@@ -1303,7 +1317,7 @@ public class ProjectController {
     return logs;
   }
 
-  private void sendInbox(String message, String userRequested) {
+  private void sendInbox(String message, String userRequested) throws AppException {
     Users to = userFacade.findByEmail(userRequested);
     Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
     messageController.send(to, from, "Force project cleanup", "Status", message, "");
@@ -2140,7 +2154,7 @@ public class ProjectController {
    * @param email of the user
    * @return a list of project team
    */
-  public List<ProjectTeam> findProjectByUser(String email) {
+  public List<ProjectTeam> findProjectByUser(String email) throws AppException {
     Users user = userFacade.findByEmail(email);
     return projectTeamFacade.findActiveByMember(user);
   }
@@ -2153,7 +2167,7 @@ public class ProjectController {
    * @param ignoreCase
    * @return a list of project names
    */
-  public List<String> findProjectNamesByUser(String email, boolean ignoreCase) {
+  public List<String> findProjectNamesByUser(String email, boolean ignoreCase) throws AppException {
     Users user = userFacade.findByEmail(email);
     List<ProjectTeam> projectTeams = projectTeamFacade.findActiveByMember(user);
     List<String> projects = null;
