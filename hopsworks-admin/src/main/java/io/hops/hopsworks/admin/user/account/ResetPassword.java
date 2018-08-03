@@ -162,7 +162,7 @@ public class ResetPassword implements Serializable {
     this.passwd2 = passwd2;
   }
 
-  public String sendTmpPassword() throws MessagingException {
+  public String sendTmpPassword() throws MessagingException, AppException {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     people = userFacade.findByEmail(this.username);
@@ -220,7 +220,7 @@ public class ResetPassword implements Serializable {
    * <p>
    * @return
    */
-  public String changePassword() {
+  public String changePassword() throws AppException {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     if (req.getRemoteUser() == null) {
@@ -271,7 +271,7 @@ public class ResetPassword implements Serializable {
    *
    * @return
    */
-  public String changeSecQuestion() {
+  public String changeSecQuestion() throws AppException {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -325,7 +325,7 @@ public class ResetPassword implements Serializable {
    *
    * @return
    */
-  public String findQuestion() {
+  public String findQuestion() throws AppException {
 
     people = userFacade.findByEmail(this.username);
     if (people == null) {
@@ -343,7 +343,7 @@ public class ResetPassword implements Serializable {
     return ("reset_password");
   }
 
-  public String deactivatedProfile() {
+  public String deactivatedProfile() throws AppException {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
         getRequest();
@@ -392,7 +392,7 @@ public class ResetPassword implements Serializable {
     return logout();
   }
 
-  public String changeProfilePassword() {
+  public String changeProfilePassword() throws AppException {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -478,15 +478,15 @@ public class ResetPassword implements Serializable {
       return ("welcome");
     }
 
-    people = userFacade.findByEmail(req.getRemoteUser());
-    auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.toString(),
-        UserAuditActions.SUCCESS.toString(), req);
     try {
+      people = userFacade.findByEmail(req.getRemoteUser());
+      auditManager.registerLoginInfo(people, UserAuditActions.LOGOUT.toString(),
+          UserAuditActions.SUCCESS.toString(), req);
       req.logout();
       session.invalidate();
       usersController.setOnline(people.getUid(), -1);
       context.getExternalContext().redirect("/hopsworks/#!/home");
-    } catch (IOException | ServletException ex) {
+    } catch (IOException | ServletException | AppException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
     return ("welcome");

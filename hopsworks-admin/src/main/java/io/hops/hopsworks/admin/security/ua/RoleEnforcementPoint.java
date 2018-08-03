@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class RoleEnforcementPoint implements Serializable {
   private int tabIndex;
   private Users user;
 
-  public Users getUserFromSession() {
+  public Users getUserFromSession() throws AppException {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
       String userEmail = context.getUserPrincipal().getName();
@@ -79,7 +80,7 @@ public class RoleEnforcementPoint implements Serializable {
    * <p>
    * @return
    */
-  public boolean isAdmin() {
+  public boolean isAdmin() throws AppException {
     if (getRequest().getRemoteUser() != null) {
       Users p = userFacade.findByEmail(getRequest().getRemoteUser());
       return usersController.isUserInRole(p, "HOPS_ADMIN");
@@ -92,12 +93,12 @@ public class RoleEnforcementPoint implements Serializable {
    * <p>
    * @return
    */
-  public boolean isUser() {
+  public boolean isUser() throws AppException {
     Users p = userFacade.findByEmail(getRequest().getRemoteUser());
     return usersController.isUserInRole(p, "HOPS_USER");
   }
 
-  public boolean isOnlyAuditorRole() {
+  public boolean isOnlyAuditorRole() throws AppException {
     Users p = userFacade.findByEmail(getRequest().getRemoteUser());
     return (usersController.isUserInRole(p,"AUDITOR") && !usersController.isUserInRole(p,"HOPS_ADMIN"));
   }
@@ -106,7 +107,7 @@ public class RoleEnforcementPoint implements Serializable {
    *
    * @return
    */
-  public boolean checkForRequests() {
+  public boolean checkForRequests() throws AppException {
     if (isAdmin()) {
       //return false if no requests
       return !(userFacade.findAllByStatus(UserAccountStatus.NEW_MOBILE_ACCOUNT).isEmpty())
@@ -139,7 +140,7 @@ public class RoleEnforcementPoint implements Serializable {
         authController.registerLogout(user, req);
       }
       FacesContext.getCurrentInstance().getExternalContext().redirect("/hopsworks/#!/home");
-    } catch (IOException | ServletException ex) {
+    } catch (IOException | ServletException | AppException ex) {
       Logger.getLogger(RoleEnforcementPoint.class.getName()).log(Level.SEVERE, null, ex);
     }
     return ("welcome");

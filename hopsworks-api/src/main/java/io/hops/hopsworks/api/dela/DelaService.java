@@ -181,7 +181,7 @@ public class DelaService {
   @Path("/transfers")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getContentsForUser(@Context SecurityContext sc, 
-    @QueryParam("filter") TransfersFilter filter) throws ThirdPartyException {
+    @QueryParam("filter") TransfersFilter filter) throws ThirdPartyException, AppException {
     if(!filter.equals(TransfersFilter.USER)) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "bad request",
         ThirdPartyException.Source.LOCAL, "not handling filter value:" + filter);

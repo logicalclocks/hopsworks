@@ -84,7 +84,7 @@ public class LoginBean implements Serializable {
     this.user = user;
   }
 
-  public String login() {
+  public String login() throws AppException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
     this.user = userFacade.findByEmail(this.credentials.getUsername());

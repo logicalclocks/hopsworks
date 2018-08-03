@@ -171,7 +171,7 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findAllByUser(@Context SecurityContext sc,
-      @Context HttpServletRequest req) {
+      @Context HttpServletRequest req) throws AppException {
 
     // Get the user according to current session and then get all its projects
     String email = sc.getUserPrincipal().getName();

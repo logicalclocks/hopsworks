@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.FormatUtils;
 import org.elasticsearch.common.Strings;
@@ -192,7 +193,7 @@ public class UserAdministration implements Serializable {
     return list;
   }
 
-  public String getChanged_Status(Users p) {
+  public String getChanged_Status(Users p) throws AppException {
     return userFacade.findByEmail(p.getEmail()).getStatusName();
   }
 
@@ -325,7 +326,13 @@ public class UserAdministration implements Serializable {
   
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-    Users user = userFacade.findByEmail(userMail);
+    Users user;
+    try {
+      user = userFacade.findByEmail(userMail);
+    } catch (AppException ex) {
+      MessagesController.addErrorMessage("Error", "User not found in DB!");
+      return;
+    }
     if (user == null) {
       MessagesController.addErrorMessage("Error", "No user found!");
       return;
@@ -365,7 +372,7 @@ public class UserAdministration implements Serializable {
       usersController.deleteUser(user);
       MessagesController.addInfoMessage(user.getEmail() + " was removed.");
       spamUsers.remove(user);
-    } catch (RuntimeException ex) {
+    } catch (RuntimeException | AppException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.
           getMessage());
       Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE,
@@ -447,30 +454,38 @@ public class UserAdministration implements Serializable {
   }
 
   public void activateUser() {
-    Users user = userFacade.findByEmail(userMail);
+    Users user;
+    try {
+      user = userFacade.findByEmail(userMail);
+    } catch (AppException ex) {
+      Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE, null, ex);
+      MessagesController.addSecurityErrorMessage("User is not in DB: " + userMail);
+      return;
+    }
     if (user == null) {
-      MessagesController.addSecurityErrorMessage("User is null.");
+      MessagesController.addSecurityErrorMessage("User is null: " + userMail);
       return;
     }
     if (role == null || role.isEmpty()) {
       role = "HOPS_USER";
     }
 
-    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
-        getCurrentInstance().getExternalContext().getRequest();
-    String message = usersController.activateUser(role, user, sessionState.getLoggedInUser(), httpServletRequest);
-    if(Strings.isNullOrEmpty(message)){
-      MessagesController.addInfoMessage("User "+user.getEmail()+ " activated successfully", message);
-    } else {
-      MessagesController.addSecurityErrorMessage(message);
-    }
     try {
+      HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
+          getCurrentInstance().getExternalContext().getRequest();
+      String message = usersController.activateUser(role, user, sessionState.getLoggedInUser(), httpServletRequest);
+      if (Strings.isNullOrEmpty(message)) {
+        MessagesController.addInfoMessage("User " + user.getEmail() + " activated successfully", message);
+      } else {
+        MessagesController.addSecurityErrorMessage(message);
+      }
+
       //send confirmation email
       emailBean.sendEmail(user.getEmail(), RecipientType.TO,
           UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
           UserAccountsEmailMessages.
               accountActivatedMessage(user.getEmail()));
-    } catch (MessagingException e) {
+    } catch (MessagingException | AppException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to "
           + user.getEmail() + ". " + e.getMessage());
       Logger.getLogger(UserAdministration.class.getName()).log(Level.SEVERE,
@@ -491,7 +506,7 @@ public class UserAdministration implements Serializable {
   }
 
   public void resendAccountVerificationEmail() throws
-      MessagingException {
+      MessagingException, AppException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
     Users user = userFacade.findByEmail(userMail);
@@ -505,7 +520,7 @@ public class UserAdministration implements Serializable {
 
   }
 
-  public String modifyUser() {
+  public String modifyUser() throws AppException {
     Users user1 = userFacade.findByEmail(userMail);
     FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user1);
 
@@ -516,7 +531,7 @@ public class UserAdministration implements Serializable {
     return "admin_profile";
   }
   
-  public String showProfile() {
+  public String showProfile() throws AppException {
     String email = FacesContext.getCurrentInstance().getExternalContext().getRemoteUser();
     Users user1 = userFacade.findByEmail(email);
     FacesContext.getCurrentInstance().getExternalContext().getSessionMap().put("editinguser", user1);
