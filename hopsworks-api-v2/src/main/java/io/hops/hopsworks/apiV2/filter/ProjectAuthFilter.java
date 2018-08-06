@@ -57,7 +57,7 @@ public class ProjectAuthFilter extends ApiV2FilterBase {
   private UserFacade userFacade;
   
   @Override
-  protected void filterInternal(ContainerRequestContext requestContext) throws IOException {
+  protected void filterInternal(ContainerRequestContext requestContext) throws IOException, AppException {
     if (resourceInfo.getResourceClass() == ProjectsResource.class) {
       //Only filter projects-endpoint calls.
       String path = requestContext.getUriInfo().getPath();

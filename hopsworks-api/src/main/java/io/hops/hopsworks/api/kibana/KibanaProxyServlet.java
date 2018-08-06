@@ -17,7 +17,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-
 package io.hops.hopsworks.api.kibana;
 
 import io.hops.hopsworks.common.exception.AppException;
@@ -107,41 +106,45 @@ public class KibanaProxyServlet extends ProxyServlet {
     MyRequestWrapper myRequestWrapper = new MyRequestWrapper(
         (HttpServletRequest) servletRequest);
     KibanaFilter kibanaFilter = null;
-    //Filter requests based on path
-    if (servletRequest.getRequestURI().contains(
-        "elasticsearch/.kibana/index-pattern/_search")) {
-      kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN_SEARCH;
+    try {
+      //Filter requests based on path
+      if (servletRequest.getRequestURI().contains(
+          "elasticsearch/.kibana/index-pattern/_search")) {
+        kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN_SEARCH;
 
-    } else if (servletRequest.getRequestURI().contains(
-        "elasticsearch/.kibana/index-pattern")) {
-      kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN;
-      //Get index from URI
-      index = servletRequest.getRequestURI().substring(servletRequest.
-          getRequestURI().lastIndexOf("/")).replace("/", "");
-      //Check if this user has access to this project
-      if (!isAuthorized(servletResponse, index, email)) {
-        return;
-      }
-    } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
-      JSONObject body = new JSONObject(myRequestWrapper.getBody());
-      JSONArray jsonArray = body.optJSONArray("index");
-      if (jsonArray != null) {
-        if (!isAuthorized(servletResponse, (String) jsonArray.get(0), email)) {
+      } else if (servletRequest.getRequestURI().contains(
+          "elasticsearch/.kibana/index-pattern")) {
+        kibanaFilter = KibanaFilter.KIBANA_INDEXPATTERN;
+        //Get index from URI
+        index = servletRequest.getRequestURI().substring(servletRequest.
+            getRequestURI().lastIndexOf("/")).replace("/", "");
+        //Check if this user has access to this project
+        if (!isAuthorized(servletResponse, index, email)) {
           return;
         }
-      } else {
-        if (!isAuthorized(servletResponse, (String) body.get("index"), email)) {
+      } else if (servletRequest.getRequestURI().contains("elasticsearch/_msearch")) {
+        JSONObject body = new JSONObject(myRequestWrapper.getBody());
+        JSONArray jsonArray = body.optJSONArray("index");
+        if (jsonArray != null) {
+          if (!isAuthorized(servletResponse, (String) jsonArray.get(0), email)) {
+            return;
+          }
+        } else {
+          if (!isAuthorized(servletResponse, (String) body.get("index"), email)) {
+            return;
+          }
+        }
+      } else if (servletRequest.getRequestURI().contains(
+          "elasticsearch/") && servletRequest.getRequestURI().contains(
+              "_mapping/field")) {
+        //Check if this user has access to this project
+        index = servletRequest.getRequestURI().split("/")[4];
+        if (!isAuthorized(servletResponse, index, email)) {
           return;
         }
       }
-    } else if (servletRequest.getRequestURI().contains(
-        "elasticsearch/") && servletRequest.getRequestURI().contains(
-            "_mapping/field")) {
-      //Check if this user has access to this project
-      index = servletRequest.getRequestURI().split("/")[4];
-      if (!isAuthorized(servletResponse, index, email)) {
-        return;
-      }
+    } catch (AppException ex) {
+      throw new IOException("DB problems - could not authorize");
     }
 
     //initialize request attributes from caches if unset by a subclass by this point
@@ -250,7 +253,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   protected void copyResponseEntity(HttpResponse proxyResponse,
       HttpServletResponse servletResponse, KibanaFilter kibanaFilter,
       String email, String index) throws
-      IOException {
+      IOException, AppException {
     if (kibanaFilter == null) {
       super.copyResponseEntity(proxyResponse, servletResponse);
     } else {
@@ -266,7 +269,8 @@ public class KibanaProxyServlet extends ProxyServlet {
 
             //Remove all projects other than the current one and check
             //if user is authorizer to access it
-            List<String> projects = projectController.findProjectNamesByUser(email, true);
+            List<String> projects;
+            projects = projectController.findProjectNamesByUser(email, true);
             JSONArray hits = indices.getJSONObject("hits").getJSONArray("hits");
             for (int i = hits.length() - 1; i >= 0; i--) {
               String projectName = hits.getJSONObject(i).getString("_id");
@@ -304,7 +308,7 @@ public class KibanaProxyServlet extends ProxyServlet {
    */
   private boolean isAuthorized(HttpServletResponse servletResponse, String index,
       String email)
-      throws IOException {
+      throws IOException, AppException {
 
     List<String> projects = projectController.findProjectNamesByUser(
         email, true);

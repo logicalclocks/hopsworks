@@ -75,7 +75,7 @@ public class MessageService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllMessagesByUser(@Context SecurityContext sc) {
+  public Response getAllMessagesByUser(@Context SecurityContext sc) throws AppException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     List<Message> list = msgFacade.getAllMessagesTo(user);
@@ -89,7 +89,7 @@ public class MessageService {
   @GET
   @Path("deleted")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllDeletedMessagesByUser(@Context SecurityContext sc) {
+  public Response getAllDeletedMessagesByUser(@Context SecurityContext sc) throws AppException {
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);
     List<Message> list = msgFacade.getAllDeletedMessagesTo(user);
@@ -102,7 +102,7 @@ public class MessageService {
   @GET
   @Path("countUnread")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response countUnreadMessagesByUser(@Context SecurityContext sc) {
+  public Response countUnreadMessagesByUser(@Context SecurityContext sc) throws AppException {
     JsonResponse json = new JsonResponse();
     String eamil = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(eamil);

@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.AuthController;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -149,7 +150,12 @@ public class LoginRestApi {
     data.put("principal", "anonymous");
     data.put("roles", "");
     data.put("ticket", "anonymous");
-    Users user = userBean.findByEmail(req.getRemoteUser());
+    Users user=null;
+    try {
+      user = userBean.findByEmail(req.getRemoteUser());
+    } catch (AppException ex) {
+      LOG.warn(ex.getMessage());
+    }
     try {
       req.getSession().invalidate();
       req.logout();
