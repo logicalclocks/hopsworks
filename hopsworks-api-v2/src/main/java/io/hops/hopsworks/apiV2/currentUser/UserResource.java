@@ -167,7 +167,7 @@ public class UserResource {
   
   @Path("/activity")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUserActivity(@Context SecurityContext sc, @Context HttpServletRequest req){
+  public Response getUserActivity(@Context SecurityContext sc, @Context HttpServletRequest req) throws AppException{
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
