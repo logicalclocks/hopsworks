@@ -147,9 +147,19 @@
     </dependency>
     <!--Elastic dependency-->
     <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-      <version>2.4.1</version>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>transport</artifactId>
+        <version>6.2.3</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.6.2</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.6.2</version>
     </dependency>
     <dependency>
       <groupId>commons-beanutils</groupId>
@@ -170,10 +180,10 @@
           <groupId>org.apache.flink</groupId>
           <artifactId>flink-shaded-hadoop2</artifactId>
         </exclusion>
-        <!--        <exclusion>
+        <exclusion>
           <groupId>io.netty</groupId>
           <artifactId>netty-all</artifactId>
-        </exclusion>-->
+        </exclusion>
       </exclusions>
     </dependency> 
     <dependency>
