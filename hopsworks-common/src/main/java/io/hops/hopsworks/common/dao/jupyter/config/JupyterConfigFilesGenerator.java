@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.dao.jupyter.config;
@@ -254,7 +273,7 @@ public class JupyterConfigFilesGenerator {
     File jupyter_kernel_file = new File(confDirPath + JUPYTER_CUSTOM_KERNEL);
     File sparkmagic_config_file = new File(confDirPath + SPARKMAGIC_CONFIG);
     File custom_js = new File(confDirPath + JUPYTER_CUSTOM_JS);
-    File log4j_file = new File(confDirPath + LOG4J_PROPS);
+//    File log4j_file = new File(confDirPath + LOG4J_PROPS);
     boolean createdJupyter = false;
     boolean createdKernel = false;
     boolean createdSparkmagic = false;
@@ -308,16 +327,16 @@ public class JupyterConfigFilesGenerator {
     }
     if (!sparkmagic_config_file.exists()) {
   
-      // TODO: Add this local file to 'spark: file' to copy it to hdfs and localize it.
-      StringBuilder log4j_sb
-          = ConfigFileGenerator.instantiateFromTemplate(
-          ConfigFileGenerator.LOG4J_TEMPLATE_JUPYTER,
-          "logstash_ip", settings.getLogstashIp(),
-          "logstash_port", settings.getLogstashPort().toString(),
-          "log_level", js.getLogLevel().toUpperCase()
-      );
-      ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
-  
+//      // TODO: Add this local file to 'spark: file' to copy it to hdfs and localize it.
+//      StringBuilder log4j_sb
+//          = ConfigFileGenerator.instantiateFromTemplate(
+//          ConfigFileGenerator.LOG4J_TEMPLATE_JUPYTER,
+//          "logstash_ip", settings.getLogstashIp(),
+//          "logstash_port", settings.getLogstashPort().toString(),
+//          "log_level", js.getLogLevel().toUpperCase()
+//      );
+//      ConfigFileGenerator.createConfigFile(log4j_file, log4j_sb.toString());
+//  
       StringBuilder sparkFiles = new StringBuilder();
       sparkFiles
           //Log4j.properties

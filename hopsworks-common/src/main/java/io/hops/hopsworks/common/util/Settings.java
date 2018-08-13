@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 package io.hops.hopsworks.common.util;
 
@@ -131,6 +150,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
+  private static final String VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION = "elastic_logs_index_expiration";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
@@ -399,8 +419,8 @@ public class Settings implements Serializable {
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
       ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
-      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT,
-          ELASTIC_REST_PORT);
+      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
+      ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       HOPSWORKS_PORT = setIntVar(VARIABLE_HOPSWORKS_PORT, HOPSWORKS_PORT);
       RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
@@ -1191,6 +1211,13 @@ public class Settings implements Serializable {
     return getElasticIp() + ":" + getElasticRESTPort();
   }
 
+  private long ELASTIC_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+
+  public synchronized long getElasticLogsIndexExpiration() {
+    checkCache();
+    return ELASTIC_LOGS_INDEX_EXPIRATION;
+  }
+  
   private static final int JOB_LOGS_EXPIRATION = 604800;
 
   /**
@@ -1583,11 +1610,13 @@ public class Settings implements Serializable {
   public static final String META_NAME_FIELD = "name";
   public static final String META_DESCRIPTION_FIELD = "description";
   public static final String META_INDEX = "projects";
-  public static final String META_PROJECT_TYPE = "proj";
-  public static final String META_DATASET_TYPE = "ds";
-  public static final String META_INODE_TYPE = "inode";
+  public static final String META_DEFAULT_TYPE = "_doc";
   public static final String META_PROJECT_ID_FIELD = "project_id";
   public static final String META_DATASET_ID_FIELD = "dataset_id";
+  public static final String META_DOC_TYPE_FIELD = "doc_type";
+  public static final String DOC_TYPE_PROJECT = "proj";
+  public static final String DOC_TYPE_DATASET = "ds";
+  public static final String DOC_TYPE_INODE = "inode";
   public static final String META_ID = "_id";
   public static final String META_DATA_NESTED_FIELD = "xattr";
   public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
@@ -1663,7 +1692,16 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_TEXT_TYPE = "text";
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
-
+  
+  //Elastic log index pattern
+  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
+  public static final String ELASTIC_VISUALIZATION = "visualization";
+  public static final String ELASTIC_SAVED_SEARCH = "search";
+  public static final String ELASTIC_DASHBOARD = "dashboard";
+  public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
+  
+  
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
   }

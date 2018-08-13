@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.project;
@@ -412,15 +431,6 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
 
-      //Create Template for this project in elasticsearch
-      try {
-        addElasticsearch(project.getName());
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, "Error while adding elasticsearch service for project:" + projectName, ex);
-        cleanup(project, sessionId, certsGenerationFuture);
-      }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic): {0}", System.currentTimeMillis() - startTime);
-
       try {
         if (certsGenerationFuture != null) {
           certsGenerationFuture.get();
@@ -437,7 +447,7 @@ public class ProjectController {
       if (dfso != null) {
         dfso.close();
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 11 (close): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (close): {0}", System.currentTimeMillis() - startTime);
     }
 
   }
@@ -760,8 +770,8 @@ public class ProjectController {
     boolean toPersist;
     switch (service) {
       case JUPYTER:
-        toPersist = addServiceDataset(project, user,
-            Settings.ServiceDataset.JUPYTER, dfso, udfso);
+        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
+        toPersist = addElasticsearch(project, ProjectServiceEnum.JUPYTER);
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
@@ -771,6 +781,9 @@ public class ProjectController {
       case SERVING:
         toPersist= addServiceDataset(project, user,
             Settings.ServiceDataset.SERVING, dfso, udfso);
+        break;
+      case JOBS:
+        toPersist = addElasticsearch(project, ProjectServiceEnum.JOBS);
         break;
       default:
         toPersist = true;
@@ -1132,7 +1145,7 @@ public class ProjectController {
 
         // Delete elasticsearch template for this project
         try {
-          removeElasticsearch(project.getName());
+          removeElasticsearch(project);
           cleanupLogger.logSuccess("Removed ElasticSearch");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing elastic during project cleanup");          
@@ -1251,9 +1264,9 @@ public class ProjectController {
 
         // Remove ElasticSearch index
         try {
-          removeElasticsearch(projectName);
+          removeElasticsearch(project);
           cleanupLogger.logSuccess("Removed ElasticSearch");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1597,7 +1610,7 @@ public class ProjectController {
       hiveController.dropDatabase(project, dfso, false);
 
       //Delete elasticsearch template for this project
-      removeElasticsearch(project.getName());
+      removeElasticsearch(project);
 
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
@@ -2183,6 +2196,18 @@ public class ProjectController {
     }
     return projects;
   }
+  
+  public List<String> findProjectNames() {
+    List<Project> projects = projectFacade.findAll();
+    List<String> projectNames = null;
+    if (projects != null && !projects.isEmpty()) {
+      projectNames = new ArrayList(projects.size());
+      for (Project project : projects) {
+        projectNames.add(project.getName());
+      }
+    }
+    return projectNames;
+  }
 
   /**
    * Retrieves all the project teams for a project
@@ -2389,143 +2414,69 @@ public class ProjectController {
    * Handles Kibana related indices and templates for projects.
    *
    * @param project
+   * @param serviceEnum
    * @return
-   * @throws java.io.IOException
    */
-  public boolean addElasticsearch(String project) throws IOException {
-    project = project.toLowerCase();
-    Map<String, String> params = new HashMap<>();
+  public boolean addElasticsearch(Project project, ProjectServiceEnum serviceEnum) {
 
-    params.put("op", "PUT");
-    params.put("project", project);
-    params.put("resource", "_template");
-    params.put("data", "{\"template\":\"" + project
-        + "\",\"mappings\":{\"logs\":{\"properties\":{\"application\":"
-        + "{\"type\":\"string\",\"index\":\"not_analyzed\"},\"host"
-        + "\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
-        + "\"jobname\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
-        + "\"file\":{\"type\":\"string\",\"index\":\"not_analyzed\"},"
-        + "\"timestamp\":{\"type\":\"date\",\"index\":\"not_analyzed\"},"
-        + "\"project\":{\"type\":\"string\",\"index\":\"not_analyzed\"}},\n"
-        + "\"_ttl\": {\n" + "\"enabled\": true,\n" + "\"default\": \""
-        + settings.getJobLogsExpiration() + "s\"\n" + "}}}}");
+    if(serviceEnum.equals(ProjectServiceEnum.JOBS) || serviceEnum.equals(ProjectServiceEnum.JUPYTER) ) {
+            
+      String projectName = project.getName().toLowerCase();
+      Map<String, String> params = new HashMap<>();
+      params.put("op", "POST");
+      params.put("project", projectName + "_logs");
+      params.put("resource", "");
+      params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
+  
+      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+      LOGGER.log(Level.FINE, resp.toString(4));
+      
+      boolean kibanaPatternCreated = false;
+      if (resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409"))) {
+        kibanaPatternCreated = true;
+      }
 
-    JSONObject resp = elasticController.sendElasticsearchReq(params);
-    boolean templateCreated = false;
-    if (resp.has("acknowledged")) {
-      templateCreated = (Boolean) resp.get("acknowledged");
+      if (kibanaPatternCreated == false) {
+        LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
+      }
+
+      return kibanaPatternCreated;
     }
-
-    //Create Kibana index
-    params.clear();
-    params.put("op", "PUT");
-    params.put("project", project);
-    params.put("resource", ".kibana/index-pattern");
-    params.put("data", "{\"title\" : \"" + project
-        + "\", \"fields\" : \"[{\\\"name\\\":\\\"_index\\\",\\\"type\\\":"
-        + "\\\"string\\\",\\\"count\\\":0,\\\"scripted\\\":false,"
-        + "\\\"indexed\\\":false,\\\"analyzed\\\":false,\\\""
-        + "doc_values\\\":false},{\\\"name\\\":\\\"project\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
-        + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"path\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"file\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@version\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"host\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
-        + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"logger_name\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"class\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"jobname\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
-        + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"timestamp\\\","
-        + "\\\"type\\\":\\\"date\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":false,"
-        + "\\\"doc_values\\\":true},{\\\"name\\\":\\\"method\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"thread\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"message\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"priority\\\","
-        + "\\\"type\\\":\\\"string\\\",\\\"count\\\":0,\\\"scripted"
-        + "\\\":false,\\\"indexed\\\":true,\\\"analyzed\\\":true,"
-        + "\\\"doc_values\\\":false},{\\\"name\\\":\\\"@timestamp"
-        + "\\\",\\\"type\\\":\\\"date\\\",\\\"count\\\":0,"
-        + "\\\"scripted\\\":false,\\\"indexed\\\":true,\\\"analyzed"
-        + "\\\":false,\\\"doc_values\\\":true},{\\\"name\\\":"
-        + "\\\"application\\\",\\\"type\\\":\\\"string\\\",\\\"count"
-        + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":true,"
-        + "\\\"analyzed\\\":false,\\\"doc_values\\\":true},{"
-        + "\\\"name\\\":\\\"_source\\\",\\\"type\\\":\\\"_source"
-        + "\\\",\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
-        + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values\\\":false},"
-        + "{\\\"name\\\":\\\"_id\\\",\\\"type\\\":\\\"string\\\","
-        + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
-        + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{\\\"name\\\":"
-        + "\\\"_type\\\",\\\"type\\\":\\\"string\\\",\\\"count"
-        + "\\\":0,\\\"scripted\\\":false,\\\"indexed\\\":false,"
-        + "\\\"analyzed\\\":false,\\\"doc_values\\\":false},{"
-        + "\\\"name\\\":\\\"_score\\\",\\\"type\\\":\\\"number\\\","
-        + "\\\"count\\\":0,\\\"scripted\\\":false,\\\"indexed"
-        + "\\\":false,\\\"analyzed\\\":false,\\\"doc_values"
-        + "\\\":false}]\"}");
-    resp = elasticController.sendElasticsearchReq(params);
-    boolean kibanaIndexCreated = false;
-    if (resp.has("acknowledged")) {
-      kibanaIndexCreated = (Boolean) resp.get("acknowledged");
-    }
-
-    if (kibanaIndexCreated && templateCreated) {
-      return true;
-    }
-
     return false;
   }
 
-  public boolean removeElasticsearch(String project) throws IOException {
-    project = project.toLowerCase();
+  public boolean removeElasticsearch(Project project) throws IOException, AppException {
     Map<String, String> params = new HashMap<>();
-    //1. Delete Kibana index
-    params.put("project", project);
-    params.put("op", "DELETE");
-    params.put("resource", ".kibana/index-pattern");
-    JSONObject resp = elasticController.sendElasticsearchReq(params);
-    boolean kibanaIndexDeleted = false;
-    if (resp != null && resp.has("acknowledged")) {
-      kibanaIndexDeleted = (Boolean) resp.get("acknowledged");
-    }
 
-    //2. Delete Elasticsearch Index
-    params.put("resource", "");
-    resp = elasticController.sendElasticsearchReq(params);
-    boolean elasticIndexDeleted = false;
-    if (resp != null && resp.has("acknowledged")) {
-      elasticIndexDeleted = (Boolean) resp.get("acknowledged");
-    }
-    //3. Delete Elasticsearch Template
-    params.put("resource", "_template");
-    boolean templateDeleted = false;
-    resp = elasticController.sendElasticsearchReq(params);
-    if (resp != null && resp.has("acknowledged")) {
-      templateDeleted = (Boolean) resp.get("acknowledged");
-    }
+    List<ProjectServiceEnum> projectServices = projectServicesFacade.
+            findEnabledServicesForProject(project);
 
-    return elasticIndexDeleted && templateDeleted && kibanaIndexDeleted;
+    String projectName = project.getName().toLowerCase();
+
+    for(ProjectServiceEnum service: projectServices) {
+      boolean removedElastic = false;
+      if(!removedElastic && (service.equals(ProjectServiceEnum.JOBS) || service.equals(ProjectServiceEnum.JUPYTER))) {
+        
+        //1. Delete visualizations, saved searches, dashboards
+        List<String> projectNames = new ArrayList<>();
+        projectNames.add(project.getName());
+        LOGGER.log(Level.INFO, "removeElasticsearch-2:{0}", projectNames.toString());
+        elasticController.deleteProjectSavedObjects(projectNames, true);
+        
+        //2. Delete Kibana Index
+        params.clear();
+        params.put("op", "DELETE");
+        params.put("resource", "");
+        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+        LOGGER.log(Level.FINE, resp.toString(4));
+        
+        LOGGER.log(Level.INFO, "removeElasticsearch-1:"+service);
+        //3. Delete Elasticsearch Index
+        elasticController.deleteProjectIndices(project);
+        removedElastic = true;
+      }
+    }
+    return true;
   }
 
   /**
