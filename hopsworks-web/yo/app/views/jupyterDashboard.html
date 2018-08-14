@@ -35,7 +35,7 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  -->
+-->
 
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
@@ -111,34 +111,31 @@
 
 
           <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
+
             <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:20px; margin-left: 0px;'>
 
               <!-- STYLE THIS (TENSORFLOW : SPARK) -->
               <div class="row" ng-if="jupyterCtrl.advanced === true">
                 <div class="col-md-2"></div>
                 <div class="col-md-8 pull-left" style="margin-left: 43px;">
-                  <div class="btn-group blocks" style="padding: " data-toggle="buttons" ng-if="jupyterCtrl.ui === ''">
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'tensorflow', focus: jupyterCtrl.val.mode === 'tensorflow'}"
-                           ng-click="jupyterCtrl.val.mode = 'tensorflow'">
-                      <input type="radio" name="tensorflow" id="tensorflow" autocomplete="off"> TensorFlow
+                  <div class="btn-group blocks" style="padding: 20px;" ng-if="jupyterCtrl.ui === ''">
+                    <label class="btn btn-primary" >
+                      <input type="radio" value="tensorflow" data-ng-model="jupyterCtrl.val.mode" id="tensorflow" autocomplete="off"> TensorFlow
                     </label>
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'distributedTensorFlow', focus: jupyterCtrl.val.mode === 'distributedTensorFlow'}"
-                           ng-click="jupyterCtrl.val.mode = 'distributedTensorFlow'">
-                      <input type="radio" name="distributedTensorFlow" id="distributedTensorFlow" autocomplete="off"> TensorFlowOnSpark
+                    <label class="btn btn-primary" 
+                           >
+                      <input type="radio" name="framework" value="distributedTensorFlow" data-ng-model="jupyterCtrl.val.mode" id="distributedTensorFlow" autocomplete="off"> TensorFlowOnSpark
                     </label>
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'horovod', focus: jupyterCtrl.val.mode === 'horovod'}"
-                           ng-click="jupyterCtrl.val.mode = 'horovod'" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
-                      <input type="radio" name="horovod" id="horovod" autocomplete="off"> Horovod
+                    <label class="btn btn-primary" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
+                      <input type="radio" name="framework" value="horovod" id="horovod" data-ng-model="jupyterCtrl.val.mode" autocomplete="off"> Horovod
                     </label>
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkStatic', focus: jupyterCtrl.val.mode === 'sparkStatic'}"
-                           ng-click="jupyterCtrl.val.mode = 'sparkStatic'">
-                      <input type="radio" name="sparks" id="sparkStatic" autocomplete="off"> Spark (Static)
+                    <label class="btn btn-primary">
+                      <input type="radio" name="framework" value="sparks" id="sparkStatic"  autocomplete="off"> Spark (Static)
                     </label>
-                    <label class="btn btn-primary" ng-class="{active: jupyterCtrl.val.mode === 'sparkDynamic', focus: jupyterCtrl.val.mode === 'sparkDynamic'}"
-                           ng-click="jupyterCtrl.val.mode = 'sparkDynamic'">
-                      <input type="radio" name="sparkd" id="sparkDynamic" autocomplete="off"> Spark (Dynamic)
+                    <label class="btn btn-primary">
+                      <input class="active" type="radio" name="framework" value="sparkd" id="sparkDynamic" data-ng-model="jupyterCtrl.val.mode" autocomplete="off"> Spark (Dynamic)
                     </label>
-                  </div>
+                  </div>       
                   <br>
                 </div>
               </div>
@@ -318,8 +315,8 @@
                 <div class="row" ng-if="jupyterCtrl.val.mode === 'tensorflow'" >
                   <div class="row clusterparams">
                     <div class="text-right col-md-6">Fault-tolerant mode<i class="fa fa-info-circle"
-                                                                     uib-tooltip="Whether to retry on failure and enable machine/executor blacklisting. This setting should be disabled during development and enabled during training."
-                                                                     style="margin-left: 10px"></i>
+                                                                           uib-tooltip="Whether to retry on failure and enable machine/executor blacklisting. This setting should be disabled during development and enabled during training."
+                                                                           style="margin-left: 10px"></i>
                     </div>
                     <div class="col-md-2 jupyter-left"><input type="checkbox" ng-init="false" ng-model="jupyterCtrl.val.faultTolerant"></div>
                   </div>
@@ -484,11 +481,27 @@
               </div>
 
               <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
-                <div class="text-right col-md-6">Umask (output files) <i class="fa fa-info-circle"
+
+
+                <div class="text-right col-md-6">Quick add Maven libs <i class="fa fa-info-circle"
+                                                                  uib-tooltip="Add library to app. mmlspark (Microsoft Machine Learning for Apache Spark)" 
+                                                                  style="margin-left: 10px"></i>
+                </div>
+                <div class="col-md-2 jupyter-left">
+                  <ui-select multiple tagging tagging-label="false" ng-model="jupyterCtrl.libs" theme="select2" 
+                             close-on-select="false" style="width: 400px;"  title="Add a library to the app">
+                    <ui-select-match placeholder="Add a library...">{{$item}}</ui-select-match>
+                    <ui-select-choices repeat="lib in jupyterCtrl.availableLibs | filter:$select.search">
+                      {{lib}}
+                    </ui-select-choices>
+                  </ui-select>              
+                </div>
+
+                <div style="margin-top: 20px" class="text-right col-md-6">Umask (output files) <i class="fa fa-info-circle"
                                                                          uib-tooltip="022 - Group readable/not-writable : 007 Group readable/writable : 077 - Group not-readable/not-writable" 
                                                                          style="margin-left: 10px"></i>
                 </div>
-                <div class="col-md-2 jupyter-left">
+                <div style="margin-top: 20px" class="col-md-2 jupyter-left">
                   <ui-select ng-model="jupyterCtrl.umask" theme="bootstrap"
                              on-select="jupyterCtrl.changeUmask()">
                     <ui-select-match >
@@ -499,140 +512,173 @@
                     </ui-select-choices>
                   </ui-select>
                 </div>
+
               </div>
             </div>
-
 
           </div>
-        </div>
 
-        <div class="row top-buffer" ng-if="jupyterCtrl.ui !== ''">
+          <div class="row top-buffer" ng-if="jupyterCtrl.ui !== ''">
 
-          <div class="col-md-1"></div> 
-          <div class="col-md-8 panel panel-default shift-left">
-            <div class="panel-heading" >
-              <div>
-                <span style="font-weight: bold;">Jupyter Notebook Server Details</span>
+            <div class="col-md-1"></div> 
+            <div class="col-md-8 panel panel-default shift-left">
+              <div class="panel-heading" >
+                <div>
+                  <span style="font-weight: bold;">Jupyter Notebook Server Details</span>
+                </div>
               </div>
+              <div class="panel-body">
+                <div>
+                  <div>Port <i class="fa fa-info-circle" uib-tooltip="Port number where this Jupyter Notebook Server is listening" style="margin-left: 20px"></i> 
+                    <span style="margin-left: 10px;">  {{jupyterCtrl.config.port}}</span>
+                  </div>
+                </div>             
+                <div>
+                  <div>Token <i class="fa fa-info-circle" uib-tooltip="Secret token used to authenticate with this Jupyter Notebook Server." style="margin-left: 10px"></i>
+                    <span style="margin-left: 10px;">{{jupyterCtrl.config.token}}</span>
+                  </div>
+                </div>   
+                <div>
+                  <div>$PDIR <i class="fa fa-info-circle" uib-tooltip="Private local directory on this server for Python Notebooks." style="margin-left: 10px"></i>
+                    <span style="margin-left: 10px;">{{jupyterCtrl.val.privateDir}}</span>
+                  </div>
+                </div>
+
+                <!--              <div class="row" style="margin-top: 3px">
+                                <div class="col-md-12">
+                                  <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
+                                    <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">
+                                    <button class="kafka-consumergroups-buttons glyphicon glyphicon-remove-sign" ng-show="$last" ng-click="newJobCtrl.removeGroup()">
+                                    </button>
+                                    <button class="kafka-consumergroups-buttons glyphicon glyphicon-plus-sign" ng-show="$last" ng-click="newJobCtrl.addGroup(group)">
+                                    </button>
+                                  </fieldset>
+                                </div>
+                              </div>-->
+
+
+
+                <!--              <div class="row" style="margin-left: 0px">
+                                Add libraries. </span>
+                              </div>
+                              <div class="row">  
+                                <div class="col-md-2">
+                                  Select libraries:
+                                </div>
+                                <div class="col-md-3">
+                                  <ui-select ng-model="jupyterCtrl.libs" theme="bootstrap"
+                                             on-select="jupyterCtrl.updateLibs()">
+                                    <ui-select-match >
+                                      <span ng-bind="jupyterCtrl.libs.name"></span>
+                                    </ui-select-match>
+                                    <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
+                                      <span ng-bind="level.name | highlight: $select.search"></span>
+                                    </ui-select-choices>
+                                  </ui-select>
+                                </div>
+                              </div>-->
+
+                <br/>
+                <div class="row" style="margin-left: 0px">
+                  Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}} minutes. </span>
+                </div>
+                <div class="row">  
+                  <div class="col-md-2">
+                    Add hour(s):
+                  </div>
+                  <div class="col-md-3">
+                    <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
+                               on-select="jupyterCtrl.updateShutdownLevel()">
+                      <ui-select-match >
+                        <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
+                      </ui-select-match>
+                      <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
+                        <span ng-bind="level.name | highlight: $select.search"></span>
+                      </ui-select-choices>
+                    </ui-select>
+                  </div>
+                </div>
+
+
+              </div>
+              <!--              <div class="row top-buffer">
+                              <div class="text-right col-md-2"></div>
+                              <i class="fa fa-info" aria-hidden="true" uib-tooltip="Info: You cannot create notebooks in the '/' (root) folder of your project as you cannot store files in the project root directory. Notebooks are stored as files in HDFS, and files must be stored in datasets in Hopsworks. So, in Jupyter, navigate to a dataset from where you can create/save a new Notebook :)">
+                              </i> Jupyter Kernels (pyspark, python2) cannot be opened in the root folder - open within a dataset
+                              (e.g., 'Resources' or 'Jupyter').
+                            </div>-->
+
             </div>
-            <div class="panel-body">
-              <div>
-                <div>Port <i class="fa fa-info-circle" uib-tooltip="Port number where this Jupyter Notebook Server is listening" style="margin-left: 20px"></i> 
-                  <span style="margin-left: 10px;">  {{jupyterCtrl.config.port}}</span>
-                </div>
-              </div>             
-              <div>
-                <div>Token <i class="fa fa-info-circle" uib-tooltip="Secret token used to authenticate with this Jupyter Notebook Server." style="margin-left: 10px"></i>
-                  <span style="margin-left: 10px;">{{jupyterCtrl.config.token}}</span>
-                </div>
-              </div>   
-              <div>
-                <div>$PDIR <i class="fa fa-info-circle" uib-tooltip="Private local directory on this server for Python Notebooks." style="margin-left: 10px"></i>
-                  <span style="margin-left: 10px;">{{jupyterCtrl.val.privateDir}}</span>
-                </div>
-              </div>
-
-              <br/>
-              <div class="row" style="margin-left: 0px">
-                Automatic Notebook Shutdown in <span style="font-weight: bold;">{{jupyterCtrl.timeLeftInMinutes}} minutes. </span>
-              </div>
-              <div class="row">  
-                <div class="col-md-2">
-                  Add hour(s):
-                </div>
-                <div class="col-md-3">
-                  <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
-                             on-select="jupyterCtrl.updateShutdownLevel()">
-                    <ui-select-match >
-                      <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
-                    </ui-select-match>
-                    <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
-                      <span ng-bind="level.name | highlight: $select.search"></span>
-                    </ui-select-choices>
-                  </ui-select>
-                </div>
-              </div>
-
-
-            </div>
-            <!--              <div class="row top-buffer">
-                            <div class="text-right col-md-2"></div>
-                            <i class="fa fa-info" aria-hidden="true" uib-tooltip="Info: You cannot create notebooks in the '/' (root) folder of your project as you cannot store files in the project root directory. Notebooks are stored as files in HDFS, and files must be stored in datasets in Hopsworks. So, in Jupyter, navigate to a dataset from where you can create/save a new Notebook :)">
-                            </i> Jupyter Kernels (pyspark, python2) cannot be opened in the root folder - open within a dataset
-                            (e.g., 'Resources' or 'Jupyter').
-                          </div>-->
-
           </div>
         </div>
+        <!--, top-buffer: jupyterCtrl.ui !== ''-->
+        <div class="ds-sidenav" ng-class="{open: jupyterCtrl.tgState}" ng-if="jupyterCtrl.ui !== ''">
+          <div class="ibox float-e-margins" style="margin-bottom:-25px; height: 95%;">
+            <div class="file-manager">
+              <div>
+                <md-content class="md-padding" style="padding-top: 0px;">
+                  <md-tabs md-dynamic-height md-border-bottom>
+                    <md-tab label="Notebook Server">
+                      <md-content>
+                        <table class="table table-hover ds-sidenav-table" style="width: 100%">
+                          <tbody>
+                            <tr>
+                              <td>                                      
+                                <button uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server" 
+                                        tooltip-placement="auto right"
+                                        ng-click="jupyterCtrl.openWindow()" 
+                                        type="button" class="btn btn-info btn-sm">
+                                  <span class="glyphicon glyphicon-eye-open" ></span>
+                                </button>
+                              </td>
+                              <td style="text-align: right">Open Jupyter in a new Tab</td>
+                            </tr>
+                            <tr ng-repeat="session in sessions">
+                              <td>                                      
+                                <button
+                                  uib-tooltip="Open the Spark UI for a Livy Session" 
+                                  tooltip-placement="auto top"
+                                  ng-click="jupyterCtrl.showLivyUI(session.appId)"
+                                  type="button" class="btn btn-info btn-sm" >
+                                  <span class="glyphicon glyphicon-eye-open" ></span>
+                                </button>
+                              </td>
+                              <td style="text-align: right">Open UI for {{session.appId}}</td>
+                            </tr>
+                            <!--                        <tr  ng-if="interpreter.interpreter.group === 'tensorflow' && !interpreter.interpreter.notRunning">
+                                                      <td><span>Open TensorBoard UI</span></td>
+                                                      <td style="text-align: right">                                      
+                                                        <button
+                                                                uib-tooltip="Open the TensorBoard UI for an existing TFoS Livy Session" 
+                                                                ng-click="jupyterCtrl.showTensorboardUI()"
+                                                                type="button" class="btn btn-info btn-sm" 
+                                                                ng-disabled="interpreter.interpreter.notRunning">
+                                                          <span class="glyphicon glyphicon-eye-open" ></span>
+                                                        </button>
+                                                      </td>
+                                                    </tr>-->
+                            <tr>
+                              <td>                                      			  
+                                <button tooltip-placement="auto top"
+                                        uib-tooltip="Shutdown Jupyter Notebook Server and stop applications." 
+                                        ng-click="jupyterCtrl.stop()" 
+                                        type="button" class="btn btn-danger btn-sm" >
+                                  <span class="glyphicon glyphicon-off" ></span>
+                                </button>
+                              </td>
+                              <td style="text-align: right">Shutdown Notebook Server</td>
+                            </tr>
+                          </tbody>                     
+                        </table>
+                      </md-content>
+                    </md-tab>
+                  </md-tabs>
+                </md-content>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-    <!--, top-buffer: jupyterCtrl.ui !== ''-->
-    <div class="ds-sidenav" ng-class="{open: jupyterCtrl.tgState}" ng-if="jupyterCtrl.ui !== ''">
-      <div class="ibox float-e-margins" style="margin-bottom:-25px; height: 95%;">
-        <div class="file-manager">
-          <div>
-            <md-content class="md-padding" style="padding-top: 0px;">
-              <md-tabs md-dynamic-height md-border-bottom>
-                <md-tab label="Notebook Server">
-                  <md-content>
-                    <table class="table table-hover ds-sidenav-table" style="width: 100%">
-                      <tbody>
-                        <tr>
-                          <td>                                      
-                            <button uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server" 
-                                    tooltip-placement="auto right"
-                                    ng-click="jupyterCtrl.openWindow()" 
-                                    type="button" class="btn btn-info btn-sm">
-                              <span class="glyphicon glyphicon-eye-open" ></span>
-                            </button>
-                          </td>
-                          <td style="text-align: right">Open Jupyter in a new Tab</td>
-                        </tr>
-                        <tr ng-repeat="session in sessions">
-                          <td>                                      
-                            <button
-                              uib-tooltip="Open the Spark UI for a Livy Session" 
-                              tooltip-placement="auto top"
-                              ng-click="jupyterCtrl.showLivyUI(session.appId)"
-                              type="button" class="btn btn-info btn-sm" >
-                              <span class="glyphicon glyphicon-eye-open" ></span>
-                            </button>
-                          </td>
-                          <td style="text-align: right">Open UI for {{session.appId}}</td>
-                        </tr>
-                        <!--                        <tr  ng-if="interpreter.interpreter.group === 'tensorflow' && !interpreter.interpreter.notRunning">
-                                                  <td><span>Open TensorBoard UI</span></td>
-                                                  <td style="text-align: right">                                      
-                                                    <button
-                                                            uib-tooltip="Open the TensorBoard UI for an existing TFoS Livy Session" 
-                                                            ng-click="jupyterCtrl.showTensorboardUI()"
-                                                            type="button" class="btn btn-info btn-sm" 
-                                                            ng-disabled="interpreter.interpreter.notRunning">
-                                                      <span class="glyphicon glyphicon-eye-open" ></span>
-                                                    </button>
-                                                  </td>
-                                                </tr>-->
-                        <tr>
-                          <td>                                      			  
-                            <button tooltip-placement="auto top"
-                                    uib-tooltip="Shutdown Jupyter Notebook Server and stop applications." 
-                                    ng-click="jupyterCtrl.stop()" 
-                                    type="button" class="btn btn-danger btn-sm" >
-                              <span class="glyphicon glyphicon-off" ></span>
-                            </button>
-                          </td>
-                          <td style="text-align: right">Shutdown Notebook Server</td>
-                        </tr>
-                      </tbody>                     
-                    </table>
-                  </md-content>
-                </md-tab>
-              </md-tabs>
-            </md-content>
-          </div>
-        </div>
-      </div>
-    </div>
-    </section>
   </div>
-</div>
 </div>

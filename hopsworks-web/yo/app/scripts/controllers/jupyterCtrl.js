@@ -63,6 +63,7 @@ angular.module('hopsWorksApp')
             self.tensorflow = false;
             self.condaEnabled = true;
             $scope.sessions = null;
+            $scope.framework = "";
             self.val = {};
             $scope.tgState = true;
             self.config = {};
@@ -107,6 +108,8 @@ angular.module('hopsWorksApp')
             ];
             self.umask = self.umasks[1];
 
+            self.availableLibs = ['Azure:mmlspark:0.13'];
+            self.libs = [];
 
             self.job = {'type': '',
               'name': '',
@@ -408,7 +411,7 @@ angular.module('hopsWorksApp')
                         self.toggleValue = true;
                         timeToShutdown();
                       }, function (error) {
-                        self.val.shutdownLevel = 4;
+                self.val.shutdownLevel = 4;
                 // nothing to do
               }
               );
@@ -455,10 +458,10 @@ angular.module('hopsWorksApp')
                         } else {
                           self.logLevelSelected = self.log_levels[2];
                         }
-                        
+
                         if (self.val.shutdownLevel <= "1") {
                           self.shutdownLevelSelected = self.shutdown_levels[0];
-                          } else if (self.val.shutdownLevel <= "6") {
+                        } else if (self.val.shutdownLevel <= "6") {
                           self.shutdownLevelSelected = self.shutdown_levels[1];
                         } else if (self.val.shutdownLevel <= "12") {
                           self.shutdownLevelSelected = self.shutdown_levels[2];
@@ -481,6 +484,14 @@ angular.module('hopsWorksApp')
                         } else {
                           self.umask = self.umasks[0];
                         }
+
+
+                        if (self.val.libs === undefined || self.val.libs.length === 0) {
+                          self.libs = [];
+                        } else {
+                          self.libs = self.val.libs;
+                        }
+
 
                         timeToShutdown();
 
@@ -569,6 +580,42 @@ angular.module('hopsWorksApp')
               startLoading("Connecting to Jupyter...");
               $scope.tgState = true;
               self.setInitExecs();
+
+              // if quick-select libraries have been added, we need to add them as
+              // maven packages.
+              var azureRepo = false;
+              if (self.libs.length > 0) {
+                var packages = "";
+                var foundPackages = self.val.sparkParams.includes("spark.jars.packages");
+                var foundRepos = self.val.sparkParams.includes("spark.jars.repositories");
+                for (var i = 0; i < self.libs.length; i++) {
+                  packages = packages + self.libs[i];
+                  if (i < self.libs.length-1) {
+                    packages = packages + ",";
+                  }
+                  
+                  if (self.libs[i].includes("Azure")) {
+                    azureRepo = true;
+                  }
+                }
+                var entry = "spark.jars.packages=" + packages;
+                if (foundPackages) {
+                  self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
+                } else {
+                  self.val.sparkParams = self.val.sparkParams + "\n" + entry;
+                }
+                
+                if (azureRepo) {
+                  var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
+                  if (foundRepos) {
+                    self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
+                  } else {
+                    self.val.sparkParams = self.val.sparkParams + "\n" + repo;
+                  }
+                  
+                }
+              }
+
 
               JupyterService.start(self.projectId, self.val).then(
                       function (success) {
