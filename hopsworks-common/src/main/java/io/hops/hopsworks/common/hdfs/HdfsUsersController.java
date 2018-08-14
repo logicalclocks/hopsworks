@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.hdfs;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
@@ -141,8 +140,15 @@ public class HdfsUsersController {
     }
     String hdfsUsername;
     HdfsUsers memberHdfsUser;
-    Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
-        getTeamMember());
+    Users newMember;
+    try {
+      newMember
+          = userFacade.findByEmail(member.getProjectTeamPK().
+              getTeamMember());
+    } catch (Exception ex) {
+      Logger.getLogger(HdfsUsersController.class.getName()).log(Level.SEVERE, null, ex);
+      throw new IOException(ex.getMessage());
+    }
     hdfsUsername = getHdfsUserName(project, newMember);
     memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
     if (memberHdfsUser == null) {
@@ -178,7 +184,7 @@ public class HdfsUsersController {
    * Adds a user to project group if the member have a Data owner role in the
    * project.
    * <p>
-   * throws IllegalArgumentException if the project group is not found.
+   * throws IllegalArgumentException if the project group or there is a problem finding the user.
    * <p>
    * @param project
    * @param member
@@ -190,10 +196,16 @@ public class HdfsUsersController {
     }
     String hdfsUsername;
     HdfsUsers memberHdfsUser;
-    Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
-        getTeamMember());
+    Users newMember;
+    try {
+      newMember = userFacade.findByEmail(member.getProjectTeamPK().getTeamMember());
+    } catch (Exception ex) {
+      Logger.getLogger(HdfsUsersController.class.getName()).log(Level.SEVERE, null, ex);
+      throw new IllegalArgumentException(ex.getMessage());
+    }
     hdfsUsername = getHdfsUserName(project, newMember);
     memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+    // TODO: should we really add the user to hdfs users if it is not found? @ermiasg ?
     if (memberHdfsUser == null) {
       memberHdfsUser = new HdfsUsers(hdfsUsername);
       hdfsUsersFacade.persist(memberHdfsUser);

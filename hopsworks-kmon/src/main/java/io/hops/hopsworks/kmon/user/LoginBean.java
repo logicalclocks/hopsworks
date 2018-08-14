@@ -103,7 +103,7 @@ public class LoginBean implements Serializable {
     this.user = user;
   }
 
-  public Users getUserFromSession() {
+  public Users getUserFromSession() throws AppException {
     if (user == null) {
       ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
       String userEmail = context.getUserPrincipal().getName();
@@ -112,7 +112,7 @@ public class LoginBean implements Serializable {
     return user;
   }
 
-  public String loginUsername() {
+  public String loginUsername() throws AppException {
     this.user = getUserFromSession();
     if (this.user != null) {
       return user.getFname() + " " + user.getLname();
@@ -120,7 +120,7 @@ public class LoginBean implements Serializable {
     return "No username";
   }
 
-  public String login() {
+  public String login() throws AppException {
     FacesContext context = FacesContext.getCurrentInstance();
     HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
     this.user = userFacade.findByEmail(this.credentials.getUsername());
@@ -165,7 +165,7 @@ public class LoginBean implements Serializable {
         authController.registerLogout(user, req);
       }
       FacesContext.getCurrentInstance().getExternalContext().redirect("/hopsworks/#!/home");
-    } catch (IOException | ServletException ex) {
+    } catch (IOException | ServletException | AppException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
     return "login";

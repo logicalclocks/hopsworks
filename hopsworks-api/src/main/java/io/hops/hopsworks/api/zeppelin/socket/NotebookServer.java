@@ -437,7 +437,7 @@ public class NotebookServer {
     return proj;
   }
 
-  private void authenticateUser(Session session, Project project, String user) {
+  private void authenticateUser(Session session, Project project, String user) throws AppException {
     //returns the user role in project. Null if the user has no role in project
     this.userRole = projectTeamBean.findCurrentRole(project, user);
     LOG.log(Level.FINEST, "User role in this project {0}", this.userRole);

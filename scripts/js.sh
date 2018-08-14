@@ -107,4 +107,8 @@ ssh -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKe
 
 #ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $key -p $PORT vagrant@${SERVER} "cd ${basedir}/docroot/app && perl -pi -e \"s/getApiLocationBase\(\)/'http:\/\/${SERVER}:${WEBPORT}\/hopsworks-api/api\/'/g\" scripts/services/RequestInterceptorService.js"
 
+echo ""
+echo "Debug version of hopsworks running at http://127.0.0.1/app"
+echo "" 
 google-chrome -new-tab http://${SERVER}:$WEBPORT/app
+

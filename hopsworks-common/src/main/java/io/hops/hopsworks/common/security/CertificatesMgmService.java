@@ -212,7 +212,13 @@ public class CertificatesMgmService {
       throws IOException, EncryptionMasterPasswordException {
     String sha = DigestUtils.sha256Hex(providedPassword);
     if (!getMasterEncryptionPassword().equals(sha)) {
-      Users user = userFacade.findByEmail(userRequestedEmail);
+      Users user;
+      try {
+        user = userFacade.findByEmail(userRequestedEmail);
+      } catch (Exception ex) {
+        Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+        throw new IOException(ex.getMessage());
+      }
       String logMsg = "*** Attempt to change master encryption password with wrong credentials";
       if (user != null) {
         LOG.log(Level.INFO, logMsg + " by user <" + user.getUsername() + ">");
@@ -315,8 +321,14 @@ public class CertificatesMgmService {
   }
   
   private void sendInbox(String message, String preview, String userRequested) {
-    Users to = userFacade.findByEmail(userRequested);
-    Users from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    Users to, from;
+    try {
+      to = userFacade.findByEmail(userRequested);
+      from = userFacade.findByEmail(Settings.SITE_EMAIL);
+    } catch (Exception ex) {
+      Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+      throw new IllegalArgumentException("Error when finding the user in the database. Is the database down?");
+    }
     messageController.send(to, from, "Master encryption password changed", preview, message, "");
   }
   

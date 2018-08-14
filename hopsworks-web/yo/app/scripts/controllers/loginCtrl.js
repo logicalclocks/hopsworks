@@ -40,12 +40,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 
-          function ($location, $cookies, growl, TourService, AuthService, BannerService, md5) {
+        .controller('LoginCtrl', ['$scope', '$location', '$cookies', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5',
+          function ($scope, $location, $cookies, growl, TourService, AuthService, BannerService, md5) {
 
             var self = this;
 
-            self.announcement = "";
+            $scope.announcement = "";
             self.secondFactorRequired = false;
             self.firstTime = false;
             self.adminPasswordChanged = true;
@@ -62,7 +62,7 @@ angular.module('hopsWorksApp')
             self.ldapEnabled = $cookies.get('ldap') === 'true';
 
 
-            self.showDefaultPassword = function() {
+            self.showDefaultPassword = function () {
               if (self.firstTime === false || self.adminPasswordChanged === true ||
                       self.user.email !== 'admin@kth.se') {
                 return false;
@@ -76,10 +76,10 @@ angular.module('hopsWorksApp')
                         console.log(success);
                         self.otp = success.data.otp;
                         if (success.data.status === 1) {
-                          self.announcement = success.data.message;
+                          $scope.announcement = success.data.message;
                         }
                       }, function (error) {
-                self.announcement = '';
+                $scope.announcement = '';
               });
             };
 
@@ -88,10 +88,13 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.firstTime = true;
                         self.user.email = "admin@kth.se";
-//                        self.user.password = "admin";
                         self.user.toursState = 0;
                       }, function (error) {
-                self.firstTime = false;
+                        if (error.status === 503) { // service_unavailable
+                        $scope.announcement = "Hopsworks unavailable. Is MySQL down?"
+                      } else {
+                        self.firstTime = false;
+                      }
               });
             };
             var isAdminPasswordChanged = function () {
@@ -99,8 +102,12 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.adminPasswordChanged = true;
                       }, function (error) {
-                self.adminPasswordChanged = false;
-                self.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                      if (error.status === 503) { // service_unavailable
+                        $scope.announcement = "Hopsworks unavailable. Is MySQL down?"
+                      } else {
+                        self.adminPasswordChanged = false;
+                        $scope.announcement = "Security risk: change the current default password for the 'admin@kth.se' account."
+                      }
               });
             };
             self.enterAdminPassword = function () {

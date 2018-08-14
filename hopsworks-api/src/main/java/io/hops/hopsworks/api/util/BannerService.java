@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -93,7 +92,8 @@ public class BannerService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response findUserBanner(@Context HttpServletRequest req) throws AppException {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+    Users user = null;
+    user = userFacade.findByEmail(req.getRemoteUser());
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("");
     if (user != null && (user.getSalt() == null || user.getSalt().isEmpty())) {
@@ -111,23 +111,31 @@ public class BannerService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
   }
-  
+
   @GET
   @Path("firstlogin")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response firstLogin(@Context HttpServletRequest req) throws AppException {
-    settings.updateVariable("first_time_login", "0");
+    try {
+      settings.updateVariable("first_time_login", "0");
+    } catch (Exception e) {
+      throw new AppException(Response.Status.SERVICE_UNAVAILABLE, "Hopsworks unavailable. Is the DB down?");
+    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }  
+  }
 
   @GET
-  @Path("admin_pwd_changed")  
+  @Path("admin_pwd_changed")
   @Produces(MediaType.TEXT_PLAIN)
   public Response adminPwdChanged(@Context HttpServletRequest req) throws AppException {
-    if (settings.isDefaultAdminPasswordChanged()) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    try {
+      if (settings.isDefaultAdminPasswordChanged()) {
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+      }
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    } catch (Exception e) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
   }
 }

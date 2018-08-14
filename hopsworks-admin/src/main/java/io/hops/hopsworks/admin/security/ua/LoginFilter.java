@@ -51,6 +51,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LoginFilter extends PolicyDecisionPoint implements Filter {
 
@@ -77,7 +80,12 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
     Users user = null;
 
     if (username != null) {
-      user = userFacade.findByEmail(username);
+      try {
+        user = userFacade.findByEmail(username);
+      } catch (AppException ex) {
+        Logger.getLogger(LoginFilter.class.getName()).log(Level.SEVERE, null, ex);
+        throw new IOException("Could not get username from DB: " + username);
+      }
     }
 
     // If user is logged in redirect to index first page 

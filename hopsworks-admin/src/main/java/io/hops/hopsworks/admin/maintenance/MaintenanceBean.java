@@ -40,6 +40,7 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.maintenance.Maintenance;
 import io.hops.hopsworks.common.maintenance.MaintenanceController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -85,7 +86,7 @@ public class MaintenanceBean implements Serializable {
     maintenanceController.setMessage(message);
   }
 
-  public void update(short status, String message) {
+  public void update(short status, String message) throws AppException {
     setStatus(status);
     setMessage(message);
 

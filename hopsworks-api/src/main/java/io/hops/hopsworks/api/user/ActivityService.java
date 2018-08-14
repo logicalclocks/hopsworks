@@ -64,6 +64,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.exception.AppException;
 import io.swagger.annotations.Api;
 
 @Path("/activity")
@@ -86,7 +87,7 @@ public class ActivityService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response findAllByUser(@Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+          @Context HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
@@ -105,7 +106,7 @@ public class ActivityService {
           @QueryParam("from") int from,
           @QueryParam("to") int to,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+          @Context HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
@@ -123,7 +124,7 @@ public class ActivityService {
   public Response findPaginatedByUser(@QueryParam("from") int from,
           @QueryParam("to") int to,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) {
+          @Context HttpServletRequest req) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     List<Activity> activityDetails = activityFacade.
             getPaginatedActivityByUser(from, to, user);

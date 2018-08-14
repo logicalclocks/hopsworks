@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 
 import javax.ejb.EJB;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -56,6 +57,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Provider
@@ -121,7 +123,13 @@ public class ProjectAuthFilter extends ApiV2FilterBase {
         }
       
         String userEmail = requestContext.getSecurityContext().getUserPrincipal().getName();
-        Users user = userFacade.findByEmail(userEmail);
+        Users user;
+        try {
+          user = userFacade.findByEmail(userEmail);
+        } catch (AppException ex) {
+          Logger.getLogger(ProjectAuthFilter.class.getName()).log(Level.SEVERE, null, ex);
+          throw new IOException("DB problem with access.");
+        }
   
         String currentRole = projectTeamBean.findCurrentRole(project, user);
   

@@ -273,7 +273,13 @@ public class KibanaProxyServlet extends ProxyServlet {
             List<String> projects = new ArrayList();
             //If we don't have the current project, filter out based on all user's projects
             if (Strings.isNullOrEmpty(projectName)) {
-              List<String> projectNames = projectController.findProjectNamesByUser(email, true);
+              List<String> projectNames;
+              try {
+                projectNames = projectController.findProjectNamesByUser(email, true);
+              } catch (AppException ex) {
+                Logger.getLogger(KibanaProxyServlet.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IOException(ex.getMessage());
+              }
               if(projectNames!= null && !projectNames.isEmpty()){
                 projects.addAll(projectNames);
               }

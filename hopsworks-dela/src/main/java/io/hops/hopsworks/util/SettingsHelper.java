@@ -36,14 +36,17 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.util;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dela.AddressJSON;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
+import io.hops.hopsworks.dela.exception.ThirdPartyException.Source;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 
 public class SettingsHelper {
@@ -52,7 +55,7 @@ public class SettingsHelper {
     AddressJSON delaTransferEndpoint = settings.getDELA_PUBLIC_ENDPOINT();
     if (delaTransferEndpoint == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_TRANSFER_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return delaTransferEndpoint;
   }
@@ -61,7 +64,7 @@ public class SettingsHelper {
     String delaTransferHttpEndpoint = settings.getDELA_TRANSFER_HTTP_ENDPOINT();
     if (delaTransferHttpEndpoint == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_TRANSFER_HTTP_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return delaTransferHttpEndpoint;
   }
@@ -70,7 +73,7 @@ public class SettingsHelper {
     String delaHttpEndpoint = settings.getDELA_SEARCH_ENDPOINT();
     if (delaHttpEndpoint == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HTTP_ENDPOINT",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return delaHttpEndpoint;
   }
@@ -79,7 +82,7 @@ public class SettingsHelper {
     String clusterId = settings.getDELA_CLUSTER_ID();
     if (clusterId == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_CLUSTER_ID",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return clusterId;
   }
@@ -88,7 +91,7 @@ public class SettingsHelper {
     String hopsSite = settings.getHOPSSITE();
     if (hopsSite == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HOPS_SITE",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return hopsSite;
   }
@@ -97,16 +100,22 @@ public class SettingsHelper {
     String hopsSiteHost = settings.getHOPSSITE_HOST();
     if (hopsSiteHost == null) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "DELA_HOPS_SITE_HOST",
-        ThirdPartyException.Source.SETTINGS, "misconfigured");
+          ThirdPartyException.Source.SETTINGS, "misconfigured");
     }
     return hopsSiteHost;
   }
-  
+
   public static Users getUser(UserFacade userFacade, String email) throws ThirdPartyException {
-    Users user = userFacade.findByEmail(email);
+    Users user;
+    try {
+      user = userFacade.findByEmail(email);
+    } catch (AppException ex) {
+      Logger.getLogger(SettingsHelper.class.getName()).log(Level.SEVERE, null, ex);
+      throw new ThirdPartyException(ex.getStatus(), "Database not accessible", Source.MYSQL, "Database problems");
+    }
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
-        ThirdPartyException.Source.LOCAL, "exception");
+          ThirdPartyException.Source.LOCAL, "exception");
     }
     return user;
   }

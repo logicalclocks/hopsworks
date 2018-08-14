@@ -81,7 +81,12 @@ public class GrafanaProxyServlet extends ProxyServlet {
     if (servletRequest.getRequestURI().contains("query")) {
       String email = servletRequest.getUserPrincipal().getName();
       Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
-      Users user = userFacade.findByEmail(email);
+      Users user;
+      try {
+        user = userFacade.findByEmail(email);
+      } catch (AppException ex) {
+        throw new ServletException("Couldn't access the DB. Is it down?");
+      }
       Matcher matcher = pattern.matcher(servletRequest.getQueryString());
       if (matcher.find()) {
         String appId = matcher.group(1);

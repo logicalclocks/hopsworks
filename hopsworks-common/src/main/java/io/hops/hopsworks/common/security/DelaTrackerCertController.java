@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
+import io.hops.hopsworks.common.exception.AppException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -58,6 +59,8 @@ import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRChe
 import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.O;
 import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.OU;
 import static io.hops.hopsworks.common.security.DelaCSRCheckException.DelaCSRCheckErrors.SERIALNUMBER;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 @Stateless
@@ -83,7 +86,13 @@ public class DelaTrackerCertController {
   }
 
   private ClusterCert checkCSR(String userEmail, String csr) throws IOException, DelaCSRCheckException{
-    Users user = userFacade.findByEmail(userEmail);
+    Users user;
+    try {
+      user = userFacade.findByEmail(userEmail);
+    } catch (AppException ex) {
+      Logger.getLogger(DelaTrackerCertController.class.getName()).log(Level.SEVERE, null, ex);
+      throw new IOException(ex.getMessage());
+    }
     if (user == null || user.getEmail() == null || csr == null || csr.isEmpty()) {
       throw new DelaCSRCheckException(BADREQUEST);
     }

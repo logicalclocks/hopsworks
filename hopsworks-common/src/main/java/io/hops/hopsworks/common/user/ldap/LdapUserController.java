@@ -132,7 +132,13 @@ public class LdapUserController {
       throw new LoginException("Could not register user. Chosen email not in ldap user email list.");
     }
     String email = userDTO.getEmail().size() == 1 ? userDTO.getEmail().get(0) : chosenEmail;
-    Users u = userFacade.findByEmail(email);
+    Users u;
+    try {
+      u = userFacade.findByEmail(email);
+    } catch (Exception ex) {
+      Logger.getLogger(LdapUserController.class.getName()).log(Level.SEVERE, null, ex);
+      throw new LoginException(ex.getMessage());
+    }
     if (u != null) {
       throw new LoginException("Failed to login. User with the chosen email already exist in the system.");
     }

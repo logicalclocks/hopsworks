@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.admin.maintenance;
 
 import java.io.Serializable;
@@ -49,6 +48,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 import java.io.IOException;
 import javax.faces.context.ExternalContext;
 
@@ -88,7 +88,7 @@ public class ClientSessionState implements Serializable {
 
   public HttpServletRequest getRequest() {
     return (HttpServletRequest) FacesContext.getCurrentInstance().
-            getExternalContext().getRequest();
+        getExternalContext().getRequest();
   }
 
   /**
@@ -101,7 +101,7 @@ public class ClientSessionState implements Serializable {
     return getRequest().getUserPrincipal().getName();
   }
 
-  public Users getLoggedInUser() {
+  public Users getLoggedInUser() throws AppException {
     if (user == null) {
       String email = getRequest().getUserPrincipal().getName();
       user = userFacade.findByEmail(email);
@@ -111,7 +111,7 @@ public class ClientSessionState implements Serializable {
 
   public void redirect() throws IOException {
     ExternalContext externalContext = FacesContext.getCurrentInstance().
-            getExternalContext();
+        getExternalContext();
     externalContext.redirect("/hopsworks-kmon/monitor/clusters.xhtml");
   }
 

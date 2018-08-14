@@ -186,7 +186,12 @@ public class RecoverySelector implements Serializable {
    */
   public String sendQrCode() throws SocketException {
 
-    people = userFacade.findByEmail(this.uname);
+    try {
+      people = userFacade.findByEmail(this.uname);
+    } catch (AppException ex) {
+      Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
+      throw new SocketException("Could not get username from DB: " + this.uname);
+    }
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
         getCurrentInstance().getExternalContext().getRequest();
     try {
@@ -226,7 +231,7 @@ public class RecoverySelector implements Serializable {
    * <p>
    * @return
    */
-  public String validateTmpCode() {
+  public String validateTmpCode() throws AppException {
     qrCode = null;
     people = userFacade.findByEmail(this.uname);
 

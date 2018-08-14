@@ -633,7 +633,7 @@ public class UsersController {
     }
   }
 
-  public boolean isUsernameTaken(String username) {
+  public boolean isUsernameTaken(String username) throws AppException {
     return (userFacade.findByEmail(username) != null);
   }
 
@@ -662,7 +662,7 @@ public class UsersController {
     userFacade.update(id);
   }
 
-  public void deleteUser(Users u) {
+  public void deleteUser(Users u) throws AppException {
     if (u != null) {
       List<RolesAudit> results1 = rolesAuditFacade.findByInitiator(u);
       List<RolesAudit> results2 = rolesAuditFacade.findByTarget(u);

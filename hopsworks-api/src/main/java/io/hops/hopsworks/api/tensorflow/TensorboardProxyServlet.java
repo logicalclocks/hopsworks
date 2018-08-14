@@ -136,7 +136,12 @@ public class TensorboardProxyServlet extends ProxyServlet {
         throw new ServletException(ex);
       }
 
-      Users user = userFacade.findByEmail(email);
+      Users user;
+      try {
+        user = userFacade.findByEmail(email);
+      } catch (AppException ex) {
+        throw new ServletException("Couldn't access the DB. Is it down?");
+      }
 
       boolean inTeam = false;
       for (ProjectTeam pt : project.getProjectTeam()) {

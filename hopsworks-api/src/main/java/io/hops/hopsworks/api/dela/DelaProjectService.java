@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
@@ -51,6 +50,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
@@ -70,6 +70,7 @@ import io.swagger.annotations.ApiParam;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -95,7 +96,7 @@ import javax.ws.rs.core.SecurityContext;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Dela Project Service",
-  description = "Dela Project Service")
+    description = "Dela Project Service")
 public class DelaProjectService {
 
   private final static Logger logger = Logger.getLogger(DelaProjectService.class.getName());
@@ -152,7 +153,7 @@ public class DelaProjectService {
     }
     return successResponse(projectContents);
   }
-  
+
   @POST
   @Path("/uploads")
   @Produces(MediaType.APPLICATION_JSON)
@@ -166,14 +167,14 @@ public class DelaProjectService {
     json.setSuccessMessage("Dataset transfer is started - published");
     return successResponse(json);
   }
-  
+
   @GET
   @Path("/transfers/{publicDSId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getExtendedDetails(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId)
-    throws ThirdPartyException {
+      throws ThirdPartyException {
 
     TorrentId torrentId = new TorrentId(publicDSId);
     TorrentExtendedStatusJSON resp = delaTransferCtrl.details(torrentId);
@@ -185,7 +186,8 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removePublic(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean) throws ThirdPartyException {
+      @ApiParam(value = "delete dataset",
+          required = true) @QueryParam("clean") boolean clean) throws ThirdPartyException {
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = getUser(sc.getUserPrincipal().getName());
     if (clean) {
@@ -197,14 +199,14 @@ public class DelaProjectService {
     json.setSuccessMessage("Dataset is now private");
     return successResponse(json);
   }
-  
+
   @POST
   @Path("/downloads/{publicDSId}/manifest")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response startDownload(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
+      HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
     Users user = getUser(sc.getUserPrincipal().getName());
     //dataset not createed yet
 
@@ -218,7 +220,7 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response downloadDatasetHdfs(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
+      HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
     Users user = getUser(sc.getUserPrincipal().getName());
     Dataset dataset = getDatasetByPublicId(downloadDTO.getPublicDSId());
 
@@ -232,7 +234,8 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response downloadDatasetKafka(@Context SecurityContext sc, @Context HttpServletRequest req,
-    @PathParam("publicDSId") String publicDSId, HopsworksTransferDTO.Download downloadDTO) throws ThirdPartyException {
+      @PathParam("publicDSId") String publicDSId, HopsworksTransferDTO.Download downloadDTO)
+      throws ThirdPartyException {
     Users user = getUser(sc.getUserPrincipal().getName());
     Dataset dataset = getDatasetByPublicId(publicDSId);
 
@@ -242,10 +245,10 @@ public class DelaProjectService {
     String keyStore = certPath + "/keystore.jks";
     String trustStore = certPath + "/truststore.jks";
     KafkaEndpoint kafkaEndpoint = new KafkaEndpoint(brokerEndpoint, restEndpoint, settings.getDELA_DOMAIN(),
-      "" + project.getId(), keyStore, trustStore);
+        "" + project.getId(), keyStore, trustStore);
 
     delaWorkerCtrl.advanceDownload(project, dataset, user, downloadDTO, req.getSession().getId(),
-      kafkaEndpoint);
+        kafkaEndpoint);
     return successResponse(new SuccessJSON(""));
   }
 
@@ -254,13 +257,13 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response showManifest(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId)
-    throws ThirdPartyException {
+      throws ThirdPartyException {
     JsonResponse json = new JsonResponse();
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = getUser(sc.getUserPrincipal().getName());
     if (!dataset.isPublicDs()) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dataset not public - no manifest",
-        ThirdPartyException.Source.LOCAL, "bad request");
+          ThirdPartyException.Source.LOCAL, "bad request");
     }
 
     ManifestJSON manifestJSON = delaHdfsCtrl.readManifest(project, dataset, user);
@@ -268,10 +271,17 @@ public class DelaProjectService {
   }
 
   private Users getUser(String email) throws ThirdPartyException {
-    Users user = userFacade.findByEmail(email);
+    Users user;
+    try {
+      user = userFacade.findByEmail(email);
+    } catch (AppException ex) {
+      Logger.getLogger(DelaProjectService.class.getName()).log(Level.SEVERE, null, ex);
+      throw new ThirdPartyException(ex.getStatus(), "DB Problem",
+          ThirdPartyException.Source.MYSQL, ex.getMessage());
+    }
     if (user == null) {
       throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
-        ThirdPartyException.Source.LOCAL, "exception");
+          ThirdPartyException.Source.LOCAL, "exception");
     }
     return user;
   }
@@ -280,7 +290,7 @@ public class DelaProjectService {
     Optional<Dataset> d = datasetFacade.findByPublicDsIdProject(publicDSId, project);
     if (!d.isPresent()) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(),
-        "dataset by publicId and project", ThirdPartyException.Source.MYSQL, "not found");
+          "dataset by publicId and project", ThirdPartyException.Source.MYSQL, "not found");
     }
     return d.get();
   }
@@ -289,7 +299,7 @@ public class DelaProjectService {
     Dataset dataset = datasetFacade.findByProjectAndInode(this.project, inode);
     if (dataset == null) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "dataset not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
+          ThirdPartyException.Source.LOCAL, "bad request");
     }
     return dataset;
   }
@@ -297,12 +307,12 @@ public class DelaProjectService {
   private Inode getInode(Integer inodeId) throws ThirdPartyException {
     if (inodeId == null) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "inode not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
+          ThirdPartyException.Source.LOCAL, "bad request");
     }
     Inode inode = inodeFacade.findById(inodeId);
     if (inode == null) {
       throw new ThirdPartyException(Response.Status.BAD_REQUEST.getStatusCode(), "inode not found",
-        ThirdPartyException.Source.LOCAL, "bad request");
+          ThirdPartyException.Source.LOCAL, "bad request");
     }
     return inode;
   }

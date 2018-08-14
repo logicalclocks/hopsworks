@@ -40,6 +40,7 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
+import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.user.UsersController;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,8 +88,14 @@ public class UsernameValidator implements Validator {
 
     }
 
-    if (usersController.isUsernameTaken(uname)) {
-      FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+    try {
+      if (usersController.isUsernameTaken(uname)) {
+        FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+        facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+        throw new ValidatorException(facesMsg);
+      }
+    } catch (AppException ex) {
+      FacesMessage facesMsg = new FacesMessage("Could not get user account from DB: " + uname);
       facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
       throw new ValidatorException(facesMsg);
     }
