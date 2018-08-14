@@ -16,38 +16,51 @@
 
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
+import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.project.ProjectDTO;
 
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Date;
 
 public class TensorBoardDTO {
 
-  private int port=0;
-  private BigInteger pid=BigInteger.valueOf(1);
-  private String hostIp="";
-  private int exitValue=-1;
+  private BigInteger pid;
 
-  public TensorBoardDTO(BigInteger pid, int port, int exitValue) {
-    this.port = port;
+  private String endpoint;
+
+  private String elasticId;
+
+  private Date lastAccessed;
+
+  private String hdfsLogdir;
+
+  private ProjectDTO project;
+
+  private UserDTO user;
+
+  public TensorBoardDTO(){}
+
+  public TensorBoardDTO(TensorBoard tensorBoard) {
+    this.pid = tensorBoard.getPid();
+    this.endpoint = tensorBoard.getEndpoint();
+    this.elasticId = tensorBoard.getElasticId();
+    this.lastAccessed = tensorBoard.getLastAccessed();
+    this.hdfsLogdir = tensorBoard.getHdfsLogdir();
+    this.user = new UserDTO(tensorBoard.getTensorBoardPK().getUser());
+    //Set this when v2 is merged
+    //this.project = new ProjectDTO(tensorBoard.getTensorBoardPK().getProject());
+  }
+
+  public TensorBoardDTO(BigInteger pid, String endpoint, String elasticId, Date lastAccessed,
+                        String hdfsLogdir, ProjectDTO projectDTO, UserDTO userDTO) {
     this.pid = pid;
-    this.exitValue = exitValue;
-    try {
-      this.hostIp = InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException ex) {
-      Logger.getLogger(JupyterDTO.class.getName()).log(Level.SEVERE, null, ex);
-    }
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
+    this.endpoint = endpoint;
+    this.elasticId = elasticId;
+    this.lastAccessed = lastAccessed;
+    this.hdfsLogdir = hdfsLogdir;
+    this.project = projectDTO;
+    this.user = userDTO;
   }
 
   public BigInteger getPid() {
@@ -58,19 +71,51 @@ public class TensorBoardDTO {
     this.pid = pid;
   }
 
-  public String getHostIp() {
-    return hostIp;
+  public String getEndpoint() {
+    return endpoint;
   }
 
-  public void setHostIp(String hostIp) {
-    this.hostIp = hostIp;
+  public void setEndpoint(String endpoint) {
+    this.endpoint = endpoint;
   }
 
-  public int getExitValue() {
-    return exitValue;
+  public String getElasticId() {
+    return elasticId;
   }
 
-  public void setExitValue(int exitValue) {
-    this.exitValue = exitValue;
+  public void setElasticId(String elasticId) {
+    this.elasticId = elasticId;
+  }
+
+  public Date getLastAccessed() {
+    return lastAccessed;
+  }
+
+  public void setLastAccessed(Date lastAccessed) {
+    this.lastAccessed = lastAccessed;
+  }
+
+  public String getHdfsLogdir() {
+    return hdfsLogdir;
+  }
+
+  public void setHdfsLogdir(String hdfsLogdir) {
+    this.hdfsLogdir = hdfsLogdir;
+  }
+
+  public ProjectDTO getProject() {
+    return project;
+  }
+
+  public void setProject(ProjectDTO project) {
+    this.project = project;
+  }
+
+  public UserDTO getUser() {
+    return user;
+  }
+
+  public void setUser(UserDTO user) {
+    this.user = user;
   }
 }

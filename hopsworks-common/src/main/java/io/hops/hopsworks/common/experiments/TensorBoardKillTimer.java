@@ -77,10 +77,11 @@ public class TensorBoardKillTimer {
           if (tensorBoardProcessMgr.killTensorBoard(tensorBoard) == 0) {
             try {
               tensorBoardFacade.remove(tensorBoard);
-              HdfsUsers hdfsUser = hdfsUsersFacade.findById(tensorBoard.getHdfsUserId());
+              HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
               String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
 
-                      DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
+                      DigestUtils.sha256Hex(tensorBoard.getTensorBoardPK().getProject().getName()
+                          + "_" + hdfsUser.getName());
               File tbDir = new File(tbPath);
               if(tbDir.exists()) {
                 FileUtils.deleteDirectory(tbDir);
@@ -99,10 +100,11 @@ public class TensorBoardKillTimer {
       if (tensorBoardProcessMgr.ping(tensorBoard.getPid()) != 0) {
         try {
           tensorBoardFacade.remove(tensorBoard);
-          HdfsUsers hdfsUser = hdfsUsersFacade.findById(tensorBoard.getHdfsUserId());
+          HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
           String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
 
-                  DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
+                  DigestUtils.sha256Hex(tensorBoard.getTensorBoardPK().getProject().getName()
+                      + "_" + hdfsUser.getName());
           File tbDir = new File(tbPath);
           if(tbDir.exists()) {
             FileUtils.deleteDirectory(tbDir);

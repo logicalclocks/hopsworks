@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
 
 
             var tbRunning = function() {
-                TensorBoardService.running(self.projectId).then(
+                TensorBoardService.getTensorBoard(self.projectId).then(
                     function(success) {
                         self.tb = success.data;
                     },
@@ -65,13 +65,20 @@ angular.module('hopsWorksApp')
             tbRunning();
 
             self.viewTB = function() {
-                    self.tbUI();
-                TensorBoardService.view(self.projectId).then(
-
-                    function(success) {
-                    },
-                    function(error) {
-                    });
+            TensorBoardService.getTensorBoard(self.projectId).then(
+                                function(success) {
+                                    self.tb = success.data;
+                                    self.tbUI();
+                                },
+                                function(error) {
+                                    if (error.data !== undefined && error.status !== 404) {
+                                    self.tb = "";
+                                        growl.error("The TensorBoard was inactive for too long and was killed. Please start a new one.", {
+                                            title: 'TensorBoard killed',
+                                            ttl: 15000
+                                        });
+                                    }
+                                });
             };
 
             self.startTB = function() {
@@ -86,7 +93,7 @@ angular.module('hopsWorksApp')
             startLoading("Starting TensorBoard...");
 
 
-                TensorBoardService.start(self.projectId, self.id).then(
+                TensorBoardService.startTensorBoard(self.projectId, self.id).then(
                     function(success) {
                     self.tb = success.data;
                     self.tbUI();
@@ -166,7 +173,7 @@ angular.module('hopsWorksApp')
 
             self.stopTB = function() {
 
-                TensorBoardService.stop(self.projectId).then(
+                TensorBoardService.stopTensorBoard(self.projectId).then(
                     function(success) {
                     self.tb="";
                     $route.reload();
@@ -199,29 +206,6 @@ angular.module('hopsWorksApp')
                     ifram.contentWindow.location.reload();
                 }
             };
-
-            var startPolling = function() {
-                self.poller = $interval(function() {
-                    TensorBoardService.running(self.projectId).then(
-                        function(success) {
-                            self.tb = success.data;
-                        },
-                        function(error) {
-                            if(self.tb !== "") {
-                                self.kibanaUI();
-                            }
-                            self.tb = "";
-                            if (error.data !== undefined && error.status !== 404) {
-                                growl.error(error.data.errorMsg, {
-                                    title: 'Error fetching TensorBoard status',
-                                    ttl: 10000
-                                });
-                            }
-                        });
-
-                }, 60000);
-            };
-            startPolling();
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function($parse, $compile) {
                 return function($scope, $element, $attrs) {

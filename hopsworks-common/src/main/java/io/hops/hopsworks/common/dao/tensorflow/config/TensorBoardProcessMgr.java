@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
@@ -44,6 +45,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,7 +95,7 @@ public class TensorBoardProcessMgr {
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public TensorBoardDTO startTensorBoard(TensorBoard tensorBoard)
+  public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)
           throws IOException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -103,9 +106,6 @@ public class TensorBoardProcessMgr {
     BigInteger pid = null;
 
     String tensorBoardDir = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-
-    Project project = projectFacade.find(tensorBoard.getTensorBoardPK().getProjectId());
-    HdfsUsers hdfsUser = hdfsUsersFacade.find(tensorBoard.getHdfsUserId());
 
     String localDir = DigestUtils.sha256Hex(project.getName() + "_" + hdfsUser.getName());
     tensorBoardDir = tensorBoardDir + File.separator + localDir;
@@ -120,8 +120,7 @@ public class TensorBoardProcessMgr {
             if (pid != null && ping(pid) == 0) {
               killTensorBoard(pid);
               try {
-                TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project,
-                        tensorBoard.getTensorBoardPK().getEmail());
+                TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
                 if(tb.getPid().equals(pid)) {
                   tensorBoardFacade.remove(tb);
                 }
@@ -147,13 +146,13 @@ public class TensorBoardProcessMgr {
 
       if(retries == 0) {
         throw new IOException("Failed to start TensorBoard for project=" + project.getName() + ", user="
-                + tensorBoard.getTensorBoardPK().getEmail());
+                + user.getUid());
       }
 
       // use pidfile to kill any running servers
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
-      String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), tensorBoard.getHdfsLogdir(),
+      String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
         tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion()};
 
       logger.log(Level.INFO, Arrays.toString(command));
@@ -191,13 +190,30 @@ public class TensorBoardProcessMgr {
           while(maxWait > 0) {
             if(logFile.length() > 0) {
               Thread.currentThread().sleep(5000);
-              return new TensorBoardDTO(pid, port, exitValue);
+              TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
+              String host = null;
+              try {
+                host = InetAddress.getLocalHost().getHostAddress();
+              } catch (UnknownHostException ex) {
+                Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
+              }
+              tensorBoardDTO.setEndpoint(host + ":" + port);
+              return tensorBoardDTO;
             } else {
               Thread.currentThread().sleep(1000);
               maxWait--;
             }
           }
-          return new TensorBoardDTO(pid, port, exitValue);
+          TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
+          tensorBoardDTO.setPid(pid);
+          String host = null;
+          try {
+            host = InetAddress.getLocalHost().getHostAddress();
+          } catch (UnknownHostException ex) {
+            Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
+          }
+          tensorBoardDTO.setEndpoint(host + ": " + port);
+          return tensorBoardDTO;
         } else {
           logger.log(Level.SEVERE,
                   "Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
@@ -264,9 +280,10 @@ public class TensorBoardProcessMgr {
       }
       process.waitFor();
       exitValue = process.exitValue();
-      HdfsUsers hdfsUser = hdfsUsersFacade.find(tb.getHdfsUserId());
+      HdfsUsers hdfsUser = tb.getHdfsUser();
       String tensorBoardDir = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-      String localDir = DigestUtils.sha256Hex(tb.getProject().getName() + "_" + hdfsUser.getName());
+      String localDir = DigestUtils.sha256Hex(tb.getTensorBoardPK().getProject().getName()
+          + "_" + hdfsUser.getName());
       tensorBoardDir = tensorBoardDir + File.separator + localDir;
       FileUtils.deleteDirectory(new File(tensorBoardDir));
     } catch (IOException | InterruptedException ex) {

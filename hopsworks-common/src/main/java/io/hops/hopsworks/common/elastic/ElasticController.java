@@ -68,6 +68,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -943,6 +944,36 @@ public class ElasticController {
       }
     }
     return objectId;
+  }
+
+  public String getLogdirFromElastic(Project project, String elasticId) throws NotFoundException {
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "GET");
+
+    String experimentsIndex = project.getName() + "_experiments";
+
+    String templateUrl = "http://"+settings.getElasticRESTEndpoint() + "/" +
+        experimentsIndex + "/experiments/" + elasticId;
+
+    boolean foundEntry = false;
+    JSONObject resp = null;
+    try {
+      resp = sendELKReq(templateUrl, params, false);
+      foundEntry = (boolean) resp.get("found");
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
+          " for TensorBoard for project " + project.getName());
+      throw new NotFoundException("Could not find elastic index " + elasticId);
+    }
+
+    if(!foundEntry) {
+      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
+          " for TensorBoard for project " + project.getName());
+      throw new NotFoundException("Could not find elastic index " + elasticId);
+    }
+
+    JSONObject source = resp.getJSONObject("_source");
+    return (String)source.get("logdir");
   }
 }
 

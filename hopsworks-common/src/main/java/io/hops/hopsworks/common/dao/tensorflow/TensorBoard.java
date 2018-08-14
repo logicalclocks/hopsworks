@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.tensorflow;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -49,8 +49,6 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Column;
 import javax.persistence.Basic;
 import javax.persistence.Temporal;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -79,7 +77,7 @@ public class TensorBoard implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "hdfs_user_id")
-  private int hdfsUserId;
+  private HdfsUsers hdfsUser;
 
   @Column(name = "pid")
   private BigInteger pid;
@@ -105,13 +103,6 @@ public class TensorBoard implements Serializable {
   @Column(name = "hdfs_logdir")
   private String hdfsLogdir;
 
-  @JoinColumn(name = "project_id",
-          referencedColumnName = "id",
-          insertable = false,
-          updatable = false)
-  @ManyToOne(optional = false)
-  private Project project;
-
   public TensorBoard() {
   }
 
@@ -127,14 +118,6 @@ public class TensorBoard implements Serializable {
     this.setElasticId(elasticId);
     this.setLastAccessed(lastAccessed);
     this.setHdfsLogdir(hdfsLogdir);
-  }
-
-  public Project getProject() {
-    return project;
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
   }
 
   public TensorBoardPK getTensorBoardPK() {
@@ -177,12 +160,12 @@ public class TensorBoard implements Serializable {
     this.hdfsLogdir = hdfsLogdir;
   }
 
-  public int getHdfsUserId() {
-    return hdfsUserId;
+  public HdfsUsers getHdfsUser() {
+    return hdfsUser;
   }
 
-  public void setHdfsUserId(int hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
+  public void setHdfsUser(HdfsUsers hdfsUser) {
+    this.hdfsUser = hdfsUser;
   }
 
   public String getElasticId() {

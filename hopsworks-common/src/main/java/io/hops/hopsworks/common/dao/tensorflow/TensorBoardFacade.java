@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.dao.tensorflow;
 
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 import javax.ejb.Stateless;
@@ -74,11 +75,11 @@ public class TensorBoardFacade {
     return q.getResultList();
   }
 
-  public TensorBoard findForProjectAndUser(Project project, String email) throws DatabaseException {
+  public TensorBoard findForProjectAndUser(Project project, Users user) throws DatabaseException {
     try {
       TypedQuery<TensorBoard> q = em.createNamedQuery("TensorBoard.findByProjectAndUser", TensorBoard.class);
-      q.setParameter("projectId", project.getId());
-      q.setParameter("email", email);
+      q.setParameter("project", project);
+      q.setParameter("user", user);
       TensorBoard tb = q.getSingleResult();
       return tb;
     } catch (NoResultException nre) {
