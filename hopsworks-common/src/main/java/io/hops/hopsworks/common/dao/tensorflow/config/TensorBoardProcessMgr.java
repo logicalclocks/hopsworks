@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -84,15 +83,6 @@ public class TensorBoardProcessMgr {
   private ProjectFacade projectFacade;
   @EJB
   private UserFacade userFacade;
-
-  @PostConstruct
-  public void init() {
-  }
-
-  @PreDestroy
-  public void preDestroy() {
-
-  }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)

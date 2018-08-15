@@ -123,7 +123,7 @@ public class TensorBoard implements Serializable {
       insertable = false,
       updatable = false)
   @ManyToOne(optional = false)
-  private Users user;
+  private Users users;
 
 
   public TensorBoard() {
@@ -207,12 +207,12 @@ public class TensorBoard implements Serializable {
     this.project = project;
   }
 
-  public Users getUser() {
-    return user;
+  public Users getUsers() {
+    return users;
   }
 
-  public void setUser(Users user) {
-    this.user = user;
+  public void setUsers(Users user) {
+    this.users = user;
   }
 
   @Override

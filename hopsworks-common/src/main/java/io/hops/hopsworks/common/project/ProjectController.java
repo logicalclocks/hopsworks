@@ -2452,30 +2452,23 @@ public class ProjectController {
 
       Map<String, String> params = new HashMap<>();
 
-      String indexName = project.getName() + "_experiments";
+      String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-      params.put("op", "PUT");
-      params.put("project", indexName);
-      params.put("resource", "");
-      params.put("data", "{}");
-
-      JSONObject resp = elasticController.sendElasticsearchReq(params);
-
-      boolean elasticIndexCreated = false;
-      if (resp.has("acknowledged")) {
-        elasticIndexCreated = (Boolean) resp.get("acknowledged");
-      }
-
-      if (elasticIndexCreated == false) {
-        LOGGER.log(Level.SEVERE, "Could not create elastic index " +
-            indexName + "\n " + resp.toString(2));
+      boolean acknowledged = false;
+      try {
+        acknowledged = elasticController.createIndex(indexName);
+        if (!acknowledged) {
+          LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
+        }
+      } catch(AppException ae) {
+        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName, ae);
       }
 
       params.clear();
       params.put("op", "POST");
       params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
 
-      resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
+      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
 
       boolean kibanaIndexPatternCreated = false;
       if (resp.has("updated_at")) {
@@ -2539,12 +2532,12 @@ public class ProjectController {
             project + "\n " + resp.toString(2)));
       }
 
-      return elasticIndexCreated && kibanaIndexPatternCreated && kibanaSearchCreated && kibanaDashboardCreated;
+      return acknowledged && kibanaIndexPatternCreated && kibanaSearchCreated && kibanaDashboardCreated;
     }
     return false;
   }
 
-  public boolean removeElasticsearch(Project project) throws IOException, AppException {
+  public boolean removeElasticsearch(Project project) throws AppException {
     Map<String, String> params = new HashMap<>();
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2578,34 +2571,26 @@ public class ProjectController {
 
     for(ProjectServiceEnum service: projectServices) {
       if(service.equals(ProjectServiceEnum.EXPERIMENTS)) {
-        String indexName = projectName + "_experiments";
-        params.clear();
-        params.put("op", "DELETE");
-        params.put("resource", "");
-        params.put("project", indexName);
-        JSONObject resp = elasticController.sendElasticsearchReq(params);
+        String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-        boolean elasticIndexRemoved = false;
-        if (resp.has("acknowledged")) {
-          elasticIndexRemoved = (Boolean) resp.get("acknowledged");
-        }
+        boolean deleted = elasticController.deleteIndex(experimentsIndex);
 
-        if (elasticIndexRemoved == false) {
-          LOGGER.log(Level.SEVERE, "Failed to remove experiments index for " + project +
-              " \n" + resp.toString(2));
+        if (!deleted) {
+          LOGGER.log(Level.SEVERE, "Failed to remove experiments index " + experimentsIndex);
         }
 
         params.clear();
         params.put("op", "DELETE");
-        resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, false);
+        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
         params.clear();
         params.put("op", "DELETE");
-        resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", false);
+        resp = elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
         params.clear();
         params.put("op", "DELETE");
         resp = elasticController.sendKibanaReq(params, "dashboard",
-            indexName + "_summary-dashboard", false);
-        return elasticIndexRemoved;
+            experimentsIndex + "_summary-dashboard", false);
+
+        return deleted;
       }
     }
     return true;

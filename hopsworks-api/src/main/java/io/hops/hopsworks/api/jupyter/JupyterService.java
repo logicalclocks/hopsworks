@@ -440,7 +440,8 @@ public class JupyterService {
     livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
     int retries = 3;
-    while(retries > 0 && livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+    while(retries > 0 &&
+        livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
 
       LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
             " user " + hdfsUser + ", retrying...");

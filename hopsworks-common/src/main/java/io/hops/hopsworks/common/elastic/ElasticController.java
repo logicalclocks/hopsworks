@@ -76,6 +76,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -327,6 +328,16 @@ public class ElasticController {
       LOG.log(Level.INFO, "Acknowledged deletion of elastic index:{0}", index);
     } else {
       LOG.log(Level.SEVERE, "Elastic index:{0} deletion could not be acknowledged", index);
+    }
+    return acked;
+  }
+
+  public boolean createIndex(String index) throws AppException {
+    boolean acked = getClient().admin().indices().create(new CreateIndexRequest(index)).actionGet().isAcknowledged();
+    if (acked) {
+      LOG.log(Level.INFO, "Acknowledged creation of elastic index:{0}", index);
+    } else {
+      LOG.log(Level.SEVERE, "Elastic index:{0} creation could not be acknowledged", index);
     }
     return acked;
   }

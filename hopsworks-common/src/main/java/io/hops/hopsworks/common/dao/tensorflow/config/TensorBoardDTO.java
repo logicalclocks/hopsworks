@@ -47,7 +47,7 @@ public class TensorBoardDTO {
     this.elasticId = tensorBoard.getElasticId();
     this.lastAccessed = tensorBoard.getLastAccessed();
     this.hdfsLogdir = tensorBoard.getHdfsLogdir();
-    this.user = new UserDTO(tensorBoard.getUser());
+    this.user = new UserDTO(tensorBoard.getUsers());
     //Set this when v2 is merged
     //this.project = new ProjectDTO(tensorBoard.getProject());
   }
