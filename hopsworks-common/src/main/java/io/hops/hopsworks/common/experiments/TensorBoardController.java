@@ -92,7 +92,6 @@ public class TensorBoardController {
       newTensorBoard.setTensorBoardPK(tensorBoardPK);
       newTensorBoard.setPid(tensorBoardDTO.getPid());
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
-      LOGGER.log(Level.SEVERE, "ID IS " + hdfsUser.getId());
       newTensorBoard.setHdfsUserId(hdfsUser.getId());
       newTensorBoard.setElasticId(elasticId);
       newTensorBoard.setLastAccessed(new Date());

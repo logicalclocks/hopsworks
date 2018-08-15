@@ -152,8 +152,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
-        throw new ServletException("Trying to process targetUri init parameter: "
-            + e, e);
+        throw new ServletException("Trying to process targetUri init parameter: ", e);
       }
       targetHost = URIUtils.extractHost(targetUriHost);
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
@@ -212,8 +211,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
-        throw new ServletException("Trying to process targetUri init parameter: "
-                + e, e);
+        throw new ServletException("Trying to process targetUri init parameter: ", e);
       }
       targetHost = URIUtils.extractHost(targetUriHost);
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);

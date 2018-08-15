@@ -71,12 +71,16 @@ angular.module('hopsWorksApp')
                                     self.tbUI();
                                 },
                                 function(error) {
-                                    if (error.data !== undefined && error.status !== 404) {
-                                    self.tb = "";
+                                    if (error.data !== undefined && error.status === 404) {
                                         growl.error("The TensorBoard was inactive for too long and was killed. Please start a new one.", {
-                                            title: 'TensorBoard killed',
-                                            ttl: 15000
-                                        });
+                                                                                    title: 'TensorBoard killed',
+                                                                                    ttl: 15000
+                                                                                });
+                                    } else {
+                                        growl.error(error.data.errorMsg, {
+                                                                    title: 'Error viewing TensorBoard',
+                                                                    ttl: 15000
+                                                                });
                                     }
                                 });
             };

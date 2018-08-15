@@ -68,7 +68,7 @@ public class TensorBoardKillTimer {
           minute = "*/4",
           hour = "*")
   public void rotate(Timer timer) {
-    LOG.log(Level.FINEST, "Killing TensorBoards not accessed in " + settings.getTensorBoardMaxLastAccessed());
+
     Collection<TensorBoard> tensorBoardCollection = tensorBoardFacade.findAll();
     for (TensorBoard tensorBoard : tensorBoardCollection) {
       //Standard case, TB have been idle for a given amount of time
@@ -76,6 +76,8 @@ public class TensorBoardKillTimer {
       Date current = Calendar.getInstance().getTime();
       if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
         tensorBoardController.cleanup(tensorBoard);
+        LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
+        settings.getTensorBoardMaxLastAccessed() + " milliseconds");
       }
     }
 
