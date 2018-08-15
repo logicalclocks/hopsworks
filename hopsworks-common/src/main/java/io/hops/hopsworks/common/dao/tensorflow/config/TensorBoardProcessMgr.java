@@ -178,6 +178,7 @@ public class TensorBoardProcessMgr {
                 Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
               }
               tensorBoardDTO.setEndpoint(host + ":" + port);
+              tensorBoardDTO.setPid(pid);
               return tensorBoardDTO;
             } else {
               Thread.currentThread().sleep(1000);
@@ -234,7 +235,7 @@ public class TensorBoardProcessMgr {
       while ((line = br.readLine()) != null) {
         logger.info(line);
       }
-      process.waitFor();
+      process.waitFor(20l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
       exitValue=2;
@@ -260,7 +261,7 @@ public class TensorBoardProcessMgr {
       while ((line = br.readLine()) != null) {
         logger.info(line);
       }
-      process.waitFor();
+      process.waitFor(20l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
       cleanupLocalTBDir(tb);
     } catch (IOException | InterruptedException ex) {

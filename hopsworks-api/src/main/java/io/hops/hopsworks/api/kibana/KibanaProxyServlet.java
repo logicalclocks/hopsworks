@@ -270,7 +270,7 @@ public class KibanaProxyServlet extends ProxyServlet {
             //Remove all projects other than the current one and check
             //if user is authorizer to access it
             JSONObject indices = new JSONObject(resp);
-            LOG.log(Level.INFO, "indices:{0}", indices.toString());
+            LOG.log(Level.FINE, "indices:{0}", indices.toString());
             JSONArray hits = null;
 
             String projectName = currentProjects.get(email);
@@ -290,7 +290,7 @@ public class KibanaProxyServlet extends ProxyServlet {
               hits = indices.getJSONArray("saved_objects");
             }
             if (hits != null) {
-              LOG.log(Level.INFO, "hits:{0}", hits);
+              LOG.log(Level.FINE, "hits:{0}", hits);
               for (int i = hits.length() - 1; i >= 0; i--) {
                 String objectId = null;
                 switch (kibanaFilter) {
@@ -305,7 +305,7 @@ public class KibanaProxyServlet extends ProxyServlet {
                 }
                 if (!Strings.isNullOrEmpty(objectId) && (!isAuthorizedKibanaObject(objectId, email, projects))) {
                   hits.remove(i);
-                  LOG.log(Level.INFO, "removed objectId:{0}", objectId);
+                  LOG.log(Level.FINE, "removed objectId:{0}", objectId);
                 }
               }
             }

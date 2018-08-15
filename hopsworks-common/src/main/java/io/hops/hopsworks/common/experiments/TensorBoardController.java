@@ -69,23 +69,7 @@ public class TensorBoardController {
     tb = tensorBoardFacade.findForProjectAndUser(project, user);
 
     if(tb != null) {
-      //TensorBoard could be dead, remove from DB
-      if(tensorBoardProcessMgr.ping(tb.getPid()) == 1) {
-        try {
-          tensorBoardFacade.remove(tb);
-        } catch (DatabaseException dbe) {
-          throw new PersistenceException("Unable to remove TensorBoard from database" , dbe);
-        }
-        //TensorBoard is alive, kill it and remove from DB
-      } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
-        if (tensorBoardProcessMgr.killTensorBoard(tb) == 0) {
-          try {
-            tensorBoardFacade.remove(tb);
-          } catch (DatabaseException dbe) {
-            throw new PersistenceException("Unable to remove TensorBoard from database" , dbe);
-          }
-        }
-      }
+      cleanup(tb);
     }
 
     String hdfsLogdir = null;
@@ -94,13 +78,10 @@ public class TensorBoardController {
       //Inject correct NN host:port
       hdfsLogdir = replaceNN(hdfsLogdir);
 
-      tensorBoardDTO = new TensorBoardDTO();
+
 
       String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-
-      tensorBoardDTO.setElasticId(elasticId);
-      tensorBoardDTO.setHdfsLogdir(hdfsLogdir);
 
       tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir);
 
@@ -111,6 +92,7 @@ public class TensorBoardController {
       newTensorBoard.setTensorBoardPK(tensorBoardPK);
       newTensorBoard.setPid(tensorBoardDTO.getPid());
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
+      LOGGER.log(Level.SEVERE, "ID IS " + hdfsUser.getId());
       newTensorBoard.setHdfsUserId(hdfsUser.getId());
       newTensorBoard.setElasticId(elasticId);
       newTensorBoard.setLastAccessed(new Date());

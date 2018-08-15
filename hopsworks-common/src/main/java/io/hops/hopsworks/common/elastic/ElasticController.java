@@ -83,6 +83,7 @@ import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRespon
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
@@ -198,11 +199,17 @@ public class ElasticController {
 
     Client client = getClient();
 
-    SearchResponse response = client.prepareSearch(index)
+    SearchResponse searchResponse = client.prepareSearch(index)
         .setQuery(QueryBuilders.matchQuery("app_id", app_id))
         .get();
 
-    return response.toString();
+    int status = searchResponse.status().getStatus();
+    if(status != 200) {
+      LOG.log(Level.SEVERE, "Unexpected response code " + searchResponse.status().getStatus() +
+          " when updating experiment in Elastic. " + searchResponse.toString());
+    }
+
+    return searchResponse.toString();
   }
 
   public void updateExperiment(String index, String id, JSONObject source) throws
@@ -217,9 +224,16 @@ public class ElasticController {
         new TypeReference<HashMap<String, Object>>() {
         });
 
-    client.prepareIndex(index, "experiments", id)
+    IndexResponse indexResponse = client.prepareIndex(index, "experiments", id)
         .setSource(map)
         .get();
+
+    int status = indexResponse.status().getStatus();
+    if(status != 200) {
+      LOG.log(Level.SEVERE, "Unexpected response code " + indexResponse.status().getStatus() +
+              " when updating experiment in Elastic. " + indexResponse.toString());
+    }
+
   }
 
   public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException {

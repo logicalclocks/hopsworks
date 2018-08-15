@@ -135,13 +135,14 @@ public class TensorBoard implements Serializable {
   }
 
   public TensorBoard(TensorBoardPK tensorBoardPK, BigInteger pid, String endpoint, String elasticId,
-                           Date lastAccessed, String hdfsLogdir) {
+                           Date lastAccessed, String hdfsLogdir, int hdfsUserId) {
     this.setTensorBoardPK(tensorBoardPK);
     this.setPid(pid);
     this.setEndpoint(endpoint);
     this.setElasticId(elasticId);
     this.setLastAccessed(lastAccessed);
     this.setHdfsLogdir(hdfsLogdir);
+    this.setHdfsUserId(hdfsUserId);
   }
 
   public TensorBoardPK getTensorBoardPK() {
@@ -188,7 +189,7 @@ public class TensorBoard implements Serializable {
     return hdfsUserId;
   }
 
-  public void setHdfsUserId(int hdfsUser) {
+  public void setHdfsUserId(int hdfsUserId) {
     this.hdfsUserId = hdfsUserId;
   }
 

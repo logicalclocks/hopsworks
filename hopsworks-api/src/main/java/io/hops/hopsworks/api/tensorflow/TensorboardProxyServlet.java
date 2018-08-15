@@ -101,8 +101,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       HttpServletResponse servletResponse)
       throws ServletException, IOException {
     String email = servletRequest.getUserPrincipal().getName();
-    LOGGER.log(Level.FINEST, "Request URL: {0}", servletRequest.getRequestURL());
-    LOGGER.log(Level.FINEST, "Request URI: {0}", servletRequest.getRequestURI());
+    LOGGER.log(Level.FINE, "Request URL: {0}", servletRequest.getRequestURL());
 
     String uri = servletRequest.getRequestURI();
     // valid hostname regex:
