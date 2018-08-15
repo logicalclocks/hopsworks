@@ -13,7 +13,6 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 'use strict';
 /*
  * Controller for the job UI dialog.
@@ -53,7 +52,7 @@ angular.module('hopsWorksApp')
                     },
                     function(error) {
                         if (error.data !== undefined && error.status !== 404) {
-                        self.tb = "";
+                            self.tb = "";
                             growl.error(error.data.errorMsg, {
                                 title: 'Error fetching TensorBoard status',
                                 ttl: 15000
@@ -65,46 +64,46 @@ angular.module('hopsWorksApp')
             tbRunning();
 
             self.viewTB = function() {
-            TensorBoardService.getTensorBoard(self.projectId).then(
-                                function(success) {
-                                    self.tb = success.data;
-                                    self.tbUI();
-                                },
-                                function(error) {
-                                    if (error.data !== undefined && error.status === 404) {
-                                        growl.error("The TensorBoard was inactive for too long and was killed. Please start a new one.", {
-                                                                                    title: 'TensorBoard killed',
-                                                                                    ttl: 15000
-                                                                                });
-                                    } else {
-                                        growl.error(error.data.errorMsg, {
-                                                                    title: 'Error viewing TensorBoard',
-                                                                    ttl: 15000
-                                                                });
-                                    }
-                                });
+                TensorBoardService.getTensorBoard(self.projectId).then(
+                    function(success) {
+                        self.tb = success.data;
+                        self.tbUI();
+                    },
+                    function(error) {
+                        if (error.data !== undefined && error.status === 404) {
+                            growl.error("The TensorBoard was inactive for too long and was killed. Please start a new one.", {
+                                title: 'TensorBoard killed',
+                                ttl: 15000
+                            });
+                        } else {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Error viewing TensorBoard',
+                                ttl: 15000
+                            });
+                        }
+                    });
             };
 
             self.startTB = function() {
-                     if(self.id === '' || !self.id.startsWith('application')) {
-                            growl.error("Please specify a valid experiment _id", {
-                                                                    title: 'Invalid argument',
-                                                                    ttl: 15000
-                                                                });
-                                            return;
-                                        }
+                if (self.id === '' || !self.id.startsWith('application')) {
+                    growl.error("Please specify a valid experiment _id", {
+                        title: 'Invalid argument',
+                        ttl: 15000
+                    });
+                    return;
+                }
 
-            startLoading("Starting TensorBoard...");
+                startLoading("Starting TensorBoard...");
 
 
                 TensorBoardService.startTensorBoard(self.projectId, self.id).then(
                     function(success) {
-                    self.tb = success.data;
-                    self.tbUI();
-                    self.id = "";
+                        self.tb = success.data;
+                        self.tbUI();
+                        self.id = "";
                     },
                     function(error) {
-                    stopLoading();
+                        stopLoading();
                         growl.error(error.data.errorMsg, {
                             title: 'Error starting TensorBoard',
                             ttl: 15000
@@ -124,13 +123,13 @@ angular.module('hopsWorksApp')
                     stopLoading();
                 } else {
                     iframe.onload = function() {
-                        if(!self.reloadedOnce) {
+                        if (!self.reloadedOnce) {
                             self.reloadedOnce = true;
                             self.refresh();
                         } else {
                             stopLoading();
                             self.reloadedOnce = false;
-                            }
+                        }
                     };
                 }
                 if (iframe !== null) {
@@ -139,12 +138,12 @@ angular.module('hopsWorksApp')
                 self.reloadedOnce = false;
             };
 
-            self.hitEnter = function (event) {
-                          var code = event.which || event.keyCode || event.charCode;
-                          if (angular.equals(code, 13)) {
-                          self.startTB();
-                          }
-                        };
+            self.hitEnter = function(event) {
+                var code = event.which || event.keyCode || event.charCode;
+                if (angular.equals(code, 13)) {
+                    self.startTB();
+                }
+            };
 
             self.kibanaUI = function() {
 
@@ -153,10 +152,10 @@ angular.module('hopsWorksApp')
                     function(success) {
                         var projectName = success.data;
                         self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/dashboard/" + projectName.toLowerCase() + "_experiments_summary-dashboard?_g=" +
-                        "(refreshInterval:('$$hashKey':'object:161',display:'5%20seconds',pause:!f,section:1,value:5000),time:(from:now-15m,mode:quick,to:now))&_a=" +
-                        "(description:'A%20summary%20of%20all%20experiments%20run%20in%20this%20project',filters:!(),fullScreenMode:!f,options:(darkTheme:!f,hidePanelTitles:!" +
-                        "f,useMargins:!t),panels:!((gridData:(h:9,i:'1',w:12,x:0,y:0),id:" + projectName.toLowerCase() + "_experiments_summary-search,panelIndex:'1',type:search,version:'6.2.3'))," +
-                        "query:(language:lucene,query:''),timeRestore:!f,title:'Experiments%20summary%20dashboard',viewMode:view)"
+                            "(refreshInterval:('$$hashKey':'object:161',display:'5%20seconds',pause:!f,section:1,value:5000),time:(from:now-15m,mode:quick,to:now))&_a=" +
+                            "(description:'A%20summary%20of%20all%20experiments%20run%20in%20this%20project',filters:!(),fullScreenMode:!f,options:(darkTheme:!f,hidePanelTitles:!" +
+                            "f,useMargins:!t),panels:!((gridData:(h:9,i:'1',w:12,x:0,y:0),id:" + projectName.toLowerCase() + "_experiments_summary-search,panelIndex:'1',type:search,version:'6.2.3'))," +
+                            "query:(language:lucene,query:''),timeRestore:!f,title:'Experiments%20summary%20dashboard',viewMode:view)"
 
                         var iframe = document.getElementById('ui_iframe');
                         if (iframe !== null) {
@@ -179,8 +178,8 @@ angular.module('hopsWorksApp')
 
                 TensorBoardService.stopTensorBoard(self.projectId).then(
                     function(success) {
-                    self.tb="";
-                    $route.reload();
+                        self.tb = "";
+                        $route.reload();
                     },
                     function(error) {
                         growl.error(error.data.errorMsg, {
@@ -191,7 +190,7 @@ angular.module('hopsWorksApp')
             };
 
             var init = function() {
-                if(self.tb === '') {
+                if (self.tb === '') {
                     self.kibanaUI();
                 } else {
                     self.tbUI();
