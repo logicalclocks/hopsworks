@@ -513,6 +513,9 @@ public class ProjectService {
             case HIVE:
               error = ResponseMessages.HIVE_ADD_FAILURE;
               break;
+            case JOBS:
+              error = ResponseMessages.JOBS_ADD_FAILURE;
+              break;
             default:
               error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
               break;
@@ -848,25 +851,6 @@ public class ProjectService {
     hdfsUsersBean.shareDataset(destProj, ds);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  @POST
-  @Path("{id}/logs/enable")
-  @Produces(MediaType.TEXT_PLAIN)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response enableLogs(@PathParam("id") Integer id) throws AppException {
-    Project project = projectController.findProjectById(id);
-    if (!project.getLogs()) {
-      projectFacade.enableLogs(project);
-      try {
-        projectController.addElasticsearch(project.getName());
-      } catch (IOException ex) {
-        logger.log(Level.SEVERE, ex.getMessage());
-        return noCacheResponse.getNoCacheResponseBuilder(
-            Response.Status.SERVICE_UNAVAILABLE).build();
-      }
-    }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity("").build();
   }
 
   @POST

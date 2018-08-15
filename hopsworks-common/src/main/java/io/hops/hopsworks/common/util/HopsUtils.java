@@ -76,6 +76,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -84,6 +85,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.json.JSONObject;
 
 /**
  * Utility methods.
@@ -833,6 +835,26 @@ public class HopsUtils {
     }
     
     return finalParams;
+  }
+  
+  /**
+   * Search recursively for a key in JSON.
+   * @param object json to parse
+   * @param searchedKey key to search for
+   * @return true if key is found, false otherwise.
+   */
+  public static boolean jsonKeyExists(JSONObject object, String searchedKey) {
+    boolean exists = object.has(searchedKey);
+    if (!exists) {
+      Iterator<?> keys = object.keys();
+      while (keys.hasNext()) {
+        String key = (String) keys.next();
+        if (object.get(key) instanceof JSONObject) {
+          exists = jsonKeyExists((JSONObject) object.get(key), searchedKey);
+        }
+      }
+    }
+    return exists;
   }
   
 }
