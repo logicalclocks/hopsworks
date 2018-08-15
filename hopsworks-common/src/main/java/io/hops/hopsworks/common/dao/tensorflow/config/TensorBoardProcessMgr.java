@@ -271,7 +271,8 @@ public class TensorBoardProcessMgr {
   }
 
   public void cleanupLocalTBDir(TensorBoard tb) throws IOException {
-    HdfsUsers hdfsUser = tb.getHdfsUser();
+    int hdfsUserId = tb.getHdfsUserId();
+    HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
     String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
         DigestUtils.sha256Hex(tb.getProject().getName() + "_" + hdfsUser.getName());
     File tbDir = new File(tbPath);

@@ -87,10 +87,13 @@ public class TensorBoardService {
             "You are not authorized for this invocation.");
       }
       TensorBoardDTO tb = tensorBoardController.getTensorBoard(project, user);
+      if(tb == null) {
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      }
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tb).build();
     } catch (PersistenceException pe) {
-      LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
   }
 

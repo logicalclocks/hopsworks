@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.common.dao.tensorflow;
 
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -87,7 +86,7 @@ public class TensorBoard implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "hdfs_user_id")
-  private HdfsUsers hdfsUser;
+  private int hdfsUserId;
 
   @Column(name = "pid")
   private BigInteger pid;
@@ -185,12 +184,12 @@ public class TensorBoard implements Serializable {
     this.hdfsLogdir = hdfsLogdir;
   }
 
-  public HdfsUsers getHdfsUser() {
-    return hdfsUser;
+  public int getHdfsUserId() {
+    return hdfsUserId;
   }
 
-  public void setHdfsUser(HdfsUsers hdfsUser) {
-    this.hdfsUser = hdfsUser;
+  public void setHdfsUserId(int hdfsUser) {
+    this.hdfsUserId = hdfsUserId;
   }
 
   public String getElasticId() {

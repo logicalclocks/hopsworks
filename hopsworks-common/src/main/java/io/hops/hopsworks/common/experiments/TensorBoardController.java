@@ -50,6 +50,9 @@ public class TensorBoardController {
     TensorBoard tb;
     try {
       tb = tensorBoardFacade.findForProjectAndUser(project, user);
+      if(tb == null) {
+        return null;
+      }
       tb.setLastAccessed(new Date());
       tensorBoardFacade.update(tb);
     } catch (DatabaseException dbe) {
@@ -108,7 +111,7 @@ public class TensorBoardController {
       newTensorBoard.setTensorBoardPK(tensorBoardPK);
       newTensorBoard.setPid(tensorBoardDTO.getPid());
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
-      newTensorBoard.setHdfsUser(hdfsUser);
+      newTensorBoard.setHdfsUserId(hdfsUser.getId());
       newTensorBoard.setElasticId(elasticId);
       newTensorBoard.setLastAccessed(new Date());
       newTensorBoard.setHdfsLogdir(hdfsLogdir);
@@ -137,7 +140,7 @@ public class TensorBoardController {
           tensorBoardFacade.remove(tb);
           tensorBoardProcessMgr.cleanupLocalTBDir(tb);
         } catch (DatabaseException | IOException e) {
-          LOGGER.log(Level.SEVERE, "Unable to cleanup TensorBoard" , e);
+          LOGGER.log(Level.SEVERE, "Exception while cleaning up after TensorBoard" , e);
         }
         //TensorBoard is alive, kill it and remove from DB
       } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
@@ -146,7 +149,7 @@ public class TensorBoardController {
             tensorBoardFacade.remove(tb);
             tensorBoardProcessMgr.cleanupLocalTBDir(tb);
           } catch (DatabaseException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Unable to cleanup TensorBoard" , e);
+            LOGGER.log(Level.SEVERE, "Exception while cleaning up after TensorBoard" , e);
           }
         }
       }

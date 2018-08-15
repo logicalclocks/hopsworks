@@ -79,7 +79,7 @@ public class TensorBoardKillTimer {
       }
     }
 
-    //sanity check to make sure that all TBs running have a corresponding entry in a .pid file
+    //sanity check to make sure that all .pid files have a corresponding TB
     try {
       List<TensorBoard> TBs = tensorBoardFacade.findAll();
       String tbDirPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
