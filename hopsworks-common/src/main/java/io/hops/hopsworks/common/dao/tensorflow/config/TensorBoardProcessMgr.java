@@ -119,14 +119,6 @@ public class TensorBoardProcessMgr {
             pid = BigInteger.valueOf(Long.parseLong(pidContents));
             if (pid != null && ping(pid) == 0) {
               killTensorBoard(pid);
-              try {
-                TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
-                if(tb.getPid().equals(pid)) {
-                  tensorBoardFacade.remove(tb);
-                }
-              } catch(DatabaseException dbe) {
-                //skip
-              }
             }
           } catch(NumberFormatException nfe) {
             logger.log(Level.WARNING, "Expected number in pidfile " +

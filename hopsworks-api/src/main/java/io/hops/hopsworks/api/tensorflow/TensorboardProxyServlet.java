@@ -103,7 +103,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
     String email = servletRequest.getUserPrincipal().getName();
     LOGGER.log(Level.FINEST, "Request URL: {0}", servletRequest.getRequestURL());
     LOGGER.log(Level.FINEST, "Request URI: {0}", servletRequest.getRequestURI());
-    
+
     String uri = servletRequest.getRequestURI();
     // valid hostname regex:
     // https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
