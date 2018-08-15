@@ -16,15 +16,12 @@
 
 package io.hops.hopsworks.common.experiments;
 
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Resource;
@@ -64,6 +61,8 @@ public class TensorBoardKillTimer {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private TensorBoardProcessMgr tensorBoardProcessMgr;
+  @EJB
+  private TensorBoardController tensorBoardController;
 
   @Schedule(persistent = false,
           minute = "*/4",
@@ -76,46 +75,11 @@ public class TensorBoardKillTimer {
       Date accessed = tensorBoard.getLastAccessed();
       Date current = Calendar.getInstance().getTime();
       if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
-        if (tensorBoardProcessMgr.ping(tensorBoard.getPid()) == 0) {
-          if (tensorBoardProcessMgr.killTensorBoard(tensorBoard) == 0) {
-            try {
-              tensorBoardFacade.remove(tensorBoard);
-              HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
-              String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
-                      DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
-              File tbDir = new File(tbPath);
-              if(tbDir.exists()) {
-                FileUtils.deleteDirectory(tbDir);
-              }
-            } catch (DatabaseException | IOException e) {
-              LOG.log(Level.SEVERE, "Failed while trying to kill TensorBoard", e);
-            }
-          } else {
-            LOG.log(Level.SEVERE, "Unable to kill TensorBoard with pid " + tensorBoard.getPid());
-          }
-        }
-        continue;
-      }
-
-      //TensorBoard might have been killed manually (i.e we have entry in DB but no actual running process)
-      if (tensorBoardProcessMgr.ping(tensorBoard.getPid()) != 0) {
-        try {
-          tensorBoardFacade.remove(tensorBoard);
-          HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
-          String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
-
-                  DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
-          File tbDir = new File(tbPath);
-          if(tbDir.exists()) {
-            FileUtils.deleteDirectory(tbDir);
-          }
-        } catch (DatabaseException | IOException e) {
-          LOG.log(Level.SEVERE, "Failed while trying to kill stray TensorBoard", e);
-        }
-        continue;
+        tensorBoardController.cleanup(tensorBoard);
       }
     }
-    //handle case where TB might be running but with no corresponding entry in DB
+
+    //sanity check to make sure that all TBs running have a corresponding entry in a .pid file
     try {
       List<TensorBoard> TBs = tensorBoardFacade.findAll();
       String tbDirPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;

@@ -126,7 +126,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
     Matcher elasticMatcher = elasticPattern.matcher(servletRequest.getRequestURI());
     if (elasticMatcher.find()) {
 
-      List<TensorBoard> TBList = tensorBoardFacade.findForUser(email);
+      List<TensorBoard> TBList = tensorBoardFacade.findByUserEmail(email);
       if(TBList == null) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
             "This TensorBoard is not running right now");

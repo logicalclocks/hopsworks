@@ -75,20 +75,21 @@ public class TensorBoardFacade {
     return q.getResultList();
   }
 
-  public TensorBoard findForProjectAndUser(Project project, Users user) throws DatabaseException {
+  public TensorBoard findForProjectAndUser(Project project, Users user) {
     try {
       TypedQuery<TensorBoard> q = em.createNamedQuery("TensorBoard.findByProjectAndUser", TensorBoard.class);
-      q.setParameter("project", project);
-      q.setParameter("user", user);
+      q.setParameter("projectId", project.getId());
+      q.setParameter("userId", user.getUid());
       TensorBoard tb = q.getSingleResult();
       return tb;
     } catch (NoResultException nre) {
-      throw new DatabaseException("Could not retrieve running TensorBoard", nre);
+      //This is fine
     }
+    return null;
   }
 
-  public List<TensorBoard> findForUser(String email) {
-    TypedQuery<TensorBoard> q = em.createNamedQuery("TensorBoard.findByTeamMember", TensorBoard.class);
+  public List<TensorBoard> findByUserEmail(String email) {
+    TypedQuery<TensorBoard> q = em.createNamedQuery("TensorBoard.findByUserEmail", TensorBoard.class);
     q.setParameter("email", email);
     return q.getResultList();
   }

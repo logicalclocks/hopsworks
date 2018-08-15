@@ -74,6 +74,8 @@ import java.util.Date;
         "t.tensorBoardPK.projectId = :projectId")
         , @NamedQuery(name = "TensorBoard.findByUserId", query = "SELECT t FROM TensorBoard t WHERE " +
         "t.tensorBoardPK.userId = :userId")
+        , @NamedQuery(name = "TensorBoard.findByUserEmail", query = "SELECT t FROM TensorBoard t WHERE " +
+        "t.users.email = :email")
         , @NamedQuery(name = "TensorBoard.findByProjectAndUser", query = "SELECT t FROM TensorBoard t WHERE " +
         "t.tensorBoardPK.projectId = :projectId AND t.tensorBoardPK.userId = :userId")})
 public class TensorBoard implements Serializable {

@@ -30,8 +30,6 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.DependsOn;
@@ -264,17 +262,22 @@ public class TensorBoardProcessMgr {
       }
       process.waitFor();
       exitValue = process.exitValue();
-      HdfsUsers hdfsUser = tb.getHdfsUser();
-      String tensorBoardDir = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-      String localDir = DigestUtils.sha256Hex(tb.getProject().getName()
-          + "_" + hdfsUser.getName());
-      tensorBoardDir = tensorBoardDir + File.separator + localDir;
-      FileUtils.deleteDirectory(new File(tensorBoardDir));
+      cleanupLocalTBDir(tb);
     } catch (IOException | InterruptedException ex) {
       exitValue=2;
       logger.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
     }
     return exitValue;
+  }
+
+  public void cleanupLocalTBDir(TensorBoard tb) throws IOException {
+    HdfsUsers hdfsUser = tb.getHdfsUser();
+    String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
+        DigestUtils.sha256Hex(tb.getProject().getName() + "_" + hdfsUser.getName());
+    File tbDir = new File(tbPath);
+    if(tbDir.exists()) {
+      FileUtils.deleteDirectory(tbDir);
+    }
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

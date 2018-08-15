@@ -42,6 +42,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -78,10 +79,7 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTensorBoard(@Context SecurityContext sc) throws AppException {
-    if (project.getId() == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
+
     try {
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
       if (user == null) {
@@ -91,6 +89,7 @@ public class TensorBoardService {
       TensorBoardDTO tb = tensorBoardController.getTensorBoard(project, user);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tb).build();
     } catch (PersistenceException pe) {
+      LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database");
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
   }
@@ -101,11 +100,6 @@ public class TensorBoardService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId,
                                             @Context SecurityContext sc) throws AppException {
-
-    if (project.getId() == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-      "Incomplete request!");
-    }
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
@@ -123,10 +117,6 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response stopTensorBoard(@Context SecurityContext sc) throws AppException {
-    if (project.getId() == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
-    }
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
@@ -135,7 +125,7 @@ public class TensorBoardService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    tensorBoardController.stopTensorBoard(this.project, user);
+    tensorBoardController.cleanup(this.project, user);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

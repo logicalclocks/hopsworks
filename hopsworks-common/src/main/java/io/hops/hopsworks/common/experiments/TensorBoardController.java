@@ -15,14 +15,11 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.NotFoundException;
-import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.logging.Level;
@@ -66,11 +63,8 @@ public class TensorBoardController {
     //Kill existing TensorBoard
     TensorBoard tb = null;
     TensorBoardDTO tensorBoardDTO = null;
-    try {
-      tb = tensorBoardFacade.findForProjectAndUser(project, user);
-    } catch (DatabaseException nre) {
-      //skip
-    }
+    tb = tensorBoardFacade.findForProjectAndUser(project, user);
+
     if(tb != null) {
       //TensorBoard could be dead, remove from DB
       if(tensorBoardProcessMgr.ping(tb.getPid()) == 1) {
@@ -130,28 +124,18 @@ public class TensorBoardController {
     return tensorBoardDTO;
   }
 
-  public void stopTensorBoard(Project project, Users user) {
+  public void cleanup(Project project, Users user) {
+    TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
+    this.cleanup(tb);
+  }
 
-    TensorBoard tb = null;
-    try {
-      tb = tensorBoardFacade.findForProjectAndUser(project, user);
-    } catch (DatabaseException nre) {
-      LOGGER.log(Level.SEVERE, "Could not stop TensorBoard for project=" + project + ", user=" +
-          user);
-    }
-
+  public void cleanup(TensorBoard tb) {
     if(tb != null) {
       //TensorBoard could be dead, remove from DB
       if(tensorBoardProcessMgr.ping(tb.getPid()) != 0) {
         try {
           tensorBoardFacade.remove(tb);
-          HdfsUsers hdfsUser = tb.getHdfsUser();
-          String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
-              DigestUtils.sha256Hex(project.getName() + "_" + hdfsUser.getName());
-          File tbDir = new File(tbPath);
-          if(tbDir.exists()) {
-            FileUtils.deleteDirectory(tbDir);
-          }
+          tensorBoardProcessMgr.cleanupLocalTBDir(tb);
         } catch (DatabaseException | IOException e) {
           LOGGER.log(Level.SEVERE, "Unable to cleanup TensorBoard" , e);
         }
@@ -160,20 +144,13 @@ public class TensorBoardController {
         if (tensorBoardProcessMgr.killTensorBoard(tb) == 0) {
           try {
             tensorBoardFacade.remove(tb);
-          } catch (DatabaseException dbe) {
-            LOGGER.log(Level.SEVERE, "Unable to remove TensorBoard from database" , dbe);
-
+            tensorBoardProcessMgr.cleanupLocalTBDir(tb);
+          } catch (DatabaseException | IOException e) {
+            LOGGER.log(Level.SEVERE, "Unable to cleanup TensorBoard" , e);
           }
         }
-      } else {
-        LOGGER.log(Level.SEVERE, "Unable to kill TensorBoard with pid " + tb.getPid());
-
       }
     }
-  }
-
-  public void cleanup(TensorBoard tensorBoard) {
-
   }
 
   private String replaceNN(String hdfsPath)  {
