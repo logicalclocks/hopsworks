@@ -172,6 +172,10 @@ public class TensorBoardController {
     }
   }
 
+  public void cleanup(TensorBoard tensorBoard) {
+
+  }
+
   private String replaceNN(String hdfsPath)  {
     HdfsLeDescriptors descriptor = hdfsLeDescriptorsFacade.findEndpoint();
 

@@ -36,7 +36,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.DependsOn;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -63,7 +63,7 @@ import java.util.logging.Logger;
  * The bash script has several commands with parameters that can be executed.
  * This class provides a Java interface for executing the commands.
  */
-@Singleton
+@Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 @DependsOn("Settings")
 public class TensorBoardProcessMgr {
@@ -93,7 +93,7 @@ public class TensorBoardProcessMgr {
   public void preDestroy() {
 
   }
-  
+
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)
           throws IOException {
@@ -237,6 +237,7 @@ public class TensorBoardProcessMgr {
     return null;
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int killTensorBoard(BigInteger pid) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -262,6 +263,7 @@ public class TensorBoardProcessMgr {
     return exitValue;
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int killTensorBoard(TensorBoard tb) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -293,6 +295,7 @@ public class TensorBoardProcessMgr {
     return exitValue;
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int ping(BigInteger pid) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
@@ -318,6 +321,7 @@ public class TensorBoardProcessMgr {
     return exitValue;
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void removeProject(Project project) {
     Collection<TensorBoard> instances = project.getTensorBoardCollection();
 

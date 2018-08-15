@@ -143,9 +143,8 @@ public class KibanaProxyServlet extends ProxyServlet {
       kibanaFilter = KibanaFilter.KIBANA_SAVED_OBJECTS_API;
     } else if (servletRequest.getRequestURI().contains("elasticsearch/*/_search")) {
       kibanaFilter = KibanaFilter.ELASTICSEARCH_SEARCH;
-    } else if (servletRequest.getRequestURI().contains("legacy_scroll_start")) {
-      return;
-    } else if (servletRequest.getRequestURI().contains("settings/defaultIndex")) {
+    } else if (servletRequest.getRequestURI().contains("legacy_scroll_start") ||
+        servletRequest.getRequestURI().contains("settings/defaultIndex")) {
       return;
     }
 
@@ -248,11 +247,7 @@ public class KibanaProxyServlet extends ProxyServlet {
    * @param proxyResponse
    * @param servletResponse
    * @param kibanaFilter
-<<<<<<< b600f2b583f65ca12f47797aa986d0bcf1d567c5
    * @param email
-=======
->>>>>>> [HOPSWORKS-532] Add experiments service
-   * @throws java.io.IOException
    */
   protected void copyResponseEntity(HttpResponse proxyResponse,
       HttpServletResponse servletResponse, KibanaFilter kibanaFilter, String email) throws

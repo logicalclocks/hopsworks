@@ -81,6 +81,7 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
@@ -475,7 +476,7 @@ public class JupyterService {
     }
 
     try {
-      String experimentsIndex = this.project.getName() + "_experiments";
+      String experimentsIndex = this.project.getName() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
       for (LivyMsg.Session session : sessions) {
         String sessionAppId = session.getAppId();
@@ -490,7 +491,7 @@ public class JupyterService {
           JSONObject source = obj.getJSONObject("_source");
           String status = source.getString("status");
 
-          if(status.equals("RUNNING")) {
+          if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
             source.put("status", "KILLED");
             elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
           }

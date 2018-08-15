@@ -72,10 +72,10 @@ import java.util.Date;
         @NamedQuery(name = "TensorBoard.findAll", query = "SELECT t FROM TensorBoard t")
         , @NamedQuery(name = "TensorBoard.findByProjectId", query = "SELECT t FROM TensorBoard t WHERE " +
         "t.tensorBoardPK.projectId = :projectId")
-        , @NamedQuery(name = "TensorBoard.findByTeamMember", query = "SELECT t FROM TensorBoard t WHERE " +
-        "t.tensorBoardPK.email = :email")
+        , @NamedQuery(name = "TensorBoard.findByUserId", query = "SELECT t FROM TensorBoard t WHERE " +
+        "t.tensorBoardPK.userId = :userId")
         , @NamedQuery(name = "TensorBoard.findByProjectAndUser", query = "SELECT t FROM TensorBoard t WHERE " +
-        "t.tensorBoardPK.projectId = :projectId AND t.tensorBoardPK.email = :email")})
+        "t.tensorBoardPK.projectId = :projectId AND t.tensorBoardPK.userId = :userId")})
 public class TensorBoard implements Serializable {
 
   private static final long serialVersionUID = 1L;

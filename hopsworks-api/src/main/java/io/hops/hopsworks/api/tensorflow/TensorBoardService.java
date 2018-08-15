@@ -136,6 +136,7 @@ public class TensorBoardService {
           "You are not authorized for this invocation.");
     }
     tensorBoardController.stopTensorBoard(this.project, user);
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 }
