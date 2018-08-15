@@ -282,7 +282,7 @@ public class Users implements Serializable {
   private Collection<JupyterSettings> jupyterSettingsCollection;
 
   @OneToMany(cascade = CascadeType.ALL,
-      mappedBy = "uid")
+      mappedBy = "users")
   private Collection<TensorBoard> tensorBoardCollection;
 
 

@@ -10,7 +10,6 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardPK;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -37,8 +36,6 @@ public class TensorBoardController {
   private Settings settings;
   @EJB
   TensorBoardFacade tensorBoardFacade;
-  @EJB
-  UserFacade userFacade;
   @EJB
   TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
@@ -112,8 +109,8 @@ public class TensorBoardController {
 
       TensorBoard newTensorBoard = new TensorBoard();
       TensorBoardPK tensorBoardPK = new TensorBoardPK();
-      tensorBoardPK.setProject(project);
-      tensorBoardPK.setUser(user);
+      tensorBoardPK.setProjectId(project.getId());
+      tensorBoardPK.setUserId(user.getUid());
       newTensorBoard.setTensorBoardPK(tensorBoardPK);
       newTensorBoard.setPid(tensorBoardDTO.getPid());
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());

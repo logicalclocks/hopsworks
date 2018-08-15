@@ -59,7 +59,7 @@ import java.util.logging.Logger;
 /**
  * *
  * This class wraps a bash script with sudo rights that can be executed by the node['hopsworks']['user'].
- * /srv/hops/domains/domain1/bin/tfserving.sh
+ * /srv/hops/domains/domain1/bin/tensorboard.sh
  * The bash script has several commands with parameters that can be executed.
  * This class provides a Java interface for executing the commands.
  */
@@ -282,7 +282,7 @@ public class TensorBoardProcessMgr {
       exitValue = process.exitValue();
       HdfsUsers hdfsUser = tb.getHdfsUser();
       String tensorBoardDir = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-      String localDir = DigestUtils.sha256Hex(tb.getTensorBoardPK().getProject().getName()
+      String localDir = DigestUtils.sha256Hex(tb.getProject().getName()
           + "_" + hdfsUser.getName());
       tensorBoardDir = tensorBoardDir + File.separator + localDir;
       FileUtils.deleteDirectory(new File(tensorBoardDir));

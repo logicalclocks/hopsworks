@@ -439,14 +439,12 @@ public class JupyterService {
     livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
 
     int retries = 3;
-    while(retries > 0) {
-      if (livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
-        LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
+    while(retries > 0 && livyService.getLivySessionsForProjectUser(project, user, ProjectServiceEnum.JUPYTER).size() > 0) {
+
+      LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " + project.getName() +
             " user " + hdfsUser + ", retrying...");
-        livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
-      } else {
-        break;
-      }
+      livyService.deleteAllLivySessions(hdfsUser, ProjectServiceEnum.JUPYTER);
+
       try {
         Thread.sleep(1000);
       } catch(InterruptedException ie) {

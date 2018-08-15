@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.experiments;
 
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
@@ -58,6 +59,8 @@ public class TensorBoardKillTimer {
   @EJB
   private TensorBoardFacade tensorBoardFacade;
   @EJB
+  private ProjectFacade projectFacade;
+  @EJB
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private TensorBoardProcessMgr tensorBoardProcessMgr;
@@ -79,9 +82,7 @@ public class TensorBoardKillTimer {
               tensorBoardFacade.remove(tensorBoard);
               HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
               String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
-
-                      DigestUtils.sha256Hex(tensorBoard.getTensorBoardPK().getProject().getName()
-                          + "_" + hdfsUser.getName());
+                      DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
               File tbDir = new File(tbPath);
               if(tbDir.exists()) {
                 FileUtils.deleteDirectory(tbDir);
@@ -103,8 +104,7 @@ public class TensorBoardKillTimer {
           HdfsUsers hdfsUser = tensorBoard.getHdfsUser();
           String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
 
-                  DigestUtils.sha256Hex(tensorBoard.getTensorBoardPK().getProject().getName()
-                      + "_" + hdfsUser.getName());
+                  DigestUtils.sha256Hex(tensorBoard.getProject().getName() + "_" + hdfsUser.getName());
           File tbDir = new File(tbPath);
           if(tbDir.exists()) {
             FileUtils.deleteDirectory(tbDir);

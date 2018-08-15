@@ -258,6 +258,9 @@ public class ApplicationService {
             projectUser));
 
     Collection<HdfsUsers> hdfsUsers = hdfsUsersFacade.findProjectUsers(project.getName());
+    if(hdfsUsers == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
     HdfsUsers jupyterHdfsUser = null;
     for(HdfsUsers hdfsUser: hdfsUsers) {
       if(hdfsUser.getUsername().equals(username)) {
@@ -274,15 +277,8 @@ public class ApplicationService {
                 .request()
                 .method("GET")
                 .readEntity(String.class));
-        LOGGER.log(Level.SEVERE, "RESPONSE");
-        LOGGER.log(Level.SEVERE, obj.toString(4));
-
-
-
       }
     }
-
-
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

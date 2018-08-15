@@ -79,7 +79,8 @@ public class TensorBoardService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTensorBoard(@Context SecurityContext sc) throws AppException {
     if (project.getId() == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Incomplete request!");
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
     }
     try {
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
@@ -115,15 +116,25 @@ public class TensorBoardService {
 
     TensorBoardDTO tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user);
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tensorBoardDTO).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response stopTensorBoard(@Context SecurityContext sc) throws AppException {
+    if (project.getId() == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+          "Incomplete request!");
+    }
+
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
+
+    if (user == null) {
+      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+          "You are not authorized for this invocation.");
+    }
     tensorBoardController.stopTensorBoard(this.project, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

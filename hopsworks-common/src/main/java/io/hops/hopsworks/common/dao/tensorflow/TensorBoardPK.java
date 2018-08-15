@@ -17,60 +17,53 @@
 package io.hops.hopsworks.common.dao.tensorflow;
 
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
-
+import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
+import javax.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
 @Embeddable
 public class TensorBoardPK implements Serializable {
 
-  @JoinColumn(name = "project_id",
-      referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Project project;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "project_id")
+  private int projectId;
 
-  @JoinColumn(name = "user_id",
-      referencedColumnName = "uid")
-  @ManyToOne(optional = false)
-  private Users user;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "user_id")
+  private int userId;
 
   public TensorBoardPK() {
   }
 
-  public TensorBoardPK(Project projectId, Users user) {
-    this.project = projectId;
-    this.user = user;
+  public TensorBoardPK(int projectId, int userId) {
+    this.projectId = projectId;
+    this.userId = userId;
   }
 
-  public Project getProject() {
-    return project;
+  public int getProjectId() {
+    return projectId;
   }
 
-  public void setProject(Project project) {
-    this.project = project;
+  public void setProjectId(int projectId) {
+    this.projectId = projectId;
   }
 
-  public Users getUser() {
-    return user;
+  public int getUserId() {
+    return userId;
   }
 
-  public void setUser(Users user) {
-    this.user = user;
+  public void setUserId(int userId) {
+    this.userId = userId;
   }
 
   @Override
   public int hashCode() {
-    int hash = 0;
-    hash += (int) getProject().getId();
-    String email = getUser().getEmail();
-    hash += (email != null ? email.hashCode() : 0);
-    return hash;
+    return (getProjectId() + "_" + getUserId()).hashCode();
   }
 
   @Override
@@ -80,8 +73,8 @@ public class TensorBoardPK implements Serializable {
       return false;
     }
     TensorBoardPK other = (TensorBoardPK) object;
-    if (this.getProject().getId() != other.getProject().getId()
-        || this.getUser().getUid() != other.getUser().getUid()) {
+    if (this.getProjectId() != other.getProjectId()
+        || this.getUserId() != other.getUserId()) {
       return false;
     } else {
       return true;
@@ -91,6 +84,6 @@ public class TensorBoardPK implements Serializable {
   @Override
   public String toString() {
     return "io.hops.hopsworks.common.dao.jupyter.TensorBoardPK[ project=" +
-            getProject() + ", user=" + getUser() + " ]";
+            getProjectId() + ", user=" + getUserId() + " ]";
   }
 }

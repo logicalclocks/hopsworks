@@ -40,16 +40,24 @@
 package io.hops.hopsworks.common.dao.tensorflow;
 
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.EmbeddedId;
-import javax.persistence.Column;
 import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.JoinColumn;
 import javax.persistence.Temporal;
+import javax.persistence.ManyToOne;
 import javax.persistence.TemporalType;
+
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -102,6 +110,21 @@ public class TensorBoard implements Serializable {
           max = 10000)
   @Column(name = "hdfs_logdir")
   private String hdfsLogdir;
+
+  @JoinColumn(name = "project_id",
+      referencedColumnName = "id",
+      insertable = false,
+      updatable = false)
+  @ManyToOne(optional = false)
+  private Project project;
+
+  @JoinColumn(name = "user_id",
+      referencedColumnName = "uid",
+      insertable = false,
+      updatable = false)
+  @ManyToOne(optional = false)
+  private Users user;
+
 
   public TensorBoard() {
   }
@@ -174,5 +197,48 @@ public class TensorBoard implements Serializable {
 
   public void setElasticId(String elasticId) {
     this.elasticId = elasticId;
+  }
+
+  public Project getProject() {
+    return project;
+  }
+
+  public void setProject(Project project) {
+    this.project = project;
+  }
+
+  public Users getUser() {
+    return user;
+  }
+
+  public void setUser(Users user) {
+    this.user = user;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (tensorBoardPK != null ? tensorBoardPK.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof JupyterSettings)) {
+      return false;
+    }
+    TensorBoard other = (TensorBoard) object;
+    if ((this.tensorBoardPK == null && other.tensorBoardPK != null) || (this.tensorBoardPK != null
+        && !this.tensorBoardPK.equals(other.tensorBoardPK))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "io.hops.hopsworks.common.dao.tensorflow.TensorBoard[ tensorBoardPK="
+        + tensorBoardPK + " ]";
   }
 }
