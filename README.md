@@ -13,7 +13,7 @@ metadata. Hopsworks lowers the barrier to entry for users getting started with H
 <ul>
 <li><a href="https://twitter.com/hopshadoop">Follow our Twitter account.</a></li>
 <li><a href="https://groups.google.com/forum/#!forum/hopshadoop">Join our developer mailing list.</a></li>
-<li><a href="https://cloud17.sics.se/jenkins/view/develop/">Checkout the current build status.</a></li>
+<li><a href="https://bbc1.sics.se/jenkins/job/Hopsworks-build/">Checkout the current build status.</a></li>
 </ul>
 
 ## Installing Hopsworks
