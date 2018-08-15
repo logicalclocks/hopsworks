@@ -41,7 +41,7 @@ package io.hops.hopsworks.api.kibana;
 
 /**
  * Enumeration that defines the filtered URIs of Kibana going through
- * HopsWorks proxy servlet.
+ * Hopsworks proxy servlet.
  * <p>
  * <p>
  * List of requests (prefix is /hopsworks-api/kibana)

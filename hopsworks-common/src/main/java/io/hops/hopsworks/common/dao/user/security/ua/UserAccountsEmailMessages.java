@@ -45,17 +45,17 @@ public class UserAccountsEmailMessages {
    * Subject of account request
    */
   public final static String ACCOUNT_REQUEST_SUBJECT
-          = "Your HopsWorks account needs verification";
+          = "Your Hopsworks account needs verification";
   /*
    * Subject of cluster request
    */
-  public final static String CLUSTER_REQUEST_SUBJECT = "Your HopsWorks cluster needs verification";
+  public final static String CLUSTER_REQUEST_SUBJECT = "Your Hopsworks cluster needs verification";
 
   /*
    * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
-          = "Welcome to HopsWorks!";
+          = "Welcome to Hopsworks!";
 
   public final static String ALERT_SERVICE_DOWN
           = "A Hopsworks service has stopped ";
@@ -97,7 +97,7 @@ public class UserAccountsEmailMessages {
    * Subject of rejected accounts
    */
   public final static String ACCOUNT_REJECT
-          = "Your HopsWorks account request has been rejected";
+          = "Your Hopsworks account request has been rejected";
 
   /*
    * Default accpount acitvation period
@@ -110,7 +110,7 @@ public class UserAccountsEmailMessages {
    * Account deactivation
    */
   public final static String ACCOUNT_DEACTIVATED
-          = "Your HopsWorks account has expired";
+          = "Your Hopsworks account has expired";
 
   /**
    * Build an email message for mobile users upon registration.
@@ -155,7 +155,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
@@ -185,7 +185,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a password recovery request for HopsWorks on your behalf.\n\n";
+            + "We received a password recovery request for Hopsworks on your behalf.\n\n";
     String l2
             = "Please click on the following link to recover your password: \n";
 
@@ -204,7 +204,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your HopsWorks account has been blocked.\n\n";
+            + "Your Hopsworks account has been blocked.\n\n";
     String l2
             = "If you have any questions please visit www.hops.io or contact support@hops.io";
     String l3 = "If you have any questions please contact "
@@ -274,7 +274,7 @@ public class UserAccountsEmailMessages {
 
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We receieved an account deactivation request and your HopsWorks "
+            + "We receieved an account deactivation request and your Hopsworks "
             + "account has been deactivated.\n\n";
     String l2 = "If you have any questions please contact "
             + HOPSWORKS_SUPPORT_EMAIL;
@@ -306,7 +306,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account request to access HopsWorks has been approved.\n\n";
+            + "Your account request to access Hopsworks has been approved.\n\n";
     String l2 = "You can login with your username: " + username
             + " and other credentials you setup.\n\n\n";
     String l3 = "If you have any questions please contact "
@@ -320,7 +320,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your HopsWorks account request has been rejected.\n\n";
+            + "Your Hopsworks account request has been rejected.\n\n";
     String l2 = "If you have any questions please contact "
             + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2;
@@ -352,7 +352,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to verify your email address. Within"
             + ACCOUNT_ACITVATION_PERIOD
             + " hours of getting this email.\n\n\n";
