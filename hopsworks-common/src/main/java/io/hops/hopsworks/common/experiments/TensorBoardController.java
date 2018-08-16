@@ -15,7 +15,6 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
-import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -30,8 +29,6 @@ import java.util.regex.Pattern;
 
 @Stateless
 public class TensorBoardController {
-  @EJB
-  private Settings settings;
   @EJB
   TensorBoardFacade tensorBoardFacade;
   @EJB
