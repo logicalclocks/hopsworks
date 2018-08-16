@@ -182,10 +182,9 @@ public class KibanaProxyServlet extends ProxyServlet {
     HttpResponse proxyResponse = null;
     try {
       // Execute the request
-      if (doLog) {
-        log("proxy " + method + " uri: " + servletRequest.getRequestURI()
-                + " -- " + proxyRequest.getRequestLine().getUri());
-      }
+      LOG.log(Level.FINE, "proxy " + method + " uri: " + servletRequest.getRequestURI()
+          + " -- " + proxyRequest.getRequestLine().getUri());
+
       proxyResponse = super.proxyClient.execute(super.getTargetHost(
               myRequestWrapper), proxyRequest);
 
