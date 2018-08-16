@@ -78,11 +78,11 @@ public class TensorBoardKillTimer {
       if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
         try {
           tensorBoardController.cleanup(tensorBoard);
+          LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
+              settings.getTensorBoardMaxLastAccessed() + " milliseconds");
         } catch (TensorBoardCleanupException tbce) {
           LOG.log(Level.SEVERE, "Failed to clean up running TensorBoard", tbce);
         }
-        LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
-          settings.getTensorBoardMaxLastAccessed() + " milliseconds");
       }
     }
 
@@ -99,6 +99,7 @@ public class TensorBoardKillTimer {
             BigInteger pid = BigInteger.valueOf(Long.parseLong(pidContents));
 
             if(pid != null) {
+              // do not kill TBs which are in the DB
               boolean tbExists = false;
               for (TensorBoard tb : TBs) {
                 if (tb.getPid().equals(pid)) {
@@ -108,10 +109,8 @@ public class TensorBoardKillTimer {
               }
 
               if (!tbExists) {
-                if (tensorBoardProcessMgr.ping(pid) == 0) {
-                  tensorBoardProcessMgr.killTensorBoard(pid);
-                  FileUtils.deleteDirectory(file);
-                }
+                LOG.log(Level.SEVERE, "MANUAL CLEANUP NEEDED: Detected a stray TensorBoard with pid "
+                    + pid.toString() + " in directory " + file.getAbsolutePath());
               }
             }
           }

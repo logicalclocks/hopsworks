@@ -47,7 +47,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
@@ -191,6 +190,8 @@ public class TensorBoardProcessMgr {
                       .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certificatesPath);
             }
           } catch (IOException ioe) {
+            LOGGER.log(Level.SEVERE, "Failed in materializing certificates for " +
+                hdfsUser + " in directory " + certsDir, ioe);
             HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
                 settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesPath, settings);
 
@@ -232,8 +233,7 @@ public class TensorBoardProcessMgr {
           tensorBoardDTO.setEndpoint(host + ": " + port);
           return tensorBoardDTO;
         } else {
-          LOGGER.log(Level.SEVERE,
-                  "Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
+          LOGGER.log(Level.SEVERE,"Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
           if(pid != null) {
             killTensorBoard(pid);
           }
@@ -324,7 +324,7 @@ public class TensorBoardProcessMgr {
         HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
             settings.getHdfsTmpCertDir(), certificateMaterializer, certsDir, settings);
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsDir);
+        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsDir, e);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
