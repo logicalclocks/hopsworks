@@ -47,6 +47,12 @@ public class TensorBoardController {
 
   private static final Logger LOGGER = Logger.getLogger(TensorBoardController.class.getName());
 
+  /**
+   * Fetch the TensorBoard from the database for the user in this project
+   * @param project
+   * @param user
+   * @return
+   */
   public TensorBoardDTO getTensorBoard(Project project, Users user) {
     TensorBoard tb;
     try {
@@ -63,6 +69,14 @@ public class TensorBoardController {
   }
 
 
+  /**
+   * Start the TensorBoard for the specific user in this project with the specified elasticId containing the logdir
+   * @param elasticId
+   * @param project
+   * @param user
+   * @return
+   * @throws TensorBoardCleanupException
+   */
   public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user)
       throws TensorBoardCleanupException {
     //Kill existing TensorBoard

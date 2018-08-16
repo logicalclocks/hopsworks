@@ -86,15 +86,11 @@ public class TensorBoardService {
 
     try {
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-      if (user == null) {
-        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-            "You are not authorized for this invocation.");
-      }
-      TensorBoardDTO tb = tensorBoardController.getTensorBoard(project, user);
-      if(tb == null) {
+      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
+      if(tbDTO == null) {
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
       }
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tb).build();
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tbDTO).build();
     } catch (PersistenceException pe) {
       LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -113,28 +109,17 @@ public class TensorBoardService {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-      "You are not authorized for this invocation.");
-    }
 
     TensorBoardDTO tensorBoardDTO = null;
     try {
       tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
     } catch(TensorBoardCleanupException tbce) {
       LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
           "Could not start TensorBoard.");
     }
-
-    if(tensorBoardDTO == null) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not start TensorBoard.");
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
   @ApiOperation("Stop the running TensorBoard for the logged in user")
@@ -146,19 +131,19 @@ public class TensorBoardService {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
 
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
     try {
+      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
+      if(tbDTO == null) {
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      }
+
       tensorBoardController.cleanup(this.project, user);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
     } catch(TensorBoardCleanupException tbce) {
       LOGGER.log(Level.SEVERE, "Failed to stop TensorBoard", tbce);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
           "Could not stop TensorBoard.");
     }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 }
