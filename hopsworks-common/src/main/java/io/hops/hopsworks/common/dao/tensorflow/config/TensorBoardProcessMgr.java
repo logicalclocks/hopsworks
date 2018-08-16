@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -46,6 +47,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
@@ -111,7 +113,8 @@ public class TensorBoardProcessMgr {
 
     String localDir = DigestUtils.sha256Hex(project.getName() + "_" + hdfsUser.getName());
     tensorBoardDir = tensorBoardDir + File.separator + localDir;
-    String certificatesDir = tensorBoardDir + File.separator + "certificates";
+    String certificatesPath = tensorBoardDir + File.separator + "certificates";
+    File certsDir = new File(certificatesPath);
 
 
     File tbDir = new File(tensorBoardDir);
@@ -132,23 +135,10 @@ public class TensorBoardProcessMgr {
       }
       FileUtils.deleteDirectory(tbDir);
     }
-    tbDir.mkdirs();
+    certsDir.mkdirs();
 
     String anacondaEnvironmentPath = settings.getAnacondaProjectDir(project.getName());
     //disable for now
-
-    DistributedFileSystemOps dfso = dfsService.getDfsOps();
-    try {
-      if(settings.getHopsRpcTls()) {
-        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
-      }
-    } catch (IOException ioe) {
-      LOGGER.log(Level.SEVERE, null, ioe);
-    } finally {
-      if (dfso != null) {
-        dfsService.closeDfsClient(dfso);
-      }
-    }
 
     int retries = 3;
 
@@ -163,7 +153,7 @@ public class TensorBoardProcessMgr {
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
       String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
-        tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certificatesDir};
+        tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certificatesPath};
 
       LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
@@ -194,6 +184,22 @@ public class TensorBoardProcessMgr {
           pid = BigInteger.valueOf(Long.parseLong(pidContents));
         }
         if(exitValue == 0 && pid != null) {
+          DistributedFileSystemOps dfso = dfsService.getDfsOps();
+          try {
+            if(settings.getHopsRpcTls()) {
+              HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
+                      .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certificatesPath);
+            }
+          } catch (IOException ioe) {
+            HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+                settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesPath, settings);
+
+          } finally {
+            if (dfso != null) {
+              dfsService.closeDfsClient(dfso);
+            }
+          }
+
           int maxWait = 10;
           String logFilePath = tensorBoardDir + File.separator + port + ".log";
           File logFile = new File(logFilePath);
@@ -304,10 +310,29 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   public void cleanupLocalTBDir(TensorBoard tb) throws IOException {
+
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
     String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
         DigestUtils.sha256Hex(tb.getProject().getName() + "_" + hdfsUser.getName());
+    String certsDir = tbPath + File.separator + "certificates";
+
+    //dematerialize certificates
+    if(settings.getHopsRpcTls()) {
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      try {
+        HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
+            settings.getHdfsTmpCertDir(), certificateMaterializer, certsDir, settings);
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsDir);
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
+      }
+    }
+
+    //remove directory itself
     File tbDir = new File(tbPath);
     if(tbDir.exists()) {
       FileUtils.deleteDirectory(tbDir);
