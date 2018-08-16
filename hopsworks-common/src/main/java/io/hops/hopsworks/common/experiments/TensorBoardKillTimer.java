@@ -77,7 +77,7 @@ public class TensorBoardKillTimer {
       if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
         tensorBoardController.cleanup(tensorBoard);
         LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
-        settings.getTensorBoardMaxLastAccessed() + " milliseconds");
+          settings.getTensorBoardMaxLastAccessed() + " milliseconds");
       }
     }
 

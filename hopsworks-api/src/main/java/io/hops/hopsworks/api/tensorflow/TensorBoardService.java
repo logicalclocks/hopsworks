@@ -26,6 +26,8 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.util.Settings;
+import io.swagger.annotations.ApiOperation;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -75,6 +77,7 @@ public class TensorBoardService {
 
   private final static Logger LOGGER = Logger.getLogger(TensorBoardService.class.getName());
 
+  @ApiOperation("Get the running TensorBoard of the authorized user in this project")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -97,6 +100,7 @@ public class TensorBoardService {
     }
   }
 
+  @ApiOperation("Start a new TensorBoard")
   @POST
   @Path("/{elasticId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -116,6 +120,7 @@ public class TensorBoardService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
+  @ApiOperation("Stop a running TensorBoard")
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

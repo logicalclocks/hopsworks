@@ -25,7 +25,11 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -37,10 +41,8 @@ import javax.ejb.Stateless;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -65,7 +67,7 @@ import java.util.logging.Logger;
 @DependsOn("Settings")
 public class TensorBoardProcessMgr {
 
-  private static final Logger logger = Logger.getLogger(TensorBoardProcessMgr.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TensorBoardProcessMgr.class.getName());
 
   @EJB
   private Settings settings;
@@ -81,6 +83,10 @@ public class TensorBoardProcessMgr {
   private ProjectFacade projectFacade;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private DistributedFsService dfsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir)
@@ -97,6 +103,7 @@ public class TensorBoardProcessMgr {
 
     String localDir = DigestUtils.sha256Hex(project.getName() + "_" + hdfsUser.getName());
     tensorBoardDir = tensorBoardDir + File.separator + localDir;
+    String certificatesDir = tensorBoardDir + File.separator + "certificates";
 
     File tbDir = new File(tensorBoardDir);
     if(tbDir.exists()) {
@@ -109,7 +116,7 @@ public class TensorBoardProcessMgr {
               killTensorBoard(pid);
             }
           } catch(NumberFormatException nfe) {
-            logger.log(Level.WARNING, "Expected number in pidfile " +
+            LOGGER.log(Level.WARNING, "Expected number in pidfile " +
                     file.getAbsolutePath() + " got " + pidContents);
           }
         }
@@ -119,6 +126,23 @@ public class TensorBoardProcessMgr {
     tbDir.mkdirs();
 
     String anacondaEnvironmentPath = settings.getAnacondaProjectDir(project.getName());
+    //disable for now
+    if(true == false) {
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      try {
+        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
+            .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certificatesDir);
+      } catch (IOException ioe) {
+        LOGGER.log(Level.SEVERE, null, ioe);
+        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(),
+            certificateMaterializer, certificatesDir, settings);
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
+      }
+    }
 
     int retries = 3;
 
@@ -133,9 +157,9 @@ public class TensorBoardProcessMgr {
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
       String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
-        tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion()};
+        tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certificatesDir};
 
-      logger.log(Level.INFO, Arrays.toString(command));
+      LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
 
       try {
@@ -149,7 +173,7 @@ public class TensorBoardProcessMgr {
             // Wait until the launcher bash script has finished
             process.waitFor(20l, TimeUnit.SECONDS);
           } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE,
+            LOGGER.log(Level.SEVERE,
                     "Woken while waiting for the TensorBoard to start: {0}",
                     ex.getMessage());
           }
@@ -196,7 +220,7 @@ public class TensorBoardProcessMgr {
           tensorBoardDTO.setEndpoint(host + ": " + port);
           return tensorBoardDTO;
         } else {
-          logger.log(Level.SEVERE,
+          LOGGER.log(Level.SEVERE,
                   "Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
           if(pid != null) {
             killTensorBoard(pid);
@@ -205,7 +229,7 @@ public class TensorBoardProcessMgr {
         }
 
       } catch (Exception ex) {
-        logger.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex.
+        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex.
                 toString());
         if (process != null) {
           process.destroyForcibly();
@@ -214,7 +238,6 @@ public class TensorBoardProcessMgr {
         retries--;
       }
     }
-
     return null;
   }
 
@@ -225,21 +248,15 @@ public class TensorBoardProcessMgr {
     int exitValue;
 
     String[] command = {"/usr/bin/sudo", prog, "kill", pid.toString()};
-    logger.log(Level.INFO, Arrays.toString(command));
+    LOGGER.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-              process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        logger.info(line);
-      }
       process.waitFor(20l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
       exitValue=2;
-      logger.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
+      LOGGER.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
     }
     return exitValue;
   }
@@ -251,22 +268,16 @@ public class TensorBoardProcessMgr {
     int exitValue;
 
     String[] command = {"/usr/bin/sudo", prog, "kill", tb.getPid().toString()};
-    logger.log(Level.INFO, Arrays.toString(command));
+    LOGGER.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-              process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        logger.info(line);
-      }
       process.waitFor(20l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
       cleanupLocalTBDir(tb);
     } catch (IOException | InterruptedException ex) {
       exitValue=2;
-      logger.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
+      LOGGER.log(Level.SEVERE,"Failed to kill TensorBoard" , ex);
     }
     return exitValue;
   }
@@ -289,20 +300,14 @@ public class TensorBoardProcessMgr {
     int exitValue = 1;
 
     String[] command = {"/usr/bin/sudo", prog, "ping", pid.toString()};
-    logger.log(Level.INFO, Arrays.toString(command));
+    LOGGER.log(Level.INFO, Arrays.toString(command));
     ProcessBuilder pb = new ProcessBuilder(command);
     try {
       Process process = pb.start();
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-              process.getInputStream(), Charset.forName("UTF8")));
-      String line;
-      while ((line = br.readLine()) != null) {
-        logger.info(line);
-      }
-      process.waitFor();
+      process.waitFor(20l, TimeUnit.SECONDS);
       exitValue = process.exitValue();
     } catch (IOException | InterruptedException ex) {
-      logger.log(Level.SEVERE, "Problem pinging: {0}", ex.
+      LOGGER.log(Level.SEVERE, "Problem pinging: {0}", ex.
               toString());
     }
     return exitValue;
