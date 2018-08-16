@@ -12,6 +12,7 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.Settings;
@@ -62,7 +63,8 @@ public class TensorBoardController {
   }
 
 
-  public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user) {
+  public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user)
+      throws TensorBoardCleanupException {
     //Kill existing TensorBoard
     TensorBoard tb = null;
     TensorBoardDTO tensorBoardDTO = null;
@@ -75,11 +77,15 @@ public class TensorBoardController {
     String hdfsLogdir = null;
     try {
       hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
-      //Inject correct NN host:port
-      hdfsLogdir = replaceNN(hdfsLogdir);
+    } catch (NotFoundException nfe) {
+      LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
+      return null;
+    }
 
+    //Inject an alive NN host:port
+    hdfsLogdir = replaceNN(hdfsLogdir);
 
-
+    try {
       String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
@@ -97,23 +103,27 @@ public class TensorBoardController {
       newTensorBoard.setLastAccessed(new Date());
       newTensorBoard.setHdfsLogdir(hdfsLogdir);
       tensorBoardFacade.persist(newTensorBoard);
-    } catch (NotFoundException nfe) {
-
-    }
-    catch(IOException | DatabaseException e) {
+    } catch(IOException | DatabaseException e) {
       LOGGER.log(Level.SEVERE, "Could not start TensorBoard", e);
-
     }
-
     return tensorBoardDTO;
   }
 
-  public void cleanup(Project project, Users user) {
+  /**
+   * Stop and cleanup a TensorBoard for the given project and user
+   * @param project
+   * @param user
+   */
+  public void cleanup(Project project, Users user) throws TensorBoardCleanupException {
     TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
     this.cleanup(tb);
   }
 
-  public void cleanup(TensorBoard tb) {
+  /**
+   * Stop and cleanup a TensorBoard
+   * @param tb
+   */
+  public void cleanup(TensorBoard tb) throws TensorBoardCleanupException {
     if(tb != null) {
       //TensorBoard could be dead, remove from DB
       if(tensorBoardProcessMgr.ping(tb.getPid()) != 0) {
@@ -121,7 +131,7 @@ public class TensorBoardController {
           tensorBoardFacade.remove(tb);
           tensorBoardProcessMgr.cleanupLocalTBDir(tb);
         } catch (DatabaseException | IOException e) {
-          LOGGER.log(Level.SEVERE, "Exception while cleaning up after TensorBoard" , e);
+          throw new TensorBoardCleanupException("Exception while cleaning up after TensorBoard" , e);
         }
         //TensorBoard is alive, kill it and remove from DB
       } else if (tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
@@ -130,13 +140,18 @@ public class TensorBoardController {
             tensorBoardFacade.remove(tb);
             tensorBoardProcessMgr.cleanupLocalTBDir(tb);
           } catch (DatabaseException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Exception while cleaning up after TensorBoard" , e);
+            throw new TensorBoardCleanupException("Exception while cleaning up after TensorBoard" , e);
           }
         }
       }
     }
   }
 
+  /**
+   * Replace the namenode host:port which may be old (the path is previously read from elastic)
+   * @param hdfsPath
+   * @return HDFS path with updated namenode host:port
+   */
   private String replaceNN(String hdfsPath)  {
     HdfsLeDescriptors descriptor = hdfsLeDescriptorsFacade.findEndpoint();
 

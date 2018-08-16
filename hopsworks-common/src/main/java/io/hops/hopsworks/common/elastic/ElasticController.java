@@ -988,7 +988,7 @@ public class ElasticController {
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
           " for TensorBoard for project " + project.getName());
-      throw new NotFoundException("Could not find elastic index " + elasticId);
+      throw new NotFoundException("Could not find elastic index " + elasticId, e);
     }
 
     if(!foundEntry) {

@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
@@ -77,7 +78,7 @@ public class TensorBoardService {
 
   private final static Logger LOGGER = Logger.getLogger(TensorBoardService.class.getName());
 
-  @ApiOperation("Get the running TensorBoard of the authorized user in this project")
+  @ApiOperation("Get the running TensorBoard of the logged in user in this project")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -96,11 +97,13 @@ public class TensorBoardService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tb).build();
     } catch (PersistenceException pe) {
       LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not get the running TensorBoard.");
     }
   }
 
-  @ApiOperation("Start a new TensorBoard")
+  @ApiOperation("Start a new TensorBoard for the logged in user")
   @POST
   @Path("/{elasticId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -115,12 +118,26 @@ public class TensorBoardService {
       "You are not authorized for this invocation.");
     }
 
-    TensorBoardDTO tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user);
+    TensorBoardDTO tensorBoardDTO = null;
+    try {
+      tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user);
+    } catch(TensorBoardCleanupException tbce) {
+      LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not start TensorBoard.");
+    }
+
+    if(tensorBoardDTO == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not start TensorBoard.");
+    }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
-  @ApiOperation("Stop a running TensorBoard")
+  @ApiOperation("Stop the running TensorBoard for the logged in user")
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -133,7 +150,14 @@ public class TensorBoardService {
       throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
           "You are not authorized for this invocation.");
     }
-    tensorBoardController.cleanup(this.project, user);
+    try {
+      tensorBoardController.cleanup(this.project, user);
+    } catch(TensorBoardCleanupException tbce) {
+      LOGGER.log(Level.SEVERE, "Failed to stop TensorBoard", tbce);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not stop TensorBoard.");
+    }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }

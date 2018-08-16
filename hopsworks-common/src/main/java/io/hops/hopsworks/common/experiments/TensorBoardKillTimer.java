@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
+import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.io.FileUtils;
 
@@ -75,7 +76,11 @@ public class TensorBoardKillTimer {
       Date accessed = tensorBoard.getLastAccessed();
       Date current = Calendar.getInstance().getTime();
       if ((current.getTime() - accessed.getTime()) > settings.getTensorBoardMaxLastAccessed()) {
-        tensorBoardController.cleanup(tensorBoard);
+        try {
+          tensorBoardController.cleanup(tensorBoard);
+        } catch (TensorBoardCleanupException tbce) {
+          LOG.log(Level.SEVERE, "Failed to clean up running TensorBoard", tbce);
+        }
         LOG.log(Level.INFO, "Killed TensorBoard " + tensorBoard.toString() + " not accessed in the last " +
           settings.getTensorBoardMaxLastAccessed() + " milliseconds");
       }
