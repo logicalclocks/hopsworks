@@ -99,6 +99,7 @@ angular.module('hopsWorksApp')
                 TensorBoardService.startTensorBoard(self.projectId, self.id).then(
                     function(success) {
                         self.tb = success.data;
+                        console.log(self.tb);
                         self.tbUI();
                         self.id = "";
                     },

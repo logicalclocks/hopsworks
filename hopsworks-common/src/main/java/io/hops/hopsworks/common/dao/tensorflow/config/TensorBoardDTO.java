@@ -19,12 +19,17 @@ package io.hops.hopsworks.common.dao.tensorflow.config;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.project.ProjectDTO;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.math.BigInteger;
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class TensorBoardDTO {
 
+  @JsonIgnore
   private BigInteger pid;
 
   private String endpoint;

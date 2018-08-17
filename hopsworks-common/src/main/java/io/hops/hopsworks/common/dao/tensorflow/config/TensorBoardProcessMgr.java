@@ -107,7 +107,7 @@ public class TensorBoardProcessMgr {
     String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
     String projectUserUniquePath = project.getName() + "_" + hdfsUser.getName();
     String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
-    String certsPath = "";
+    String certsPath = "\"\"";
 
     File tbDir = new File(tbPath);
     if(tbDir.exists()) {

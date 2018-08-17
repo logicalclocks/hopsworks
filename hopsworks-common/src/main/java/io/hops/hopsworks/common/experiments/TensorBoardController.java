@@ -118,6 +118,10 @@ public class TensorBoardController {
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
       tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir);
+      Date lastAccessed = new Date();
+      tensorBoardDTO.setElasticId(elasticId);
+      tensorBoardDTO.setLastAccessed(lastAccessed);
+      tensorBoardDTO.setHdfsLogdir(hdfsLogdir);
 
       TensorBoard newTensorBoard = new TensorBoard();
       TensorBoardPK tensorBoardPK = new TensorBoardPK();
@@ -128,7 +132,7 @@ public class TensorBoardController {
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
       newTensorBoard.setHdfsUserId(hdfsUser.getId());
       newTensorBoard.setElasticId(elasticId);
-      newTensorBoard.setLastAccessed(new Date());
+      newTensorBoard.setLastAccessed(lastAccessed);
       newTensorBoard.setHdfsLogdir(hdfsLogdir);
       tensorBoardFacade.persist(newTensorBoard);
     } catch(IOException | DatabaseException e) {
