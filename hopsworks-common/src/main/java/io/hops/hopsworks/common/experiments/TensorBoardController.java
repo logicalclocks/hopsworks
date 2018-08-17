@@ -159,6 +159,11 @@ public class TensorBoardController {
     }
   }
 
+  /**
+   * Remove and cleanup all running TensorBoards for this project
+   * @param project
+   * @throws TensorBoardCleanupException
+   */
   public void removeProject(Project project) throws TensorBoardCleanupException {
     Collection<TensorBoard> instances = project.getTensorBoardCollection();
     if(instances != null) {
