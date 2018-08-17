@@ -124,7 +124,6 @@ public class TensorBoardService {
 
   @ApiOperation("Stop the running TensorBoard for the logged in user")
   @DELETE
-  @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response stopTensorBoard(@Context SecurityContext sc) throws AppException {
 
