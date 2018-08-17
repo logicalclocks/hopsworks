@@ -109,15 +109,23 @@ public class TensorBoardKillTimer {
               }
 
               if (!tbExists) {
-                LOG.log(Level.SEVERE, "MANUAL CLEANUP NEEDED: Detected a stray TensorBoard with pid "
-                    + pid.toString() + " in directory " + file.getAbsolutePath());
+                if(tensorBoardProcessMgr.ping(pid) == 0) {
+                  if (settings.getHopsRpcTls()) {
+                    LOG.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
+                        + pid.toString() + " in directory " + file.getAbsolutePath() + " killing it for now...");
+                    tensorBoardProcessMgr.killTensorBoard(pid);
+                  } else {
+                    tensorBoardProcessMgr.killTensorBoard(pid);
+                    FileUtils.deleteDirectory(file);
+                  }
+                }
               }
             }
           }
         }
       }
     } catch(IOException | NumberFormatException e) {
-      LOG.log(Level.SEVERE, "Exception while trying to kill stray TensorBoards", e);
+      LOG.log(Level.SEVERE, "Exception while reading .pid files", e);
     }
   }
 }

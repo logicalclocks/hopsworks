@@ -21,6 +21,7 @@ import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.NotFoundException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -158,7 +159,14 @@ public class TensorBoardController {
     }
   }
 
-
+  public void removeProject(Project project) throws TensorBoardCleanupException {
+    Collection<TensorBoard> instances = project.getTensorBoardCollection();
+    if(instances != null) {
+      for(TensorBoard tensorBoard: instances) {
+        this.cleanup(tensorBoard);
+      }
+    }
+  }
 
   /**
    * Replace the namenode host:port which may be old (the path is previously read from elastic)

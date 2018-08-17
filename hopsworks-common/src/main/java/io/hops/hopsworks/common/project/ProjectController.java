@@ -101,6 +101,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -112,6 +113,8 @@ import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -183,6 +186,8 @@ public class ProjectController {
   @EJB
   private ProjectServiceFacade projectServicesFacade;
   @EJB
+  private TensorBoardFacade tensorBoardFacade;
+  @EJB
   private InodeFacade inodes;
   @EJB
   private DatasetController datasetController;
@@ -216,6 +221,8 @@ public class ProjectController {
   private KafkaFacade kafkaFacade;
   @EJB 
   KafkaController kafkaController;
+  @EJB
+  TensorBoardController tensorBoardController;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -1557,7 +1564,7 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
       throws IOException, InterruptedException, ExecutionException,
-      AppException, CAException {
+      AppException, CAException, TensorBoardCleanupException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2052,6 +2059,9 @@ public class ProjectController {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
 
+      //kill running TB if any
+      tensorBoardController.cleanup(project, user);
+
       //kill all jobs run by this user.
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
@@ -2401,8 +2411,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTensorBoard(Project project) throws AppException {
-    tensorBoardProcessMgr.removeProject(project);
+  public void removeTensorBoard(Project project) throws TensorBoardCleanupException {
+    tensorBoardController.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

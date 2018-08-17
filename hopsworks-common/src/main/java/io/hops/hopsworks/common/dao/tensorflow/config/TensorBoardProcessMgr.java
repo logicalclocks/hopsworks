@@ -48,7 +48,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -102,21 +101,15 @@ public class TensorBoardProcessMgr {
           throws IOException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
-
     Process process = null;
     Integer port = 0;
-
     BigInteger pid = null;
+    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
+    String projectUserUniquePath = project.getName() + "_" + hdfsUser.getName();
+    String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
+    String certsPath = "";
 
-    String tensorBoardDir = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
-
-    String localDir = DigestUtils.sha256Hex(project.getName() + "_" + hdfsUser.getName());
-    tensorBoardDir = tensorBoardDir + File.separator + localDir;
-    String certificatesPath = tensorBoardDir + File.separator + "certificates";
-    File certsDir = new File(certificatesPath);
-
-
-    File tbDir = new File(tensorBoardDir);
+    File tbDir = new File(tbPath);
     if(tbDir.exists()) {
       for(File file: tbDir.listFiles()) {
         if(file.getName().endsWith(".pid")) {
@@ -134,11 +127,30 @@ public class TensorBoardProcessMgr {
       }
       FileUtils.deleteDirectory(tbDir);
     }
-    certsDir.mkdirs();
+    tbDir.mkdirs();
+
+    if(settings.getHopsRpcTls()) {
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      try {
+        certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+        File certsDir = new File(certsPath);
+        certsDir.mkdirs();
+
+        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
+            .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certsPath);
+      } catch (IOException ioe) {
+        LOGGER.log(Level.SEVERE, "Failed in materializing certificates for " +
+            hdfsUser + " in directory " + certsPath, ioe);
+        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
+      }
+    }
 
     String anacondaEnvironmentPath = settings.getAnacondaProjectDir(project.getName());
-    //disable for now
-
     int retries = 3;
 
     while(retries > 0) {
@@ -152,7 +164,7 @@ public class TensorBoardProcessMgr {
       port = ThreadLocalRandom.current().nextInt(40000, 59999);
 
       String[] command = new String[]{"/usr/bin/sudo", prog, "start", hdfsUser.getName(), hdfsLogdir,
-        tensorBoardDir, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certificatesPath};
+        tbPath, port.toString(), anacondaEnvironmentPath, settings.getHadoopVersion(), certsPath};
 
       LOGGER.log(Level.INFO, Arrays.toString(command));
       ProcessBuilder pb = new ProcessBuilder(command);
@@ -175,7 +187,7 @@ public class TensorBoardProcessMgr {
         }
 
         int exitValue = process.exitValue();
-        String pidPath = tensorBoardDir + File.separator + port + ".pid";
+        String pidPath = tbPath + File.separator + port + ".pid";
         File pidFile = new File(pidPath);
         // Read the pid for TensorBoard server
         if(pidFile.exists()) {
@@ -183,26 +195,8 @@ public class TensorBoardProcessMgr {
           pid = BigInteger.valueOf(Long.parseLong(pidContents));
         }
         if(exitValue == 0 && pid != null) {
-          DistributedFileSystemOps dfso = dfsService.getDfsOps();
-          try {
-            if(settings.getHopsRpcTls()) {
-              HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
-                      .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certificatesPath);
-            }
-          } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, "Failed in materializing certificates for " +
-                hdfsUser + " in directory " + certsDir, ioe);
-            HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-                settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesPath, settings);
-
-          } finally {
-            if (dfso != null) {
-              dfsService.closeDfsClient(dfso);
-            }
-          }
-
           int maxWait = 10;
-          String logFilePath = tensorBoardDir + File.separator + port + ".log";
+          String logFilePath = tbPath + File.separator + port + ".log";
           File logFile = new File(logFilePath);
           while(maxWait > 0) {
             if(logFile.length() > 0) {
@@ -235,7 +229,7 @@ public class TensorBoardProcessMgr {
         } else {
           LOGGER.log(Level.SEVERE,"Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
           if(pid != null) {
-            killTensorBoard(pid);
+            this.killTensorBoard(pid);
           }
           pid = null;
         }
@@ -250,6 +244,31 @@ public class TensorBoardProcessMgr {
         retries--;
       }
     }
+
+    //Failed to start TensorBoard, make sure there is no process running for it! (This should not be needed)
+    if(pid != null && this.ping(pid) == 0) {
+      this.killTensorBoard(pid);
+    }
+
+    //Certificates cleanup in case they were materialized but no TB started successfully
+    if(settings.getHopsRpcTls()) {
+      DistributedFileSystemOps dfso = dfsService.getDfsOps();
+      certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+      File certsDir = new File(certsPath);
+      certsDir.mkdirs();
+      try {
+        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+            settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+      } catch (IOException ioe) {
+        LOGGER.log(Level.SEVERE, "Failed in dematerializing certificates for " +
+            hdfsUser + " in directory " + certsPath, ioe);
+      } finally {
+        if (dfso != null) {
+          dfsService.closeDfsClient(dfso);
+        }
+      }
+    }
+
     return null;
   }
 
@@ -313,18 +332,20 @@ public class TensorBoardProcessMgr {
 
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
-    String tbPath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator +
-        DigestUtils.sha256Hex(tb.getProject().getName() + "_" + hdfsUser.getName());
-    String certsDir = tbPath + File.separator + "certificates";
+    String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS + File.separator;
+    String projectUserUniquePath = tb.getProject().getName() + "_" + hdfsUser.getName();
+    String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
 
     //dematerialize certificates
     if(settings.getHopsRpcTls()) {
+      String certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+
       DistributedFileSystemOps dfso = dfsService.getDfsOps();
       try {
         HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
-            settings.getHdfsTmpCertDir(), certificateMaterializer, certsDir, settings);
+          settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsDir, e);
+        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsPath, e);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
@@ -362,17 +383,5 @@ public class TensorBoardProcessMgr {
               toString());
     }
     return exitValue;
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void removeProject(Project project) {
-    Collection<TensorBoard> instances = project.getTensorBoardCollection();
-
-    if (instances != null) {
-      //Maybe do this in a separate thread in best-effort style
-      for (TensorBoard tensorBoard : instances) {
-        killTensorBoard(tensorBoard);
-      }
-    }
   }
 }
