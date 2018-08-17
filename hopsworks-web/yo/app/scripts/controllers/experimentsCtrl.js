@@ -71,8 +71,8 @@ angular.module('hopsWorksApp')
                     },
                     function(error) {
                         if (error.data !== undefined && error.status === 404) {
-                            growl.error("The TensorBoard was inactive for too long and was killed. Please start a new one.", {
-                                title: 'TensorBoard killed',
+                            growl.error("The TensorBoard was shutdown. Please start a new one.", {
+                                title: 'TensorBoard not running',
                                 ttl: 15000
                             });
                         } else {

@@ -29,7 +29,7 @@
                                 {{experimentsCtrl.loadingText}}
                             </div>
                         </div>
-                        <div class="row" style="margin-left: 10px; height: 100%; overflow-y: auto;">
+                        <div class="row" style="margin-left: 5px; height: 100%; overflow-y: auto;">
                             <div class="row" style="padding-bottom:3px">
                                 <div class="col-md-12" ng-if="experimentsCtrl.tb === ''">
                            <span class="col-md-4" style="margin-left:-15px;">
@@ -49,7 +49,7 @@
                            </span>
                                 </div>
                                 <div class="col-md-12" ng-if="experimentsCtrl.tb !== ''">
-                           <span class="col-md-4" style="margin-left:-15px;">
+                           <span class="col-md-4" style="margin-left:-15px; padding-bottom:1px;">
                            <button style="margin-bottom:-2px;"
                                    ng-click="experimentsCtrl.kibanaUI();
                               $event.stopPropagation();"
@@ -75,7 +75,7 @@
                                 </div>
                             </div>
                             <div ng-if="experimentsCtrl.ui !== ''">
-                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="98%" height ="89%"></iframe>
+                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="99%" height ="89%"></iframe>
                             </div>
                         </div>
                     </div>
