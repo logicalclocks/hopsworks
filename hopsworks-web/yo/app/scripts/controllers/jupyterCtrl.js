@@ -594,15 +594,17 @@ angular.module('hopsWorksApp')
                     packages = packages + ",";
                   }
                   
-                  if (self.libs[i].includes("Azure")) {
-                    azureRepo = true;
+                  if (self.libs[i].includes(self.availableLibs[0])) {
+                    if (self.val.sparkParams !== undefined && self.val.sparkParams.includes(self.availableLibs[0]) == false) {
+                      azureRepo = true;
+                    }
                   }
                 }
                 var entry = "spark.jars.packages=" + packages;
                 if (foundPackages) {
                   self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
                 } else {
-                  self.val.sparkParams = self.val.sparkParams + "\n" + entry;
+                  self.val.sparkParams = self.val.sparkParams + entry;
                 }
                 
                 if (azureRepo) {
@@ -610,7 +612,7 @@ angular.module('hopsWorksApp')
                   if (foundRepos) {
                     self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
-                    self.val.sparkParams = self.val.sparkParams + "\n" + repo;
+                    self.val.sparkParams = self.val.sparkParams + repo;
                   }
                   
                 }

@@ -84,10 +84,7 @@
                id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-              <!--<label id="tensorflowJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="6" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>-->
-              <!--<label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="5" ng-change="newJobCtrl.jobTypeChosen()">TensorFlowOnSpark</label>-->
-
-              <!--<label class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">Adam</label>-->
+              <label id="tensorflowJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="2" ng-change="newJobCtrl.jobTypeChosen()">TensorFlow</label>
               <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
             </div>
           </div>
@@ -97,21 +94,9 @@
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}"
                is-open="newJobCtrl.accordion3.isOpen"
                ng-show="newJobCtrl.accordion3.visible">
-            <!-- Adam, Spark, Flink, TensorFlow  -->
-            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 0 || newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 4 || newJobCtrl.jobtype == 5 || newJobCtrl.jobtype == 6">
+            <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 2">
               <span>Select...</span>
             </button>
-            <!-- ADAM -->
-            <table ng-show="newJobCtrl.jobtype === 2">
-              <tr ng-repeat="command in newJobCtrl.adamState.commandList">
-                <td>
-                  <button class="btn btn-default" ng-click="newJobCtrl.selectCommand(command.name)" style="width:100%">{{command.name}}</button>
-                </td>
-                <td>
-                  {{command.description}}
-                </td>
-              </tr>
-            </table>
           </div>
 
 
@@ -121,8 +106,8 @@
                ng-show="newJobCtrl.accordion4.visible"
                id="chooseParametersAndArguments">
             <!-- Spark, Flink, TensorFlow-->
-            <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 5 || newJobCtrl.jobtype === 6">
-              <div class="row" ng-show="newJobCtrl.jobtype !== 4 && newJobCtrl.jobtype !== 5 && newJobCtrl.jobtype !== 6">
+            <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 3">
+              <div class="row" ng-show="newJobCtrl.jobtype !== 2">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text"
                                              ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
@@ -133,117 +118,8 @@
                                              ng-model="newJobCtrl.runConfig.args" class="form-control" ></div>
               </div>
             </div>
-            <!-- Adam -->
-            <div ng-show="newJobCtrl.jobtype === 2">
-              {{newJobCtrl.runConfig.selectedCommand.description}}
-              <div>
-                <strong>Arguments</strong>
-              </div>
-              <div class="row" ng-repeat="arg in newJobCtrl.runConfig.selectedCommand.arguments">
-                <div class="text-right col-md-4">
-                  {{arg.name}} <span ng-show="arg.required">*</span> <i class="fa fa-info-circle" uib-tooltip="{{arg.description}}" style="margin-left: 10px"></i>
-                </div>
-                <div class="col-md-8">
-                  <input type="text" ng-model="arg.value" ng-hide="arg.path && !arg.value" ng-required="arg.required" class="form-control">
-                  <button ng-show="arg.path && !arg.value && arg.name === 'INPUT'" ng-click="newJobCtrl.selectFile('ADAM', arg)" class="btn btn-default">Select</button>
-                  <button ng-show="arg.path && !arg.value && arg.name === 'OUTPUT'" ng-click="newJobCtrl.selectDir('ADAM', arg)" class="btn btn-default">Select</button>
-                </div>
-              </div>
-
-              <div>
-                <strong>Options</strong>
-              </div>
-              <div class="row" ng-repeat="opt in newJobCtrl.runConfig.selectedCommand.options">
-                <div class="text-right col-md-4">
-                  {{opt.name}} <i class="fa fa-info-circle" uib-tooltip="{{opt.description}}"></i>
-                </div>
-                <div class="col-md-8">
-                  <input type="text" ng-model="opt.value" ng-hide="(opt.valueIsPath && !opt.value) || opt.flag" class="form-control">
-                  <button ng-show="opt.valueIsPath && !opt.value" ng-click="newJobCtrl.selectFile('ADAM', opt)" class="btn btn-default">Select</button>
-                  <label ng-show="opt.flag">
-                    <input type="checkbox" ng-model="opt.value" class="form-control">
-                  </label>
-                </div>
-              </div>
-            </div>
 
           </div>
-          <!--Pre-configuration uib-accordion visible only for Spark jobs-->
-          <!--<div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion6.title}} {{newJobCtrl.accordion6.value}}"-->
-               <!--is-open="newJobCtrl.accordion6.isOpen"-->
-               <!--ng-show="newJobCtrl.accordion6.visible && (newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)"-->
-               <!--id="preConfig">-->
-            <!--<div>-->
-              <!--<div class="row" style="float: left;width: 100%;" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)">-->
-                <!--<div style="float: left;width: 150px;">-->
-                  <!--<div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">-->
-                    <!--<button style="width: 100%;" ng-click="newJobCtrl.autoConfig(false)" title="Search for the analysis results when you set new input attributes." class="btn btn-default glyphicon glyphicon-refresh">  Search  </button>-->
-                  <!--</div>-->
-                  <!--<div class="btn-group" style="float: left;width: 100px; margin-bottom: 0px;margin-left: 10px;margin-top: 10px" id="buttonRefresh">-->
-                    <!--<button style="width: 100%;" ng-click="newJobCtrl.autoConfig(true)" title="Filter by your own suffessfully executed jobs" class="btn btn-default glyphicon glyphicon-filter">  Filter  </button>-->
-                  <!--</div>-->
-                <!--</div>-->
-                <!--<div>-->
-                  <!--<div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="newJobCtrl.configAlert">-->
-                    <!--<p style="margin-top: 15px;margin-left: 20px; color:red; ">* Please set all the required job parameters in order to get a pre-configuration proposal.</p>-->
-                  <!--</div>-->
-                <!--</div>-->
-                <!--<div ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults != '0'">-->
-                  <!--<div style="margin-left: 15px; margin-top: 5px; width: 100%" ng-show="!newJobCtrl.configAlert">-->
-                    <!--<p style="margin-top: 15px;margin-left: 20px">-->
-                      <!--After the analysis, {{newJobCtrl.autoConfigResult.numberOfResults}} result(s) was/were found with {{newJobCtrl.autoConfigResult.degreeOfSimilarity}} similarity.-->
-                      <!--<i class="glyphicon glyphicon-info-sign"-->
-                         <!--uib-tooltip="Similarity refers to the attributes (Main Class Name, Job Arguments etc) likeness of the current job with previously analized jobs."-->
-                         <!--tooltip-placement="bottom"-->
-                         <!--style="margin-left: 10px"></i>-->
-                    <!--</p>-->
-                    <!--<p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length == 1"> Due to limited results we can't propose a Premium Configuration.</p>-->
-                    <!--<p ng-show="newJobCtrl.autoConfigResult.jobProposedConfig.length > 1"> Please select one of the following configuration options:</p>-->
-                  <!--</div>-->
-                  <!--<div style="float: left" ng-show="!newJobCtrl.configAlert">-->
-                    <!--<div class="panel panel-info pull-left" ng-repeat="e in newJobCtrl.autoConfigResult.jobProposedConfig" style="width: 32%; margin-left: 10px; margin-top: 10px">-->
-                      <!--<div class="panel-heading">-->
-                        <!--<label class="panel-title"><input type="radio" name="optradio" value="{{e.configType}}" ng-click="selectConfig(e.configType)" ng-checked="checkRadio(e.configType)" ng-init="selectConfig('Minimal')"> &nbsp &nbsp {{e.configType}} Configuration &nbsp {{e.message}}</label>-->
-                      <!--</div>-->
-                      <!--<div class="panel-body">-->
-                        <!--<div class="row" style="margin-top: 10px">-->
-                          <!--<div class="text-right col-md-9">Application master memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amMemory">{{e.amMemory}}</div>-->
-                          <!--<div class="text-right col-md-9">Application master Vcores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for the Yarn Application Master container." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amVCores">{{e.amVcores}}</div>-->
-                          <!--<div class="text-right col-md-9">Resource Manager queue <i class="fa fa-info-circle" uib-tooltip="The queue in the ResourceManager in which this application should be submitted." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.amQueue">default</div>-->
-                          <!--<div class="text-right col-md-9">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of Spark executors that should be requested for this job." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.numberOfExecutors">{{e.numOfExecutors}}</div>-->
-                          <!--<div class="text-right col-md-9">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorCores">{{e.executorCores}}</div>-->
-                          <!--<div class="text-right col-md-9">Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-model="newJobCtrl.runConfig.executorMemory">{{e.executorMemory}}</div>-->
-                          <!--<div class="text-right col-md-9" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">Estimated execution duration <i class="fa fa-info-circle" uib-tooltip="The execution duration is also related to the system load." style="margin-left: 5px"></i></div>-->
-                          <!--<div class="text-left col-md-3" ng-show="newJobCtrl.autoConfigResult.degreeOfSimilarity == 'VERY HIGH'">{{e.estimatedExecutionTime}}</div>-->
-                        <!--</div>-->
-                      <!--</div>-->
-                    <!--</div>-->
-                  <!--</div>-->
-                <!--</div>-->
-                <!--<div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults == null && newJobCtrl.isSpin">-->
-                  <!--<p style="text-align: center">-->
-                    <!--<i class="fa fa-spinner fa-pulse fa-3x fa-fw" style="font-size:24px; text-align: center"></i> &nbsp &nbsp Please wait.. </p>-->
-                <!--</div>-->
-                <!--<div style="margin-top: 10px;margin-left: 10px; width: 64%; height: 250px" ng-show="newJobCtrl.autoConfigResult.numberOfResults != null && newJobCtrl.autoConfigResult.numberOfResults == '0' && !newJobCtrl.configAlert">-->
-                  <!--<p style="text-align: center">There are no similar applications. Please use the next panel and configure your job manually.</p>-->
-                <!--</div>-->
-              <!--</div>-->
-            <!--</div>-->
-            <!--&lt;!&ndash; Creation button &ndash;&gt;-->
-            <!--<div class="row" style="float: left;width: 150px;">-->
-              <!--<button style="float: left; margin-bottom: 0px;margin-left: 10px;margin-top: 10px"-->
-                      <!--ng-click="newJobCtrl.createJob()" ng-show="newJobCtrl.autoConfigResult.numberOfResults >= 1" class="btn btn-warning">-->
-                <!--Create job-->
-              <!--</button>-->
-            <!--</div>-->
-
-          <!--</div>-->
           <!-- Set some run configuration -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}"
                is-open="newJobCtrl.accordion5.isOpen"
@@ -269,35 +145,39 @@
             </div>
 
             <!-- Spark -->
-            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4">
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2">
               <div class="text-right col-md-4">Dynamic Executors <i class="fa fa-info-circle" uib-tooltip="Enable Spark Dynamic Executors." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="checkbox" ng-model="newJobCtrl.runConfig.dynamicExecutors" ng-click="newJobCtrl.toggleSlider()"></div>
             </div>
             <div class="row">
               <div class="col-md-4"></div>
               <div class="col-md-8">
-                <rzslider  ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4) && newJobCtrl.runConfig.dynamicExecutors" style="margin-top: 32px;"
+                <rzslider  ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && newJobCtrl.runConfig.dynamicExecutors" style="margin-top: 32px;"
                            rz-slider-model="newJobCtrl.sliderOptions.min"
                            rz-slider-high="newJobCtrl.sliderOptions.max"
                            rz-slider-options="newJobCtrl.sliderOptions.options">
                 </rzslider>
               </div>
             </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4) && newJobCtrl.runConfig.dynamicExecutors">
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && newJobCtrl.runConfig.dynamicExecutors">
               <div class="text-right col-md-4">Initial number of executors <i class="fa fa-info-circle" uib-tooltip="The initial number of executors that should be requested for this job. Must be greater than the minimum and smaller than the maximum number of executors." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number"  ng-change="newJobCtrl.setInitExecs()" value="{{newJobCtrl.runConfig.selectedMinExecutors}}" ng-model="newJobCtrl.runConfig.numberOfExecutorsInit" class="form-control"></div>
             </div>
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5) && !newJobCtrl.runConfig.dynamicExecutors">
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && !newJobCtrl.runConfig.dynamicExecutors">
               <div class="text-right col-md-4">Number of executors <i class="fa fa-info-circle" uib-tooltip="The number of executors that should be requested for this job." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.numberOfExecutors" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5">
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2">
               <div class="text-right col-md-4">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" ng-model="newJobCtrl.runConfig.executorCores" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5">
+            <div class="row" ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2">
               <div class="text-right col-md-4">Executor memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.executorMemory" class="form-control"></div>
+            </div>
+            <div class="row" ng-show="newJobCtrl.jobtype === 2">
+              <div class="text-right col-md-4">Number of GPUs per Executor <i class="fa fa-info-circle" uib-tooltip="The number of GPUs for each Spark executor in this job." style="margin-left: 10px"></i></div>
+              <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.numGpus" class="form-control"></div>
             </div>
 
 
@@ -352,7 +232,7 @@
             </div>
 
             <!-- Services -->
-            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
+            <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3)" ng-click="newJobCtrl.getAllTopics()" style="margin-top: 10px">
               <div class="text-right col-md-4">Settings & Services <i class="fa fa-info-circle" uib-tooltip="Indicates if this job makes use of the Kafka service." style="margin-left: 10px"></i></div>
               <div class="col-md-8">
                 <div class="row">
@@ -373,7 +253,7 @@
                     </div>
                   </div>
                   <div class="col-md-11" >
-                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5) && newJobCtrl.settingsSelected" style="margin-top: 3px">
+                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && newJobCtrl.settingsSelected" style="margin-top: 3px">
                       <div class="col-md-12" >
                         <div class="row">
                           <div class="col-md-12">
@@ -387,7 +267,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4 || newJobCtrl.jobtype === 5) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
+                    <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected" style="margin-top: 3px">
                       <div class="col-md-12" >
                         <div class="row">
                           <div class="col-md-12">
@@ -413,12 +293,12 @@
                             </button>
                           </div>
                         </div>
-                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
+                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
                           <div class="col-md-12">
                             Consumer Groups<i class="fa fa-info-circle" uib-tooltip="Choose Consumer groups to be available in the job via HopsUtil." style="margin-left: 10px; text-align: left;"></i>
                           </div>
                         </div>
-                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
+                        <div class="row" ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 3) && newJobCtrl.kafkaSelected && newJobCtrl.runConfig.kafka.advanced" style="margin-top: 3px">
                           <div class="col-md-12">
                             <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
                               <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">

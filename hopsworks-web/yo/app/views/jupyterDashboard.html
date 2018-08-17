@@ -112,7 +112,7 @@
 
           <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
-            <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:20px; margin-left: 0px;'>
+            <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:5px; margin-left: 0px;'>
 
               <!-- STYLE THIS (TENSORFLOW : SPARK) -->
               <div class="row" ng-if="jupyterCtrl.advanced === true">
@@ -139,7 +139,7 @@
                   <br>
                 </div>
               </div>
-              <div class="row top-buffer" ng-if="jupyterCtrl.advanced === true">
+              <div class="row" ng-if="jupyterCtrl.advanced === true">
                 <div class="row">
                   <div class="row clusterparams">
                     <div class="text-right col-md-6"> Base Directory <i class="fa fa-info-circle"
@@ -520,8 +520,8 @@
 
           <div class="row top-buffer" ng-if="jupyterCtrl.ui !== ''">
 
-            <div class="col-md-1"></div> 
-            <div class="col-md-8 panel panel-default shift-left">
+            <div class="col-md-2"></div> 
+            <div class="col-md-8 panel jupyter-left">
               <div class="panel-heading" >
                 <div>
                   <span style="font-weight: bold;">Jupyter Notebook Server Details</span>
@@ -544,39 +544,6 @@
                   </div>
                 </div>
 
-                <!--              <div class="row" style="margin-top: 3px">
-                                <div class="col-md-12">
-                                  <fieldset  data-ng-repeat="group in newJobCtrl.consumerGroups">
-                                    <input type="text" ng-model="group.name" name="" placeholder="Enter group here...">
-                                    <button class="kafka-consumergroups-buttons glyphicon glyphicon-remove-sign" ng-show="$last" ng-click="newJobCtrl.removeGroup()">
-                                    </button>
-                                    <button class="kafka-consumergroups-buttons glyphicon glyphicon-plus-sign" ng-show="$last" ng-click="newJobCtrl.addGroup(group)">
-                                    </button>
-                                  </fieldset>
-                                </div>
-                              </div>-->
-
-
-
-                <!--              <div class="row" style="margin-left: 0px">
-                                Add libraries. </span>
-                              </div>
-                              <div class="row">  
-                                <div class="col-md-2">
-                                  Select libraries:
-                                </div>
-                                <div class="col-md-3">
-                                  <ui-select ng-model="jupyterCtrl.libs" theme="bootstrap"
-                                             on-select="jupyterCtrl.updateLibs()">
-                                    <ui-select-match >
-                                      <span ng-bind="jupyterCtrl.libs.name"></span>
-                                    </ui-select-match>
-                                    <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
-                                      <span ng-bind="level.name | highlight: $select.search"></span>
-                                    </ui-select-choices>
-                                  </ui-select>
-                                </div>
-                              </div>-->
 
                 <br/>
                 <div class="row" style="margin-left: 0px">
