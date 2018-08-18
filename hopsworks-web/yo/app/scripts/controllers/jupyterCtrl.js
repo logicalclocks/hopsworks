@@ -590,12 +590,12 @@ angular.module('hopsWorksApp')
                 var foundRepos = self.val.sparkParams.includes("spark.jars.repositories");
                 for (var i = 0; i < self.libs.length; i++) {
                   packages = packages + self.libs[i];
-                  if (i < self.libs.length-1) {
+                  if (i < self.libs.length - 1) {
                     packages = packages + ",";
                   }
-                  
+
                   if (self.libs[i].includes(self.availableLibs[0])) {
-                    if (self.val.sparkParams !== undefined && self.val.sparkParams.includes(self.availableLibs[0]) == false) {
+                    if (self.val.sparkParams.includes(self.availableLibs[0]) === false) {
                       azureRepo = true;
                     }
                   }
@@ -604,17 +604,21 @@ angular.module('hopsWorksApp')
                 if (foundPackages) {
                   self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
                 } else {
-                  self.val.sparkParams = self.val.sparkParams + entry;
+                  if (self.val.sparkParams) {
+                    self.val.sparkParams = self.val.sparkParams + '\n' + entry;
+                  } else {
+                    self.val.sparkParams = self.val.sparkParams + entry;                    
+                  }
                 }
-                
+
                 if (azureRepo) {
                   var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
                   if (foundRepos) {
                     self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
-                    self.val.sparkParams = self.val.sparkParams + repo;
+                      self.val.sparkParams = self.val.sparkParams + '\n' + repo;
                   }
-                  
+
                 }
               }
 
