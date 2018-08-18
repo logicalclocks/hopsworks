@@ -63,7 +63,6 @@ angular.module('hopsWorksApp')
             self.tensorflow = false;
             self.condaEnabled = true;
             $scope.sessions = null;
-            $scope.framework = "";
             self.val = {};
             $scope.tgState = true;
             self.config = {};

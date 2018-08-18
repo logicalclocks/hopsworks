@@ -51,7 +51,7 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TensorfFlowService', 'TourService',
+          'AdamService', 'FlinkService', 'TensorFlowService', 'TourService',
           'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,

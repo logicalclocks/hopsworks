@@ -180,7 +180,6 @@
               <div class="col-md-8"><input type="number" min="0" ng-model="newJobCtrl.runConfig.numGpus" class="form-control"></div>
             </div>
 
-
             <!-- Flink -->
             <div class="row" ng-show="newJobCtrl.jobtype === 3">
               <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" uib-tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
@@ -394,6 +393,8 @@
       </div>
       <!-- /#page-content-wrapper -->
     </section>
+    
+    
     <tour class="ng-scope"
           step="newJobCtrl.tourService.currentStep_TourSeven"
           post-tour="closeTour()"
