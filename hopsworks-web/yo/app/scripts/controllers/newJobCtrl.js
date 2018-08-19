@@ -206,6 +206,7 @@ angular.module('hopsWorksApp')
                 self.runConfig.numberOfExecutorsInit =
                         parseInt(self.sliderOptions.max);
               }
+              self.runConfig.numberOfGpusPerExecutor = 0;
             };
 
             self.sparkState = {//Will hold spark-specific state
@@ -966,26 +967,6 @@ angular.module('hopsWorksApp')
                 return true;
               } else
                 return false;
-            };
-
-            /**
-             * When the user changes configutaion (using the radio button) the
-             * runConfig values change.
-             * @param {type} value
-             * @returns {undefined}
-             */
-            $scope.selectConfig = function (value) {
-              for (var i = 0; i < self.autoConfigResult.jobProposedConfig.length; i++) {
-                var obj = self.autoConfigResult.jobProposedConfig[i];
-                if (obj.configType === value) {
-                  self.runConfig.amMemory = obj.amMemory;
-                  self.runConfig.amVCores = obj.amVcores;
-                  self.runConfig.amQueue = "default";
-                  self.runConfig.numberOfExecutors = obj.numOfExecutors;
-                  self.runConfig.executorCores = obj.executorCores;
-                  self.runConfig.executorMemory = obj.executorMemory;
-                }
-              }
             };
 
           }]);

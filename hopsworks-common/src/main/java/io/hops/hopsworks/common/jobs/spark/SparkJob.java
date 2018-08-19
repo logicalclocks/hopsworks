@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -95,13 +94,14 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    if(!Strings.isNullOrEmpty(jobconfig.getProperties())){
+    if (!Strings.isNullOrEmpty(jobconfig.getProperties())) {
       runnerbuilder.setProperties(jobconfig.getProperties());
     }
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    runnerbuilder.setNumberOfGpusPerExecutor(jobconfig.getNumberOfGpusPerExecutor());
     if (jobconfig.isDynamicExecutors()) {
       runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
       runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
@@ -114,9 +114,6 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
 
-    //Set TFSPARK params
-    runnerbuilder.setNumOfGPUs(jobconfig.getNumOfGPUs());
-//    runnerbuilder.setNumOfPs(jobconfig.getNumOfPs());
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));

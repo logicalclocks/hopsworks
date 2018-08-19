@@ -729,6 +729,15 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
+  public SparkYarnRunnerBuilder setNumberOfGpusPerExecutor(int numberOfGpusPerExecutor) {
+    if (numberOfGpusPerExecutor < 0) {
+      throw new IllegalArgumentException(
+          "Number of GPUs per executor cannot be less than 0.");
+    }
+    this.numberOfGpus = numberOfGpusPerExecutor;
+    return this;
+  }
+  
   /**
    * Parse and set user provided Spark properties.
    *

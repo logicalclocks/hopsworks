@@ -72,7 +72,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
 
   private boolean pySpark;
-  private int numOfGPUs = 0;
+  private int numberOfGpusPerExecutor = 0;
 //  private int numOfPs = 0;
 
   protected static final String KEY_JARPATH = "JARPATH";
@@ -180,21 +180,13 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.pySpark = pySpark;
   }
 
-  public int getNumOfGPUs() {
-    return numOfGPUs;
+  public int getNumberOfGpusPerExecutor() {
+    return numberOfGpusPerExecutor;
   }
 
-  public void setNumOfGPUs(int numOfGPUs) {
-    this.numOfGPUs = numOfGPUs;
+  public void setNumberOfGpusPerExecutor(int numberOfGpusPerExecutor) {
+    this.numberOfGpusPerExecutor = numberOfGpusPerExecutor;
   }
-
-//  public int getNumOfPs() {
-//    return numOfPs;
-//  }
-  
-//  public void setNumOfPs(int numOfPs) {
-//    this.numOfPs = numOfPs;
-//  }
 
   /**
    * Set the number of executors to be requested for this job. This should be
@@ -306,6 +298,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
     this.numberOfExecutorsInit = numberOfExecutorsInit;
   }
+  
 
   @Override
   public JobType getType() {
@@ -352,7 +345,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
     if (pySpark) {
       obj.set(KEY_IS_PYSPARK, Boolean.toString(pySpark));
-      obj.set(KEY_GPUS, "" + numOfGPUs);
+      obj.set(KEY_GPUS, "" + numberOfGpusPerExecutor);
 //      obj.set(KEY_NUM_PS, "" + numOfPs);
     }
     return obj;
@@ -434,7 +427,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     }
     if (!jsonPySpark.equals("")) {
       this.pySpark = Boolean.parseBoolean(jsonPySpark);
-      this.numOfGPUs = Integer.parseInt(jsonNumOfGPUs);
+      this.numberOfGpusPerExecutor = Integer.parseInt(jsonNumOfGPUs);
     }
     this.historyServerIp = hs;
 
