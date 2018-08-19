@@ -45,12 +45,10 @@ import java.util.EnumSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.jobs.MutableJsonObject;
-import io.hops.hopsworks.common.jobs.adam.AdamJobConfiguration;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
-import io.hops.hopsworks.common.jobs.tensorflow.TensorFlowJobConfiguration;
 
 /**
  * Represents the persistable configuration of a runnable job. To be persisted
@@ -183,12 +181,8 @@ public abstract class JobConfiguration implements JsonReduceable {
       JobType type = JobType.valueOf(jType);
       JobConfiguration conf;
       switch (type) {
-        case ADAM:
-          conf = new AdamJobConfiguration();
-          break;
         case SPARK:
         case PYSPARK:
-        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -196,9 +190,6 @@ public abstract class JobConfiguration implements JsonReduceable {
           break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
-          break;
-        case TENSORFLOW:
-          conf = new TensorFlowJobConfiguration();
           break;
         default:
           throw new UnsupportedOperationException(
@@ -218,12 +209,8 @@ public abstract class JobConfiguration implements JsonReduceable {
     public static JobConfiguration getJobConfigurationTemplate(JobType type) {
       JobConfiguration conf;
       switch (type) {
-        case ADAM:
-          conf = new AdamJobConfiguration();
-          break;
         case SPARK:
         case PYSPARK:
-        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -240,10 +227,9 @@ public abstract class JobConfiguration implements JsonReduceable {
     }
 
     public static Set<JobType> getSupportedTypes() {
-      return EnumSet.of(JobType.ADAM,
+      return EnumSet.of(
               JobType.SPARK,
               JobType.PYSPARK,
-              JobType.TFSPARK,
               JobType.FLINK,
               JobType.ERASURE_CODING);
     }

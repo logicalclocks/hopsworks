@@ -116,7 +116,7 @@ public class SparkJob extends YarnJob {
 
     //Set TFSPARK params
     runnerbuilder.setNumOfGPUs(jobconfig.getNumOfGPUs());
-    runnerbuilder.setNumOfPs(jobconfig.getNumOfPs());
+//    runnerbuilder.setNumOfPs(jobconfig.getNumOfPs());
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));

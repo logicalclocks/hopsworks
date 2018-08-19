@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -90,6 +89,7 @@ public class SparkYarnRunnerBuilder {
   private int numberOfExecutorsMax = Settings.SPARK_MAX_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
   private int executorCores = 1;
+  private int numberOfGpus = 0;
   private String properties;
   private boolean dynamicExecutors;
   private String executorMemory = "512m";
@@ -97,7 +97,7 @@ public class SparkYarnRunnerBuilder {
   private int driverCores = 1;
   private String driverQueue;
   private int numOfGPUs = 0;
-  private int numOfPs = 0;
+//  private int numOfPs = 0;
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
@@ -137,7 +137,7 @@ public class SparkYarnRunnerBuilder {
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
       Settings settings)
       throws IOException {
-  
+
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getType();
     String appPath = ((SparkJobConfiguration) job.getJobConfig()).getAppPath();
@@ -152,16 +152,18 @@ public class SparkYarnRunnerBuilder {
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
     builder.setJobUser(jobUser);
-    
-    /*** 1. Set stagingPath ***/
-    
+
+    /**
+     * * 1. Set stagingPath **
+     */
     String stagingPath = "/Projects/" + project + "/" + Settings.PROJECT_STAGING_DIR + "/.sparkjobstaging-"
         + YarnRunner.APPID_PLACEHOLDER;
     builder.localResourcesBasePath(stagingPath);
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    /*** 2. Set job local resources, i.e. project certificates, job jar etc. ***/
-    
+
+    /**
+     * * 2. Set job local resources, i.e. project certificates, job jar etc. **
+     */
     //Add hdfs prefix so the monitor knows it should find it there
     builder.addFileToRemove("hdfs://" + stagingPath);
     builder.addLocalResource(new LocalResourceDTO(
@@ -188,7 +190,7 @@ public class SparkYarnRunnerBuilder {
     String appExecName = null;
     if (jobType == JobType.SPARK) {
       appExecName = Settings.SPARK_LOCRSC_APP_JAR;
-    } else if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
+    } else if (jobType == JobType.PYSPARK) {
       builder.addLocalResource(new LocalResourceDTO(
           Settings.PYSPARK_ZIP,
           settings.getPySparkLibsPath() + File.separator
@@ -202,20 +204,20 @@ public class SparkYarnRunnerBuilder {
           + Settings.PYSPARK_PY4J,
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
-      if (jobType == JobType.TFSPARK) {
-        if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
-          jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-              new ConfigProperty(
-                  Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                  HopsUtils.APPEND_PATH,
-                  System.getenv("LD_LIBRARY_PATH")));
-        } else {
-          jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-              new ConfigProperty(
-                  Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                  HopsUtils.APPEND_PATH,
-                  "$JAVA_HOME/jre/lib/amd64/server"));
-        }
+      if (jobType == JobType.PYSPARK) {
+//        if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
+        jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+            new ConfigProperty(
+                Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+                HopsUtils.APPEND_PATH,
+                System.getenv("LD_LIBRARY_PATH")));
+//        } else {
+        jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+            new ConfigProperty(
+                Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+                HopsUtils.APPEND_PATH,
+                "$JAVA_HOME/jre/lib/amd64/server"));
+//        }
       }
       pythonPath = new StringBuilder();
       pythonPath
@@ -229,7 +231,7 @@ public class SparkYarnRunnerBuilder {
           .append(File.pathSeparator).append(Settings.PYSPARK_PY4J);
       //set app file from path
       appExecName = appPath.substring(appPath.lastIndexOf(File.separator) + 1);
-      
+
       jobHopsworksProps.put(Settings.SPARK_APP_NAME_ENV,
           new ConfigProperty(
               Settings.SPARK_APP_NAME_ENV,
@@ -277,10 +279,12 @@ public class SparkYarnRunnerBuilder {
         //Set deletion to true so that certs are removed
         builder.addLocalResource(dto, true);
       } else {
-        if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
+        if (jobType == JobType.PYSPARK) {
           //For PySpark jobs prefix the resource name with __pyfiles__ as spark requires that.
-          /*https://github.com/hopshadoop/spark/blob/v2.3.0-hops/resource-managers/yarn/src/main/scala/org/apache
-          /spark/deploy/yarn/Client.scala#L803*/
+          /*
+           * https://github.com/hopshadoop/spark/blob/v2.3.0-hops/resource-managers/yarn/src/main/scala/org/apache
+           * /spark/deploy/yarn/Client.scala#L803
+           */
           if (dto.getName().endsWith(".py")) {
             dto.setName(Settings.SPARK_LOCALIZED_PYTHON_DIR + File.separator + dto.getName());
           } else {
@@ -317,47 +321,52 @@ public class SparkYarnRunnerBuilder {
             jobUser));
 
     //Set TensorFlowOnSpark required environment variables
-    if (jobType == JobType.TFSPARK) {
-      
-      //Should always be false in case of TFoS
-      dynamicExecutors = false;
-
-      //No point in retrying since clusterspec is static
-      jobHopsworksProps.put(Settings.SPARK_MAX_APP_ATTEMPTS,
-          new ConfigProperty(
-              Settings.SPARK_MAX_APP_ATTEMPTS,
-              HopsUtils.IGNORE,
-              "1"));
-      
-
-      //This is needed to solve a bug where the driver is able to allocate GPUs
-      builder.addToAppMasterEnvironment("CUDA_VISIBLE_DEVICES", "''");
-
-      //The following configuration is based on:
-      //https://github.com/yahoo/TensorFlowOnSpark/wiki/GetStarted_YARN
-      //IMPORTANT, if TFoS still can't find cuda libraries there may be issues with cuda installation
-      // 1. ssh to machine where the container failed
-      // 2. Make sure /usr/local/cuda exists and is a symlink pointing to e.g. /usr/local/cuda-8.0
-      // 3. Make sure /etc/ld.so.conf.d directory on the host has an entry pointing to /usr/local/cuda/lib64
-      // 4. /usr/local/cuda/lib64 can be a symlink and should point to the real location with libcu(...).so files
-      // 5. Run 'sudo ldconfig'
+    if (jobType == JobType.PYSPARK) {
       String libCuda = settings.getCudaDir() + "/lib64";
       String libJVM = settings.getJavaHome() + "/jre/lib/amd64/server";
       String libHDFS = settings.getHadoopSymbolicLinkDir() + "/lib/native";
-
       builder.addToAppMasterEnvironment("LD_LIBRARY_PATH", libCuda);
-  
       jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
           new ConfigProperty(
               Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
               HopsUtils.APPEND_PATH,
               libCuda + ":" + libJVM + ":" + libHDFS));
     }
+//    if (jobType == JobType.TFSPARK) {
+//      //Should always be false in case of TFoS
+//      dynamicExecutors = false;
+//      //No point in retrying since clusterspec is static
+//      jobHopsworksProps.put(Settings.SPARK_MAX_APP_ATTEMPTS,
+//          new ConfigProperty(
+//              Settings.SPARK_MAX_APP_ATTEMPTS,
+//              HopsUtils.IGNORE, "1"));
+//      //This is needed to solve a bug where the driver is able to allocate GPUs
+//      builder.addToAppMasterEnvironment("CUDA_VISIBLE_DEVICES", "''");
+//      //The following configuration is based on:
+//      //https://github.com/yahoo/TensorFlowOnSpark/wiki/GetStarted_YARN
+//      //IMPORTANT, if TFoS still can't find cuda libraries there may be issues with cuda installation
+//      // 1. ssh to machine where the container failed
+//      // 2. Make sure /usr/local/cuda exists and is a symlink pointing to e.g. /usr/local/cuda-8.0
+//      // 3. Make sure /etc/ld.so.conf.d directory on the host has an entry pointing to /usr/local/cuda/lib64
+//      // 4. /usr/local/cuda/lib64 can be a symlink and should point to the real location with libcu(...).so files
+//      // 5. Run 'sudo ldconfig'
+//      String libCuda = settings.getCudaDir() + "/lib64";
+//      String libJVM = settings.getJavaHome() + "/jre/lib/amd64/server";
+//      String libHDFS = settings.getHadoopSymbolicLinkDir() + "/lib/native";
+//
+//      builder.addToAppMasterEnvironment("LD_LIBRARY_PATH", libCuda);
+//  
+//      jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+//          new ConfigProperty(
+//              Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+//              HopsUtils.APPEND_PATH,
+//              libCuda + ":" + libJVM + ":" + libHDFS));
+//    }
 
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
-  
+
     jobHopsworksProps.put(Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
         new ConfigProperty(
             Settings.SPARK_EXECUTOR_EXTRACLASSPATH,
@@ -368,7 +377,7 @@ public class SparkYarnRunnerBuilder {
             Settings.SPARK_DRIVER_EXTRACLASSPATH,
             HopsUtils.APPEND_PATH,
             settings.getHopsLeaderElectionJarPath()));
-    
+
     if (secondaryJars.length() > 0) {
       jobHopsworksProps.put(Settings.SPARK_YARN_SECONDARY_JARS,
           new ConfigProperty(
@@ -390,19 +399,19 @@ public class SparkYarnRunnerBuilder {
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
               HopsUtils.IGNORE,
               String.valueOf(numberOfExecutorsMin)));
-  
+
       jobHopsworksProps.put(Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
           new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
               HopsUtils.IGNORE,
               String.valueOf(numberOfExecutorsMax)));
-  
+
       jobHopsworksProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
           new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
               HopsUtils.IGNORE,
               String.valueOf(numberOfExecutorsInit)));
-      
+
       //Dynamic executors requires the shuffle service to be enabled
       jobHopsworksProps.put(Settings.SPARK_SHUFFLE_SERVICE,
           new ConfigProperty(
@@ -482,7 +491,6 @@ public class SparkYarnRunnerBuilder {
     extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, services.getSettings().getHadoopSymbolicLinkDir()
         + "/lib/native/");
     extraJavaOptions.put(Settings.HOPSWORKS_APPID_PROPERTY, YarnRunner.APPID_PLACEHOLDER);
-    
 
     if (serviceProps != null) {
       jobHopsworksProps.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY,
@@ -564,33 +572,23 @@ public class SparkYarnRunnerBuilder {
     amargs.append(((SparkJobConfiguration) job.getJobConfig()).
         getMainClass());
 
-    if (jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
+    if (jobType == JobType.PYSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
       //Check if anaconda is enabled
-      if (jobType == JobType.TFSPARK) {
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, "python");
-        jobHopsworksProps.put(Settings.SPARK_TF_ENV,
-            new ConfigProperty(
-                Settings.SPARK_TF_ENV,
-                HopsUtils.IGNORE,
-                "true"));
-        jobHopsworksProps.put(Settings.SPARK_TF_GPUS_ENV,
-            new ConfigProperty(
-                Settings.SPARK_TF_GPUS_ENV,
-                HopsUtils.IGNORE,
-                Integer.toString(numOfGPUs)));
-        jobHopsworksProps.put(Settings.SPARK_TF_PS_ENV,
-            new ConfigProperty(
-                Settings.SPARK_TF_PS_ENV,
-                HopsUtils.IGNORE,
-                Integer.toString(numOfPs)));
-      } else if (serviceProps.isAnacondaEnabled()) {
-        //Add libs to PYTHONPATH
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
-      } else {
-        //Throw error in Hopswors UI to notify user to enable Anaconda
-        throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
-      }
+//      builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, "python");
+//        jobHopsworksProps.put(Settings.SPARK_TF_ENV,
+//            new ConfigProperty(
+//                Settings.SPARK_TF_ENV,
+//                HopsUtils.IGNORE,
+//                "true"));
+      jobHopsworksProps.put(Settings.SPARK_TF_GPUS_ENV,
+          new ConfigProperty(
+              Settings.SPARK_TF_GPUS_ENV,
+              HopsUtils.IGNORE,
+              Integer.toString(numOfGPUs)));
+      //Add libs to PYTHONPATH
+      builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
+
       builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
       jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_PYTHONPATH,
           new ConfigProperty(
@@ -617,21 +615,20 @@ public class SparkYarnRunnerBuilder {
         }
       }
     }
-    
-    
+
     //Create a string with system properties from extraJavaOptions
     StringBuilder extraJavaOptionsSb = new StringBuilder();
     //extraJavaOptionsSb.append("'-D"+Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS+"=");
     for (String key : extraJavaOptions.keySet()) {
       extraJavaOptionsSb.append(" -D").append(key).append("=").append(extraJavaOptions.get(key)).append(" ");
     }
-    
+
     jobHopsworksProps.put(Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS,
         new ConfigProperty(
             Settings.SPARK_EXECUTOR_EXTRA_JAVA_OPTS,
             HopsUtils.APPEND_SPACE,
             extraJavaOptionsSb.toString().trim()));
-    
+
     Map<String, String> userSparkProperties = null;
     try {
       userSparkProperties = HopsUtils.validateUserProperties(properties, settings.getSparkDir());
@@ -640,16 +637,16 @@ public class SparkYarnRunnerBuilder {
           "There was an error while setting user-provided Spark properties:{0}", ex.getMessage());
       throw new IOException(
           "There was an error while setting user-provided Spark properties. Please check that the values conform to"
-              + " the requested input format or that the property is allowed:" + ex.getMessage());
+          + " the requested input format or that the property is allowed:" + ex.getMessage());
     }
-  
+
     Map<String, String> finalJobProps = HopsUtils.mergeHopsworksAndUserParams(jobHopsworksProps, userSparkProperties,
         true);
     finalJobProps.remove("spark_user_defined_properties");
     for (String key : finalJobProps.keySet()) {
       addSystemProperty(key, finalJobProps.get(key));
     }
-    
+
     for (String s : sysProps.keySet()) {
       String option = YarnRunner.escapeForShell("-D" + s + "=" + sysProps.get(s));
       builder.addJavaOption(option);
@@ -853,10 +850,9 @@ public class SparkYarnRunnerBuilder {
     this.numOfGPUs = numOfGPUs;
   }
 
-  public void setNumOfPs(int numOfPs) {
-    this.numOfPs = numOfPs;
-  }
-
+//  public void setNumOfPs(int numOfPs) {
+//    this.numOfPs = numOfPs;
+//  }
   public void setServiceProps(ServiceProperties serviceProps) {
     this.serviceProps = serviceProps;
   }
