@@ -39,6 +39,7 @@
 package io.hops.hopsworks.api.jupyter;
 
 import io.hops.hopsworks.api.util.LivyController;
+import io.hops.hopsworks.api.zeppelin.util.LivyMsg;
 import io.hops.hopsworks.api.zeppelin.util.LivyMsg.Session;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -50,8 +51,20 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -74,6 +87,8 @@ public class JupyterNotebookCleaner {
   @EJB
   private LivyController livyService;
   @EJB
+  private Settings settings;
+  @EJB
   private JupyterFacade jupyterFacade;
   @EJB
   private JupyterSettingsFacade jupyterSettingsFacade;
@@ -84,7 +99,13 @@ public class JupyterNotebookCleaner {
   @EJB
   private HdfsUsersController hdfsUserscontroller;
   @EJB
+  private ElasticController elasticController;
+  @EJB
   private UserFacade usersFacade;
+  @EJB
+  private DistributedFsService dfsService;
+  @EJB
+  private CertificateMaterializer certificateMaterializer;
 
   public JupyterNotebookCleaner() {
   }
@@ -105,19 +126,6 @@ public class JupyterNotebookCleaner {
         List<Session> sessions = livyService.getLivySessions(jp.getProjectId(), ProjectServiceEnum.JUPYTER);
 
         HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-        // 3. If there is an active livy session, update the lastModified column
-        if (!sessions.isEmpty()) {
-          for (Session s : sessions) {
-            String h = s.getProxyUser();
-            if (h != null) {
-              if (h.compareTo(hdfsUser.getUsername()) == 0) {
-                jp.setLastAccessed(new Date(System.currentTimeMillis()));
-                jupyterFacade.update(jp);
-              }
-            }
-          }
-        }
-        // 3a. TODO - Check if there is an active Python kernel for the notebook
 
         Users user = usersFacade.findByUsername(hdfsUser.getUsername());
         JupyterSettings js = jupyterSettingsFacade.findByProjectUser(jp.getProjectId().getId(), user.getEmail());
@@ -125,13 +133,82 @@ public class JupyterNotebookCleaner {
         // If notebook hasn't been used in the last X hours, kill it.
         if (jp.getLastAccessed().before(
             new Date(System.currentTimeMillis() - (js.getShutdownLevel() * 60 * 60 * 1000)))) {
-          String jupyterHomePath;
+
+          livyService.deleteAllLivySessions(hdfsUser.getName(), ProjectServiceEnum.JUPYTER);
+
+          int retries = 3;
+          while(retries > 0 &&
+              livyService.getLivySessionsForProjectUser(jp.getProjectId(), user,
+                  ProjectServiceEnum.JUPYTER).size() > 0) {
+            LOGGER.log(Level.SEVERE, "Failed previous attempt to delete livy sessions for project " +
+                jp.getProjectId().getName() +
+                " user " + hdfsUser + ", retrying...");
+            livyService.deleteAllLivySessions(hdfsUser.getName(), ProjectServiceEnum.JUPYTER);
+
+            try {
+              Thread.sleep(1000);
+            } catch(InterruptedException ie) {
+              LOGGER.log(Level.SEVERE, "Interrupted while sleeping");
+            }
+            retries--;
+          }
+
+          String jupyterHomePath = null;
+
           try {
             jupyterHomePath = jupyterProcessFacade.getJupyterHome(hdfsUser.getName(), jp);
-            jupyterProcessFacade.killServerJupyterUser(hdfsUser.getName(), jupyterHomePath, jp.getPid(), jp.getPort());
-          } catch (AppException ex) {
-            Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.SEVERE, null, ex);
+
+            // stop the server, remove the user in this project's local dirs
+            // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
+            jupyterProcessFacade.killServerJupyterUser(hdfsUser.getName(), jupyterHomePath, jp.getPid(), jp.
+                getPort());
+          } catch(AppException ae) {
+
           }
+
+          String[] project_user = hdfsUser.getName().split(HdfsUsersController.USER_NAME_DELIMITER);
+          if(settings.getHopsRpcTls()) {
+            DistributedFileSystemOps dfso = dfsService.getDfsOps();
+            try {
+              String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
+              HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], jp.getProjectId()
+                  .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+              certificateMaterializer.removeCertificatesLocal(project_user[1], jp.getProjectId().getName());
+            } catch (IOException e) {
+              LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
+            } finally {
+              if (dfso != null) {
+                dfsService.closeDfsClient(dfso);
+              }
+            }
+          }
+
+          try {
+            String experimentsIndex = jp.getProjectId().getName() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+            // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
+            for (LivyMsg.Session session : sessions) {
+              String sessionAppId = session.getAppId();
+
+              String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
+
+              JSONObject json = new JSONObject(experiment);
+              json = json.getJSONObject("hits");
+              JSONArray hits = json.getJSONArray("hits");
+              for(int i = 0; i < hits.length(); i++) {
+                JSONObject obj = (JSONObject)hits.get(i);
+                JSONObject source = obj.getJSONObject("_source");
+                String status = source.getString("status");
+
+                if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
+                  source.put("status", "KILLED");
+                  elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
+                }
+              }
+            }
+          } catch(Exception e) {
+            LOGGER.log(Level.WARNING, "Exception while updating RUNNING status to KILLED on experiments", e);
+          }
+
         }
       }
 

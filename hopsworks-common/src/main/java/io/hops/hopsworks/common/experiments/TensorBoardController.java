@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
-import javax.ws.rs.NotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
@@ -91,7 +90,7 @@ public class TensorBoardController {
    * @return
    * @throws TensorBoardCleanupException
    */
-  public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user)
+  public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user, String hdfsLogdir)
       throws TensorBoardCleanupException {
     //Kill existing TensorBoard
     TensorBoard tb = null;
@@ -101,17 +100,6 @@ public class TensorBoardController {
     if(tb != null) {
       cleanup(tb);
     }
-
-    String hdfsLogdir = null;
-    try {
-      hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
-    } catch (NotFoundException nfe) {
-      LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
-      return null;
-    }
-
-    //Inject an alive NN host:port
-    hdfsLogdir = replaceNN(hdfsLogdir);
 
     try {
       String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
@@ -198,7 +186,7 @@ public class TensorBoardController {
    * @param hdfsPath
    * @return HDFS path with updated namenode host:port
    */
-  private String replaceNN(String hdfsPath)  {
+  public String replaceNN(String hdfsPath)  {
     HdfsLeDescriptors descriptor = hdfsLeDescriptorsFacade.findEndpoint();
 
     String endPoint = descriptor.getRpcAddresses().split(",")[0].replaceAll(",", "");

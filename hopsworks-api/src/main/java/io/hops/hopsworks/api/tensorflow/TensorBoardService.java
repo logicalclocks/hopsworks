@@ -18,11 +18,15 @@ package io.hops.hopsworks.api.tensorflow;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.api.project.util.PathValidator;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
@@ -38,9 +42,11 @@ import javax.persistence.PersistenceException;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.Path;
+import javax.ws.rs.NotFoundException;
+
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -57,7 +63,13 @@ public class TensorBoardService {
   @EJB
   private UserFacade userFacade;
   @EJB
+  private InodeFacade inodesFacade;
+  @EJB
   private TensorBoardController tensorBoardController;
+  @EJB
+  private ElasticController elasticController;
+  @EJB
+  private PathValidator pathValidator;
   @EJB
   private Settings settings;
   @EJB
@@ -110,9 +122,27 @@ public class TensorBoardService {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
 
+    String hdfsLogdir = null;
+    try {
+      hdfsLogdir = elasticController.getLogdirFromElastic(project, elasticId);
+      hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
+    } catch (NotFoundException nfe) {
+      LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
+      return null;
+    }
+
+    try {
+      DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
+      tbPath.validatePathExists(inodesFacade, true);
+    } catch(Exception e) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Experiment directory is missing, check in your project if it was deleted?.");
+    }
+
     TensorBoardDTO tensorBoardDTO = null;
     try {
-      tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user);
+      tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
     } catch(TensorBoardCleanupException tbce) {
       LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
