@@ -1,44 +1,6 @@
-/*
- * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- * are released under the following license:
- *
- * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
- *
- * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- * are released under the following license:
- *
- * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this
- * software and associated documentation files (the "Software"), to deal in the Software
- * without restriction, including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
- * persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
+NS
 /**
- * Created by stig on 2015-07-27.
+ * CreaORd by stig on 2015-07-27.
  * Controller for the jobs creation page.
  *
  * As it stands, self controller contains a lot of logic concerning all different
@@ -51,11 +13,11 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TensorFlowService', 'TourService',
+          'AdamService', 'FlinkService', 'TourService',
           'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService,
-                  AdamService, FlinkService, TensorFlowService, TourService,
+                  AdamService, FlinkService, TourService,
                   HistoryService, KafkaService, ProjectService, $timeout) {
 
             var self = this;
@@ -149,13 +111,11 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "TENSORFLOW": /.py\b/,
               "PYSPARK": /.py\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "TENSORFLOW": "Please select a Python file.",
               "PYSPARK": "Please select a Python file."
             };
 
@@ -464,12 +424,7 @@ angular.module('hopsWorksApp')
               }
               if (self.phase === 0) {
                 if (!self.jobname) {
-                  //If it's the tensorflow tour, set proper name
-                  if (self.projectName.startsWith("demo_tensorflow")) {
-                    self.jobname = "Mnist-training-QueueRunners";
-                  } else {
                     self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
-                  }
                 }
                 self.phase = 1;
                 self.accordion2.isOpen = true; //Open type selection
@@ -722,19 +677,6 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                   });
                   break;
-//                case "TENSORFLOW":
-//                  self.tensorflowState.selectedJar = filename;
-//                  TensorFlowService.inspectProgram(self.projectId, path).then(
-//                          function (success) {
-//                            self.runConfig = success.data;
-//                            self.mainFileSelected(filename);
-//                            if (self.tourService.currentStep_TourFour > -1) {
-//                              self.tourService.currentStep_TourFour = 6;
-//                            }
-//                          }, function (error) {
-//                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-//                  });
-//                  break;
                 default:
                   break;
               }
