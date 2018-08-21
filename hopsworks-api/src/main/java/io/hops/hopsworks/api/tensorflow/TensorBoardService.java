@@ -134,10 +134,11 @@ public class TensorBoardService {
     try {
       DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
       tbPath.validatePathExists(inodesFacade, true);
-    } catch(Exception e) {
+    } catch(AppException e) {
+      LOGGER.log(Level.SEVERE, "Exception validating path in hdfs for experiment ", e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
-          "Experiment directory is missing, check in your project if it was deleted?.");
+          "Experiment directory is missing, check in your project if it was deleted.");
     }
 
     TensorBoardDTO tensorBoardDTO = null;
