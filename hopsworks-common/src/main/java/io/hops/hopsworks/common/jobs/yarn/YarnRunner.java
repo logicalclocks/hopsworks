@@ -106,7 +106,6 @@ public class YarnRunner {
 
   private Configuration conf;
   private ApplicationId appId = null;
-  //Type of Job to run, Spark/Flink/Adam...
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;

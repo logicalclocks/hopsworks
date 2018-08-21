@@ -320,7 +320,7 @@ public class SparkYarnRunnerBuilder {
             HopsUtils.IGNORE,
             jobUser));
 
-    //Set TensorFlowOnSpark required environment variables
+    //Set  required environment variables
     if (jobType == JobType.PYSPARK) {
       String libCuda = settings.getCudaDir() + "/lib64";
       String libJVM = settings.getJavaHome() + "/jre/lib/amd64/server";
@@ -332,36 +332,6 @@ public class SparkYarnRunnerBuilder {
               HopsUtils.APPEND_PATH,
               libCuda + ":" + libJVM + ":" + libHDFS));
     }
-//    if (jobType == JobType.TFSPARK) {
-//      //Should always be false in case of TFoS
-//      dynamicExecutors = false;
-//      //No point in retrying since clusterspec is static
-//      jobHopsworksProps.put(Settings.SPARK_MAX_APP_ATTEMPTS,
-//          new ConfigProperty(
-//              Settings.SPARK_MAX_APP_ATTEMPTS,
-//              HopsUtils.IGNORE, "1"));
-//      //This is needed to solve a bug where the driver is able to allocate GPUs
-//      builder.addToAppMasterEnvironment("CUDA_VISIBLE_DEVICES", "''");
-//      //The following configuration is based on:
-//      //https://github.com/yahoo/TensorFlowOnSpark/wiki/GetStarted_YARN
-//      //IMPORTANT, if TFoS still can't find cuda libraries there may be issues with cuda installation
-//      // 1. ssh to machine where the container failed
-//      // 2. Make sure /usr/local/cuda exists and is a symlink pointing to e.g. /usr/local/cuda-8.0
-//      // 3. Make sure /etc/ld.so.conf.d directory on the host has an entry pointing to /usr/local/cuda/lib64
-//      // 4. /usr/local/cuda/lib64 can be a symlink and should point to the real location with libcu(...).so files
-//      // 5. Run 'sudo ldconfig'
-//      String libCuda = settings.getCudaDir() + "/lib64";
-//      String libJVM = settings.getJavaHome() + "/jre/lib/amd64/server";
-//      String libHDFS = settings.getHadoopSymbolicLinkDir() + "/lib/native";
-//
-//      builder.addToAppMasterEnvironment("LD_LIBRARY_PATH", libCuda);
-//  
-//      jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-//          new ConfigProperty(
-//              Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-//              HopsUtils.APPEND_PATH,
-//              libCuda + ":" + libJVM + ":" + libHDFS));
-//    }
 
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));

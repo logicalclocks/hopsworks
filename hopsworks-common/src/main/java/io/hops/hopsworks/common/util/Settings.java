@@ -188,8 +188,6 @@ public class Settings implements Serializable {
   public static final String VARIABLE_LLAP_APP_ID = "hive_llap_app_id";
   public static final String VARIABLE_LLAP_START_PROC = "hive_llap_start_proc";
 
-  private static final String VARIABLE_ADAM_USER = "adam_user";
-  private static final String VARIABLE_ADAM_DIR = "adam_dir";
   private static final String VARIABLE_TWOFACTOR_AUTH = "twofactor_auth";
   private static final String VARIABLE_TWOFACTOR_EXCLUD = "twofactor-excluded-groups";
   private static final String VARIABLE_KAFKA_DIR = "kafka_dir";
@@ -408,8 +406,6 @@ public class Settings implements Serializable {
       ZEPPELIN_SYNC_INTERVAL = setLongVar(VARIABLE_ZEPPELIN_SYNC_INTERVAL, ZEPPELIN_SYNC_INTERVAL);
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
-      ADAM_USER = setVar(VARIABLE_ADAM_USER, ADAM_USER);
-      ADAM_DIR = setDirVar(VARIABLE_ADAM_DIR, ADAM_DIR);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
@@ -705,13 +701,6 @@ public class Settings implements Serializable {
 
   public synchronized String getSparkConfFile() {
     return getSparkConfDir() + SPARK_CONF_FILE;
-  }
-
-  private String ADAM_USER = "glassfish";
-
-  public synchronized String getAdamUser() {
-    checkCache();
-    return ADAM_USER;
   }
 
   // "/tmp" by default
@@ -1159,16 +1148,6 @@ public class Settings implements Serializable {
    * Static final fields are allowed in session beans:
    * http://stackoverflow.com/questions/9141673/static-variables-restriction-in-session-beans
    */
-//ADAM constants
-  public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
-//  public static final String ADAM_DEFAULT_JAR_HDFS_PATH = "hdfs:///user/adam/repo/adam-cli.jar";
-  //Or: "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"
-  public static final String ADAM_DEFAULT_OUTPUT_PATH = "Logs/Adam/";
-  public static final String ADAM_DEFAULT_HDFS_REPO = "/user/adam/repo/";
-
-  public String getAdamJarHdfsPath() {
-    return "hdfs:///user/" + getAdamUser() + "/adam-cli.jar";
-  }
 
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";

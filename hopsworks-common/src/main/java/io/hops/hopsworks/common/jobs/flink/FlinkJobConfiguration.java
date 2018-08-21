@@ -275,7 +275,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
   @Override
   public void updateFromJson(MutableJsonObject json) throws
           IllegalArgumentException {
-    //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonArgs, jsonJarpath, jsonMainclass, jsonNumtms, jsonJobType;
     int jsonTMmem, jsonSlots, jsonParallelism;

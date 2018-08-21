@@ -175,7 +175,6 @@ public class YarnJobConfiguration extends JobConfiguration {
   @Override
   public void updateFromJson(MutableJsonObject json) throws
       IllegalArgumentException {
-    //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonCors, jsonMem, jsonQueue;
 

@@ -424,7 +424,7 @@ public class WebCommunication {
 
     String template = "%s://%s:%s/%s";
     String channelEscaped = StringEscapeUtils.escapeJava(channel);
-    String path = "conda/" + settings.getAdamUser() + '/' + op.toLowerCase()
+    String path = "conda/" + settings.getHopsworksUser() + '/' + op.toLowerCase()
             + "/" + project + "/" + lib;
 
     String url = String.format(template, PROTOCOL, hostAddress, PORT, path);

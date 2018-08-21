@@ -83,7 +83,6 @@ public class SparkJob extends YarnJob {
       jobconfig.setAppName("Untitled Spark Job");
     }
     //If runnerbuilder is not null, it has been instantiated by child class,
-    //i.e. AdamJob
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(jobs);
       runnerbuilder.setJobName(jobconfig.getAppName());
