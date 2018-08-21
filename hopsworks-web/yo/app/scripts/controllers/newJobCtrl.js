@@ -13,11 +13,9 @@ NS
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'AdamService', 'FlinkService', 'TourService',
-          'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
+          'FlinkService', 'TourService', 'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
           function ($routeParams, growl, JobService,
-                  $location, ModalService, StorageService, $scope, SparkService,
-                  AdamService, FlinkService, TourService,
+                  $location, ModalService, StorageService, $scope, SparkService, FlinkService, TourService,
                   HistoryService, KafkaService, ProjectService, $timeout) {
 
             var self = this;
@@ -116,7 +114,7 @@ angular.module('hopsWorksApp')
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "PYSPARK": "Please select a Python file."
+              "PYSPARK": "Please select a file."
             };
 
             //Create variables for user-entered information
@@ -424,7 +422,7 @@ angular.module('hopsWorksApp')
               }
               if (self.phase === 0) {
                 if (!self.jobname) {
-                    self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
+                  self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
                 }
                 self.phase = 1;
                 self.accordion2.isOpen = true; //Open type selection
@@ -690,7 +688,7 @@ angular.module('hopsWorksApp')
              */
             this.selectFile = function (reason, parameter) {
               ModalService.selectFile('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["ADAM-FILE"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
                       }, function (error) {
@@ -705,12 +703,9 @@ angular.module('hopsWorksApp')
              */
             this.selectDir = function (reason, parameter) {
               ModalService.selectDir('lg', self.selectFileRegexes[reason],
-                      self.selectFileErrorMsgs["ADAM-FOLDER"]).then(
+                      self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
                         self.onFileSelected(reason, "hdfs://" + success);
-                        if (reason.toUpperCase() === "ADAM") {
-                          growl.info("Insert output file name", {title: 'Required', ttl: 5000});
-                        }
                       }, function (error) {
                 //The user changed their mind.
               });

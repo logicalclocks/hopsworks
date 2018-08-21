@@ -93,14 +93,6 @@
                           class="btn btn-primary btn-md fa fa-bar-chart"> Metrics
                   </button>
                 </span>
-                <!--                <span class="field-info" uib-tooltip="Show Vizops" style="padding-top: 5px;padding-left:3px">
-                                  <button style=""
-                                          ng-click="jobUICtrl.vizopsUI();
-                                                    $event.stopPropagation();"
-                                          class="btn btn-primary btn-md fa fa-eye"
-                                          ng-if="jobUICtrl.job.jobType !== 'TENSORFLOW' && jobUICtrl.job.jobType !== 'FLINK'"> Vizops
-                                  </button>
-                                </span>-->
                 <span ng-if="jobUICtrl.sessions.length === 2" class="field-info"  ng-repeat="tf in jobUICtrl.sessions" uib-tooltip="Show TensorBoard"
                       style="padding-top: 5px;padding-left:3px">
                   <button ng-if="$index > 0" style="" ng-click="jobUICtrl.tfUI(tf); $event.stopPropagation();"
@@ -144,11 +136,6 @@
                 <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe>
               </div>
               <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
-              <div ng-if="jobUICtrl.current === 'vizopsUI'">
-                <div ng-controller="VizopsCtrl as vizopsCtrl">
-                  <div ng-include="'views/vizops.html'" style="overflow-y: auto;"></div>
-                </div>
-              </div>
 
               <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
                 No Job selected.
@@ -156,9 +143,6 @@
             </div>
 
           </div>
-
-
-          <!--<div ng-include="'footer.html'"/>-->
 
 
         </section>
