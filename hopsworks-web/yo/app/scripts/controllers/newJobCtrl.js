@@ -683,7 +683,7 @@ angular.module('hopsWorksApp')
             /**
              * Open a dialog for file selection.
              * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-             * @param {Object} parameter The Adam parameter to bind.
+             * @param {Object} parameter The  parameter to bind.
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
@@ -698,7 +698,7 @@ angular.module('hopsWorksApp')
             /**
              * Open a dialog for directory selection.
              * @param {String} reason Goal for which the file is selected. (JobType or "LIBRARY").
-             * @param {Object} parameter The Adam parameter to bind.
+             * @param {Object} parameter The parameter to bind.
              * @returns {undefined}
              */
             this.selectDir = function (reason, parameter) {
