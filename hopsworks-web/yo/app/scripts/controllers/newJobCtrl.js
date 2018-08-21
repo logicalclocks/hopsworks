@@ -765,9 +765,6 @@ angular.module('hopsWorksApp')
               if (stored) {
                 //Job information
                 self.jobtype = stored.jobtype;
-                if (self.getJobType() === "TFSPARK") {
-                  self.tfOnSpark = true;
-                }
                 self.jobname = stored.jobname;
                 if (typeof self.jobname !== "undefined") {
                   self.jobname = self.jobname + "." + Math.floor(Math.random() * 10);

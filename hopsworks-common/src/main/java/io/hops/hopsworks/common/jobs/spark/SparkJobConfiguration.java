@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
@@ -71,9 +70,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int selectedMaxExecutors = Settings.SPARK_INIT_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
 
-  private boolean pySpark;
   private int numberOfGpusPerExecutor = 0;
-//  private int numOfPs = 0;
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
@@ -97,9 +94,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   //    pyspark-distributed-language-processing-hadoop-cluster
   protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
   protected static final String KEY_PYSPARK_PYLIB = "PYLIB";
-  protected static final String KEY_IS_PYSPARK = "IS_TFONSPARK";
   protected static final String KEY_GPUS = "NUM_GPUS";
-//  protected static final String KEY_NUM_PS = "NUM_PS";
 
   public SparkJobConfiguration() {
     super();
@@ -170,14 +165,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public void setAnacondaDir(String anacondaDir) {
     this.anacondaDir = anacondaDir;
-  }
-
-  public boolean isPySpark() {
-    return pySpark;
-  }
-
-  public void setTfOnSpark(boolean pySpark) {
-    this.pySpark = pySpark;
   }
 
   public int getNumberOfGpusPerExecutor() {
@@ -298,13 +285,10 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public void setNumberOfExecutorsInit(int numberOfExecutorsInit) {
     this.numberOfExecutorsInit = numberOfExecutorsInit;
   }
-  
 
   @Override
   public JobType getType() {
-    if (isPySpark()) {
-      return JobType.PYSPARK;
-    } else if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
+    if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
       return JobType.PYSPARK;
     } else {
       return JobType.SPARK;
@@ -343,10 +327,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
     obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
 
-    if (pySpark) {
-      obj.set(KEY_IS_PYSPARK, Boolean.toString(pySpark));
+    if (getType() == JobType.PYSPARK) {
       obj.set(KEY_GPUS, "" + numberOfGpusPerExecutor);
-//      obj.set(KEY_NUM_PS, "" + numOfPs);
     }
     return obj;
   }
@@ -366,7 +348,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     String jsonDynexecs = "NOT_AVAILABLE";
     String jsonPySpark = "";
     String jsonNumOfGPUs = "0";
-//    String jsonNumOfPs = "0";
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
@@ -390,13 +371,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
         jsonNumexecsMaxSelected = json.getString(KEY_DYNEXECS_MAX_SELECTED);
         jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
       }
-      if (json.containsKey(KEY_IS_PYSPARK)) {
-        //This is to fix backwards compatibility with old jobs
-        jsonPySpark = json.getString(KEY_IS_PYSPARK);
-        if (jsonPySpark.equalsIgnoreCase("true")) {
-          jsonNumOfGPUs = json.getString(KEY_GPUS);
-//          jsonNumOfPs = json.getString(KEY_NUM_PS);
-        }
+      if (jsonMainclass.compareToIgnoreCase(Settings.SPARK_PY_MAINCLASS) == 0) {
+        jsonNumOfGPUs = json.getString(KEY_GPUS);
       }
 
       hs = json.getString(KEY_HISTORYSERVER);
@@ -406,18 +382,27 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     }
     //Second: allow all superclasses to check validity. To do this: make sure that 
     //the type will get recognized correctly.
+
     json.set(KEY_TYPE, JobType.YARN.name());
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state
+
     this.args = jsonArgs;
+
     this.executorCores = Integer.parseInt(jsonExeccors);
+
     this.executorMemory = Integer.parseInt(jsonExecmem);
+
     this.appPath = jsonJarpath;
+
     this.mainClass = jsonMainclass;
+
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
+
     this.properties = jsonProperties;
 
-    if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
+    if (jsonDynexecs.equals(
+        "true") || jsonDynexecs.equals("false")) {
       this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
       this.minExecutors = Integer.parseInt(jsonNumexecsMin);
       this.maxExecutors = Integer.parseInt(jsonNumexecsMax);
@@ -425,10 +410,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       this.selectedMaxExecutors = Integer.parseInt(jsonNumexecsMaxSelected);
       this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
     }
-    if (!jsonPySpark.equals("")) {
-      this.pySpark = Boolean.parseBoolean(jsonPySpark);
+
+    if (!jsonNumOfGPUs.equals("")) {
       this.numberOfGpusPerExecutor = Integer.parseInt(jsonNumOfGPUs);
     }
+
     this.historyServerIp = hs;
 
   }
