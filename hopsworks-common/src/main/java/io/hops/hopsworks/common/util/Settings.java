@@ -661,8 +661,11 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
+
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
+  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv.PYSPARK_PYTHON";
+  //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
 
   //Spark log4j and metrics properties
