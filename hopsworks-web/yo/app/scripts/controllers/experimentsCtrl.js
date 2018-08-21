@@ -190,20 +190,6 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            var init = function() {
-                if (self.tb === '') {
-                    self.kibanaUI();
-                } else {
-                    self.tbUI();
-                }
-            }
-
-            init();
-
-            self.openUiInNewWindow = function() {
-                $window.open(self.ui, '_blank');
-            };
-
             self.refresh = function() {
                 var ifram = document.getElementById('ui_iframe');
                 if (ifram !== null) {
@@ -226,5 +212,6 @@ angular.module('hopsWorksApp')
                 };
             });
 
+            self.kibanaUI();
         }
     ]);

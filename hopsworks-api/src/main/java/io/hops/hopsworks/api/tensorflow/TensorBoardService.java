@@ -105,7 +105,7 @@ public class TensorBoardService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(tbDTO).build();
     } catch (PersistenceException pe) {
       LOGGER.log(Level.SEVERE, "Failed to fetch TensorBoard from database", pe);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+      throw new AppException(Response.Status.BAD_REQUEST.
           getStatusCode(),
           "Could not get the running TensorBoard.");
     }
@@ -128,7 +128,9 @@ public class TensorBoardService {
       hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
     } catch (NotFoundException nfe) {
       LOGGER.log(Level.SEVERE, "Could not locate logdir from elastic ", nfe);
-      return null;
+      throw new AppException(Response.Status.NOT_FOUND.
+          getStatusCode(),
+          "Unable to retrieve location of experiment logdir from elastic, contact a system administrator.");
     }
 
     try {
@@ -136,7 +138,7 @@ public class TensorBoardService {
       tbPath.validatePathExists(inodesFacade, true);
     } catch(AppException e) {
       LOGGER.log(Level.SEVERE, "Exception validating path in hdfs for experiment ", e);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+      throw new AppException(Response.Status.BAD_REQUEST.
           getStatusCode(),
           "Experiment directory is missing, check in your project if it was deleted.");
     }
