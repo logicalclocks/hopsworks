@@ -2,9 +2,12 @@
 set -e
 
 ext=""
-if [ $# -eq 1 ] ; then
-  ext="-$1"
+if [ ! $# -eq 1 ] ; then
+  echo "JIM YOU ARE OVERWRITING THE MASTER BRANCH RELEASE. DO NOT DO IT"
+  exit 1
 fi
+
+ext="-$1"
 
 # Change to directory for the script
 cd "$(dirname "$0")"
