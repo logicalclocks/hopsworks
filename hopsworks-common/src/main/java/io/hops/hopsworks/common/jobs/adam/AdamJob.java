@@ -142,7 +142,7 @@ public class AdamJob extends SparkJob {
       String firstName = user.getFname();
       String lastName = user.getLname();
       String usersFullName = null;
-      if(firstName != null && firstName.isEmpty()) {
+      if(firstName != null && !firstName.isEmpty()) {
         usersFullName = firstName;
       }
       if(lastName != null && !lastName.isEmpty()) {
