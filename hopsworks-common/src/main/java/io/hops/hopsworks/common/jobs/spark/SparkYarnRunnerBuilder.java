@@ -304,7 +304,9 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment("CUDA_VERSION", settings.getHopsworksVersion());
       builder.addToAppMasterEnvironment("HOPSWORKS_VERSION", settings.getCudaVersion());
       builder.addToAppMasterEnvironment("LIVY_VERSION", settings.getLivyVersion());
-      builder.addToAppMasterEnvironment("HOPSWORKS_USER", usersFullName);
+      if(usersFullName != null && !usersFullName.isEmpty()) {
+        builder.addToAppMasterEnvironment("HOPSWORKS_USER", usersFullName);
+      }
       builder.addToAppMasterEnvironment("KAFKA_BROKERS", settings.getKafkaBrokersStr());
     }
 

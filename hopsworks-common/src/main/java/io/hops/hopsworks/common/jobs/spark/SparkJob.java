@@ -134,16 +134,18 @@ public class SparkJob extends YarnJob {
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
+
       String firstName = user.getFname();
       String lastName = user.getLname();
-      String usersFullName = "";
+      String usersFullName = null;
       if(firstName != null && firstName.isEmpty()) {
         usersFullName = firstName;
       }
       if(lastName != null && !lastName.isEmpty()) {
         usersFullName += " " + lastName;
+        usersFullName.trim();
       }
-      usersFullName.trim();
+
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject().getName(),
               jobUser, usersFullName,
