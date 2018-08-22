@@ -614,7 +614,7 @@ angular.module('hopsWorksApp')
                   if (self.val.sparkParams) {
                     self.val.sparkParams = self.val.sparkParams.concat('\n' + "spark.jars.packages=");
                   } else {
-                    self.val.sparkParams = "spark.jars.packages=" + '\n';
+                    self.val.sparkParams = "spark.jars.packages=";
                   }
                 }
                 if (azureRepo) {
