@@ -650,9 +650,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS="spark.executorEnv.LIBHDFS_OPTS";
   public static final String SPARK_DRIVER_EXTRALIBRARYPATH="spark.driver.extraLibraryPath";
   public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS="spark.driver.extraJavaOptions";
-  
-  
-  
+
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
@@ -664,7 +662,7 @@ public class Settings implements Serializable {
 
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
-  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv.PYSPARK_PYTHON";
+  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
   //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
 

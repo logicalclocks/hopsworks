@@ -134,16 +134,19 @@ public class SparkJob extends YarnJob {
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
-      String usersName = "";
-      if(user.getFname() != null) {
-        usersName = user.getFname();
+      String firstName = user.getFname();
+      String lastName = user.getLname();
+      String usersFullName = "";
+      if(firstName != null && firstName.isEmpty()) {
+        usersFullName = firstName;
       }
-      if(user.getLname() != null) {
-        usersName += " " + usersName;
+      if(lastName != null && !lastName.isEmpty()) {
+        usersFullName += " " + lastName;
       }
+      usersFullName.trim();
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject().getName(),
-              jobUser, usersName,
+              jobUser, usersFullName,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 
     } catch (IOException e) {

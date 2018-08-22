@@ -132,7 +132,7 @@ public class SparkYarnRunnerBuilder {
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project,
-      String jobUser, String userName, AsynchronousJobExecutor services,
+      String jobUser, String usersFullName, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
       Settings settings)
       throws IOException {
@@ -304,7 +304,7 @@ public class SparkYarnRunnerBuilder {
       builder.addToAppMasterEnvironment("CUDA_VERSION", settings.getHopsworksVersion());
       builder.addToAppMasterEnvironment("HOPSWORKS_VERSION", settings.getCudaVersion());
       builder.addToAppMasterEnvironment("LIVY_VERSION", settings.getLivyVersion());
-      builder.addToAppMasterEnvironment("HOPSWORKS_USER", userName);
+      builder.addToAppMasterEnvironment("HOPSWORKS_USER", usersFullName);
       builder.addToAppMasterEnvironment("KAFKA_BROKERS", settings.getKafkaBrokersStr());
     }
 
