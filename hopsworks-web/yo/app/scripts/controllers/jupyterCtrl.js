@@ -41,9 +41,10 @@
 
 angular.module('hopsWorksApp')
         .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
-          'growl', 'ModalService', '$interval', 'JupyterService', 'TensorFlowService', 'SparkService', 'StorageService', '$location', '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
-          function ($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService, TensorFlowService, SparkService, StorageService,
-                  $location, $timeout, $window, $sce, PythonDepsService, TourService) {
+          'growl', 'ModalService', '$interval', 'JupyterService', 'SparkService', 'StorageService', '$location',
+          '$timeout', '$window', '$sce', 'PythonDepsService', 'TourService',
+          function ($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
+                  SparkService, StorageService, $location, $timeout, $window, $sce, PythonDepsService, TourService) {
 
             var self = this;
             self.connectedStatus = false;
@@ -107,7 +108,15 @@ angular.module('hopsWorksApp')
             ];
             self.umask = self.umasks[1];
 
-            self.availableLibs = ['Azure:mmlspark:0.13'];
+            self.availableLibs = [
+              {'maven': 'Azure:mmlspark:0.13',
+                'pypi': '', // mmlspark is a .whl file that is already installed in the base conda env
+              },
+              {
+                'maven': 'ch.cern.sparkmeasure:spark-measure_2.11:0.13',
+                'pypi': 'sparkmeasure'
+              }
+            ];
             self.libs = [];
 
             self.job = {'type': '',
@@ -593,34 +602,91 @@ angular.module('hopsWorksApp')
                     packages = packages + ",";
                   }
 
-                  if (self.libs[i].includes(self.availableLibs[0])) {
-                    if (self.val.sparkParams.includes(self.availableLibs[0]) === false) {
+                  if (self.libs[i].includes("mmlspark")) {
+                    if (self.val.sparkParams.includes("mmlspark") === false) {
                       azureRepo = true;
                     }
                   }
                 }
-                var entry = "spark.jars.packages=" + packages;
-                if (foundPackages) {
-                  self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
-                } else {
-                  if (self.val.sparkParams) {
-                    self.val.sparkParams = self.val.sparkParams + '\n' + entry;
-                  } else {
-                    self.val.sparkParams = self.val.sparkParams + entry;                    
-                  }
-                }
-
                 if (azureRepo) {
                   var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
                   if (foundRepos) {
                     self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
-                      self.val.sparkParams = self.val.sparkParams + '\n' + repo;
+                    self.val.sparkParams = self.val.sparkParams + '\n' + repo;
                   }
-
                 }
               }
 
+              var existsPackage = true;
+              if (self.val.sparkParams.includes("spark.jars.packages") === false && self.libs.length > 0) {
+                existsPackage = false;
+                if (self.val.sparkParams) {
+                  self.val.sparkParams = self.val.sparkParams + '\n' + "spark.jars.packages=";
+                } else {
+                  self.val.sparkParams = "spark.jars.packages=";
+                }
+              }
+
+              // First add all the maven coordinates to spark.jars.packages
+              for (var i = 0; i < self.libs.length; i++) {
+                if (existsPackage) {
+                  self.val.sparkParams.replace("spark.jars.packages=", "spark.jars.packages=" + self.libs[i].maven + ",");
+                } else {
+                  existsPackage = true;
+                  self.val.sparkParams.replace("spark.jars.packages=", "spark.jars.packages=" + self.libs[i].maven);
+                }
+              }
+
+
+              // If PySpark selected, add the pip libraries for preselected libraries
+              PythonDepsService.index(self.projectId).then(
+                      function (success) {
+                        var installedPip = success.data;
+
+                        for (var i = 0; i < self.libs.length; i++) {
+                          // Some selected packages dont have pip libraries.
+                          if (self.libs[i].pip !== "") {
+
+                            var pipLibAlreadyInstalled = false;
+                            for (var j = 0; j < installedPip.length; j++) {
+                              var splitPip = self.libs[i].pip.split(":");
+                              var pipLibName = splitPip[0];
+                              var pipLibVersion = splitPip[1];
+                              if (installedPip[j].lib === pipLibName) {
+                                pipLibAlreadyInstalled = true;
+                                break;
+                              }
+                            }
+                            if (pipLibAlreadyInstalled === false) {
+                              var data = {
+                                "channelUrl": "PyPi",
+                                "installType": 'PIP',
+                                "machineType": "ALL",
+                                "lib": pipLibName,
+                                "version": pipLibVersion
+                              };
+                              PythonDepsService.install(self.projectId, data).then(
+                                      function (success) {
+                                        growl.info("Installing library: " + self.libs[i].pip,
+                                                {title: "PIP",
+                                                  ttl: 2000
+                                                });
+                                      },
+                                      function (error) {
+                                        growl.error(error.data.errorMsg, {
+                                          title: 'Error installing pip library: ' + self.libs[i].pip,
+                                          ttl: 3000
+                                        });
+                                      });
+                            }
+                          }
+                        }
+
+                      },
+                      function (error) {
+                        // Could be a 204 - python not enabled. Don't need to print to the user
+                      });
 
               JupyterService.start(self.projectId, self.val).then(
                       function (success) {
@@ -647,6 +713,7 @@ angular.module('hopsWorksApp')
                 self.toggleValue = true;
               }
               );
+
 
             };
 

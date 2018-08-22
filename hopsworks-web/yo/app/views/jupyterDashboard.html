@@ -492,7 +492,7 @@
                              close-on-select="false" style="width: 400px;"  title="Add a library to the app">
                     <ui-select-match placeholder="Add a library...">{{$item}}</ui-select-match>
                     <ui-select-choices repeat="lib in jupyterCtrl.availableLibs | filter:$select.search">
-                      {{lib}}
+                      {{lib.maven}}
                     </ui-select-choices>
                   </ui-select>              
                 </div>
