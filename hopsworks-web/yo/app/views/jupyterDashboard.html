@@ -482,7 +482,6 @@
 
               <div class="row clusterparams" ng-if="jupyterCtrl.advanced === true">
 
-
                 <div class="text-right col-md-6">Quick add Maven libs <i class="fa fa-info-circle"
                                                                   uib-tooltip="Add library to app. mmlspark (Microsoft Machine Learning for Apache Spark)" 
                                                                   style="margin-left: 10px"></i>
@@ -490,7 +489,7 @@
                 <div class="col-md-2 jupyter-left">
                   <ui-select multiple tagging tagging-label="false" ng-model="jupyterCtrl.libs" theme="select2" 
                              close-on-select="false" style="width: 400px;"  title="Add a library to the app">
-                    <ui-select-match placeholder="Add a library...">{{$item}}</ui-select-match>
+                    <ui-select-match placeholder="Add a library...">{{$item.maven}}</ui-select-match>
                     <ui-select-choices repeat="lib in jupyterCtrl.availableLibs | filter:$select.search">
                       {{lib.maven}}
                     </ui-select-choices>
