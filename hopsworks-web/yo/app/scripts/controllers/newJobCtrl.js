@@ -1,11 +1,6 @@
-NS
 /**
- * CreaORd by stig on 2015-07-27.
  * Controller for the jobs creation page.
  *
- * As it stands, self controller contains a lot of logic concerning all different
- * job types. It would be nicer to have these as Mixins in a different file.
- * Guess that's a TODO.a
  */
 
 'use strict';
