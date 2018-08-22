@@ -8,10 +8,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'SparkService',
-          'FlinkService', 'TourService', 'HistoryService', 'KafkaService', 'ProjectService', '$timeout',
+          'FlinkService', 'TourService', 'HistoryService', 'KafkaService', 'ProjectService', 'PythonDepsService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, SparkService, FlinkService, TourService,
-                  HistoryService, KafkaService, ProjectService, $timeout) {
+                  HistoryService, KafkaService, ProjectService, PythonDepsService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -608,6 +608,18 @@ angular.module('hopsWorksApp')
              */
             self.onFileSelected = function (reason, path) {
               var filename = getFileName(path);
+
+              if (reason.toUpperCase() === "PYSPARK") {
+                PythonDepsService.enabled(self.projectId).then(
+                    function (success) {
+                    },
+                    function (error) {
+                      self.jobtype = 0;
+                      growl.error("You need to enable Python before running this job.", {title: 'Error - Python not Enabled Yet.', ttl: 15000});
+                });
+              }
+
+
               switch (reason.toUpperCase()) {
                 case "SPARK":
                 case "PYSPARK":
