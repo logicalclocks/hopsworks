@@ -97,7 +97,6 @@ public class SparkYarnRunnerBuilder {
   private int driverCores = 1;
   private String driverQueue;
   private int numOfGPUs = 0;
-//  private int numOfPs = 0;
   private final Map<String, String> envVars = new HashMap<>();
   private final Map<String, String> sysProps = new HashMap<>();
   private String classPath;
@@ -204,21 +203,16 @@ public class SparkYarnRunnerBuilder {
           + Settings.PYSPARK_PY4J,
           LocalResourceVisibility.APPLICATION.toString(),
           LocalResourceType.ARCHIVE.toString(), null), false);
-      if (jobType == JobType.PYSPARK) {
-//        if (System.getenv().containsKey("LD_LIBRARY_PATH")) {
-        jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-            new ConfigProperty(
-                Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                HopsUtils.APPEND_PATH,
-                System.getenv("LD_LIBRARY_PATH")));
-//        } else {
-        jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-            new ConfigProperty(
-                Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
-                HopsUtils.APPEND_PATH,
-                "$JAVA_HOME/jre/lib/amd64/server"));
-//        }
-      }
+      jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+          new ConfigProperty(
+              Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+              HopsUtils.APPEND_PATH,
+              System.getenv("LD_LIBRARY_PATH")));
+      jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+          new ConfigProperty(
+              Settings.SPARK_EXECUTORENV_LD_LIBRARY_PATH,
+              HopsUtils.APPEND_PATH,
+              "$JAVA_HOME/jre/lib/amd64/server"));
       pythonPath = new StringBuilder();
       pythonPath
           .append(Settings.SPARK_LOCALIZED_PYTHON_DIR)
@@ -557,8 +551,12 @@ public class SparkYarnRunnerBuilder {
               HopsUtils.IGNORE,
               Integer.toString(numOfGPUs)));
       //Add libs to PYTHONPATH
-      builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
-
+      if (serviceProps.isAnacondaEnabled()) {
+        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
+      } else {
+        //Throw error in Hopswors UI to notify user to enable Anaconda
+        throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
+      }
       builder.addToAppMasterEnvironment(Settings.SPARK_PYTHONPATH, pythonPath.toString());
       jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_PYTHONPATH,
           new ConfigProperty(
@@ -707,7 +705,7 @@ public class SparkYarnRunnerBuilder {
     this.numberOfGpus = numberOfGpusPerExecutor;
     return this;
   }
-  
+
   /**
    * Parse and set user provided Spark properties.
    *
@@ -829,9 +827,6 @@ public class SparkYarnRunnerBuilder {
     this.numOfGPUs = numOfGPUs;
   }
 
-//  public void setNumOfPs(int numOfPs) {
-//    this.numOfPs = numOfPs;
-//  }
   public void setServiceProps(ServiceProperties serviceProps) {
     this.serviceProps = serviceProps;
   }
