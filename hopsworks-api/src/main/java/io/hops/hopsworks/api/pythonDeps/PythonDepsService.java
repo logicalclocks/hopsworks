@@ -173,10 +173,11 @@ public class PythonDepsService {
 
     Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
 
-    List<PythonDepJson> jsonDeps = new ArrayList<>();
-    if (jsonDeps.isEmpty()) {
+    if (pythonDeps.isEmpty()) {
       throw new AppException(Response.Status.NO_CONTENT.getStatusCode(), "No results found.");
     }
+
+    List<PythonDepJson> jsonDeps = new ArrayList<>();
     for (PythonDep pd : pythonDeps) {
       jsonDeps.add(new PythonDepJson(pd));
     }

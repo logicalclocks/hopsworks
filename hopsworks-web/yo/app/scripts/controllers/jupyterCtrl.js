@@ -110,7 +110,7 @@ angular.module('hopsWorksApp')
 
             self.availableLibs = [
               {'maven': 'Azure:mmlspark:0.13',
-                'pip': '', // mmlspark is a .whl file that is already installed in the base conda env
+                'pip': ''// mmlspark is a .whl file that is already installed in the base conda env
               },
               {
                 'maven': 'ch.cern.sparkmeasure:spark-measure_2.11:0.13',
@@ -675,7 +675,7 @@ angular.module('hopsWorksApp')
                                         function (error) {
                                           growl.error(error.data.errorMsg, {
                                             title: 'Error installing pip library: ' + self.libs[i].pip,
-                                            ttl: 3000
+                                            ttl: 10000
                                           });
                                         });
                               }
