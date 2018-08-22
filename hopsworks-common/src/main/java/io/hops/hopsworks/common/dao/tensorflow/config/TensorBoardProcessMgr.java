@@ -199,7 +199,13 @@ public class TensorBoardProcessMgr {
           String logFilePath = tbPath + File.separator + port + ".log";
           File logFile = new File(logFilePath);
           while(maxWait > 0) {
-            if(logFile.length() > 0) {
+            String logFileContents = com.google.common.io.Files.readFirstLine(logFile, Charset.defaultCharset());
+            // It is not possible to have a fixed wait time before showing the TB, we need to be sure it has started
+            if(logFile.length() > 0 &&
+                (logFileContents.contains("Loaded") |
+                logFileContents.contains("Reloader") |
+                logFileContents.contains("event"))
+              | maxWait == 1) {
               Thread.currentThread().sleep(5000);
               TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
               String host = null;
@@ -235,8 +241,7 @@ public class TensorBoardProcessMgr {
         }
 
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex.
-                toString());
+        LOGGER.log(Level.SEVERE, "Problem starting TensorBoard: {0}", ex);
         if (process != null) {
           process.destroyForcibly();
         }
