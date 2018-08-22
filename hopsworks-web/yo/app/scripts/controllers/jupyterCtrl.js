@@ -599,7 +599,7 @@ angular.module('hopsWorksApp')
                 for (var i = 0; i < self.libs.length; i++) {
                   packages = packages + self.libs[i].maven;
                   if (i < self.libs.length - 1) {
-                    packages = packages + ",";s
+                    packages = packages + ",";
                   }
 
                   if (self.libs[i].maven.includes("mmlspark")) {
