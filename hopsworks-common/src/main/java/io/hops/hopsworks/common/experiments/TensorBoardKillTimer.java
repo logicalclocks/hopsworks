@@ -66,7 +66,7 @@ public class TensorBoardKillTimer {
   private TensorBoardController tensorBoardController;
 
   @Schedule(persistent = false,
-          minute = "*/4",
+          minute = "*/20",
           hour = "*")
   public void rotate(Timer timer) {
 
