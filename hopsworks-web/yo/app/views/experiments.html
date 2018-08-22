@@ -32,12 +32,15 @@
                         <div class="row" style="margin-left: 5px; height: 100%; overflow-y: auto;">
                             <div class="row" style="padding-bottom:3px">
                                 <div class="col-md-12" ng-if="experimentsCtrl.tb === ''">
-                           <span class="col-md-4" style="margin-left:-15px;">
+                           <span class="col-md-3" style="margin-left:-15px;">
                            <button ng-click="experimentsCtrl.kibanaUI();
                               $event.stopPropagation();"
                                    class="btn btn-primary btn-md fa fa-table" > Experiments Summary
                            </button>
                            </span>
+                                    <div class="col-md-1">
+                                        <img height="30" src="images/tf-175x200.png" style="float:right;"/>
+                                    </div>
                                     <span class="field-info input-group col-md-4" ng-if="experimentsCtrl.tb === ''" uib-tooltip="Search for specific experiment given id" style="padding-left:3px;">
                               <input type="text" class="form-control" style="height: 32px;" placeholder="Start TensorBoard for given experiment _id" ng-model="experimentsCtrl.id" ng-keyup="experimentsCtrl.hitEnter($event);">
                               <div class="input-group-btn" style="width: 54px;">
