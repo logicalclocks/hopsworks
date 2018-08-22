@@ -584,6 +584,7 @@ angular.module('hopsWorksApp')
               $location.path('/#!/project/' + self.projectId + '/python');
             };
 
+
             self.start = function () {
               startLoading("Connecting to Jupyter...");
               $scope.tgState = true;
@@ -594,15 +595,14 @@ angular.module('hopsWorksApp')
               var azureRepo = false;
               if (self.libs.length > 0) {
                 var packages = "";
-                var foundPackages = self.val.sparkParams.includes("spark.jars.packages");
                 var foundRepos = self.val.sparkParams.includes("spark.jars.repositories");
                 for (var i = 0; i < self.libs.length; i++) {
-                  packages = packages + self.libs[i];
+                  packages = packages + self.libs[i].maven;
                   if (i < self.libs.length - 1) {
                     packages = packages + ",";
                   }
 
-                  if (self.libs[i].includes("mmlspark")) {
+                  if (self.libs[i].maven.includes("mmlspark")) {
                     if (self.val.sparkParams.includes("mmlspark") === false) {
                       azureRepo = true;
                     }
