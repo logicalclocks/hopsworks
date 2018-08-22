@@ -599,7 +599,7 @@ angular.module('hopsWorksApp')
                 for (var i = 0; i < self.libs.length; i++) {
                   packages = packages + self.libs[i].maven;
                   if (i < self.libs.length - 1) {
-                    packages = packages + ",";
+                    packages = packages + ",";s
                   }
 
                   if (self.libs[i].maven.includes("mmlspark")) {
@@ -620,7 +620,7 @@ angular.module('hopsWorksApp')
                 if (azureRepo) {
                   var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
                   if (foundRepos) {
-                    self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
+                    self.val.sparkParams = self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
                     self.val.sparkParams = self.val.sparkParams.concat('\n' + repo);
                   }
@@ -630,10 +630,10 @@ angular.module('hopsWorksApp')
                 for (var i = 0; i < self.libs.length; i++) {
                   var entry = "spark.jars.packages=" + self.libs[i].maven;
                   if (existsPackages) {
-                    self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
+                    self.val.sparkParams = self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
                   } else {
                     existsPackages = true;
-                    self.val.sparkParams.replace("spark.jars.packages=", entry);
+                    self.val.sparkParams = self.val.sparkParams.replace("spark.jars.packages=", entry);
                   }
                 }
 
