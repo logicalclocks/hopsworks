@@ -114,7 +114,7 @@ angular.module('hopsWorksApp')
               },
               {
                 'maven': 'ch.cern.sparkmeasure:spark-measure_2.11:0.13',
-                'pip': 'sparkmeasure'
+                'pip': 'sparkmeasure:0.13.4'
               }
             ];
             self.libs = [];
@@ -641,50 +641,51 @@ angular.module('hopsWorksApp')
                 // If PySpark selected, add the pip libraries for preselected libraries
                 PythonDepsService.index(self.projectId).then(
                         function (success) {
-                          var installedPip = success.data;
+                          if (success.status !== 204) { // if some libraries were found, continue
+                            var installedPip = success.data;
 
-                          for (var i = 0; i < self.libs.length; i++) {
-                            // Some selected packages dont have pip libraries.
-                            if (self.libs[i].pip !== "") {
+                            for (var i = 0; i < self.libs.length; i++) {
+                              // Some selected packages dont have pip libraries.
+                              if (self.libs[i].pip !== "") {
 
-                              var pipLibAlreadyInstalled = false;
-                              for (var j = 0; j < installedPip.length; j++) {
-                                var splitPip = self.libs[i].pip.split(":");
-                                var pipLibName = splitPip[0];
-                                var pipLibVersion = splitPip[1];
-                                if (installedPip[j].lib === pipLibName) {
-                                  pipLibAlreadyInstalled = true;
-                                  break;
+                                var pipLibAlreadyInstalled = false;
+                                for (var j = 0; j < installedPip.length; j++) {
+                                  var splitPip = self.libs[i].pip.split(":");
+                                  var pipLibName = splitPip[0];
+                                  var pipLibVersion = splitPip[1];
+                                  if (installedPip[j].lib === pipLibName) {
+                                    pipLibAlreadyInstalled = true;
+                                    break;
+                                  }
                                 }
-                              }
-                              if (pipLibAlreadyInstalled === false) {
-                                var data = {
-                                  "channelUrl": "PyPi",
-                                  "installType": 'PIP',
-                                  "machineType": "ALL",
-                                  "lib": pipLibName,
-                                  "version": pipLibVersion
-                                };
-                                PythonDepsService.install(self.projectId, data).then(
-                                        function (success) {
-                                          growl.info("Installing library: " + self.libs[i].pip,
-                                                  {title: "PIP",
-                                                    ttl: 2000
-                                                  });
-                                        },
-                                        function (error) {
-                                          growl.error(error.data.errorMsg, {
-                                            title: 'Error installing pip library: ' + self.libs[i].pip,
-                                            ttl: 10000
+                                if (pipLibAlreadyInstalled === false) {
+                                  var data = {
+                                    "channelUrl": "PyPi",
+                                    "installType": 'PIP',
+                                    "machineType": "ALL",
+                                    "lib": pipLibName,
+                                    "version": pipLibVersion
+                                  };
+                                  PythonDepsService.install(self.projectId, data).then(
+                                          function (success) {
+                                            growl.info("Installing library: " + self.libs[i].pip,
+                                                    {title: "PIP",
+                                                      ttl: 2000
+                                                    });
+                                          },
+                                          function (error) {
+                                            growl.error(error.data.errorMsg, {
+                                              title: 'Error installing pip library: ' + self.libs[i].pip,
+                                              ttl: 10000
+                                            });
                                           });
-                                        });
+                                }
                               }
                             }
                           }
-
                         },
                         function (error) {
-                          // Could be a 204 - python not enabled. Don't need to print to the user
+                          // Don't need to print to the user
                         });
               }
 
