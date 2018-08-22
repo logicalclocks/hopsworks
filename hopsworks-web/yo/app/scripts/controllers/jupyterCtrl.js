@@ -669,13 +669,13 @@ angular.module('hopsWorksApp')
                                           function (success) {
                                             growl.info("Installing library: " + self.libs[i].pip,
                                                     {title: "PIP",
-                                                      ttl: 2000
+                                                      ttl: 5000
                                                     });
                                           },
                                           function (error) {
                                             growl.error(error.data.errorMsg, {
                                               title: 'Error installing pip library: ' + self.libs[i].pip,
-                                              ttl: 10000
+                                              ttl: 5000
                                             });
                                           });
                                 }
