@@ -112,12 +112,12 @@
 
           <div class="row" ng-if="jupyterCtrl.val.mode !== '' && jupyterCtrl.ui === ''" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
-            <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:5px; margin-left: 0px;'>
+            <div class="col-sm-8 col-md-8 col-lg-8" layout-align="center center" style='margin-top:1px; margin-left: 0px;'>
 
               <!-- STYLE THIS (TENSORFLOW : SPARK) -->
               <div class="row" ng-if="jupyterCtrl.advanced === true">
                 <div class="col-md-2"></div>
-                <div class="col-md-8 pull-left" style="margin-left: 43px;">
+                <div class="col-md-8 pull-left" style="margin-left: 43px; margin-top:-10px;">
                   <div class="btn-group blocks" style="padding: 20px;" ng-if="jupyterCtrl.ui === ''">
                     <label class="btn btn-primary" >
                       <input type="radio" value="tensorflow" data-ng-model="jupyterCtrl.val.mode" id="tensorflow" autocomplete="off"> TensorFlow
