@@ -153,7 +153,7 @@ angular.module('hopsWorksApp')
                     function(success) {
                         var projectName = success.data;
                         self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/dashboard/" + projectName.toLowerCase() + "_experiments_summary-dashboard?_g=" +
-                            "(refreshInterval:('$$hashKey':'object:161',display:'10%20seconds',pause:!f,section:1,value:5000),time:(from:now-15m,mode:quick,to:now))&_a=" +
+                            "(refreshInterval:('$$hashKey':'object:161',display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-15m,mode:quick,to:now))&_a=" +
                             "(description:'A%20summary%20of%20all%20experiments%20run%20in%20this%20project',filters:!(),fullScreenMode:!f,options:(darkTheme:!f,hidePanelTitles:!" +
                             "f,useMargins:!t),panels:!((gridData:(h:9,i:'1',w:12,x:0,y:0),id:" + projectName.toLowerCase() + "_experiments_summary-search,panelIndex:'1',type:search,version:'6.2.3'))," +
                             "query:(language:lucene,query:''),timeRestore:!f,title:'Experiments%20summary%20dashboard',viewMode:view)"
