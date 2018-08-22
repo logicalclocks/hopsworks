@@ -612,9 +612,9 @@ angular.module('hopsWorksApp')
                 if (self.val.sparkParams.includes("spark.jars.packages") === false) {
                   existsPackages = false;
                   if (self.val.sparkParams) {
-                    self.val.sparkParams = self.val.sparkParams + '\n' + "spark.jars.packages=";
+                    self.val.sparkParams = self.val.sparkParams.concat('\n' + "spark.jars.packages=");
                   } else {
-                    self.val.sparkParams = "spark.jars.packages=";
+                    self.val.sparkParams = "spark.jars.packages=" + '\n';
                   }
                 }
                 if (azureRepo) {
@@ -622,7 +622,7 @@ angular.module('hopsWorksApp')
                   if (foundRepos) {
                     self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
-                    self.val.sparkParams.replace("spark.jars.repositories=", repo + '\n');
+                    self.val.sparkParams = self.val.sparkParams.concat('\n' + repo);
                   }
                 }
 
