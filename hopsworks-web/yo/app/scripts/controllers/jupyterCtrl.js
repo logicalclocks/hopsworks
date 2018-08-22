@@ -110,11 +110,11 @@ angular.module('hopsWorksApp')
 
             self.availableLibs = [
               {'maven': 'Azure:mmlspark:0.13',
-                'pypi': '', // mmlspark is a .whl file that is already installed in the base conda env
+                'pip': '', // mmlspark is a .whl file that is already installed in the base conda env
               },
               {
                 'maven': 'ch.cern.sparkmeasure:spark-measure_2.11:0.13',
-                'pypi': 'sparkmeasure'
+                'pip': 'sparkmeasure'
               }
             ];
             self.libs = [];
@@ -608,85 +608,85 @@ angular.module('hopsWorksApp')
                     }
                   }
                 }
+                var existsPackages = true;
+                if (self.val.sparkParams.includes("spark.jars.packages") === false) {
+                  existsPackages = false;
+                  if (self.val.sparkParams) {
+                    self.val.sparkParams = self.val.sparkParams + '\n' + "spark.jars.packages=";
+                  } else {
+                    self.val.sparkParams = "spark.jars.packages=";
+                  }
+                }
                 if (azureRepo) {
                   var repo = "spark.jars.repositories=" + "http://dl.bintray.com/spark-packages/maven";
                   if (foundRepos) {
                     self.val.sparkParams.replace("spark.jars.repositories=", repo + ",");
                   } else {
-                    self.val.sparkParams = self.val.sparkParams + '\n' + repo;
+                    self.val.sparkParams.replace("spark.jars.repositories=", repo + '\n');
                   }
                 }
-              }
 
-              var existsPackage = true;
-              if (self.val.sparkParams.includes("spark.jars.packages") === false && self.libs.length > 0) {
-                existsPackage = false;
-                if (self.val.sparkParams) {
-                  self.val.sparkParams = self.val.sparkParams + '\n' + "spark.jars.packages=";
-                } else {
-                  self.val.sparkParams = "spark.jars.packages=";
+                // First add all the maven coordinates to spark.jars.packages
+                for (var i = 0; i < self.libs.length; i++) {
+                  var entry = "spark.jars.packages=" + self.libs[i].maven;
+                  if (existsPackages) {
+                    self.val.sparkParams.replace("spark.jars.packages=", entry + ",");
+                  } else {
+                    existsPackages = true;
+                    self.val.sparkParams.replace("spark.jars.packages=", entry);
+                  }
                 }
-              }
-
-              // First add all the maven coordinates to spark.jars.packages
-              for (var i = 0; i < self.libs.length; i++) {
-                if (existsPackage) {
-                  self.val.sparkParams.replace("spark.jars.packages=", "spark.jars.packages=" + self.libs[i].maven + ",");
-                } else {
-                  existsPackage = true;
-                  self.val.sparkParams.replace("spark.jars.packages=", "spark.jars.packages=" + self.libs[i].maven);
-                }
-              }
 
 
-              // If PySpark selected, add the pip libraries for preselected libraries
-              PythonDepsService.index(self.projectId).then(
-                      function (success) {
-                        var installedPip = success.data;
+                // If PySpark selected, add the pip libraries for preselected libraries
+                PythonDepsService.index(self.projectId).then(
+                        function (success) {
+                          var installedPip = success.data;
 
-                        for (var i = 0; i < self.libs.length; i++) {
-                          // Some selected packages dont have pip libraries.
-                          if (self.libs[i].pip !== "") {
+                          for (var i = 0; i < self.libs.length; i++) {
+                            // Some selected packages dont have pip libraries.
+                            if (self.libs[i].pip !== "") {
 
-                            var pipLibAlreadyInstalled = false;
-                            for (var j = 0; j < installedPip.length; j++) {
-                              var splitPip = self.libs[i].pip.split(":");
-                              var pipLibName = splitPip[0];
-                              var pipLibVersion = splitPip[1];
-                              if (installedPip[j].lib === pipLibName) {
-                                pipLibAlreadyInstalled = true;
-                                break;
+                              var pipLibAlreadyInstalled = false;
+                              for (var j = 0; j < installedPip.length; j++) {
+                                var splitPip = self.libs[i].pip.split(":");
+                                var pipLibName = splitPip[0];
+                                var pipLibVersion = splitPip[1];
+                                if (installedPip[j].lib === pipLibName) {
+                                  pipLibAlreadyInstalled = true;
+                                  break;
+                                }
+                              }
+                              if (pipLibAlreadyInstalled === false) {
+                                var data = {
+                                  "channelUrl": "PyPi",
+                                  "installType": 'PIP',
+                                  "machineType": "ALL",
+                                  "lib": pipLibName,
+                                  "version": pipLibVersion
+                                };
+                                PythonDepsService.install(self.projectId, data).then(
+                                        function (success) {
+                                          growl.info("Installing library: " + self.libs[i].pip,
+                                                  {title: "PIP",
+                                                    ttl: 2000
+                                                  });
+                                        },
+                                        function (error) {
+                                          growl.error(error.data.errorMsg, {
+                                            title: 'Error installing pip library: ' + self.libs[i].pip,
+                                            ttl: 3000
+                                          });
+                                        });
                               }
                             }
-                            if (pipLibAlreadyInstalled === false) {
-                              var data = {
-                                "channelUrl": "PyPi",
-                                "installType": 'PIP',
-                                "machineType": "ALL",
-                                "lib": pipLibName,
-                                "version": pipLibVersion
-                              };
-                              PythonDepsService.install(self.projectId, data).then(
-                                      function (success) {
-                                        growl.info("Installing library: " + self.libs[i].pip,
-                                                {title: "PIP",
-                                                  ttl: 2000
-                                                });
-                                      },
-                                      function (error) {
-                                        growl.error(error.data.errorMsg, {
-                                          title: 'Error installing pip library: ' + self.libs[i].pip,
-                                          ttl: 3000
-                                        });
-                                      });
-                            }
                           }
-                        }
 
-                      },
-                      function (error) {
-                        // Could be a 204 - python not enabled. Don't need to print to the user
-                      });
+                        },
+                        function (error) {
+                          // Could be a 204 - python not enabled. Don't need to print to the user
+                        });
+              }
 
               JupyterService.start(self.projectId, self.val).then(
                       function (success) {
