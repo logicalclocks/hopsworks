@@ -646,13 +646,12 @@ angular.module('hopsWorksApp')
 
                             for (var i = 0; i < self.libs.length; i++) {
                               // Some selected packages dont have pip libraries.
-                              if (self.libs[i].pip !== "") {
-
+                              if (self.libs[i].pip !== undefined && self.libs[i].pip !== "") {
                                 var pipLibAlreadyInstalled = false;
+                                var splitPip = self.libs[i].pip.split(":");
+                                var pipLibName = splitPip[0];
+                                var pipLibVersion = splitPip[1];
                                 for (var j = 0; j < installedPip.length; j++) {
-                                  var splitPip = self.libs[i].pip.split(":");
-                                  var pipLibName = splitPip[0];
-                                  var pipLibVersion = splitPip[1];
                                   if (installedPip[j].lib === pipLibName) {
                                     pipLibAlreadyInstalled = true;
                                     break;
