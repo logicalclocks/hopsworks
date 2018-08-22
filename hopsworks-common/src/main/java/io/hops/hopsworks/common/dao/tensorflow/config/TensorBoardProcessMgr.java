@@ -224,7 +224,7 @@ public class TensorBoardProcessMgr {
           } catch (UnknownHostException ex) {
             Logger.getLogger(TensorBoardProcessMgr.class.getName()).log(Level.SEVERE, null, ex);
           }
-          tensorBoardDTO.setEndpoint(host + ": " + port);
+          tensorBoardDTO.setEndpoint(host + ":" + port);
           return tensorBoardDTO;
         } else {
           LOGGER.log(Level.SEVERE,"Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
