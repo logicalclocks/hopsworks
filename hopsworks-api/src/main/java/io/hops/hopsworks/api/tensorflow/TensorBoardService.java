@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
+import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -46,6 +47,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.Path;
 import javax.ws.rs.NotFoundException;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -59,6 +63,8 @@ public class TensorBoardService {
 
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private Settings settings;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -143,6 +149,7 @@ public class TensorBoardService {
     TensorBoardDTO tensorBoardDTO = null;
     try {
       tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
+      waitForTensorBoardLoaded(tensorBoardDTO);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
     } catch(TensorBoardCleanupException tbce) {
       LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
@@ -173,6 +180,29 @@ public class TensorBoardService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
           "Could not stop TensorBoard.");
+    }
+  }
+
+  private void waitForTensorBoardLoaded(TensorBoardDTO tbDTO) {
+    int retries = 10;
+
+    while (retries > 0) {
+      Response response;
+      String tbUrl = "http://" + tbDTO.getEndpoint() + "/";
+      Client client = ClientBuilder.newClient();
+      WebTarget target = client.target(tbUrl);
+      try {
+        response = target.request().get();
+        if(response.getStatus() == 200) {
+          return;
+        }
+        Thread.currentThread().sleep(1000);
+      } catch (Exception ex) {
+        LOGGER.log(Level.FINE, "Exception trying to get TensorBoard content", ex);
+      } finally {
+        client.close();
+        retries--;
+      }
     }
   }
 }
