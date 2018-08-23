@@ -163,7 +163,7 @@ public class JupyterNotebookCleaner {
             jupyterProcessFacade.killServerJupyterUser(hdfsUser.getName(), jupyterHomePath, jp.getPid(), jp.
                 getPort());
           } catch(AppException ae) {
-
+            Logger.getLogger(JupyterNotebookCleaner.class.getName()).log(Level.SEVERE, null, ae);
           }
 
           String[] project_user = hdfsUser.getName().split(HdfsUsersController.USER_NAME_DELIMITER);

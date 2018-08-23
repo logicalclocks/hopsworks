@@ -90,7 +90,7 @@
             <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-17px;">
               <li class="pull-left" 
                   ng-class="{'connected-space' : jupyterCtrl.connectedStatus, 'disconnected-space':!jupyterCtrl.connectedStatus}" style="margin-top:-8px;">
-              <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-click="jupyterCtrl.deselect()">
+              <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-click="jupyterCtrl.deselect()" ng-if="jupyterCtrl.ui !== ''">
               </hamburger-toggle>
               </li>
               <li class="server-status">
