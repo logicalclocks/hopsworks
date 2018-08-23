@@ -167,21 +167,21 @@ public class JupyterNotebookCleaner {
           }
 
           String[] project_user = hdfsUser.getName().split(HdfsUsersController.USER_NAME_DELIMITER);
-          if(settings.getHopsRpcTls()) {
-            DistributedFileSystemOps dfso = dfsService.getDfsOps();
-            try {
-              String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
-              HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], jp.getProjectId()
-                  .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
-              certificateMaterializer.removeCertificatesLocal(project_user[1], jp.getProjectId().getName());
-            } catch (IOException e) {
-              LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
-            } finally {
-              if (dfso != null) {
-                dfsService.closeDfsClient(dfso);
-              }
+
+          DistributedFileSystemOps dfso = dfsService.getDfsOps();
+          try {
+            String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
+            HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], jp.getProjectId()
+                .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
+            certificateMaterializer.removeCertificatesLocal(project_user[1], jp.getProjectId().getName());
+          } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser);
+          } finally {
+            if (dfso != null) {
+              dfsService.closeDfsClient(dfso);
             }
           }
+
 
           try {
             String experimentsIndex = jp.getProjectId().getName() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;

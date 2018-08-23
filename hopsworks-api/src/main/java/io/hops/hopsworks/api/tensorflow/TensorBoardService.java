@@ -71,8 +71,6 @@ public class TensorBoardService {
   @EJB
   private PathValidator pathValidator;
   @EJB
-  private Settings settings;
-  @EJB
   private NoCacheResponse noCacheResponse;
 
   private Project project;

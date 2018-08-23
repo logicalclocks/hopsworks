@@ -129,24 +129,22 @@ public class TensorBoardProcessMgr {
     }
     tbDir.mkdirs();
 
-    if(settings.getHopsRpcTls()) {
-      DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      try {
-        certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
-        File certsDir = new File(certsPath);
-        certsDir.mkdirs();
 
-        HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
-            .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certsPath);
-      } catch (IOException ioe) {
-        LOGGER.log(Level.SEVERE, "Failed in materializing certificates for " +
-            hdfsUser + " in directory " + certsPath, ioe);
-        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-            settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-      } finally {
-        if (dfso != null) {
-          dfsService.closeDfsClient(dfso);
-        }
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    try {
+      certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+      File certsDir = new File(certsPath);
+      certsDir.mkdirs();
+      HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(), settings
+          .getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, certsPath);
+    } catch (IOException ioe) {
+      LOGGER.log(Level.SEVERE, "Failed in materializing certificates for " +
+          hdfsUser + " in directory " + certsPath, ioe);
+      HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+          settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
       }
     }
 
@@ -256,21 +254,20 @@ public class TensorBoardProcessMgr {
     }
 
     //Certificates cleanup in case they were materialized but no TB started successfully
-    if(settings.getHopsRpcTls()) {
-      DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
-      File certsDir = new File(certsPath);
-      certsDir.mkdirs();
-      try {
-        HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
-            settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-      } catch (IOException ioe) {
-        LOGGER.log(Level.SEVERE, "Failed in dematerializing certificates for " +
-            hdfsUser + " in directory " + certsPath, ioe);
-      } finally {
-        if (dfso != null) {
-          dfsService.closeDfsClient(dfso);
-        }
+
+    dfso = dfsService.getDfsOps();
+    certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+    File certsDir = new File(certsPath);
+    certsDir.mkdirs();
+    try {
+      HopsUtils.cleanupCertificatesForUserCustomDir(user.getUsername(), project.getName(),
+          settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+    } catch (IOException ioe) {
+      LOGGER.log(Level.SEVERE, "Failed in dematerializing certificates for " +
+          hdfsUser + " in directory " + certsPath, ioe);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
       }
     }
 
@@ -342,19 +339,16 @@ public class TensorBoardProcessMgr {
     String tbPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath);
 
     //dematerialize certificates
-    if(settings.getHopsRpcTls()) {
-      String certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
-
-      DistributedFileSystemOps dfso = dfsService.getDfsOps();
-      try {
-        HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
-          settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
-      } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsPath, e);
-      } finally {
-        if (dfso != null) {
-          dfsService.closeDfsClient(dfso);
-        }
+    String certsPath = tbBasePath + DigestUtils.sha256Hex(projectUserUniquePath + "_certs");
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    try {
+      HopsUtils.cleanupCertificatesForUserCustomDir(tb.getUsers().getUsername(), tb.getProject().getName(),
+        settings.getHdfsTmpCertDir(), certificateMaterializer, certsPath, settings);
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Could not cleanup certificates for " + hdfsUser + " in directory " + certsPath, e);
+    } finally {
+      if (dfso != null) {
+        dfsService.closeDfsClient(dfso);
       }
     }
 

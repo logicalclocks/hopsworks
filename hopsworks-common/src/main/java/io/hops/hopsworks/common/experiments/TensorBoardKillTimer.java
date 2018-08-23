@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Resource;
 import javax.ejb.Schedule;
@@ -109,16 +108,9 @@ public class TensorBoardKillTimer {
               }
 
               if (!tbExists) {
-                if(tensorBoardProcessMgr.ping(pid) == 0) {
-                  if (settings.getHopsRpcTls()) {
-                    LOG.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
-                        + pid.toString() + " in directory " + file.getAbsolutePath() + " killing it for now...");
-                    tensorBoardProcessMgr.killTensorBoard(pid);
-                  } else {
-                    tensorBoardProcessMgr.killTensorBoard(pid);
-                    FileUtils.deleteDirectory(file);
-                  }
-                }
+                LOG.log(Level.SEVERE, "MANUAL CERTIFICATE CLEANUP NEEDED: Detected a stray TensorBoard with pid "
+                    + pid.toString() + " in directory " + file.getAbsolutePath() + " killing it for now...");
+                tensorBoardProcessMgr.killTensorBoard(pid);
               }
             }
           }
