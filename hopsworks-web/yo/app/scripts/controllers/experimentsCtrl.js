@@ -134,7 +134,10 @@ angular.module('hopsWorksApp')
                     };
                 }
                 if (iframe !== null) {
+
                     iframe.src = $sce.trustAsResourceUrl(self.ui);
+                    iframe.contentWindow.location.reload();
+
                 }
                 self.reloadedOnce = false;
             };
