@@ -163,7 +163,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
       try {
         super.service(servletRequest, servletResponse);
       } catch (IOException ex) {
-        sendErrorResponse(servletResponse, "This TensorBoard is not running right now");
+        sendErrorResponse(servletResponse, "This TensorBoard is not ready to serve requests right now, try refreshing the page");
         return;
       }
 
