@@ -30,7 +30,6 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
-import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
