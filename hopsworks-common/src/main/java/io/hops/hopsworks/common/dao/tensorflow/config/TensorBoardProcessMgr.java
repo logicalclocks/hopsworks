@@ -204,7 +204,7 @@ public class TensorBoardProcessMgr {
                 logFileContents.contains("Reloader") |
                 logFileContents.contains("event"))
               | maxWait == 1) {
-              Thread.currentThread().sleep(5000);
+              Thread.currentThread().sleep(6000);
               TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
               String host = null;
               try {

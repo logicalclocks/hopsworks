@@ -35,7 +35,7 @@
                            <span class="col-md-3" style="margin-left:-15px;">
                            <button ng-click="experimentsCtrl.kibanaUI();
                               $event.stopPropagation();"
-                                   class="btn btn-primary btn-md fa fa-table" > Experiments Summary
+                                   class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; background-color:#005571;"> Experiments Summary
                            </button>
                            </span>
                                     <div class="col-md-1">
@@ -53,7 +53,7 @@
                                 </div>
                                 <div class="col-md-12" ng-if="experimentsCtrl.tb !== ''">
                            <span class="col-md-4" style="margin-left:-15px; padding-bottom:1px;">
-                           <button style="margin-bottom:-2px;"
+                           <button style="font-size:0.9em; padding:7px 10px; background-color:#005571;"
                                    ng-click="experimentsCtrl.kibanaUI();
                               $event.stopPropagation();"
                                    class="btn btn-primary btn-md fa fa-table" > Experiments Summary
@@ -62,12 +62,14 @@
                                        tooltip-placement="auto top"
                                        ng-click="experimentsCtrl.viewTB();
                               $event.stopPropagation();"
-                                       type="button" class="btn btn-info btn-md glyphicon glyphicon-eye-open">
+                                       type="button" class="btn btn-md" style="padding:2px 5px; border:1px solid gray;"
+                                       onmouseover="this.style.backgroundColor='lightgray'" onmouseout="this.style.backgroundColor='white'">
+                                   <img src="images/tf-175x200.png" height="29" />
                            </button>
                                <button uib-tooltip="Shutdown TensorBoard"
                                        tooltip-placement="auto top"
                                        ng-click="experimentsCtrl.stopTB();"
-                                       type="button" class="btn btn-danger btn-md glyphicon glyphicon-off" >
+                                       type="button" class="btn btn-danger btn-md glyphicon glyphicon-off" style="padding:6px 11px; margin-bottom:1px;">
                            </button>
                            </span>
                                     <span style="font-size:16px; margin-right:45px; float:right; padding-top:5px;">
