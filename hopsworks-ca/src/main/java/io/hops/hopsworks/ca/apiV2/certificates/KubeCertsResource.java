@@ -94,7 +94,7 @@ public class KubeCertsResource{
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
   }
 
-  @ApiOperation(value = "Sign Kubernetes certificate with KubeCA", response = CSRView.class)
+  @ApiOperation(value = "Revoke KubeCA certificates")
   @DELETE
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
@@ -107,7 +107,7 @@ public class KubeCertsResource{
     return Response.ok().build();
   }
 
-  @ApiOperation(value = "Sign Kubernetes certificate with KubeCA", response = CSRView.class)
+  @ApiOperation(value = "Get KubeCA certificate", response = CSRView.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response getCACert() throws IOException {

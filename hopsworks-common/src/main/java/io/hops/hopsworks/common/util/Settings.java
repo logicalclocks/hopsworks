@@ -282,12 +282,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_CA_PATH = "kube_ca_path";
   private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
+  private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
 
-  /* ------------------ Handlers ------------------------- */
-  private static final String VARIABLE_PRJ_CREATION_HANDLERS = "prj_creation_handlers";
-  private static final String VARIABLE_PRJ_DELETION_HANDLERS = "prj_deletion_handlers";
-  private static final String VARIABLE_CERT_GENERATION_HANDLERS = "cert_generation_handlers";
-  private static final String VARIABLE_CERT_REVOKATION_HANDLERS = "cert_revokation_handlers";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -552,6 +548,7 @@ public class Settings implements Serializable {
       KUBE_CA_PATH = setStrVar(VARIABLE_KUBE_CA_PATH, KUBE_CA_PATH);
       KUBE_CA_PASSWORD = setStrVar(VARIABLE_KUBE_CA_PASSWORD, KUBE_CA_PASSWORD);
       KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
+      KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
       cached = true;
     }
@@ -2934,5 +2931,11 @@ public class Settings implements Serializable {
   public synchronized String getKubeRegistry() {
     checkCache();
     return KUBE_REGISTRY;
+  }
+
+  private Integer KUBE_MAX_SERVING_INSTANCES = 10;
+  public synchronized Integer getKubeMaxServingInstances() {
+    checkCache();
+    return KUBE_MAX_SERVING_INSTANCES;
   }
 }
