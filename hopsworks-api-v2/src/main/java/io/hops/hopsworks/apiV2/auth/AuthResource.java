@@ -110,7 +110,7 @@ public class AuthResource {
   @GET
   @Path("user")
   @JWTRequired
-  @AcceptedTokens({"api", "service"})
+  @AcceptedTokens({"api", "service", "datasetsResource"})
   @AllowedUserRoles({"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.TEXT_PLAIN)
   public Response user() {
@@ -209,7 +209,7 @@ public class AuthResource {
   }
 
   private String createToken(Users user) throws NoSuchAlgorithmException, SigningKeyNotFoundException {
-    String[] audience = {"service"};
+    String[] audience = {"api"};
     Date now = new Date();
     Date expiresAt = new Date(now.getTime() + settings.getJWTLifetimeMs());
     String issuer = uriInfo.getAbsolutePath().toString();

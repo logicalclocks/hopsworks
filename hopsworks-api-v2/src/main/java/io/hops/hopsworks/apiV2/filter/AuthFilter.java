@@ -89,6 +89,7 @@ public class AuthFilter extends JWTFilter {
 
   @Override
   public Set<String> acceptedTokens() {
+    // check class first 
     Method method = resourceInfo.getResourceMethod();
     if (!method.isAnnotationPresent(AcceptedTokens.class)) {
       return null;

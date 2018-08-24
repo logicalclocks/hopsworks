@@ -17,7 +17,7 @@ package io.hops.hopsworks.jwt;
 
 public class Constants {
 
-  public static final String BEARER = "Bearer ";
+  public static final String BEARER = "Bearer "; // The whitespace is required. 
   public static final String RENEWABLE = "renewable";
   public static final String EXPIRY_LEEWAY = "expLeeway";
   public static final String ROLES = "roles";
