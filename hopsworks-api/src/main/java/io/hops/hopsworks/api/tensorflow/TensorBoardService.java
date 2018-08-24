@@ -193,7 +193,7 @@ public class TensorBoardService {
       WebTarget target = client.target(tbUrl);
       try {
         response = target.request().get();
-        if(response.getStatus() == 200) {
+        if(response.getStatus() == Response.Status.OK.getStatusCode()) {
           return;
         }
         Thread.currentThread().sleep(1000);
