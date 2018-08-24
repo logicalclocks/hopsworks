@@ -1639,7 +1639,7 @@ public class Settings implements Serializable {
   public static final String T_CERTIFICATE = "t_certificate";
   private static final String CA_TRUSTSTORE_NAME = "cacerts.jks";
   public static final String DOMAIN_CA_TRUSTSTORE = "domain_ca_truststore";
-  //Glassfish truststore, used by hopsutil to initialize https connection to HopsWorks
+  //Glassfish truststore, used by hopsutil to initialize https connection to Hopsworks
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
   //Used to retrieve schema by HopsUtil

@@ -879,7 +879,7 @@ public class ProjectService {
       //Pop-up a message from admin
       messageController.send(user, userFacade.findByEmail(Settings.SITE_EMAIL), "Certificate Info", "",
           "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-          + "please check spam first and then contact the HopsWorks administrator.", "");
+          + "please check spam first and then contact the administrator.", "");
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
           "The password for keystore and truststore is:" + certPwd);
     } catch (IOException ioe) {

@@ -43,7 +43,7 @@ import io.hops.hopsworks.common.dao.jobs.JsonReduceable;
 import io.hops.hopsworks.common.jobs.MutableJsonObject;
 
 /**
- * CTO containing containing kafka related HopsWorks information.
+ * CTO containing containing kafka related Hopsworks information.
  * <p>
  */
 public class KafkaDTO implements JsonReduceable {
