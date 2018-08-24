@@ -167,15 +167,7 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response index() throws AppException {
 
-    if (project.getConda() == false) {
-      throw new AppException(Status.NO_CONTENT.getStatusCode(), "Python has not been enabled for this project");
-    }
-
     Collection<PythonDep> pythonDeps = project.getPythonDepCollection();
-
-    if (pythonDeps.isEmpty()) {
-      throw new AppException(Response.Status.NO_CONTENT.getStatusCode(), "No results found.");
-    }
 
     List<PythonDepJson> jsonDeps = new ArrayList<>();
     for (PythonDep pd : pythonDeps) {
