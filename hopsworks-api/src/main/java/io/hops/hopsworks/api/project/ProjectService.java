@@ -955,10 +955,6 @@ public class ProjectService {
     }
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
 
     this.tfServingService.setProject(project);
     this.tfServingService.setUser(user);
