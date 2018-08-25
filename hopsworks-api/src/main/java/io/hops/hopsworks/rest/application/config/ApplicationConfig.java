@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.tensorflow.ServingConfResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -97,7 +98,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
-    register(io.hops.hopsworks.api.tensorflow.ServingConf.class);
+    register(ServingConfResource.class);
 
     // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);

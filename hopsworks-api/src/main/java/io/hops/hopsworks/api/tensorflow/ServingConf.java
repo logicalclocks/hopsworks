@@ -16,39 +16,30 @@
 
 package io.hops.hopsworks.api.tensorflow;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.serving.tf.TfServingController;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlRootElement;
 
-@Path("/servingconf")
-@Stateless
-@Api(value = "UI serving configuration", description = "Get UI serving configuration")
+@XmlRootElement
+@ApiModel(value = "Represent configuration for serving UI")
 public class ServingConf {
 
-  @EJB
-  private NoCacheResponse noCacheResponse;
+  private Integer maxNumInstances;
 
-  @Inject
-  private TfServingController tfServingController;
+  public ServingConf() {
+  }
 
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Get UI configuration for serving", response = ServingConfView.class)
-  public Response getConfiguration() {
-    ServingConfView servingConfView = new ServingConfView(tfServingController.getMaxNumInstances());
-    GenericEntity<ServingConfView> servingConfDTOGenericEntity =
-        new GenericEntity<ServingConfView>(servingConfView) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(servingConfDTOGenericEntity).build();
+  public ServingConf(Integer maxNumInstances) {
+    this.maxNumInstances = maxNumInstances;
+  }
+
+  @ApiModelProperty(value = "Max number of serving instances serving a model", readOnly = true)
+  public Integer getMaxNumInstances() {
+    return maxNumInstances;
+  }
+
+  public void setMaxNumInstances(Integer maxNumInstances) {
+    this.maxNumInstances = maxNumInstances;
   }
 }
