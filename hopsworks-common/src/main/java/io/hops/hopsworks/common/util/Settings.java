@@ -268,6 +268,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
+
+  /* -------------------- TfServing  --------------- */
+  private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+
   /* -------------------- Kubernetes --------------- */
   private static final String VARIABLE_KUBEMASTER_URL = "kube_master_url";
   private static final String VARIABLE_KUBE_USER = "kube_user";
@@ -535,6 +539,9 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+
+      TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
       KUBE_CA_CERTFILE = setStrVar(VARIABLE_KUBE_CA_CERTFILE, KUBE_CA_CERTFILE);
@@ -2937,5 +2944,11 @@ public class Settings implements Serializable {
   public synchronized Integer getKubeMaxServingInstances() {
     checkCache();
     return KUBE_MAX_SERVING_INSTANCES;
+  }
+
+  private String TF_SERVING_MONITOR_INT = "30s";
+  public synchronized String getTFServingMonitorInt() {
+    checkCache();
+    return TF_SERVING_MONITOR_INT;
   }
 }

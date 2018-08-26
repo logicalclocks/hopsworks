@@ -72,6 +72,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TfServing.findByProjectAndId", query = "SELECT t FROM TfServing t " +
       "WHERE t.project = :project AND t.id = :id"),
     @NamedQuery(name = "TfServing.findByCreated", query = "SELECT t FROM TfServing t WHERE t.created = :created"),
+    @NamedQuery(name = "TfServing.findLocalhostRunning", query = "SELECT t FROM TfServing t WHERE t.localPid != -2"),
     @NamedQuery(name = "TfServing.expiredLocks", query = "SELECT t FROM TfServing t " +
         "WHERE t.lockTimestamp is not NULL AND t.lockTimestamp < :lockts"),
     @NamedQuery(name = "TfServing.findByProjectModelName", query = "SELECT t FROM TfServing t " +

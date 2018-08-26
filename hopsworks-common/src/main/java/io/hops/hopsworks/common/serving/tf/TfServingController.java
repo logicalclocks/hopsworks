@@ -38,4 +38,6 @@ public interface TfServingController {
       throws TfServingException;
 
   int getMaxNumInstances();
+
+  String getClassName();
 }

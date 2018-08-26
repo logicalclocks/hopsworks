@@ -52,8 +52,8 @@ public class LocalhostTfServingController implements TfServingController {
 
   private final static Logger logger = Logger.getLogger(LocalhostTfServingController.class.getName());
 
-  private static final String SERVING_DIRS = "/serving/";
-  private static final Integer PID_STOPPED = -2;
+  public static final String SERVING_DIRS = "/serving/";
+  public static final Integer PID_STOPPED = -2;
 
   @EJB
   private TfServingFacade tfServingFacade;
@@ -180,6 +180,11 @@ public class LocalhostTfServingController implements TfServingController {
   @Override
   public int getMaxNumInstances() {
     return 1;
+  }
+
+  @Override
+  public String getClassName() {
+    return LocalhostTfServingController.class.getName();
   }
 
   private TfServingWrapper getTfServingInternal(TfServing tfServing) throws TfServingException {

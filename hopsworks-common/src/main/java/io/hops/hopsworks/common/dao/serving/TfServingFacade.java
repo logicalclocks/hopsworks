@@ -227,10 +227,8 @@ public class TfServingFacade {
     throw new TfServingException(TfServingException.TfServingExceptionErrors.LIFECYCLEERRORINT);
   }
 
-  public List<TfServing> getExpiredLocks(Long timestamp) {
-    return em.createNamedQuery("TfServing.expiredLocks", TfServing.class)
-        .setParameter("lockts", timestamp)
+  public List<TfServing> getLocalhostRunning() {
+    return em.createNamedQuery("TfServing.findLocalhostRunning", TfServing.class)
         .getResultList();
   }
-
 }
