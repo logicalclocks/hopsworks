@@ -25,4 +25,6 @@ import java.io.IOException;
 public interface CertificateHandler {
   void generate(Project project, Users user, UserCerts userCerts) throws IOException;
   void revoke(Project project, Users user) throws IOException;
+
+  String getClassName();
 }

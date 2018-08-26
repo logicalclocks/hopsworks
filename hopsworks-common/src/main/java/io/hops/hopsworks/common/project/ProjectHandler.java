@@ -24,4 +24,6 @@ public interface ProjectHandler {
 
   void preDelete(Project project) throws Exception;
   void postDelete(Project project) throws Exception;
+
+  String getClassName();
 }

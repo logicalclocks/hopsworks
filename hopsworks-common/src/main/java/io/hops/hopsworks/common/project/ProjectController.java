@@ -353,7 +353,7 @@ public class ProjectController {
         try {
           projectHandler.preCreate(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClass().getName(), e);
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "An error occured when creating the project");
         }
@@ -484,7 +484,7 @@ public class ProjectController {
         try {
           projectHandler.postCreate(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClass().getName(), e);
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
           cleanup(project, sessionId, certsGenerationFuture);
         }
       }
@@ -1044,9 +1044,9 @@ public class ProjectController {
         for (ProjectHandler projectHandler : projectHandlers) {
           try {
             projectHandler.preDelete(project);
-            cleanupLogger.logSuccess("Handler " + projectHandler.getClass().getName() + " successfully run");
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
           } catch (Exception e) {
-            cleanupLogger.logError("Error running handler: " + projectHandler.getClass().getName()
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
                 + " during project cleanup");
             cleanupLogger.logError(e.getMessage());
           }
@@ -1273,9 +1273,9 @@ public class ProjectController {
         for (ProjectHandler projectHandler : projectHandlers) {
           try {
             projectHandler.postDelete(project);
-            cleanupLogger.logSuccess("Handler " + projectHandler.getClass().getName() + " successfully run");
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
           } catch (Exception e) {
-            cleanupLogger.logError("Error running handler: " + projectHandler.getClass().getName()
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
                 + " during project cleanup");
             cleanupLogger.logError(e.getMessage());
           }
@@ -1643,7 +1643,7 @@ public class ProjectController {
         try {
           projectHandler.preDelete(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClass().getName(), e);
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
         }
       }
 
@@ -1732,7 +1732,7 @@ public class ProjectController {
         try {
           projectHandler.postDelete(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClass().getName(), e);
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
         }
       }
 
