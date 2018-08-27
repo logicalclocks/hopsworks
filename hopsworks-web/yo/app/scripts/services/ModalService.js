@@ -280,7 +280,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              shareDataset: function (size, dsName) {
+              shareDataset: function (size, dsName, permissions) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/shareDataset.html',
                   controller: 'ShareDatasetCtrl as shareDatasetCtrl',
@@ -299,6 +299,9 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
+                    },
+                    permissions: function () {
+                      return permissions;
                     }
                   }
                 });
