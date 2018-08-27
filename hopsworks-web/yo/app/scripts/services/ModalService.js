@@ -156,7 +156,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
+
               json: function (size, title, json) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/json.html',
@@ -173,7 +173,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
+
               confirmShare: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/confirmShareModal.html',
@@ -280,7 +280,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              shareDataset: function (size, dsName, permissions) {
+              shareDataset: function (size, dsName) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/shareDataset.html',
                   controller: 'ShareDatasetCtrl as shareDatasetCtrl',
@@ -299,9 +299,6 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
-                    }, 
-                    permissions: function () {
-                      return permissions;
                     }
                   }
                 });
@@ -353,9 +350,6 @@ angular.module('hopsWorksApp')
                       }],
                     dsName: function () {
                       return dsName;
-                    }, 
-                    permissions: function () {
-                      return permissions;
                     }
                   }
                 });
@@ -390,7 +384,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              }, 
+              },
               viewPublicDataset: function (size, projects, datasetDto) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/viewPublicDataset.html',
@@ -683,7 +677,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },              
+              },
               createSchema: function (size, projectId, projectIsGuide) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/schemaCreate.html',
@@ -710,7 +704,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },     
+              },
               viewSchemaContent: function (size, projectId, schemaName, schemaVersion) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/schemaViewContent.html',
@@ -740,8 +734,8 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },   
-              
+              },
+
               updateSchemaContent: function (size, projectId, schemaName, schemaVersion) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/schemaUpdateContent.html',
@@ -771,8 +765,8 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },   
-              
+              },
+
               createTopic: function (size, projectId, projectIsGuide) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/createTopic.html',
@@ -799,7 +793,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },     
+              },
               createTopicAcl: function (size, projectId, topicName) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/createTopicAcl.html',
@@ -826,7 +820,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },                
+              },
               jobDetails: function (size, job, projectId) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/jobDetails.html',
@@ -934,7 +928,7 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },              
+              },
               importTemplate: function (size) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/importTemplate.html',
@@ -1062,14 +1056,14 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
+
               setupDownload: function (size, projectId, params) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/setupDownload.html',
                   controller: 'SetupDownloadCtrl as setupDownloadCtrl',
                   size: size,
                   resolve: {
-                    
+
                     projectId : function(){
                         return projectId;
                     },
@@ -1097,7 +1091,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              
+
               noteCreate: function (size, title, msg, val ) {
                 var modalInstance = $uibModal.open({
                   templateUrl: 'views/noteCreateModal.html',
