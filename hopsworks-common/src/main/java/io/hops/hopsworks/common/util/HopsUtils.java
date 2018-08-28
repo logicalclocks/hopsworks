@@ -456,9 +456,7 @@ public class HopsUtils {
                 jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
                 jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
                 break;
-              case TENSORFLOW:
               case PYSPARK:
-              case TFSPARK:
               case SPARK:
                 Map<String, File> certs = new HashMap<>();
                 certs.put(Settings.K_CERTIFICATE, new File(

@@ -67,8 +67,6 @@ angular.module('hopsWorksApp')
                         { ind:"jobType" , id: "null" , type: "-- Select App Type --" },
                         { ind:"jobType" , id: "Spark" , type: "Spark" },
                         { ind:"jobType" , id: "Flink" , type: "Flink" },
-                        { ind:"jobType" , id: "Adam" , type: "Adam" },
-                        { ind:"jobType" , id: "HadoopJava" , type: "Hadoop Java" },
                         { ind:"jobType" , id: "Map Reduce" , type: "Map Reduce" }
                     ]
                 },

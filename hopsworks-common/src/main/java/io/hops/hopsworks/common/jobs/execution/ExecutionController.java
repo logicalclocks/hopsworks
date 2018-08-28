@@ -55,11 +55,9 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.adam.AdamController;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
-import io.hops.hopsworks.common.jobs.tensorflow.TensorFlowController;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,11 +77,7 @@ public class ExecutionController {
   @EJB
   private SparkController sparkController;
   @EJB
-  private AdamController adamController;
-  @EJB
   private FlinkController flinkController;
-  @EJB
-  private TensorFlowController tensorflowController;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -106,24 +100,6 @@ public class ExecutionController {
     Execution exec = null;
 
     switch (job.getJobType()) {
-      case ADAM:
-        exec = adamController.startJob(job, user);
-//        if (exec == null) {
-//          throw new IllegalArgumentException("Problem getting execution object for: " + job.
-//              getJobType());
-//        }
-//        int execId = exec.getId();
-//        AdamJobConfiguration adamConfig = (AdamJobConfiguration) job.getJobConfig();
-//        String path = adamConfig.getAppPath();
-//        String[] parts = path.split("/");
-//        String pathOfInode = path.replace("hdfs://" + parts[2], "");
-//        
-//        Inode inode = inodes.getInodeAtPath(pathOfInode);
-//        String inodeName = inode.getInodePK().getName();
-//        
-//        jobHistoryFac.persist(user, job, execId, exec.getAppId());
-//        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName, job.getProject(), user);
-        break;
       case FLINK:
         return flinkController.startJob(job, user, null);
       case SPARK:
@@ -152,14 +128,11 @@ public class ExecutionController {
                 job.getProject(), user);
         break;
       case PYSPARK:
-      case TFSPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }
         break;
-      case TENSORFLOW:
-        return tensorflowController.startJob(job, user);
       default:
         throw new IllegalArgumentException(
                 "Unsupported job type: " + job.
@@ -205,9 +178,6 @@ public class ExecutionController {
   public void stop(Jobs job, Users user, String appid) throws
           IOException {
     switch (job.getJobType()) {
-      case ADAM:
-        adamController.stopJob(job, user, appid);
-        break;
       case SPARK:
         sparkController.stopJob(job, user, appid);
         break;

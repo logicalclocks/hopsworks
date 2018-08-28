@@ -126,24 +126,15 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                   jobType = 1;
                   break;
-                case "ADAM":
+                case "PYSPARK":
                   jobType = 2;
                   break;
                 case "FLINK":
                   jobType = 3;
                   break;
-                case "PYSPARK":
-                  jobType = 4;
-                  break;
-                case "TFSPARK":
-                  jobType = 5;
-                  break;
-                case "TENSORFLOW":
-                  jobType = 6;
-                  break;
               }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState, tensorflowState;
-              if (jobType === 1 || jobType === 4 || jobType === 5 ) {
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState, pysparkState;
+              if (jobType === 1 || jobType === 2 ) {
 
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
@@ -151,28 +142,12 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "App file";
                 mainFileVal = sparkState.selectedJar;
                 jobDetailsTxt = "Job details";
-              } else if (jobType === 2) {
-                adamState = {
-                  "processparameter": null,
-                  "commandList": null,
-                  "selectedCommand": self.currentjob.runConfig.selectedCommand.command
-                };
-                mainFileTxt = "ADAM command";
-                mainFileVal = adamState.selectedCommand;
-                jobDetailsTxt = "Job arguments";
               } else if (jobType === 3) {
                 flinkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
-                jobDetailsTxt = "Job details";
-              } else if (jobType === 6) {
-                tensorflowState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
-                };
-                mainFileTxt = "Python file";
-                mainFileVal = tensorflowState.selectedJar;
                 jobDetailsTxt = "Job details";
               }
               var state = {
@@ -182,9 +157,7 @@ angular.module('hopsWorksApp')
                 "phase": 4,
                 "runConfig": self.currentjob.runConfig,
                 "sparkState": sparkState,
-                "adamState": adamState,
                 "flinkState": flinkState,
-                "tensorflowState": tensorflowState,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,
@@ -209,12 +182,7 @@ angular.module('hopsWorksApp')
                   "isOpen": false,
                   "visible": true,
                   "value": "",
-                  "title": "Configure and create"}/*,
-                "accordion6" : {//Contains the pre-configuration and proposals for auto-configuration
-                   "isOpen": false,
-                   "visible": true,
-                   "value": "",
-                   "title": "Pre-Configuration"}*/
+                  "title": "Configure and create"}
               };
               StorageService.store(self.projectId + "_newjob", state);
               $location.path('project/' + self.projectId + '/newjob');

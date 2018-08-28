@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.jobs.yarn;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
@@ -71,7 +70,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.tensorflow.LocalResourceInfo;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 
@@ -108,7 +106,6 @@ public class YarnRunner {
 
   private Configuration conf;
   private ApplicationId appId = null;
-  //Type of Job to run, Spark/Flink/Adam...
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
@@ -232,8 +229,7 @@ public class YarnRunner {
     YarnClientWrapper newYarnClientWrapper = ycs.getYarnClient(dfsUsername);
     
     YarnMonitor monitor = null;
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || 
-        jobType == JobType.TFSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
       //Get application id
       
       YarnClientApplication app = yarnClient.createApplication();
@@ -362,71 +358,7 @@ public class YarnRunner {
         logger.log(Level.INFO, "Deleting local flink app jar:{0}", appJarPath);
       }
 
-    } else if (jobType == JobType.TENSORFLOW) {
-      try {
-        
-        tfClient.setConf(conf);
-        tfClient.initYarnClient();
-        YarnClientApplication app = tfClient.createApplication();
-        appId = app.getNewApplicationResponse().getApplicationId();
-  
-        // When Hops RPC TLS is enabled, Yarn will take care of application certificate
-        if (!services.getSettings().getHopsRpcTls()) {
-          copyUserCertificates(project, jobType, dfso, username, appId.toString());
-  
-  
-          String kstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-              + File.separator + project.getName() + HdfsUsersController
-              .USER_NAME_DELIMITER + username + File.separator + appId.toString()
-              + File.separator + HopsUtils.getProjectKeystoreName(project.getName(),
-              username);
-  
-  
-          String tstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-              + File.separator + project.getName() + HdfsUsersController
-              .USER_NAME_DELIMITER + username + File.separator + appId.toString()
-              + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
-              username);
-  
-          tfClient.addFile(kstore);
-          tfClient.addFile(tstore);
-  
-          tfClient.getFilesInfo().put(kstore, new LocalResourceInfo(Settings
-              .K_CERTIFICATE, kstore, LocalResourceVisibility.PRIVATE.toString(),
-              LocalResourceType.FILE.toString(), null));
-          tfClient.getFilesInfo().put(tstore, new LocalResourceInfo(Settings
-              .T_CERTIFICATE, tstore, LocalResourceVisibility.PRIVATE.toString(),
-              LocalResourceType.FILE.toString(), null));
-  
-          String passFile =
-              "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-                  + File.separator + project.getName() + HdfsUsersController
-                  .USER_NAME_DELIMITER + username + File.separator +
-                  appId.toString()
-                  + File.separator + HopsUtils.getProjectMaterialPasswordName(
-                  project.getName(), username);
-          tfClient.addFile(passFile);
-          tfClient.getFilesInfo().put(passFile, new LocalResourceInfo(Settings
-              .CRYPTO_MATERIAL_PASSWORD, passFile, LocalResourceVisibility.PRIVATE
-              .toString(), LocalResourceType.FILE.toString(), null));
-          logger.log(Level.INFO, "Adding local resource {0}", passFile);
-  
-          logger.log(Level.INFO, "Adding local resource {0}", kstore);
-          logger.log(Level.INFO, "Adding local resource {0}", tstore);
-        }
-        
-        
-        tfClient.submitApplication(app);
-//        String logstashInfo = tfClient.getEnvironment().get(Settings.LOGSTASH_JOB_INFO);
-//        logstashInfo = logstashInfo.replaceAll(APPID_REGEX, appId.toString());
-//        tfClient.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, logstashInfo);
-        fillInAppid(appId.toString());
-        monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
-      } finally {
-        appId = null;
-      }
     }
-
     return monitor;
   }
 
@@ -579,7 +511,7 @@ public class YarnRunner {
     }
     //For Spark 2.0, loop through local resources and add their properties
     //as system properties (javaOptions)
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
       StringBuilder uris = new StringBuilder();
       StringBuilder timestamps = new StringBuilder();
       StringBuilder sizes = new StringBuilder();

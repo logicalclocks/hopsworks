@@ -105,8 +105,7 @@ public class SparkController {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK && job.getJobType()
-        != JobType.TFSPARK) {
+    } else if (job.getJobType() != JobType.SPARK && job.getJobType() != JobType.PYSPARK) {
       throw new IllegalArgumentException(
           "Job configuration is not a Spark job configuration.");
     }

@@ -164,11 +164,7 @@ public class JobService {
   @Inject
   private SparkService spark;
   @Inject
-  private AdamService adam;
-  @Inject
   private FlinkService flink;
-  @Inject
-  private TensorFlowService tensorflow;
   @Inject
   private InfluxDBService influxdb;
   @EJB
@@ -1476,24 +1472,6 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public SparkService pyspark() {
     return this.spark.setProject(project);
-  }
-
-  @Path("/tfspark")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public SparkService tfspark() {
-    return this.spark.setProject(project);
-  }
-
-  @Path("/tensorflow")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public TensorFlowService tensorflow() {
-    return this.tensorflow.setProject(project);
-  }
-
-  @Path("/adam")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public AdamService adam() {
-    return this.adam.setProject(project);
   }
 
   @Path("/flink")

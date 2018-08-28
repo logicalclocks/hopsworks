@@ -65,7 +65,7 @@ angular.module('hopsWorksApp')
               /**
                * Get all the jobs in the current project for the given type.
                * @param {type} projectId
-               * @param {type} type The name of the job type (e.g. Flink, Spark, Adam)
+               * @param {type} type The name of the job type (e.g. Flink, Spark)
                * @returns {unresolved} A list of defined jobs in the given project of the requested type.
                */
               getByProjectAndType: function (projectId, type) {

@@ -110,14 +110,10 @@ public class YarnExecutionFinalizer {
       switch (exec.getJob().getJobType()) {
         case SPARK:
         case PYSPARK:
-        case TFSPARK:
           defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
           break;
         case FLINK:
           defaultOutputPath = Settings.FLINK_DEFAULT_OUTPUT_PATH;
-          break;
-        case ADAM:
-          defaultOutputPath = Settings.ADAM_DEFAULT_OUTPUT_PATH;
           break;
         case YARN:
           defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
