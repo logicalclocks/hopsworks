@@ -120,20 +120,19 @@
                 <div class="col-md-8 pull-left" style="margin-left: 43px; margin-top:-10px;">
                   <div class="btn-group blocks" style="padding: 20px;" ng-if="jupyterCtrl.ui === ''">
                     <label class="btn btn-primary" >
-                      <input type="radio" value="tensorflow" data-ng-model="jupyterCtrl.val.mode" id="tensorflow" autocomplete="off"> TensorFlow
+                      <input type="radio" value="tensorflow" data-ng-model="jupyterCtrl.val.mode" id="tensorflow"> TensorFlow
                     </label>
-                    <label class="btn btn-primary" 
-                           >
-                      <input type="radio" name="framework" value="distributedTensorFlow" data-ng-model="jupyterCtrl.val.mode" id="distributedTensorFlow" autocomplete="off"> TensorFlowOnSpark
+                    <label class="btn btn-primary" >
+                      <input type="radio" name="tfOnSpark" value="distributedTensorFlow" data-ng-model="jupyterCtrl.val.mode" id="distributedTensorFlow"> TensorFlowOnSpark
                     </label>
                     <label class="btn btn-primary" ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
-                      <input type="radio" name="framework" value="horovod" id="horovod" data-ng-model="jupyterCtrl.val.mode" autocomplete="off"> Horovod
+                      <input type="radio" name="horovod" value="horovod" id="horovod" data-ng-model="jupyterCtrl.val.mode"> Horovod
                     </label>
                     <label class="btn btn-primary">
-                      <input type="radio" name="framework" value="sparks" id="sparkStatic"  autocomplete="off"> Spark (Static)
+                      <input type="radio" name="SparkStatic" value="sparks" data-ng-model="jupyterCtrl.val.mode" id="sparkStatic"> Spark (Static)
                     </label>
                     <label class="btn btn-primary">
-                      <input class="active" type="radio" name="framework" value="sparkd" id="sparkDynamic" data-ng-model="jupyterCtrl.val.mode" autocomplete="off"> Spark (Dynamic)
+                      <input class="active" type="radio" name="SparkDynamic" value="sparkd" id="sparkDynamic" data-ng-model="jupyterCtrl.val.mode"> Spark (Dynamic)
                     </label>
                   </div>       
                   <br>
