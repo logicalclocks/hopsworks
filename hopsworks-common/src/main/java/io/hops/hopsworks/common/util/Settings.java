@@ -2861,7 +2861,6 @@ public class Settings implements Serializable {
   }
 
   // -------------------------------- Kubernetes ----------------------------------------------//
-  // TODO(Fabio) set correct defaults
   private String KUBE_USER = "hopsworks";
   public synchronized String getKubeUser() {
     checkCache();
