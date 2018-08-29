@@ -15,28 +15,28 @@
 =end
 
 module HopsFSHelper
-  @hdfs_user = Variables.find_by(id: "hdfs_user").value
-  @hadoop_home = Variables.find_by(id: "hadoop_dir").value
+  @@hdfs_user = Variables.find_by(id: "hdfs_user").value
+  @@hadoop_home = Variables.find_by(id: "hadoop_dir").value
 
   def mkdir(path, user, group, mode)
-    system "sudo su #{@hdfs_user} && #{@hadoop_home}/bin/hdfs dfs -mkdir #{path}"
+    system "sudo su #{@@hdfs_user} && #{@@hadoop_home}/bin/hdfs dfs -mkdir #{path}"
     if $?.exitstatus > 0
       raise "Failed to create directory: #{path}"
     end
 
-    system "sudo su #{@hdfs_user} && #{@hadoop_home}/bin/hdfs dfs -chown #{user}:#{group} #{path}"
+    system "sudo su #{@@hdfs_user} && #{@@hadoop_home}/bin/hdfs dfs -chown #{user}:#{group} #{path}"
     if $?.exitstatus > 0
       raise "Failed to chown directory: #{path} to #{user}:#{group}"
     end
 
-    system "sudo su #{@hdfs_user} && #{@hadoop_home}/bin/hdfs dfs -chmod #{mode} #{path}"
+    system "sudo su #{@@hdfs_user} && #{@@hadoop_home}/bin/hdfs dfs -chmod #{mode} #{path}"
     if $?.exitstatus > 0
       raise "Failed to chmod directory: #{path} "
     end
   end
 
   def test_dir(path)
-    system "sudo su #{@hdfs_user} && #{@hadoop_home}/bin/hdfs dfs test -d #{path}"
+    system "sudo su #{@@hdfs_user} && #{@@hadoop_home}/bin/hdfs dfs test -d #{path}"
     return $?.exitstatus == 0
   end
 end
