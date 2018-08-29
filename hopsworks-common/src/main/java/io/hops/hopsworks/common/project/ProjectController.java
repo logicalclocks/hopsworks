@@ -1899,8 +1899,7 @@ public class ProjectController {
       DistributedFileSystemOps dfso, Users user)
       throws IOException {
     this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
-        new YarnProjectsQuota(project.getName(), Integer.parseInt(
-            settings.getYarnDefaultQuota()), 0));
+        new YarnProjectsQuota(project.getName(), settings.getYarnDefaultQuota(), 0));
     this.yarnProjectsQuotaFacade.flushEm();
     setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, dfso);
     projectFacade.setTimestampQuotaUpdate(project, new Date());

@@ -695,7 +695,7 @@ public class HopsUtils {
 
   /**
    * Convert processing quota from human friendly to seconds
-   * The format accepted is -?[0-9]{1,}:([0-9]{1,2}:){2}[0-9]{1,2}
+   * The format accepted is -?[0-9]+:([0-9]+:){2}[0-9]+
    * @param quota
    * @return
    */
