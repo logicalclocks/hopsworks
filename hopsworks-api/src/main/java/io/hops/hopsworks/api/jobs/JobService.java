@@ -56,7 +56,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -165,8 +164,6 @@ public class JobService {
   private SparkService spark;
   @Inject
   private FlinkService flink;
-  @Inject
-  private InfluxDBService influxdb;
   @EJB
   private JobController jobController;
   @EJB
@@ -185,8 +182,6 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private ElasticController elasticController;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -1478,11 +1473,5 @@ public class JobService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public FlinkService flink() {
     return this.flink.setProject(project);
-  }
-
-  @Path("/{appId}/influxdb")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public InfluxDBService influxdb(@PathParam("appId") String appId) {
-    return this.influxdb.setAppId(appId);
   }
 }
