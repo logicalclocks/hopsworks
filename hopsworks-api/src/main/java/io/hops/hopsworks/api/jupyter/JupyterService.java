@@ -476,7 +476,8 @@ public class JupyterService {
     }
 
     try {
-      String experimentsIndex = this.project.getName() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+      String experimentsIndex = this.project.getName().toLowerCase()
+          + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
       // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
       for (LivyMsg.Session session : sessions) {
         String sessionAppId = session.getAppId();
