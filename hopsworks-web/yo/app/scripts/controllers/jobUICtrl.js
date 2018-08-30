@@ -43,9 +43,9 @@
  */
 angular.module('hopsWorksApp')
         .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'JobService', '$interval', 'StorageService',
-          '$routeParams', '$route', 'VizopsService', '$sce', '$window', 
+          '$routeParams', '$route', '$sce', '$window',
           function ($scope, $timeout, growl, JobService, $interval, StorageService,
-                  $routeParams, $route, VizopsService, $sce, $window) {
+                  $routeParams, $route, $sce, $window) {
 
             var self = this;
             self.job;
@@ -271,17 +271,6 @@ angular.module('hopsWorksApp')
                 stopLoading();
               });
             };
-            self.vizopsUI = function () {
-              startLoading("Loading Vizops...");
-              getAppId(vizopsInt);
-            };
-            var vizopsInt = function () {
-              self.ui = "vizz";
-              self.current = "vizopsUI";
-              VizopsService.init(self.projectId, self.appId);
-              // The rest of the logic is handled by vizopsCtrl.js
-              stopLoading();
-            };
             self.tfUI = function (tfSession) {
               startLoading("Loading Tensorboard...");
               getAppId(tensorboardDummy);
@@ -324,8 +313,6 @@ angular.module('hopsWorksApp')
               var ifram = document.getElementById('ui_iframe');
               if (self.current === "grafanaUI") {
                 self.grafanaUI();
-              } else if (self.current === "vizopsUI") {
-                self.vizopsUI();
               } else if (self.current === "jobUI") {
                 self.jobUI();
               } else if (self.current === "yarnUI") {

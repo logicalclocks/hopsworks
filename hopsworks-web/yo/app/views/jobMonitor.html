@@ -132,7 +132,7 @@
                   <a ng-click="jobUICtrl.openUiInNewWindow()"><i class="glyphicon glyphicon-new-window"></i> New Window</a>
                 </span>
               </div>
-              <div ng-if="jobUICtrl.ui !== '' && jobUICtrl.current !== 'vizopsUI'">
+              <div ng-if="jobUICtrl.ui !== ''">
                 <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe>
               </div>
               <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
