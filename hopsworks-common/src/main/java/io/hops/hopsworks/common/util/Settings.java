@@ -652,13 +652,10 @@ public class Settings implements Serializable {
    */
   public static final String PRIVATE_DIRS = "/private_dirs/";
 
-<<<<<<< HEAD
   public static final String SERVING_DIRS = "/serving/";
 
   public static final String TENSORBOARD_DIRS = "/tensorboard/";
 
-=======
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
 

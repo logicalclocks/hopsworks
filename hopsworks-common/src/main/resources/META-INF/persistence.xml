@@ -105,12 +105,8 @@
     <class>io.hops.hopsworks.common.dao.pythonDeps.PythonDep</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
-<<<<<<< HEAD
-    <class>io.hops.hopsworks.common.dao.tfserving.TfServing</class>
     <class>io.hops.hopsworks.common.dao.tensorflow.TensorBoard</class>
-=======
     <class>io.hops.hopsworks.common.dao.serving.TfServing</class>
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>

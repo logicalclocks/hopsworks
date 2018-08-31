@@ -104,12 +104,8 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-<<<<<<< HEAD
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
-=======
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -220,20 +216,15 @@ public class ProjectController {
   @EJB
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
-<<<<<<< HEAD
   private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
-  private TfServingProcessMgr tfServingProcessMgr;
-  @EJB
-=======
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
   private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB 
   private KafkaController kafkaController;
   @EJB
-  TensorBoardController tensorBoardController;
+  private TensorBoardController tensorBoardController;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -1233,21 +1224,19 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-<<<<<<< HEAD
         // remove running tensorboards repos
         try {
           removeTensorBoard(project);
           cleanupLogger.logSuccess("Removed local TensorBoards");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing running TensorBoards during project cleanup");
-=======
-         // remove anaconda repos
+        }
+
         try {
           tfServingController.deleteTfServings(project);
           cleanupLogger.logSuccess("Removed Tf Servings");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing Tf Serving instances");
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1706,17 +1695,15 @@ public class ProjectController {
       //remove anaconda repos
       removeJupyter(project);
 
-<<<<<<< HEAD
       //remove running tensorboards
       removeTensorBoard(project);
-=======
+
       // Remove TF Servings
       try {
         tfServingController.deleteTfServings(project);
       } catch (TfServingException e) {
         throw new IOException(e);
       }
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
 
       //remove folder
       removeProjectFolder(project.getName(), dfso);
@@ -2489,8 +2476,7 @@ public class ProjectController {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
 
-  @TransactionAttribute(
-      TransactionAttributeType.NEVER)
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createAnacondaEnv(Project project) throws AppException {
     pythonDepsFacade.getPreInstalledLibs(project);
 
@@ -2507,20 +2493,11 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-<<<<<<< HEAD
   public void removeTensorBoard(Project project) throws TensorBoardCleanupException {
     tensorBoardController.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTfServing(Project project) throws AppException {
-    LOGGER.log(Level.SEVERE, "PLEASE REMOVE TF SERVINGS");
-    tfServingProcessMgr.removeProject(project);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-=======
->>>>>>> [HOPSWORKS-643] Refactor TfServing code to allow pluggable providers
   public void cloneAnacondaEnv(Project srcProj, Project destProj) throws
       AppException {
     pythonDepsFacade.cloneProject(srcProj, destProj);
