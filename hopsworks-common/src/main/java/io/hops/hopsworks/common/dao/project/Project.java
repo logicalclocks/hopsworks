@@ -64,6 +64,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tfserving.TfServing;
 import io.hops.hopsworks.common.util.Settings;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -144,6 +145,9 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<TfServing> tfServingCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<TensorBoard> tensorBoardCollection;
 
 //  @OneToMany(cascade = CascadeType.ALL,
 //      mappedBy = "projectId")
@@ -484,6 +488,16 @@ public class Project implements Serializable {
 
   public void setTfServingCollection(Collection<TfServing> tfServingCollection) {
     this.tfServingCollection = tfServingCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TensorBoard> getTensorBoardCollection() {
+    return tensorBoardCollection;
+  }
+
+  public void setTensorBoardCollection(Collection<TensorBoard> tensorBoardCollection) {
+    this.tensorBoardCollection = tensorBoardCollection;
   }
 
   public String getProjectGenericUser() {

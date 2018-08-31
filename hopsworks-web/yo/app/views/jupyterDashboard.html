@@ -56,22 +56,22 @@
         <div class="content-wrapper">                      
           <div growl reference="10" class="pull-right" ></div>
           <h3>
-            <div class="col-md-4 col-lg-4" style="margin-top:-17px;">
+            <div class="col-md-4 col-lg-4" style="margin-top:-25px;">
 
               <div class="row">
                 <div class="col-md-2 col-lg-2">
 
-                  <img height="30" src="images/jupyter.png"/>
+                  <img height="40" src="images/jupyter.png"/>
                 </div>
 
 
                 <div class="col-md-10 col-lg-10">
-                  <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:5px;">
+                  <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:12px;">
                     <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Anaconda environment installing...
 
                   </div>
 
-                  <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled === false" style="margin-top:6px;">
+                  <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled === false" style="margin-top:12px;">
                     <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
 
                   </div>
@@ -90,7 +90,7 @@
             <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-17px;">
               <li class="pull-left" 
                   ng-class="{'connected-space' : jupyterCtrl.connectedStatus, 'disconnected-space':!jupyterCtrl.connectedStatus}" style="margin-top:-8px;">
-              <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-click="jupyterCtrl.deselect()">
+              <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-click="jupyterCtrl.deselect()" ng-if="jupyterCtrl.ui !== ''">
               </hamburger-toggle>
               </li>
               <li class="server-status">
@@ -117,7 +117,7 @@
               <!-- STYLE THIS (TENSORFLOW : SPARK) -->
               <div class="row" ng-if="jupyterCtrl.advanced === true">
                 <div class="col-md-2"></div>
-                <div class="col-md-8 pull-left" style="margin-left: 43px; margin-top:-10px;">
+                <div class="col-md-8 pull-right" style="margin-left: 43px; margin-top:-10px;">
                   <div class="btn-group blocks" style="padding: 20px;" ng-if="jupyterCtrl.ui === ''">
                     <label class="btn btn-primary" >
                       <input type="radio" value="tensorflow" data-ng-model="jupyterCtrl.val.mode" id="tensorflow"> TensorFlow
@@ -551,7 +551,7 @@
                   <div class="col-md-2">
                     Add hour(s):
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-3" style="z-index: 1;">
                     <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
                                on-select="jupyterCtrl.updateShutdownLevel()">
                       <ui-select-match >
@@ -563,7 +563,6 @@
                     </ui-select>
                   </div>
                 </div>
-
 
               </div>
               <!--              <div class="row top-buffer">

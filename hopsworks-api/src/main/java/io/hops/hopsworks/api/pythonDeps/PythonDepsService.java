@@ -143,6 +143,7 @@ public class PythonDepsService {
       add("tfspark");
       add("pandas");
       add("tensorflow-serving-api");
+      add("horovod");
       add("hopsfacets");
       add("mmlspark");
       add("numpy");
@@ -154,7 +155,6 @@ public class PythonDepsService {
     {
       add("tensorflow-gpu");
       add("tensorflow");
-      add("horovod");
       add("pydoop");
       add("pyspark");
       add("tensorboard");

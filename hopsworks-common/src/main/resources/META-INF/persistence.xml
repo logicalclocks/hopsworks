@@ -106,6 +106,7 @@
     <class>io.hops.hopsworks.common.dao.pythonDeps.AnacondaRepo</class>
     <class>io.hops.hopsworks.common.dao.pythonDeps.CondaCommands</class>
     <class>io.hops.hopsworks.common.dao.tfserving.TfServing</class>
+    <class>io.hops.hopsworks.common.dao.tensorflow.TensorBoard</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.common.dao.jupyter.JupyterSettings</class>
     <class>io.hops.hopsworks.common.dao.ndb.NdbBackup</class>

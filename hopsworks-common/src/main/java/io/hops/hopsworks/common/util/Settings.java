@@ -489,6 +489,7 @@ public class Settings implements Serializable {
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
       applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
           applicationCertificateValidityPeriod);
+      tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -616,6 +617,8 @@ public class Settings implements Serializable {
 
   public static final String SERVING_DIRS = "/serving/";
 
+  public static final String TENSORBOARD_DIRS = "/tensorboard/";
+
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
 
@@ -647,9 +650,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_LIBHDFS_OPTS="spark.executorEnv.LIBHDFS_OPTS";
   public static final String SPARK_DRIVER_EXTRALIBRARYPATH="spark.driver.extraLibraryPath";
   public static final String SPARK_DRIVER_EXTRAJAVAOPTIONS="spark.driver.extraJavaOptions";
-  
-  
-  
+
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
   public static final String SPARK_EXECUTORENV_PYTHONPATH = "spark.executorEnv.PYTHONPATH";
@@ -658,8 +659,11 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTORENV_HADOOP_USER_NAME = "spark.executorEnv.HADOOP_USER_NAME";
   public static final String SPARK_YARN_IS_PYTHON_ENV = "spark.yarn.isPython";
   public static final String SPARK_YARN_SECONDARY_JARS = "spark.yarn.secondary.jars";
+
   public static final String SPARK_PYTHONPATH = "PYTHONPATH";
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
+  public static final String SPARK_EXECUTORENV_PYSPARK_PYTHON = "spark.executorEnv."+SPARK_PYSPARK_PYTHON ;
+  //TFSPARK properties
   public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
 
   //Spark log4j and metrics properties
@@ -1671,6 +1675,7 @@ public class Settings implements Serializable {
   
   //Elastic log index pattern
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_logs-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
   public static final String ELASTIC_SAVED_SEARCH = "search";
@@ -2614,7 +2619,16 @@ public class Settings implements Serializable {
     checkCache();
     return applicationCertificateValidityPeriod;
   }
-  
+
+  // TensorBoard kill rotation interval in milliseconds
+  private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
+  private int tensorBoardMaxLastAccessed = 1800000;
+
+  public synchronized int getTensorBoardMaxLastAccessed() {
+    checkCache();
+    return tensorBoardMaxLastAccessed;
+  }
+
   public static Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
