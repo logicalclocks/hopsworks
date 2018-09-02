@@ -43,7 +43,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
                       http://xmlns.jcp.org/xml/ns/javaee/beans_1_1.xsd"
-        bean-discovery-mode="all">
+        bean-discovery-mode="annotated">
     <alternatives>
         <class>io.hops.hopsworks.common.serving.tf.LocalhostTfServingController</class>
     </alternatives>
