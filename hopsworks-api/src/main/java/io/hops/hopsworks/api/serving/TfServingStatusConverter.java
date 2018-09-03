@@ -14,32 +14,24 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.tensorflow;
+package io.hops.hopsworks.api.serving;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.hops.hopsworks.common.serving.tf.TfServingStatusEnum;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
-@XmlRootElement
-@ApiModel(value = "Represent configuration for serving UI")
-public class ServingConf {
+@Converter(autoApply = true)
+public class TfServingStatusConverter implements AttributeConverter<TfServingStatusEnum, String> {
 
-  private Integer maxNumInstances;
-
-  public ServingConf() {
+  @Override
+  public String convertToDatabaseColumn(TfServingStatusEnum attribute) {
+    return attribute.toString();
   }
 
-  public ServingConf(Integer maxNumInstances) {
-    this.maxNumInstances = maxNumInstances;
+  @Override
+  public TfServingStatusEnum convertToEntityAttribute(String dbData) {
+    return TfServingStatusEnum.fromString(dbData);
   }
 
-  @ApiModelProperty(value = "Max number of serving instances serving a model", readOnly = true)
-  public Integer getMaxNumInstances() {
-    return maxNumInstances;
-  }
-
-  public void setMaxNumInstances(Integer maxNumInstances) {
-    this.maxNumInstances = maxNumInstances;
-  }
 }

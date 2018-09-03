@@ -63,7 +63,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.jobs.FlinkService.class);
     register(io.hops.hopsworks.api.jobs.JobService.class);
     register(io.hops.hopsworks.api.jupyter.JupyterService.class);
-    register(io.hops.hopsworks.api.tensorflow.TfServingService.class);
+    register(io.hops.hopsworks.api.serving.TfServingService.class);
     register(io.hops.hopsworks.api.jobs.KafkaService.class);
     register(io.hops.hopsworks.api.jobs.SparkService.class);
     register(io.hops.hopsworks.api.project.DataSetService.class);
@@ -97,7 +97,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.zeppelin.rest.ZeppelinRestApi.class);
     register(io.hops.hopsworks.api.app.ApplicationService.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
-    register(io.hops.hopsworks.api.tensorflow.ServingConfResource.class);
+    register(io.hops.hopsworks.api.serving.ServingConfResource.class);
 
     // admin
     register(io.hops.hopsworks.api.admin.UsersAdmin.class);

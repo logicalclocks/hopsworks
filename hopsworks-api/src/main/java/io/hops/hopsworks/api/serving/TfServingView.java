@@ -1,5 +1,4 @@
 /*
- *
  * This file is part of Hopsworks
  * Copyright (C) 2018, Logical Clocks AB. All rights reserved
  *
@@ -16,7 +15,7 @@
  */
 
 
-package io.hops.hopsworks.api.tensorflow;
+package io.hops.hopsworks.api.serving;
 
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.serving.tf.TfServingStatusEnum;
