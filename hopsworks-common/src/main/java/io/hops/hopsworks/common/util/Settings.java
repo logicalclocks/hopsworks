@@ -510,6 +510,8 @@ public class Settings implements Serializable {
       applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
           applicationCertificateValidityPeriod);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
+      sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
+
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -2667,6 +2669,15 @@ public class Settings implements Serializable {
   public synchronized int getTensorBoardMaxLastAccessed() {
     checkCache();
     return tensorBoardMaxLastAccessed;
+  }
+
+  // TensorBoard kill rotation interval in milliseconds
+  private static final String SPARK_UI_LOGS_OFFSET = "spark_ui_logs_offset";
+  private int sparkUILogsOffset = 512000;
+
+  public synchronized int getSparkUILogsOffset() {
+    checkCache();
+    return sparkUILogsOffset;
   }
 
   public static Long getConfTimeValue(String configurationTime) {
