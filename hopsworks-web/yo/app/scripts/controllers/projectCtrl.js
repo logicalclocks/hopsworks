@@ -411,7 +411,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToTfServing = function () {
-              self.goToUrl('tfserving');
+              self.goToUrl('serving');
             };
 
             self.goToPython = function () {

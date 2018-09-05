@@ -65,7 +65,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
-import io.hops.hopsworks.common.dao.tfserving.TfServing;
+import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.util.Settings;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;

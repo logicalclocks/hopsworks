@@ -269,6 +269,26 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
 
+  /* -------------------- TfServing  --------------- */
+  private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
+
+  /* -------------------- Kubernetes --------------- */
+  private static final String VARIABLE_KUBEMASTER_URL = "kube_master_url";
+  private static final String VARIABLE_KUBE_USER = "kube_user";
+  private static final String VARIABLE_KUBE_CA_CERTFILE = "kube_ca_certfile";
+  private static final String VARIABLE_KUBE_CLIENT_KEYFILE = "kube_client_keyfile";
+  private static final String VARIABLE_KUBE_CLIENT_CERTFILE = "kube_client_certfile";
+  private static final String VARIABLE_KUBE_CLIENT_KEYPASS = "kube_client_keypass";
+  private static final String VARIABLE_KUBE_TRUSTSTORE_PATH = "kube_truststore_path";
+  private static final String VARIABLE_KUBE_TRUSTSTORE_KEY = "kube_truststore_key";
+  private static final String VARIABLE_KUBE_KEYSTORE_PATH = "kube_keystore_path";
+  private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
+  private static final String VARIABLE_KUBE_CA_PATH = "kube_ca_path";
+  private static final String VARIABLE_KUBE_CA_PASSWORD = "kube_ca_password";
+  private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
+  private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
+
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -519,6 +539,23 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+
+      TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
+
+      KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
+      KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
+      KUBE_CA_CERTFILE = setStrVar(VARIABLE_KUBE_CA_CERTFILE, KUBE_CA_CERTFILE);
+      KUBE_CLIENT_KEYFILE = setStrVar(VARIABLE_KUBE_CLIENT_KEYFILE, KUBE_CLIENT_KEYFILE);
+      KUBE_CLIENT_CERTFILE = setStrVar(VARIABLE_KUBE_CLIENT_CERTFILE, KUBE_CLIENT_CERTFILE);
+      KUBE_CLIENT_KEYPASS = setStrVar(VARIABLE_KUBE_CLIENT_KEYPASS, KUBE_CLIENT_KEYPASS);
+      KUBE_TRUSTSTORE_PATH = setStrVar(VARIABLE_KUBE_TRUSTSTORE_PATH, KUBE_TRUSTSTORE_PATH);
+      KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY,  KUBE_TRUSTSTORE_KEY);
+      KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
+      KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
+      KUBE_CA_PATH = setStrVar(VARIABLE_KUBE_CA_PATH, KUBE_CA_PATH);
+      KUBE_CA_PASSWORD = setStrVar(VARIABLE_KUBE_CA_PASSWORD, KUBE_CA_PASSWORD);
+      KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
+      KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
 
       cached = true;
     }
@@ -1639,6 +1676,9 @@ public class Settings implements Serializable {
   //hopsworks user prefix username prefix
   public static final String USERNAME_PREFIX = "meb";
 
+  public static final String KEYSTORE_SUFFIX = "__kstore.jks";
+  public static final String TRUSTSTORE_SUFFIX = "__tstore.jks";
+  public static final String CERT_PASS_SUFFIX = "__cert.key";
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
   private static final String CA_TRUSTSTORE_NAME = "cacerts.jks";
@@ -2817,4 +2857,94 @@ public class Settings implements Serializable {
     return ZOOKEEPER_VERSION;
   }
 
+  // -------------------------------- Kubernetes ----------------------------------------------//
+  private String KUBE_USER = "hopsworks";
+  public synchronized String getKubeUser() {
+    checkCache();
+    return KUBE_USER;
+  }
+
+  private String KUBEMASTER_URL = "https://192.168.68.102:6443";
+  public synchronized String getKubeMasterUrl() {
+    checkCache();
+    return KUBEMASTER_URL;
+  }
+
+  private String KUBE_CA_CERTFILE = "/srv/hops/certs-dir/certs/ca.cert.pem";
+  public synchronized String getKubeCaCertfile() {
+    checkCache();
+    return KUBE_CA_CERTFILE;
+  }
+
+  private String KUBE_CLIENT_KEYFILE = "/srv/hops/certs-dir/kube/hopsworks/hopsworks.key.pem";
+  public synchronized String getKubeClientKeyfile() {
+    checkCache();
+    return KUBE_CLIENT_KEYFILE;
+  }
+
+  private String KUBE_CLIENT_CERTFILE = "/srv/hops/certs-dir/kube/hopsworks/hopsworks.cert.pem";
+  public synchronized String getKubeClientCertfile() {
+    checkCache();
+    return KUBE_CLIENT_CERTFILE;
+  }
+
+  private String KUBE_CLIENT_KEYPASS = "adminpw";
+  public synchronized String getKubeClientKeypass() {
+    checkCache();
+    return KUBE_CLIENT_KEYPASS;
+  }
+
+  private String KUBE_TRUSTSTORE_PATH = "/srv/hops/certs-dir/kube/hopsworks/hopsworks__tstore.jks";
+  public synchronized String getKubeTruststorePath() {
+    checkCache();
+    return KUBE_TRUSTSTORE_PATH;
+  }
+
+  private String KUBE_TRUSTSTORE_KEY = "adminpw";
+  public synchronized String getKubeTruststoreKey() {
+    checkCache();
+    return KUBE_TRUSTSTORE_KEY;
+  }
+
+  private String KUBE_KEYSTORE_PATH = "/srv/hops/certs-dir/kube/hopsworks/hopsworks__kstore.jks";
+  public synchronized String getKubeKeystorePath() {
+    checkCache();
+    return KUBE_KEYSTORE_PATH;
+  }
+
+  private String KUBE_KEYSTORE_KEY = "adminpw";
+  public synchronized String getKubeKeystoreKey() {
+    checkCache();
+    return KUBE_KEYSTORE_KEY;
+  }
+
+  private String KUBE_CA_PATH = "/srv/hops/certs-dir/kube";
+  public synchronized String getKubeCAPath() {
+    checkCache();
+    return KUBE_CA_PATH;
+  }
+
+  private String KUBE_CA_PASSWORD = "adminpw";
+  public synchronized String getKubeCAPassword() {
+    checkCache();
+    return KUBE_CA_PASSWORD;
+  }
+
+  private String KUBE_REGISTRY = "registry.docker-registry.svc.cluster.local";
+  public synchronized String getKubeRegistry() {
+    checkCache();
+    return KUBE_REGISTRY;
+  }
+
+  private Integer KUBE_MAX_SERVING_INSTANCES = 10;
+  public synchronized Integer getKubeMaxServingInstances() {
+    checkCache();
+    return KUBE_MAX_SERVING_INSTANCES;
+  }
+
+  private String TF_SERVING_MONITOR_INT = "30s";
+  public synchronized String getTFServingMonitorInt() {
+    checkCache();
+    return TF_SERVING_MONITOR_INT;
+  }
 }

@@ -89,7 +89,7 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
         json.setStatus("Database unavailable.");
         json.setStatusCode(Response.Status.SERVICE_UNAVAILABLE.getStatusCode());
       } else {
-        json.setErrorMsg("Persistence Exception :(");
+        json.setErrorMsg("Persistence Exception");
         json.setStatus("Persistence Exception.");
         json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
       }

@@ -47,7 +47,7 @@ import io.hops.hopsworks.api.jobs.KafkaService;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.pythonDeps.PythonDepsService;
 import io.hops.hopsworks.api.tensorflow.TensorBoardService;
-import io.hops.hopsworks.api.tensorflow.TfServingService;
+import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
@@ -943,16 +943,21 @@ public class ProjectService {
     return this.tensorboard;
   }
 
-  @Path("{id}/tfserving")
+  @Path("{id}/serving")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TfServingService tfServingService(
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id,
+      @Context SecurityContext sc) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_NOT_FOUND);
     }
-    this.tfServingService.setProjectId(id);
+
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+
+    this.tfServingService.setProject(project);
+    this.tfServingService.setUser(user);
 
     return this.tfServingService;
   }

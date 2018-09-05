@@ -279,4 +279,8 @@ public class ResponseMessages {
   public final static String LLAP_CLUSTER_ALREADY_UP = "LLAP cluster already up";
   public final static String LLAP_CLUSTER_ALREADY_DOWN = "LLAP cluster already down";
 
+  // TF Serving
+  public final static String SERVING_NOT_FOUND = "Serving not found";
+  public final static String SERVING_ID_NULL = "Serving ID is null";
+
 }

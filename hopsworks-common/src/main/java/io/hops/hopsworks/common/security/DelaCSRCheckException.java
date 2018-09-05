@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.common.security;
 
-
 import javax.ws.rs.core.Response;
 
 public class DelaCSRCheckException extends Exception {

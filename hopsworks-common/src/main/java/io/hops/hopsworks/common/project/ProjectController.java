@@ -61,6 +61,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.client.Client;
@@ -103,7 +106,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -125,6 +127,8 @@ import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.OpensslOperations;
+import io.hops.hopsworks.common.serving.tf.TfServingController;
+import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -214,15 +218,13 @@ public class ProjectController {
   @EJB
   private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
-  private TfServingProcessMgr tfServingProcessMgr;
-  @EJB
   private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB 
-  KafkaController kafkaController;
+  private KafkaController kafkaController;
   @EJB
-  TensorBoardController tensorBoardController;
+  private TensorBoardController tensorBoardController;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -231,7 +233,6 @@ public class ProjectController {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private HiveController hiveController;
-
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -244,6 +245,12 @@ public class ProjectController {
   private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
   @EJB
   private OpensslOperations opensslOperations;
+  @Inject
+  private TfServingController tfServingController;
+  @Inject
+  @Any
+  private Instance<ProjectHandler> projectHandlers;
+
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -330,6 +337,18 @@ public class ProjectController {
       verifyProject(project, dfso, sessionId);
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
+
+
+      // Run the handlers.
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.preCreate(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "An error occured when creating the project");
+        }
+      }
 
       //create certificate for this user
       // User's certificates should be created before making any call to
@@ -450,7 +469,17 @@ public class ProjectController {
             + "generation thread to finish. Will try to cleanup...", ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
-      
+
+      // Run the handlers.
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.postCreate(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          cleanup(project, sessionId, certsGenerationFuture);
+        }
+      }
+
       return project;
 
     } finally {
@@ -466,7 +495,7 @@ public class ProjectController {
   private void verifyProject(Project project, DistributedFileSystemOps dfso,
       String sessionId)
       throws AppException {
-    //proceed to all the verrifications and set up local variable    
+    //proceed to all the verrifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
     //  verify that Quota for this project name does not already exist in YARN
@@ -1002,6 +1031,18 @@ public class ProjectController {
       if (project != null) {
         cleanupLogger.logSuccess("Project not found in the database");
 
+        // Run custom handler for project deletion
+        for (ProjectHandler projectHandler : projectHandlers) {
+          try {
+            projectHandler.preDelete(project);
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
+          } catch (Exception e) {
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
+                + " during project cleanup");
+            cleanupLogger.logError(e.getMessage());
+          }
+        }
+
         // Remove from Project team
         try {
           updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
@@ -1189,6 +1230,13 @@ public class ProjectController {
           cleanupLogger.logSuccess("Removed local TensorBoards");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing running TensorBoards during project cleanup");
+        }
+
+        try {
+          tfServingController.deleteTfServings(project);
+          cleanupLogger.logSuccess("Removed Tf Servings");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing Tf Serving instances");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1208,6 +1256,18 @@ public class ProjectController {
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");          
           cleanupLogger.logError(ex.getMessage());
+        }
+
+        // Run custom handler for project deletion
+        for (ProjectHandler projectHandler : projectHandlers) {
+          try {
+            projectHandler.postDelete(project);
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
+          } catch (Exception e) {
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
+                + " during project cleanup");
+            cleanupLogger.logError(e.getMessage());
+          }
         }
       } else {
         // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
@@ -1526,8 +1586,6 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
 
-        tfServingProcessMgr.removeProject(project);
-
         try {
           removeAnacondaEnv(project);
         } catch (AppException ex) {
@@ -1568,7 +1626,16 @@ public class ProjectController {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
-      
+
+      // Run custom handler for project deletion
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.preDelete(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+        }
+      }
+
       datasetController.unsetMetaEnabledForAllDatasets(dfso, project);
       
       //log removal to notify elastic search
@@ -1631,14 +1698,30 @@ public class ProjectController {
       //remove running tensorboards
       removeTensorBoard(project);
 
+      // Remove TF Servings
+      try {
+        tfServingController.deleteTfServings(project);
+      } catch (TfServingException e) {
+        throw new IOException(e);
+      }
+
       //remove folder
       removeProjectFolder(project.getName(), dfso);
-      
+
       if(decreaseCreatedProj){
         usersController.decrementNumProjectsCreated(project.getOwner().getUid());
       }
       
       usersController.decrementNumActiveProjects(project.getOwner().getUid());
+
+      // Run custom handler for project deletion
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.postDelete(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+        }
+      }
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
@@ -2393,8 +2476,7 @@ public class ProjectController {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
 
-  @TransactionAttribute(
-      TransactionAttributeType.NEVER)
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createAnacondaEnv(Project project) throws AppException {
     pythonDepsFacade.getPreInstalledLibs(project);
 
@@ -2413,12 +2495,6 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeTensorBoard(Project project) throws TensorBoardCleanupException {
     tensorBoardController.removeProject(project);
-  }
-
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTfServing(Project project) throws AppException {
-    LOGGER.log(Level.SEVERE, "PLEASE REMOVE TF SERVINGS");
-    tfServingProcessMgr.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
