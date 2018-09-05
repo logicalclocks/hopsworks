@@ -62,6 +62,15 @@
 
   <profiles>
     <profile>
+      <id>kube</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>hopsworks-kube</module>
+      </modules>
+    </profile>
+    <profile>
       <id>cluster</id>
       <activation>
         <activeByDefault>false</activeByDefault>

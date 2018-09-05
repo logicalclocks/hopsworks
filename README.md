@@ -1,4 +1,4 @@
-# Hopsworks
+# Hopsworks Enterprise
 
 [![Join the chat at https://gitter.im/hopshadoop/hopsworks](https://badges.gitter.im/hopshadoop/services.png)](https://gitter.im/hopshadoop/hopsworks)
 [![Google Group](https://img.shields.io/badge/google-group-blue.svg)](https://groups.google.com/forum/#!forum/hopshadoop)
@@ -57,6 +57,16 @@ You can also build Hopsworks without the frontend (for Java EE development and t
 ```sh
 mvn install -P-web
 ```
+
+
+### Build instructions for the enterprise modules.
+
+#### Kubernetes
+
+If you want to build Hopsworks-enterprise with support for Kubernetes you should enable the `kube` profile
+```$xslt
+mvn clean install -Pkube
+``` 
 
 ## Front-end Development 
 
