@@ -85,6 +85,7 @@ Backend Dependecies
 * com.googlecode.json-simple:json-simple:jar:1.1.1 [ApacheV2](https://github.com/fangyidong/json-simple/blob/master/LICENSE.txt)
 * com.google.guava:guava:jar:18.0 [ApacheV2](https://github.com/google/guava/blob/master/COPYING)
 * com.google.zxing:javase:jar:3.0.0 [ApacheV2](https://github.com/zxing/zxing/blob/master/LICENSE)
+* com.twitter.bijection-avro [ApacheV2](https://github.com/twitter/bijection/blob/develop/LICENSE)
 * commons-beanutils:commons-beanutils:jar:1.9.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * commons-fileupload:commons-fileupload:jar:1.2.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * commons-logging:commons-logging:jar:1.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)

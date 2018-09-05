@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.dao.serving;
 
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 
@@ -99,6 +100,10 @@ public class TfServing implements Serializable {
   private String lockIP;
   @Column(name = "lock_timestamp")
   private Long lockTimestamp;
+
+  @JoinColumn(name = "kafka_topic_id", referencedColumnName = "id")
+  @ManyToOne
+  private ProjectTopics kafkaTopic;
 
   @Basic(optional = true)
   @Column(name = "local_port")
@@ -240,6 +245,14 @@ public class TfServing implements Serializable {
     this.lockTimestamp = lockTimestamp;
   }
 
+  public ProjectTopics getKafkaTopic() {
+    return kafkaTopic;
+  }
+
+  public void setKafkaTopic(ProjectTopics kafkaTopic) {
+    this.kafkaTopic = kafkaTopic;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -260,6 +273,7 @@ public class TfServing implements Serializable {
     if (lockIP != null ? !lockIP.equals(tfServing.lockIP) : tfServing.lockIP != null) return false;
     if (lockTimestamp != null ? !lockTimestamp.equals(tfServing.lockTimestamp) : tfServing.lockTimestamp != null)
       return false;
+    if (kafkaTopic != null ? !kafkaTopic.equals(tfServing.kafkaTopic) : tfServing.kafkaTopic != null) return false;
     if (localPort != null ? !localPort.equals(tfServing.localPort) : tfServing.localPort != null) return false;
     if (localPid != null ? !localPid.equals(tfServing.localPid) : tfServing.localPid != null) return false;
     return localDir != null ? localDir.equals(tfServing.localDir) : tfServing.localDir == null;
@@ -279,6 +293,7 @@ public class TfServing implements Serializable {
     result = 31 * result + (batching ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
+    result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
     result = 31 * result + (localPid != null ? localPid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);

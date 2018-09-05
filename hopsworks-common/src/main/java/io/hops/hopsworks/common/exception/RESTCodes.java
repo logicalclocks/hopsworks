@@ -557,7 +557,9 @@ public class RESTCodes {
     HOST_EXISTS(40, "Host exists", Response.Status.CONFLICT),
     TENSORFLOW_VERSION_NOT_SUPPORTED(41,
       "We currently do not support this version of TensorFlow. Update to a " +
-        "newer version or contact an admin", Response.Status.BAD_REQUEST);
+        "newer version or contact an admin", Response.Status.BAD_REQUEST),
+    SERVICE_GENERIC_ERROR(41, "Generic error while enabling the service",
+        Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;

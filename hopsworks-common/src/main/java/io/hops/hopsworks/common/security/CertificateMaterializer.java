@@ -910,7 +910,7 @@ public class CertificateMaterializer {
   
             Path passwordFile = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
                 + CERT_PASS_SUFFIX);
-            writeToHDFS(dfso, passwordFile, new String(material.getPassword()));
+            writeToHDFS(dfso, passwordFile, new String(material.getPassword()).getBytes());
             dfso.setOwner(passwordFile, ownerName, groupName);
             dfso.setPermission(passwordFile, permissions);
   
@@ -972,21 +972,7 @@ public class CertificateMaterializer {
     }
   }
   
-  private void writeToHDFS(DistributedFileSystemOps dfso, Path path, String data) throws IOException {
-    if (dfso == null) {
-      throw new IOException("DistributedFilesystemOps is null");
-    }
-    FSDataOutputStream fsStream = dfso.getFilesystem().create(path);
-    try {
-      fsStream.writeUTF(data);
-      fsStream.hflush();
-    } finally {
-      if (fsStream != null) {
-        fsStream.close();
-      }
-    }
-  }
-  
+
   /*
    * Remove remote section
    */

@@ -23,9 +23,9 @@ import io.hops.hopsworks.common.dao.serving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.serving.KafkaServingHelper;
 import io.hops.hopsworks.common.util.Settings;
 
-import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -62,27 +62,29 @@ public class LocalhostTfServingController implements TfServingController {
   private Settings settings;
   @EJB
   private CertificateMaterializer certificateMaterializer;
+  @EJB
+  private KafkaServingHelper kafkaServingHelper;
 
   @Override
-  public List<TfServingWrapper> getTfServings(Project project) throws TfServingException {
+  public List<TfServingWrapper> getTfServings(Project project, Users user) throws TfServingException {
     List<TfServing> tfServingList = tfServingFacade.findForProject(project);
 
     List<TfServingWrapper> tfServingWrapperList = new ArrayList<>();
     for (TfServing tfServing : tfServingList) {
-      tfServingWrapperList.add(getTfServingInternal(tfServing));
+      tfServingWrapperList.add(getTfServingInternal(tfServing, user));
     }
 
     return tfServingWrapperList;
   }
 
   @Override
-  public TfServingWrapper getTfServing(Project project, Integer id) throws TfServingException {
+  public TfServingWrapper getTfServing(Project project, Integer id, Users user) throws TfServingException {
     TfServing tfServing = tfServingFacade.findByProjectAndId(project, id);
     if (tfServing == null) {
       return null;
     }
 
-    return getTfServingInternal(tfServing);
+    return getTfServingInternal(tfServing, user);
   }
 
   @Override
@@ -117,26 +119,36 @@ public class LocalhostTfServingController implements TfServingController {
   }
 
   @Override
-  public void createOrUpdate(Project project, Users user, TfServing newTfServing) throws TfServingException {
-    if (newTfServing.getId() == null) {
+  public void createOrUpdate(Project project, Users user, TfServingWrapper newTfServingWrapper)
+      throws TfServingException {
+
+    TfServing serving = newTfServingWrapper.getTfServing();
+    if (serving.getId() == null) {
       // Create request
-      newTfServing.setCreated(new Date());
-      newTfServing.setCreator(user);
-      newTfServing.setProject(project);
+      serving.setCreated(new Date());
+      serving.setCreator(user);
+      serving.setProject(project);
 
       UUID uuid = UUID.randomUUID();
-      newTfServing.setLocalDir(uuid.toString());
-      newTfServing.setLocalPid(PID_STOPPED);
-      newTfServing.setInstances(1);
-      tfServingFacade.merge(newTfServing);
+      serving.setLocalDir(uuid.toString());
+      serving.setLocalPid(PID_STOPPED);
+      serving.setInstances(1);
+
+      // Setup the Kafka topic for logging
+      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, null);
+
+      tfServingFacade.merge(serving);
     } else {
-      TfServing oldDbTfServing = tfServingFacade.acquireLock(project, newTfServing.getId());
+      TfServing oldDbTfServing = tfServingFacade.acquireLock(project, serving.getId());
 
       // Get the status of the current instance
       TfServingStatusEnum status = getTfServingStatus(oldDbTfServing);
 
+      // Setup the Kafka topic for logging
+      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, oldDbTfServing);
+
       // Update the object in the database
-      TfServing dbTfServing = tfServingFacade.updateDbObject(newTfServing, project);
+      TfServing dbTfServing = tfServingFacade.updateDbObject(serving, project);
 
       if (status == TfServingStatusEnum.RUNNING ||
           status == TfServingStatusEnum.STARTING ||
@@ -146,7 +158,7 @@ public class LocalhostTfServingController implements TfServingController {
             oldDbTfServing.getVersion() > dbTfServing.getVersion()) {
           // To update the name and/or the model path we need to restart the server and/or the version as been
           // reduced. We need to restart the server
-          restartTfServingInstance(project, user, oldDbTfServing, newTfServing);
+          restartTfServingInstance(project, user, oldDbTfServing, serving);
         } else {
           // To update the version call the script and download the new version in the directory
           // the server polls for new versions and it will pick it up.
@@ -188,7 +200,7 @@ public class LocalhostTfServingController implements TfServingController {
     return LocalhostTfServingController.class.getName();
   }
 
-  private TfServingWrapper getTfServingInternal(TfServing tfServing) throws TfServingException {
+  private TfServingWrapper getTfServingInternal(TfServing tfServing, Users user) throws TfServingException {
     TfServingWrapper tfServingWrapper = new TfServingWrapper(tfServing);
 
     TfServingStatusEnum status = getTfServingStatus(tfServing);
@@ -204,6 +216,8 @@ public class LocalhostTfServingController implements TfServingController {
         tfServingWrapper.setNodePort(tfServing.getLocalPort());
 
     }
+
+    tfServingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(tfServing, user));
 
     return tfServingWrapper;
   }
@@ -225,7 +239,6 @@ public class LocalhostTfServingController implements TfServingController {
     }
   }
 
-  @Asynchronous
   private void updateModelVersion(Project project, Users user, TfServing tfServing) throws TfServingException {
     // TFServing polls for new version of the model in the directory
     // if a new version is downloaded it starts serving it
@@ -302,19 +315,21 @@ public class LocalhostTfServingController implements TfServingController {
     }
   }
 
-  @Asynchronous
   private void startTfServingInstance(Project project, Users user, TfServing tfServing) throws TfServingException{
 
     String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
 
     // TODO(Fabio) this is bad as we don't know if the port is used or not
-    Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
+    Integer grpcPort = ThreadLocalRandom.current().nextInt(40000, 59999);
+    Integer restPort = ThreadLocalRandom.current().nextInt(40000, 59999);
+
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + tfServing.getLocalDir());
 
     String[] shCommnad = new String[]{"/usr/bin/sudo", script, "start",
         tfServing.getModelName(),
         Paths.get(tfServing.getModelPath(), tfServing.getVersion().toString()).toString(),
-        String.valueOf(port),
+        String.valueOf(grpcPort),
+        String.valueOf(restPort),
         secretDir.toString(),
         project.getName() + USER_NAME_DELIMITER + user.getUsername()};
 
@@ -356,7 +371,7 @@ public class LocalhostTfServingController implements TfServingController {
 
       // Update the info in the db
       tfServing.setLocalPid(Integer.valueOf(pidContents));
-      tfServing.setLocalPort(port);
+      tfServing.setLocalPort(restPort);
       tfServingFacade.updateDbObject(tfServing, project);
     } catch (Exception ex) {
       if (process != null) {

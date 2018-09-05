@@ -119,6 +119,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -474,11 +476,23 @@ public class ProjectService {
       // Create dfso here and pass them to the different controllers
       DistributedFileSystemOps dfso = dfs.getDfsOps();
       DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersBean.getHdfsUserName(project, user));
-  
+
       for (String s : projectDTO.getServices()) {
         ProjectServiceEnum se = null;
         se = ProjectServiceEnum.valueOf(s.toUpperCase());
-        if (projectController.addService(project, se, user, dfso, udfso)) {
+        List<Future<?>> serviceFutureList = projectController.addService(project, se, user, dfso, udfso);
+        if (serviceFutureList != null) {
+          // Wait for the futures
+          for (Future f : serviceFutureList) {
+            try {
+              f.get();
+            } catch (InterruptedException | ExecutionException e) {
+              LOGGER.log(Level.SEVERE, "Error waiting for the futures to enable service: " + s, e);
+              throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
+                  Level.SEVERE, "service: " + s);
+            }
+          }
+
           // Service successfully enabled
           json.setSuccessMessage(json.getSuccessMessage() + "\n"
             + ResponseMessages.PROJECT_SERVICE_ADDED
@@ -815,7 +829,7 @@ public class ProjectService {
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
     }
-    this.kafka.setProjectId(id);
+    this.kafka.setProject(project);
 
     return this.kafka;
   }

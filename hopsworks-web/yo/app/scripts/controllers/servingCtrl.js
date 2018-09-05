@@ -20,8 +20,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-          function ($scope, $routeParams, growl, ServingService, $location, ModalService, $interval, StorageService, $mdSidenav, DataSetService) {
+        .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', '$location', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService', 'KafkaService',
+          function ($scope, $routeParams, growl, ServingService, $location, ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
 
             var self = this;
 
@@ -37,17 +37,31 @@ angular.module('hopsWorksApp')
 
             self.projectId = $routeParams.projectID;
 
+            self.projectKafkaTopics = [];
+            self.kafkaDefaultNumPartitions = 1;
+            self.kafkaDefaultNumReplicas = 1;
+            self.kafkaMaxNumReplicas = 1;
+
             self.servings = [];
             self.editServing = {};
+            self.editServing.kafkaTopicDTO = {}
+            self.editServing.kafkaTopicDTO.name = "CREATE";
+            self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
+            self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
 
             self.activeTab = 'serving';
             self.showCreateNewServingForm = false;
+            self.showAdvancedForm = false;
 
             self.sendingRequest = false;
 
             $scope.pageSize = 10;
             $scope.sortKey = 'creationTime';
             $scope.reverse = true;
+
+            // TODO(Fabio) get this from the serving configuration
+            self.kafkaSchemaName = "inferenceschema";
+            self.kafkaSchemaVersion = 1;
 
             var datasetService = DataSetService(self.projectId)
 
@@ -116,19 +130,30 @@ angular.module('hopsWorksApp')
               self.getModelVersions(modelPath);
               self.editServing.modelPath = modelPath;
               self.editServing.modelName = modelName;
-            }
+            };
 
             self.showCreateServingForm = function () {
-              self.showCreateNewServingForm = true
-              self.createNewServingMode = true
+              self.showCreateNewServingForm = true;
+              self.createNewServingMode = true;
+              self.updateKafkaTopics();
             };
+
+            self.showAdvanced = function () {
+              self.showAdvancedForm = !self.showAdvancedForm;
+            };
+
 
             self.hideCreateServingForm = function() {
               self.showCreateNewServingForm = false;
               self.createNewServingMode = false;
               self.editServing = {};
+              self.editServing.kafkaTopicDTO = {};
+              self.editServing.kafkaTopicDTO.name = "CREATE";
+              self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
+              self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
               self.versions = [];
               self.sliderOptions.value = 1;
+              self.showAdvancedForm = false;
             };
 
             self.getAllServings = function () {
@@ -146,6 +171,28 @@ angular.module('hopsWorksApp')
                  });
             };
 
+
+            self.updateKafkaTopics = function() {
+                KafkaService.getTopics(self.projectId).then(
+                  function(success) {
+                    self.projectKafkaTopics = [];
+                    self.projectKafkaTopics.push("CREATE");
+                    self.projectKafkaTopics.push("NONE");
+
+                    for (var topic in success.data) {
+                        if (success.data[topic].schemaName === self.kafkaSchemaName &&
+                            success.data[topic].schemaVersion === self.kafkaSchemaVersion) {
+                            self.projectKafkaTopics.push(success.data[topic].name);
+                        }
+                    }
+                  },
+                  function (error) {
+                   growl.error(error.data.errorMsg, {
+                     title: 'Error',
+                     ttl: 15000
+                   });
+                 });
+            };
 
             self.containsServingStatus = function (status) {
 
@@ -258,6 +305,20 @@ angular.module('hopsWorksApp')
                         });
                     }
                 );
+
+                KafkaService.defaultTopicValues(self.projectId).then(
+                    function (success) {
+                        self.kafkaDefaultNumPartitions = success.data.numOfPartitions;
+                        self.kafkaDefaultNumReplicas = success.data.numOfReplicas;
+                        self.kafkaMaxNumReplicas = success.data.maxNumOfReplicas;
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Error',
+                            ttl: 15000
+                        });
+                    }
+                )
             };
             self.init();
           }

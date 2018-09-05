@@ -67,6 +67,12 @@ public class TfServingFacade {
         .getResultList();
   }
 
+  public TfServing findById(Integer id) {
+    return em.createNamedQuery("TfServing.findById", TfServing.class)
+        .setParameter("id", id)
+        .getSingleResult();
+  }
+
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void delete(TfServing tfServing) {
     // Fetch again the tfServing instance from the DB as the method that calls this
@@ -94,6 +100,8 @@ public class TfServingFacade {
     if (newTfServing.getVersion() != null) {
       dbTfServing.setVersion(newTfServing.getVersion());
     }
+
+    dbTfServing.setKafkaTopic(newTfServing.getKafkaTopic());
 
     if (newTfServing.getLocalPid() != null) {
       dbTfServing.setLocalPid(newTfServing.getLocalPid());

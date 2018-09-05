@@ -45,43 +45,43 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class TopicDefaultValueDTO implements Serializable {
 
-  private String numOfReplicas;
+  private Integer numOfReplicas;
 
-  private String numOfPartitions;
+  private Integer numOfPartitions;
 
-  private String maxNumOfReplicas;
+  private Integer maxNumOfReplicas;
 
   public TopicDefaultValueDTO() {
   }
 
-  public TopicDefaultValueDTO(String numOfReplicas, String numOfPartitions,
-          String maxNumOfReplicas) {
+  public TopicDefaultValueDTO(Integer numOfReplicas, Integer numOfPartitions,
+          Integer maxNumOfReplicas) {
     this.numOfReplicas = numOfReplicas;
     this.numOfPartitions = numOfPartitions;
     this.maxNumOfReplicas = maxNumOfReplicas;
   }
 
-  public String getNumOfPartitions() {
-    return numOfPartitions;
-  }
-
-  public String getNumOfReplicas() {
+  public Integer getNumOfReplicas() {
     return numOfReplicas;
   }
 
-  public String getMaxNumOfReplicas() {
-    return maxNumOfReplicas;
-  }
-
-  public void setNumOfPartitions(String numOfPartitions) {
-    this.numOfPartitions = numOfPartitions;
-  }
-
-  public void setNumOfReplicas(String numOfReplicas) {
+  public void setNumOfReplicas(Integer numOfReplicas) {
     this.numOfReplicas = numOfReplicas;
   }
 
-  public void setMaxNumOfReplicas(String maxNumOfReplicas) {
+  public Integer getNumOfPartitions() {
+    return numOfPartitions;
+  }
+
+  public void setNumOfPartitions(Integer numOfPartitions) {
+    this.numOfPartitions = numOfPartitions;
+  }
+
+  public Integer getMaxNumOfReplicas() {
+    return maxNumOfReplicas;
+  }
+
+  public void setMaxNumOfReplicas(Integer maxNumOfReplicas) {
     this.maxNumOfReplicas = maxNumOfReplicas;
   }
 }

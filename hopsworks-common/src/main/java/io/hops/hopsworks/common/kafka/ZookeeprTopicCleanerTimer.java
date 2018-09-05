@@ -119,7 +119,7 @@ public class ZookeeprTopicCleanerTimer {
 
     for (ProjectTopics pt : dbProjectTopics) {
       try {
-        dbTopics.add(pt.getProjectTopicsPK().getTopicName());
+        dbTopics.add(pt.getTopicName());
       } catch (UnsupportedOperationException e) {
         LOGGER.log(Level.SEVERE, e.toString());
       }

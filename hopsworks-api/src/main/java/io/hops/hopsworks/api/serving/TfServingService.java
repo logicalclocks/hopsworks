@@ -98,7 +98,7 @@ public class TfServingService {
       response = TfServingView.class,
       responseContainer = "List")
   public Response getTfServings() throws TfServingException {
-    List<TfServingWrapper> servingDAOList = tfServingController.getTfServings(project);
+    List<TfServingWrapper> servingDAOList = tfServingController.getTfServings(project, user);
 
 
     ArrayList<TfServingView> servingViewList = new ArrayList<>();
@@ -125,7 +125,7 @@ public class TfServingService {
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-    TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId);
+    TfServingWrapper tfServingWrapper = tfServingController.getTfServing(project, servingId, user);
 
     TfServingView tfServingView = new TfServingView(tfServingWrapper);
     GenericEntity<TfServingView> tfServingEntity = new GenericEntity<TfServingView>(tfServingView){};
@@ -163,7 +163,7 @@ public class TfServingService {
       throw new IllegalArgumentException("tfServing was not provided");
     }
 
-    tfServingController.createOrUpdate(project, user, tfServing.getTfServingDAO());
+    tfServingController.createOrUpdate(project, user, tfServing.getTfServingWrapper());
 
     return Response.status(Response.Status.CREATED).build();
   }

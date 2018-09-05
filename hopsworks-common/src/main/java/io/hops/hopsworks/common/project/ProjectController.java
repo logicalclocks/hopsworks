@@ -104,6 +104,7 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.OpensslOperations;
+import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.user.UsersController;
@@ -329,11 +330,12 @@ public class ProjectController {
       // User's certificates should be created before making any call to
       // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
       // This is an async call
-      Future<CertificatesController.CertsResult> certsGenerationFuture = null;
+      List<Future<?>> projectCreationFutures = new ArrayList<>();
       try {
-        certsGenerationFuture = certificatesController.generateCertificates(project, owner, true);
+        projectCreationFutures.add(certificatesController
+            .generateCertificates(project, owner, true));
       } catch (Exception ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
           "project: " + project.getName() +
             "owner: " + owner.getUsername(), ex.getMessage(), ex);
@@ -341,7 +343,7 @@ public class ProjectController {
 
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.SEVERE,
           "project: " + project.getName() + "owner: " + owner.getUsername());
       }
@@ -353,7 +355,7 @@ public class ProjectController {
       try {
         mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -362,7 +364,7 @@ public class ProjectController {
       try {
         setProjectInode(project, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
           Level.SEVERE, "project: " + projectName, ex.getMessage(), ex);
       }
@@ -373,7 +375,7 @@ public class ProjectController {
         setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
             dfso, owner);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE,
           "project: " + project.getName(), ex.getMessage(), ex);
       }
@@ -383,7 +385,7 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso);
       } catch (IOException | EJBException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
@@ -394,9 +396,9 @@ public class ProjectController {
       // enable services
       for (ProjectServiceEnum service : projectServices) {
         try {
-          addService(project, service, owner, dfso);
+          projectCreationFutures.addAll(addService(project, service, owner, dfso));
         } catch (RESTException ex) {
-          cleanup(project, sessionId, certsGenerationFuture);
+          cleanup(project, sessionId, projectCreationFutures);
           throw ex;
         }
       }
@@ -406,19 +408,21 @@ public class ProjectController {
         failedMembers = new ArrayList<>();
         failedMembers.addAll(addMembers(project, owner.getEmail(), projectDTO.getProjectTeam()));
       } catch (KafkaException | UserException | ProjectException | EJBException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFuturesj);
         throw ex;
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
 
       try {
-        if (certsGenerationFuture != null) {
-          certsGenerationFuture.get();
+        for (Future f : projectCreationFutures) {
+          if (f != null) {
+            f.get();
+          }
         }
       } catch (InterruptedException | ExecutionException ex) {
         LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
             + "generation thread to finish. Will try to cleanup...", ex);
-        cleanup(project, sessionId, certsGenerationFuture);
+        cleanup(project, sessionId, projectCreationFutures);
       }
 
       // Run the handlers.
@@ -426,7 +430,7 @@ public class ProjectController {
         try {
           projectHandler.postCreate(project);
         } catch (Exception e) {
-          cleanup(project, sessionId, certsGenerationFuture);
+          cleanup(project, sessionId, projectCreationFutures);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR, Level.SEVERE,
             "project: " + projectName, e.getMessage(), e);
         }
@@ -678,19 +682,21 @@ public class ProjectController {
   }
 
   // Used only during project creation
-  private boolean addService(Project project, ProjectServiceEnum service,
+  private List<Future<?>> addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso)
     throws ProjectException, ServiceException, DatasetException, HopsSecurityException {
     return addService(project, service, user, dfso, dfso);
   }
 
-  public boolean addService(Project project, ProjectServiceEnum service,
-      Users user, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) throws ProjectException, ServiceException, DatasetException,
-    HopsSecurityException {
+  public List<Future<?>> addService(Project project, ProjectServiceEnum service,
+      Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+    throws ProjectException, ServiceException, DatasetException, HopsSecurityException {
+
+    List<Future<?>> futureList = new ArrayList<>();
+
     if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
-      // Service already enabled fro the current project. Nothing to do
-      return false;
+      // Service already enabled for the current project. Nothing to do
+      return null;
     }
 
     switch (service) {
@@ -708,6 +714,7 @@ public class ProjectController {
         break;
       case SERVING:
         addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
+        futureList.add(addServingManager(project));
         break;
       case JOBS:
         addElasticsearch(project);
@@ -728,7 +735,7 @@ public class ProjectController {
       logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
           ActivityFacade.FLAG_PROJECT, user, project);
     }
-    return true;
+    return futureList;
   }
 
   private void addServiceDataset(Project project, Users user,
@@ -769,6 +776,22 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
+  }
+
+  /**
+   * Add to the project the serving manager. The user responsible of writing the inference logs to kafka
+   * @param project
+   */
+  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws Exception {
+    // Add the Serving Manager user to the project team
+    Users servingManagerUser = userFacade.findByUsername(KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
+    ProjectTeamPK stp = new ProjectTeamPK(project.getId(), servingManagerUser.getEmail());
+    ProjectTeam st = new ProjectTeam(stp);
+    st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
+    st.setTimestamp(new Date());
+    projectTeamFacade.persistProjectTeam(st);
+    // Create the certificate for this project user
+    return certificatesController.generateCertificates(project, servingManagerUser, false);
   }
 
   /**
@@ -1167,7 +1190,7 @@ public class ProjectController {
         // Kill jobs
         List<HdfsUsers> projectHdfsUsers = hdfsUsersBean.getAllProjectHdfsUsers(projectName);
         try {
-          Set<String> hdfsUsersStr = new HashSet();
+          Set<String> hdfsUsersStr = new HashSet<>();
           for (HdfsUsers hdfsUser : projectHdfsUsers) {
             hdfsUsersStr.add(hdfsUser.getName());
           }
@@ -1405,13 +1428,14 @@ public class ProjectController {
   }
 
   public void cleanup(Project project, String sessionId,
-      Future<CertificatesController.CertsResult> certsGenerationFuture) throws GenericException {
-    cleanup(project, sessionId, certsGenerationFuture, true);
+      List<Future<?>> projectCreationFutures) throws GenericException {
+    cleanup(project, sessionId, projectCreationFutures, true);
   }
   
   public void cleanup(Project project, String sessionId,
-      Future<CertificatesController.CertsResult> certsGenerationFuture, boolean decreaseCreatedProj)
+      List<Future<?>> projectCreationFutures, boolean decreaseCreatedProj)
     throws GenericException {
+
     if (project == null) {
       return;
     }
@@ -1458,8 +1482,7 @@ public class ProjectController {
 
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
-        removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture, decreaseCreatedProj);
-        break;
+        removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj);
       } catch (Exception ex) {
         nbTry++;
         if (nbTry < 3) {
@@ -1478,7 +1501,7 @@ public class ProjectController {
   }
 
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
-      List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
+      List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj)
     throws IOException, InterruptedException, ExecutionException,
     CAException, ServiceException, ProjectException {
@@ -1514,8 +1537,10 @@ public class ProjectController {
 
       //remove user certificate from local node 
       //(they will be removed from db when the project folder is deleted)
-      if (certsGenerationFuture != null) {
-        certsGenerationFuture.get();
+      for (Future f : projectCreationFutures) {
+        if (f != null) {
+          f.get();
+        }
       }
 
       try {

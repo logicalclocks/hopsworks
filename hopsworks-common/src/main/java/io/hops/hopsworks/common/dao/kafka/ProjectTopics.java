@@ -41,9 +41,14 @@ package io.hops.hopsworks.common.dao.kafka;
 
 import java.io.Serializable;
 import java.util.Collection;
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
-import javax.persistence.EmbeddedId;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
@@ -51,8 +56,11 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.project.Project;
 
@@ -66,10 +74,14 @@ import io.hops.hopsworks.common.dao.project.Project;
           query = "SELECT p FROM ProjectTopics p"),
   @NamedQuery(name = "ProjectTopics.findByTopicName",
           query
-          = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.topicName = :topicName"),
-  @NamedQuery(name = "ProjectTopics.findByProjectId",
+          = "SELECT p FROM ProjectTopics p WHERE p.topicName = :topicName"),
+  @NamedQuery(name = "ProjectTopics.findByProject",
           query
-          = "SELECT p FROM ProjectTopics p WHERE p.projectTopicsPK.projectId = :projectId"),
+          = "SELECT p FROM ProjectTopics p WHERE p.project = :project"),
+  @NamedQuery(name = "ProjectTopics.findByProjectAndTopicName",
+          query
+          = "SELECT p FROM ProjectTopics p WHERE p.project = :project " +
+              "AND p.topicName = :topicName"),
   @NamedQuery(name = "ProjectTopics.findBySchemaVersion",
           query
           = "SELECT p FROM ProjectTopics p WHERE p.schemaTopics.schemaTopicsPK.name "
@@ -78,52 +90,63 @@ public class ProjectTopics implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectTopics")
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  @Basic(optional = false)
+  @Column(name = "id", unique = true)
+  private Integer id;
+
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1, max = 255)
+  @Column(name = "topic_name")
+  private String topicName;
+
+  @JoinColumn(name = "project_id", referencedColumnName = "id")
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  private Project project;
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
   private Collection<TopicAcls> topicAclsCollection;
 
   @JoinColumns({
-    @JoinColumn(name = "schema_name",
-            referencedColumnName = "name"),
-    @JoinColumn(name = "schema_version",
-            referencedColumnName = "version")})
+      @JoinColumn(name = "schema_name", referencedColumnName = "name"),
+      @JoinColumn(name = "schema_version", referencedColumnName = "version")})
   @ManyToOne(optional = false)
   private SchemaTopics schemaTopics;
-  @JoinColumn(name = "project_id",
-          referencedColumnName = "id",
-          insertable = false,
-          updatable = false)
-  @ManyToOne(optional = false)
-  private Project project;
-
-  @EmbeddedId
-  protected ProjectTopicsPK projectTopicsPK;
 
   public ProjectTopics() {
   }
 
-  public ProjectTopics(ProjectTopicsPK projectTopicsPK) {
-    this.projectTopicsPK = projectTopicsPK;
-  }
-
-  public ProjectTopics(String topicName, int projectId,
-          SchemaTopics schemaTopics) {
-    this.projectTopicsPK = new ProjectTopicsPK(topicName, projectId);
+  public ProjectTopics(String topicName, Project project, SchemaTopics schemaTopics) {
+    this.topicName = topicName;
+    this.project = project;
     this.schemaTopics = schemaTopics;
   }
 
-  public ProjectTopics(SchemaTopics schemaTopics,
-          ProjectTopicsPK projectTopicsPK) {
-    this.schemaTopics = schemaTopics;
-    this.projectTopicsPK = projectTopicsPK;
+  public Integer getId() {
+    return id;
   }
 
-  public ProjectTopicsPK getProjectTopicsPK() {
-    return projectTopicsPK;
+  public void setId(Integer id) {
+    this.id = id;
   }
 
-  public void setProjectTopicsPK(ProjectTopicsPK projectTopicsPK) {
-    this.projectTopicsPK = projectTopicsPK;
+  @NotNull
+  public String getTopicName() {
+    return topicName;
+  }
+
+  public void setTopicName(@NotNull String topicName) {
+    this.topicName = topicName;
+  }
+
+  public Project getProject() {
+    return project;
+  }
+
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   public SchemaTopics getSchemaTopics() {
@@ -134,12 +157,30 @@ public class ProjectTopics implements Serializable {
     this.schemaTopics = schemaTopics;
   }
 
-  public Project getProject() {
-    return project;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ProjectTopics topics = (ProjectTopics) o;
+
+    if (id != null ? !id.equals(topics.id) : topics.id != null) return false;
+    if (!topicName.equals(topics.topicName)) return false;
+    if (project != null ? !project.equals(topics.project) : topics.project != null) return false;
+    if (topicAclsCollection != null ?
+        !topicAclsCollection.equals(topics.topicAclsCollection) : topics.topicAclsCollection != null)
+      return false;
+    return schemaTopics != null ? schemaTopics.equals(topics.schemaTopics) : topics.schemaTopics == null;
   }
 
-  public void setProject(Project project) {
-    this.project = project;
+  @Override
+  public int hashCode() {
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + topicName.hashCode();
+    result = 31 * result + (project != null ? project.hashCode() : 0);
+    result = 31 * result + (topicAclsCollection != null ? topicAclsCollection.hashCode() : 0);
+    result = 31 * result + (schemaTopics != null ? schemaTopics.hashCode() : 0);
+    return result;
   }
 
   @XmlTransient
@@ -151,33 +192,4 @@ public class ProjectTopics implements Serializable {
   public void setTopicAclsCollection(Collection<TopicAcls> topicAclsCollection) {
     this.topicAclsCollection = topicAclsCollection;
   }
-
-  @Override
-  public int hashCode() {
-    int hash = 0;
-    hash += (projectTopicsPK != null ? projectTopicsPK.hashCode() : 0);
-    return hash;
-  }
-
-  @Override
-  public boolean equals(Object object) {
-    // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof ProjectTopics)) {
-      return false;
-    }
-    ProjectTopics other = (ProjectTopics) object;
-    if ((this.projectTopicsPK == null && other.projectTopicsPK != null)
-            || (this.projectTopicsPK != null && !this.projectTopicsPK.equals(
-                    other.projectTopicsPK))) {
-      return false;
-    }
-    return true;
-  }
-
-  @Override
-  public String toString() {
-    return "io.hops.kafka.ProjectTopics[ projectTopicsPK=" + projectTopicsPK
-            + " ]";
-  }
-
 }

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.serving.tf;
 
+import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 
 public class TfServingWrapper {
@@ -24,6 +25,8 @@ public class TfServingWrapper {
   private TfServingStatusEnum status;
   private Integer availableReplicas;
   private Integer nodePort;
+
+  private TopicDTO kafkaTopicDTO;
 
   public TfServingWrapper(TfServing tfServing) {
     this.tfServing = tfServing;
@@ -59,5 +62,13 @@ public class TfServingWrapper {
 
   public void setNodePort(Integer nodePort) {
     this.nodePort = nodePort;
+  }
+
+  public TopicDTO getKafkaTopicDTO() {
+    return kafkaTopicDTO;
+  }
+
+  public void setKafkaTopicDTO(TopicDTO kafkaTopicDTO) {
+    this.kafkaTopicDTO = kafkaTopicDTO;
   }
 }

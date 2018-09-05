@@ -17,22 +17,21 @@
 package io.hops.hopsworks.common.serving.tf;
 
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import java.util.List;
 
 public interface TfServingController {
 
-  List<TfServingWrapper> getTfServings(Project project) throws TfServingException;
+  List<TfServingWrapper> getTfServings(Project project, Users user) throws TfServingException;
 
-  TfServingWrapper getTfServing(Project project, Integer id) throws TfServingException;
+  TfServingWrapper getTfServing(Project project, Integer id, Users user) throws TfServingException;
 
   void deleteTfServing(Project project, Integer id) throws TfServingException;
 
   void deleteTfServings(Project project) throws TfServingException;
 
-  void createOrUpdate(Project project, Users user, TfServing newTfServing) throws TfServingException;
+  void createOrUpdate(Project project, Users user, TfServingWrapper newTfServing) throws TfServingException;
 
   void startOrStop(Project project, Users user, Integer tfServingId, TfServingCommands command)
       throws TfServingException;
