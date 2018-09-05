@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.common;
 
+import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -182,5 +183,9 @@ public class KubeClientService {
 
   private String getProjectUsername(Project project, Users user) {
     return project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
+  }
+
+  public List<Node> getNodeList() throws KubernetesClientException {
+    return client.nodes().list().getItems();
   }
 }

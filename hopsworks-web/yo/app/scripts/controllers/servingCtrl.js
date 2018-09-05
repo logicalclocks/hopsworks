@@ -249,7 +249,7 @@ angular.module('hopsWorksApp')
         return false;
       };
 
-      self.getAllServings()
+      self.getAllServings();
 
       self.createOrUpdate = function () {
         self.sendingRequest = true;
@@ -310,7 +310,7 @@ angular.module('hopsWorksApp')
           self.ignorePoll = true;
           serving.status = 'Starting';
         } else {
-          self.ignorePoll;
+          self.ignorePoll = true;
           serving.status = 'Stopping';
         }
 

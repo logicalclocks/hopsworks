@@ -6,6 +6,7 @@ package io.hops.hopsworks.kube.serving;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -41,7 +42,12 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.TfServing;
 import io.hops.hopsworks.common.dao.serving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
+import io.hops.hopsworks.common.serving.KafkaServingHelper;
 import io.hops.hopsworks.common.serving.tf.TfServingCommands;
 import io.hops.hopsworks.common.serving.tf.TfServingController;
 import io.hops.hopsworks.common.serving.tf.TfServingException;
@@ -56,12 +62,12 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Alternative;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.serving.tf.TfServingCommands.START;
 import static io.hops.hopsworks.common.serving.tf.TfServingCommands.STOP;
@@ -71,8 +77,6 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KubeTfServingController implements TfServingController {
-
-  private final static Logger logger = Logger.getLogger(KubeTfServingController.class.getName());
 
   public final static String SERVING_ID = "SERVING_ID";
   public final static String MODEL_NAME = "MODEL_NAME";
@@ -87,6 +91,8 @@ public class KubeTfServingController implements TfServingController {
   private HdfsLeDescriptorsFacade hdfsLEFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private KafkaServingHelper kafkaServingHelper;
 
   @Override
   public List<TfServingWrapper> getTfServings(Project project) throws TfServingException {
@@ -148,15 +154,40 @@ public class KubeTfServingController implements TfServingController {
   }
 
   @Override
-  public void createOrUpdate(Project project, Users user, TfServing newTfServing) throws TfServingException {
-    if (newTfServing.getId() == null) {
+  public void checkDuplicates(Project project, TfServingWrapper tfServingWrapper) throws TfServingException {
+    TfServing serving = tfServingFacade.findByProjectModelName(project,
+        tfServingWrapper.getTfServing().getModelName());
+    if (serving != null && !serving.getId().equals(tfServingWrapper.getTfServing().getId())) {
+      // There is already an entry for this project
+      throw new TfServingException(RESTCodes.TfServingErrorCode.DUPLICATEDENTRY, Level.FINE);
+    }
+  }
+
+  @Override
+  public void createOrUpdate(Project project, Users user, TfServingWrapper newTfServingWrapper)
+      throws KafkaException, UserException, ProjectException, ServiceException, TfServingException {
+
+    TfServing serving = newTfServingWrapper.getTfServing();
+
+    if (serving.getId() == null) {
       // Create request
-      newTfServing.setCreated(new Date());
-      newTfServing.setCreator(user);
-      newTfServing.setProject(project);
-      tfServingFacade.merge(newTfServing);
+      serving.setCreated(new Date());
+      serving.setCreator(user);
+      serving.setProject(project);
+
+      // Setup the Kafka topic for logging
+      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, null);
+
+      tfServingFacade.merge(serving);
     } else {
-      TfServing dbTfServing = tfServingFacade.updateDbObject(newTfServing, project);
+      TfServing oldDbTfServing = tfServingFacade.acquireLock(project, serving.getId());
+
+      // Setup the Kafka topic for logging
+      kafkaServingHelper.setupKafkaServingTopic(project, newTfServingWrapper, serving, oldDbTfServing);
+
+      // Update the object in the database
+      TfServing dbTfServing = tfServingFacade.updateDbObject(serving, project);
+
       String servingIdStr = String.valueOf(dbTfServing.getId());
       // If pods are currently running for this tfServing instance, submit a new deployment to update them
       try {
@@ -169,7 +200,7 @@ public class KubeTfServingController implements TfServingController {
       } catch (KubernetesClientException e) {
         throw new TfServingException(RESTCodes.TfServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
       } finally {
-        tfServingFacade.releaseLock(project, newTfServing.getId());
+        tfServingFacade.releaseLock(project, serving.getId());
       }
     }
   }
@@ -243,11 +274,11 @@ public class KubeTfServingController implements TfServingController {
         .build();
   }
 
-  private String getDeploymentName(String servingId) {
+  public String getDeploymentName(String servingId) {
     return "tf-serving-dep-" + servingId;
   }
 
-  private String getServiceName(String servingId) {
+  public static String getServiceName(String servingId) {
     return "tf-serving-ser-" + servingId;
   }
 
@@ -291,6 +322,8 @@ public class KubeTfServingController implements TfServingController {
         tfServingWrapper.setAvailableReplicas(0);
     }
 
+    tfServingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(tfServing));
+
     return tfServingWrapper;
   }
 
@@ -324,44 +357,71 @@ public class KubeTfServingController implements TfServingController {
 
     String servingIdStr = String.valueOf(tfServing.getId());
 
-    List<EnvVar> envVarList = new ArrayList<>();
-    envVarList.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
-    envVarList.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(tfServing.getModelName()).build());
-    envVarList.add(new EnvVarBuilder().withName(MODEL_DIR)
+    List<EnvVar> tfServingEnv = new ArrayList<>();
+    tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
+    tfServingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(tfServing.getModelName()).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName()).build());
+    tfServingEnv.add(new EnvVarBuilder().withName(MODEL_DIR)
         .withValue("hdfs://" + hdfsLEFacade.getSingleEndpoint() + tfServing.getModelPath()).build());
-    envVarList.add(new EnvVarBuilder().withName(MODEL_VERSION)
+    tfServingEnv.add(new EnvVarBuilder().withName(MODEL_VERSION)
         .withValue(String.valueOf(tfServing.getVersion())).build());
-    envVarList.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER")
+    tfServingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER")
         .withValue(project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername()).build());
-    envVarList.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
-    envVarList.add(new EnvVarBuilder().withName("HDFS_USER")
+    tfServingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("HDFS_USER")
         .withValue(settings.getHdfsSuperUser()).build());
-    envVarList.add(new EnvVarBuilder().withName("TLS")
+    tfServingEnv.add(new EnvVarBuilder().withName("TLS")
         .withValue(String.valueOf(settings.getHopsRpcTls())).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("ENABLE_BATCHING")
+        .withValue(tfServing.isBatchingEnabled() ? "1" : "0").build());
 
+    List<EnvVar> fileBeatEnv = new ArrayList<>();
+    fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(settings.getLogstashIp() + ":" +
+        settings.getLogstashPortServing()).build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeProjectUsername(project.getName(), user))
         .build();
 
-    Volume volume = new VolumeBuilder()
+    Volume secretVol = new VolumeBuilder()
         .withName("certs")
         .withSecret(secretVolume)
         .build();
 
-    VolumeMount volumeMount = new VolumeMountBuilder()
+    Volume logs = new VolumeBuilder()
+        .withName("logs")
+        .withEmptyDir(new EmptyDirVolumeSource())
+        .build();
+
+    VolumeMount secretMount = new VolumeMountBuilder()
         .withName("certs")
         .withReadOnly(true)
         .withMountPath("/certs")
         .build();
 
-    Container container = new ContainerBuilder()
+    VolumeMount logMount = new VolumeMountBuilder()
+        .withName("logs")
+        .withMountPath("/logs")
+        .build();
+
+    Container tfContainer = new ContainerBuilder()
         .withName("tf-serving")
         .withImage(settings.getKubeRegistry() + "/tf")
         .withImagePullPolicy("Always")
-        .withEnv(envVarList)
-        .withVolumeMounts(volumeMount)
+        .withEnv(tfServingEnv)
+        .withVolumeMounts(secretMount, logMount)
         .build();
+
+    Container fileBeatContainer = new ContainerBuilder()
+        .withName("filebeat")
+        .withImage(settings.getKubeRegistry() + "/filebeat")
+        .withImagePullPolicy("Always")
+        .withEnv(fileBeatEnv)
+        .withVolumeMounts(logMount)
+        .build();
+
+    List<Container> containerList = Arrays.asList(tfContainer, fileBeatContainer);
 
     LabelSelector labelSelector = new LabelSelectorBuilder()
         .addToMatchLabels("model", servingIdStr)
@@ -375,8 +435,8 @@ public class KubeTfServingController implements TfServingController {
         .build();
 
     PodSpec podSpec = new PodSpecBuilder()
-        .withContainers(container)
-        .withVolumes(volume)
+        .withContainers(containerList)
+        .withVolumes(secretVol, logs)
         .build();
 
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
