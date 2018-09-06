@@ -38,12 +38,9 @@
  */
 package io.hops.hopsworks.apiV2;
 
-import io.hops.hopsworks.apiV2.auth.AuthResource;
-import io.hops.hopsworks.apiV2.filter.AuthFilter;
 import io.hops.hopsworks.apiV2.mapper.AccessControlExceptionMapper;
 import io.hops.hopsworks.apiV2.mapper.AppExceptionMapper;
 import io.hops.hopsworks.apiV2.mapper.AuthExceptionMapper;
-import io.hops.hopsworks.apiV2.mapper.JWTExceptionMapper;
 import io.hops.hopsworks.apiV2.mapper.ThrowableExceptionMapper;
 import io.hops.hopsworks.apiV2.mapper.TransactionExceptionMapper;
 import io.hops.hopsworks.apiV2.projects.BlobsResource;
@@ -67,7 +64,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(AuthExceptionMapper.class);
     register(ThrowableExceptionMapper.class);
     register(TransactionExceptionMapper.class);
-    register(JWTExceptionMapper.class);
     
     //API V2
     //Projects & Datasets
@@ -80,10 +76,6 @@ public class ApplicationConfig extends ResourceConfig {
   
     //Hopsworks-Users
     register(UsersResource.class);
-    register(AuthResource.class);
-    
-    //Filters
-    register(AuthFilter.class);
   
     //swagger
     register(ApiListingResource.class);
