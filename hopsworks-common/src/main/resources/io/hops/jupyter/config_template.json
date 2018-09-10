@@ -110,6 +110,7 @@
       "spark.tensorflow.application": "%%spark_tensorflow_application%%",
       "spark.tensorflow.num.ps": "%%spark_tensorflow_num_ps%%",
       "spark.executor.gpus": "%%spark_executor_gpus%%",
+      "spark.driver.gpus": "%%spark_driver_gpus%%",
       "spark.dynamicAllocation.enabled": "%%spark_dynamicAllocation_enabled%%",
       "spark.dynamicAllocation.initialExecutors": "%%spark_dynamicAllocation_initialExecutors%%",
       "spark.dynamicAllocation.minExecutors": "%%spark_dynamicAllocation_minExecutors%%",
