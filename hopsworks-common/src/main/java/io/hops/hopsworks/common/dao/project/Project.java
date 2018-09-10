@@ -114,7 +114,10 @@ import javax.persistence.ManyToMany;
   @NamedQuery(name = "Project.findByInodeId",
       query
       = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
-      + "AND t.inode.inodePK.name = :name")})
+      + "AND t.inode.inodePK.name = :name")
+  ,
+  @NamedQuery(name = "Project.findAllCondaEnabled",
+      query = "SELECT t FROM Project t where t.conda = true")})
 public class Project implements Serializable {
 
   @Column(name = "conda")
