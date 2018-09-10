@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
@@ -279,6 +280,10 @@ public class Users implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "users")
   private Collection<JupyterSettings> jupyterSettingsCollection;
+
+  @OneToMany(cascade = CascadeType.ALL,
+      mappedBy = "users")
+  private Collection<TensorBoard> tensorBoardCollection;
 
 
   public Users() {
@@ -619,6 +624,17 @@ public class Users implements Serializable {
 
   public void setToursState(int toursState) {
     this.toursState = toursState;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<TensorBoard> getTensorBoardCollection() {
+    return tensorBoardCollection;
+  }
+
+  public void setTensorBoardCollection(
+      Collection<TensorBoard> tensorBoardCollection) {
+    this.tensorBoardCollection = tensorBoardCollection;
   }
 
   @XmlTransient

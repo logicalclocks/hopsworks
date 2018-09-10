@@ -200,7 +200,6 @@ angular.module('hopsWorksApp')
                 JobService.getProjectName(self.projectId).then(
                         function (success) {
                           var projectName = success.data;
-
                 self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + 
                         "#/discover?_g=()&_a=(columns:!(logdate,host,priority,logger_name,log_message),"+
                         "filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'" + projectName.toLowerCase() 
@@ -209,7 +208,7 @@ angular.module('hopsWorksApp')
                         projectName.toLowerCase() +"_logs-*',key:jobname,negate:!f,params:(query:jupyter,type:phrase),"+
                         "type:phrase,value:jupyter),query:(match:(jobname:(query:jupyter,type:phrase))))),index:'" + projectName.toLowerCase() +
                         "_logs-*',interval:auto,query:(language:lucene,query:''),sort:!(logdate,desc))";
-          
+
                           self.current = "kibanaUI";
                           var iframe = document.getElementById('ui_iframe');
                           if (iframe !== null) {
@@ -225,7 +224,6 @@ angular.module('hopsWorksApp')
                 //if not jupyter we should have a job
                 self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/discover?_g=()&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),index:'"
                            + self.job.project.name.toLowerCase() +"_logs-*',interval:auto,query:(language:lucene,query:jobname=\"" + self.job.name +"\"),sort:!(logdate,desc))";
-
                 self.current = "kibanaUI";
                 var iframe = document.getElementById('ui_iframe');
                 if (iframe !== null) {

@@ -36,64 +36,55 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.common.serving.tf;
 
-package io.hops.hopsworks.common.dao.tfserving.config;
 
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
 
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+@XmlEnum
+public enum TfServingStatusEnum {
+  @XmlEnumValue("Running")
+  RUNNING("Running"),
+  @XmlEnumValue("Stopped")
+  STOPPED("Stopped"),
+  @XmlEnumValue("Starting")
+  STARTING("Starting"),
+  @XmlEnumValue("Updating")
+  UPDATING("Updating"),
+  @XmlEnumValue("Stopping")
+  STOPPING("Stopping"),
+  @XmlEnumValue("Transforming")
+  TRANSFORMING("Transforming");
 
-public class TfServingDTO {
+  private final String readable;
 
-  private int port=0;
-  private BigInteger pid=BigInteger.valueOf(1);
-  private String hostIp="";
-  private int exitValue=-1;
+  private TfServingStatusEnum(String readable) {
+    this.readable = readable;
+  }
 
-  public TfServingDTO(BigInteger pid, int port, int exitValue) {
-    this.port = port;
-    this.pid = pid;
-    this.exitValue = exitValue;
-    try {
-      this.hostIp = InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException ex) {
-      Logger.getLogger(JupyterDTO.class.getName()).log(Level.SEVERE, null, ex);
+  public static TfServingStatusEnum fromString(String shortName) {
+    switch (shortName) {
+      case "Running":
+        return TfServingStatusEnum.RUNNING;
+      case "Stopped":
+        return TfServingStatusEnum.STOPPED;
+      case "Starting":
+        return TfServingStatusEnum.STARTING;
+      case "Updating":
+        return TfServingStatusEnum.UPDATING;
+      case "Stopping":
+        return TfServingStatusEnum.STOPPING;
+      case "Transforming":
+        return TfServingStatusEnum.TRANSFORMING;
+      default:
+        throw new IllegalArgumentException("ShortName [" + shortName + "] not supported.");
     }
   }
 
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
-  }
-
-  public BigInteger getPid() {
-    return pid;
-  }
-
-  public void setPid(BigInteger pid) {
-    this.pid = pid;
-  }
-
-  public String getHostIp() {
-    return hostIp;
-  }
-
-  public void setHostIp(String hostIp) {
-    this.hostIp = hostIp;
-  }
-
-  public int getExitValue() {
-    return exitValue;
-  }
-
-  public void setExitValue(int exitValue) {
-    this.exitValue = exitValue;
+  @Override
+  public String toString() {
+    return this.readable;
   }
 }
+

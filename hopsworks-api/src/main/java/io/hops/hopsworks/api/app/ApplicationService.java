@@ -40,36 +40,39 @@
 package io.hops.hopsworks.api.app;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.app.ServingEndpointJsonDTO;
+import io.hops.hopsworks.common.dao.app.EmailJsonDTO;
+import io.hops.hopsworks.common.dao.app.JobWorkflowDTO;
+import io.hops.hopsworks.common.dao.app.TopicJsonDTO;
+import io.hops.hopsworks.common.dao.app.KeystoreDTO;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 import javax.servlet.http.HttpServletRequest;
+
 import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import io.hops.hopsworks.common.dao.app.EmailJsonDTO;
-import io.hops.hopsworks.common.dao.app.JobWorkflowDTO;
-import io.hops.hopsworks.common.dao.app.TopicJsonDTO;
+
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.tfserving.TfServing;
-import io.hops.hopsworks.common.dao.tfserving.TfServingFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -84,12 +87,13 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.security.HopsUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.SecurityContext;
 
 @Path("/appservice")
@@ -123,11 +127,11 @@ public class ApplicationService {
   @EJB
   private JobFacade jobFacade;
   @EJB
-  private ExecutionFacade executionFacade;
-  @EJB
-  private TfServingFacade tfServingFacade;
-  @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private Settings settings;
 
   @POST
   @Path("mail")
@@ -180,8 +184,9 @@ public class ApplicationService {
         entity(schemaDto).build();
   }
 
-  @POST
-  @Path("tfserving")
+  // TODO(Fabio) fix this code.
+  /*@POST
+  @Path("serving")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getServingEndpoint(@Context SecurityContext sc,
@@ -223,6 +228,50 @@ public class ApplicationService {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.UNAUTHORIZED).
               build();
     }
+  } */
+
+  @POST
+  @Path("notebook")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response versionNotebook(@Context HttpServletRequest req,
+                                  KeystoreDTO keystoreDTO) throws AppException {
+
+    String projectUser = checkAndGetProjectUser(keystoreDTO.
+            getKeyStoreBytes(), keystoreDTO.getKeyStorePwd().toCharArray());
+
+    //check if user is member of project
+
+    Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
+    String username = user.getUsername();
+
+    Project project = projectFacade.findByName(hdfsUserBean.getProjectName(
+            projectUser));
+
+    Collection<HdfsUsers> hdfsUsers = hdfsUsersFacade.findProjectUsers(project.getName());
+    if(hdfsUsers == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+    HdfsUsers jupyterHdfsUser = null;
+    for(HdfsUsers hdfsUser: hdfsUsers) {
+      if(hdfsUser.getUsername().equals(username)) {
+        jupyterHdfsUser = hdfsUser;
+      }
+    }
+
+    Collection<JupyterProject> jps = project.getJupyterProjectCollection();
+    for(JupyterProject jp: jps) {
+      if(jp.getHdfsUserId() == jupyterHdfsUser.getId()) {
+
+        JSONObject obj = new JSONObject(ClientBuilder.newClient()
+                .target(settings.getRestEndpoint() + "/hopsworks-api/jupyter/" + jp.getPort() + "/api/sessions")
+                .request()
+                .method("GET")
+                .readEntity(String.class));
+      }
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   /////////////////////////////////////////////////

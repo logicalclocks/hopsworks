@@ -80,5 +80,6 @@ package io.hops.hopsworks.api.kibana;
 public enum KibanaFilter {
   KIBANA_SAVED_OBJECTS_API,
   ELASTICSEARCH_SEARCH,//elasticsearch/*/_search
-  LEGACY_SCROLL_START//Used when exporting from kibana management tab
+  LEGACY_SCROLL_START,//Used when exporting from kibana management tab
+  KIBANA_DEFAULT_INDEX
 }

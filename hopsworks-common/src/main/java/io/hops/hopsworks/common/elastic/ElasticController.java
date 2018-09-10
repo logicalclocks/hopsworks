@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.elastic;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -48,6 +50,8 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
+
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -64,6 +68,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -71,12 +76,14 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
@@ -95,6 +102,7 @@ import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.json.JSONObject;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
@@ -121,7 +129,7 @@ public class ElasticController {
   private static final Logger LOG = Logger.getLogger(ElasticController.class.getName());
 
   private Client elasticClient = null;
-  
+
   @PostConstruct
   private void initClient() {
     try {
@@ -130,12 +138,12 @@ public class ElasticController {
       LOG.log(Level.SEVERE, null, ex);
     }
   }
-  
+
   @PreDestroy
   private void closeClient(){
     shutdownClient();
   }
-  
+
   public List<ElasticHit> globalSearch(String searchTerm) throws AppException {
     //some necessary client settings
     Client client = getClient();
@@ -186,7 +194,48 @@ public class ElasticController {
           getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
     }
   }
-  
+
+  public String findExperiment(String index, String app_id) throws AppException {
+
+    Client client = getClient();
+
+    SearchResponse searchResponse = client.prepareSearch(index)
+        .setQuery(QueryBuilders.matchQuery("app_id", app_id))
+        .get();
+
+    int status = searchResponse.status().getStatus();
+    if(status != 200) {
+      LOG.log(Level.SEVERE, "Unexpected response code " + searchResponse.status().getStatus() +
+          " when updating experiment in Elastic. " + searchResponse.toString());
+    }
+
+    return searchResponse.toString();
+  }
+
+  public void updateExperiment(String index, String id, JSONObject source) throws
+      AppException, IndexOutOfBoundsException, IOException {
+
+    Client client = getClient();
+
+    Map<String, Object> map = new HashMap<>();
+
+    ObjectMapper mapper = new ObjectMapper();
+    map = mapper.readValue(source.toString(),
+        new TypeReference<HashMap<String, Object>>() {
+        });
+
+    IndexResponse indexResponse = client.prepareIndex(index, "experiments", id)
+        .setSource(map)
+        .get();
+
+    int status = indexResponse.status().getStatus();
+    if(status != 200) {
+      LOG.log(Level.SEVERE, "Unexpected response code " + indexResponse.status().getStatus() +
+              " when updating experiment in Elastic. " + indexResponse.toString());
+    }
+
+  }
+
   public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws AppException {
     Client client = getClient();
     //check if the index are up and running
@@ -281,7 +330,7 @@ public class ElasticController {
       }
       return elasticHits;
     }
-    
+
     shutdownClient();
     throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
         getStatusCode(), ResponseMessages.ELASTIC_SERVER_NOT_FOUND);
@@ -296,7 +345,17 @@ public class ElasticController {
     }
     return acked;
   }
-  
+
+  public boolean createIndex(String index) throws AppException {
+    boolean acked = getClient().admin().indices().create(new CreateIndexRequest(index)).actionGet().isAcknowledged();
+    if (acked) {
+      LOG.log(Level.INFO, "Acknowledged creation of elastic index:{0}", index);
+    } else {
+      LOG.log(Level.SEVERE, "Elastic index:{0} creation could not be acknowledged", index);
+    }
+    return acked;
+  }
+
   public void deleteProjectIndices(Project project) throws AppException {
     //Get all project indices
     Map<String, IndexMetaData> indices = getIndices(project.getName() + "_logs-\\d{4}.\\d{2}.\\d{2}");
@@ -306,22 +365,22 @@ public class ElasticController {
       }
     }
   }
-  
+
   /**
    * Deletes visualizations, saved searches and dashboards for a project.
-   * 
+   *
    * @param projects
    * @param contains
-   * @throws AppException 
+   * @throws AppException
    */
   public void deleteProjectSavedObjects(List<String> projects, boolean contains) throws AppException {
     //Loop through all objects and
-    
+
     Map<String, String> params = new HashMap<>();
     params.put("op", "GET");
     JSONArray allObjects = sendKibanaReq(params).getJSONArray("saved_objects");
     Map<String, String> objectsToDelete= new HashMap<>();
-    
+
     for(int i = 0; i< allObjects.length(); i++){
       String index = getIndexFromKibana(allObjects.getJSONObject(i));
       LOG.log(Level.FINE, "deleteProjectSavedObjects-index:{0}", index);
@@ -339,22 +398,22 @@ public class ElasticController {
         objectsToDelete.get(id)});
       sendKibanaReq(params, objectsToDelete.get(id), id);
     }
-    
+
   }
-  
+
   public Result deleteDocument(String index, String type, String id) throws AppException {
     return getClient().prepareDelete(index, type, id).get().getResult();
   }
-  
+
   public Map<String,IndexMetaData> getIndices() throws AppException{
     return getIndices(null);
   }
-  
+
   /**
    * Get all indices. If pattern parameter is provided, only indices matching the pattern will be returned.
    * @param regex
    * @return
-   * @throws AppException 
+   * @throws AppException
    */
   public Map<String, IndexMetaData> getIndices(String regex) throws AppException {
     ImmutableOpenMap<String, IndexMetaData> indices = getClient().admin().cluster().prepareState().get().getState()
@@ -372,17 +431,17 @@ public class ElasticController {
         String index = iter.next();
         if (pattern == null || pattern.matcher(index).matches()) {
           indicesMap.put(index, indices.get(index));
-        } 
+        }
       }
     }
     return indicesMap;
   }
-  
+
   private Client getClient() throws AppException {
     if (elasticClient == null) {
       final org.elasticsearch.common.settings.Settings settings
           = org.elasticsearch.common.settings.Settings.builder()
-              .put("client.transport.sniff", true) //being able to retrieve other nodes 
+              .put("client.transport.sniff", true) //being able to retrieve other nodes
               .put("cluster.name", "hops").build();
 
       elasticClient = new PreBuiltTransportClient(settings)
@@ -402,7 +461,7 @@ public class ElasticController {
         List<Dataset> dss = datasetFacade.findByInode(ds.getInode());
         for (Dataset sh : dss) {
           if (!sh.isShared()) {
-            int datasetId = ds.getInodeId();            
+            int datasetId = ds.getInodeId();
             executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
                 searchTerm), elasticHits);
 
@@ -472,7 +531,7 @@ public class ElasticController {
     QueryBuilder nameDescQuery = getNameDescriptionMetadataQuery(searchTerm);
     QueryBuilder onlyDatasetsAndInodes = termsQuery(Settings.META_DOC_TYPE_FIELD,
         Settings.DOC_TYPE_DATASET, Settings.DOC_TYPE_INODE);
-    
+
     QueryBuilder query = boolQuery()
         .must(projectIdQuery)
         .must(onlyDatasetsAndInodes)
@@ -492,7 +551,7 @@ public class ElasticController {
     QueryBuilder query = getNameDescriptionMetadataQuery(searchTerm);
     QueryBuilder onlyInodes = termQuery(Settings.META_DOC_TYPE_FIELD,
         Settings.DOC_TYPE_INODE);
-    
+
     QueryBuilder cq = boolQuery()
         .must(datasetIdQuery)
         .must(onlyInodes)
@@ -560,7 +619,7 @@ public class ElasticController {
    */
   private QueryBuilder getDescriptionQuery(String searchTerm) {
 
-    //do a prefix query on the description field in case the user starts writing 
+    //do a prefix query on the description field in case the user starts writing
     //a full sentence
     QueryBuilder descriptionPrefixMatch = prefixQuery(
         Settings.META_DESCRIPTION_FIELD, searchTerm);
@@ -745,28 +804,38 @@ public class ElasticController {
     }
   }
 
-  
   public JSONObject sendKibanaReq(Map<String, String> params) {
     String templateUrl = settings.getKibanaUri() + "/api/saved_objects";
-    LOG.log(Level.SEVERE, templateUrl);
+    LOG.log(Level.INFO, templateUrl);
     return sendELKReq(templateUrl, params, false);
   }
-  
+
   public JSONObject sendKibanaReq(Map<String, String> params, String kibanaType) {
     String templateUrl = settings.getKibanaUri() + "/api/saved_objects/" + kibanaType;
-    LOG.log(Level.SEVERE, templateUrl);
+    LOG.log(Level.INFO, templateUrl);
     return sendELKReq(templateUrl, params, false);
   }
-   
+
   public JSONObject sendKibanaReq(Map<String, String> params, String kibanaType, String id) {
     String templateUrl = settings.getKibanaUri() + "/api/saved_objects/" + kibanaType + "/" + id;
-    LOG.log(Level.SEVERE, templateUrl);
+    LOG.log(Level.INFO, templateUrl);
+    return sendELKReq(templateUrl, params, false);
+  }
+
+  public JSONObject sendKibanaReq(Map<String, String> params, String kibanaType, String id, boolean overwrite) {
+    String templateUrl;
+    if(overwrite) {
+      templateUrl = settings.getKibanaUri() + "/api/saved_objects/" + kibanaType + "/" + id + "?overwrite=true";
+    } else {
+      templateUrl = settings.getKibanaUri() + "/api/saved_objects/" + kibanaType + "/" + id;
+    }
+    LOG.log(Level.INFO, templateUrl);
     return sendELKReq(templateUrl, params, false);
   }
 
   public String getIndexFromKibana(JSONObject json){
     String index = null;
-    
+
     if (json.has("type")) {
       switch (json.getString("type")) {
         case Settings.ELASTIC_INDEX_PATTERN:
@@ -825,7 +894,7 @@ public class ElasticController {
     LOG.log(Level.FINE, "getIndexFromKibana-index:{0}", index);
     return index;
   }
-  
+
   public String getIndex(JSONObject json) {
     String objectId = null;
     if (json.getJSONObject("attributes").has("savedSearchId")) {
@@ -851,7 +920,7 @@ public class ElasticController {
           .getString("searchSourceJSON")).getString("index");
     } else if (json.getString("type").equals("dashboard")
         && HopsUtils.jsonKeyExists(json, "panelsJSON")) {
-      //We need to get the index name from the visualization or saved search this dashboard is 
+      //We need to get the index name from the visualization or saved search this dashboard is
       //created from
       String id = (String) new JSONArray((String) json.getJSONObject("attributes")
           .get("panelsJSON")).getJSONObject(0).get("id");
@@ -901,4 +970,36 @@ public class ElasticController {
     }
     return objectId;
   }
+
+  public String getLogdirFromElastic(Project project, String elasticId) throws NotFoundException {
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "GET");
+
+    String experimentsIndex = project.getName() + "_experiments";
+
+    String templateUrl = "http://"+settings.getElasticRESTEndpoint() + "/" +
+        experimentsIndex + "/experiments/" + elasticId;
+
+    boolean foundEntry = false;
+    JSONObject resp = null;
+    try {
+      resp = sendELKReq(templateUrl, params, false);
+      foundEntry = (boolean) resp.get("found");
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
+          " for TensorBoard for project " + project.getName());
+      throw new NotFoundException("Could not find elastic index " + elasticId, e);
+    }
+
+    if(!foundEntry) {
+      LOG.log(Level.SEVERE, "Could not find elastic index " + elasticId +
+          " for TensorBoard for project " + project.getName());
+      throw new NotFoundException("Could not find elastic index " + elasticId);
+    }
+
+    JSONObject source = resp.getJSONObject("_source");
+    return (String)source.get("logdir");
+  }
 }
+
+

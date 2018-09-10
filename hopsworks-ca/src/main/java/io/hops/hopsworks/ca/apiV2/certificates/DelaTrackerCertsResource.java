@@ -106,7 +106,6 @@ public class DelaTrackerCertsResource {
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the certificate to revoke", required = true) @QueryParam("certId") String certId)
       throws IOException, CAException {
-
     if (certId == null || certId.isEmpty()) {
       throw new CAException(BADREVOKATIONREQUEST, DELA);
     }

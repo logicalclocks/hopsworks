@@ -37,50 +37,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.tfserving;
+'use strict';
 
-
-import javax.xml.bind.annotation.XmlEnumValue;
-
-public enum TfServingStatusEnum {
-  @XmlEnumValue("Created")
-  CREATED("Created"),
-  @XmlEnumValue("Running")
-  RUNNING("Running"),
-  @XmlEnumValue("Stopped")
-  STOPPED("Stopped"),
-  @XmlEnumValue("Starting")
-  STARTING("Starting"),
-  @XmlEnumValue("Transforming")
-  TRANSFORMING("Transforming")
-  ;
-
-  private final String readable;
-
-  private TfServingStatusEnum(String readable) {
-    this.readable = readable;
-  }
-
-  public static TfServingStatusEnum fromString(String shortName) {
-    switch (shortName) {
-      case "Created":
-        return TfServingStatusEnum.CREATED;
-      case "Running":
-        return TfServingStatusEnum.RUNNING;
-      case "Stopped":
-        return TfServingStatusEnum.STOPPED;
-      case "Starting":
-        return TfServingStatusEnum.STARTING;
-      case "Transforming":
-        return TfServingStatusEnum.TRANSFORMING;
-      default:
-        throw new IllegalArgumentException("ShortName [" + shortName + "] not supported.");
-    }
-  }
-
-  @Override
-  public String toString() {
-    return this.readable;
-  }
-
-}
+angular.module('hopsWorksApp')
+        .factory('TensorBoardService', ['$http', function ($http) {
+            return {
+              getTensorBoard: function (projectId) {
+                return $http.get('/api/project/' + projectId + '/tensorboard/');
+              },
+              startTensorBoard: function (projectId, elasticId) {
+                return $http.post('/api/project/' + projectId + '/tensorboard/' + elasticId);
+              },
+              stopTensorBoard: function (projectId) {
+                return $http.delete('/api/project/' + projectId + '/tensorboard');
+              }
+            };
+          }]);

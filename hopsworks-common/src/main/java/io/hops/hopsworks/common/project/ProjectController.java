@@ -61,6 +61,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.client.Client;
@@ -101,7 +104,8 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.tfserving.config.TfServingProcessMgr;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
+import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -111,6 +115,8 @@ import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -121,17 +127,13 @@ import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.OpensslOperations;
+import io.hops.hopsworks.common.serving.tf.TfServingController;
+import io.hops.hopsworks.common.serving.tf.TfServingException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -188,6 +190,8 @@ public class ProjectController {
   @EJB
   private ProjectServiceFacade projectServicesFacade;
   @EJB
+  private TensorBoardFacade tensorBoardFacade;
+  @EJB
   private InodeFacade inodes;
   @EJB
   private DatasetController datasetController;
@@ -212,13 +216,15 @@ public class ProjectController {
   @EJB
   private JupyterProcessMgr jupyterProcessFacade;
   @EJB
-  private TfServingProcessMgr tfServingProcessMgr;
+  private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
   private JobFacade jobFacade;
   @EJB
   private KafkaFacade kafkaFacade;
   @EJB 
-  KafkaController kafkaController;
+  private KafkaController kafkaController;
+  @EJB
+  private TensorBoardController tensorBoardController;
   @EJB
   private ElasticController elasticController;
   @EJB
@@ -227,7 +233,6 @@ public class ProjectController {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private HiveController hiveController;
-
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -240,6 +245,12 @@ public class ProjectController {
   private HdfsInodeAttributesFacade hdfsInodeAttributesFacade;
   @EJB
   private OpensslOperations opensslOperations;
+  @Inject
+  private TfServingController tfServingController;
+  @Inject
+  @Any
+  private Instance<ProjectHandler> projectHandlers;
+
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -327,6 +338,18 @@ public class ProjectController {
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
+
+      // Run the handlers.
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.preCreate(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "An error occured when creating the project");
+        }
+      }
+
       //create certificate for this user
       // User's certificates should be created before making any call to
       // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
@@ -358,6 +381,8 @@ public class ProjectController {
         projectPath = mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
+        LOGGER.log(Level.SEVERE, "Error while creating project folder for project " +
+                " for project " + projectName, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "problem creating project folder");
       }
@@ -388,6 +413,8 @@ public class ProjectController {
             dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
+        LOGGER.log(Level.SEVERE, "Error while setting quotas for project " +
+                " for project " + projectName, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "could not set folder quota");
       }
@@ -416,6 +443,8 @@ public class ProjectController {
           addService(project, service, owner, dfso);
         } catch (ServiceException sex) {
           cleanup(project, sessionId, certsGenerationFuture);
+          LOGGER.log(Level.SEVERE, "Error while enabling service " + service.toString() +
+                  " for project " + projectName, sex);
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error while enabling the services");
         }
@@ -440,7 +469,17 @@ public class ProjectController {
             + "generation thread to finish. Will try to cleanup...", ex);
         cleanup(project, sessionId, certsGenerationFuture);
       }
-      
+
+      // Run the handlers.
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.postCreate(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          cleanup(project, sessionId, certsGenerationFuture);
+        }
+      }
+
       return project;
 
     } finally {
@@ -456,7 +495,7 @@ public class ProjectController {
   private void verifyProject(Project project, DistributedFileSystemOps dfso,
       String sessionId)
       throws AppException {
-    //proceed to all the verrifications and set up local variable    
+    //proceed to all the verrifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
     //  verify that Quota for this project name does not already exist in YARN
@@ -785,6 +824,9 @@ public class ProjectController {
       case JOBS:
         toPersist = addElasticsearch(project, ProjectServiceEnum.JOBS);
         break;
+      case EXPERIMENTS:
+        toPersist = addElasticsearch(project, ProjectServiceEnum.EXPERIMENTS);
+        break;
       default:
         toPersist = true;
         break;
@@ -989,6 +1031,18 @@ public class ProjectController {
       if (project != null) {
         cleanupLogger.logSuccess("Project not found in the database");
 
+        // Run custom handler for project deletion
+        for (ProjectHandler projectHandler : projectHandlers) {
+          try {
+            projectHandler.preDelete(project);
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
+          } catch (Exception e) {
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
+                + " during project cleanup");
+            cleanupLogger.logError(e.getMessage());
+          }
+        }
+
         // Remove from Project team
         try {
           updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
@@ -1170,6 +1224,21 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
+        // remove running tensorboards repos
+        try {
+          removeTensorBoard(project);
+          cleanupLogger.logSuccess("Removed local TensorBoards");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing running TensorBoards during project cleanup");
+        }
+
+        try {
+          tfServingController.deleteTfServings(project);
+          cleanupLogger.logSuccess("Removed Tf Servings");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error when removing Tf Serving instances");
+          cleanupLogger.logError(ex.getMessage());
+        }
 
         // remove dumy Inode
         try {
@@ -1187,6 +1256,18 @@ public class ProjectController {
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");          
           cleanupLogger.logError(ex.getMessage());
+        }
+
+        // Run custom handler for project deletion
+        for (ProjectHandler projectHandler : projectHandlers) {
+          try {
+            projectHandler.postDelete(project);
+            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
+          } catch (Exception e) {
+            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
+                + " during project cleanup");
+            cleanupLogger.logError(e.getMessage());
+          }
         }
       } else {
         // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
@@ -1505,8 +1586,6 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
 
-        tfServingProcessMgr.removeProject(project);
-
         try {
           removeAnacondaEnv(project);
         } catch (AppException ex) {
@@ -1543,11 +1622,20 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
       throws IOException, InterruptedException, ExecutionException,
-      AppException, CAException {
+      AppException, CAException, TensorBoardCleanupException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
-      
+
+      // Run custom handler for project deletion
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.preDelete(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+        }
+      }
+
       datasetController.unsetMetaEnabledForAllDatasets(dfso, project);
       
       //log removal to notify elastic search
@@ -1607,14 +1695,33 @@ public class ProjectController {
       //remove anaconda repos
       removeJupyter(project);
 
+      //remove running tensorboards
+      removeTensorBoard(project);
+
+      // Remove TF Servings
+      try {
+        tfServingController.deleteTfServings(project);
+      } catch (TfServingException e) {
+        throw new IOException(e);
+      }
+
       //remove folder
       removeProjectFolder(project.getName(), dfso);
-      
+
       if(decreaseCreatedProj){
         usersController.decrementNumProjectsCreated(project.getOwner().getUid());
       }
       
       usersController.decrementNumActiveProjects(project.getOwner().getUid());
+
+      // Run custom handler for project deletion
+      for (ProjectHandler projectHandler : projectHandlers) {
+        try {
+          projectHandler.postDelete(project);
+        } catch (Exception e) {
+          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+        }
+      }
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
@@ -2035,6 +2142,9 @@ public class ProjectController {
         jupyterProcessFacade.removePythonKernelForProjectUser(hdfsUser);
       }
 
+      //kill running TB if any
+      tensorBoardController.cleanup(project, user);
+
       //kill all jobs run by this user.
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
@@ -2366,8 +2476,7 @@ public class ProjectController {
     operationsLogFacade.persist(new OperationsLog(project, type));
   }
 
-  @TransactionAttribute(
-      TransactionAttributeType.NEVER)
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createAnacondaEnv(Project project) throws AppException {
     pythonDepsFacade.getPreInstalledLibs(project);
 
@@ -2384,9 +2493,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTfServing(Project project) throws AppException {
-    LOGGER.log(Level.SEVERE, "PLEASE REMOVE TF SERVINGS");
-    tfServingProcessMgr.removeProject(project);
+  public void removeTensorBoard(Project project) throws TensorBoardCleanupException {
+    tensorBoardController.removeProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -2402,6 +2510,7 @@ public class ProjectController {
    * @param serviceEnum
    * @return
    */
+
   public boolean addElasticsearch(Project project, ProjectServiceEnum serviceEnum) {
 
     if(serviceEnum.equals(ProjectServiceEnum.JOBS) || serviceEnum.equals(ProjectServiceEnum.JUPYTER) ) {
@@ -2414,7 +2523,6 @@ public class ProjectController {
       params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
   
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-      LOGGER.log(Level.FINE, resp.toString(4));
       
       boolean kibanaPatternCreated = false;
       if (resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409"))) {
@@ -2426,11 +2534,96 @@ public class ProjectController {
       }
 
       return kibanaPatternCreated;
+    } else if(serviceEnum.equals(ProjectServiceEnum.EXPERIMENTS)) {
+
+      Map<String, String> params = new HashMap<>();
+
+      String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+
+      boolean acknowledged = false;
+      try {
+        acknowledged = elasticController.createIndex(indexName);
+        if (!acknowledged) {
+          LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
+        }
+      } catch(AppException ae) {
+        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName, ae);
+      }
+
+      params.clear();
+      params.put("op", "POST");
+      params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
+
+      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
+
+      boolean kibanaIndexPatternCreated = false;
+      if (resp.has("updated_at")) {
+        kibanaIndexPatternCreated = true;
+      }
+
+      if (kibanaIndexPatternCreated == false) {
+        LOGGER.log(Level.SEVERE, ("Could not create kibana index-pattern for project " +
+            project + "\n " + resp.toString(2)));
+      }
+
+      String savedSummarySearch =
+              "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
+                      ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
+                      ",\"hyperparameter\"" +
+                      ",\"metric\"],\"sort\":[\"start\"" +
+                      ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
+                      "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
+                      ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
+                      "[]}\"}}}";
+
+      params.clear();
+      params.put("op", "POST");
+      params.put("data", savedSummarySearch);
+      resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+
+      boolean kibanaSearchCreated = false;
+      if (resp.has("updated_at")) {
+        kibanaSearchCreated = true;
+      }
+
+      if (kibanaSearchCreated == false) {
+        LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
+            + "\n " + resp.toString(2));
+      }
+
+      String savedSummaryDashboard =
+              "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
+                      "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
+                      ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
+                      ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
+                      ",\\\"type\\\":\\\"search\\\"" +
+                      ",\\\"version\\\":\\\"6.2.3\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
+                      ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
+                      "false" +
+                      ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
+                      ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
+                      "true,\\\"version\\\":true}\"}}}";
+      params.clear();
+      params.put("op", "POST");
+      params.put("data", savedSummaryDashboard);
+      resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
+
+      boolean kibanaDashboardCreated = false;
+      if (resp.has("updated_at")) {
+        kibanaDashboardCreated = true;
+      }
+
+      if (kibanaDashboardCreated == false) {
+        LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
+            project + "\n " + resp.toString(2)));
+      }
+
+      return acknowledged && kibanaIndexPatternCreated && kibanaSearchCreated && kibanaDashboardCreated;
     }
     return false;
   }
 
-  public boolean removeElasticsearch(Project project) throws IOException, AppException {
+  public boolean removeElasticsearch(Project project) throws AppException {
     Map<String, String> params = new HashMap<>();
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2461,58 +2654,32 @@ public class ProjectController {
         removedElastic = true;
       }
     }
+
+    for(ProjectServiceEnum service: projectServices) {
+      if(service.equals(ProjectServiceEnum.EXPERIMENTS)) {
+        String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+
+        boolean deleted = elasticController.deleteIndex(experimentsIndex);
+
+        if (!deleted) {
+          LOGGER.log(Level.SEVERE, "Failed to remove experiments index " + experimentsIndex);
+        }
+
+        params.clear();
+        params.put("op", "DELETE");
+        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
+        params.clear();
+        params.put("op", "DELETE");
+        resp = elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
+        params.clear();
+        params.put("op", "DELETE");
+        resp = elasticController.sendKibanaReq(params, "dashboard",
+            experimentsIndex + "_summary-dashboard", false);
+
+        return deleted;
+      }
+    }
     return true;
-  }
-
-  /**
-   *
-   * @param params
-   * @return
-   * @throws MalformedURLException
-   * @throws IOException
-   */
-  private JSONObject sendElasticsearchReq(Map<String, String> params) throws MalformedURLException, IOException {
-    String templateUrl;
-    if (!params.containsKey("url")) {
-      templateUrl = "http://" + settings.getElasticIp() + ":" + "9200/"
-          + params.get("resource") + "/" + params.get("project");
-    } else {
-      templateUrl = params.get("url");
-    }
-    URL obj = new URL(templateUrl);
-    HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
-
-    conn.setDoOutput(true);
-    conn.setRequestMethod(params.get("op"));
-    if (params.get("op").equalsIgnoreCase("PUT")) {
-      String data = params.get("data");
-      try (OutputStreamWriter out
-          = new OutputStreamWriter(conn.getOutputStream())) {
-        out.write(data);
-      }
-    }
-    try {
-      BufferedReader br = new BufferedReader(new InputStreamReader(
-          (conn.getInputStream())));
-
-      String output;
-      StringBuilder outputBuilder = new StringBuilder();
-      while ((output = br.readLine()) != null) {
-        outputBuilder.append(output);
-      }
-
-      conn.disconnect();
-      return new JSONObject(outputBuilder.toString());
-
-    } catch (IOException ex) {
-      if (ex.getMessage().contains("kibana")) {
-        LOGGER.log(Level.WARNING, "error", ex);
-        LOGGER.log(Level.WARNING, "Kibana index could not be deleted for {0}", params.get("project"));
-      } else {
-        throw new IOException(ex);
-      }
-    }
-    return null;
   }
 
   public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,

@@ -37,22 +37,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.tfserving;
+package io.hops.hopsworks.common.dao.command;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import io.hops.hopsworks.common.dao.pythonDeps.CondaCommands;
 
-@Converter(autoApply = true)
-public class TfServingStatusConverter implements AttributeConverter<TfServingStatusEnum, String> {
+import java.util.List;
 
-  @Override
-  public String convertToDatabaseColumn(TfServingStatusEnum attribute) {
-    return attribute.toString();
+public class HeartbeatReplyDTO {
+  
+  private final List<SystemCommand> systemCommands;
+  private final List<CondaCommands> condaCommands;
+  
+  
+  public HeartbeatReplyDTO(final List<SystemCommand> systemCommands,
+      final List<CondaCommands> condaCommands) {
+    this.systemCommands = systemCommands;
+    this.condaCommands = condaCommands;
   }
-
-  @Override
-  public TfServingStatusEnum convertToEntityAttribute(String dbData) {
-    return TfServingStatusEnum.fromString(dbData);
+  
+  public List<SystemCommand> getSystemCommands() {
+    return systemCommands;
   }
-
+  
+  public List<CondaCommands> getCondaCommands() {
+    return condaCommands;
+  }
 }

@@ -88,6 +88,7 @@ public class HostCertsResource {
 
     String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), HOST);
     Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(HOST));
+
     CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
     GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();

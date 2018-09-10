@@ -56,6 +56,9 @@ import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Stateless
 public class PathValidator {
@@ -71,6 +74,8 @@ public class PathValidator {
   @EJB
   private Settings settings;
 
+  private final static Logger LOGGER = Logger.getLogger(PathValidator.class.getName());
+
   /**
    * Validate a path received by a DatasetService.java REST API
    * the function validates that the path requests is valid and, in case the dataset is shared,
@@ -85,9 +90,18 @@ public class PathValidator {
   public DsPath validatePath(Project project, String path) throws AppException {
     DsPath dsPath = new DsPath();
 
+    Pattern authorityPattern = Pattern.compile("(hdfs://[a-zA-Z0-9\\-\\.]{2,255}:[0-9]{4,6})(/.*$)");
+    Matcher urlMatcher = authorityPattern.matcher(path);
+
     if (path == null || path.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.EMPTY_PATH);
+    } else if (urlMatcher.find()) {
+      // Case hdfs://10.0.2.15:8020//Projects/project1/ds/dsRelativePath
+      path = urlMatcher.group(2);
+      dsPath.setFullPath(new Path(path));
+      String[] pathComponents = path.split("/");
+      buildProjectDsRelativePath(pathComponents, dsPath);
     } else if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
@@ -162,7 +176,6 @@ public class PathValidator {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_NOT_FOUND);
     }
-
     Dataset ds = datasetFacade.findByNameAndProjectId(project, pathComponents[3]);
     if (ds == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

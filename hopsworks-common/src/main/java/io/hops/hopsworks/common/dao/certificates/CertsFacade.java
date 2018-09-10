@@ -177,7 +177,7 @@ public class CertsFacade {
     return new ArrayList<>();
   }
   
-  public void putUserCerts(String projectname, String username, String userKeyPwd)
+  public UserCerts putUserCerts(String projectname, String username, String userKeyPwd)
       throws IOException {
     File kFile = new File("/tmp/" + projectname + "__"
         + username + "__kstore.jks");
@@ -198,6 +198,8 @@ public class CertsFacade {
   
     FileUtils.deleteQuietly(kFile);
     FileUtils.deleteQuietly(tFile);
+
+    return uc;
   }
 
   public void putProjectGenericUserCerts(String projectGenericUsername,

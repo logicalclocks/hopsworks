@@ -510,8 +510,8 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/tfserving', {
-                      templateUrl: 'views/tfServing.html',
+                    .when('/project/:projectID/serving', {
+                      templateUrl: 'views/serving.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',
@@ -532,6 +532,26 @@ angular.module('hopsWorksApp', [
                     })
                     .when('/project/:projectID/python', {
                       templateUrl: 'views/python.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.put("email", success.data.data.value);
+                                    },
+                                    function (err) {
+                                      $cookies.remove("email");
+                                      $cookies.remove("projectID");
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
+                    .when('/project/:projectID/experiments', {
+                      templateUrl: 'views/experiments.html',
                       controller: 'ProjectCtrl as projectCtrl',
                       resolve: {
                         auth: ['$q', '$location', 'AuthService', '$cookies',
@@ -674,14 +694,14 @@ angular.module('hopsWorksApp', [
             return out;
           };
         })
-        
+
         .filter('unique', function () {
           return function (arr, field) {
             return _.uniq(arr, function (a) {
               return a[field];
             });
           };
-        })  
+        })
         // Filter that highlight @username.
         .filter('highlightUsername', function () {
           return function (text) {

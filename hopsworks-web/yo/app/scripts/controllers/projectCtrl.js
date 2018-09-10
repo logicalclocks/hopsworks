@@ -410,11 +410,15 @@ angular.module('hopsWorksApp')
             };
 
             self.goToTfServing = function () {
-              self.goToUrl('tfserving');
+              self.goToUrl('serving');
             };
 
             self.goToPython = function () {
               self.goToUrl('python');
+            };
+
+            self.goToExperiments = function () {
+              self.goToUrl('experiments');
             };
 
             self.goToKafka = function () {
@@ -496,6 +500,10 @@ angular.module('hopsWorksApp')
 
             self.showJobs = function () {
               return showService("Jobs");
+            };
+
+            self.showExperiments = function () {
+              return showService("Experiments");
             };
 
             self.showSsh = function () {

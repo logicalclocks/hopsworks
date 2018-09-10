@@ -136,31 +136,6 @@ public class PythonDepsService {
     return project;
   }
 
-  //User upgradable libraries we installed for them
-  public static final ArrayList<String> providedLibraryNames = new ArrayList<String>() {
-    {
-      add("hops");
-      add("tfspark");
-      add("pandas");
-      add("tensorflow-serving-api");
-      add("hopsfacets");
-      add("mmlspark");
-      add("numpy");
-    }
-  };
-
-  //Libraries we preinstalled users should not mess with
-  public static final ArrayList<String> preInstalledLibraryNames = new ArrayList<String>() {
-    {
-      add("tensorflow-gpu");
-      add("tensorflow");
-      add("horovod");
-      add("pydoop");
-      add("pyspark");
-      add("tensorboard");
-    }
-  };
-
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -343,7 +318,7 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response remove(PythonDepJson library) throws AppException {
 
-    if (preInstalledLibraryNames.contains(library.getLib())) {
+    if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
           "Could not uninstall " + library.getLib() + ", it is a mandatory dependency");
@@ -374,7 +349,7 @@ public class PythonDepsService {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
-    if (preInstalledLibraryNames.contains(library.getLib())) {
+    if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
           getStatusCode(),
           "Could not install " + library.getLib() + ", it is already pre-installed");

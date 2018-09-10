@@ -154,6 +154,9 @@
 .sidebar-nav li:nth-child(9):before {
   background-color: #35acdf;
 }
+.sidebar-nav li:nth-child(10):before {
+  background-color: #ffa43d;
+}
 .sidebar-nav li:hover:before,
 .sidebar-nav li.open:hover:before {
   width: 100%;
@@ -263,6 +266,12 @@
   background-color: #35acdf;
 }
 
+.sidebar-nav li:nth-child(10) a:active,
+.sidebar-nav li:nth-child(10) a:focus,
+.sidebar-nav li:nth-child(10).open a:active,
+.sidebar-nav li:nth-child(10).open a:focus{
+  background-color: #ffa43d;
+}
 
 .sidebar-nav > .sidebar-brand {
   height: 65px;

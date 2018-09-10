@@ -132,7 +132,7 @@ public class SparkYarnRunnerBuilder {
    * @throws IOException If creation failed.
    */
   public YarnRunner getYarnRunner(String project,
-      String jobUser, AsynchronousJobExecutor services,
+      String jobUser, String usersFullName, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
       Settings settings)
       throws IOException {
@@ -293,6 +293,21 @@ public class SparkYarnRunnerBuilder {
         extraClassPathFiles.append(dto.getName()).append(File.pathSeparator);
       }
       builder.addLocalResource(dto, !appPath.startsWith("hdfs:"));
+    }
+
+    if(jobType == JobType.PYSPARK) {
+      builder.addToAppMasterEnvironment("REST_ENDPOINT", settings.getRestEndpoint());
+      builder.addToAppMasterEnvironment("ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint());
+      builder.addToAppMasterEnvironment("SPARK_VERSION", settings.getSparkVersion());
+      builder.addToAppMasterEnvironment("KAFKA_VERSION", settings.getKafkaVersion());
+      builder.addToAppMasterEnvironment("TENSORFLOW_VERSION", settings.getTensorflowVersion());
+      builder.addToAppMasterEnvironment("CUDA_VERSION", settings.getHopsworksVersion());
+      builder.addToAppMasterEnvironment("HOPSWORKS_VERSION", settings.getCudaVersion());
+      builder.addToAppMasterEnvironment("LIVY_VERSION", settings.getLivyVersion());
+      if(usersFullName != null && !usersFullName.isEmpty()) {
+        builder.addToAppMasterEnvironment("HOPSWORKS_USER", usersFullName);
+      }
+      builder.addToAppMasterEnvironment("KAFKA_BROKERS", settings.getKafkaBrokersStr());
     }
 
     //Set Spark specific environment variables
@@ -538,13 +553,7 @@ public class SparkYarnRunnerBuilder {
 
     if (jobType == JobType.PYSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
-      //Check if anaconda is enabled
-//      builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, "python");
-//        jobHopsworksProps.put(Settings.SPARK_TF_ENV,
-//            new ConfigProperty(
-//                Settings.SPARK_TF_ENV,
-//                HopsUtils.IGNORE,
-//                "true"));
+
       jobHopsworksProps.put(Settings.SPARK_TF_GPUS_ENV,
           new ConfigProperty(
               Settings.SPARK_TF_GPUS_ENV,
@@ -552,7 +561,15 @@ public class SparkYarnRunnerBuilder {
               Integer.toString(numOfGPUs)));
       //Add libs to PYTHONPATH
       if (serviceProps.isAnacondaEnabled()) {
-        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON, serviceProps.getAnaconda().getEnvPath());
+        //Add libs to PYTHONPATH
+        builder.addToAppMasterEnvironment(Settings.SPARK_PYSPARK_PYTHON,
+            settings.getAnacondaProjectDir(project + "/bin/python"));
+
+        jobHopsworksProps.put(Settings.SPARK_EXECUTORENV_PYSPARK_PYTHON,
+            new ConfigProperty(
+                Settings.SPARK_EXECUTORENV_PYSPARK_PYTHON,
+                HopsUtils.IGNORE,
+                settings.getAnacondaProjectDir(project + "/bin/python")));
       } else {
         //Throw error in Hopswors UI to notify user to enable Anaconda
         throw new IOException("Pyspark job needs to have Python Anaconda environment enabled");
