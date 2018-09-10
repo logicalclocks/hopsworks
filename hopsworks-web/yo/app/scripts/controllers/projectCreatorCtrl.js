@@ -57,22 +57,30 @@ angular.module('hopsWorksApp')
               registeredon: '',
               twoFactor: ''
             };
-            
+
             self.projectMembers = [];
             self.projectTeam = [];
-            if ($rootScope.isDelaEnabled) {
-              // , 'RSTUDIO'
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING'];
-            } else {
-              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
-            }
 
             self.projectName = '';
             self.projectDesc = '';
 
             self.regex = /^(?!.*?__|.*?-|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#|.*?å|.*?Å|.*?ö|.*?Ö|.*?ä|.*?Ä|.*?ü|.*?Ü|.*?à|.*?á|.*?é|.*?è|.*?â|.*?ê|.*?î|.*?ï|.*?ë|.*?@|.*?\{|.*?\}|.*?\[|.*?\]|.*?\$|.*?\+|.*?~|.*?\`|.*?\^).*$/;
+
+            self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+            self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
+
+            self.init = function () {
+              if ($rootScope.isDelaEnabled) {
+                self.projectTypes.push('DELA');
+                self.selectionProjectTypes.push('DELA');
+              }
+              if ($rootScope.isRStudioEnabled) {
+                self.projectTypes.push('RSTUDIO');
+                self.selectionProjectTypes.push('RSTUDIO');
+              }
+            };
+
+            self.init();
 
             UserService.profile().then(
                     function (success) {
@@ -170,8 +178,8 @@ angular.module('hopsWorksApp')
                         }
                         $uibModalInstance.close($scope.newProject);
                       }, function (error) {
-                          self.working = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
+                self.working = false;
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
               });
             };
 

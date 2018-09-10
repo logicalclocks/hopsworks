@@ -255,6 +255,8 @@
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
+
+<!-- Security Settings -->
   <security-role>
     <role-name>HOPS_ADMIN</role-name>
   </security-role>

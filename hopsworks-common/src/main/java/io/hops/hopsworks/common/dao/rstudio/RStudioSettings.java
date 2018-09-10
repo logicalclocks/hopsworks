@@ -19,7 +19,7 @@
  * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
  * are released under the following license:
  *
- * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
  * software and associated documentation files (the "Software"), to deal in the Software
@@ -282,7 +282,7 @@ public class RStudioSettings implements Serializable {
   private String privateDir = "";
 
   @Transient
-  private String baseDir = "/Jupyter/";
+  private String baseDir = "/RStudio/";
 
   public RStudioSettings() {
   }

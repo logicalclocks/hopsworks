@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
           function ($interval, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
-                  ElasticService, DelaProjectService, DelaService, md5, ModalService, 
+                  ElasticService, DelaProjectService, DelaService, md5, ModalService,
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService) {
             const MIN_SEARCH_TERM_LEN = 2;
@@ -64,13 +64,13 @@ angular.module('hopsWorksApp')
             } else {
               self.searchType = "global";
             }
-            
+
             var checkeIsAdmin = function () {
               AuthService.isAdmin().then(
-                  function (success) {
-                    $cookies.put("isAdmin", success.data === 'true');
-                },function (error) {
-                    $cookies.put("isAdmin", false);
+                      function (success) {
+                        $cookies.put("isAdmin", success.data === 'true');
+                      }, function (error) {
+                $cookies.put("isAdmin", false);
               });
             };
             checkeIsAdmin();
@@ -98,12 +98,12 @@ angular.module('hopsWorksApp')
                 self.errorMessage = error.data.msg;
               });
             };
-            
+
             var checkDelaEnabled = function () {
               HopssiteService.getServiceInfo("dela").then(function (success) {
                 console.log("isDelaEnabled", success);
                 self.delaServiceInfo = success.data;
-                if (self.delaServiceInfo.status === 1 ) {
+                if (self.delaServiceInfo.status === 1) {
                   $rootScope['isDelaEnabled'] = true;
                 } else {
                   $rootScope['isDelaEnabled'] = false;
@@ -113,20 +113,29 @@ angular.module('hopsWorksApp')
                 console.log("isDelaEnabled", error);
               });
             };
-            checkDelaEnabled(); // check 
-            
+            var checkRStudioEnabled = function () {
+
+            }
+
+            var init = function () {
+              checkDelaEnabled();
+              checkRStudioEnabled();
+            }
+
+            init();
+
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
               BannerService.findUserBanner().then(
-                function (success) {
-                  console.log(success);
-                  if (success.data.successMessage) {
-                    self.userNotification = success.data.successMessage;
-                  }
-                }, function (error) {
-                  console.log(error);
-                  self.userNotification = '';
+                      function (success) {
+                        console.log(success);
+                        if (success.data.successMessage) {
+                          self.userNotification = success.data.successMessage;
+                        }
+                      }, function (error) {
+                console.log(error);
+                self.userNotification = '';
               });
             };
             getUserNotification();
@@ -288,7 +297,7 @@ angular.module('hopsWorksApp')
                           }
                           self.searching = false;
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;                          
+                          self.resultItems = self.searchResult.length;
                         }, function (error) {
                           self.searching = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});

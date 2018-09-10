@@ -1,7 +1,7 @@
 /*
  * This file is part of Hopsworks
  * Copyright (C) 2018, Logical Clocks AB. All rights reserved
-
+ *
  * Hopsworks is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -15,14 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package com.predic8.membrane.servlet.embedded;
 
 import java.io.IOException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,13 +33,20 @@ import com.predic8.membrane.core.rules.ProxyRule;
 import com.predic8.membrane.core.rules.ProxyRuleKey;
 import com.predic8.membrane.core.rules.ServiceProxy;
 import com.predic8.membrane.core.rules.ServiceProxyKey;
+import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.util.Ip;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
@@ -49,10 +54,19 @@ import org.apache.http.client.utils.URLEncodedUtils;
  * This embeds Membrane as a servlet.
  */
 @SuppressWarnings({"serial"})
-public class RStudioMembraneServlet extends HttpServlet {
+public class RStudioMembraneServlet extends ProxyServlet {
 
   private static final long serialVersionUID = 1L;
   private static final Log logger = LogFactory.getLog(RStudioMembraneServlet.class);
+
+  private static final HashSet<String> PASS_THROUGH_HEADERS
+      = new HashSet<String>(
+          Arrays
+              .asList("User-Agent", "user-agent", "Accept", "accept",
+                  "Accept-Encoding", "accept-encoding",
+                  "Accept-Language",
+                  "accept-language",
+                  "Accept-Charset", "accept-charset"));
 
   @Override
   public void init(ServletConfig config) throws ServletException {
@@ -62,30 +76,58 @@ public class RStudioMembraneServlet extends HttpServlet {
   public void destroy() {
   }
 
+  /**
+   * *
+   * https://support.rstudio.com/hc/en-us/articles/200552326-Running-RStudio-Server-with-a-Proxy
+   * <p>
+   * <p>
+   * https://github.com/rstudio/rstudio/issues/1676
+   * <p>
+   * This example hosts RStudio under the example subdirectory /rstudio.
+   * <p>
+   * <VirtualHost *:80>
+   * <p>
+ProxyPreserveHost on
+   * <p>
+   * # Some required redirects for rstudio to work under a subdirectory
+   * Redirect /rstudio /rstudio/
+   * Redirect /auth-sign-in /rstudio/auth-sign-in
+   * Redirect /auth-sign-out /rstudio/auth-sign-out
+   * Redirect /s /rstudio/s
+   * Redirect /admin /rstudio/admin
+   * <p>
+   * # Catch RStudio redirecting improperly from the auth-sign-in page
+   * <If "%{HTTP_REFERER} =~ /auth-sign-in/">
+   * RedirectMatch ^/$	/rstudio/
+   * </If>
+   * <p>
+RewriteEngine on
+   * RewriteCond %{HTTP:Upgrade} =websocket
+   * RewriteRule /rstudio/(.*) ws://localhost:8787/$1 [P,L]
+   * RewriteCond %{HTTP:Upgrade} !=websocket
+   * RewriteRule /rstudio/(.*) http://localhost:8787/$1 [P,L]
+   * ProxyPass /rstudio/ http://localhost:8787/
+   * ProxyPassReverse /rstudio/ http://localhost:8787/
+   * <p>
+   * </VirtualHost>
+   * <p>
+   * <p>
+   */
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
-          throws ServletException, IOException {
+      throws ServletException, IOException {
     String queryString = req.getQueryString() == null ? "" : "?" + req.
-            getQueryString();
+        getQueryString();
 
     Router router;
 
-// For websockets, the following paths are used by JupyterHub:
-//  /(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)/?
-// forward to ws(s)://servername:port_number
-//<LocationMatch "/mypath/(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)(.*)">
-//    ProxyPassMatch ws://localhost:8999/mypath/$1/$2$3
-//    ProxyPassReverse ws://localhost:8999 # this may be superfluous
-//</LocationMatch>
-//        ProxyPass /api/kernels/ ws://192.168.254.23:8888/api/kernels/
-//        ProxyPassReverse /api/kernels/ http://192.168.254.23:8888/api/kernels/
     List<NameValuePair> pairs;
     try {
       //note: HttpClient 4.2 lets you parse the string without building the URI
       pairs = URLEncodedUtils.parse(new URI(queryString), "UTF-8");
     } catch (URISyntaxException e) {
       throw new ServletException("Unexpected URI parsing error on "
-              + queryString, e);
+          + queryString, e);
     }
     LinkedHashMap<String, String> params = new LinkedHashMap<>();
     for (NameValuePair pair : pairs) {
@@ -122,12 +164,12 @@ public class RStudioMembraneServlet extends HttpServlet {
       targetUriObj = new URI(newQueryBuf.toString());
     } catch (Exception e) {
       throw new ServletException("Rewritten targetUri is invalid: "
-              + newTargetUri, e);
+          + newTargetUri, e);
     }
     ServiceProxy sp = new ServiceProxy(
-            new ServiceProxyKey(
-                    externalIp, "*", "*", -1),
-            "localhost", targetPort);
+        new ServiceProxyKey(
+            externalIp, "*", "*", -1),
+        "localhost", targetPort);
 //    ServiceProxy sp = new ServiceProxy(
 //            new ServiceProxyKey(
 //                    externalIp, "*", "*", -1),
@@ -140,16 +182,111 @@ public class RStudioMembraneServlet extends HttpServlet {
       router.init();
       ProxyRule proxy = new ProxyRule(new ProxyRuleKey(-1));
       router.getRuleManager().addProxy(proxy,
-              RuleManager.RuleDefinitionSource.MANUAL);
+          RuleManager.RuleDefinitionSource.MANUAL);
       router.getRuleManager().addProxy(sp,
-              RuleManager.RuleDefinitionSource.MANUAL);
+          RuleManager.RuleDefinitionSource.MANUAL);
       new HopsServletHandler(req, resp, router.getTransport(),
-              targetUriObj).run();
+          targetUriObj).run();
     } catch (Exception ex) {
       Logger.getLogger(RStudioMembraneServlet.class.getName()).log(Level.SEVERE, null,
-              ex);
+          ex);
     }
 
+  }
+
+  private String urlRewrite(String ui, String source, String port) {
+
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/" + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/" + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\")//", "/hopsworks-api/rstudio/" + port + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')//", "/hopsworks-api/rstudio/" + port + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=http)", "/hopsworks-api/rstudio/" + port + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=http)", "/hopsworks-api/rstudio/" + port + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/" + source + "/");
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/" + source + "/");
+    ui = ui.replaceAll("(?<=(url: '))/(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/");
+    ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-zA-Z])", "/hopsworks-api/rstudio/" + port + "/");
+    return ui;
+
+  }
+
+  protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
+    StringBuilder uri = new StringBuilder(500);
+    if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
+        "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+      String target = "http://" + servletRequest.getPathInfo().substring(7);
+      servletRequest.setAttribute(ATTR_TARGET_URI, target);
+      uri.append(target);
+    } else {
+      uri.append(getTargetUri(servletRequest));
+      // Handle the path given to the servlet
+      if (servletRequest.getPathInfo() != null) {//ex: /my/path.html
+        uri.append(encodeUriQuery(servletRequest.getPathInfo()));
+      }
+    }
+    // Handle the query string & fragment
+    //ex:(following '?'): name=value&foo=bar#fragment
+    String queryString = servletRequest.getQueryString();
+    String fragment = null;
+    //split off fragment from queryString, updating queryString if found
+    if (queryString != null) {
+      int fragIdx = queryString.indexOf('#');
+      if (fragIdx >= 0) {
+        fragment = queryString.substring(fragIdx + 2); // '#!', not '#'
+//        fragment = queryString.substring(fragIdx + 1);
+        queryString = queryString.substring(0, fragIdx);
+      }
+    }
+
+    queryString = rewriteQueryStringFromRequest(servletRequest, queryString);
+    if (queryString != null && queryString.length() > 0) {
+      uri.append('?');
+      uri.append(encodeUriQuery(queryString));
+    }
+
+    if (doSendUrlFragment && fragment != null) {
+      uri.append('#');
+      uri.append(encodeUriQuery(fragment));
+    }
+    return uri.toString();
+  }
+
+  @Override
+  protected void copyRequestHeaders(HttpServletRequest servletRequest,
+      HttpRequest proxyRequest) {
+    // Get an Enumeration of all of the header names sent by the client
+    Enumeration enumerationOfHeaderNames = servletRequest.getHeaderNames();
+    while (enumerationOfHeaderNames.hasMoreElements()) {
+      String headerName = (String) enumerationOfHeaderNames.nextElement();
+      //Instead the content-length is effectively set via InputStreamEntity
+      if (headerName.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH)) {
+        continue;
+      }
+      if (hopByHopHeaders.containsHeader(headerName)) {
+        continue;
+      }
+      if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null || !servletRequest.
+          getPathInfo().contains(".js"))) {
+        continue;
+      }
+      Enumeration headers = servletRequest.getHeaders(headerName);
+      while (headers.hasMoreElements()) {//sometimes more than one value
+        String headerValue = (String) headers.nextElement();
+        // In case the proxy host is running multiple virtual servers,
+        // rewrite the Host header to ensure that we get content from
+        // the correct virtual server
+        if (headerName.equalsIgnoreCase(HttpHeaders.HOST)) {
+          HttpHost host = getTargetHost(servletRequest);
+          headerValue = host.getHostName();
+          if (host.getPort() != -1) {
+            headerValue += ":" + host.getPort();
+          }
+        } else if (headerName.equalsIgnoreCase(org.apache.http.cookie.SM.COOKIE)) {
+          headerValue = getRealCookie(headerValue);
+        }
+        proxyRequest.addHeader(headerName, headerValue);
+      }
+    }
   }
 
 }

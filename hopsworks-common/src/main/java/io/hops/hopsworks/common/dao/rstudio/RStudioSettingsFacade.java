@@ -49,9 +49,6 @@ import javax.persistence.TypedQuery;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
- * The jupyter_settings table stores the most recent configuration settings from the user's Hopsworks UI.
- * That is, what version did the user pick (tensorflow, dynamic/static spark, horovod, TfOnSpark, etc)
- * How many executors (CPU/Memory/GPus), etc...
  */
 @Stateless
 public class RStudioSettingsFacade {
@@ -69,9 +66,9 @@ public class RStudioSettingsFacade {
     return em;
   }
 
-  public List<RStudioSettings> findJupyterSettingsByProject(Integer projectId) {
+  public List<RStudioSettings> findRStudioSettingsByProject(Integer projectId) {
     TypedQuery<RStudioSettings> query = em.createNamedQuery(
-            "JupyterSettings.findByProjectId",
+            "RStudioSettings.findByProjectId",
             RStudioSettings.class);
     query.setParameter("projectId", projectId);
     return query.getResultList();
