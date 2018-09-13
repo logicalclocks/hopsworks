@@ -49,9 +49,8 @@ angular.module('hopsWorksApp')
                 tourService.kafkaTopicName = "DemoKafkaTopic";
                 tourService.kafkaProjectPrefix = "demo_kafka";
                 tourService.sparkProjectPrefix = "demo_spark";
-                tourService.tensorflowProjectPrefix = "demo_tensorflow";
-                tourService.distributedtensorflowProjectPrefix = "demo_distributed_tensorflow";
-                tourService.tensorflowRunTip = "";
+                tourService.deepLearningProjectPrefix = "demo_deep_learning";
+                tourService.deepLearningRunTip = "";
                 tourService.informAndTips = true;
                 tourService.tipsOnly = false;
                 tourService.informOnly = false;
@@ -65,17 +64,18 @@ angular.module('hopsWorksApp')
                 tourService.currentStep_TourFive = -1;
                 tourService.currentStep_TourSix = -1;
                 tourService.currentStep_TourSeven = -1;
+                tourService.currentStep_TourEight = -1;
                 tourService.alive_TourOne = 15;
                 tourService.createdJobName = null;
                 tourService.activeTour = null;
                 tourService.kafkaJobCreationState = "producer";
                 tourService.counter = 0;
 
-                tourService.getTensorFlowJobTip = function(){
-                  if(tourService.activeTour === "tensorflow"){
-                    tourService.tensorflowRunTip = "An inference job was created for you! Go on and run it after the model is finished.";
+                tourService.getDeepLearningJobTip = function(){
+                  if(tourService.activeTour === "deep_learning"){
+                    tourService.deepLearningRunTip = "An inference job was created for you! Go on and run it after the model is finished.";
                   }
-                  return tourService.tensorflowRunTip;
+                  return tourService.deepLearningRunTip;
                 };
 
                 tourService.setActiveTour = function (tourName) {
@@ -145,6 +145,7 @@ angular.module('hopsWorksApp')
                     tourService.currentStep_TourFive = -1;
                     tourService.currentStep_TourSix = -1;
                     tourService.currentStep_TourSeven = -1;
+                    tourService.currentStep_TourEight = -1;
                     tourService.createdJobName = null;
                 };
 

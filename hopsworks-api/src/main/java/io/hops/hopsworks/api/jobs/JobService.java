@@ -445,10 +445,11 @@ public class JobService {
     try {
       client = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
-          getName() + "/Logs/TensorFlow/" + appId + "/TensorBoard.*"));
+          getName() + "/Experiments/" + appId + "/TensorBoard.*"));
+      LOGGER.log(Level.INFO, "Found " + statuses.length + " tbs");
       DistributedFileSystem fs = client.getFilesystem();
       for (FileStatus status : statuses) {
-        //LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
+        LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
         FSDataInputStream in = null;
         try {
           in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
@@ -515,15 +516,7 @@ public class JobService {
             + appId + "/prox/" + trackingUrl;
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
-
-      if (isLivy.compareToIgnoreCase("true") == 0) {
-        YarnApplicationstate appStates;
-        appStates = appStateBean.findByAppId(appId);
-        if (appStates != null && appStates.getAppname().toUpperCase().contains("TENSORFLOW")) {
-          urls.addAll(getTensorBoardUrls(hdfsUser, appId));
-        }
-      }
-
+      urls.addAll(getTensorBoardUrls(hdfsUser, appId));
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.
           getLocalizedMessage(), e);

@@ -715,7 +715,7 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
               "spark_task_max_failures", HopsUtils.OVERWRITE,
               (isParallelExperiment && js.getFaultTolerant()) ? "3" :
-                      ((isHorovod || isTfOnSpark || isExperiment) ? "1" : "4")));
+                      ((isHorovod || isTfOnSpark || isExperiment || isParallelExperiment) ? "1" : "4")));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
       sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(

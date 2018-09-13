@@ -138,13 +138,9 @@ angular.module('hopsWorksApp')
                       self.tourService.kafkaProjectPrefix)) {
                 self.tourService.setActiveTour('kafka');
               } else if (angular.equals(self.currentProject.projectName
-                      .substr(0, self.tourService.tensorflowProjectPrefix.length),
-                      self.tourService.tensorflowProjectPrefix)) {
-                self.tourService.setActiveTour('tensorflow');
-              } else if (angular.equals(self.currentProject.projectName
-                      .substr(0, self.tourService.distributedtensorflowProjectPrefix.length),
-                      self.tourService.distributedtensorflowProjectPrefix)) {
-                self.tourService.setActiveTour('distributed tensorflow');
+                      .substr(0, self.tourService.deepLearningProjectPrefix.length),
+                      self.tourService.deepLearningProjectPrefix)) {
+                self.tourService.setActiveTour('deep_learning');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo
@@ -382,7 +378,7 @@ angular.module('hopsWorksApp')
               PythonDepsService.enabled(self.projectId).then(function (success) {
                 self.goToUrl('jupyter');
               }, function (error) {
-                if (self.currentProject.projectName.startsWith("demo_tensorflow")) {
+                if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
                   self.goToUrl('jupyter');
                 } else {
                   ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')

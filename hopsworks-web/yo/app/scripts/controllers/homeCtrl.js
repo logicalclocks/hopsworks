@@ -67,9 +67,7 @@ angular.module('hopsWorksApp')
               self.tours = [
                 {'name': 'Spark', 'tip': 'Take a tour of Hopsworks by creating a project and running a Spark job!'},
                 {'name': 'Kafka', 'tip': 'Take a tour of Hopsworks by creating a project and running a Kafka job!'},
-                {'name': 'TensorFlow', 'tip': 'Take a tour by creating a project and running a TensorFlow notebook!'}
-//                {'name': 'Distributed TensorFlow', 'tip': 'Take a tour by creating a project and running a distributed TensorFlow Mnist job!'}
-//                {'name': 'zeppelin', 'tip': 'Take a tour of Zeppelin by creating a Hopsworks project and running a Zeppelin notebook for Spark!'}
+                {'name': 'Deep Learning', 'tip': 'Take a tour by creating a project and running a Deep Learning notebook!'}
               ];
             };
 
@@ -313,15 +311,22 @@ angular.module('hopsWorksApp')
             };
 
             self.createExampleProject = function (tourName) {
+
               $scope.creating[tourName] = true;
+
+              if(tourName === 'Deep Learning') {
+                tourName = 'Deep_Learning'
+              };
+
               if (self.showTourTips === false) {
                 self.toggleTourTips();
               }
+
               ProjectService.example({type: tourName}).$promise.then(
                       function (success) {
                         $scope.creating[tourName] = false;
                         self.tourService.setActiveTour(tourName);
-                        growl.success("Created Example Project", {title: 'Success', ttl: 5000});
+                        growl.success("Created Tour Project", {title: 'Success', ttl: 5000});
                         self.exampleProjectID = success.id;
                         updateUIAfterChange(true);
                         // To make sure the new project is refreshed
@@ -342,15 +347,7 @@ angular.module('hopsWorksApp')
               self.working[projectId] = true;
               //Clear project StorageService state
               StorageService.remove(projectId+"-tftour-finished");
-//              //Get name of project to be deleted, if it is demo_tensorflow 
-//              //set anadonca disabled in TourService
-//              for (var i = 0; i<self.projects.length;i++){
-//                var projName = self.projects[i].project.name;
-//                if(projName.startsWith("demo_tensorflow")){
-//                  self.tourService.anacondaEnabled = false;
-//                  break;
-//                }
-//              }
+
               ProjectService.delete({id: projectId}).$promise.then(
                       function (success) {
                         growl.success(success.successMessage, {title: 'Success', ttl: 5000});
