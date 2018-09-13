@@ -269,7 +269,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
-
+  
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
 
@@ -2899,7 +2899,7 @@ public class Settings implements Serializable {
     checkCache();
     return ZOOKEEPER_VERSION;
   }
-
+  
   // -------------------------------- Kubernetes ----------------------------------------------//
   private String KUBE_USER = "hopsworks";
   public synchronized String getKubeUser() {
