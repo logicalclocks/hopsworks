@@ -449,8 +449,20 @@ describe 'dataset' do
       end
 
       it 'unzip directory' do
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/zip/#{@dataset[:inode_name]}/testDir"
+        expect_status(404)
+
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/unzip/#{@dataset[:inode_name]}/testDir.zip"
         expect_status(200)
+
+        wait_for do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{@dataset[:inode_name]}"
+          ds = json_body.detect { |d| d[:name] == "testDir" }
+          !ds.nil?
+        end
       end
     end
   end
