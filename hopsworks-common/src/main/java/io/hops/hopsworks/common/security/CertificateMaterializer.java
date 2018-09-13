@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 package io.hops.hopsworks.common.security;
 
@@ -75,23 +94,16 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.hops.hopsworks.common.util.Settings.CERT_PASS_SUFFIX;
+import static io.hops.hopsworks.common.util.Settings.KEYSTORE_SUFFIX;
+import static io.hops.hopsworks.common.util.Settings.TRUSTSTORE_SUFFIX;
+
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 @DependsOn("Settings")
 public class CertificateMaterializer {
   private static final Logger LOG = Logger.getLogger(CertificateMaterializer.class.getName());
-  private static final Map<String, TimeUnit> TIME_SUFFIXES;
-  static {
-    TIME_SUFFIXES = new HashMap<>(5);
-    TIME_SUFFIXES.put("ms", TimeUnit.MILLISECONDS);
-    TIME_SUFFIXES.put("s", TimeUnit.SECONDS);
-    TIME_SUFFIXES.put("m", TimeUnit.MINUTES);
-    TIME_SUFFIXES.put("h", TimeUnit.HOURS);
-    TIME_SUFFIXES.put("d", TimeUnit.DAYS);
-  }
-  private final static String KEYSTORE_SUFFIX = "__kstore.jks";
-  private final static String TRUSTSTORE_SUFFIX = "__tstore.jks";
-  private final static String CERT_PASS_SUFFIX = "__cert.key";
+  
   private final static Pattern HDFS_SCHEME = Pattern.compile("^hdfs://.*");
   private final static int MAX_NUMBER_OF_RETRIES = 3;
   private final static long RETRY_WAIT_TIMEOUT = 10;
@@ -208,20 +220,8 @@ public class CertificateMaterializer {
     }
     transientDir = tmpDir.getAbsolutePath();
     String delayRaw = settings.getCertificateMaterializerDelay();
-    
-    Matcher matcher = Pattern.compile("([0-9]+)([a-z]+)?").matcher(delayRaw
-        .toLowerCase());
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException("Invalid delay value: " + delayRaw);
-    }
-    
-    DELAY_VALUE = Long.parseLong(matcher.group(1));
-    String timeUnitStr = matcher.group(2);
-    if (null != timeUnitStr && !TIME_SUFFIXES.containsKey(timeUnitStr)) {
-      throw new IllegalArgumentException("Invalid delay suffix: " + timeUnitStr);
-    }
-    DELAY_TIMEUNIT = timeUnitStr == null ? TimeUnit.MINUTES : TIME_SUFFIXES
-        .get(timeUnitStr);
+    DELAY_VALUE = Settings.getConfTimeValue(delayRaw);
+    DELAY_TIMEUNIT = Settings.getConfTimeTimeUnit(delayRaw);
     
     try {
       String hostAddress = InetAddress.getLocalHost().getHostAddress();
@@ -799,15 +799,6 @@ public class CertificateMaterializer {
       if (materialBag.getCount(materializationDirectory) <= 0) {
         scheduleFileRemover(key, materializationDirectory);
       }
-      
-      // No more references to that crypto material
-      if (materialBag.isEmpty()) {
-        materializedCerts.remove(key);
-        CryptoMaterial material = materialCache.remove(key);
-        if (material != null) {
-          material.wipePassword();
-        }
-      }
     }
   }
   
@@ -916,16 +907,13 @@ public class CertificateMaterializer {
             writeToHDFS(dfso, trustStore, material.getKeyStore().array());
             dfso.setOwner(trustStore, ownerName, groupName);
             dfso.setPermission(trustStore, permissions);
-            
-            // If RPC TLS is enabled, password file is injected automatically by the NodeManager
-            if (!settings.getHopsRpcTls()) {
-              Path passwordFile = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
-                  + CERT_PASS_SUFFIX);
-              writeToHDFS(dfso, passwordFile, new String(material.getPassword()));
-              dfso.setOwner(passwordFile, ownerName, groupName);
-              dfso.setPermission(passwordFile, permissions);
-            }
-            
+  
+            Path passwordFile = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
+                + CERT_PASS_SUFFIX);
+            writeToHDFS(dfso, passwordFile, new String(material.getPassword()));
+            dfso.setOwner(passwordFile, ownerName, groupName);
+            dfso.setPermission(passwordFile, permissions);
+  
             // Cache should be flushed otherwise NN will raise permission exceptions
             dfso.flushCache(ownerName, groupName);
           } finally {
@@ -1008,9 +996,14 @@ public class CertificateMaterializer {
     RemoteMaterialRefID identifier = new RemoteMaterialRefID(key.getExtendedUsername(), remoteDirectory);
     
     int retries = 0;
+    boolean deletedMaterial = false;
     while (materialRef == null && retries < MAX_NUMBER_OF_RETRIES) {
       try {
-        materialRef = remoteMaterialReferencesFacade.acquireLock(identifier, lock_id);
+        if (force) {
+          materialRef = new RemoteMaterialReferences(identifier);
+        } else {
+          materialRef = remoteMaterialReferencesFacade.acquireLock(identifier, lock_id);
+        }
         
         if (materialRef != null) {
           materialRef.decrementReferences();
@@ -1024,6 +1017,7 @@ public class CertificateMaterializer {
                   + "> could not be removed from HDFS. You SHOULD clean them manually!");
             }
             remoteMaterialReferencesFacade.delete(materialRef.getIdentifier());
+            deletedMaterial = true;
           } else {
             materialRef.decrementReferences();
             remoteMaterialReferencesFacade.update(materialRef);
@@ -1047,7 +1041,9 @@ public class CertificateMaterializer {
         }
       } finally {
         try {
-          remoteMaterialReferencesFacade.releaseLock(identifier, lock_id);
+          if (!deletedMaterial) {
+            remoteMaterialReferencesFacade.releaseLock(identifier, lock_id);
+          }
         } catch (AcquireLockException ex) {
           LOG.log(Level.SEVERE, "Cannot release lock for " + identifier, ex);
         }
@@ -1241,6 +1237,22 @@ public class CertificateMaterializer {
         if (materialRemovers.isEmpty()) {
           fileRemovers.remove(key);
         }
+  
+        // No more references to that crypto material, wipe out password
+        try {
+          localWriteLock.lock();
+          Bag materialBag = materializedCerts.get(key);
+          if (materialBag.isEmpty()) {
+            materializedCerts.remove(key);
+            CryptoMaterial material = materialCache.remove(key);
+            if (material != null) {
+              material.wipePassword();
+            }
+          }
+        } finally {
+          localWriteLock.unlock();
+        }
+        
         LOG.log(Level.FINEST, "Deleted crypto material for <" + key.getExtendedUsername() + "> from directory "
             + materializationDirectory);
       }

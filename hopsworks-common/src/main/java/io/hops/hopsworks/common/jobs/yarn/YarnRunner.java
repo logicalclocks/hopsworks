@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.jobs.yarn;
@@ -23,7 +42,6 @@ package io.hops.hopsworks.common.jobs.yarn;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.flink.YarnClusterClient;
@@ -52,7 +70,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.tensorflow.LocalResourceInfo;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
 
@@ -77,21 +94,18 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.codehaus.plexus.util.FileUtils;
 
-/**
+/**d
  * <p>
  */
 public class YarnRunner {
 
-  private static final Logger logger = Logger.getLogger(YarnRunner.class.
-      getName());
-  public static final String APPID_PLACEHOLDER = "$APPID";
-  private static final String APPID_REGEX = "\\$APPID";
+  private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
+  public static final String APPID_PLACEHOLDER = "**APPID";
   public static final String KEY_CLASSPATH = "CLASSPATH";
   private static final String LOCAL_LOG_DIR_PLACEHOLDER = "<LOG_DIR>";
 
   private Configuration conf;
   private ApplicationId appId = null;
-  //Type of Job to run, Spark/Flink/Adam...
   private JobType jobType;
   //The parallelism parameter of Flink
   private int parallelism;
@@ -119,8 +133,6 @@ public class YarnRunner {
   private final AsynchronousJobExecutor services;
   private DistributedFileSystemOps dfsClient;
   private YarnClient yarnClient;
-  private final String keyStorePassword;
-  private final String trustStorePassword;
   private String jobUser;
   
   private boolean readyToSubmit = false;
@@ -217,8 +229,7 @@ public class YarnRunner {
     YarnClientWrapper newYarnClientWrapper = ycs.getYarnClient(dfsUsername);
     
     YarnMonitor monitor = null;
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.ADAM || 
-        jobType == JobType.TFSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
       //Get application id
       
       YarnClientApplication app = yarnClient.createApplication();
@@ -227,8 +238,11 @@ public class YarnRunner {
       //And replace all occurences of $APPID with the real id.
       fillInAppid(appId.toString());
 
-      copyUserCertificates(project, jobType, dfso, username,
-          appId.toString());
+      // When Hops RPC TLS is enabled, Yarn will take care of application certificate
+      if (!services.getSettings().getHopsRpcTls()) {
+        copyUserCertificates(project, jobType, dfso, username,
+            appId.toString());
+      }
 
       //Check resource requests and availabilities
       checkAmResourceRequest(appResponse);
@@ -236,7 +250,7 @@ public class YarnRunner {
       //Set application name and type
       appContext = app.getApplicationSubmissionContext();
       appContext.setApplicationName(appName);
-      appContext.setApplicationType("HopsWorks-Yarn");
+      appContext.setApplicationType("Hopsworks-Yarn");
 
       //Add local resources to AM container
       Map<String, LocalResource> localResources = addAllToLocalResources();
@@ -267,12 +281,6 @@ public class YarnRunner {
       //Run any remaining commands
       for (YarnSetupCommand c : commands) {
         c.execute(this);
-      }
-
-      // Set keystore and truststore passwords
-      if (services.getSettings().getHopsRpcTls()) {
-        appContext.setKeyStorePassword(keyStorePassword);
-        appContext.setTrustStorePassword(trustStorePassword);
       }
       
       //And submit
@@ -350,71 +358,7 @@ public class YarnRunner {
         logger.log(Level.INFO, "Deleting local flink app jar:{0}", appJarPath);
       }
 
-    } else if (jobType == JobType.TENSORFLOW) {
-      try {
-        
-        tfClient.setConf(conf);
-        tfClient.initYarnClient();
-        YarnClientApplication app = tfClient.createApplication();
-        appId = app.getNewApplicationResponse().getApplicationId();
-        
-        copyUserCertificates(project, jobType, dfso, username, appId.toString());
-        
-        String kstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-            + File.separator + project.getName() + HdfsUsersController
-            .USER_NAME_DELIMITER + username + File.separator + appId.toString()
-            + File.separator + HopsUtils.getProjectKeystoreName(project.getName(),
-            username);
-        
-  
-        String tstore = "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-            + File.separator + project.getName() + HdfsUsersController
-            .USER_NAME_DELIMITER + username + File.separator +appId.toString()
-            + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
-            username);
-        
-        tfClient.addFile(kstore);
-        tfClient.addFile(tstore);
-        
-        tfClient.getFilesInfo().put(kstore, new LocalResourceInfo(Settings
-            .K_CERTIFICATE, kstore, LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.FILE.toString(), null));
-        tfClient.getFilesInfo().put(tstore, new LocalResourceInfo(Settings
-            .T_CERTIFICATE, tstore, LocalResourceVisibility.PRIVATE.toString(),
-            LocalResourceType.FILE.toString(), null));
-  
-        // If RPC TLS is enabled, password file would be injected by the
-        // NodeManagers. We don't need to add it as LocalResource
-        if (!services.getSettings().getHopsRpcTls()) {
-          String passFile =
-              "hdfs://" + services.getSettings().getHdfsTmpCertDir()
-                  + File.separator + project.getName() + HdfsUsersController
-                  .USER_NAME_DELIMITER + username + File.separator +
-                  appId.toString()
-                  + File.separator + HopsUtils.getProjectMaterialPasswordName(
-                  project.getName(), username);
-          tfClient.addFile(passFile);
-          tfClient.getFilesInfo().put(passFile, new LocalResourceInfo(Settings
-              .CRYPTO_MATERIAL_PASSWORD, passFile, LocalResourceVisibility.PRIVATE
-              .toString(), LocalResourceType.FILE.toString(), null));
-          logger.log(Level.INFO, "Adding local resource {0}", passFile);
-        }
-        
-        logger.log(Level.INFO, "Adding local resource {0}", kstore);
-        logger.log(Level.INFO, "Adding local resource {0}", tstore);
-        
-        
-        tfClient.submitApplication(app);
-//        String logstashInfo = tfClient.getEnvironment().get(Settings.LOGSTASH_JOB_INFO);
-//        logstashInfo = logstashInfo.replaceAll(APPID_REGEX, appId.toString());
-//        tfClient.addEnvironmentVariable(Settings.LOGSTASH_JOB_INFO, logstashInfo);
-        fillInAppid(appId.toString());
-        monitor = new YarnMonitor(appId, newYarnClientWrapper, ycs);
-      } finally {
-        appId = null;
-      }
     }
-
     return monitor;
   }
 
@@ -448,27 +392,27 @@ public class YarnRunner {
   //------------------------- UTILITY METHODS ---------------------------------
   //---------------------------------------------------------------------------
   private void fillInAppid(String id) {
-    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id).replace("\\", "");
-    appName = appName.replaceAll(APPID_REGEX, id);
+    localResourcesBasePath = localResourcesBasePath.replace(APPID_PLACEHOLDER, id);
+    appName = appName.replace(APPID_PLACEHOLDER, id);
     if (amArgs != null) {
-      amArgs = amArgs.replaceAll(APPID_REGEX, id);
+      amArgs = amArgs.replace(APPID_PLACEHOLDER, id);
     }
     for (Entry<String, LocalResourceDTO> entry : amLocalResourcesToCopy.
         entrySet()) {
       entry.getValue().setName(entry.getValue().getName().
-          replaceAll(APPID_REGEX, id));
+          replace(APPID_PLACEHOLDER, id));
     }
     //TODO(Theofilos): thread-safety?
     for (Entry<String, String> entry : amEnvironment.entrySet()) {
-      entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
+      entry.setValue(entry.getValue().replace(APPID_PLACEHOLDER, id));
     }
     for (ListIterator<String> i = javaOptions.listIterator(); i.hasNext();) {
-      i.set(i.next().replaceAll(APPID_REGEX, id));
+      i.set(i.next().replace(APPID_PLACEHOLDER, id));
     }
     
     //Loop through files to remove
     for (ListIterator<String> i = filesToRemove.listIterator(); i.hasNext();) {
-      i.set(i.next().replaceAll(APPID_REGEX, id));
+      i.set(i.next().replace(APPID_PLACEHOLDER, id));
     }
   }
 
@@ -567,7 +511,7 @@ public class YarnRunner {
     }
     //For Spark 2.0, loop through local resources and add their properties
     //as system properties (javaOptions)
-    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK || jobType == JobType.TFSPARK) {
+    if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
       StringBuilder uris = new StringBuilder();
       StringBuilder timestamps = new StringBuilder();
       StringBuilder sizes = new StringBuilder();
@@ -726,8 +670,6 @@ public class YarnRunner {
     this.localResourcesBasePath = builder.localResourcesBasePath;
     this.yarnClient = builder.yarnClient;
     this.dfsClient = builder.dfsClient;
-    this.keyStorePassword = builder.keyStorePassword;
-    this.trustStorePassword = builder.trustStorePassword;
     this.jobUser = builder.jobUser;
     this.conf = builder.conf;
     this.shouldCopyAmJarToLocalResources
@@ -788,7 +730,7 @@ public class YarnRunner {
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
-    private String appName = "HopsWorks-Yarn";
+    private String appName = "Hopsworks-Yarn";
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
@@ -818,9 +760,6 @@ public class YarnRunner {
     private YarnClient yarnClient;
     private DistributedFileSystemOps dfsClient;
     private String jobUser;
-
-    private String keyStorePassword;
-    private String trustStorePassword;
     
     private String serviceDir;
     private AsynchronousJobExecutor services;
@@ -859,16 +798,6 @@ public class YarnRunner {
 
     public Builder setJobUser(String jobUser) {
       this.jobUser = jobUser;
-      return this;
-    }
-    
-    public Builder setKeyStorePassword(String password) {
-      this.keyStorePassword = password;
-      return this;
-    }
-    
-    public Builder setTrustStorePassword(String password) {
-      this.trustStorePassword = password;
       return this;
     }
     
@@ -975,9 +904,6 @@ public class YarnRunner {
       this.amMemory = config.getAmMemory();
       this.amVCores = config.getAmVCores();
       this.appName = config.getAppName();
-//      for (LocalResourceDTO dto : config.getLocalResources()) {
-//        addLocalResource(dto,false);
-//      }
       return this;
     }
 

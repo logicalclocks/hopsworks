@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
   ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -16,7 +36,6 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ~
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -97,7 +116,8 @@
                   <div class="bar" style="width: #{host.memoryUsagePercentageString};"></div>
                 </div>
               </p:column> 
-              <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
+              <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column>
+              <p:column headerText="# GPUs"><h:outputText value="#{host.numGpus}" /></p:column>
               <p:column headerText="Load Average">
                 <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
                   <p:column>#{host.load1}</p:column>
@@ -154,27 +174,7 @@
         </p:accordionPanel>         
 
         <p:spacer width="1" height="20" />
-        <!--
-                        <h:form>
-                            <p:growl id="growl" life="2000" />
-                            <p:panelGrid>  
-                                <p:row>  
-                                    <p:column>
-                                        <p:inputText id="ssh_command" value="#{SshController.command}" />
-                                    </p:column>
-                                    <p:column>
-                                        <p:commandLink id="nonAjax" actionListener="#{SshController.exec}" ajax="false">
-                                            <f:param name="cluster" value="#{hostController.cluster}" />
-                                            <f:param name="hostname" value="#{hostController.host.hostname}" />
-                                            <h:outputText value="Execute ssh command" />
-                                        </p:commandLink>                
-                                    </p:column>
-                                </p:row>
-                            </p:panelGrid>
-                        </h:form>
-                        <p:spacer width="1" height="20" />-->
-
-      </p:outputPanel>    
+      </p:outputPanel>
 
     </ui:define>
 

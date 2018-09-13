@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 /**
@@ -107,24 +126,15 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                   jobType = 1;
                   break;
-                case "ADAM":
+                case "PYSPARK":
                   jobType = 2;
                   break;
                 case "FLINK":
                   jobType = 3;
                   break;
-                case "PYSPARK":
-                  jobType = 4;
-                  break;
-                case "TFSPARK":
-                  jobType = 5;
-                  break;
-                case "TENSORFLOW":
-                  jobType = 6;
-                  break;
               }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, adamState, flinkState, tensorflowState;
-              if (jobType === 1 || jobType === 4 || jobType === 5 ) {
+              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState, pysparkState;
+              if (jobType === 1 || jobType === 2 ) {
 
                 sparkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
@@ -132,28 +142,12 @@ angular.module('hopsWorksApp')
                 mainFileTxt = "App file";
                 mainFileVal = sparkState.selectedJar;
                 jobDetailsTxt = "Job details";
-              } else if (jobType === 2) {
-                adamState = {
-                  "processparameter": null,
-                  "commandList": null,
-                  "selectedCommand": self.currentjob.runConfig.selectedCommand.command
-                };
-                mainFileTxt = "ADAM command";
-                mainFileVal = adamState.selectedCommand;
-                jobDetailsTxt = "Job arguments";
               } else if (jobType === 3) {
                 flinkState = {
                   "selectedJar": getFileName(self.currentjob.runConfig.appPath)
                 };
                 mainFileTxt = "JAR file";
                 mainFileVal = flinkState.selectedJar;
-                jobDetailsTxt = "Job details";
-              } else if (jobType === 6) {
-                tensorflowState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
-                };
-                mainFileTxt = "Python file";
-                mainFileVal = tensorflowState.selectedJar;
                 jobDetailsTxt = "Job details";
               }
               var state = {
@@ -163,9 +157,7 @@ angular.module('hopsWorksApp')
                 "phase": 4,
                 "runConfig": self.currentjob.runConfig,
                 "sparkState": sparkState,
-                "adamState": adamState,
                 "flinkState": flinkState,
-                "tensorflowState": tensorflowState,
                 "accordion1": {//Contains the job name
                   "isOpen": false,
                   "visible": true,
@@ -190,12 +182,7 @@ angular.module('hopsWorksApp')
                   "isOpen": false,
                   "visible": true,
                   "value": "",
-                  "title": "Configure and create"},
-                "accordion6" : {//Contains the pre-configuration and proposals for auto-configuration
-                   "isOpen": false,
-                   "visible": true,
-                   "value": "",
-                   "title": "Pre-Configuration"}
+                  "title": "Configure and create"}
               };
               StorageService.store(self.projectId + "_newjob", state);
               $location.path('project/' + self.projectId + '/newjob');
@@ -299,7 +286,7 @@ angular.module('hopsWorksApp')
                                             JobService.runJob(self.projectId, jobId).then(
                                                     function (success) {
                                                       self.toggle(job, index);
-                                                      //self.buttonClickedToggle(job.id, true);
+                                                      self.buttonClickedToggle(job.id, true);
                                                       StorageService.store(self.projectId + "_jobstopclicked_" + job.id, "running");
 //                                            self.stopbuttonClickedToggle(job.id, false);
                                                       self.getRunStatus();

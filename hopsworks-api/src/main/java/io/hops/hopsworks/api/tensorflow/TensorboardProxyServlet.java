@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.api.tensorflow;
@@ -25,6 +44,8 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
@@ -38,6 +59,7 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +86,8 @@ public class TensorboardProxyServlet extends ProxyServlet {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private TensorBoardFacade tensorBoardFacade;
  
   private AtomicInteger barrier = new AtomicInteger(1);
   
@@ -77,15 +101,10 @@ public class TensorboardProxyServlet extends ProxyServlet {
       HttpServletResponse servletResponse)
       throws ServletException, IOException {
     String email = servletRequest.getUserPrincipal().getName();
-    LOGGER.log(Level.INFO, "Request URL: {0}", servletRequest.getRequestURL());
-    LOGGER.log(Level.INFO, "Request URI: {0}", servletRequest.getRequestURI());
-
-    if (barrier.get()==0) {
-      
-    }
+    LOGGER.log(Level.FINE, "Request URL: {0}", servletRequest.getRequestURL());
 
     String uri = servletRequest.getRequestURI();
-    // valid hostname regex: 
+    // valid hostname regex:
     // https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
     Pattern urlPattern = Pattern.compile("([a-zA-Z0-9\\-\\.]{2,255}:[0-9]{4,6})(/.*$)");
     Matcher urlMatcher = urlPattern.matcher(uri);
@@ -99,14 +118,63 @@ public class TensorboardProxyServlet extends ProxyServlet {
       throw new ServletException("Couldn't extract host:port from: " + servletRequest.getRequestURI());
     }
 
-    Pattern pattern = Pattern.compile("(application_.*?_\\d*)");
-    Matcher matcher = pattern.matcher(servletRequest.getRequestURI());
-    if (matcher.find()) {
-      String appId = matcher.group(1);
+    Pattern appPattern = Pattern.compile("(application_.*?_\\d*)");
+    Matcher appMatcher = appPattern.matcher(servletRequest.getRequestURI());
+
+    Pattern elasticPattern = Pattern.compile("(experiments)");
+    Matcher elasticMatcher = elasticPattern.matcher(servletRequest.getRequestURI());
+    if (elasticMatcher.find()) {
+
+      List<TensorBoard> TBList = tensorBoardFacade.findByUserEmail(email);
+      if(TBList == null) {
+        servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+            "This TensorBoard is not running right now");
+      }
+      boolean foundTB = false;
+      for(TensorBoard tb: TBList) {
+        if(tb.getEndpoint().equals(hostPortPair)) {
+          foundTB = true;
+          break;
+        }
+      }
+
+      if(!foundTB) {
+        servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+                "This TensorBoard is not running right now");
+        return;
+      }
+
+      targetUri = uriToFinish;
+
+      String theHost = "http://" + hostPortPair;
+      URI targetUriHost;
+      try {
+        targetUriObj = new URI(targetUri);
+        targetUriHost = new URI(theHost);
+      } catch (Exception e) {
+        throw new ServletException("Trying to process targetUri init parameter: ", e);
+      }
+      targetHost = URIUtils.extractHost(targetUriHost);
+      servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
+      servletRequest.setAttribute(ATTR_TARGET_HOST, targetHost);
+      servletRequest.setAttribute(ATTR_URI_FINISH, uriToFinish);
+      servletRequest.setAttribute(ATTR_HOST_PORT, hostPortPair );
+
+      try {
+        super.service(servletRequest, servletResponse);
+      } catch (IOException ex) {
+        sendErrorResponse(servletResponse, "This TensorBoard is not ready to serve requests right now, " +
+            "try refreshing the page");
+        return;
+      }
+
+
+    } else if(appMatcher.find()) {
+      String appId = appMatcher.group(1);
       YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
       if (appState == null) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-            "You don't have the access right for this application");
+                "You don't have the access right for this application");
         return;
       }
       String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
@@ -128,12 +196,12 @@ public class TensorboardProxyServlet extends ProxyServlet {
       }
       if (!inTeam) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-            "You don't have the access right for this application");
+                "You don't have the access right for this application");
         return;
       }
       if (appState.getAppsmstate() != null && (appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.FINISHED.
-          toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
-        sendErrorResponse(servletResponse, "This tensorboard has finished running");
+              toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
+        sendErrorResponse(servletResponse, "This TensorBoard has finished running");
         return;
       }
       targetUri = uriToFinish;
@@ -144,8 +212,7 @@ public class TensorboardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
-        throw new ServletException("Trying to process targetUri init parameter: "
-            + e, e);
+        throw new ServletException("Trying to process targetUri init parameter: ", e);
       }
       targetHost = URIUtils.extractHost(targetUriHost);
       servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
@@ -156,9 +223,10 @@ public class TensorboardProxyServlet extends ProxyServlet {
       try {
         super.service(servletRequest, servletResponse);
       } catch (IOException ex) {
-        sendErrorResponse(servletResponse, "This tensorboard is not running right now");
+        sendErrorResponse(servletResponse, "This TensorBoard is not running right now");
         return;
       }
+
     } else {
       servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
           "You don't have the access right for this application");

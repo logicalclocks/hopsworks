@@ -1,0 +1,117 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- A file selection dialog. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="selectEnvYmlCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+  <h2 class="modal-title">Create Anaconda environment from .yml file</h2>
+</div>
+<div class="modal-body" ng-controller="PythonDepsCtrl as pythonDepsCtrl">
+
+  <div class="row" ng-if="pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']">
+    <div class="col-md-2">
+      <button id="selectCpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'CPU'">
+          <span>
+            Select CPU .yml</span>
+      </button>
+    </div>
+    <div class="col-md-9 col-md-offset-1">
+
+      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.cpuYmlPath = ''" type="text" class="form-control" id="cpuYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.cpuYmlPath" required/>
+    </div>
+  </div>
+
+  <div class="row" ng-if="(pythonDepsCtrl.environmentTypes['CPU'] && !pythonDepsCtrl.environmentTypes['GPU']) || (!pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU'])">
+    <div class="col-md-2">
+      <button id="selectAllYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'ALL'">
+          <span>
+            Select .yml</span>
+      </button>
+    </div>
+    <div class="col-md-9 col-md-offset-1">
+
+      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.allYmlPath = ''" type="text" class="form-control" id="allYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.allYmlPath" required/>
+    </div>
+  </div>
+
+  <div class="row" ng-show="pythonDepsCtrl.environmentTypes['CPU'] && pythonDepsCtrl.environmentTypes['GPU']">
+    <div class="col-md-2">
+      <button id="selectGpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'GPU'">
+          <span>
+            Select GPU .yml</span>
+      </button>
+    </div>
+    <div class="col-md-9 col-md-offset-1">
+
+      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath = ''" type="text" class="form-control" id="gpuYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath" required/>
+    </div>
+  </div>
+
+  <div><span> <label>Enable Python Kernel:
+                              <input type="checkbox" ng-init="selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable = true" ng-model="selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable"></label>
+                            <i class="fa" ng-class="{'fa-exclamation-triangle' : selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable == true, 'fa-info' : selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project."
+                               style="margin-left: 10px"></i></span>
+  </div>
+
+  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonDepsCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
+          <span>
+            Create environment</span>
+  </button>
+
+  <div ng-if="selectEnvYmlCtrl.envMode === 'CPU' || selectEnvYmlCtrl.envMode === 'ALL' || selectEnvYmlCtrl.envMode === 'GPU'" class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
+
+    <table class="table table-hover">
+      <tbody ng-model="datasetsCtrl.files">
+      <tr ng-click="selectEnvYmlCtrl.back(datasetsCtrl)">
+        <td style="padding: 0px">&nbsp &nbsp
+          <a style="font-size:25px">..</a>
+        </td>
+      </tr>
+      <a href="selectFile.html"></a>
+      <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'" ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }" ng-click="selectEnvYmlCtrl.selectEnvYml(pythonDepsCtrl, datasetsCtrl, file);">
+        <td>
+          <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+          <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i> {{file.name}}
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
   ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -16,7 +36,6 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ~
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -25,16 +44,14 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
-      >
+      xmlns:p="http://primefaces.org/ui">
   <f:view contentType="text/html">
 
     <h:head>
-      <title><ui:insert name="title">HopsWorks</ui:insert></title>
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <title><ui:insert name="title">Hopsworks</ui:insert></title>
+      <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
@@ -46,66 +63,66 @@
 
 
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
+      <p:layout id="UserMgmLayout" styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
 
         <p:layoutUnit id="centerLayout" position="center">
 
           <div class="container">
-	    <div align="left">
-	      <h2>Update Hopsworks variables</h2>
-	    </div>
-	    
+            <div align="left">
+              <h2>Update Hopsworks variables</h2>
+            </div>
+
             <div class="content">
               <h:form id="updateVariablesForm" >
                 <p:growl id="growl" life="2000" showDetail="true"/>
-		
-		<p:dataTable id="variablesTable" var="variable"
+
+                <p:dataTable id="variablesTable" var="variable"
                              value="#{hopsworksVariablesBean.allVariables}"
-			     editable="true"
+                             editable="true"
                              style="table-layout: fixed"
-			     rows="25"
-			     paginator="true"
-			     paginatorTemplate="{CurrentPageReport}
-			     {FirstPageLink} {PreviousPageLink}
-			     {PageLinks} {NextPageLink} {LastPageLink}
-			     {RowsPerPageDropdown}"
-			     rowsPerPageTemplate="10,25,50,100,250">
+			     resizableColumns="true" liveResize="true"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}
+                             {FirstPageLink} {PreviousPageLink}
+                             {PageLinks} {NextPageLink} {LastPageLink}
+                             {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,25,50,100,250">
 
-		  <f:facet name="header">
-		    <h:outputText value="Variables" style="float:center"/>
-		    <p:commandButton value="Reload variables"
-				     style="float:right"
-				     actionListener="#{hopsworksVariablesBean.refreshVariables}"
-				     icon="ui-icon-arrowrefresh-1-w" update=":updateVariablesForm:growl"/>
-		  </f:facet>
+                  <f:facet name="header">                    
+                    <p:commandButton value="Reload variables"
+                                     style="margin-right: -975px;"
+                                     actionListener="#{hopsworksVariablesBean.refreshVariables}"
+                                     icon="ui-icon-arrowrefresh-1-w" update=":updateVariablesForm:growl"/>
+                  </f:facet>
 
-		  <p:ajax event="rowEdit"
-			listener="#{hopsworksVariablesBean.onRowEdit}"
-			update=":updateVariablesForm:growl" />
+                  <p:ajax event="rowEdit"
+                          listener="#{hopsworksVariablesBean.onRowEdit}"
+                          update=":updateVariablesForm:growl" />
 
-		  <p:column id="idColumn" headerText="Name"
-			    style="width:30%" filterBy="#{variable.id}"
-			    filterMatchMode="contains">
-		    <h:outputText value="#{variable.id}"/>
-		  </p:column>
+                  <p:column id="idColumn" headerText="Name"
+                            style="width:30%" filterBy="#{variable.id}"
+                            filterMatchMode="contains">
+                    <h:outputText value="#{variable.id}"/>
+                  </p:column>
 
-		  <p:column id="valueColumn" headerText="Value"
-			    filterBy="#{variable.value}" filterMatchMode="contains">
-		    <p:cellEditor>
-		      <f:facet name="output"><h:outputText value="#{variable.value}"/></f:facet>
-		      <f:facet name="input"><p:inputText value="#{variable.value}"
-							 style="width:100%"
-							 label="Value"/>
-		      </f:facet>
-		    </p:cellEditor>
-		  </p:column>
+                  <p:column id="valueColumn" headerText="Value"
+                            filterBy="#{variable.value}" filterMatchMode="contains">
+                    <p:cellEditor>
+                      <f:facet name="output"><h:outputText value="#{variable.value}"/></f:facet>
+                      <f:facet name="input"><p:inputText value="#{variable.value}"
+                                                         style="width:100%"
+                                                         label="Value"/>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
 
 
-		  <p:column style="width:32px">
-		    <p:rowEditor />
-		  </p:column>
+                  <p:column style="width:32px">
+                    <p:rowEditor />
+                  </p:column>
 
-		  
+
                 </p:dataTable>                                            
               </h:form>   
 

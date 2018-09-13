@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,13 +35,12 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.admin.user.account;
 
 import com.google.zxing.WriterException;
-import io.hops.hopsworks.admin.lims.MessagesController;
+import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.constants.auth.AccountStatusErrorMessages;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -41,7 +60,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.primefaces.model.StreamedContent;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
@@ -49,6 +67,8 @@ import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import org.primefaces.model.DefaultStreamedContent;
@@ -69,6 +89,9 @@ public class RecoverySelector implements Serializable {
 
   @EJB
   private AccountAuditFacade am;
+  
+  @EJB
+  private AuthController authController;
 
   private Users people;
 
@@ -167,42 +190,19 @@ public class RecoverySelector implements Serializable {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
         getCurrentInstance().getExternalContext().getRequest();
     try {
-
-      if (people != null && people.getPassword().equals(DigestUtils.sha256Hex(passwd))) {
-
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus().equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
-          MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
-          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
-              "", people, httpServletRequest);
-
-          return "";
-        }
-
-        if (people.getStatus().equals(UserAccountStatus.DEACTIVATED_ACCOUNT)) {
-          MessagesController.addSecurityErrorMessage(
-              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-          am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
-              "", people, httpServletRequest);
-          return "";
-        }
+      if (people != null && authController.checkPasswordAndStatus(people, passwd, httpServletRequest)) {
 
         // generate a randome secret of legth 6
         String random = SecurityUtils.getRandomPassword(passwordLength);
         usersController.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-        email.sendEmail(people.getEmail(), RecipientType.TO,
-            UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-
+        email.sendEmail(people.getEmail(), RecipientType.TO,UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
         am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.name(),
             "Reset QR code.", people, httpServletRequest);
 
         return "validate_code";
       } else {
-        MessagesController.addSecurityErrorMessage(
-            AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCORRECT_CREDENTIALS);
         if (people != null) {
           am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
               "", people, httpServletRequest);
@@ -213,10 +213,11 @@ public class RecoverySelector implements Serializable {
       am.registerAccountChange(people, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.FAILED.name(),
           "", people, httpServletRequest);
 
+    } catch (AppException ex) {
+      Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
     }
 
-    MessagesController.addSecurityErrorMessage(
-        AccountStatusErrorMessages.INTERNAL_ERROR);
+    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INTERNAL_ERROR);
     return "";
   }
 

@@ -1,0 +1,227 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+body {
+  margin: 0px;
+  font-family: Source Sans Pro, sans-serif;
+  font-size: 12px;
+}
+
+.admin-main-layout {
+  text-align: center;
+  min-height: 900px;
+  height: auto !important;
+}
+
+.admin-main-layout .ui-widget-content {
+  border-width: 0px;  
+  overflow-y: auto;
+}
+
+.ui-widget-content {
+  height: fit-content !important;
+}
+
+.admin-main-layout::-webkit-scrollbar {
+  display: none;
+}
+
+.container{
+  display: block;
+  height: auto !important;
+  padding-top: 0;
+  z-index: 5;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1200px;
+}
+
+.container:before, .container:after {
+  display: table;
+  content: "";
+  line-height: 0;
+  clear: both;
+}
+
+.content{
+  display: inline-block;
+  width:100%;
+  height: auto !important;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+}
+
+.user-profile {
+  min-height: 900px;
+  height: auto !important;
+  margin-top: 50px;
+  margin-left: 25%;
+  margin-right: 25%;
+}
+
+.personal-info{
+  background-color: #FFF;
+  text-align: left;
+  color: #4184F3;
+  font-weight: 500;
+  line-height: 1; 
+  margin-bottom: 20px;
+}
+
+.personal-info .h2 {
+  color: rgba(0, 0, 0, 0.87);
+  font-weight: 400;
+}
+
+.user-profile .ui-widget-content {
+  border-width: 0px;  
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.ui-panelgrid .ui-panelgrid-cell {
+  border-width: 0px;
+  padding-right: 100px;
+}
+
+ui-panelgrid td {
+  border-width: medium;
+  border-style: none;
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  border-image: none;
+  border-color: inherit;
+  padding: 4px 5px;
+  font-size: 14px;
+}
+
+.ui-dialog.ui-widget-content 
+.ui-dialog-content{
+  padding: 5px 15px !important;
+  font-size: 12px !important;
+}
+
+.ui-dialog.ui-widget-content 
+.ui-dialog-titlebar {
+  background-color: #f5f5f5 !important;
+  padding: 2px 5px !important;
+}
+
+.ui-dialog.ui-widget-content 
+.ui-dialog-title {
+  font-size: 20px !important;
+  margin-right: 10px !important;
+}
+
+.requestPopup {
+  height: 100px !important;
+  width: 230px !important;
+}
+.requestPopup .viewReqButton {
+  margin-top: 10px;
+}
+
+.iconsTable {
+  text-align: center;
+}
+
+.ui-button-remove {
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px !important;
+  margin: 2px;
+  border-color: #BD362F;
+  color: #FFF !important;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: #DB4F4A;
+  background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-style: normal !important;   
+  text-decoration: none !important;
+}
+
+.ui-button-allow {
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px !important;
+  margin: 2px;
+  border-color: #00B233;
+  color: #FFF !important;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: #DB4F4A;
+  background-image: linear-gradient(to bottom, #00BD36, #00B233);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-style: normal !important;   
+  text-decoration: none !important;
+}
+
+.actionTable td {
+  border: none !important;
+  padding: 0px !important;
+}
+
+.condaSync {
+ /*background-color: lightgreen;*/ 
+}
+
+.condaOutOfSync {
+ background-color: red; 
+}

@@ -10,6 +10,7 @@ gem 'net-ssh', '~> 2.1.0'
 gem 'session', '3.2.0'
 gem 'coderay', '1.1.1'
 gem 'rspec_junit_formatter'
+gem 'file-tail'
 
 group :development do
   gem 'dotenv'

@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,21 +35,26 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.hdfs.Utils;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LocalhostServices {
 
+  private static final Logger logger = Logger.getLogger(LocalhostServices.class.getName());
+
   public static String createUserAccount(String username, String projectName,
-          List<String> sshKeys) throws IOException {
+      List<String> sshKeys) throws IOException {
 
     String user = getUsernameInProject(username, projectName);
     String home = Settings.HOPS_USERS_HOMEDIR + user;
@@ -45,9 +70,9 @@ public class LocalhostServices {
     commands.add("-c");
     // Need to enclose public keys in quotes here.
     commands.add("sudo /srv/mkuser.sh " + user + " \"" + publicKeysAsString.
-            toString() + "\"");
+        toString() + "\"");
 
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     try {
       int result = commandExecutor.executeCommand();
@@ -60,14 +85,14 @@ public class LocalhostServices {
     } catch (InterruptedException e) {
       e.printStackTrace();
       throw new IOException("Interrupted. Could not create user: " + home
-              + " - " + stderr);
+          + " - " + stderr);
     }
 
     return stdout;
   }
 
   public static String deleteUserAccount(String username, String projectName)
-          throws IOException {
+      throws IOException {
     // Run using a bash script the following with sudo '/usr/sbin/deluser johnny'
 
     String user = getUsernameInProject(username, projectName);
@@ -81,7 +106,7 @@ public class LocalhostServices {
     commands.add("-c");
     commands.add("sudo /usr/sbin/deluser " + user);
 
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     try {
       int result = commandExecutor.executeCommand();
@@ -94,129 +119,7 @@ public class LocalhostServices {
     } catch (InterruptedException e) {
       e.printStackTrace();
       throw new IOException("Interrupted. Could not delete user: " + home
-              + " - " + stderr);
-    }
-    return stdout;
-  }
-
-  public static boolean isPresentProjectCertificates(String intermediateCaDir,
-          String projectName) {
-    File certFolder = new File(intermediateCaDir + "/certs/");
-    String[] certs = certFolder.list();
-    if (certs != null && certs.length > 0) {
-      for (String certFile : certs) {
-        if (certFile.startsWith(projectName + "__")) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createUserCertificates(String intermediateCaDir,
-          String projectName, String userName, String countryCode, String city,
-          String org, String email, String orcid, String userKeyPwd) throws IOException {
-
-    return createServiceCertificates(intermediateCaDir, Utils.getProjectUsername(projectName, userName), countryCode,
-        city, org, email, orcid, userKeyPwd);
-  }
-
-  //Make this asynchronous and call back UserCertsFacade.putUSer()
-  public static String createServiceCertificates(String intermediateCaDir,
-          String service, String countryCode, String city, String org,
-          String email, String orcid, String userKeyPwd) throws IOException {
-    String sslCertFile = intermediateCaDir + "/certs/" + service + ".cert.pem";
-    String sslKeyFile = intermediateCaDir + "/private/" + service + ".key.pem";
-
-    if (new File(sslCertFile).exists() || new File(sslKeyFile).exists()) {
-      throw new IOException("Certs exist already: " + sslCertFile + " & "
-              + sslKeyFile);
-    }
-
-    // Need to execute CreatingUserCerts.sh as 'root' using sudo. 
-    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
-    List<String> commands = new ArrayList<>();
-    commands.add("/usr/bin/sudo");
-    commands.add(intermediateCaDir + File.separator + Settings.SSL_CREATE_CERT_SCRIPTNAME);
-    commands.add(service);
-    commands.add(countryCode);
-    commands.add(city);
-    commands.add(org);
-    commands.add(email);
-    commands.add(orcid);
-    commands.add(userKeyPwd);
-    
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
-    String stdout = "", stderr = "";
-    try {
-      int result = commandExecutor.executeCommand();
-      // get the stdout and stderr from the command that was run
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
-      if (result != 0) {
-        throw new IOException(stderr);
-      }
-    } catch (InterruptedException e) {
-      throw new IOException("Interrupted. Could not generate the certificates: "
-              + stderr);
-    }
-    return stdout;
-  }
-  
-  public static String deleteUserCertificates(String intermediateCaDir,
-          String projectSpecificUsername) throws IOException {
-
-    // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
-    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
-    List<String> commands = new ArrayList<>();
-    commands.add("/bin/bash");
-    commands.add("-c");
-    commands.add("sudo " + intermediateCaDir + "/"
-            + Settings.SSL_DELETE_CERT_SCRIPTNAME + " "
-            + projectSpecificUsername);
-
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
-    String stdout = "", stderr = "";
-    try {
-      int result = commandExecutor.executeCommand();
-      // get the stdout and stderr from the command that was run
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
-      if (result != 0) {
-        throw new IOException(stderr);
-      }
-    } catch (InterruptedException e) {
-      throw new IOException("Interrupted. Could not generate the certificates: "
-              + stderr);
-    }
-    return stdout;
-  }
-
-  public static String deleteProjectCertificates(String intermediateCaDir,
-          String projectName) throws IOException {
-
-    // Need to execute DeleteUserCerts.sh as 'root' using sudo. 
-    // Solution is to add them to /etc/sudoers.d/glassfish file. Chef cookbook does this for us.
-    List<String> commands = new ArrayList<>();
-    commands.add("/bin/bash");
-    commands.add("-c");
-    commands.add("sudo " + intermediateCaDir + "/"
-            + Settings.SSL_DELETE_PROJECT_CERTS_SCRIPTNAME + " " + projectName);
-
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
-    String stdout = "", stderr = "";
-    try {
-      int result = commandExecutor.executeCommand();
-      // get the stdout and stderr from the command that was run
-      stdout = commandExecutor.getStandardOutputFromCommand();
-      stderr = commandExecutor.getStandardErrorFromCommand();
-      if (result != 0) {
-        throw new IOException(stderr);
-      }
-    } catch (InterruptedException e) {
-      throw new IOException("Interrupted. Could not generate the certificates: "
-              + stderr);
+          + " - " + stderr);
     }
     return stdout;
   }
@@ -232,7 +135,7 @@ public class LocalhostServices {
   }
 
   public static String unzipHdfsFile(String hdfsFile, String localFolder,
-          String domainsDir) throws IOException {
+      String domainsDir) throws IOException {
 
     List<String> commands = new ArrayList<>();
     commands.add(domainsDir + "/bin/" + Settings.UNZIP_FILES_SCRIPTNAME);
@@ -240,7 +143,7 @@ public class LocalhostServices {
     commands.add(localFolder);
 
     AsyncSystemCommandExecutor commandExecutor = new AsyncSystemCommandExecutor(
-            commands);
+        commands);
     String stdout = "", stderr = "";
     try {
       int result = commandExecutor.executeCommand();
@@ -252,19 +155,19 @@ public class LocalhostServices {
       }
     } catch (InterruptedException e) {
       throw new IOException("Interrupted. Could not generate the certificates: "
-              + stderr);
+          + stderr);
     }
     return stdout;
   }
-  
+
   //Dela Certificates
   public static void generateHopsSiteKeystore(Settings settings, String userKeyPwd) throws IOException {
     List<String> commands = new ArrayList<>();
     commands.add("/usr/bin/sudo");
     commands.add(settings.getHopsSiteCaScript());
     commands.add(userKeyPwd);
-    
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
     try {
       int result = commandExecutor.executeCommand();
@@ -279,4 +182,42 @@ public class LocalhostServices {
     }
   }
   //Dela Certificates end
+
+  /**
+   *
+   * @param base - root directory for calculating disk usage for the subtree
+   * @return the disk usage in Bytes for the subtree rooted at base.
+   */
+  public static String du(File base) throws IOException {
+
+// This java implementation is like 100 times slower than calling 'du -sh'
+//    long totalBytes = base.length();    
+//    if (base.isDirectory()) {           
+//      for (String child : base.list()) {      
+//        File inode = new File(base, child);       
+//        totalBytes += du(inode);                 
+//      }
+//    }
+//    return totalBytes;
+    StringBuilder sb = new StringBuilder();
+
+    String[] command = {"du", "-sh", base.getCanonicalPath()};
+    logger.log(Level.INFO, Arrays.toString(command));
+    ProcessBuilder pb = new ProcessBuilder(command);
+    try {
+      Process process = pb.start();
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+          process.getInputStream(), Charset.forName("UTF8")));
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line).append(System.lineSeparator());
+      }
+
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Problem getting logs: {0}", ex.
+          toString());
+    }
+    return sb.toString();
+  }
+
 }

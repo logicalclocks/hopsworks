@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.dao.user.security.ua;
@@ -26,17 +45,17 @@ public class UserAccountsEmailMessages {
    * Subject of account request
    */
   public final static String ACCOUNT_REQUEST_SUBJECT
-          = "Your HopsWorks account needs verification";
+          = "Your Hopsworks account needs verification";
   /*
    * Subject of cluster request
    */
-  public final static String CLUSTER_REQUEST_SUBJECT = "Your HopsWorks cluster needs verification";
+  public final static String CLUSTER_REQUEST_SUBJECT = "Your Hopsworks cluster needs verification";
 
   /*
    * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
-          = "Welcome to HopsWorks!";
+          = "Welcome to Hopsworks!";
 
   public final static String ALERT_SERVICE_DOWN
           = "A Hopsworks service has stopped ";
@@ -54,8 +73,7 @@ public class UserAccountsEmailMessages {
   /*
    * Subject of blocked acouunt
    */
-  public final static String HOPSWORKS_SUPPORT_EMAIL
-          = "support@hops.io";
+  public static String HOPSWORKS_SUPPORT_EMAIL = "support@hops.io";
 
   /*
    * Subject of profile update
@@ -79,7 +97,7 @@ public class UserAccountsEmailMessages {
    * Subject of rejected accounts
    */
   public final static String ACCOUNT_REJECT
-          = "Your HopsWorks account request has been rejected";
+          = "Your Hopsworks account request has been rejected";
 
   /*
    * Default accpount acitvation period
@@ -92,7 +110,7 @@ public class UserAccountsEmailMessages {
    * Account deactivation
    */
   public final static String ACCOUNT_DEACTIVATED
-          = "Your HopsWorks account has expired";
+          = "Your Hopsworks account has expired";
 
   /**
    * Build an email message for mobile users upon registration.
@@ -137,7 +155,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
@@ -167,7 +185,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received a password recovery request for HopsWorks on your behalf.\n\n";
+            + "We received a password recovery request for Hopsworks on your behalf.\n\n";
     String l2
             = "Please click on the following link to recover your password: \n";
 
@@ -186,7 +204,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your HopsWorks account has been blocked.\n\n";
+            + "Your Hopsworks account has been blocked.\n\n";
     String l2
             = "If you have any questions please visit www.hops.io or contact support@hops.io";
     String l3 = "If you have any questions please contact "
@@ -256,7 +274,7 @@ public class UserAccountsEmailMessages {
 
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We receieved an account deactivation request and your HopsWorks "
+            + "We receieved an account deactivation request and your Hopsworks "
             + "account has been deactivated.\n\n";
     String l2 = "If you have any questions please contact "
             + HOPSWORKS_SUPPORT_EMAIL;
@@ -288,7 +306,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your account request to access HopsWorks has been approved.\n\n";
+            + "Your account request to access Hopsworks has been approved.\n\n";
     String l2 = "You can login with your username: " + username
             + " and other credentials you setup.\n\n\n";
     String l3 = "If you have any questions please contact "
@@ -302,7 +320,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "Your HopsWorks account request has been rejected.\n\n";
+            + "Your Hopsworks account request has been rejected.\n\n";
     String l2 = "If you have any questions please contact "
             + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2;
@@ -334,7 +352,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to verify your email address. Within"
             + ACCOUNT_ACITVATION_PERIOD
             + " hours of getting this email.\n\n\n";

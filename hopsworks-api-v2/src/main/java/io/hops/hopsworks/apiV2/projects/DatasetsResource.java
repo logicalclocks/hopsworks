@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.apiV2.projects;
@@ -609,20 +628,22 @@ public class DatasetsResource {
   @POST
   @Path("/{dsName}/files/{path: .+}")
   @ApiOperation(value = "Unzip", notes = "Asynchronously zips or unzips a folder in the dataset.")
-  public Response unzip(@PathParam("dsName") String targetDataset,
+  public Response compression(@PathParam("dsName") String targetDataset,
       @ApiParam("Path to folder") @PathParam("path") String targetPath,
-      @ApiParam(value = "\"unzip\"", allowableValues = "unzip", required = true)
+      @ApiParam(value = "\"zip\" or \"unzip\"", allowableValues = "zip,unzip", required = true)
       @QueryParam("op") String operation,
       @Context SecurityContext sc, @Context HttpServletRequest req) throws AppException, AccessControlException {
     Dataset dataset = getDataset(targetDataset);
     
-    if (operation == null || !operation.matches("unzip")){
-      throw new AppException(Response.Status.BAD_REQUEST, "Must supply ?op= as \"unzip\"");
+    if (operation == null || !(operation.matches("unzip") || operation.matches("zip"))){
+      throw new AppException(Response.Status.BAD_REQUEST, "Must supply ?op= as \"unzip\" or \"zip\"");
     }
     
     switch (operation){
       case "unzip":
         return unzip(dataset, targetPath, sc);
+      case "zip":
+        return zip(dataset, targetPath, sc);
       default:
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR, ResponseMessages.INTERNAL_SERVER_ERROR);
     }
@@ -630,54 +651,111 @@ public class DatasetsResource {
   
   private Response unzip(Dataset dataset, String targetPath, SecurityContext sc)
       throws AppException, AccessControlException {
-    DatasetPath datasetPath = new DatasetPath(dataset, targetPath);
-    org.apache.hadoop.fs.Path fullPath = pathValidator.getFullPath(datasetPath);
-    
+
+    DatasetPath dsPath = new DatasetPath(dataset, targetPath);
+    org.apache.hadoop.fs.Path fullPath = pathValidator.getFullPath(dsPath);
+
+    String localDir = DigestUtils.sha256Hex(fullPath.toString());
+    String stagingDir = settings.getStagingDir() + File.separator + localDir;
+
+    File unzipDir = new File(stagingDir);
+    unzipDir.mkdirs();
+    settings.addUnzippingState(fullPath.toString());
+
     // HDFS_USERNAME is the next param to the bash script
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
-    
-    String localDir = DigestUtils.sha256Hex(fullPath.toString());
-    String stagingDir = settings.getStagingDir() + File.separator + localDir;
-    
-    File unzipDir = new File(stagingDir);
-    unzipDir.mkdirs();
-    
+
     List<String> commands = new ArrayList<>();
+
     commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
     commands.add(stagingDir);
     commands.add(fullPath.toString());
     commands.add(hdfsUser);
-    
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
-    settings.addUnzippingState(fullPath.toString());
     try {
       int result = commandExecutor.executeCommand();
       stdout = commandExecutor.getStandardOutputFromCommand();
       stderr = commandExecutor.getStandardErrorFromCommand();
       if (result == 2) {
         throw new AppException(Response.Status.EXPECTATION_FAILED.
-            getStatusCode(),
-            "Not enough free space on the local scratch directory to download and unzip this file."
-                + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
+                getStatusCode(),
+                "Not enough free space on the local scratch directory to download and unzip this file."
+                        + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
       }
       if (result != 0) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(),
-            "Could not unzip the file at path: " + fullPath);
+                getStatusCode(),
+                "Could not unzip the file at path: " + fullPath);
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      logger.log(Level.FINE, null, e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Interrupted exception. Could not unzip the file at path: " + fullPath);
+              getStatusCode(),
+              "Interrupted exception. Could not unzip the file at path: " + fullPath);
     } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "IOException. Could not unzip the file at path: " + fullPath);
+              getStatusCode(),
+              "IOException. Could not unzip the file at path: " + fullPath);
     }
-    
+    return Response.noContent().build();
+  }
+
+  private Response zip(Dataset dataset, String targetPath, SecurityContext sc)
+          throws AppException, AccessControlException {
+
+    DatasetPath dsPath = new DatasetPath(dataset, targetPath);
+    org.apache.hadoop.fs.Path fullPath = pathValidator.getFullPath(dsPath);
+
+    String localDir = DigestUtils.sha256Hex(fullPath.toString());
+    String stagingDir = settings.getStagingDir() + File.separator + localDir;
+
+    File zipDir = new File(stagingDir);
+    zipDir.mkdirs();
+    settings.addZippingState(fullPath.toString());
+
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
+    List<String> commands = new ArrayList<>();
+
+    commands.add(settings.getHopsworksDomainDir() + "/bin/zip-background.sh");
+    commands.add(stagingDir);
+    commands.add(fullPath.toString());
+    commands.add(hdfsUser);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result == 2) {
+        throw new AppException(Response.Status.EXPECTATION_FAILED.
+                getStatusCode(),
+                "Not enough free space on the local scratch directory to download and zip this directory."
+                        + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
+      }
+      if (result != 0) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Could not zip the directory at path: " + fullPath);
+      }
+    } catch (InterruptedException e) {
+      logger.log(Level.FINE, null, e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Interrupted exception. Could not zip the directory at path: " + fullPath);
+    } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "IOException. Could not zip the directory at path: " + fullPath);
+    }
     return Response.noContent().build();
   }
   
@@ -691,7 +769,7 @@ public class DatasetsResource {
   
   private GenericEntity<InodeView> getFileHelper(Inode inode, String path){
     InodeView inodeView = new InodeView(inode, path+ "/" + inode.getInodePK().getName());
-    inodeView.setUnzippingState(settings.getUnzippingState(
+    inodeView.setZipState(settings.getZipState(
         path+ "/" + inode.getInodePK().getName()));
     Users user = userFacade.findByUsername(inodeView.getOwner());
     if (user != null) {
@@ -713,7 +791,7 @@ public class DatasetsResource {
         //Get project of project__user the inode is owned by
         inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
       }
-      inodeView.setUnzippingState(settings.getUnzippingState(path + "/" + i.getInodePK().getName()));
+      inodeView.setZipState(settings.getZipState(path + "/" + i.getInodePK().getName()));
       Users user = userFacade.findByUsername(inodeView.getOwner());
       if (user != null) {
         inodeView.setOwner(user.getFname() + " " + user.getLname());

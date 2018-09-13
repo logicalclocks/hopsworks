@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,39 +35,49 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-
 package io.hops.hopsworks.api.pythonDeps;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterProcessMgr;
+import io.hops.hopsworks.api.project.util.DsPath;
+import io.hops.hopsworks.api.project.util.PathValidator;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
-import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
-import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
+import io.hops.hopsworks.common.dao.pythonDeps.EnvironmentYmlJson;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDepJson;
+import io.hops.hopsworks.common.dao.pythonDeps.PythonDep;
+import io.hops.hopsworks.common.dao.pythonDeps.LibVersions;
+import io.hops.hopsworks.common.dao.pythonDeps.OpStatus;
 import io.hops.hopsworks.common.dao.pythonDeps.Version;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.dela.exception.ThirdPartyException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
+
 import java.util.ArrayList;
+
+import java.io.IOException;
+import java.io.DataInputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.File;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.GenericEntity;
@@ -56,6 +86,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
@@ -79,19 +110,23 @@ public class PythonDepsService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
+  private HostsFacade hostsFacade;
+  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-  @EJB
-  private HostsFacade hostsFacade;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
-  @EJB
-  private JupyterProcessMgr jupyterProcessFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private PathValidator pathValidator;
+  @EJB
+  private InodeFacade inodes;
+  @EJB
+  private DistributedFsService dfs;
 
   public void setProject(Project project) {
     this.project = project;
@@ -100,28 +135,6 @@ public class PythonDepsService {
   public Project getProject() {
     return project;
   }
-
-  //User upgradable libraries we installed for them
-  public static final ArrayList<String> providedLibraryNames = new ArrayList<String>() {
-    {
-      add("hops");
-      add("tfspark");
-      add("pandas");
-      add("tensorflow-serving-api");
-      add("hopsfacets");
-    }
-  };
-
-  //Libraries we preinstalled users should not mess with
-  public static final ArrayList<String> preInstalledLibraryNames = new ArrayList<String>() {
-    {
-      add("tensorflow-gpu");
-      add("tensorflow");
-      add("horovod");
-      add("pydoop");
-      add("pyspark");
-    }
-  };
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -135,8 +148,7 @@ public class PythonDepsService {
       jsonDeps.add(new PythonDepJson(pd));
     }
 
-    GenericEntity<Collection<PythonDepJson>> deps = new GenericEntity<Collection<PythonDepJson>>(jsonDeps) {
-    };
+    GenericEntity<Collection<PythonDepJson>> deps = new GenericEntity<Collection<PythonDepJson>>(jsonDeps) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         deps).build();
   }
@@ -174,7 +186,8 @@ public class PythonDepsService {
       // 'X' indicates that the python kernel should not be enabled in Conda
       version = version + "X";
     }
-    pythonDepsFacade.createProjectInDb(project, deps, version, enablePythonKernel);
+    pythonDepsFacade.createProjectInDb(project, deps, version,
+        enablePythonKernel, PythonDepsFacade.MachineType.ALL, null);
 
     project.setPythonVersion(version);
     projectFacade.update(project);
@@ -182,27 +195,108 @@ public class PythonDepsService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-  private Users getUser(String email) throws ThirdPartyException {
-    Users user = userFacade.findByEmail(email);
-    if (user == null) {
-      throw new ThirdPartyException(Response.Status.FORBIDDEN.getStatusCode(), "user not found",
-          ThirdPartyException.Source.LOCAL, "exception");
+  @POST
+  @Path("/enableYml")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response enableYml(@Context SecurityContext sc,
+      @Context HttpServletRequest req, EnvironmentYmlJson environmentYmlJson) throws AppException {
+
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String username = hdfsUsersController.getHdfsUserName(project, user);
+
+    String version = "0.0";
+    Boolean enablePythonKernel = Boolean.parseBoolean(environmentYmlJson.getPythonKernelEnable());
+    if (!enablePythonKernel) {
+      // 'X' indicates that the python kernel should not be enabled in Conda
+      version = version + "X";
     }
-    return user;
+    String allYmlPath = environmentYmlJson.getAllYmlPath();
+    String cpuYmlPath = environmentYmlJson.getCpuYmlPath();
+    String gpuYmlPath = environmentYmlJson.getGpuYmlPath();
+
+    if (allYmlPath != null && !allYmlPath.isEmpty()) {
+      if (!allYmlPath.substring(allYmlPath.length() - 4, allYmlPath.length()).equals(".yml")) {
+        throw new AppException(Response.Status.BAD_REQUEST.
+            getStatusCode(),
+            "Can only create Anaconda environment from a valid .yml file");
+      }
+      String allYml = getYmlFromPath(allYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+          PythonDepsFacade.MachineType.ALL, allYml);
+    } else if (cpuYmlPath != null || gpuYmlPath != null || !cpuYmlPath.isEmpty() || !gpuYmlPath.isEmpty()) {
+
+      if (!cpuYmlPath.substring(cpuYmlPath.length() - 4, cpuYmlPath.length()).equals(".yml") || !gpuYmlPath.substring(
+          gpuYmlPath.length() - 4, gpuYmlPath.length()).equals(".yml")) {
+        throw new AppException(Response.Status.BAD_REQUEST.
+            getStatusCode(),
+            "Can only create Anaconda environment from valid .yml files");
+      }
+
+      String cpuYml = getYmlFromPath(cpuYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+          PythonDepsFacade.MachineType.CPU, cpuYml);
+
+      String gpuYml = getYmlFromPath(gpuYmlPath, username);
+      pythonDepsFacade.createProjectInDb(project, null, version, enablePythonKernel,
+          PythonDepsFacade.MachineType.GPU, gpuYml);
+
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.
+          getStatusCode(),
+          "Could not create Anaconda environment due to invalid .yml files");
+    }
+
+    project.setPythonVersion(version);
+    projectFacade.update(project);
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   @GET
   @Path("/installed")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Produces(MediaType.TEXT_PLAIN)
   public Response installed() throws AppException {
-    Map<String, String> deps = pythonDepsFacade.getPreInstalledLibs(project);
-
-    if (settings.isAnacondaInstalled()) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          build();
+    String defaultRepo = settings.getCondaDefaultRepo();
+    if (settings.isAnacondaEnabled()) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+          .entity(defaultRepo).build();
     }
     return noCacheResponse.getNoCacheResponseBuilder(
         Response.Status.SERVICE_UNAVAILABLE).build();
+  }
+
+  @GET
+  @Path("/environmentTypes")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response environmentTypes() throws AppException {
+
+    JsonObjectBuilder response = Json.createObjectBuilder();
+
+    String cpuHost = hostsFacade.findCPUHost();
+
+    if (cpuHost != null) {
+      response.add("CPU", true);
+    } else {
+      response.add("CPU", false);
+    }
+
+    String gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost != null) {
+      response.add("GPU", true);
+    } else {
+      response.add("GPU", false);
+    }
+
+    if (cpuHost == null && gpuHost == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Could not find any CPU or GPU host");
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response.build()).build();
   }
 
   @GET
@@ -224,15 +318,15 @@ public class PythonDepsService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response remove(PythonDepJson library) throws AppException {
 
-    if(preInstalledLibraryNames.contains(library.getLib())) {
+    if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not uninstall " + library.getLib() + ", it is a mandatory dependency");
+          getStatusCode(),
+          "Could not uninstall " + library.getLib() + ", it is a mandatory dependency");
     }
 
     pythonDepsFacade.uninstallLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
         PythonDepsFacade.MachineType.valueOf(library.getMachineType()), library.getChannelUrl(),
-            library.getLib(), library.getVersion());
+        library.getLib(), library.getVersion());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -255,10 +349,10 @@ public class PythonDepsService {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public Response install(PythonDepJson library) throws AppException {
 
-    if(preInstalledLibraryNames.contains(library.getLib())) {
+    if(settings.getPreinstalledPythonLibraryNames().contains(library.getLib())) {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not install " + library.getLib() + ", it is already pre-installed");
+          getStatusCode(),
+          "Could not install " + library.getLib() + ", it is already pre-installed");
 
     }
 
@@ -278,7 +372,7 @@ public class PythonDepsService {
 
     pythonDepsFacade.addLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
         PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
-            library.getChannelUrl(), library.getLib(), library.getVersion());
+        library.getChannelUrl(), library.getLib(), library.getVersion());
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -293,39 +387,39 @@ public class PythonDepsService {
       PythonDepJson library) throws AppException {
     pythonDepsFacade.blockingCondaOp(Integer.parseInt(hostId),
         PythonDepsFacade.CondaOp.INSTALL, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
-            PythonDepsFacade.MachineType.valueOf(library.getMachineType()), project,
-            library.getChannelUrl(), library.getLib(), library.getVersion());
+        PythonDepsFacade.MachineType.valueOf(library.getMachineType()), project,
+        library.getChannelUrl(), library.getLib(), library.getVersion());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
 
-/* Disable UPGRADE for now
-
-  @POST
-  @Produces(MediaType.APPLICATION_JSON)
-  @Path("/upgrade")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response upgrade(PythonDepJson library) throws AppException {
-
-    if(preInstalledLibraryNames.contains(library.getLib())) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Could not upgrade " + library.getLib());
-    }
-
-    logger.log(Level.SEVERE,"INSTALL TYPE " + library.getInstallType());
-    logger.log(Level.SEVERE,"MACHINE TYPE " + library.getMachineType());
-
-
-    pythonDepsFacade.upgradeLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
-            PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
-            library.getChannelUrl(), library.getLib(), library.getVersion());
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
-  */
-
+  /*
+   * Disable UPGRADE for now
+   *
+   * @POST
+   * @Produces(MediaType.APPLICATION_JSON)
+   * @Path("/upgrade")
+   * @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+   * public Response upgrade(PythonDepJson library) throws AppException {
+   *
+   * if(preInstalledLibraryNames.contains(library.getLib())) {
+   * throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+   * getStatusCode(),
+   * "Could not upgrade " + library.getLib());
+   * }
+   *
+   * logger.log(Level.SEVERE,"INSTALL TYPE " + library.getInstallType());
+   * logger.log(Level.SEVERE,"MACHINE TYPE " + library.getMachineType());
+   *
+   *
+   * pythonDepsFacade.upgradeLibrary(project, PythonDepsFacade.CondaInstallType.valueOf(library.getInstallType()),
+   * PythonDepsFacade.MachineType.valueOf(library.getMachineType()),
+   * library.getChannelUrl(), library.getLib(), library.getVersion());
+   *
+   * return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+   * }
+   *
+   */
   @GET
   @Path("/clone/{projectName}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -362,6 +456,28 @@ public class PythonDepsService {
   }
 
   @GET
+  @Path("/export")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response export(@Context SecurityContext sc,
+      @Context HttpServletRequest req,
+      @Context HttpHeaders httpHeaders) throws AppException {
+
+    String hdfsUser = getHdfsUser(sc);
+
+    String cpuHost = hostsFacade.findCPUHost();
+    if (cpuHost != null) {
+      exportEnvironment(cpuHost, "environment_cpu.yml", hdfsUser);
+    }
+
+    String gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost != null) {
+      exportEnvironment(gpuHost, "environment_gpu.yml", hdfsUser);
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+
+  @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/status")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -369,7 +485,7 @@ public class PythonDepsService {
 
     List<OpStatus> response = pythonDepsFacade.opStatus(project);
 
-    GenericEntity<Collection<OpStatus>> opsFound = new GenericEntity<Collection<OpStatus>>(response) { };
+    GenericEntity<Collection<OpStatus>> opsFound = new GenericEntity<Collection<OpStatus>>(response) {     };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(opsFound).build();
 
@@ -425,10 +541,10 @@ public class PythonDepsService {
     Collection<LibVersions> response = null;
     List<PythonDep> installedDeps = null;
 
-    if(lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.PIP.name())) {
+    if (lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.PIP.name())) {
       response = findPipLib(lib);
       installedDeps = pythonDepsFacade.listProject(project);
-    } else if(lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.CONDA.name())) {
+    } else if (lib.getInstallType().equals(PythonDepsFacade.CondaInstallType.CONDA.name())) {
       response = findCondaLib(lib);
       installedDeps = pythonDepsFacade.listProject(project);
     }
@@ -504,11 +620,12 @@ public class PythonDepsService {
         if (key.compareToIgnoreCase("Loading") == 0 || value.compareToIgnoreCase("channels:") == 0) {
           continue;
         }
+
         // First row is sometimes empty
         if (key.isEmpty()) {
           continue;
         }
-        if (key.compareToIgnoreCase("Name") == 0) {
+        if (key.contains("Name") || key.contains("#")) {
           continue;
         }
         char c = key.charAt(0);
@@ -555,7 +672,7 @@ public class PythonDepsService {
   }
 
   private Collection<LibVersions> findPipLib(PythonDepJson lib) throws
-          AppException {
+      AppException {
     String envName = project.getName();
     String library = lib.getLib();
     List<LibVersions> all = new ArrayList<>();
@@ -566,7 +683,7 @@ public class PythonDepsService {
       Process process = pb.start();
 
       BufferedReader br = new BufferedReader(new InputStreamReader(process.
-              getInputStream()));
+          getInputStream()));
       String line;
       library = library.toLowerCase();
 
@@ -580,7 +697,7 @@ public class PythonDepsService {
         // currently it is indented
         lineSplit = line.split(" +");
 
-        if(line.length() == 0 || lineSplit.length < 2) {
+        if (line.length() == 0 || lineSplit.length < 2) {
           continue;
         }
 
@@ -592,7 +709,7 @@ public class PythonDepsService {
         // split on multiple spaces
         lineSplit = line.split(" +");
 
-        if(lineSplit.length >= 2) {
+        if (lineSplit.length >= 2) {
 
           String libName = lineSplit[0];
 
@@ -611,22 +728,89 @@ public class PythonDepsService {
       int errCode = process.waitFor();
       if (errCode == 2) {
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                getStatusCode(),
-                "Problem listing libraries with pip - report a bug.");
+            getStatusCode(),
+            "Problem listing libraries with pip - report a bug.");
       } else if (errCode == 1) {
         throw new AppException(Response.Status.NO_CONTENT.
-                getStatusCode(),
-                "No results found.");
+            getStatusCode(),
+            "No results found.");
       }
       return all;
 
     } catch (IOException | InterruptedException ex) {
       Logger.getLogger(HopsUtils.class
-              .getName()).log(Level.SEVERE, null, ex);
+          .getName()).log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Problem listing libraries, pip interrupted on this webserver.");
+          getStatusCode(),
+          "Problem listing libraries, pip interrupted on this webserver.");
 
+    }
+  }
+
+  private String getYmlFromPath(String path, String username) throws AppException {
+
+    DsPath ymlPath = pathValidator.validatePath(this.project, path);
+    ymlPath.validatePathExists(inodes, false);
+    org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
+    String ymlFileName = fullPath.getName();
+
+    DistributedFileSystemOps udfso = null;
+    FSDataInputStream is = null;
+
+    try {
+      udfso = dfs.getDfsOps(username);
+      //tests if the user have permission to access this path
+      is = udfso.open(fullPath);
+
+      long fileSize = udfso.getFileStatus(fullPath).getLen();
+      byte[] ymlFileInBytes = new byte[(int) fileSize];
+
+      if (fileSize < 10000) {
+        try (DataInputStream dis = new DataInputStream(is)) {
+          dis.readFully(ymlFileInBytes, 0, (int) fileSize);
+          String ymlFileContents = new String(ymlFileInBytes);
+          return ymlFileContents;
+        }
+      } else {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+            getStatusCode(),
+            ".yml file too large. Maximum size is 10000 bytes.");
+      }
+
+    } catch (IOException ioe) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Failed to create Anaconda environment from .yml file.");
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+
+  private void exportEnvironment(String host, String environmentFile, String hdfsUser) throws AppException {
+
+    String secretDir = DigestUtils.sha256Hex(project.getName() + hdfsUser);
+    String exportPath = settings.getStagingDir() + Settings.PRIVATE_DIRS + secretDir;
+    File exportDir = new File(exportPath);
+    exportDir.mkdirs();
+
+    String prog = settings.getHopsworksDomainDir() + "/bin/condaexport.sh";
+    ProcessBuilder pb = new ProcessBuilder("/usr/bin/sudo", prog,
+        exportPath, project.getName(), host, environmentFile, hdfsUser);
+
+    try {
+      Process process = pb.start();
+      process.waitFor(180l, TimeUnit.SECONDS);
+      int exitCode = process.exitValue();
+      if (exitCode != 0) {
+        throw new IOException("A problem occurred when exporting the environment. ");
+      }
+    } catch (IOException | InterruptedException ex) {
+      logger.log(Level.SEVERE, "Error exporting Anaconda environment as .yml", ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+          getStatusCode(),
+          "Failed to export Anaconda environment as .yml");
     }
   }
 }

@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.jobs.configuration;
@@ -26,12 +45,10 @@ import java.util.EnumSet;
 import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 import io.hops.hopsworks.common.jobs.MutableJsonObject;
-import io.hops.hopsworks.common.jobs.adam.AdamJobConfiguration;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
-import io.hops.hopsworks.common.jobs.tensorflow.TensorFlowJobConfiguration;
 
 /**
  * Represents the persistable configuration of a runnable job. To be persisted
@@ -164,12 +181,8 @@ public abstract class JobConfiguration implements JsonReduceable {
       JobType type = JobType.valueOf(jType);
       JobConfiguration conf;
       switch (type) {
-        case ADAM:
-          conf = new AdamJobConfiguration();
-          break;
         case SPARK:
         case PYSPARK:
-        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -177,9 +190,6 @@ public abstract class JobConfiguration implements JsonReduceable {
           break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
-          break;
-        case TENSORFLOW:
-          conf = new TensorFlowJobConfiguration();
           break;
         default:
           throw new UnsupportedOperationException(
@@ -199,12 +209,8 @@ public abstract class JobConfiguration implements JsonReduceable {
     public static JobConfiguration getJobConfigurationTemplate(JobType type) {
       JobConfiguration conf;
       switch (type) {
-        case ADAM:
-          conf = new AdamJobConfiguration();
-          break;
         case SPARK:
         case PYSPARK:
-        case TFSPARK:
           conf = new SparkJobConfiguration();
           break;
         case FLINK:
@@ -221,10 +227,9 @@ public abstract class JobConfiguration implements JsonReduceable {
     }
 
     public static Set<JobType> getSupportedTypes() {
-      return EnumSet.of(JobType.ADAM,
+      return EnumSet.of(
               JobType.SPARK,
               JobType.PYSPARK,
-              JobType.TFSPARK,
               JobType.FLINK,
               JobType.ERASURE_CODING);
     }

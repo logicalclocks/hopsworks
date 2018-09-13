@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,9 +35,7 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
@@ -41,7 +59,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String anacondaDir;
   private String properties;
 
-  //Kafka properties
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private int executorMemory = 1024;
@@ -53,9 +70,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int selectedMaxExecutors = Settings.SPARK_INIT_EXECS;
   private int numberOfExecutorsInit = Settings.SPARK_INIT_EXECS;
 
-  private boolean tfOnSpark;
-  private int numOfGPUs = 0;
-  private int numOfPs = 0;
+  private int numberOfGpusPerExecutor = 0;
 
   protected static final String KEY_JARPATH = "JARPATH";
   protected static final String KEY_MAINCLASS = "MAINCLASS";
@@ -79,9 +94,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   //    pyspark-distributed-language-processing-hadoop-cluster
   protected static final String KEY_PYSPARK_PYTHON_DIR = "PYSPARK_PYTHON";
   protected static final String KEY_PYSPARK_PYLIB = "PYLIB";
-  protected static final String KEY_IS_TFONSPARK = "IS_TFONSPARK";
   protected static final String KEY_GPUS = "NUM_GPUS";
-  protected static final String KEY_NUM_PS = "NUM_PS";
 
   public SparkJobConfiguration() {
     super();
@@ -154,28 +167,12 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     this.anacondaDir = anacondaDir;
   }
 
-  public boolean isTfOnSpark() {
-    return tfOnSpark;
+  public int getNumberOfGpusPerExecutor() {
+    return numberOfGpusPerExecutor;
   }
 
-  public void setTfOnSpark(boolean tfOnSpark) {
-    this.tfOnSpark = tfOnSpark;
-  }
-
-  public int getNumOfGPUs() {
-    return numOfGPUs;
-  }
-
-  public void setNumOfGPUs(int numOfGPUs) {
-    this.numOfGPUs = numOfGPUs;
-  }
-
-  public int getNumOfPs() {
-    return numOfPs;
-  }
-
-  public void setNumOfPs(int numOfPs) {
-    this.numOfPs = numOfPs;
+  public void setNumberOfGpusPerExecutor(int numberOfGpusPerExecutor) {
+    this.numberOfGpusPerExecutor = numberOfGpusPerExecutor;
   }
 
   /**
@@ -291,9 +288,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   @Override
   public JobType getType() {
-    if (isTfOnSpark()) {
-      return JobType.TFSPARK;
-    } else if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
+    if (this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
       return JobType.PYSPARK;
     } else {
       return JobType.SPARK;
@@ -332,10 +327,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     obj.set(KEY_PYSPARK_PYTHON_DIR, getAnacondaDir() + "/bin/python");
     obj.set(KEY_PYSPARK_PYLIB, getAnacondaDir() + "/lib");
 
-    if (tfOnSpark) {
-      obj.set(KEY_IS_TFONSPARK, Boolean.toString(tfOnSpark));
-      obj.set(KEY_GPUS, "" + numOfGPUs);
-      obj.set(KEY_NUM_PS, "" + numOfPs);
+    if (getType() == JobType.PYSPARK) {
+      obj.set(KEY_GPUS, "" + numberOfGpusPerExecutor);
     }
     return obj;
   }
@@ -343,7 +336,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   @Override
   public void updateFromJson(MutableJsonObject json) throws
       IllegalArgumentException {
-    //First: make sure the given object is valid by getting the type and AdamCommandDTO
     JobType type;
     String jsonArgs, jsonJarpath, jsonMainclass, jsonNumexecs, hs, jsonExecmem,
         jsonExeccors, jsonProperties;
@@ -353,13 +345,12 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     String jsonNumexecsMaxSelected = "";
     String jsonNumexecsInit = "";
     String jsonDynexecs = "NOT_AVAILABLE";
-    String jsonTfOnSpark = "";
+    String jsonPySpark = "";
     String jsonNumOfGPUs = "0";
-    String jsonNumOfPs = "0";
     try {
       String jsonType = json.getString(KEY_TYPE);
       type = JobType.valueOf(jsonType);
-      if (type != JobType.SPARK && type != JobType.PYSPARK && type != JobType.TFSPARK) {
+      if (type != JobType.SPARK && type != JobType.PYSPARK) {
         throw new IllegalArgumentException("JobType must be SPARK.");
       }
       //First: fields that can be null or empty
@@ -379,13 +370,8 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
         jsonNumexecsMaxSelected = json.getString(KEY_DYNEXECS_MAX_SELECTED);
         jsonNumexecsInit = json.getString(KEY_DYNEXECS_INIT);
       }
-      if (json.containsKey(KEY_IS_TFONSPARK)) {
-        //This is to fix backwards compatibility with old jobs
-        jsonTfOnSpark = json.getString(KEY_IS_TFONSPARK);
-        if (jsonTfOnSpark.equalsIgnoreCase("true")) {
-          jsonNumOfGPUs = json.getString(KEY_GPUS);
-          jsonNumOfPs = json.getString(KEY_NUM_PS);
-        }
+      if (jsonMainclass.compareToIgnoreCase(Settings.SPARK_PY_MAINCLASS) == 0) {
+        jsonNumOfGPUs = json.getString(KEY_GPUS);
       }
 
       hs = json.getString(KEY_HISTORYSERVER);
@@ -395,18 +381,27 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
     }
     //Second: allow all superclasses to check validity. To do this: make sure that 
     //the type will get recognized correctly.
+
     json.set(KEY_TYPE, JobType.YARN.name());
     super.updateFromJson(json);
     //Third: we're now sure everything is valid: actually update the state
+
     this.args = jsonArgs;
+
     this.executorCores = Integer.parseInt(jsonExeccors);
+
     this.executorMemory = Integer.parseInt(jsonExecmem);
+
     this.appPath = jsonJarpath;
+
     this.mainClass = jsonMainclass;
+
     this.numberOfExecutors = Integer.parseInt(jsonNumexecs);
+
     this.properties = jsonProperties;
 
-    if (jsonDynexecs.equals("true") || jsonDynexecs.equals("false")) {
+    if (jsonDynexecs.equals(
+        "true") || jsonDynexecs.equals("false")) {
       this.dynamicExecutors = Boolean.parseBoolean(jsonDynexecs);
       this.minExecutors = Integer.parseInt(jsonNumexecsMin);
       this.maxExecutors = Integer.parseInt(jsonNumexecsMax);
@@ -414,11 +409,11 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       this.selectedMaxExecutors = Integer.parseInt(jsonNumexecsMaxSelected);
       this.numberOfExecutorsInit = Integer.parseInt(jsonNumexecsInit);
     }
-    if (!jsonTfOnSpark.equals("")) {
-      this.tfOnSpark = Boolean.parseBoolean(jsonTfOnSpark);
-      this.numOfGPUs = Integer.parseInt(jsonNumOfGPUs);
-      this.numOfPs = Integer.parseInt(jsonNumOfPs);
+
+    if (!jsonNumOfGPUs.equals("")) {
+      this.numberOfGpusPerExecutor = Integer.parseInt(jsonNumOfGPUs);
     }
+
     this.historyServerIp = hs;
 
   }

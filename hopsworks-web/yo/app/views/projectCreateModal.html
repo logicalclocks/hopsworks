@@ -1,0 +1,155 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<div class="modal-header">
+  <button class="close" ng-click="projectCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">New project</h2>
+</div>
+<div class="modal-body">
+  <div growl reference="1" class="pull-right" ></div>
+
+  <form role="form" name="projectForm" ng-submit="projectCreatorCtrl.createProject()" novalidate class="form-validate">
+    <div class="row">
+      <div class="col-md-8">
+        <fieldset>
+
+          <div class="control-group" flex>
+            <label for="projectname" style="color: black;">Name</label>
+            <md-input-container style="height: 50px" class="md-block">
+              <input name="project_name" type="text" id="projectname"
+                     ng-model="projectCreatorCtrl.projectName" tabindex="1"
+                     ng-pattern="projectCreatorCtrl.regex"
+                     autofocus="autofocus"
+                     ng-maxlength="88"
+                     required >
+            </md-input-container>
+            <span ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) && projectForm.project_name.$error.required"
+                  class="text-danger ng-hide">This field is required</span>
+
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.pattern"
+                  class="text-danger ng-hide">Invalid project name. You are not allowed to use spaces in project names and special characters such as __, -, /, \, ?,
+              *, :, |, ', ", <, >, %, (, ), &, ;, #, å, ä, ö, ü, etc..</span>
+
+            <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.maxlength"
+                  class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>
+
+            <p></p>
+
+            <label for="projectname" class="control-label">Description</label>
+
+            <div class="controls">
+              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
+                        rows="3" tabindex="2"></textarea>
+            </div>
+
+
+            <label style="margin-top:20px;" for="projectname" class="control-label">Members</label>
+
+            <div class="controls">
+
+              <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2"
+                         style="min-width: 300px;" tabindex="3">
+
+                <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+                <ui-select-choices
+                  repeat="card in projectCreatorCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
+
+                  <div ng-bind-html="projectCreatorCtrl.card.email | highlight: $select.search"></div>
+                  <small>
+                    <i class="fa fa-user-plus"></i>
+                    <span style="font-size: 14px;;"
+                          ng-bind-html="''+card.email | highlight: $select.search"></span>
+
+                    <br/>
+                    <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
+                    <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
+                  </small>
+                </ui-select-choices>
+              </ui-select>
+
+              <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
+
+                <button class="animate-repeat btn btn-info" style="margin: 3px;"
+                        ng-repeat="member in projectCreatorCtrl.projectMembers"
+                        ng-click="projectCreatorCtrl.removeMember(member)">
+                  <span style="margin-right:10px;"> {{member}}</span>
+                  <span class="close" style="float: none;">× </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="col-md-4">
+        <h3>Services</h3>
+        <fieldset class="standard">
+          <div class="control-group col-md-offset-2" flex>
+            <div class="row" ng-repeat="projectType in projectCreatorCtrl.projectTypes">
+              <md-checkbox class="md-primary" 
+                           ng-checked="projectCreatorCtrl.exists(projectType)"
+                           ng-click="projectCreatorCtrl.addSelected(projectType)"
+                           aria-label="projectType"
+                           tabindex="4">
+                {{ projectType}}
+              </md-checkbox>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div><label class="text-muted">You can still create {{projectCreatorCtrl.user.numRemainingProjects}} project(s)</label></div>
+    <div class="modal-footer">
+      <button class="btn btn-default" type="button" ng-click="projectCreatorCtrl.close()" tabindex="5">Cancel</button>
+      <button class="btn btn-primary" type="submit" 
+              ng-disabled="projectForm.project_name.$error.required
+                        || projectCreatorCtrl.working
+                        || projectForm.project_name.$error.pattern
+                        || projectForm.project_name.$error.maxlength" tabindex="6">
+        <i ng-if="projectCreatorCtrl.working" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+        Create
+      </button>
+
+    </div>
+  </form>
+
+</div>
+

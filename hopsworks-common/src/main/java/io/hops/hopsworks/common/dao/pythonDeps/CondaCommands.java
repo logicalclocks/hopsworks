@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.dao.pythonDeps;
@@ -81,7 +100,12 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT c FROM CondaCommands c WHERE c.status = :status"),
   @NamedQuery(name = "CondaCommands.findByCreated",
           query
-          = "SELECT c FROM CondaCommands c WHERE c.created = :created")})
+          = "SELECT c FROM CondaCommands c WHERE c.created = :created"),
+  @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
+          query
+          = "DELETE FROM CondaCommands c WHERE c.status = :status"),
+  @NamedQuery(name = "CondaCommands.findByHost",
+          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -155,6 +179,10 @@ public class CondaCommands implements Serializable {
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Hosts hostId;
+  @Size(min = 1,
+          max = 10000)
+  @Column(name = "environment_yml")
+  private String environmentYml;
 
   public CondaCommands() {
   }
@@ -162,7 +190,7 @@ public class CondaCommands implements Serializable {
   public CondaCommands(Hosts h, String user, PythonDepsFacade.CondaOp op,
           PythonDepsFacade.CondaStatus status, PythonDepsFacade.CondaInstallType installType,
           PythonDepsFacade.MachineType machineType, Project project, String lib, String version, String channelUrl,
-                       Date created, String arg) {
+                       Date created, String arg,  String environmentYml) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -179,6 +207,7 @@ public class CondaCommands implements Serializable {
     this.lib = lib;
     this.version = version;
     this.arg = arg;
+    this.environmentYml = environmentYml;
   }
 
   public Integer getId() {
@@ -294,7 +323,14 @@ public class CondaCommands implements Serializable {
     this.machineType = machineType;
   }
 
-  
+  public String getEnvironmentYml() {
+    return environmentYml;
+  }
+
+  public void setEnvironmentYml(String environmentYml) {
+    this.environmentYml = environmentYml;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -318,8 +354,9 @@ public class CondaCommands implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.common.dao.pythonDeps.CondaCommands[ id=" + id +
-            " ]";
+    return "[ id=" + id + ", proj=" + proj  + ", op=" + op + ", installType=" + installType 
+        + ", hostType=" + machineType + ", lib=" + lib + ", version=" + version + ", arg=" + arg 
+        + ", channel=" + channelUrl + " ]";
   }
 
 }

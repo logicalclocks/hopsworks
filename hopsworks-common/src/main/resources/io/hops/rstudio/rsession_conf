@@ -1,0 +1,7 @@
+#  /etc/rstudio/rsession.conf
+
+session-timeout-minutes=%%rstudio_session_timeout%%
+
+r-libs-user=~/R/packages
+
+r-cran-repos=https://mirrors.nics.utk.edu/cran/

@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,9 +35,7 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
-
 package io.hops.hopsworks.common.jobs.spark;
 
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -65,7 +83,6 @@ public class SparkJob extends YarnJob {
       jobconfig.setAppName("Untitled Spark Job");
     }
     //If runnerbuilder is not null, it has been instantiated by child class,
-    //i.e. AdamJob
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(jobs);
       runnerbuilder.setJobName(jobconfig.getAppName());
@@ -76,13 +93,14 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    if(!Strings.isNullOrEmpty(jobconfig.getProperties())){
+    if (!Strings.isNullOrEmpty(jobconfig.getProperties())) {
       runnerbuilder.setProperties(jobconfig.getProperties());
     }
     //Set spark runner options
     runnerbuilder.setExecutorCores(jobconfig.getExecutorCores());
     runnerbuilder.setExecutorMemory("" + jobconfig.getExecutorMemory() + "m");
     runnerbuilder.setNumberOfExecutors(jobconfig.getNumberOfExecutors());
+    runnerbuilder.setNumberOfGpusPerExecutor(jobconfig.getNumberOfGpusPerExecutor());
     if (jobconfig.isDynamicExecutors()) {
       runnerbuilder.setDynamicExecutors(jobconfig.isDynamicExecutors());
       runnerbuilder.setNumberOfExecutorsMin(jobconfig.getSelectedMinExecutors());
@@ -95,9 +113,6 @@ public class SparkJob extends YarnJob {
     runnerbuilder.setDriverCores(jobconfig.getAmVCores());
     runnerbuilder.setDriverQueue(jobconfig.getAmQueue());
 
-    //Set TFSPARK params
-    runnerbuilder.setNumOfGPUs(jobconfig.getNumOfGPUs());
-    runnerbuilder.setNumOfPs(jobconfig.getNumOfPs());
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);
     runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
@@ -119,9 +134,22 @@ public class SparkJob extends YarnJob {
     setStdErrFinalDestination(stdErrFinalDestination);
 
     try {
+
+      String firstName = user.getFname();
+      String lastName = user.getLname();
+      String usersFullName = null;
+      if(firstName != null && !firstName.isEmpty()) {
+        usersFullName = firstName;
+      }
+      if(lastName != null && !lastName.isEmpty()) {
+        usersFullName += " " + lastName;
+        usersFullName.trim();
+      }
+
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject().getName(),
-              jobUser, services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
+              jobUser, usersFullName,
+              services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 
     } catch (IOException e) {
       LOG.log(Level.WARNING,

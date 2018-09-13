@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.api.project;
@@ -52,6 +71,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.JobCreationException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -175,46 +195,31 @@ public class DataSetService {
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
 
+
     Response.Status resp = Response.Status.OK;
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     String fullPath = dsPath.getFullPath().toString();
-
-
-    // HDFS_USERNAME is the next param to the bash script
-    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
 
     String localDir = DigestUtils.sha256Hex(fullPath);
     String stagingDir = settings.getStagingDir() + File.separator + localDir;
 
     File unzipDir = new File(stagingDir);
     unzipDir.mkdirs();
+    settings.addUnzippingState(fullPath);
 
-//    Set<PosixFilePermission> perms = new HashSet<>();
-//    //add owners permission
-//    perms.add(PosixFilePermission.OWNER_READ);
-//    perms.add(PosixFilePermission.OWNER_WRITE);
-//    perms.add(PosixFilePermission.OWNER_EXECUTE);
-//    //add group permissions
-//    perms.add(PosixFilePermission.GROUP_READ);
-//    perms.add(PosixFilePermission.GROUP_WRITE);
-//    perms.add(PosixFilePermission.GROUP_EXECUTE);
-//    //add others permissions
-//    perms.add(PosixFilePermission.OTHERS_READ);
-//    perms.add(PosixFilePermission.OTHERS_WRITE);
-//    perms.add(PosixFilePermission.OTHERS_EXECUTE);
-//    Files.setPosixFilePermissions(Paths.get(unzipDir), perms);
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
     List<String> commands = new ArrayList<>();
-//    commands.add("/bin/bash");
-//    commands.add("-c");
+
     commands.add(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh");
     commands.add(stagingDir);
     commands.add(fullPath);
     commands.add(hdfsUser);
 
-    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
     String stdout = "", stderr = "";
-    settings.addUnzippingState(fullPath);
     try {
       int result = commandExecutor.executeCommand();
       stdout = commandExecutor.getStandardOutputFromCommand();
@@ -231,14 +236,77 @@ public class DataSetService {
                 "Could not unzip the file at path: " + fullPath);
       }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      logger.log(Level.FINE, null, e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "Interrupted exception. Could not unzip the file at path: " + fullPath);
     } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(),
               "IOException. Could not unzip the file at path: " + fullPath);
+    }
+
+    return noCacheResponse.getNoCacheResponseBuilder(resp).build();
+  }
+
+  @GET
+  @Path("zip/{path: .+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response zip(@PathParam("path") String path,
+                        @Context SecurityContext sc) throws
+          AppException, AccessControlException {
+
+    Response.Status resp = Response.Status.OK;
+    DsPath dsPath = pathValidator.validatePath(this.project, path);
+    String fullPath = dsPath.getFullPath().toString();
+
+    String localDir = DigestUtils.sha256Hex(fullPath);
+    String stagingDir = settings.getStagingDir() + File.separator + localDir;
+
+    File zipDir = new File(stagingDir);
+    zipDir.mkdirs();
+    settings.addZippingState(fullPath);
+
+    // HDFS_USERNAME is the next param to the bash script
+    Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
+    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+
+    List<String> commands = new ArrayList<>();
+
+    commands.add(settings.getHopsworksDomainDir() + "/bin/zip-background.sh");
+    commands.add(stagingDir);
+    commands.add(fullPath);
+    commands.add(hdfsUser);
+
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands, false);
+    String stdout = "", stderr = "";
+    try {
+      int result = commandExecutor.executeCommand();
+      stdout = commandExecutor.getStandardOutputFromCommand();
+      stderr = commandExecutor.getStandardErrorFromCommand();
+      if (result == 2) {
+        throw new AppException(Response.Status.EXPECTATION_FAILED.
+                getStatusCode(),
+                "Not enough free space on the local scratch directory to download and zip this file."
+                        + "Talk to your admin to increase disk space at the path: hopsworks/staging_dir");
+      }
+      if (result != 0) {
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+                getStatusCode(),
+                "Could not zip the file at path: " + fullPath);
+      }
+    } catch (InterruptedException e) {
+      logger.log(Level.FINE, null, e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Interrupted exception. Could not zip the file at path: " + fullPath);
+    } catch (IOException ex) {
+      logger.log(Level.FINE, null, ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "IOException. Could not zip the file at path: " + fullPath);
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(resp).build();
@@ -303,7 +371,7 @@ public class DataSetService {
         //Get project of project__user the inode is owned by
         inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
       }
-      inodeView.setUnzippingState(settings.getUnzippingState(
+      inodeView.setZipState(settings.getZipState(
               fullPath + "/" + i.getInodePK().getName()));
       Users user = userFacade.findByUsername(inodeView.getOwner());
       if (user != null) {
@@ -333,7 +401,7 @@ public class DataSetService {
 
     InodeView inodeView = new InodeView(inode, fullPath+ "/" + inode.getInodePK().
             getName());
-    inodeView.setUnzippingState(settings.getUnzippingState(
+    inodeView.setZipState(settings.getZipState(
             fullPath+ "/" + inode.getInodePK().getName()));
     Users user = userFacade.findByUsername(inodeView.getOwner());
     if (user != null) {
@@ -1332,7 +1400,13 @@ public class DataSetService {
     ecConfig.setFilePath(fullPath.toString());
 
     //persist the job in the database
-    Jobs jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    Jobs jobdesc = null;
+    try {
+      jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
+    } catch (JobCreationException e) {
+      logger.log(Level.FINE, e.getMessage());
+      throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
+    }
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);

@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,15 +35,16 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.elastic;
 
+import io.hops.hopsworks.common.util.Settings;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.elasticsearch.search.SearchHit;
@@ -34,7 +55,7 @@ import org.elasticsearch.search.SearchHit;
 @XmlRootElement
 public class ElasticHit implements Comparator<ElasticHit> {
 
-  private static final Logger logger = Logger.getLogger(ElasticHit.class.getName());
+  private static final Logger LOG = Logger.getLogger(ElasticHit.class.getName());
 
   //the inode id
   private String id;
@@ -54,11 +75,8 @@ public class ElasticHit implements Comparator<ElasticHit> {
   }
 
   public ElasticHit(SearchHit hit) {
-    //the id of the retrieved hit (i.e. the inode_id)
-    this.id = hit.getId();
     //the source of the retrieved record (i.e. all the indexed information)
-    this.map = hit.getSource();
-    this.type = hit.getType();
+    this.map = hit.getSourceAsMap();
     this.score = hit.getScore();
     //export the name of the retrieved record from the list
     for (Entry<String, Object> entry : map.entrySet()) {
@@ -69,8 +87,21 @@ public class ElasticHit implements Comparator<ElasticHit> {
         this.description = entry.getValue().toString();
       } else if(entry.getKey().equals("public_ds")) {
         this.public_ds = Boolean.valueOf(entry.getValue().toString());
+      } else if (entry.getKey().equals(Settings.META_DOC_TYPE_FIELD)) {
+        this.type = entry.getValue().toString();
+        if (!type.equals(Settings.DOC_TYPE_INODE) && !type.equals(Settings.DOC_TYPE_DATASET) && !type.equals(
+            Settings.DOC_TYPE_PROJECT)) {
+          LOG.log(Level.WARNING, "Got a wrong document type [{0}] was expecting one of these types [{1}, {2}, {3}]",
+              new Object[]{type, Settings.DOC_TYPE_INODE, Settings.DOC_TYPE_DATASET, Settings.DOC_TYPE_PROJECT});
+        }
       }
-      //logger.log(Level.FINE, "KEY -- {0} VALUE --- {1}", new Object[]{entry.getKey(), entry.getValue()});
+    }
+    
+    if(type.equals(Settings.DOC_TYPE_PROJECT)){
+      this.id = map.get(Settings.META_PROJECT_ID_FIELD).toString();
+    }else{
+      //the id of the retrieved hit (i.e. the inode_id)
+      this.id = hit.getId();
     }
   }
 

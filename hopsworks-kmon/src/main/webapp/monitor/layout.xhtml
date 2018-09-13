@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
   ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -16,7 +36,6 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ~
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -25,46 +44,39 @@
 <html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
 
   <h:head>
     <title><ui:insert name="title">Default title</ui:insert></title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
-    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
     <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=/hopsworks/#!/login"/>
     <ui:insert name="css"> </ui:insert>
   </h:head>
 
   <!--    moved hear from head-->
   <ui:insert name="scripts"> </ui:insert>
-
   <h:body>
-
-      <h:form class="stylelayout" id="formToolbar">  
-        <p:toolbar styleClass="MainToolbar">  
-          <p:toolbarGroup align="left">  
-            <p:commandLink value="#{settingsController.name}" action="#{facesContext.externalContext.redirect('/hopsworks')}"/>
-          </p:toolbarGroup> 
-          <p:toolbarGroup align="left">  
-            <p:commandLink value="Admin Home" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}"/>
-          </p:toolbarGroup> 
-
-          <p:toolbarGroup align="left">
-            <p:commandButton value="Clusters" action='clusters'/>
-            <p:commandButton value="Hosts" action="hosts"/>
-          </p:toolbarGroup>  
-
-          <p:toolbarGroup align="right">  
-            <p:commandButton id="userBtn" value="#{loginBean.loginUsername()}" type="button" icon="ui-icon-person"/>  
-            <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-              <!--<p:menuitem value="Backup / Restore" action="backuprestore" />--> 
-              <p:menuitem value="Logout" action='#{loginBean.logOut()}'/> 
-            </p:menu>  
-          </p:toolbarGroup>  
-
-        </p:toolbar> 
-
-      </h:form>
+    <h:form id="monitorToolbarForm"> 
+      <p:toolbar>
+        <f:facet name="left" rendered="#{roleEnforcementPoint.loggedIn}">
+          <p:commandButton value="Hopsworks" action="#{facesContext.externalContext.redirect('/hopsworks')}" ajax="false" process="@monitorToolbarForm" icon="ui-icon-extlink"/>
+          <p:commandButton value="Admin Home" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}" ajax="false" process="@monitorToolbarForm" icon="ui-icon-arrowrefresh-1-w"/>
+          <span class="ui-separator">
+            <span class="ui-icon ui-icon-grip-dotted-vertical" />
+          </span>
+          <p:commandButton value="Clusters" action='clusters' ajax="false" process="@monitorToolbarForm"/>
+          <p:commandButton value="Hosts" action="hosts" ajax="false" process="@monitorToolbarForm"/>
+        </f:facet>
+        <f:facet name="right">
+          <p:menuButton value=" #{loginBean.loginUsername()}" id="userBtn">
+            <p:menuitem value="Logout" action="#{loginBean.logOut()}" icon="ui-icon-extlink"/>           
+          </p:menuButton>
+        </f:facet>
+      </p:toolbar>            
+    </h:form>
 
       <ui:insert name="content">Default content</ui:insert>
 

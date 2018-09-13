@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.api.jobs;
@@ -37,7 +56,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -145,13 +163,7 @@ public class JobService {
   @Inject
   private SparkService spark;
   @Inject
-  private AdamService adam;
-  @Inject
   private FlinkService flink;
-  @Inject
-  private TensorFlowService tensorflow;
-  @Inject
-  private InfluxDBService influxdb;
   @EJB
   private JobController jobController;
   @EJB
@@ -170,8 +182,6 @@ public class JobService {
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private ElasticController elasticController;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -427,7 +437,7 @@ public class JobService {
 
   }
 
-  private List<YarnAppUrlsDTO> getTensorboardUrls(String hdfsUser, String appId) throws AppException {
+  private List<YarnAppUrlsDTO> getTensorBoardUrls(String hdfsUser, String appId) throws AppException {
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
 
     DistributedFileSystemOps client = null;
@@ -435,10 +445,10 @@ public class JobService {
     try {
       client = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = client.getFilesystem().globStatus(new org.apache.hadoop.fs.Path("/Projects/" + project.
-          getName() + "/Logs/TensorFlow/" + appId + "/tensorboard.exec*"));
+          getName() + "/Logs/TensorFlow/" + appId + "/TensorBoard.*"));
       DistributedFileSystem fs = client.getFilesystem();
       for (FileStatus status : statuses) {
-        LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
+        //LOGGER.log(Level.INFO, "Reading tensorboard for: {0}", status.getPath());
         FSDataInputStream in = null;
         try {
           in = fs.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
@@ -471,7 +481,7 @@ public class JobService {
     return urls;
   }
 
-  
+
   /**
    * Get the Job UI url for the specified job
    * <p>
@@ -510,7 +520,7 @@ public class JobService {
         YarnApplicationstate appStates;
         appStates = appStateBean.findByAppId(appId);
         if (appStates != null && appStates.getAppname().toUpperCase().contains("TENSORFLOW")) {
-          urls.addAll(getTensorboardUrls(hdfsUser, appId));
+          urls.addAll(getTensorBoardUrls(hdfsUser, appId));
         }
       }
 
@@ -739,7 +749,7 @@ public class JobService {
     }
     try {
       String trackingUrl;
-      if (param.matches("http([a-z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
+      if (param.matches("http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
         trackingUrl = param;
       } else {
         trackingUrl = "http://" + param;
@@ -789,8 +799,11 @@ public class JobService {
       for (Header header : method.getResponseHeaders()) {
         responseBuilder.header(header.getName(), header.getValue());
       }
+      //method.getPath().contains("/allexecutors") is needed to replace the links under Executors tab
+      //which are in a json response object
       if (method.getResponseHeader("Content-Type") == null || method.
-          getResponseHeader("Content-Type").getValue().contains("html")) {
+          getResponseHeader("Content-Type").getValue().contains("html")
+          || method.getPath().contains("/allexecutors")) {
         final String source = "http://" + method.getURI().getHost() + ":"
             + method.getURI().getPort();
         if (method.getResponseHeader("Content-Length") == null) {
@@ -863,11 +876,11 @@ public class JobService {
 
     ui = ui.replaceAll("(?<=(href|src)=.[^>]{0,200})\\?", "@hwqm");
 
-    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")/(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/"
         + source + "/");
-    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')/(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/"
         + source + "/");
@@ -881,14 +894,19 @@ public class JobService {
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/");
-    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/" + param);
-    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-z])",
+    ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/" + param);
+    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
+        "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
+        + " bytes of logs");
+    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
     return ui;
-
   }
 
   private boolean hasAppAccessRight(String trackingUrl) {
@@ -1352,8 +1370,6 @@ public class JobService {
       try {
         LOGGER.log(Level.INFO, "Request to delete job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});
-
-        elasticController.deleteJobLogs(project.getName(), "logs", settings.getJobLogsIdField(), job.getId());
         jobFacade.removeJob(job);
         LOGGER.log(Level.INFO, "Deleted job name ={0} job id ={1}",
             new Object[]{job.getName(), job.getId()});
@@ -1461,33 +1477,9 @@ public class JobService {
     return this.spark.setProject(project);
   }
 
-  @Path("/tfspark")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public SparkService tfspark() {
-    return this.spark.setProject(project);
-  }
-
-  @Path("/tensorflow")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public TensorFlowService tensorflow() {
-    return this.tensorflow.setProject(project);
-  }
-
-  @Path("/adam")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public AdamService adam() {
-    return this.adam.setProject(project);
-  }
-
   @Path("/flink")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public FlinkService flink() {
     return this.flink.setProject(project);
-  }
-
-  @Path("/{appId}/influxdb")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public InfluxDBService influxdb(@PathParam("appId") String appId) {
-    return this.influxdb.setAppId(appId);
   }
 }

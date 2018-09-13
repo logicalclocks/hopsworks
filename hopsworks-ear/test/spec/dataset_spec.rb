@@ -1,20 +1,40 @@
 =begin
-Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this
-software and associated documentation files (the "Software"), to deal in the Software
-without restriction, including without limitation the rights to use, copy, modify, merge,
-publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-persons to whom the Software is furnished to do so, subject to the following conditions:
+ This file is part of Hopsworks
+ Copyright (C) 2018, Logical Clocks AB. All rights reserved
 
-The above copyright notice and this permission notice shall be included in all copies or
-substantial portions of the Software.
+ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ the GNU Affero General Public License as published by the Free Software Foundation,
+ either version 3 of the License, or (at your option) any later version.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
-BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License along with this program.
+ If not, see <https://www.gnu.org/licenses/>.
+
+ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ are released under the following license:
+
+ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ software and associated documentation files (the "Software"), to deal in the Software
+ without restriction, including without limitation the rights to use, copy, modify, merge,
+ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 describe 'dataset' do
   after (:all){clean_projects}
@@ -386,6 +406,51 @@ describe 'dataset' do
         get_datasets_in(@project, @dataset[:name])
         createdDir = json_body.detect { |inode| inode[:name] == "afterDir" }
         expect(createdDir).to be_nil
+      end
+    end
+  end
+
+  describe "#zip_unzip" do
+    context 'with authentication and sufficient privileges' do
+      before :all do
+        with_valid_project
+        with_valid_dataset
+      end
+
+      it 'create directory to zip' do
+        ds1name = @dataset[:inode_name]
+
+        ds2name = ds1name + "/testDir"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds2name, description: "test dataset", searchable: false, generateReadme: false}
+        expect_status(200)
+
+        ds3name = ds2name + "/subDir"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds3name, description: "test dataset", searchable: false, generateReadme: false}
+        expect_status(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds1name}"
+        ds = json_body.detect { |d| d[:name] == "testDir" }
+        expect(ds).to be_present
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds2name}"
+        ds = json_body.detect { |d| d[:name] == "subDir" }
+        expect(ds).to be_present
+      end
+
+      it 'zip directory' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/zip/#{@dataset[:inode_name]}/testDir"
+        expect_status(200)
+
+        wait_for do
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{@dataset[:inode_name]}"
+          ds = json_body.detect { |d| d[:name] == "testDir.zip" }
+          !ds.nil?
+        end
+      end
+
+      it 'unzip directory' do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/unzip/#{@dataset[:inode_name]}/testDir.zip"
+        expect_status(200)
       end
     end
   end

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
   ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -16,7 +36,6 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ~
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -25,53 +44,44 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
   <h:head>
-    <title>HopsWorks - Password reset</title>
-    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+    <title>Hopsworks - Password reset</title>
+    <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
   </h:head>
 
   <h:body >
-
     <h:form >
-      <div class="ForgotPassword" align="center">
-
-        <p:inputText id="runame" required="true"  
-                     requiredMessage="Enter your email address."
-                     validatorMessage="Invalid email format"
-                     value="#{recoverySelector.uname}"
-                     >
-
-          <f:validateRegex
-            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-
-        </p:inputText>
-        <p:watermark for="runame" value="Enter your email" />
-
-        <p:password id="curpwd" value="#{recoverySelector.passwd}"  
-                    required="true" 
-                    size="40"  
-                    requiredMessage="Enter password"/>
-        <p:watermark for="curpwd" value="******" />
-
-        <p:watermark for="curpwd" value="Enter password " />
-
-
+      <p:panel id="loginPnl" header="Password reset" style="width: 400px; margin: 150px auto;">
+        <h:panelGrid id="loginPanel" columns="3" cellpadding="5">
+          <h:outputText value="Email" />
+          <p:inputText id="runame" required="true"  
+                       requiredMessage="Enter your email address."
+                       validatorMessage="Invalid email format"
+                       value="#{recoverySelector.uname}">
+            <f:validateRegex pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+          </p:inputText>
+          <p:watermark for="runame" value="Enter your email" />
+          <h:outputText value="Password"/>
+          <p:password id="curpwd" value="#{recoverySelector.passwd}"  
+                      required="true" feedback="false" 
+                      requiredMessage="Enter password"/>
+          <p:watermark for="curpwd" value="Enter password " />
+        </h:panelGrid>
         <p:messages id="messages" autoUpdate="true" closable="true"/>
-
-        <h:panelGrid columns="2" style="margin-top: 20px"> 
-          <p:commandButton type="submit"
-                           value="Submit" 
-                           ajax="false"
-                           action="#{recoverySelector.sendQrCode()}"/>
-          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
-        </h:panelGrid>   
-
-      </div>
+        <div style="margin-left: 215px;">
+          <h:panelGrid columns="2"> 
+            <p:commandButton type="submit"
+                             value="Submit" 
+                             ajax="false"
+                             action="#{recoverySelector.sendQrCode()}"/>
+            <p:commandButton type="submit" value="Cancel" action="#{facesContext.externalContext.redirect('/hopsworks')}" process="@this"/>
+          </h:panelGrid>  
+        </div>
+      </p:panel>
     </h:form>
-
   </h:body>
 </html>

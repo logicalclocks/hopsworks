@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.api.dela;
@@ -50,11 +69,13 @@ import io.hops.hopsworks.dela.old_dto.HopsContentsSummaryJSON;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -208,18 +229,43 @@ public class DelaService {
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets readme file from a provided list of peers")
-  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON) 
+  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON)
     throws ThirdPartyException {
+    Optional<FilePreviewDTO> readme = tryReadmeLocally(publicDSId);
+    if (!readme.isPresent()) {
+      readme = tryReadmeRemotely(publicDSId, peersJSON);
+    }
+    if (!readme.isPresent()) {
+      throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "readme retrieval fail",
+        ThirdPartyException.Source.REMOTE_DELA, "no local or remote version of readme found");
+    }
+    return success(readme.get());
+  }
+  
+  private Optional<FilePreviewDTO> tryReadmeLocally(String publicDSId) throws ThirdPartyException {
+    Optional<Dataset> dataset = delaDatasetCtrl.isPublicDatasetLocal(publicDSId);
+    if(dataset.isPresent()) {
+      try {
+        FilePreviewDTO readme = delaDatasetCtrl.getLocalReadmeForPublicDataset(dataset.get());
+        return Optional.of(readme);
+      } catch (IOException | IllegalAccessException ex) {
+        throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "readme access problem",
+          ThirdPartyException.Source.HDFS, "filesystem access problem");
+      }
+    }
+    return Optional.empty();
+  }
+  
+  private Optional<FilePreviewDTO> tryReadmeRemotely(String publicDSId, BootstrapDTO peersJSON) {
     for(ClusterAddressDTO peer : peersJSON.getBootstrap()) {
       try {
         FilePreviewDTO readme = remoteDelaCtrl.readme(publicDSId, peer);
-        return success(readme);
+        return Optional.of(readme);
       } catch (ThirdPartyException ex) {
         continue;
       }
     }
-    throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), "communication fail",
-        ThirdPartyException.Source.REMOTE_DELA, "all peers for:" + publicDSId);
+    return Optional.empty();
   }
   //********************************************************************************************************************
   private Response success(Object content) {

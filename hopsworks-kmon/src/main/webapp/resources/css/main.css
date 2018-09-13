@@ -1,0 +1,195 @@
+ /*
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+
+ * Hopsworks is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+body {
+  margin: 0px;
+  font-family: Source Sans Pro, sans-serif;
+  font-size: 12px;
+}
+
+.admin-main-layout {
+  text-align: center;
+  min-height: 900px;
+  height: auto !important;
+}
+
+.admin-main-layout .ui-widget-content {
+  border-width: 0px;  
+  overflow-y: auto;
+}
+
+.ui-widget-content {
+  height: auto !important;
+}
+
+.cluster-contener {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.ui-panel .ui-panel-content {
+  border: 0;
+  background: 0;
+  padding: 0 !important;
+}
+
+.admin-main-layout::-webkit-scrollbar {
+  display: none;
+}
+
+.container{
+  display: block;
+  height: auto !important;
+  padding-top: 0;
+  z-index: 5;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 1200px;
+}
+
+.container:before, .container:after {
+  display: table;
+  content: "";
+  line-height: 0;
+  clear: both;
+}
+
+.content{
+  display: inline-block;
+  width:100%;
+  height: auto !important;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+}
+
+.ui-panelgrid {
+    margin: -1px;
+    border-collapse: collapse;
+    border: none;
+    width: 100%;
+    font-family: Arial,sans-serif;
+    font-size: 20px;
+}
+
+.services-header {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+
+.ui-panel .ui-panel-titlebar {
+    padding: 0.6em 0.6em 0.1em 0em;
+    font-size: 20px;
+    margin: 5px;
+    border-radius: 0px;
+    border-left: none;
+    border-top: none;
+    border-right: none;
+    background: none;
+}
+
+.ui-datatable table {
+    border-collapse: collapse;
+    border: none;
+    font-family: Arial,sans-serif;
+    font-size: 12px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.ui-panel .Health-Good {
+    color: green;
+}
+
+.ui-panel .Health-Bad {
+  color: red;
+}
+
+.ui-datatable {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: Arial,sans-serif;
+}
+
+.CapacityUsage {
+    display: block;
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+    margin: auto 0 auto 0;
+    font-size: 11px;
+    line-height: 11px;
+    border: 1px solid #444;
+    background-color: gray;
+}
+
+.CapacityUsage .reading {
+  display: block;
+  position: relative;
+  z-index: 1;
+  height: 12px;
+  border: 1px solid transparent;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  text-shadow: #222 0 1px 2px;
+}
+
+.CapacityUsage.priorityLow .bar {
+  background-color: #080;
+}
+
+.CapacityUsage.priorityMed .bar {
+  background-color: #AA881A;
+}
+
+.CapacityUsage.priorityHigh .bar {
+  background-color: #B30000;
+}
+
+.CapacityUsage .bluebar, .CapacityUsage .greenbar, .CapacityUsage .bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*innerDataTable*/
+.ui-datatable.innerDataTable .ui-datatable-data  {
+  border-style: hidden;
+}
+
+
+.ui-datatable.innerDataTable table thead tr {
+  display: none;
+}
+
+.ui-datatable.innerDataTable .ui-datatable-data td div.ui-dt-c {
+  padding: 0px;
+  background-color: transparent;
+}
+
+.ui-datatable.innerDataTable .ui-widget-content {
+  background: transparent;
+}

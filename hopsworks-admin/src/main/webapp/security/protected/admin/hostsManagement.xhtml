@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
   ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -16,7 +36,6 @@
   ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ~
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -26,15 +45,14 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
       >
   <f:view contentType="text/html">
 
     <h:head>
-      <title><ui:insert name="title">HopsWorks</ui:insert></title>
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <title><ui:insert name="title">Hopsworks</ui:insert></title>
+      <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
@@ -45,7 +63,17 @@
       </ui:insert>
 
 
-      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{roleEnforcementPoint.admin}">  
+      <p:layout id="UserMgmLayout" styleClass="admin-main-layout" rendered="#{roleEnforcementPoint.admin}">  
+
+        <h:form rendered="#{nodesBean.isOutput()}">
+          <p:outputPanel style="margin-left: 10px;">
+            <h3>Logs</h3>
+            <h:inputTextarea readonly="#{nodesBean.isOutput()}" 
+                             value="#{nodesBean.getOutput()}" class="form-control" 
+                             style="margin-left: 30px; min-width: 80%" rows="6"></h:inputTextarea>
+          </p:outputPanel>
+        </h:form>
+
 
         <p:layoutUnit id="centerLayout" position="center">
 
@@ -60,8 +88,8 @@
 
 
                 <div class="ui-g">
-                  <div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>
-                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
+                  <!--<div class="ui-g-12 ui-md-2" style="float:left"><h3>Anaconda for New Nodes</h3></div>-->
+<!--                  <div class="ui-g-12 ui-md-8 ui-g-nopad">
                     <div class="ui-g-12">
                       <h:outputText value="Anaconda package:  #{nodesBean.anacondaLastSynchronized()}"
                                     style="float:left"/>
@@ -70,19 +98,24 @@
                       <h:outputText value="Gpu Anaconda package: #{nodesBean.anacondaGpuLastSynchronized()}"
                                     style="float:left"/>
                     </div>
-                  </div>
+                  </div>-->
+
                   <div class="ui-g-12 ui-md-2">
-                    <p:commandButton value="Zip Anaconda Libraries"
+                    <p:commandButton value="Rotate host keys"
                                      style="float:right" 
-                                     actionListener="#{nodesBean.zipUpAnacondaLibs}" ajax ="true" update="@all">
+                                     actionListener="#{nodesBean.rotateKeys}"
+                                     icon="ui-icon-arrowrefresh-1-w"
+                                     update=":manageClusterNodes:growl">
                     </p:commandButton>
                   </div>
+
                 </div>
 
                 <p:dataTable id="nodesTable" var="node"
                              value="#{nodesBean.allNodes}"
                              editable="true"
                              style="table-layout: auto"
+			     resizableColumns="true" liveResize="true"
                              rows="25"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport}
@@ -177,11 +210,25 @@
                     </p:cellEditor>
                   </p:column>
 
+                  <p:column id="condaEnabled" headerText="Conda enabled">
+
+                    <p:cellEditor>
+                      <f:facet name="output"><h:selectBooleanCheckbox value="#{node.condaEnabled}" disabled="true"/></f:facet>
+                      <f:facet name="input"><p:selectBooleanCheckbox value="#{node.condaEnabled}"/></f:facet>
+                    </p:cellEditor>
+                  </p:column>
 
                   <p:column style="width:32px">
                     <p:rowEditor />
                   </p:column>
 
+                  <p:column id="rsync" headerText="Synchronize Conda" styleClass="#{nodesBean.condaStyle(node.hostname)}">
+                                        <p:commandButton value="Sync up Anaconda"
+                                     style="float:right" 
+                                     actionListener="#{nodesBean.rsyncAnacondaLibs(node.hostIp)}" ajax ="true" update="@all">
+                    </p:commandButton>
+                  </p:column>
+                  
                 </p:dataTable>
 
                 <p:contextMenu for="nodesTable">

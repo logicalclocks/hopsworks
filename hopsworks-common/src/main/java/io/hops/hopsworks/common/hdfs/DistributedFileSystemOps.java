@@ -1,4 +1,24 @@
 /*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -15,7 +35,6 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package io.hops.hopsworks.common.hdfs;
@@ -43,6 +62,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 import org.apache.hadoop.security.UserGroupInformation;
 
 public class DistributedFileSystemOps {
@@ -342,6 +362,10 @@ public class DistributedFileSystemOps {
     Path location = new Path(path);
     return dfs.exists(location);
   }
+  
+  public boolean exists(Path path) throws IOException {
+    return dfs.exists(path);
+  }
 
   /**
    * Copy a file within HDFS. Largely taken from Hadoop code.
@@ -377,6 +401,10 @@ public class DistributedFileSystemOps {
       dfs.mkdirs(dirsPath);
     }
     return dfs.create(dstPath);
+  }
+  
+  public FSDataOutputStream create(Path path) throws IOException {
+    return create(path.toString());
   }
 
   /**
@@ -578,9 +606,29 @@ public class DistributedFileSystemOps {
    */
   public void setMetaEnabled(String location) throws IOException {
     Path path = new Path(location);
+    setMetaEnabled(path);
+  }
+  
+  /**
+   * Marks a file/folder in location as metadata enabled
+   * <p/>
+   * @param path
+   * @throws IOException
+   */
+  public void setMetaEnabled(Path path) throws IOException {
     this.dfs.setMetaEnabled(path, true);
   }
 
+  /**
+   * Unset Metadata enabled flag on a given path
+   * <p/>
+   * @param path
+   * @throws IOException
+   */
+  public void unsetMetaEnabled(Path path) throws IOException {
+    this.dfs.setMetaEnabled(path, false);
+  }
+  
   /**
    * Returns the number of blocks of a file in the given path.
    * The path has to resolve to a file.
@@ -654,8 +702,17 @@ public class DistributedFileSystemOps {
     return -1;
   }
 
+  public long getLength(Path path) throws IOException {
+    return dfs.getLength(path);
+  }
+  
   public long getDatasetSize(Path datasetPath) throws IOException {
     ContentSummary cs = dfs.getContentSummary(datasetPath);
     return cs.getLength();
+  }
+  
+  public long getLastUpdatedDatasetSize(Path datasetPath) throws IOException {
+    LastUpdatedContentSummary cs = dfs.getLastUpdatedContentSummary(datasetPath);
+    return cs.getSpaceConsumed();
   }
 }
