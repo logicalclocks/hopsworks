@@ -452,9 +452,6 @@ describe 'dataset' do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
         expect_status(200)
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/zip/#{@dataset[:inode_name]}/testDir"
-        expect_status(404)
-
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/unzip/#{@dataset[:inode_name]}/testDir.zip"
         expect_status(200)
 
