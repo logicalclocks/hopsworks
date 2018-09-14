@@ -36,37 +36,39 @@
  DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
-describe 'tfserving' do
-  after (:all){clean_projects}
+describe "On #{ENV['OS']}" do
+  describe 'tfserving' do
+    after (:all){clean_projects}
 
-  describe "#create" do
+    describe "#create" do
 
-    context 'without authentication' do
-      before :all do
-        with_valid_project
-        reset_session
+      context 'without authentication' do
+        before :all do
+          with_valid_project
+          reset_session
+        end
+
+        it "should fail to create the serving" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModel",
+               modelPath: "hdfs:///Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1}
+          expect_json(errorMsg: "Client not authorized for this invocation")
+          expect_status(401)
+        end
       end
 
-      it "should fail to create the serving" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {modelName: "testModel",
-             modelPath: "hdfs:///Projects/#{@project[:projectname]}/Models/mnist/",
-             modelVersion: 1}
-        expect_json(errorMsg: "Client not authorized for this invocation")
-        expect_status(401)
-      end
-    end
-
-    context 'with authentication' do
-      before :all do
-        with_valid_project
-      end
-      it "should create the serving" do
-         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {modelName: "testModel",
-             modelPath: "hdfs:///Projects/#{@project[:projectname]}/Models/mnist/",
-             modelVersion: 1}
-        expect_status(201)
+      context 'with authentication' do
+        before :all do
+          with_valid_project
+        end
+        it "should create the serving" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {modelName: "testModel",
+               modelPath: "hdfs:///Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1}
+          expect_status(201)
+        end
       end
     end
   end
