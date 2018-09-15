@@ -82,7 +82,6 @@ import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJob;
 import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.jobhistory.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SystemCommandExecutor;
@@ -1488,15 +1487,9 @@ public class DataSetService {
     Inode inode = inodes.getInodeAtPath(inodePath);
     Template temp = template.findByTemplateId(templateid);
     temp.getInodes().add(inode);
-
-    try {
-      //persist the relationship
-      this.template.updateTemplatesInodesMxN(temp);
-    } catch (DatabaseException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              ResponseMessages.TEMPLATE_NOT_ATTACHED);
-    }
+  
+    //persist the relationship
+    this.template.updateTemplatesInodesMxN(temp);
 
     JsonResponse json = new JsonResponse();
     json.setSuccessMessage("The template was attached to file "

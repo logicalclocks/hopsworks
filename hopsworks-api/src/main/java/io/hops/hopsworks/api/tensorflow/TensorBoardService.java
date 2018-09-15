@@ -28,7 +28,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.ApiOperation;
@@ -120,7 +120,7 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId,
-                                            @Context SecurityContext sc) throws AppException {
+                                            @Context SecurityContext sc) throws AppException, ServiceException {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
@@ -147,40 +147,26 @@ public class TensorBoardService {
     }
 
     TensorBoardDTO tensorBoardDTO = null;
-    try {
-      tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
-      waitForTensorBoardLoaded(tensorBoardDTO);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
-    } catch(TensorBoardCleanupException tbce) {
-      LOGGER.log(Level.SEVERE, "Failed to start TensorBoard", tbce);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not start TensorBoard.");
-    }
+    tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);
+    waitForTensorBoardLoaded(tensorBoardDTO);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(tensorBoardDTO).build();
   }
 
   @ApiOperation("Stop the running TensorBoard for the logged in user")
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public Response stopTensorBoard(@Context SecurityContext sc) throws AppException {
+  public Response stopTensorBoard(@Context SecurityContext sc) throws ServiceException {
 
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-
-    try {
-      TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
-      if(tbDTO == null) {
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-      }
-
-      tensorBoardController.cleanup(this.project, user);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-    } catch(TensorBoardCleanupException tbce) {
-      LOGGER.log(Level.SEVERE, "Failed to stop TensorBoard", tbce);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "Could not stop TensorBoard.");
+  
+    TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
+    if (tbDTO == null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
     }
+  
+    tensorBoardController.cleanup(this.project, user);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
   private void waitForTensorBoardLoaded(TensorBoardDTO tbDTO) {

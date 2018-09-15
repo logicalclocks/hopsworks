@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.dao.metadata.db;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -50,12 +51,11 @@ import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.metadata.RawData;
 import io.hops.hopsworks.common.dao.metadata.RawDataPK;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 @Stateless
 public class RawDataFacade extends AbstractFacade<RawData> {
 
-  private static final Logger logger = Logger.getLogger(RawDataFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(RawDataFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -70,7 +70,7 @@ public class RawDataFacade extends AbstractFacade<RawData> {
     super(RawData.class);
   }
 
-  public RawData getRawData(RawDataPK rawdataPK) throws DatabaseException {
+  public RawData getRawData(RawDataPK rawdataPK) {
 
     TypedQuery<RawData> q = this.em.createNamedQuery("RawData.findByPrimaryKey",
             RawData.class);
@@ -88,9 +88,8 @@ public class RawDataFacade extends AbstractFacade<RawData> {
    * going to be persisted/updated in the database
    * <p/>
    * @param raw
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void addRawData(RawData raw) throws DatabaseException {
+  public void addRawData(RawData raw) {
 
     try {
       RawData r = this.contains(raw) ? raw : this.getRawData(raw.getRawdataPK());
@@ -112,13 +111,13 @@ public class RawDataFacade extends AbstractFacade<RawData> {
 
       this.em.flush();
       this.em.clear();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException("Could not add raw data " + raw, e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, "Could not add raw data " + raw, ex);
+      throw ex;
     }
   }
 
-  public int getLastInsertedTupleId() throws DatabaseException {
+  public int getLastInsertedTupleId() {
 
     String queryString = "RawData.lastInsertedTupleId";
 

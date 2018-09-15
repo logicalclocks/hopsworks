@@ -55,21 +55,29 @@ import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeys;
 import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.SocketException;
 import java.security.NoSuchAlgorithmException;
@@ -81,15 +89,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.persistence.TransactionRequiredException;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
 
 @Stateless
 //the operations in this method does not need any transaction
@@ -178,7 +177,7 @@ public class UsersController {
       auditManager.registerAccountChange(loggedInUser,
           UserAccountStatus.ACTIVATED_ACCOUNT.name(),
           UserAuditActions.SUCCESS.name(), "", user1, httpServletRequest);
-    } catch (ApplicationException | IllegalArgumentException ex) {
+    } catch (IllegalArgumentException ex) {
       auditManager.registerAccountChange(loggedInUser,
           UserAccountStatus.ACTIVATED_ACCOUNT.name(),
           RolesAuditAction.FAILED.name(), "User could not be activated.",
@@ -593,13 +592,9 @@ public class UsersController {
 
   }
 
-  public void updateStatus(Users id, UserAccountStatus stat) throws ApplicationException {
+  public void updateStatus(Users id, UserAccountStatus stat) {
     id.setStatus(stat);
-    try {
-      userFacade.update(id);
-    } catch (TransactionRequiredException ex) {
-      throw new ApplicationException("Need a transaction to update the user status");
-    }
+    userFacade.update(id);
   }
 
   public void updateSecret(int id, String sec) {

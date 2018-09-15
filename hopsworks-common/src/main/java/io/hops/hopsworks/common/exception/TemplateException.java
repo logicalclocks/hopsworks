@@ -13,23 +13,22 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.hops.hopsworks.common.exception;
 
-public class DatabaseException extends Exception {
-
-  private String exception;
-
-  public DatabaseException(String exception) {
-    super(exception);
+public class TemplateException extends RESTException {
+  
+  public TemplateException() {
   }
-
-  public DatabaseException(String exception, Throwable throwable) {
-    super(exception, throwable);
+  
+  public TemplateException(RESTCodes.MetadataErrorCode code) {
+    super(code);
   }
-
-  @Override
-  public String getMessage() {
-    return this.exception;
+  
+  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg) {
+    super(code, usrMsg);
+  }
+  
+  public TemplateException(RESTCodes.MetadataErrorCode code, String usrMsg, String devMsg) {
+    super(code, usrMsg, devMsg);
   }
 }

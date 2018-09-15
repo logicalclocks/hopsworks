@@ -62,16 +62,15 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -79,12 +78,13 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.NonUniqueResultException;
 import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.security.AccessControlException;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -421,8 +421,6 @@ public class DatasetController {
       throw new AccessControlException(ex);
     } catch (IOException ex) {
       throw new IOException("Could not create the directory at " + path, ex);
-    } catch (DatabaseException e) {
-      throw new IOException("Could not attach template to folder. ", e);
     }
     return success;
   }

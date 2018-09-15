@@ -70,7 +70,6 @@ import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityUtils;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import java.io.IOException;
@@ -259,7 +258,7 @@ public class ResetPassword implements Serializable {
 
       try {
         usersController.updateStatus(people, UserAccountStatus.ACTIVATED_ACCOUNT);
-      } catch (ApplicationException ex) {
+      } catch (Exception ex) {
         logger.log(Level.SEVERE, null, ex);
         return "";
       }

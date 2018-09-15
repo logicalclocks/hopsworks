@@ -115,7 +115,7 @@ import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
-import io.hops.hopsworks.common.exception.TensorBoardCleanupException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -150,7 +150,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
-import javax.xml.rpc.ServiceException;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.codec.binary.Base64;
@@ -1621,8 +1620,8 @@ public class ProjectController {
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
-      throws IOException, InterruptedException, ExecutionException,
-      AppException, CAException, TensorBoardCleanupException {
+    throws IOException, InterruptedException, ExecutionException,
+    AppException, CAException, io.hops.hopsworks.common.exception.ServiceException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2488,12 +2487,12 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeJupyter(Project project) throws AppException {
+  public void removeJupyter(Project project) {
     jupyterProcessFacade.stopProject(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeTensorBoard(Project project) throws TensorBoardCleanupException {
+  public void removeTensorBoard(Project project) throws ServiceException {
     tensorBoardController.removeProject(project);
   }
 

@@ -39,18 +39,18 @@
 
 package io.hops.hopsworks.common.dao.metadata.db;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 
 @Stateless
 public class MTableFacade extends AbstractFacade<MTable> {
 
-  private static final Logger logger = Logger.getLogger(MTableFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(MTableFacade.class.
           getName());
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -65,7 +65,7 @@ public class MTableFacade extends AbstractFacade<MTable> {
     super(MTable.class);
   }
 
-  public MTable getTable(int tableid) throws DatabaseException {
+  public MTable getTable(int tableid) {
     return this.em.find(MTable.class, tableid);
   }
 
@@ -75,9 +75,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
    *
    * @param table
    * @return the id of the newly inserted table or -1 in case of error
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public int addTable(MTable table) throws DatabaseException {
+  public int addTable(MTable table) {
 
     try {
 
@@ -107,9 +106,9 @@ public class MTableFacade extends AbstractFacade<MTable> {
       this.em.flush();
       this.em.clear();
       return t.getId();
-    } catch (IllegalStateException | SecurityException e) {
-
-      throw new DatabaseException("Could not add table " + table, e);
+    } catch (IllegalStateException | SecurityException ex) {
+      LOGGER.log(Level.SEVERE, "Could not add table " + table, ex);
+      throw ex;
     }
   }
 
@@ -120,9 +119,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
    * <p/>
    *
    * @param table The table object that's going to be removed
-   * @throws se.kth.hopsworks.meta.exception.DatabaseException
    */
-  public void deleteTable(MTable table) throws DatabaseException {
+  public void deleteTable(MTable table) {
 
     try {
       MTable t = this.contains(table) ? table : this.getTable(table.getId());
@@ -136,7 +134,8 @@ public class MTableFacade extends AbstractFacade<MTable> {
       }
 
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException("Could not delete table " + table, ex);
+      LOGGER.log(Level.SEVERE, "Could not add table " + table, ex);
+      throw ex;
     }
   }
 

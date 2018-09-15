@@ -63,6 +63,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.TemplateException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -84,8 +86,6 @@ import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
 import io.hops.hopsworks.common.upload.HttpUtils;
 import io.hops.hopsworks.common.upload.ResumableInfo;
 import io.hops.hopsworks.common.upload.ResumableInfoStorage;
@@ -139,7 +139,7 @@ public class UploadService {
    * is not valid
    */
   public void confFileUpload(DsPath dsPath, String username,
-                             int templateId, String role) throws AppException {
+                             int templateId, String role) {
     if (dsPath.getDsRelativePath() != null) {
       // We need to validate that each component of the path, either it exists
       // or it is a valid directory name
@@ -282,7 +282,7 @@ public class UploadService {
           @FormDataParam("flowRelativePath") String flowRelativePath,
           @FormDataParam("flowTotalChunks") String flowTotalChunks,
           @FormDataParam("flowTotalSize") String flowTotalSize)
-          throws AppException, IOException {
+    throws AppException, IOException, GenericException, TemplateException {
 
     JsonResponse json = new JsonResponse();
 
@@ -395,11 +395,6 @@ public class UploadService {
         throw new AccessControlException(
                 "Permission denied: You can not upload to this folder. ");
 
-      } catch (IOException e) {
-        logger.log(Level.INFO, "Failed to write to HDFS", e);
-        json.setErrorMsg("Failed to write to HDFS");
-        return noCacheResponse.getNoCacheResponseBuilder(
-                Response.Status.BAD_REQUEST).entity(json).build();
       } finally {
         if (dfsOps != null) {
           dfs.closeDfsClient(dfsOps);
@@ -418,31 +413,21 @@ public class UploadService {
 
     Template templ = template.findByTemplateId(info.getResumableTemplateId());
     templ.getInodes().add(inode);
-
-    try {
-      //persist the relationship table
-      template.updateTemplatesInodesMxN(templ);
-    } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, "Something went wrong.", e);
-    }
+  
+    //persist the relationship table
+    template.updateTemplatesInodesMxN(templ);
   }
 
   /**
    * Persist a template to the database after it has been uploaded to hopsfs
    * <p/>
-   * @throws AppException
    */
-  private void persistUploadedTemplate(String fileContent) throws AppException {
-    try {
-      //the file content has to be wrapped in a TemplateMessage message
-      UploadedTemplateMessage message = new UploadedTemplateMessage();
-      message.setMessage(fileContent);
-
-      this.responseBuilder.persistUploadedTemplate(message);
-    } catch (ApplicationException e) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), e.getMessage());
-    }
+  private void persistUploadedTemplate(String fileContent) throws GenericException, TemplateException {
+    //the file content has to be wrapped in a TemplateMessage message
+    UploadedTemplateMessage message = new UploadedTemplateMessage();
+    message.setMessage(fileContent);
+  
+    this.responseBuilder.persistUploadedTemplate(message);
   }
 
   private int getResumableChunkNumber(HttpServletRequest request) {

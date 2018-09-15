@@ -40,35 +40,34 @@
 package io.hops.hopsworks.api.metadata.wscomm;
 
 import io.hops.hopsworks.api.metadata.wscomm.message.Message;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.websocket.Decoder;
+import javax.websocket.EndpointConfig;
 import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.websocket.DecodeException;
-import javax.websocket.Decoder;
-import javax.websocket.EndpointConfig;
 
 public class MessageDecoder implements Decoder.Text<Message> {
 
-  private static final Logger logger = Logger.getLogger(MessageDecoder.class.
+  private static final Logger LOGGER = Logger.getLogger(MessageDecoder.class.
           getName());
 
   @Override
-  public Message decode(String textMessage) throws DecodeException {
+  public Message decode(String textMessage)  {
 
     Message msg = null;
     JsonObject obj = Json.createReader(new StringReader(textMessage)).
             readObject();
-
+  
+    DecoderHelper helper = new DecoderHelper(obj);
     try {
-      DecoderHelper helper = new DecoderHelper(obj);
       msg = helper.getMessage();
-      msg.init(obj);
-    } catch (ApplicationException e) {
-      logger.log(Level.SEVERE, e.getMessage(), e);
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException ex) {
+      LOGGER.log(Level.SEVERE, "Could not initialize message", ex);
     }
+    msg.init(obj);
     return msg;
   }
 

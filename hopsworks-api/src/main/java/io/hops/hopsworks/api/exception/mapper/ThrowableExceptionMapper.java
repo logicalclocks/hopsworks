@@ -1,24 +1,4 @@
 /*
- * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- * are released under the following license:
- *
- * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
- *
- * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
- * are released under the following license:
- *
  * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -35,93 +15,134 @@
  * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package io.hops.hopsworks.api.exception.mapper;
 
-import io.hops.hopsworks.common.util.JsonResponse;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.RESTException;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
+import org.apache.hadoop.security.AccessControlException;
+
+import javax.ejb.AccessLocalException;
 import javax.persistence.PersistenceException;
+import javax.security.auth.login.LoginException;
+import javax.transaction.RollbackException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Provider
 public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
-
+  
   private final static Logger LOGGER = Logger.getLogger(ThrowableExceptionMapper.class.getName());
-
+  
   @Override
   @Produces(MediaType.APPLICATION_JSON)
   public Response toResponse(Throwable ex) {
-    LOGGER.log(Level.INFO, "ThrowableExceptionMapper cause: {0}", ex.getClass());
-    ex.printStackTrace();
-    LOGGER.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getMessage());
+    //Order is important, check children first
     if (ex instanceof IllegalArgumentException) {
       return handleIllegalArgumentException((IllegalArgumentException) ex);
     } else if (ex instanceof IllegalStateException) {
       return handleIllegalStateException((IllegalStateException) ex);
+    } else if (ex instanceof SecurityException) {
+      return handleSecurityException((SecurityException) ex);
+    } else if (ex instanceof LoginException) {
+      return handleLoginException((LoginException) ex);
+    } else if (ex instanceof AccessControlException) {
+      return handleAccessControlException((AccessControlException) ex);
+    } else if (ex instanceof AccessLocalException) {
+      return handleAccessLocalException((AccessLocalException) ex);
+    } else if (ex instanceof RESTException) {
+      return handleRESTException((RESTException) ex);
+    } else if (ex instanceof RollbackException) {
+      return handleRollbackException((RollbackException) ex);
     } else {
-      JsonResponse json = new JsonResponse();
-      json.setErrorMsg("Oops! something went wrong :(");
-      setHttpStatus(ex, json);
-      return Response.status(json.getStatusCode()).entity(json).build();
+      if (ex instanceof WebApplicationException) {
+        LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+        return handleRESTException(
+          Response.Status.fromStatusCode(((WebApplicationException) ex).getResponse().getStatus()),
+          new GenericException(RESTCodes.GenericErrorCode.WEBAPPLICATION, null, ex.getMessage()));
+      } else if (ex instanceof PersistenceException) {
+        Throwable e = ex;
+        //get to the bottom of this
+        while (e.getCause() != null) {
+          e = e.getCause();
+        }
+        if (e.getMessage().contains("Connection refused") || e.getMessage().contains("Cluster Failure")) {
+          return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.DATABASE_UNAVAILABLE, null,
+            e.getMessage()));
+        } else {
+          return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.PERSISTENCE_ERROR, null,
+            e.getMessage()));
+        }
+      } else if (ex instanceof IOException) {
+        if (ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
+          return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, null,
+            ex.getMessage()));
+        }
+      }
     }
+//    LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage()));
   }
-
-  private void setHttpStatus(Throwable ex, JsonResponse json) {
-    if (ex instanceof WebApplicationException) {
-      json.setStatusCode(((WebApplicationException) ex).getResponse().getStatus());
-    } else if (ex instanceof PersistenceException) {
-      Throwable e = ex;
-      //get to the bottom of this
-      while (e.getCause() != null) {
-        e = e.getCause();
-      }
-      if (e.getMessage().contains("Connection refused") || e.getMessage().contains("Cluster Failure")) {
-        LOGGER.log(Level.SEVERE, "Database Exception: {0}", e.getMessage());
-        json.setErrorMsg("The database is temporarily unavailable. Please try again later.");
-        json.setStatus("Database unavailable.");
-        json.setStatusCode(Response.Status.SERVICE_UNAVAILABLE.getStatusCode());
-      } else {
-        json.setErrorMsg("Persistence Exception");
-        json.setStatus("Persistence Exception.");
-        json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-      }
-    } else if (ex instanceof IOException) {
-      if (ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
-        json.setErrorMsg("Zepplin notebook dir not found, or notebook storage isn't initialized.");
-        json.setStatusCode(Response.Status.SERVICE_UNAVAILABLE.getStatusCode());
-      } else {
-        json.setErrorMsg(ex.getMessage());
-        json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-      }
-    } else {
-      //defaults to internal server error 500
-      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-    }
+  
+  private Response handleIllegalArgumentException(IllegalArgumentException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, null,
+      ex.getMessage()));
   }
-
-  private Response handleIllegalArgumentException(IllegalArgumentException iae) {
-    LOGGER.log(Level.INFO, "IllegalArgumentException: {0}", iae.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.EXPECTATION_FAILED.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
-    jsonResponse.setErrorMsg(iae.getMessage());
-    return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
+  
+  private Response handleLoginException(LoginException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE, null,
+      ex.getMessage()));
   }
-
-  private Response handleIllegalStateException(IllegalStateException ise) {
-    LOGGER.log(Level.INFO, "IllegalStateException: {0}", ise.getMessage());
-    JsonResponse jsonResponse = new JsonResponse();
-    jsonResponse.setStatus(Response.Status.EXPECTATION_FAILED.getReasonPhrase());
-    jsonResponse.setStatusCode(Response.Status.EXPECTATION_FAILED.getStatusCode());
-    jsonResponse.setErrorMsg(ise.getMessage());
-    return Response.status(Response.Status.EXPECTATION_FAILED).entity(jsonResponse).build();
+  
+  private Response handleIllegalStateException(IllegalStateException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, null, ex.getMessage()));
   }
+  
+  private Response handleSecurityException(SecurityException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(
+      new GenericException(RESTCodes.GenericErrorCode.SECURITY_EXCEPTION, null, ex.getMessage()));
+  }
+  
+  private Response handleRollbackException(RollbackException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ROLLBACK, null, ex.getMessage()));
+  }
+  
+  private Response handleAccessControlException(AccessControlException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, null,
+      ex.getMessage()));
+  }
+  
+  private Response handleRESTException(RESTException ex) {
+    LOGGER.log(Level.FINE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(ex.getErrorCode().getRespStatus(), ex);
+  }
+  
+  private Response handleRESTException(Response.Status status, RESTException ex) {
+    LOGGER.log(Level.INFO, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return Response.status(status).entity(ex.getJson().toString()).type(MediaType.APPLICATION_JSON).build();
+  }
+  
+  private Response handleAccessLocalException(AccessLocalException ex) {
+    LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new UserException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, null, ex.getMessage()));
+  }
+  
 }

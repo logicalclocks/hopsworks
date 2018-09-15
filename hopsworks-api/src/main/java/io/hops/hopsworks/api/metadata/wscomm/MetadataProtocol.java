@@ -50,7 +50,10 @@ import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.TemplateException;
+
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,17 +88,8 @@ public class MetadataProtocol {
    * @param message the incoming message
    * @return a new response message or an error message
    */
-  public Message GFR(Message message) {
-
-    Message msg;
-    try {
-      msg = this.processMessage(message);
-    } catch (ApplicationException e) {
-      TextMessage response = new TextMessage("Server", e.getMessage());
-      response.setStatus("ERROR");
-      return response;
-    }
-    return msg;
+  public Message GFR(Message message) throws GenericException, TemplateException {
+    return this.processMessage(message);
   }
 
   /**
@@ -105,11 +99,10 @@ public class MetadataProtocol {
    * 'create_meta_log', and these two must be atomic. Hence the
    * TransactionAttribute annotation
    * <p/>
-   * @param message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
-  private Message processMessage(Message message) throws ApplicationException {
+  private Message processMessage(Message message) throws GenericException, TemplateException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 
@@ -132,20 +125,18 @@ public class MetadataProtocol {
    * indexed inode, but this time along with its attached metadata.
    * Those two actions have to be executed atomically (either all or nothing)
    * <p/>
-   * @param message. The incoming message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processStoreMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processStoreMetadataMessageCm(Message message) throws GenericException {
 
     List<EntityIntf> composite = ((StoreMetadataMessage) message).
             superParseSchema();
 
     //variables not set in the json message
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
     }
     List<EntityIntf> rawData = message.parseSchema();
 
@@ -160,18 +151,17 @@ public class MetadataProtocol {
    * followed by an inode mutation (i.e. add an entry to hdfs_metadata_log
    * table) so that elastic rivers will pick up the already indexed inode
    * <p/>
-   * @param message
-   * @return
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processUpdateMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processUpdateMetadataMessageCm(Message message) throws GenericException {
 
     List<EntityIntf> composite = ((UpdateMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
     }
     //update metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
@@ -187,18 +177,17 @@ public class MetadataProtocol {
    * This will delete the metadata from the table only.
    * This will not remove the elastic index of this record.
    * <p/>
-   * @param message
-   * @return
+   * @param message The incoming message
+   * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processRemoveMetadataMessageCm(Message message) throws
-          ApplicationException {
+  private Message processRemoveMetadataMessageCm(Message message) throws GenericException {
 
     List<EntityIntf> composite = ((RemoveMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new ApplicationException("Incorrect json message/Missing values");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
     }
     //delete metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
@@ -212,11 +201,10 @@ public class MetadataProtocol {
    * Processes incoming messages according to the command they carry, and
    * produces the appropriate message response
    * <p/>
-   * @param message. The incoming message
-   * @return
-   * @throws ApplicationException
+   * @param message The incoming message
+   * @return Message
    */
-  private Message processMessageNm(Message message) throws ApplicationException {
+  private Message processMessageNm(Message message) throws TemplateException, GenericException {
 
     Command action = Command.valueOf(message.getAction().toUpperCase());
 

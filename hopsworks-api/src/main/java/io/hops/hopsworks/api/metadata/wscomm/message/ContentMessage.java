@@ -44,7 +44,8 @@ import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
+import io.hops.hopsworks.common.exception.GenericException;
+
 import java.util.List;
 import java.util.logging.Logger;
 import javax.json.Json;
@@ -72,7 +73,7 @@ public abstract class ContentMessage implements Message {
     this.template = template;
   }
 
-  public Template getTemplate() throws ApplicationException {
+  public Template getTemplate() throws GenericException {
     return this.template;
   }
 

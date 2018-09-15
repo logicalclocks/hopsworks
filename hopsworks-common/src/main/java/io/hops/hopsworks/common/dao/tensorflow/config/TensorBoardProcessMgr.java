@@ -16,18 +16,15 @@
 
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
-import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -37,8 +34,8 @@ import org.apache.commons.io.FileUtils;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.DependsOn;
-import javax.ejb.Stateless;
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
@@ -72,16 +69,6 @@ public class TensorBoardProcessMgr {
   private Settings settings;
   @EJB
   private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeFacade;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private TensorBoardFacade tensorBoardFacade;
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
-  private UserFacade userFacade;
   @EJB
   private DistributedFsService dfsService;
   @EJB
@@ -305,7 +292,7 @@ public class TensorBoardProcessMgr {
    * @return
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public int killTensorBoard(TensorBoard tb) {
+  public int killTensorBoard(TensorBoard tb) throws ServiceException {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     int exitValue;
@@ -330,7 +317,7 @@ public class TensorBoardProcessMgr {
    * @param tb
    * @throws IOException
    */
-  public void cleanupLocalTBDir(TensorBoard tb) throws IOException {
+  public void cleanupLocalTBDir(TensorBoard tb) throws ServiceException {
 
     int hdfsUserId = tb.getHdfsUserId();
     HdfsUsers hdfsUser = hdfsUsersFacade.findById(hdfsUserId);
@@ -355,7 +342,13 @@ public class TensorBoardProcessMgr {
     //remove directory itself
     File tbDir = new File(tbPath);
     if(tbDir.exists()) {
-      FileUtils.deleteDirectory(tbDir);
+      try {
+        FileUtils.deleteDirectory(tbDir);
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Could not delete TensorBoard directory: " + tbDir);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.TENSORBOARD_CLEANUP_ERROR,
+          "TensorBoard directory:"+tbDir, e.getMessage());
+      }
     }
   }
 

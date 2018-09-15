@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 6. Request error codes start  with "14".
  * 7. Project error codes start  with "15".
  * 8. Security error codes start  with "16".
+ * 9. Dela error codes start with "17"
+ * 10. Template error codes start with "18"
  */
 @XmlRootElement
 public class RESTCodes {
@@ -179,8 +181,6 @@ public class RESTCodes {
     DATASET_OWNER_ERROR(110025, "You cannot perform this action on a dataset you are not the owner",
       Response.Status.BAD_REQUEST),
     DATASET_PUBLIC_IMMUTABLE(110026, "Public datasets are immutable.", Response.Status.BAD_REQUEST),
-    DATASET_TEMPLATE_INFO_MISSING(110027, "Template info is missing. Please provide InodeDTO path and templateId.",
-      Response.Status.BAD_REQUEST),
     DATASET_NAME_INVALID(110028, "Name of dir is invalid", Response.Status.BAD_REQUEST),
     IMAGE_SIZE_INVALID(110029, "Image is too big to display please download it by double-clicking it instead",
       Response.Status.BAD_REQUEST),
@@ -188,9 +188,7 @@ public class RESTCodes {
     DATASET_PARAMETERS_INVALID(110031, "Invalid parameters for requested dataset operation",
       Response.Status.BAD_REQUEST),
     EMPTY_PATH(110032, "Empty path requested", Response.Status.BAD_REQUEST),
-    //Metadata
-    TEMPLATE_INODEID_EMPTY(110033, "The template id is empty", Response.Status.BAD_REQUEST),
-    TEMPLATE_NOT_ATTACHED(110034, "The template could not be attached to a file", Response.Status.BAD_REQUEST),
+    
     UPLOAD_PATH_NOT_SPECIFIED(110035, "The path to upload the template was not specified",
       Response.Status.BAD_REQUEST);
     
@@ -200,6 +198,56 @@ public class RESTCodes {
     private Response.Status respStatus;
     
     DatasetErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+    public void setCode(Integer code) {
+      this.code = code;
+    }
+    
+    public void setMessage(String message) {
+      this.message = message;
+    }
+    
+    public void setRespStatus(Response.Status respStatus) {
+      this.respStatus = respStatus;
+    }
+    
+  }
+  
+  public enum MetadataErrorCode implements RESTErrorCode {
+    
+    TEMPLATE_ALREADY_AVAILABLE(180000, "The template is already available", Response.Status.BAD_REQUEST),
+    TEMPLATE_INODEID_EMPTY(180001, "The template id is empty", Response.Status.BAD_REQUEST),
+    TEMPLATE_NOT_ATTACHED(180002, "The template could not be attached to a file", Response.Status.BAD_REQUEST),
+    DATASET_TEMPLATE_INFO_MISSING(180003, "Template info is missing. Please provide InodeDTO path and templateId.",
+      Response.Status.BAD_REQUEST),
+    NO_METADATA_EXISTS(180004, "No metadata found", Response.Status.BAD_REQUEST),
+    METADATA_MAX_SIZE_EXCEEDED(180005, "Metadata is too long. 12000 characters is the maximum size",
+      Response.Status.BAD_REQUEST);
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+  
+    MetadataErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -253,7 +301,16 @@ public class RESTCodes {
     JOB_DELETION_ERROR(130012, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_CREATION_ERROR(130013, "Error while creating job.", Response.Status.BAD_REQUEST),
     ELASTIC_INDEX_NOT_FOUND(130014, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
-    ELASTIC_TYPE_NOT_FOUND(130015, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST);
+    ELASTIC_TYPE_NOT_FOUND(130015, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
+    
+    TENSORBOARD_ERROR(130016, "Error getting the Tensorboard(s) for this application", Response.Status.NO_CONTENT),
+  
+    APPLICATIONID_NOT_FOUND(130017, "Error while deleting job.", Response.Status.BAD_REQUEST),
+    JOB_ACCESS_ERROR(130018, "Cannot access job", Response.Status.FORBIDDEN),
+    LOG_AGGREGATION_NOT_ENABLED(130019, "YARN log aggregation is not enabled", Response.Status.SERVICE_UNAVAILABLE),
+    LOG_RETRIEVAL_ERROR(130020, "Error while retrieving YARN logs", Response.Status.INTERNAL_SERVER_ERROR),
+    
+    JOB_SCHEDULE_UPDATE(130021, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -302,6 +359,7 @@ public class RESTCodes {
     EMAIL_SENDING_FAILURE(140003, "Could not send email", Response.Status.BAD_REQUEST),
     DATASET_REQUEST_ERROR(140004, "Error while submitting dataset request", Response.Status.BAD_REQUEST),
     REQUEST_UNKNOWN_ACTION(140005, "Unknown request action", Response.Status.BAD_REQUEST);
+    
     
     private Integer code;
     private String message;
@@ -362,7 +420,9 @@ public class RESTCodes {
     
     //Database
     DATABASE_UNAVAILABLE(100008, "The database is temporarily unavailable. Please try again later",
-      Response.Status.SERVICE_UNAVAILABLE);
+      Response.Status.SERVICE_UNAVAILABLE),
+    
+    TENSORBOARD_CLEANUP_ERROR(100009, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -405,14 +465,16 @@ public class RESTCodes {
   
   public enum GenericErrorCode implements RESTErrorCode {
     
-    // Zeppelin
     UNKNOWN_ERROR(120000, "A generic error occured.", Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_ARGUMENT(120001, "A wrong argument was provided.", Response.Status.EXPECTATION_FAILED),
     ILLEGAL_STATE(120002, "A runtime error occurred.", Response.Status.EXPECTATION_FAILED),
     ROLLBACK(120003, "The last transaction did not complete as expected", Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(120004, "Web application exception occurred", null),
     PERSISTENCE_ERROR(120005, "Persistence error occured", Response.Status.INTERNAL_SERVER_ERROR),
-    UNKNOWN_ACTION(120006, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST);
+    UNKNOWN_ACTION(120006, "This action can not be applied on this resource.", Response.Status.BAD_REQUEST),
+    INCOMPLETE_REQUEST(120007, "Some parameters were not provided or were not in the required format.",
+      Response.Status.BAD_REQUEST),
+    SECURITY_EXCEPTION(120008, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -498,9 +560,12 @@ public class RESTCodes {
     SSH_KEY_REMOVED(160028, "Your ssh key was deleted successfully.", Response.Status.BAD_REQUEST),
     NOTHING_TO_UPDATE(160029, "Nothing to update", Response.Status.BAD_REQUEST),
     MASTER_ENCRYPTION_PASSWORD_CHANGE(160030,
-      "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST);
-    
-    
+      "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
+    HDFS_ACCESS_CONTROL(160031, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
+    EJB_ACCESS_LOCAL(160032, "EJB access local error", Response.Status.UNAUTHORIZED),
+    AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.BAD_REQUEST);
+  
+  
     private Integer code;
     private String message;
     private Response.Status respStatus;
@@ -509,6 +574,53 @@ public class RESTCodes {
     }
     
     SecurityErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+    public void setCode(Integer code) {
+      this.code = code;
+    }
+    
+    public void setMessage(String message) {
+      this.message = message;
+    }
+    
+    public void setRespStatus(Response.Status respStatus) {
+      this.respStatus = respStatus;
+    }
+    
+  }
+  
+  public enum DelaErrorCode implements RESTErrorCode {
+    
+    //response for validation error
+    THIRD_PARTY_ERROR(170000, null, Response.Status.EXPECTATION_FAILED);
+    
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+    
+    DelaErrorCode() {
+    }
+    
+    DelaErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;

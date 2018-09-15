@@ -39,23 +39,24 @@
 
 package io.hops.hopsworks.common.dao.jobs.description;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.common.jobs.jobhistory.JobType;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
-import io.hops.hopsworks.common.jobs.jobhistory.JobType;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Facade for management of persistent Jobs objects.
@@ -66,7 +67,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  private static final Logger logger = Logger.getLogger(JobFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(JobFacade.class.
       getName());
 
   public JobFacade() {
@@ -166,28 +167,21 @@ public class JobFacade extends AbstractFacade<Jobs> {
   /**
    *
    * @param job
-   * @throws DatabaseException
+   * @throws JobException
    */
-  public void removeJob(Jobs job) throws DatabaseException {
+  public void removeJob(Jobs job) {
     try {
       Jobs managedJob = em.find(Jobs.class, job.getId());
       em.remove(em.merge(managedJob));
       em.flush();
     } catch (SecurityException | IllegalStateException ex) {
-      throw new DatabaseException("Could not delete job " + job.getName(), ex);
+      LOGGER.log(Level.SEVERE, "Could not delete job:" + job.getId());
+      throw ex;
     }
 
   }
 
-  /**
-   *
-   * @param jobId
-   * @param schedule
-   * @return
-   * @throws DatabaseException
-   */
-  public boolean updateJobSchedule(int jobId, ScheduleDTO schedule) throws
-      DatabaseException {
+  public boolean updateJobSchedule(int jobId, ScheduleDTO schedule) {
     boolean status = false;
     try {
       Jobs managedJob = em.find(Jobs.class, jobId);
@@ -197,12 +191,13 @@ public class JobFacade extends AbstractFacade<Jobs> {
       q.setParameter("id", jobId);
       q.setParameter("jobconfig", config);
       int result = q.executeUpdate();
-      logger.log(Level.INFO, "Updated entity count = {0}", result);
+      LOGGER.log(Level.INFO, "Updated entity count = {0}", result);
       if (result == 1) {
         status = true;
       }
     } catch (SecurityException | IllegalArgumentException ex) {
-      throw new DatabaseException("Could not update job  ", ex);
+      LOGGER.log(Level.SEVERE, "Could not update job with id:" + jobId);
+      throw ex;
     }
     return status;
   }

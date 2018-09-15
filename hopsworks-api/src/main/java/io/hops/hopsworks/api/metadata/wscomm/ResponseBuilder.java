@@ -60,8 +60,9 @@ import io.hops.hopsworks.common.dao.metadata.db.FieldTypeFacade;
 import io.hops.hopsworks.common.dao.metadata.db.MTableFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
-import io.hops.hopsworks.common.metadata.exception.ApplicationException;
-import io.hops.hopsworks.common.metadata.exception.DatabaseException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.TemplateException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -104,9 +105,8 @@ public class ResponseBuilder {
    * <p/>
    * @param message
    * @return
-   * @throws ApplicationException
    */
-  public Message addNewTemplate(Message message) throws ApplicationException {
+  public Message addNewTemplate(Message message) throws TemplateException, GenericException {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
@@ -120,9 +120,8 @@ public class ResponseBuilder {
    * <p/>
    * @param message
    * @return
-   * @throws ApplicationException
    */
-  public Message removeTemplate(Message message) throws ApplicationException {
+  public Message removeTemplate(Message message) throws GenericException {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
@@ -136,9 +135,8 @@ public class ResponseBuilder {
    * <p/>
    * @param message
    * @return
-   * @throws ApplicationException
    */
-  public Message updateTemplateName(Message message) throws ApplicationException {
+  public Message updateTemplateName(Message message) throws TemplateException, GenericException {
     ContentMessage cmsg = (ContentMessage) message;
 
     Template template = cmsg.getTemplate();
@@ -155,9 +153,8 @@ public class ResponseBuilder {
    * contains all the tables and fields this template contains
    * <p/>
    * @param message
-   * @throws ApplicationException
    */
-  public void storeSchema(Message message) throws ApplicationException {
+  public void storeSchema(Message message) {
     List<EntityIntf> schema = message.parseSchema();
     this.metadataController.addTables(schema);
   }
@@ -220,24 +217,19 @@ public class ResponseBuilder {
    * <p/>
    * @param table
    * @return
-   * @throws ApplicationException
    */
-  public Message fetchTableMetadata(MTable table) throws ApplicationException {
-
-    try {
-      FetchTableMetadataMessage message
-              = new FetchTableMetadataMessage("Server", "");
-      MTable t = this.tableFacade.getTable(table.getId());
-
-      List<MTable> tables = new LinkedList<>();
-      tables.add(t);
-      String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-      message.setMessage(jsonMsg);
-
-      return message;
-    } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
-    }
+  public Message fetchTableMetadata(MTable table) {
+  
+    FetchTableMetadataMessage message
+      = new FetchTableMetadataMessage("Server", "");
+    MTable t = this.tableFacade.getTable(table.getId());
+  
+    List<MTable> tables = new LinkedList<>();
+    tables.add(t);
+    String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
+    message.setMessage(jsonMsg);
+  
+    return message;
   }
 
   /**
@@ -245,49 +237,43 @@ public class ResponseBuilder {
    *
    * @param itc
    * @return
-   * @throws ApplicationException
    */
-  public Message fetchInodeMetadata(InodeTableComposite itc) throws
-          ApplicationException {
-
-    try {
-      FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
-
-      MTable t = this.tableFacade.getTable(itc.getTableid());
-      List<TupleToFile> ttfList = this.tupletofileFacade.getTuplesByInodeId(itc.
-              getInodePid(), itc.getInodeName());
-
-      List<Field> fields = t.getFields();
-
-      for (Field field : fields) {
-        /*
-         * Load raw data based on the field id. Keep only data related to
-         * a specific inode
-         */
-        List<RawData> rawList = field.getRawData();
-        List<RawData> toKeep = new LinkedList<>();
-
-        for (RawData raw : rawList) {
-          for (TupleToFile ttf : ttfList) {
-
-            if (raw.getRawdataPK().getTupleid() == ttf.getId()) {
-              toKeep.add(raw);
-            }
+  public Message fetchInodeMetadata(InodeTableComposite itc) {
+  
+    FetchMetadataMessage message = new FetchMetadataMessage("Server", "");
+  
+    MTable t = this.tableFacade.getTable(itc.getTableid());
+    List<TupleToFile> ttfList = this.tupletofileFacade.getTuplesByInodeId(itc.
+      getInodePid(), itc.getInodeName());
+  
+    List<Field> fields = t.getFields();
+  
+    for (Field field : fields) {
+      /*
+       * Load raw data based on the field id. Keep only data related to
+       * a specific inode
+       */
+      List<RawData> rawList = field.getRawData();
+      List<RawData> toKeep = new LinkedList<>();
+    
+      for (RawData raw : rawList) {
+        for (TupleToFile ttf : ttfList) {
+        
+          if (raw.getRawdataPK().getTupleid() == ttf.getId()) {
+            toKeep.add(raw);
           }
         }
-
-        field.setRawData(toKeep);
       }
-
-      List<MTable> tables = new LinkedList<>();
-      tables.add(t);
-      String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-      message.setMessage(jsonMsg);
-
-      return message;
-    } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+    
+      field.setRawData(toKeep);
     }
+  
+    List<MTable> tables = new LinkedList<>();
+    tables.add(t);
+    String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
+    message.setMessage(jsonMsg);
+  
+    return message;
   }
 
   /**
@@ -295,22 +281,17 @@ public class ResponseBuilder {
    * removes any corresponding tuples from meta_tuple_to_file table
    * <p/>
    * @param table
-   * @throws ApplicationException
    */
-  public void checkDeleteTable(MTable table) throws ApplicationException {
-    try {
-      MTable t = this.tableFacade.contains(table) ? table : this.tableFacade.
-              getTable(table.getId());
-      List<Field> fields = t.getFields();
-
-      for (Field f : fields) {
-        this.checkDeleteField(f);
-      }
-
-      this.metadataController.deleteTable(t);
-    } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+  public void checkDeleteTable(MTable table) {
+    MTable t = this.tableFacade.contains(table) ? table : this.tableFacade.
+      getTable(table.getId());
+    List<Field> fields = t.getFields();
+  
+    for (Field f : fields) {
+      this.checkDeleteField(f);
     }
+  
+    this.metadataController.deleteTable(t);
   }
 
   /**
@@ -318,27 +299,21 @@ public class ResponseBuilder {
    * removes any corresponding tuples from meta_tuple_to_file table
    * <p/>
    * @param field
-   * @throws ApplicationException
    */
-  public void checkDeleteField(Field field) throws ApplicationException {
-    try {
-      Field f = this.fieldFacade.contains(field) ? field : this.fieldFacade.
-              getField(field.getId());
-
-      List<RawData> raw = f.getRawData();
-      List<Integer> rawdataAsTuple = this.groupByTupleid(raw);
-
-      //remove the child entities first
-      this.fieldFacade.deleteField(field);
-
-      for (Integer id : rawdataAsTuple) {
-        //get the changed tupletofile object from the database
-        TupleToFile ttf = this.tupletofileFacade.getTupletofile(id);
-        this.checkDeleteTupleToFile(ttf);
-      }
-
-    } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+  public void checkDeleteField(Field field) {
+    Field f = this.fieldFacade.contains(field) ? field : this.fieldFacade.
+      getField(field.getId());
+  
+    List<RawData> raw = f.getRawData();
+    List<Integer> rawdataAsTuple = this.groupByTupleid(raw);
+  
+    //remove the child entities first
+    this.fieldFacade.deleteField(field);
+  
+    for (Integer id : rawdataAsTuple) {
+      //get the changed tupletofile object from the database
+      TupleToFile ttf = this.tupletofileFacade.getTupletofile(id);
+      this.checkDeleteTupleToFile(ttf);
     }
   }
 
@@ -348,23 +323,17 @@ public class ResponseBuilder {
    * out of many) the tuple should not be removed from the database.
    * <p/>
    * @param ttf
-   * @throws ApplicationException
    */
-  private void checkDeleteTupleToFile(TupleToFile ttf) throws
-          ApplicationException {
-
-    try {
-      List<RawData> rawlist = ttf.getRawData();
-
-      /*
-       * remove a tuple if and only if all the raw data entries composing this
-       * tuple have been removed
-       */
-      if (rawlist.isEmpty()) {
-        this.tupletofileFacade.deleteTTF(ttf);
-      }
-    } catch (DatabaseException e) {
-      throw new ApplicationException("Server", e.getMessage());
+  private void checkDeleteTupleToFile(TupleToFile ttf) {
+  
+    List<RawData> rawlist = ttf.getRawData();
+  
+    /*
+     * remove a tuple if and only if all the raw data entries composing this
+     * tuple have been removed
+     */
+    if (rawlist.isEmpty()) {
+      this.tupletofileFacade.deleteTTF(ttf);
     }
   }
 
@@ -374,26 +343,18 @@ public class ResponseBuilder {
    * <p/>
    * @param table
    * @return
-   * @throws ApplicationException
    */
-  public Message checkTableFields(MTable table) throws ApplicationException {
-
-    try {
-
-      TextMessage message = new TextMessage("Server");
-
-      MTable t = this.tableFacade.getTable(table.getId());
-      List<Field> fields = t.getFields();
-
-      String msg = fields.size() > 0 ? "This table contains fields" : "EMPTY";
-      message.setMessage(msg);
-
-      return message;
-    } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, "Could not retrieve table " + table.getId()
-              + ". ", e);
-      throw new ApplicationException("Server", e.getMessage());
-    }
+  public Message checkTableFields(MTable table) {
+  
+    TextMessage message = new TextMessage("Server");
+  
+    MTable t = this.tableFacade.getTable(table.getId());
+    List<Field> fields = t.getFields();
+  
+    String msg = fields.size() > 0 ? "This table contains fields" : "EMPTY";
+    message.setMessage(msg);
+  
+    return message;
   }
 
   /**
@@ -402,25 +363,18 @@ public class ResponseBuilder {
    * <p/>
    * @param field
    * @return
-   * @throws ApplicationException
    */
-  public Message checkFieldContents(Field field) throws ApplicationException {
-    try {
-
-      TextMessage message = new TextMessage("Server");
-
-      Field f = this.fieldFacade.getField(field.getId());
-      List<RawData> rawdata = f.getRawData();
-
-      String msg = rawdata.size() > 0 ? "This field contains raw data" : "EMPTY";
-      message.setMessage(msg);
-
-      return message;
-    } catch (DatabaseException e) {
-      logger.log(Level.SEVERE, "Could not retrieve field " + field.getId()
-              + ".", e);
-      throw new ApplicationException("Server", e.getMessage());
-    }
+  public Message checkFieldContents(Field field) {
+  
+    TextMessage message = new TextMessage("Server");
+  
+    Field f = this.fieldFacade.getField(field.getId());
+    List<RawData> rawdata = f.getRawData();
+  
+    String msg = rawdata.size() > 0 ? "This field contains raw data" : "EMPTY";
+    message.setMessage(msg);
+  
+    return message;
   }
 
   /**
@@ -447,10 +401,8 @@ public class ResponseBuilder {
    * template content' command message
    * <p/>
    * @param message
-   * @throws ApplicationException
    */
-  public void persistUploadedTemplate(UploadedTemplateMessage message) throws
-          ApplicationException {
+  public void persistUploadedTemplate(UploadedTemplateMessage message) throws GenericException, TemplateException {
 
     //compile the message
     message.parseSchema();

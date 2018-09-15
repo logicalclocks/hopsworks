@@ -51,7 +51,6 @@ import io.hops.hopsworks.api.serving.TfServingService;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
@@ -71,6 +70,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -112,7 +112,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.rpc.ServiceException;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -169,10 +168,6 @@ public class ProjectService {
   private DistributedFsService dfs;
   @EJB
   private CertificateMaterializer certificateMaterializer;
-  @EJB
-  private Settings settings;
-  @EJB
-  private CertsFacade certsFacade;
   @EJB
   private MessageController messageController;
   @EJB
@@ -505,7 +500,7 @@ public class ProjectService {
               + json.getErrorMsg());
         } catch (ServiceException sex) {
           // Error enabling the service
-          String error = null;
+          String error;
           switch (se) {
             case ZEPPELIN:
               error = ResponseMessages.ZEPPELIN_ADD_FAILURE + Settings.ServiceDataset.ZEPPELIN.getName();

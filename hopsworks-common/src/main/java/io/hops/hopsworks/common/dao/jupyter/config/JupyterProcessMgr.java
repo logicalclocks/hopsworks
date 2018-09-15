@@ -454,7 +454,7 @@ public class JupyterProcessMgr {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void stopProject(Project project) //      throws AppException 
+  public void stopProject(Project project)
   {
     String jupyterHomePath = "";
     for (JupyterProject jp : project.getJupyterProjectCollection()) {
