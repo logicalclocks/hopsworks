@@ -112,7 +112,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.xml.rpc.ServiceException;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -503,7 +502,7 @@ public class ProjectService {
               ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
           json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
               + json.getErrorMsg());
-        } catch (ServiceException sex) {
+        } catch (AppException ae) {
           // Error enabling the service
           String error = null;
           switch (se) {

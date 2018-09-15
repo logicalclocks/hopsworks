@@ -84,7 +84,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.rpc.ServiceException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -326,7 +325,7 @@ public class ProjectsResource {
             // Service successfully enabled
             updated = true;
           }
-        } catch (ServiceException sex) {
+        } catch (AppException ae) {
           // Error enabling the service
           String error;
           switch (se) {
