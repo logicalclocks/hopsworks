@@ -60,22 +60,18 @@ angular.module('hopsWorksApp')
 
             self.projectMembers = [];
             self.projectTeam = [];
-//            if ($rootScope.isDelaEnabled) {
-//              // , 'RSTUDIO'
-//              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
-//              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS'];
-//            } else {
-//              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
-//              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS'];
-//            }
+            if ($rootScope.isDelaEnabled) {
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+            } else {
+              self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'EXPERIMENTS', 'RSTUDIO'];
+            }
 
             self.projectName = '';
             self.projectDesc = '';
 
             self.regex = /^(?!.*?__|.*?-|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#|.*?å|.*?Å|.*?ö|.*?Ö|.*?ä|.*?Ä|.*?ü|.*?Ü|.*?à|.*?á|.*?é|.*?è|.*?â|.*?ê|.*?î|.*?ï|.*?ë|.*?@|.*?\{|.*?\}|.*?\[|.*?\]|.*?\$|.*?\+|.*?~|.*?\`|.*?\^).*$/;
-
-            self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
-            self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING'];
 
             self.init = function () {
               if ($rootScope.isDelaEnabled) {
