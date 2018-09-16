@@ -125,6 +125,17 @@
           Experiments<img class="pull-right" style="margin-right:8px" height="27" src="images/experiments.png"/>
         </a>
       </li>
+
+      <li ng-click="projectCtrl.goToAirflow()" ng-show="projectCtrl.showAirflow()">
+        <a>
+          Airflow
+          <img ng-show="projectCtrl.activeService !== 'airflow'" class="pull-right" style="margin-left:10px" height="25" 
+               src="images/airflow-200x-196-bw.png"/>
+          <img ng-show="projectCtrl.activeService === 'airflow'" class="pull-right" style="margin-left:10px" height="25" 
+               src="images/airflow-200x198.png"/>
+        </a>
+      </li>
+
       
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:40px;" ng-show="projectCtrl.cloak">
         <a>
