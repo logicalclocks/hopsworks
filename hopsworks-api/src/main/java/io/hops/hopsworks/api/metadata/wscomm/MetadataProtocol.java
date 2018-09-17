@@ -51,16 +51,15 @@ import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.dao.metadata.MTable;
 import io.hops.hopsworks.common.dao.metadata.Metadata;
 import io.hops.hopsworks.common.exception.GenericException;
-import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.TemplateException;
 
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Constructs responses depending on the incoming message requests. Maintains
@@ -129,14 +128,14 @@ public class MetadataProtocol {
    * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processStoreMetadataMessageCm(Message message) throws GenericException {
+  private Message processStoreMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((StoreMetadataMessage) message).
             superParseSchema();
 
     //variables not set in the json message
     if (composite == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     List<EntityIntf> rawData = message.parseSchema();
 
@@ -155,13 +154,13 @@ public class MetadataProtocol {
    * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processUpdateMetadataMessageCm(Message message) throws GenericException {
+  private Message processUpdateMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((UpdateMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     //update metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);
@@ -181,13 +180,13 @@ public class MetadataProtocol {
    * @return Message
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Message processRemoveMetadataMessageCm(Message message) throws GenericException {
+  private Message processRemoveMetadataMessageCm(Message message) {
 
     List<EntityIntf> composite = ((RemoveMetadataMessage) message).
             superParseSchema();
 
     if (composite == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Composite value missing from json");
+      throw new IllegalArgumentException("Composite value missing from json");
     }
     //delete metadata
     Metadata metadata = (Metadata) message.parseSchema().get(0);

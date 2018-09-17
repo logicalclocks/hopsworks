@@ -72,6 +72,10 @@ import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -183,7 +187,7 @@ public class ProjectService {
   @Inject
   private DelaClusterProjectService delaclusterService;
 
-  private final static Logger logger = Logger.getLogger(ProjectService.class.
+  private final static Logger LOGGER = Logger.getLogger(ProjectService.class.
       getName());
 
   @GET
@@ -222,7 +226,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getProjectByName(@PathParam("projectName") String projectName,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException {
 
     ProjectDTO proj = projectController.getProjectByName(projectName);
 
@@ -244,7 +248,7 @@ public class ProjectService {
           if (proj == null) {
             errorMsg = "Project with id <" + id
                 + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
+            LOGGER.log(Level.WARNING, errorMsg);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 errorMsg);
           }
@@ -255,7 +259,7 @@ public class ProjectService {
           if (info == null) {
             errorMsg = "Dataset with id <" + id
                 + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
+            LOGGER.log(Level.WARNING, errorMsg);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 errorMsg);
           }
@@ -281,7 +285,7 @@ public class ProjectService {
           if (proj == null) {
             errorMsg = "Project with id <" + id
                 + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
+            LOGGER.log(Level.WARNING, errorMsg);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 "Project with id <" + id + "> could not be found");
           }
@@ -293,7 +297,7 @@ public class ProjectService {
           if (info == null) {
             errorMsg = "Dataset/INode with id <" + id
                 + "> could not be found";
-            logger.log(Level.WARNING, errorMsg);
+            LOGGER.log(Level.WARNING, errorMsg);
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 errorMsg);
           }
@@ -413,7 +417,7 @@ public class ProjectService {
       @PathParam("id") Integer projectId,
       @PathParam("inodeId") Integer inodeId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, ProjectException {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -421,6 +425,9 @@ public class ProjectService {
     }
     String group = inode.getHdfsGroup().getName();
     Project project = projectFacade.find(projectId);
+    if(project == null){
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
+    }
     if (project != null && !project.getName().equals(hdfsUsersBean.getProjectName(group))) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.DATASET_NOT_PUBLIC);
@@ -457,7 +464,7 @@ public class ProjectService {
       ProjectDTO projectDTO,
       @PathParam("id") Integer id,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException {
 
     JsonResponse json = new JsonResponse();
     String userEmail = sc.getUserPrincipal().getName();
@@ -496,7 +503,7 @@ public class ProjectService {
             updated = true;
           }
         } catch (IllegalArgumentException iex) {
-          logger.log(Level.SEVERE,
+          LOGGER.log(Level.SEVERE,
               ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
           json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
               + json.getErrorMsg());
@@ -558,7 +565,8 @@ public class ProjectService {
   public Response example(
       @PathParam("type") String type,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, DatasetException, GenericException {
+      @Context HttpServletRequest req)
+    throws AppException, DatasetException, GenericException, KafkaException, ProjectException, UserException {
     ProjectDTO projectDTO = new ProjectDTO();
     Project project = null;
     projectDTO.setDescription("A demo project for getting started with " + type);
@@ -568,7 +576,7 @@ public class ProjectService {
     List<String> projectServices = new ArrayList<>();
     Users user = userFacade.findByEmail(owner);
     if (user == null) {
-      logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
+      LOGGER.log(Level.SEVERE, "Problem finding the user {} ", owner);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
     }
@@ -639,15 +647,15 @@ public class ProjectService {
   public Response createProject(
       ProjectDTO projectDTO,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, DatasetException, GenericException {
+      @Context HttpServletRequest req)
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, AppException {
 
     //check the user
     String owner = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(owner);
     if (user == null) {
-      logger.log(Level.SEVERE, "Problem finding the user {} ", owner);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
+      LOGGER.log(Level.SEVERE, "Problem finding the user {} ", owner);
+      throw new UserException(RESTCodes.SecurityErrorCode.USER_WAS_NOT_FOUND,"user: " + owner);
     }
 
     List<String> failedMembers = null;
@@ -716,11 +724,10 @@ public class ProjectService {
   @Path("{id}/dataset")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public DataSetService datasets(
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.dataSet.setProjectId(id);
 
@@ -730,7 +737,7 @@ public class ProjectService {
   @Path("{id}/localfs")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public LocalFsService localFs(
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) {
     this.localFs.setProjectId(id);
 
     return this.localFs;
@@ -738,24 +745,20 @@ public class ProjectService {
 
   @Path("{projectId}/jobs")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public JobService jobs(@PathParam("projectId") Integer projectId) throws
-      AppException {
+  public JobService jobs(@PathParam("projectId") Integer projectId) throws ProjectException {
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
     }
     return this.jobs.setProject(project);
   }
 
   @Path("{projectId}/certs")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public CertService certs(@PathParam("projectId") Integer projectId) throws
-      AppException {
+  public CertService certs(@PathParam("projectId") Integer projectId) throws ProjectException {
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
     }
     return this.certs.setProject(project);
   }
@@ -789,7 +792,7 @@ public class ProjectService {
   public Response getCurrentMultiplicator(
       @PathParam("id") Integer id,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
 
     List<YarnPriceMultiplicator> multiplicatorsList = projectController.getYarnMultiplicators();
 
@@ -806,7 +809,7 @@ public class ProjectService {
       @PathParam("projectName") String projectName,
       @PathParam("inodeId") Integer dsId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, ProjectException {
 
     Project destProj = projectController.findProjectById(id);
     Project dsProject = projectFacade.findByName(projectName);
@@ -857,7 +860,7 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("id") Integer id, @FormParam("password") String password,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, ProjectException {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || 
         !authController.validatePwd(user, password, req)) {
@@ -882,10 +885,10 @@ public class ProjectService {
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
           "The password for keystore and truststore is:" + certPwd);
     } catch (IOException ioe) {
-      logger.log(Level.SEVERE, ioe.getMessage());
+      LOGGER.log(Level.SEVERE, ioe.getMessage());
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
     } catch (Exception ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), ResponseMessages.DOWNLOAD_ERROR);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
@@ -897,11 +900,10 @@ public class ProjectService {
   @Path("{id}/kafka")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public KafkaService kafka(
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.kafka.setProjectId(id);
 
@@ -911,11 +913,10 @@ public class ProjectService {
   @Path("{id}/jupyter")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public JupyterService jupyter(
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.jupyter.setProjectId(id);
 
@@ -925,11 +926,10 @@ public class ProjectService {
   @Path("{id}/tensorboard")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TensorBoardService tensorboard(
-          @PathParam("id") Integer id) throws AppException {
+          @PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.tensorboard.setProjectId(id);
 
@@ -940,15 +940,12 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TfServingService tfServingService(
       @PathParam("id") Integer id,
-      @Context SecurityContext sc) throws AppException {
+      @Context SecurityContext sc) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
-
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-
     this.tfServingService.setProject(project);
     this.tfServingService.setUser(user);
 
@@ -957,12 +954,10 @@ public class ProjectService {
 
   @Path("{id}/pythonDeps")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws
-      AppException {
+  public PythonDepsService pysparkDeps(@PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.pysparkService.setProject(project);
     return pysparkService;
@@ -970,11 +965,10 @@ public class ProjectService {
 
   @Path("{id}/dela")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DelaProjectService dela(@PathParam("id") Integer id) throws AppException {
+  public DelaProjectService dela(@PathParam("id") Integer id) throws AppException, ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.delaService.setProjectId(id);
 
@@ -983,11 +977,10 @@ public class ProjectService {
 
   @Path("{id}/delacluster")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws AppException {
+  public DelaClusterProjectService delacluster(@PathParam("id") Integer id) throws ProjectException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     this.delaclusterService.setProjectId(id);
 
@@ -1002,7 +995,7 @@ public class ProjectService {
       Pia pia,
       @PathParam("id") Integer projectId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
     
     piaFacade.mergeUpdate(pia, projectId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -1014,12 +1007,11 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getPia(@Context SecurityContext sc,
       @PathParam("id") Integer projectId,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException {
     
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
     }
     Pia pia = piaFacade.findByProject(projectId);
     GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};

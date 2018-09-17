@@ -76,8 +76,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
-import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
-import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.Activity;
@@ -88,8 +86,12 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.ProjectInternalFoldersFailedException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -189,8 +191,6 @@ public class ProjectController {
   @EJB
   private ProjectServiceFacade projectServicesFacade;
   @EJB
-  private TensorBoardFacade tensorBoardFacade;
-  @EJB
   private InodeFacade inodes;
   @EJB
   private DatasetController datasetController;
@@ -214,8 +214,6 @@ public class ProjectController {
   private PythonDepsFacade pythonDepsFacade;
   @EJB
   private JupyterProcessMgr jupyterProcessFacade;
-  @EJB
-  private TensorBoardProcessMgr tensorBoardProcessMgr;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -269,7 +267,8 @@ public class ProjectController {
    * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
-      List<String> failedMembers, String sessionId) throws AppException, DatasetException, GenericException {
+      List<String> failedMembers, String sessionId)
+    throws AppException, DatasetException, GenericException, KafkaException, ProjectException, UserException {
 
     Long startTime = System.currentTimeMillis();
     
@@ -370,7 +369,7 @@ public class ProjectController {
 
       //all the verifications have passed, we can now create the project  
       //create the project folder
-      String projectPath = null;
+      String projectPath;
       try {
         projectPath = mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
@@ -448,7 +447,7 @@ public class ProjectController {
       try {
         failedMembers = addMembers(project, owner.getEmail(), projectDTO.
             getProjectTeam());
-      } catch (AppException | EJBException ex) {
+      } catch (KafkaException | UserException | ProjectException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
         throw ex;
       }
@@ -773,17 +772,13 @@ public class ProjectController {
    *
    * @param id the identifier for a Project
    * @return Project
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
-  public Project findProjectById(Integer id) throws AppException {
-
+  public Project findProjectById(Integer id) throws ProjectException {
     Project project = projectFacade.find(id);
-    if (project != null) {
-      return project;
-    } else {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
+    return project;
   }
 
   // Used only during project creation
@@ -859,7 +854,7 @@ public class ProjectController {
         Path readmePath = new Path(dsPath, Settings.README_FILE);
         dfso.setOwner(readmePath, fstatus.getOwner(), fstatus.getGroup());
       }
-    } catch (IOException | GenericException | DatasetException ex) {
+    } catch (IOException | DatasetException ex) {
       LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
@@ -885,10 +880,9 @@ public class ProjectController {
    * @param projectDescr the description
    * @param user the user making the change
    * @return
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectDescription(Project project, String projectDescr,
-      Users user) throws AppException {
+      Users user) {
     if (project.getDescription() == null || !project.getDescription().equals(projectDescr)) {
       project.setDescription(projectDescr);
       projectFacade.mergeProject(project);
@@ -911,7 +905,7 @@ public class ProjectController {
    * @throws io.hops.hopsworks.common.exception.AppException
    */
   public boolean updateProjectRetention(Project project, Date projectRetention,
-      Users user) throws AppException {
+      Users user) {
     if (project.getRetentionPeriod() == null || !project.getRetentionPeriod().equals(projectRetention)) {
       project.setRetentionPeriod(projectRetention);
       projectFacade.mergeProject(project);
@@ -1741,8 +1735,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) throws InterruptedException,
-      AppException {
+  private void removeKafkaTopics(Project project) throws ServiceException, InterruptedException {
     kafkaFacade.removeAllTopicsFromProject(project);
   }
 
@@ -1803,7 +1796,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, String ownerEmail,
-      List<ProjectTeam> projectTeams) throws AppException {
+      List<ProjectTeam> projectTeams) throws KafkaException, ProjectException, UserException {
     List<String> failedList = new ArrayList<>();
     if (projectTeams == null) {
       return failedList;
@@ -1868,15 +1861,14 @@ public class ProjectController {
               LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
               projectTeamFacade.removeProjectTeam(project, newMember);
               try {
-                hdfsUsersBean.
-                    removeProjectMember(newMember, project);
+                hdfsUsersBean.removeProjectMember(newMember, project);
               } catch (IOException ex1) {
                 LOGGER.log(Level.SEVERE, null, ex1);
-                throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-                    getStatusCode(), "error while creating a user");
+                throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED, "user: " +  newMember,
+                  " project: " + project.getName());
               }
 
-              throw new EJBException("Could not creat certificates for user");
+              throw new EJBException("Could not create certificates for user");
             }
 
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
@@ -1950,20 +1942,17 @@ public class ProjectController {
    *
    * @param name
    * @return project DTO that contains team members and services
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
-  public ProjectDTO getProjectByName(String name) throws AppException {
+  public ProjectDTO getProjectByName(String name) throws ProjectException {
     //find the project entity from hopsworks database
     Project project = projectFacade.findByName(name);
-
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "project: " + name);
+    }
     //find the project as an inode from hops database
     String path = File.separator + Settings.DIR_ROOT + File.separator + name;
     Inode inode = inodes.getInodeAtPath(path);
-
-    if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
-    }
+    
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
         project);
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2089,11 +2078,10 @@ public class ProjectController {
    * @param project
    * @param email
    * @param toRemoveEmail
-   * @param sessionId
    * @throws AppException
    */
   public void removeMemberFromTeam(Project project, String email,
-      String toRemoveEmail, String sessionId) throws AppException, Exception {
+      String toRemoveEmail) throws Exception {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

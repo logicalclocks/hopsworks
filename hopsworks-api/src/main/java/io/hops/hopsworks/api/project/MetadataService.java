@@ -109,7 +109,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/metadata")
@@ -127,7 +126,7 @@ public class MetadataService {
     ADD,
     UPDATE,
     REMOVE
-  };
+  }
 
   @Inject
   private UploadService uploader;
@@ -184,10 +183,10 @@ public class MetadataService {
   public Response fetchMetadataCompact(
           @PathParam("inodepid") Integer inodePid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws GenericException {
+          @Context HttpServletRequest req) {
   
     if (inodePid == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "inodepid was not provided.");
+      throw new IllegalArgumentException("inodepid was not provided.");
     }
 
     ObjectMapper mapper = new ObjectMapper();
@@ -254,9 +253,6 @@ public class MetadataService {
 
     //metadata associated to a specific table and inode
     List<MetadataView> metadata = new LinkedList<>();
-  
-    Inode inode = this.inodefacade.findById(inodePid);
-    List<Template> nodeTemplates = new LinkedList<>(inode.getTemplates());
   
     List<TupleToFile> tuples = ttf.getTuplesByInodeId(inodePid, inodeName);
     MTable table = mtf.getTable(tableid);
@@ -409,11 +405,10 @@ public class MetadataService {
           @PathParam("inodeid") Integer inodeid,
           @PathParam("templateid") Integer templateid,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws GenericException, TemplateException {
+          @Context HttpServletRequest req) throws TemplateException {
 
     if (inodeid == null || templateid == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "Either inodeid or templateId were not provided");
+      throw new IllegalArgumentException("Either inodeid or templateId were not provided");
     }
 
     Inode inode = this.inodefacade.findById(inodeid);
@@ -489,8 +484,7 @@ public class MetadataService {
           @Context HttpServletRequest req) throws GenericException, TemplateException {
 
     if (templateid == null || sender == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "templateId or sender were not provided");
+      throw new IllegalArgumentException("templateId or sender were not provided");
     }
 
     String json = "{\"message\": \"{\"tempid\": " + templateid + "}\"}";
@@ -548,18 +542,14 @@ public class MetadataService {
   private Response mutateMetadata(String email, String metaObj, MetadataOp op)
     throws TemplateException, GenericException {
     if (op == null || email == null || metaObj == null) {
-      throw new NullPointerException("MetadataOp  or email or metaObj was null");
+      throw new IllegalArgumentException("MetadataOp  or email or metaObj were not provided.");
     }
     // Get Inode. Get project for the inode. Check if the user has DATA OWNER 
     //role for that project (privileges to add metadata)
     InodeTableComposite itc = JsonUtil.parseSchemaHeader(metaObj);
     //variables not set in the json message
     if (itc == null) {
-      Logger.getLogger(MetadataService.class.getName()).log(Level.SEVERE,
-              "Badly formatted json message/Missing values",
-              new NullPointerException());
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "Badly formatted json message/Missing values");
+      throw new IllegalArgumentException("Badly formatted json message/Missing values");
     }
     Inode parent = inodeFacade.findById(itc.getInodePid());
     if (parent == null) {
@@ -567,8 +557,7 @@ public class MetadataService {
         "Incorrect json message/Missing or incorrect parent inodeId");
     }
     Inode inode = inodeFacade.findByInodePK(parent, itc.getInodeName(),
-            HopsUtils.
-                    calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
+            HopsUtils.calculatePartitionId(parent.getId(), itc.getInodeName(), 3));
     if (inode == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
         "Incorrect json message/Missing or incorrect inode name");
@@ -583,7 +572,7 @@ public class MetadataService {
     Response.Status status = Response.Status.FORBIDDEN;
     String userRole = projectTeamFacade.findCurrentRole(project, user);
 
-    if (userRole != null && userRole.isEmpty() == false && userRole.
+    if (userRole != null && !userRole.isEmpty() && userRole.
             compareToIgnoreCase(AllowedProjectRoles.DATA_OWNER) == 0) {
       List<EntityIntf> composite = new ArrayList<>();
       composite.add(itc);
@@ -640,7 +629,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response attachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws DatasetException, GenericException, TemplateException {
+          String metaObj) throws DatasetException, TemplateException {
 
     processSchemalessMetadata(metaObj, false);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
@@ -653,7 +642,7 @@ public class MetadataService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response detachSchemalessMetadata(
           @Context SecurityContext sc, @Context HttpServletRequest req,
-          String metaObj) throws DatasetException, TemplateException, GenericException {
+          String metaObj) throws DatasetException, TemplateException {
 
     processSchemalessMetadata(metaObj, true);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.ACCEPTED).
@@ -661,11 +650,11 @@ public class MetadataService {
   }
 
   private void processSchemalessMetadata(String metaObj, boolean detach)
-    throws DatasetException, TemplateException, GenericException {
+    throws DatasetException, TemplateException {
     JsonObject jsonObj = Json.createReader(new StringReader(metaObj)).
       readObject();
     if (!jsonObj.containsKey("path")) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "missing path field");
+      throw new IllegalArgumentException("missing path field in metaObj");
     }
   
     String inodePath = jsonObj.getString("path");
@@ -675,8 +664,7 @@ public class MetadataService {
     }
   
     if (!jsonObj.containsKey("metadata")) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "missing metadata field");
+      throw new IllegalArgumentException("missing metadata field in metaObj");
     }
   
     JsonObject metadata = jsonObj.getJsonObject("metadata");

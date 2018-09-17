@@ -39,25 +39,8 @@
 
 package io.hops.hopsworks.api.jobs;
 
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.context.RequestScoped;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.JsonResponse;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
@@ -71,20 +54,44 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
-import javax.persistence.EntityExistsException;
+import org.apache.zookeeper.KeeperException;
+
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 //import org.apache.avro.Schema;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KafkaService {
 
-  private final static Logger logger = Logger.getLogger(KafkaService.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(KafkaService.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
@@ -115,22 +122,13 @@ public class KafkaService {
   /**
    * Gets the list of topics for this project
    *
-   * @param sc
-   * @param req
-   * @return
-   * @throws AppException
    */
   @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopics(@Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
+          @Context HttpServletRequest req) {
 
     List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
@@ -144,13 +142,7 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getSharedTopics(@Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
+          @Context HttpServletRequest req) {
     List<TopicDTO> listTopics = kafkaController.findSharedTopicsByProject(projectId);
     GenericEntity<List<TopicDTO>> topics
             = new GenericEntity<List<TopicDTO>>(listTopics) {};
@@ -163,12 +155,8 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getProjectAndSharedTopics(@Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
     List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(projectId);
 
     allTopics.addAll(kafkaController.findSharedTopicsByProject(projectId));
@@ -182,15 +170,10 @@ public class KafkaService {
   @Path("/topic/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response createTopic(TopicDTO topicDto,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws Exception {
     JsonResponse json = new JsonResponse();
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
     //create the topic in the database and the Kafka cluster
     kafkaFacade.createTopicInProject(projectId, topicDto);
     //By default, all members of the project are granted full permissions 
@@ -209,15 +192,10 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/remove")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeTopic(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException, ServiceException {
     JsonResponse json = new JsonResponse();
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
     //remove the topic from the database and Kafka cluster
     kafkaFacade.removeTopicFromProject(this.project, topicName);
 
@@ -232,22 +210,12 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopicDetails(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws Exception {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
 
     List<PartitionDetailsDTO> topic;
-    try {
-      topic = kafkaFacade.getTopicDetails(project, user, topicName);
-    } catch (Exception ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(),
-              "Advanced option is currently not available. Please try again later.");
-    }
+    topic = kafkaFacade.getTopicDetails(project, user, topicName);
 
     GenericEntity<List<PartitionDetailsDTO>> topics
             = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
@@ -262,16 +230,16 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response topicDefaultValues(
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
+          @Context HttpServletRequest req) throws KafkaException {
+    TopicDefaultValueDTO values;
+    try {
+      values = kafkaFacade.topicDefaultValues();
+    } catch (InterruptedException | IOException | KeeperException ex) {
+      LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR.toString(), ex);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, "project: " + project.getName(),
+        ex.getMessage());
     }
-
-    TopicDefaultValueDTO values
-            = kafkaFacade.topicDefaultValues();
-
+  
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             values).build();
   }
@@ -279,25 +247,18 @@ public class KafkaService {
   @GET
   @Path("/topic/{topic}/share/{projId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response shareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projId") int projectId,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
     JsonResponse json = new JsonResponse();
-    if (this.projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
     kafkaFacade.shareTopic(this.projectId, topicName, projectId);
-    //By default, all members of the project are granted full permissions 
-    //on the topic
+    //By default, all members of the project are granted full permissions on the topic
     Project projectShared = projectFacade.find(projectId);
     if (projectShared == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not find project for topic");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "Could not find topic: " + topicName + " for" +
+        " project: " + projectId);
     }
     AclDTO aclDto = new AclDTO(projectShared.getName(),
             Settings.KAFKA_ACL_WILDCARD,
@@ -312,15 +273,14 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopic(
           @PathParam("topic") String topicName,
           @PathParam("projectId") int projectId,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException {
     JsonResponse json = new JsonResponse();
 
-    kafkaFacade.unShareTopic(topicName, this.projectId, projectId);
+    kafkaFacade.unShareTopic(topicName, projectId);
     json.setSuccessMessage("Topic has been removed from shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -329,11 +289,10 @@ public class KafkaService {
   @DELETE
   @Path("/topic/{topic}/unshare")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response unShareTopicFromProject(
           @PathParam("topic") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException {
     JsonResponse json = new JsonResponse();
 
     kafkaFacade.unShareTopic(topicName, this.projectId);
@@ -348,7 +307,7 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response topicIsSharedTo(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
 
     List<SharedProjectDTO> projectDtoList = kafkaFacade
             .topicIsSharedTo(topicName, this.projectId);
@@ -366,16 +325,10 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response aclUsers(@PathParam("topicName") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
+          @Context HttpServletRequest req) {
 
     List<AclUserDTO> aclUsersDtos
             = kafkaFacade.aclUsers(projectId, topicName);
-
     GenericEntity<List<AclUserDTO>> aclUsers
             = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
 
@@ -387,58 +340,26 @@ public class KafkaService {
   @Path("/topic/{topic}/addAcl")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addAclsToTopic(@PathParam("topic") String topicName,
           AclDTO aclDto,
-          @Context SecurityContext sc, @Context HttpServletRequest req)
-          throws AppException {
+          @Context SecurityContext sc, @Context HttpServletRequest req) throws KafkaException, ProjectException,
+    UserException {
     JsonResponse json = new JsonResponse();
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-    boolean aclAdded = false;
-    try {
-      aclAdded = kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
-    } catch (EntityExistsException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "This ACL definition already existes in database.");
-    } catch (IllegalArgumentException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Wrong imput values");
-    }
-
-    if(aclAdded){
-      json.setSuccessMessage("ACL has been added to the topic.");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-    } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "ACL(s) already exist(s).");
-    }
+    kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
+    json.setSuccessMessage("ACL has been added to the topic.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
     
   }
 
   @DELETE
   @Path("/topic/{topic}/removeAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response removeAclsFromTopic(@PathParam("topic") String topicName,
           @PathParam("aclId") int aclId,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException {
     JsonResponse json = new JsonResponse();
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    try {
-      kafkaFacade.removeAclsFromTopic(topicName, aclId);
-    } catch (IllegalArgumentException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Wrong imput values");
-    }
-
+    kafkaFacade.removeAclFromTopic(topicName, aclId);
     json.setSuccessMessage("Topic acls has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
@@ -450,19 +371,8 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getTopicAcls(@PathParam("topic") String topicName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-    List<AclDTO> aclDto = null;
-    try {
-      aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
-    } catch (AppException e) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
+          @Context HttpServletRequest req) throws KafkaException {
+    List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, projectId);
 
     GenericEntity<List<AclDTO>> aclDtos
             = new GenericEntity<List<AclDTO>>(aclDto) {};
@@ -474,33 +384,13 @@ public class KafkaService {
   @PUT
   @Path("/topic/{topic}/updateAcl/{aclId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateTopicAcls(@PathParam("topic") String topicName,
           @PathParam("aclId") String aclId, AclDTO aclDto,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException, ProjectException, UserException {
+    kafkaFacade.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
     JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
-    try {
-      kafkaFacade.updateTopicAcl(projectId, topicName, Integer.parseInt(aclId),
-              aclDto);
-    } catch (EntityExistsException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "This ACL definition already existes in database.");
-    } catch (IllegalArgumentException ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Wrong imput values");
-    } catch (Exception ex) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Problem adding ACL to topic.");
-    }
-
-    json.setSuccessMessage("TopicAcl updated successfuly");
+    json.setSuccessMessage("TopicAcl updated successfully");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -512,15 +402,10 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response ValidateSchemaForTopics(SchemaDTO schemaData,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req)  {
     JsonResponse json = new JsonResponse();
 
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
-
       case INVALID:
         json.setErrorMsg("schema is invalid");
         return noCacheResponse.getNoCacheResponseBuilder(
@@ -543,16 +428,10 @@ public class KafkaService {
   @Path("/schema/add")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response addTopicSchema(SchemaDTO schemaData,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) {
     JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
 
     //String schemaContent = schemaData.getContents();
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
@@ -584,14 +463,7 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response listSchemasForTopics(
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-    JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
+          @Context HttpServletRequest req) {
     List<SchemaDTO> schemaDtos = kafkaFacade.listSchemasForTopics();
     GenericEntity<List<SchemaDTO>> schemas
             = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
@@ -608,12 +480,7 @@ public class KafkaService {
   public Response getSchemaContent(@PathParam("schemaName") String schemaName,
           @PathParam("schemaVersion") Integer schemaVersion,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
+          @Context HttpServletRequest req) throws KafkaException {
 
     SchemaDTO schemaDtos = kafkaFacade.getSchemaContent(schemaName, schemaVersion);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -624,18 +491,11 @@ public class KafkaService {
   @DELETE
   @Path("/removeSchema/{schemaName}/{version}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response deleteSchema(@PathParam("schemaName") String schemaName,
           @PathParam("version") Integer version,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws KafkaException {
     JsonResponse json = new JsonResponse();
-
-    if (projectId == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Incomplete request!");
-    }
-
     kafkaFacade.deleteSchema(schemaName, version);
     json.setSuccessMessage("Schema version for topic removed successfuly");
 

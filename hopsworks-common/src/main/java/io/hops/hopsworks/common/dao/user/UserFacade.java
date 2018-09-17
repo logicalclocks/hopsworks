@@ -39,13 +39,6 @@
 
 package io.hops.hopsworks.common.dao.user;
 
-import java.util.List;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.security.UserGroup;
 import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
@@ -53,9 +46,19 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.util.Settings;
 
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.logging.Logger;
+
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
-
+  private final static Logger LOGGER = Logger.getLogger(UserFacade.class.getName());
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -159,13 +162,9 @@ public class UserFacade extends AbstractFacade<Users> {
    * @return The user with given email, or null if no such user exists.
    */
   public Users findByEmail(String email) {
-    try {
-      return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
-              "email", email)
-              .getSingleResult();
-    } catch (Exception e) {
-      return null;
-    }
+    return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
+      "email", email)
+      .getSingleResult();
   }
 
   public void detach(Users user) {

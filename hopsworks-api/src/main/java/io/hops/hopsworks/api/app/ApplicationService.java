@@ -169,16 +169,14 @@ public class ApplicationService {
     String projectUser = checkAndGetProjectUser(topicInfo.getKeyStoreBytes(),
         topicInfo.getKeyStorePwd().toCharArray());
 
-    Project project = projectFacade.findByName(hdfsUserBean.getProjectName(
-        projectUser));
-
-    if (project == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, " Requested project was not found");
-    }
-
     SchemaDTO schemaDto = kafka.getSchemaForTopic(topicInfo.getTopicName());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+    if(schemaDto != null) {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
         entity(schemaDto).build();
+    } else {
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).
+        entity(schemaDto).build();
+    }
   }
 
   @POST

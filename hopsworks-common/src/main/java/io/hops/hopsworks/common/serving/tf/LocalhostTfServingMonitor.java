@@ -58,7 +58,7 @@ import static io.hops.hopsworks.common.serving.tf.LocalhostTfServingController.S
 @DependsOn("Settings")
 public class LocalhostTfServingMonitor {
 
-  private final static Logger logger =
+  private final static Logger LOGGER =
       Logger.getLogger(LocalhostTfServingMonitor.class.getName());
 
   private final static String PR_MATCHER = "tensorflow_mode";
@@ -82,9 +82,9 @@ public class LocalhostTfServingMonitor {
     if (tfServingController.getClassName().equals(LocalhostTfServingController.class.getName())) {
       // Setup the controller
       String rawInterval = settings.getTFServingMonitorInt();
-      Long intervalValue = Settings.getConfTimeValue(rawInterval);
-      TimeUnit intervalTimeunit = Settings.getConfTimeTimeUnit(rawInterval);
-      logger.log(Level.INFO, "Localhost TfServing instances monitor is configure to run every" + intervalValue +
+      Long intervalValue = settings.getConfTimeValue(rawInterval);
+      TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
+      LOGGER.log(Level.INFO, "Localhost TfServing instances monitor is configure to run every" + intervalValue +
           " " + intervalTimeunit.name());
 
       intervalValue = intervalTimeunit.toMillis(intervalValue);
@@ -98,7 +98,7 @@ public class LocalhostTfServingMonitor {
 
   @Timeout
   public void monitor(Timer timer) {
-    logger.log(Level.FINEST, "Run Localhost TfServing instances monitor");
+    LOGGER.log(Level.FINEST, "Run Localhost TfServing instances monitor");
 
     // Get the list of processes running on this machine
     Set<Integer> tfServingPSet = new HashSet<>();
@@ -113,8 +113,8 @@ public class LocalhostTfServingMonitor {
         }
       }
       input.close();
-    } catch (Exception err) {
-      logger.log(Level.SEVERE, "Could not read the processes list");
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Could not read the processes list", ex);
     }
 
     // Get the list of running Localhost TfServing instances
@@ -131,7 +131,7 @@ public class LocalhostTfServingMonitor {
           String[] command = {"/usr/bin/sudo", script, "kill", String.valueOf(dbTfServing.getLocalPid()),
               String.valueOf(dbTfServing.getLocalPort()), secretDir.toString()};
 
-          logger.log(Level.INFO, Arrays.toString(command));
+          LOGGER.log(Level.INFO, Arrays.toString(command));
           ProcessBuilder pb = new ProcessBuilder(command);
 
           try {
@@ -142,12 +142,14 @@ public class LocalhostTfServingMonitor {
             dbTfServing.setLocalPid(PID_STOPPED);
             dbTfServing.setLocalPort(-1);
             tfServingFacade.updateDbObject(dbTfServing, dbTfServing.getProject());
-          } catch (IOException | InterruptedException e) {}
+          } catch (IOException | InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+          }
         }
 
         tfServingFacade.releaseLock(tfServing.getProject(), tfServing.getId());
       } catch (TfServingException e) {
-        logger.log(Level.SEVERE, "Error proecessing TfServing instance with id: "
+        LOGGER.log(Level.SEVERE, "Error proecessing TfServing instance with id: "
             + tfServing.getId(), e);
       }
     }

@@ -401,7 +401,6 @@ public class JobService {
    * @param sc
    * @param req
    * @return url
-   * @throws AppException
    */
   @GET
   @Path("/projectName")
@@ -1109,9 +1108,9 @@ public class JobService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getLog(@PathParam("appId") String appId,
-      @PathParam("type") String type) throws GenericException, JobException {
-    if (appId == null || appId.isEmpty()) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Can not get log. No ApplicationId.");
+      @PathParam("type") String type) throws JobException {
+    if (Strings.isNullOrEmpty(appId)) {
+      throw new IllegalArgumentException("appId cannot be null or empty.");
     }
     Execution execution = exeFacade.findByAppId(appId);
     if (execution == null) {
@@ -1151,11 +1150,10 @@ public class JobService {
   public Response getLogByJobId(@PathParam("jobId") Integer jobId, @PathParam("submissionTime") String submissionTime,
       @PathParam("type") String type) throws GenericException, JobException {
     if (jobId == null || jobId <= 0) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Cannot get log. No jobId provided.");
+      throw new IllegalArgumentException("jobId must be a non-null positive integer number.");
     }
     if (submissionTime == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Cannot get log. No submissionTime " +
-        "provided.");
+      throw new IllegalArgumentException("submissionTime was not provided.");
     }
     Jobs job = jobFacade.find(jobId);
     if (job == null) {
@@ -1205,7 +1203,7 @@ public class JobService {
       @PathParam("type") String type,
       @Context HttpServletRequest req) throws GenericException, JobException {
     if (appId == null || appId.isEmpty()) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Can not get log. No ApplicationId.");
+      throw new IllegalArgumentException("get log. No ApplicationId.");
     }
     Execution execution = exeFacade.findByAppId(appId);
     if (execution == null) {

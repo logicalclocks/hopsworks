@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 8. Security error codes start  with "16".
  * 9. Dela error codes start with "17"
  * 10. Template error codes start with "18"
+ * 11. Kafka error codes start with "19"
  */
 @XmlRootElement
 public class RESTCodes {
@@ -61,7 +62,7 @@ public class RESTCodes {
     STARTER_PROJECT_BAD_REQUEST(150008, "Type of starter project is not valid", Response.Status.BAD_REQUEST),
     PROJECT_FOLDER_NOT_REMOVED(150009, "Project folder could not be removed from HDFS.", Response.Status.BAD_REQUEST),
     PROJECT_REMOVAL_NOT_ALLOWED(150010, "Project can only be deleted by its owner.", Response.Status.BAD_REQUEST),
-    PROJECT_MEMBER_NOT_REMOVED(150011, "Failed to remove team member.", Response.Status.BAD_REQUEST),
+    PROJECT_MEMBER_NOT_REMOVED(150011, "Failed to remove team member.", Response.Status.INTERNAL_SERVER_ERROR),
     MEMBER_REMOVAL_NOT_ALLOWED(150012, "Your project role does not allow to remove other members of this project.",
       Response.Status.BAD_REQUEST),
     PROJECT_OWNER_NOT_ALLOWED(150013, "Removing the project owner is not allowed.", Response.Status.BAD_REQUEST),
@@ -411,7 +412,8 @@ public class RESTCodes {
       + "Try recreating the following dir manually.", Response.Status.BAD_REQUEST),
     ELASTIC_SERVER_NOT_AVAILABLE(100002, "The Elasticsearch Server is either down or misconfigured.",
       Response.Status.BAD_REQUEST),
-    ELASTIC_SERVER_NOT_FOUND(100003, "Problem when reaching the Elasticsearch server", Response.Status.BAD_REQUEST),
+    ELASTIC_SERVER_NOT_FOUND(100003, "Problem when reaching the Elasticsearch server",
+      Response.Status.SERVICE_UNAVAILABLE),
     
     //Hive
     HIVE_ADD_FAILURE(100004, "Failed to create the Hive database", Response.Status.BAD_REQUEST),
@@ -424,13 +426,76 @@ public class RESTCodes {
     DATABASE_UNAVAILABLE(100008, "The database is temporarily unavailable. Please try again later",
       Response.Status.SERVICE_UNAVAILABLE),
     
-    TENSORBOARD_CLEANUP_ERROR(100009, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR);
-    
+    TENSORBOARD_CLEANUP_ERROR(100009, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR),
+    ZOOKEEPER_SERVICE_UNAVAILABLE(100010, "ZooKeeper service unavailable", Response.Status.SERVICE_UNAVAILABLE);
     private Integer code;
     private String message;
     private Response.Status respStatus;
     
     ServiceErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public Response.Status getRespStatus() {
+      return respStatus;
+    }
+    
+    public void setCode(Integer code) {
+      this.code = code;
+    }
+    
+    public void setMessage(String message) {
+      this.message = message;
+    }
+    
+    public void setRespStatus(Response.Status respStatus) {
+      this.respStatus = respStatus;
+    }
+    
+  }
+  
+  public enum KafkaErrorCode implements RESTErrorCode {
+    
+    // Zeppelin
+    TOPIC_NOT_FOUND(190000, "No topics found", Response.Status.NOT_FOUND),
+    BROKER_METADATA_ERROR(190001, "An error occured while retrieving topic metadata from broker",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    TOPIC_ALREADY_EXISTS(190002, "Kafka topic already exists in database. Pick a different topic name",
+      Response.Status.CONFLICT),
+    TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER(190003, "Kafka topic already exists in ZooKeeper. Pick a different topic name",
+      Response.Status.CONFLICT),
+    TOPIC_LIMIT_REACHED(190004, "Topic limit reached. Contact your administrator to increase the number of topics " +
+      "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
+    TOPIC_REPLICATION_ERROR(190005, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
+    SCHEMA_NOT_FOUND(190006, "Topic has not schema attached to it.", Response.Status.NOT_FOUND),
+    KAFKA_GENERIC_ERROR(190007, "An error occured while retrieving information from Kafka service",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    DESTINATION_PROJECT_IS_TOPIC_OWNER(190008, "Destination projet is topic owner", Response.Status.BAD_REQUEST),
+    TOPIC_ALREADY_SHARED(190009, "Topic is already shared", Response.Status.BAD_REQUEST),
+    TOPIC_NOT_SHARED(190010, "Topic is not shared with project", Response.Status.NOT_FOUND),
+    ACL_ALREADY_EXISTS(190011, "ACL already exists.", Response.Status.CONFLICT),
+    ACL_NOT_FOUND(190012, "ACL not found.", Response.Status.NOT_FOUND),
+    ACL_NOT_FOR_TOPIC(190013, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
+    SCHEMA_IN_USE(190014, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED);
+    
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+  
+    KafkaErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
       this.respStatus = respStatus;
@@ -565,7 +630,8 @@ public class RESTCodes {
       "Master password change procedure started. Check your inbox for final status", Response.Status.BAD_REQUEST),
     HDFS_ACCESS_CONTROL(160031, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
     EJB_ACCESS_LOCAL(160032, "EJB access local error", Response.Status.UNAUTHORIZED),
-    AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.BAD_REQUEST);
+    AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.UNAUTHORIZED),
+    CREATE_USER_ERROR(160034, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR);
   
   
     private Integer code;

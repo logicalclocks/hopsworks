@@ -41,10 +41,14 @@ package io.hops.hopsworks.common.dao.kafka;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
 import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -68,14 +72,16 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TopicExistsException;
+import org.apache.zookeeper.KeeperException;
+import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -93,7 +99,7 @@ import java.util.logging.Logger;
 @Stateless
 public class KafkaFacade {
 
-  private final static Logger LOG = Logger.getLogger(KafkaFacade.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -108,29 +114,26 @@ public class KafkaFacade {
   private BaseHadoopClientsService baseHadoopService;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private UserFacade userFacade;
 
-  public static final String COLON_SEPARATOR = ":";
+  private static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
-  public static final String KAFKA_SECURITY_PROTOCOL = "SSL";
-  public static final String KAFKA_BROKER_EXTERNAL_PROTOCOL = "EXTERNAL";
-  public static final String PROJECT_DELIMITER = "__";
+  private static final String KAFKA_SECURITY_PROTOCOL = "SSL";
+  private static final String KAFKA_BROKER_EXTERNAL_PROTOCOL = "EXTERNAL";
+  private static final String PROJECT_DELIMITER = "__";
   public static final String DLIMITER = "[\"]";
-  public String CLIENT_ID = "list_topics";
-  public final int BUFFER_SIZE = 20 * 1000;
-  public Set<String> topicList;
 
   protected EntityManager getEntityManager() {
     return em;
   }
 
-  public KafkaFacade() throws Exception {
+  public KafkaFacade() {
   }
 
   /**
    * Get all the Topics for the given project.
    *
-   * @param projectId
-   * @return
    */
   public List<TopicDTO> findTopicsByProject(Integer projectId) {
     TypedQuery<ProjectTopics> query = em.createNamedQuery(
@@ -138,11 +141,14 @@ public class KafkaFacade {
         ProjectTopics.class);
     query.setParameter("projectId", projectId);
     List<ProjectTopics> res = query.getResultList();
-    List<TopicDTO> topics = new ArrayList<>();
-    for (ProjectTopics pt : res) {
-      topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
+    List<TopicDTO> topics = null;
+    if(res != null && !res.isEmpty()) {
+      topics = new ArrayList<>();
+      for (ProjectTopics pt : res) {
+        topics.add(new TopicDTO(pt.getProjectTopicsPK().getTopicName(),
           pt.getSchemaTopics().getSchemaTopicsPK().getName(),
           pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
+      }
     }
     return topics;
   }
@@ -150,8 +156,6 @@ public class KafkaFacade {
   /**
    * Get all shared Topics for the given project.
    *
-   * @param projectId
-   * @return
    */
   public List<SharedTopics> findSharedTopicsByProject(Integer projectId) {
     TypedQuery<SharedTopics> query = em.createNamedQuery(
@@ -160,79 +164,67 @@ public class KafkaFacade {
     query.setParameter("projectId", projectId);
     return query.getResultList();
   }
-
+  
   public List<PartitionDetailsDTO> getTopicDetails(Project project, Users user,
-      String topicName)
-      throws AppException, Exception {
+    String topicName) throws Exception {
     List<TopicDTO> topics = findTopicsByProject(project.getId());
-    if (topics.isEmpty()) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "No Kafka topics found in this project.");
-    }
-    for (TopicDTO topic : topics) {
-      if (topic.getName().equalsIgnoreCase(topicName)) {
-        List<PartitionDetailsDTO> topicDetailDTO
-            = getTopicDetailsfromKafkaCluster(project, user, topicName);
-        return topicDetailDTO;
+    if (topics != null && !topics.isEmpty()) {
+      List<PartitionDetailsDTO> topicDetailDTO;
+      for (TopicDTO topic : topics) {
+        if (topic.getName().equalsIgnoreCase(topicName)) {
+          topicDetailDTO = getTopicDetailsfromKafkaCluster(project, user, topicName);
+          return topicDetailDTO;
+        }
       }
     }
-
-    List<PartitionDetailsDTO> pDto = new ArrayList<>();
-
-    return pDto;
+    return null;
   }
 
   private int getPort(String zkIp) {
-    int zkPort = Integer.parseInt(zkIp.split(COLON_SEPARATOR)[1]);
-    return zkPort;
+    return Integer.parseInt(zkIp.split(COLON_SEPARATOR)[1]);
   }
 
-  public InetAddress getIp(String zkIp) throws AppException {
+  public InetAddress getIp(String zkIp) throws ServiceException {
 
     String ip = zkIp.split(COLON_SEPARATOR)[0];
     try {
       return InetAddress.getByName(ip);
     } catch (UnknownHostException ex) {
-      throw new AppException(Response.Status.SERVICE_UNAVAILABLE.getStatusCode(),
-          "Zookeeper service is not available right now...");
+      LOGGER.log(Level.SEVERE, RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE.toString(), ex);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, ex.getMessage());
     }
   }
 
   //this should return list of projects the topic belongs to as owner or shared
-  public List<Project> findProjectforTopic(String topicName)
-      throws AppException {
+  public List<Project> findProjectforTopic(String topicName) {
     TypedQuery<ProjectTopics> query = em.createNamedQuery(
         "ProjectTopics.findByTopicName", ProjectTopics.class);
     query.setParameter("topicName", topicName);
 
-    if (query == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "No project found for this Kafka topic.");
-    }
     List<ProjectTopics> resp = query.getResultList();
-    List<Project> projects = new ArrayList<>();
-    for (ProjectTopics pt : resp) {
-      Project p = em.find(Project.class, pt.getProjectTopicsPK().getProjectId());
-      if (p != null) {
-        projects.add(p);
+    List<Project> projects = null;
+    if (resp != null && !resp.isEmpty()) {
+      projects = new ArrayList<>();
+      for (ProjectTopics pt : resp) {
+        Project p = em.find(Project.class, pt.getProjectTopicsPK().getProjectId());
+        if (p != null) {
+          projects.add(p);
+        }
       }
     }
-
-    if (projects.isEmpty()) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "No project found for this Kafka topic.");
-    }
-
     return projects;
   }
 
   public void createTopicInProject(Integer projectId, TopicDTO topicDto)
-      throws AppException {
+    throws ProjectException, KafkaException, ServiceException {
 
+    if(projectId == null || topicDto == null){
+      throw new IllegalArgumentException("projectId or topicDto were not provided.");
+    }
+    
     Project project = em.find(Project.class, projectId);
     if (project == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Project does not exist in database.");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId:" + projectId);
     }
 
     String topicName = topicDto.getName();
@@ -243,8 +235,7 @@ public class KafkaFacade {
     List<ProjectTopics> res = query.getResultList();
 
     if (!res.isEmpty()) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic already exists in database. Pick a different topic name.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, "topic name: " + topicName);
     }
 
     TypedQuery<ProjectTopics> projQuery = em.createNamedQuery(
@@ -253,19 +244,24 @@ public class KafkaFacade {
     List<ProjectTopics> topicsInProject = projQuery.getResultList();
 
     if (topicsInProject != null && (topicsInProject.size() >= project.getKafkaMaxNumTopics())) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Topic limit reached. Contact your administrator to increase the number "
-          + "of topics that can be created for this project.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED,
+        "topic name: " + topicName + ", project: " +project.getName());
     }
 
     //check if the replication factor is not greater than the 
-    //number of running borkers
-    Set<String> brokerEndpoints = settings.getBrokerEndpoints();
-    if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Topic replication factor can be a maximum of" + brokerEndpoints.
-              size());
+    //number of running brokers
+    try {
+      Set<String> brokerEndpoints = settings.getBrokerEndpoints();
+      if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
+        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR,
+          "maximum: " + brokerEndpoints.size());
+      }
+    } catch (InterruptedException | IOException | KeeperException ex) {
+      LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR.toString(), ex);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, "project: " + project.getName(),
+        ex.getMessage());
     }
+    
 
     // create the topic in kafka 
     ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
@@ -282,26 +278,24 @@ public class KafkaFacade {
             new Properties(), RackAwareMode.Enforced$.MODULE$);
       }
     } catch (TopicExistsException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic already exists in Zookeeper. Pick a different topic name.");
+      LOGGER.log(Level.FINE, null, ex);
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER,
+        "topic name: " + topicName, ex.getMessage());
     } finally {
       zkClient.close();
       try {
         zkConnection.close();
       } catch (InterruptedException ex) {
-        LOG.log(Level.SEVERE, null, ex.getMessage());
+        LOGGER.log(Level.SEVERE, null, ex.getMessage());
       }
     }
 
-    //if schema is empty, select a default schema, not implemented
-    //persist topic into database
     SchemaTopics schema = em.find(SchemaTopics.class,
         new SchemaTopicsPK(topicDto.getSchemaName(),
             topicDto.getSchemaVersion()));
-
+  
     if (schema == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "topic has no schema");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, "topic: " + topicName);
     }
 
     /*
@@ -327,15 +321,13 @@ public class KafkaFacade {
     // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
   }
 
-  public void removeTopicFromProject(Project project, String topicName)
-      throws AppException {
+  public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {
 
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, project.getId()));
 
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic does not exist in database.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
     }
 
     //remove from database
@@ -359,9 +351,6 @@ public class KafkaFacade {
 
     try {
       AdminUtils.deleteTopic(zkUtils, topicName);
-    } catch (TopicAlreadyMarkedForDeletionException ex) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          topicName + " alread marked for deletion.");
     } finally {
       zkClient.close();
       try {
@@ -374,7 +363,7 @@ public class KafkaFacade {
   }
 
   public void removeAllTopicsFromProject(Project project) throws
-      InterruptedException, AppException {
+    InterruptedException, ServiceException {
 
     TypedQuery<ProjectTopics> query = em.createNamedQuery(
         "ProjectTopics.findByProjectId", ProjectTopics.class);
@@ -423,71 +412,48 @@ public class KafkaFacade {
         .executeUpdate();
   }
 
-  public TopicDefaultValueDTO topicDefaultValues() throws AppException {
+  public TopicDefaultValueDTO topicDefaultValues() throws InterruptedException, IOException, KeeperException {
 
     Set<String> brokers = settings.getBrokerEndpoints();
 
-    TopicDefaultValueDTO valueDto = new TopicDefaultValueDTO(
+    return new TopicDefaultValueDTO(
         settings.getKafkaDefaultNumReplicas(),
         settings.getKafkaDefaultNumPartitions(),
         brokers.size() + "");
-
-    return valueDto;
   }
 
   public void shareTopic(Integer owningProjectId, String topicName,
-      Integer projectId) throws AppException {
-
+      Integer projectId) throws KafkaException {
     if (owningProjectId.equals(projectId)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Destination projet is topic owner");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER,
+        "owningProjectId:"+owningProjectId + ", projectId: " + projectId);
     }
 
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, owningProjectId));
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic does not exist in database.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
     }
 
     SharedTopics sharedTopics = em.find(SharedTopics.class,
         new SharedTopicsPK(topicName, projectId));
     if (sharedTopics != null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Topic is already Shared to project.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED,
+        "topic: " + topicName + ", projectId: " +projectId);
     }
     //persist shared topic to database
     SharedTopics st = new SharedTopics(topicName, owningProjectId, projectId);
     em.persist(st);
     em.flush();
   }
-
-  public void unShareTopic(String topicName, Integer owningProjectId,
-      Integer destProjectId) throws AppException {
-
-    SharedTopics pt = em.find(SharedTopics.class,
-        new SharedTopicsPK(topicName, destProjectId));
+  
+  public void unShareTopic(String topicName, Integer ownerProjectId) throws KafkaException {
+    SharedTopics pt = em.find(SharedTopics.class, new SharedTopicsPK(topicName, ownerProjectId));
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic is not shared to the project.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED,
+        "topic: " + topicName + "ownerProjectId: " + ownerProjectId);
     }
-
     em.remove(pt);
-  }
-
-  public void unShareTopic(String topicName, Integer ownerProjectId)
-      throws AppException {
-
-    SharedTopics pt = em.find(SharedTopics.class,
-        new SharedTopicsPK(topicName, ownerProjectId));
-    if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic is not shared to the project.");
-    }
-
-    em.remove(pt);
-    // remove the associated acl from database; 
-
   }
 
   public List<SharedProjectDTO> topicIsSharedTo(String topicName,
@@ -513,103 +479,91 @@ public class KafkaFacade {
 
     return shareProjectDtos;
   }
-
-  public List<AclUserDTO> aclUsers(Integer projectId, String topicName)
-      throws AppException {
-
-    List<AclUserDTO> aclUsers = new ArrayList<>();
-
-    //contains project and its members
-    Map<String, List<String>> projectMemberCollections = new HashMap<>();
-
-    //get the owner project name 
-    Project project = em.find(Project.class, projectId);
-    if (project == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "The owner project does not exist in database.");
+  
+  public List<AclUserDTO> aclUsers(Integer projectId, String topicName) {
+  
+    if (projectId == null || projectId < 0 || Strings.isNullOrEmpty(topicName)) {
+      throw new IllegalArgumentException("ProjectId must be non-null non-negative number, topic must be provided");
     }
-
+    //get the owner project name
+    Project project = em.find(Project.class, projectId);
+    List<AclUserDTO> aclUsers = new ArrayList<>();
+  
     List<String> teamMembers = new ArrayList<>();
     for (ProjectTeam pt : project.getProjectTeamCollection()) {
       teamMembers.add(pt.getUser().getEmail());
     }
     teamMembers.add("*");//wildcard used for rolebased acl
+    //contains project and its members
+    Map<String, List<String>> projectMemberCollections = new HashMap<>();
     projectMemberCollections.put(project.getName(), teamMembers);
-
+  
     //get all the projects this topic is shared with
     TypedQuery<SharedTopics> query = em.createNamedQuery(
-        "SharedTopics.findByTopicName", SharedTopics.class);
+      "SharedTopics.findByTopicName", SharedTopics.class);
     query.setParameter("topicName", topicName);
-
+  
     List<String> sharedMembers = new ArrayList<>();
     for (SharedTopics sharedTopics : query.getResultList()) {
       project = em.find(Project.class, sharedTopics.getSharedTopicsPK()
-          .getProjectId());
+        .getProjectId());
       for (ProjectTeam pt : project.getProjectTeamCollection()) {
         sharedMembers.add(pt.getUser().getEmail());
       }
       sharedMembers.add("*");
       projectMemberCollections.put(project.getName(), sharedMembers);
     }
-
     for (Map.Entry<String, List<String>> user : projectMemberCollections.
-        entrySet()) {
+      entrySet()) {
       aclUsers.add(new AclUserDTO(user.getKey(), user.getValue()));
     }
-
     return aclUsers;
   }
 
-  public boolean addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
-      throws AppException {
+  public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
+    throws KafkaException, ProjectException, UserException {
 
-    return addAclsToTopic(topicName, projectId,
+    addAclsToTopic(topicName, projectId,
         dto.getProjectName(),
         dto.getUserEmail(), dto.getPermissionType(),
         dto.getOperationType(), dto.getHost(), dto.getRole());
   }
 
-  private boolean addAclsToTopic(String topicName, Integer projectId,
+  private void addAclsToTopic(String topicName, Integer projectId,
       String selectedProjectName, String userEmail, String permission_type,
-      String operation_type, String host, String role) throws AppException {
-    boolean aclAdded = false;
-    //get the project id
-    Project project = em.find(Project.class, projectId);
-    if (project == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "The specified project for the topic is not in database");
+      String operation_type, String host, String role) throws ProjectException, KafkaException, UserException {
+    if(Strings.isNullOrEmpty(topicName) || projectId == null || projectId < 0 || userEmail == null){
+      throw new IllegalArgumentException("Topic, userEmail and projectId must be provided. ProjectId must be a " +
+        "non-negative " +
+        "number");
     }
+    //get the project id
+    Project project = projectsFacade.find(projectId);
 
     if (!project.getName().equals(selectedProjectName)) {
       project = projectsFacade.findByName(selectedProjectName);
       if (project == null) {
-        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-            "The specified project for the topic is not in database");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "The specified project for the topic" +
+          topicName + " was not found");
       }
     }
 
     ProjectTopics pt = em.find(ProjectTopics.class,
         new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Topic does not belong to the project.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "Topic: " + topicName);
     }
 
     //if acl definition applies only for a specific user
     if (!userEmail.equals("*")) {
       //fetch the user name from database       
-      TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
-          Users.class).setParameter("email", userEmail);
-      List<Users> users = query.getResultList();
+      Users user = userFacade.findByEmail(userEmail);
 
-      if (users == null) {
-        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-            "User does not exist.");
+      if (user == null) {
+        throw new UserException(RESTCodes.SecurityErrorCode.USER_WAS_NOT_FOUND, "user: " + userEmail);
       }
-      Users selectedUser = users.get(0);
 
-      String principalName = selectedProjectName + PROJECT_DELIMITER
-          + selectedUser.getUsername();
+      String principalName = selectedProjectName + PROJECT_DELIMITER + user.getUsername();
 
       //Check if the requested ACL already exists
       TopicAcls topicAcl = getTopicAcl(topicName, principalName, permission_type, operation_type, host, role);
@@ -619,15 +573,13 @@ public class KafkaFacade {
             && topicAcl.getOperationType().equalsIgnoreCase(operation_type)
             && topicAcl.getPermissionType().equalsIgnoreCase(permission_type)
             && topicAcl.getRole().equalsIgnoreCase(role)) {
-          throw new AppException(Response.Status.CONFLICT.getStatusCode(), "ACL already exists");
+          throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_ALREADY_EXISTS, "topicAcl:" + topicAcl.toString());
         }
       }
-      TopicAcls ta = new TopicAcls(pt, selectedUser,
-          permission_type, operation_type, host, role, principalName);
+      TopicAcls ta = new TopicAcls(pt, user, permission_type, operation_type, host, role, principalName);
 
       em.persist(ta);
       em.flush();
-      aclAdded = true;
     } else {
       for (ProjectTeam p : project.getProjectTeamCollection()) {
         Users selectedUser = p.getUser();
@@ -638,54 +590,39 @@ public class KafkaFacade {
           TopicAcls ta = new TopicAcls(pt, selectedUser, permission_type, operation_type, host, role, principalName);
           em.persist(ta);
           em.flush();
-          aclAdded = true;
         }
       }
     }
-    return aclAdded;
   }
 
-  public void updateTopicAcl(Integer projectId, String topicName,
-      Integer aclId, AclDTO aclDto) throws AppException {
-
-    //get the project id
-    Project project = em.find(Project.class, projectId);
-    if (project == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "The specified project for the topic is not in database");
-    }
+  public void updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws KafkaException,
+    ProjectException, UserException {
 
     ProjectTopics pt = em.find(ProjectTopics.class,
-        new ProjectTopicsPK(topicName, projectId));
+        new ProjectTopicsPK(topicName, project.getId()));
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Topic does not belong to the project.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, topicName);
     }
 
     TopicAcls ta = em.find(TopicAcls.class, aclId);
     if (ta == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "acl not found in database");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, "topic: " +topicName);
     }
     //remove previous acl
     em.remove(ta);
 
     //add the new acls  
-    addAclsToTopic(topicName, projectId, aclDto);
+    addAclsToTopic(topicName, project.getId(), aclDto);
   }
 
-  public void removeAclsFromTopic(String topicName, Integer aclId)
-      throws AppException {
+  public void removeAclFromTopic(String topicName, Integer aclId) throws KafkaException {
     TopicAcls ta = em.find(TopicAcls.class, aclId);
     if (ta == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "aclId not found in database");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, "topic: " +topicName);
     }
 
-    if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName()
-        .equals(topicName)) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "aclId does not belong the specified topic");
+    if (!ta.getProjectTopics().getProjectTopicsPK().getTopicName().equals(topicName)) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOR_TOPIC, "topic: " + topicName);
     }
 
     em.remove(ta);
@@ -707,30 +644,27 @@ public class KafkaFacade {
     }
     return null;
   }
-
-  public List<AclDTO> getTopicAcls(String topicName, Integer projectId)
-      throws AppException {
-    ProjectTopics pt = em.find(ProjectTopics.class,
-        new ProjectTopicsPK(topicName, projectId));
+  
+  public List<AclDTO> getTopicAcls(String topicName, Integer projectId) throws KafkaException {
+    ProjectTopics pt = em.find(ProjectTopics.class, new ProjectTopicsPK(topicName, projectId));
     if (pt == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Kafka topic does not exist in database.");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, "topic: " + topicName);
     }
-
+    
     TypedQuery<TopicAcls> query = em.createNamedQuery(
-        "TopicAcls.findByTopicName", TopicAcls.class)
-        .setParameter("topicName", topicName);
+      "TopicAcls.findByTopicName", TopicAcls.class)
+      .setParameter("topicName", topicName);
     List<TopicAcls> acls = query.getResultList();
-
+    
     List<AclDTO> aclDtos = new ArrayList<>();
     String projectName;
     for (TopicAcls ta : acls) {
       projectName = ta.getPrincipal().split(PROJECT_DELIMITER)[0];
       aclDtos.add(new AclDTO(ta.getId(), projectName,
-          ta.getUser().getEmail(), ta.getPermissionType(),
-          ta.getOperationType(), ta.getHost(), ta.getRole()));
+        ta.getUser().getEmail(), ta.getPermissionType(),
+        ta.getOperationType(), ta.getHost(), ta.getRole()));
     }
-
+    
     return aclDtos;
   }
 
@@ -782,7 +716,6 @@ public class KafkaFacade {
 
     List<SchemaTopics> schemaTopics = query.getResultList();
 
-    SchemaTopics schema = null;
     if (schemaTopics != null && !schemaTopics.isEmpty()) {
       for (SchemaTopics schemaTopic : schemaTopics) {
 
@@ -793,42 +726,30 @@ public class KafkaFacade {
       }
       newVersion++;
     }
-    if (schema == null) {
-      schema = new SchemaTopics(schemaDto.getName(), newVersion,
-          schemaDto.getContents(), new Date());
-    }
+    SchemaTopics schema = new SchemaTopics(schemaDto.getName(), newVersion, schemaDto.getContents(), new Date());
 
     em.persist(schema);
     em.flush();
   }
-
-  public SchemaDTO getSchemaForTopic(String topicName) throws GenericException {
-
+  
+  public SchemaDTO getSchemaForTopic(String topicName) {
+    
     List<ProjectTopics> topics = em.createNamedQuery(
-        "ProjectTopics.findByTopicName", ProjectTopics.class)
-        .setParameter("topicName", topicName).getResultList();
-
-    if (topics == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "Topic: " + topicName + " was not found");
-    }
-
-    ProjectTopics topic = topics.get(0);
-
-    SchemaTopics schema = em.find(SchemaTopics.class,
+      "ProjectTopics.findByTopicName", ProjectTopics.class)
+      .setParameter("topicName", topicName).getResultList();
+    if (topics != null && !topics.isEmpty()) {
+      ProjectTopics topic = topics.get(0);
+      
+      SchemaTopics schema = em.find(SchemaTopics.class,
         new SchemaTopicsPK(
-            topic.getSchemaTopics().getSchemaTopicsPK().getName(),
-            topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
-
-    if (schema == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "Schema: " + topic.getSchemaTopics().getSchemaTopicsPK().getName() + " with version: " +
-          topic.getSchemaTopics().getSchemaTopicsPK().getVersion() + " was not found");
+          topic.getSchemaTopics().getSchemaTopicsPK().getName(),
+          topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
+      
+      if (schema != null) {
+        return new SchemaDTO(schema.getContents());
+      }
     }
-
-    SchemaDTO schemaDto = new SchemaDTO(schema.getContents());
-
-    return schemaDto;
+    return null;
   }
 
   public List<SchemaDTO> listSchemasForTopics() {
@@ -842,11 +763,7 @@ public class KafkaFacade {
 
     for (SchemaTopics schema : query.getResultList()) {
       schemaName = schema.getSchemaTopicsPK().getName();
-
-      if (schemas.get(schemaName) == null) {
-        schemas.put(schemaName, new ArrayList<Integer>());
-      }
-
+      schemas.computeIfAbsent(schemaName, k -> new ArrayList<>());
       schemas.get(schemaName).add(schema.getSchemaTopicsPK().getVersion());
     }
     for (Map.Entry<String, List<Integer>> schema : schemas.entrySet()) {
@@ -856,58 +773,36 @@ public class KafkaFacade {
     return schemaDtos;
   }
 
-  public SchemaDTO getSchemaContent(String schemaName,
-      Integer schemaVersion) throws AppException {
-
+  public SchemaDTO getSchemaContent(String schemaName, Integer schemaVersion) throws KafkaException {
     SchemaTopics schemaTopic = em.find(SchemaTopics.class,
         new SchemaTopicsPK(schemaName, schemaVersion));
     if (schemaTopic == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "Schema: " + schemaName + " not found in database");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, "Schema: " + schemaName);
     }
-
-    SchemaDTO schemaDto = new SchemaDTO(schemaTopic.getContents());
-
-    return schemaDto;
+    return new SchemaDTO(schemaTopic.getContents());
   }
-
-  public void deleteSchema(String schemaName, Integer version)
-      throws AppException {
-
+  
+  public void deleteSchema(String schemaName, Integer version) throws KafkaException {
     //Check if schema is currently used by a topic.
     List<ProjectTopics> topics = em.createNamedQuery(
-        "ProjectTopics.findBySchemaVersion", ProjectTopics.class)
-        .setParameter("schema_name", schemaName)
-        .setParameter("schema_version", version)
-        .getResultList();
+      "ProjectTopics.findBySchemaVersion", ProjectTopics.class)
+      .setParameter("schema_name", schemaName)
+      .setParameter("schema_version", version)
+      .getResultList();
     if (topics != null && !topics.isEmpty()) {
       //Create a list of topic names to display to user
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-          "Schema is currently used by topics");
+      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_IN_USE);
     } else {
       //get the bean and remove it
-      SchemaTopics schema = em.find(SchemaTopics.class,
-          new SchemaTopicsPK(schemaName, version));
-
-      if (schema == null) {
-        throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-            "Schema: " + schemaName + " not found in database");
-      }
-
-      try {
-        em.remove(schema);
-        em.flush();
-      } catch (Exception ex) {
-        throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-            ex.getMessage());
-      }
+      SchemaTopics schema = em.find(SchemaTopics.class, new SchemaTopicsPK(schemaName, version));
+      em.remove(schema);
+      em.flush();
     }
   }
 
   private List<PartitionDetailsDTO> getTopicDetailsfromKafkaCluster(
-      Project project, Users user, String topicName) throws Exception {
-
-    CLIENT_ID = "topic_detail";
+      Project project, Users user, String topicName) throws KafkaException, CryptoPasswordNotFoundException {
+  
     Set<String> brokers = settings.getKafkaBrokers();
     Map<Integer, List<String>> replicas = new HashMap<>();
     Map<Integer, List<String>> inSyncReplicas = new HashMap<>();
@@ -970,10 +865,9 @@ public class KafkaFacade {
           partitionDetails.add(new PartitionDetailsDTO(id, leaders.get(id), replicas.get(id), replicas.get(id)));
         }
       } catch (Exception ex) {
-        LOG.log(Level.SEVERE, null, ex);
-        throw new Exception(
-            "Error while retrieving topic metadata from broker: "
-            + brokerAddress, ex);
+        LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR.toString(), ex);
+        throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, "Broker: " + brokerAddress,
+          ex.getMessage());
       }
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());

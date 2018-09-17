@@ -58,7 +58,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.exception.DatasetException;
-import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -141,11 +140,10 @@ public class DatasetController {
   public void createDataset(Users user, Project project, String dataSetName,
       String datasetDescription, int templateId, boolean searchable,
       boolean defaultDataset, DistributedFileSystemOps dfso)
-    throws IOException, GenericException, DatasetException {
+    throws IOException, DatasetException {
     //Parameter checking.
     if (user == null || project == null || dataSetName == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
-        "User, project or dataset were not provided");
+      throw new IllegalArgumentException("User, project or dataset were not provided");
     }
     FolderNameValidator.isValidName(dataSetName, false);
     //Logic

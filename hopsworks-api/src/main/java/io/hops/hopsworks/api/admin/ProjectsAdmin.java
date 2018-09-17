@@ -51,6 +51,10 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.KafkaException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -126,25 +130,26 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
-      ProjectDTO projectDTO) throws AppException, DatasetException, GenericException {
+      ProjectDTO projectDTO)
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, AppException {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
-      LOG.log(Level.WARNING, "Unauthorized or unknown user tried to create a Project as another user");
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-          ResponseMessages.AUTHENTICATION_FAILURE);
+      LOG.log(Level.WARNING, "");
+      throw new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE,
+        "Unauthorized or unknown user tried to create a Project as another user");
     }
 
     String ownerEmail = projectDTO.getOwner();
     if (ownerEmail == null) {
       LOG.log(Level.WARNING, "Owner username is null");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Owner email cannot be null");
+      throw new IllegalArgumentException("Owner email cannot be null");
     }
 
     Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
       LOG.log(Level.WARNING, "Owner is not in the database");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "Unknown owner user " + ownerEmail);
+      throw new UserException(RESTCodes.SecurityErrorCode.USER_DOES_NOT_EXIST, "user:" + ownerEmail);
     }
 
     List<String> failedMembers = null;

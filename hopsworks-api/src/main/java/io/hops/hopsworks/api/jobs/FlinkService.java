@@ -182,9 +182,9 @@ public class FlinkService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response createJob(FlinkJobConfiguration config,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException, GenericException, JobException {
+      @Context HttpServletRequest req) throws JobException {
     if (config == null) {
-      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Job config was not provided.");
+      throw new IllegalArgumentException("Job config was not provided.");
     } else {
       String email = sc.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
