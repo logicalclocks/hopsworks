@@ -117,7 +117,7 @@ public class ResponseMessages {
 
   //project error response
   public final static String PROJECT_EXISTS
-          = "Project with the same name already exists.";
+          = "A Project with the same name already exists.";
   public final static String NUM_PROJECTS_LIMIT_REACHED
           = "You have reached the maximum number of projects you could create." +
             " Contact an administrator to increase your limit.";

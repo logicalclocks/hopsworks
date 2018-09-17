@@ -323,7 +323,7 @@ public class ProjectController {
           Path dummy = new Path("/tmp/" + projectName);
           dfso.rm(dummy, true);
           throw new AppException(Response.Status.CONFLICT.
-              getStatusCode(), "A project with this name already exist");
+              getStatusCode(), "A project with this name already exists.");
         }
       } catch (AppException ex) {
         throw ex;
@@ -498,7 +498,7 @@ public class ProjectController {
     //proceed to all the verrifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
-    //  verify that Quota for this project name does not already exist in YARN
+    //  verify that Quota for this project name does not already exists in YARN
     //  verify that There is no logs folders corresponding to this project name
     //  verify that There is no certificates corresponding to this project name in the certificate generator
     try {
@@ -525,14 +525,14 @@ public class ProjectController {
             + "Possible inconsistency! Please contact the admin");
       } else if (!noExistingCertificates(project.getName())) {
         LOGGER.log(Level.WARNING,
-            "Certificates corresponding to project {0} already exist in the system "
+            "Certificates corresponding to project {0} already exists in the system "
             + "Possible inconsistency!", project.getName());
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
             getStatusCode(), "Certificates corresponding to this project already exist in the system "
             + "Possible inconsistency! Please contact the admin");
       } else if (!verifyQuota(project.getName())) {
         LOGGER.log(Level.WARNING,
-            "Quotas corresponding to this project already exist in the system "
+            "Quotas corresponding to this project already exists in the system "
             + "Possible inconsistency! Retry.", project.getName());
         cleanup(project, sessionId, true);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
@@ -782,7 +782,6 @@ public class ProjectController {
    * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project findProjectById(Integer id) throws AppException {
-
     Project project = projectFacade.find(id);
     if (project != null) {
       return project;

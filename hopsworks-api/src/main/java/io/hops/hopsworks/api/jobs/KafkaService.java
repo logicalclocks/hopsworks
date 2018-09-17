@@ -402,7 +402,7 @@ public class KafkaService {
       aclAdded = kafkaFacade.addAclsToTopic(topicName, projectId, aclDto);
     } catch (EntityExistsException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "This ACL definition already existes in database.");
+              "This ACL definition already exists in database.");
     } catch (IllegalArgumentException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Wrong imput values");
@@ -491,7 +491,7 @@ public class KafkaService {
               aclDto);
     } catch (EntityExistsException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "This ACL definition already existes in database.");
+              "This ACL definition already exists in database.");
     } catch (IllegalArgumentException ex) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Wrong imput values");

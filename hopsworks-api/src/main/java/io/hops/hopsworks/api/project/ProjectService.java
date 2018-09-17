@@ -492,9 +492,7 @@ public class ProjectService {
           se = ProjectServiceEnum.valueOf(s.toUpperCase());
           if (projectController.addService(project, se, user, dfso, udfso)) {
             // Service successfully enabled
-            json.setSuccessMessage(json.getSuccessMessage() + "\n"
-                + ResponseMessages.PROJECT_SERVICE_ADDED
-                + s
+            json.setSuccessMessage(json.getSuccessMessage() + "\n" + ResponseMessages.PROJECT_SERVICE_ADDED + s
             );
             updated = true;
           }
@@ -868,7 +866,7 @@ public class ProjectService {
     Users user = userFacade.findByEmail(req.getRemoteUser());
     if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) || 
         !authController.validatePwd(user, password, req)) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(), 
+      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
           "Access to the certificat has been forbidden.");
     }
     Project project = projectController.findProjectById(id);
@@ -932,11 +930,11 @@ public class ProjectService {
   @Path("{id}/tensorboard")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public TensorBoardService tensorboard(
-          @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws AppException {
     Project project = projectController.findProjectById(id);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NOT_FOUND);
+          ResponseMessages.PROJECT_NOT_FOUND);
     }
     this.tensorboard.setProjectId(id);
 
@@ -1010,7 +1008,7 @@ public class ProjectService {
       @PathParam("id") Integer projectId,
       @Context SecurityContext sc,
       @Context HttpServletRequest req) throws AppException {
-    
+
     piaFacade.mergeUpdate(pia, projectId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -1022,14 +1020,14 @@ public class ProjectService {
   public Response getPia(@Context SecurityContext sc,
       @PathParam("id") Integer projectId,
       @Context HttpServletRequest req) throws AppException {
-    
+
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           ResponseMessages.PROJECT_NOT_FOUND);
     }
     Pia pia = piaFacade.findByProject(projectId);
-    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) {};
+    GenericEntity<Pia> genericPia = new GenericEntity<Pia>(pia) { };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
   }
