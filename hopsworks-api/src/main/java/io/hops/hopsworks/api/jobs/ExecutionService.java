@@ -39,11 +39,22 @@
 
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
+import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.project.PaymentType;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.ProjectException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -59,27 +70,14 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.slf4j.LoggerFactory;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
-import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
-import io.hops.hopsworks.common.dao.project.PaymentType;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import java.util.List;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionService {
 
-  private static final Logger LOG = Logger.getLogger(ExecutionService.class.getName());
-
-  private static final org.slf4j.Logger debugger = LoggerFactory.getLogger(
-      ExecutionController.class);
+  private static final Logger LOGGER = Logger.getLogger(ExecutionService.class.getName());
 
   @EJB
   private ExecutionFacade executionFacade;
@@ -105,13 +103,12 @@ public class ExecutionService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getAllExecutions(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
     List<Execution> executions = executionFacade.findForJob(job);
     GenericEntity<List<Execution>> list = new GenericEntity<List<Execution>>(
         executions) {
@@ -126,35 +123,23 @@ public class ExecutionService {
    * @param sc
    * @param req
    * @return The new execution object.
-   * @throws AppException
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response startExecution(@Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws ProjectException, GenericException, JobException {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
       if(projectQuota==null || projectQuota.getQuotaRemaining() < 0){
-        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "This project is out of credits.");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR);
       }
     }
-    try {
-      Execution exec = executionController.start(job, user);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-          entity(exec).build();
-    } catch (IOException | IllegalArgumentException | NullPointerException ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(),
-          "An error occured while trying to start this job: " + ex.
-              getLocalizedMessage());
-    }
+    Execution exec = executionController.start(job, user);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+      entity(exec).build();
   }
 
   @POST
@@ -162,20 +147,11 @@ public class ExecutionService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response stopExecution(@PathParam("jobId") int jobId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) {
     String loggedinemail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(loggedinemail);
-    if (user == null) {
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
-          "You are not authorized for this invocation.");
-    }
 
-    try {
-      executionController.kill(job, user);
-    } catch (IOException ex) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
-          "An error occured while trying to start this job: " + ex.getLocalizedMessage());
-    }
+    executionController.kill(job, user);
     //executionController.stop(job, user, appid);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
         entity("Job stopped").build();
@@ -188,24 +164,20 @@ public class ExecutionService {
    * @param sc
    * @param req
    * @return
-   * @throws AppException
    */
   @GET
   @Path("/{executionId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getExecution(@PathParam("executionId") int executionId,
-      @Context SecurityContext sc, @Context HttpServletRequest req) throws
-      AppException {
+      @Context SecurityContext sc, @Context HttpServletRequest req) throws JobException {
     Execution execution = executionFacade.findById(executionId);
     if (execution == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
     } else if (!execution.getJob().equals(job)) {
       //The user is requesting an execution that is not under the given job. May be a malicious user!
-      LOG.log(Level.SEVERE,
-          "Someone is trying to access an execution under a job where it does "
-          + "not belong. May be a malicious user!");
-      return Response.status(Response.Status.FORBIDDEN).build();
+      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, "Trying to access an execution of " +
+        "another job");
     } else {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
           entity(execution).build();

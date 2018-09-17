@@ -56,7 +56,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.exception.RESTCodes;
@@ -1383,7 +1382,7 @@ public class JobService {
   public Response updateSchedule(ScheduleDTO schedule,
       @PathParam("jobId") int jobId,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws JobException {
+      @Context HttpServletRequest req) {
     Jobs job = jobFacade.findById(jobId);
     if (job == null) {
       return noCacheResponse.

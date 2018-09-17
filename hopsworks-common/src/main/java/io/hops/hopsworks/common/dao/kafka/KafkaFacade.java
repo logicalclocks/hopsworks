@@ -38,38 +38,24 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.Project;
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.core.Response;
-
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import kafka.admin.AdminUtils;
 import kafka.admin.RackAwareMode;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
-import org.I0Itec.zkclient.ZkClient;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
+import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
@@ -82,12 +68,27 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.errors.TopicExistsException;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.util.HopsUtils;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 public class KafkaFacade {
@@ -99,8 +100,6 @@ public class KafkaFacade {
 
   @EJB
   Settings settings;
-  @EJB
-  private CertsFacade userCerts;
   @EJB
   private ProjectFacade projectsFacade;
   @EJB
@@ -803,16 +802,15 @@ public class KafkaFacade {
     em.flush();
   }
 
-  public SchemaDTO getSchemaForTopic(String topicName)
-      throws AppException {
+  public SchemaDTO getSchemaForTopic(String topicName) throws GenericException {
 
     List<ProjectTopics> topics = em.createNamedQuery(
         "ProjectTopics.findByTopicName", ProjectTopics.class)
         .setParameter("topicName", topicName).getResultList();
 
     if (topics == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "topic not found in database");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
+        "Topic: " + topicName + " was not found");
     }
 
     ProjectTopics topic = topics.get(0);
@@ -823,8 +821,9 @@ public class KafkaFacade {
             topic.getSchemaTopics().getSchemaTopicsPK().getVersion()));
 
     if (schema == null) {
-      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-          "topic has not schema");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
+        "Schema: " + topic.getSchemaTopics().getSchemaTopicsPK().getName() + " with version: " +
+          topic.getSchemaTopics().getSchemaTopicsPK().getVersion() + " was not found");
     }
 
     SchemaDTO schemaDto = new SchemaDTO(schema.getContents());

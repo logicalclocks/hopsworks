@@ -92,14 +92,13 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
         }
       }
     }
-//    LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, null, ex.getMessage()));
+    LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, ex.getMessage()));
   }
   
   private Response handleIllegalArgumentException(IllegalArgumentException ex) {
     LOGGER.log(Level.WARNING, "ThrowableExceptionMapper: " + ex.getClass(), ex);
-    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, null,
-      ex.getMessage()));
+    return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, ex.getMessage()));
   }
   
   private Response handleLoginException(LoginException ex) {

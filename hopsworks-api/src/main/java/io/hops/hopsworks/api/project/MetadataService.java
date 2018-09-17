@@ -120,7 +120,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MetadataService {
 
-  private final static Logger logger = Logger.getLogger(MetadataService.class.
+  private final static Logger LOGGER = Logger.getLogger(MetadataService.class.
           getName());
 
   private enum MetadataOp {

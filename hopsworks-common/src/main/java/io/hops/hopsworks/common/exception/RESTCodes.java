@@ -310,7 +310,9 @@ public class RESTCodes {
     LOG_AGGREGATION_NOT_ENABLED(130019, "YARN log aggregation is not enabled", Response.Status.SERVICE_UNAVAILABLE),
     LOG_RETRIEVAL_ERROR(130020, "Error while retrieving YARN logs", Response.Status.INTERNAL_SERVER_ERROR),
     
-    JOB_SCHEDULE_UPDATE(130021, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR);
+    JOB_SCHEDULE_UPDATE(130021, "Could not update schedule.", Response.Status.INTERNAL_SERVER_ERROR),
+    JAR_INSEPCTION_ERROR(130022, "Could not inspect jar file.", Response.Status.INTERNAL_SERVER_ERROR),
+    PROXY_ERROR(130023, "Could not get proxy user.", Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
@@ -466,8 +468,8 @@ public class RESTCodes {
   public enum GenericErrorCode implements RESTErrorCode {
     
     UNKNOWN_ERROR(120000, "A generic error occured.", Response.Status.INTERNAL_SERVER_ERROR),
-    ILLEGAL_ARGUMENT(120001, "A wrong argument was provided.", Response.Status.EXPECTATION_FAILED),
-    ILLEGAL_STATE(120002, "A runtime error occurred.", Response.Status.EXPECTATION_FAILED),
+    ILLEGAL_ARGUMENT(120001, "A wrong argument was provided.", Response.Status.BAD_REQUEST),
+    ILLEGAL_STATE(120002, "A runtime error occurred.", Response.Status.BAD_REQUEST),
     ROLLBACK(120003, "The last transaction did not complete as expected", Response.Status.INTERNAL_SERVER_ERROR),
     WEBAPPLICATION(120004, "Web application exception occurred", null),
     PERSISTENCE_ERROR(120005, "Persistence error occured", Response.Status.INTERNAL_SERVER_ERROR),

@@ -70,6 +70,8 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -556,7 +558,7 @@ public class ProjectService {
   public Response example(
       @PathParam("type") String type,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, DatasetException, GenericException {
     ProjectDTO projectDTO = new ProjectDTO();
     Project project = null;
     projectDTO.setDescription("A demo project for getting started with " + type);
@@ -573,8 +575,8 @@ public class ProjectService {
     //save the project
     List<String> failedMembers = new ArrayList<>();
 
-    TourProjectType demoType = null;
-    String readMeMessage = null;
+    TourProjectType demoType;
+    String readMeMessage;
     if (TourProjectType.SPARK.getTourName().equalsIgnoreCase(type)) {
       // It's a Spark guide
       demoType = TourProjectType.SPARK;
@@ -615,10 +617,6 @@ public class ProjectService {
       projectController.addTourFilesToProject(owner, project, dfso, dfso, demoType);
       //TestJob dataset
       datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
-      //Activate Anaconda and install numppy
-//      if (TourProjectType.TENSORFLOW.getTourName().equalsIgnoreCase(type)){
-//        projectController.initAnacondaForTFDemo(project, req.getSession().getId());
-//      }
     } catch (Exception ex) {
       projectController.cleanup(project, req.getSession().getId());
       throw ex;
@@ -641,7 +639,7 @@ public class ProjectService {
   public Response createProject(
       ProjectDTO projectDTO,
       @Context SecurityContext sc,
-      @Context HttpServletRequest req) throws AppException {
+      @Context HttpServletRequest req) throws AppException, DatasetException, GenericException {
 
     //check the user
     String owner = sc.getUserPrincipal().getName();

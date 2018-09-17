@@ -42,45 +42,31 @@ package io.hops.hopsworks.api.app;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.app.EmailJsonDTO;
 import io.hops.hopsworks.common.dao.app.JobWorkflowDTO;
-import io.hops.hopsworks.common.dao.app.TopicJsonDTO;
 import io.hops.hopsworks.common.dao.app.KeystoreDTO;
+import io.hops.hopsworks.common.dao.app.TopicJsonDTO;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
-
-import java.security.GeneralSecurityException;
-import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.certificates.UserCerts;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.UserException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
+import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -89,12 +75,26 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/appservice")
 @Stateless
@@ -137,8 +137,7 @@ public class ApplicationService {
   @Path("mail")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response sendEmail(@Context SecurityContext sc,
-      @Context HttpServletRequest req, EmailJsonDTO mailInfo) throws
-      AppException {
+      @Context HttpServletRequest req, EmailJsonDTO mailInfo) throws UserException {
     String projectUser = checkAndGetProjectUser(mailInfo.
         getKeyStoreBytes(), mailInfo.getKeyStorePwd().toCharArray());
 
@@ -166,8 +165,7 @@ public class ApplicationService {
   @Path("schema")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getSchemaForTopics(@Context SecurityContext sc,
-      @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws
-      AppException {
+      @Context HttpServletRequest req, TopicJsonDTO topicInfo) throws UserException, GenericException {
     String projectUser = checkAndGetProjectUser(topicInfo.getKeyStoreBytes(),
         topicInfo.getKeyStorePwd().toCharArray());
 
@@ -175,8 +173,7 @@ public class ApplicationService {
         projectUser));
 
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Incomplete request!");
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, " Requested project was not found");
     }
 
     SchemaDTO schemaDto = kafka.getSchemaForTopic(topicInfo.getTopicName());
@@ -184,58 +181,12 @@ public class ApplicationService {
         entity(schemaDto).build();
   }
 
-  // TODO(Fabio) fix this code.
-  /*@POST
-  @Path("serving")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getServingEndpoint(@Context SecurityContext sc,
-                            @Context HttpServletRequest req, ServingEndpointJsonDTO servingEndpointJsonDTO) throws
-          AppException {
-
-    String projectUser = checkAndGetProjectUser(servingEndpointJsonDTO.
-            getKeyStoreBytes(), servingEndpointJsonDTO.getKeyStorePwd().toCharArray());
-
-    String projectName = servingEndpointJsonDTO.getProject();
-    String model = servingEndpointJsonDTO.getModel();
-
-    //check if user is member of project
-    Project project = projectFacade.findByName(hdfsUserBean.getProjectName(
-            projectUser));
-
-    if(project != null && project.getName().equals(projectName)) {
-
-      String host = null;
-      String port = null;
-      List <TfServing> tfServings = tfServingFacade.findForProject(project);
-      for(TfServing tfServing: tfServings) {
-        if(tfServing.getModelName().equals(model)) {
-          host = tfServing.getHostIp();
-          port = tfServing.getPort().toString();
-          break;
-        }
-      }
-
-      JsonObjectBuilder arrayObjectBuilder = Json.createObjectBuilder();
-      if(host != null && port != null) {
-        arrayObjectBuilder.add("host", host);
-        arrayObjectBuilder.add("port", port);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(arrayObjectBuilder.build()).build();
-      } else {
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
-      }
-    } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.UNAUTHORIZED).
-              build();
-    }
-  } */
-
   @POST
   @Path("notebook")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response versionNotebook(@Context HttpServletRequest req,
-                                  KeystoreDTO keystoreDTO) throws AppException {
+                                  KeystoreDTO keystoreDTO) throws UserException {
 
     String projectUser = checkAndGetProjectUser(keystoreDTO.
             getKeyStoreBytes(), keystoreDTO.getKeyStorePwd().toCharArray());
@@ -282,7 +233,7 @@ public class ApplicationService {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Submit IDs of jobs to start")
   public Response startJobs(@Context SecurityContext sc,
-      @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws AppException {
+      @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws GenericException, UserException, JobException {
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
     Users user = userFacade.findByUsername(hdfsUserBean.getUserName(projectUser));
     Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);
@@ -297,13 +248,7 @@ public class ApplicationService {
       jobsToRun.add(job);
     }
     for (Jobs job : jobsToRun) {
-      try {
-        executionController.start(job, user);
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.INTERNAL_SERVER_ERROR).entity(
-            "An error occured while starting job with id:" + job.getId()).build();
-      }
+      executionController.start(job, user);
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -314,7 +259,7 @@ public class ApplicationService {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Retrieve jobs state")
   public Response getJobsWithRunningState(@Context SecurityContext sc,
-      @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws AppException {
+      @Context HttpServletRequest req, JobWorkflowDTO jobsDTO) throws UserException {
     String projectUser = checkAndGetProjectUser(jobsDTO.getKeyStoreBytes(), jobsDTO.getKeyStorePwd().toCharArray());
     Project project = projectFacade.findByName(projectUser.split(Settings.DOUBLE_UNDERSCORE)[0]);
     List<Jobs> jobsRunning = jobFacade.getRunningJobs(project, projectUser, jobsDTO.getJobIds());
@@ -336,8 +281,7 @@ public class ApplicationService {
    * @return CN of certificate
    * @throws AppException When user is not authorized to access project.
    */
-  private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd)
-      throws AppException {
+  private String checkAndGetProjectUser(byte[] keyStore, char[] keyStorePwd) throws UserException {
     
     try {
       String dn = certificatesController.validateCertificate(keyStore, keyStorePwd);
@@ -370,17 +314,17 @@ public class ApplicationService {
       
       return commonName;
     } catch (Exception ex) {
-      LOGGER.log(Level.WARNING, "Could not authenticate user");
-      throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(), "Could not authenticate user");
+      LOGGER.log(Level.WARNING, "Could not authenticate user", ex);
+      throw new UserException(RESTCodes.SecurityErrorCode.AUTHENTICATION_FAILURE, null, ex.getMessage());
     }
   }
 
-  private void assertAdmin(String projectUser) throws AppException {
+  private void assertAdmin(String projectUser) throws UserException {
     String username = hdfsUserBean.getUserName(projectUser);
     Users user = userFacade.findByUsername(username);
     if (!usersController.isUserInRole(user, "HOPS_ADMIN")) {
-      throw new AppException((Response.Status.UNAUTHORIZED.getStatusCode()),
-          "only admins can call this function");
+      throw new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE,
+        "Method can be only be invoked by an admin");
     }
   }
 }

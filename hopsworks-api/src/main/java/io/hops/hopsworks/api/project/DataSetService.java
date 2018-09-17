@@ -71,7 +71,9 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.exception.AppException;
-import io.hops.hopsworks.common.exception.JobCreationException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -179,7 +181,6 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
-    String projectPath = settings.getProjectPath(this.project.getName());
   }
 
   public Integer getProjectId() {
@@ -652,7 +653,7 @@ public class DataSetService {
   public Response createTopLevelDataSet(
           DataSetDTO dataSet,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest req) throws AppException, DatasetException, GenericException {
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DistributedFileSystemOps dfso = dfs.getDfsOps();
@@ -698,7 +699,7 @@ public class DataSetService {
           DataSetDTO dataSetName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException,
-          AccessControlException {
+    AccessControlException, DatasetException {
 
     JsonResponse json = new JsonResponse();
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
@@ -1384,7 +1385,8 @@ public class DataSetService {
   
   @Path("compressFile/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response compressFile(@PathParam("path") String path, @Context SecurityContext context) throws AppException {
+  public Response compressFile(@PathParam("path") String path, @Context SecurityContext context)
+    throws AppException, JobException {
     Users user = userFacade.findByEmail(context.getUserPrincipal().getName());
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
@@ -1400,12 +1402,7 @@ public class DataSetService {
 
     //persist the job in the database
     Jobs jobdesc = null;
-    try {
-      jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
-    } catch (JobCreationException e) {
-      logger.log(Level.FINE, e.getMessage());
-      throw new AppException(Response.Status.CONFLICT.getStatusCode(), e.getMessage());
-    }
+    jobdesc = this.jobcontroller.createJob(user, project, ecConfig);
     //instantiate the job
     ErasureCodeJob encodeJob = new ErasureCodeJob(jobdesc, this.async, user,
             settings.getHadoopSymbolicLinkDir(), jobsMonitor);
@@ -1442,7 +1439,7 @@ public class DataSetService {
   @Path("upload/{path: .+}")
   public UploadService upload(
           @PathParam("path") String path, @Context SecurityContext sc,
-          @QueryParam("templateId") int templateId) throws AppException {
+          @QueryParam("templateId") int templateId) throws AppException, DatasetException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 

@@ -47,21 +47,23 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.exception.ThirdPartyException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
+import org.apache.hadoop.fs.Path;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
-import org.apache.hadoop.fs.Path;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -101,7 +103,7 @@ public class DelaDatasetController {
     Dataset dataset;
     try {
       dataset = createDataset(user, project, name, "");
-    } catch (IOException | AppException e) {
+    } catch (IOException | GenericException | DatasetException e) {
       throw new ThirdPartyException(Response.Status.EXPECTATION_FAILED.getStatusCode(), e.getMessage(),
         ThirdPartyException.Source.LOCAL, "");
     }
@@ -141,7 +143,7 @@ public class DelaDatasetController {
   }
 
   public Dataset createDataset(Users user, Project project, String name, String description)
-    throws IOException, AppException {
+    throws IOException, DatasetException, GenericException {
     int templateId = -1;
     boolean defaultDataset = false;
     boolean searchable = true;

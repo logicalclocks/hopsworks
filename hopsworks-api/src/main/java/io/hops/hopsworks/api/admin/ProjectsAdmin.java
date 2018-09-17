@@ -49,6 +49,8 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -124,7 +126,7 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
-      ProjectDTO projectDTO) throws AppException {
+      ProjectDTO projectDTO) throws AppException, DatasetException, GenericException {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {

@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.dao.jobs.description;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.exception.JobException;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.jobhistory.JobState;
@@ -123,12 +122,10 @@ public class JobFacade extends AbstractFacade<Jobs> {
   //be found using em.find().
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Jobs create(Users creator, Project project,
-      JobConfiguration config) throws
-      IllegalArgumentException, NullPointerException {
+      JobConfiguration config) {
     //Argument checking
     if (creator == null || project == null || config == null) {
-      throw new NullPointerException(
-          "Owner, project and config must be non-null.");
+      throw new IllegalArgumentException("Owner, project and config must be non-null.");
     }
     //First: create a job object
     Jobs job = new Jobs(config, project, creator, config.
@@ -167,7 +164,6 @@ public class JobFacade extends AbstractFacade<Jobs> {
   /**
    *
    * @param job
-   * @throws JobException
    */
   public void removeJob(Jobs job) {
     try {

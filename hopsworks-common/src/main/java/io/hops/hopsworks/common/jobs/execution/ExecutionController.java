@@ -52,6 +52,9 @@ import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.JobsHistoryFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.JobException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -96,8 +99,8 @@ public class ExecutionController {
   private final static Logger LOGGER = Logger.getLogger(ExecutionController.class.getName());
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Execution start(Jobs job, Users user) throws IOException {
-    Execution exec = null;
+  public Execution start(Jobs job, Users user) throws GenericException, JobException {
+    Execution exec;
 
     switch (job.getJobType()) {
       case FLINK:
@@ -124,25 +127,24 @@ public class ExecutionController {
         String inodeName = inode.getInodePK().getName();
 
         jobHistoryFac.persist(user, job, execId, exec.getAppId());
-        activityFacade.persistActivity(activityFacade.EXECUTED_JOB + inodeName,
+        activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName,
                 job.getProject(), user);
         break;
       case PYSPARK:
         exec = sparkController.startJob(job, user);
         if (exec == null) {
-          throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
+          throw new IllegalArgumentException("Error while getting execution object for: " + job.getJobType());
         }
         break;
       default:
-        throw new IllegalArgumentException(
-                "Unsupported job type: " + job.
-                getJobType());
+        throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, "Unsupported job type: "
+          + job.getJobType());
     }
 
     return exec;
   }
 
-  public void kill(Jobs job, Users user) throws IOException {
+  public void kill(Jobs job, Users user) {
     //Get the lastest appId for the job, a job cannot have to concurrent application running.
     List<Execution> jobExecs = execFacade.findForJob(job);
     //Sort descending based on jobId

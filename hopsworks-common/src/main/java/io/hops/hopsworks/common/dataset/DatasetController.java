@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.dataset;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -58,7 +57,9 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.DatasetException;
+import io.hops.hopsworks.common.exception.GenericException;
+import io.hops.hopsworks.common.exception.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -76,8 +77,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.NonUniqueResultException;
-import javax.validation.ValidationException;
-import javax.ws.rs.core.Response;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -135,35 +134,20 @@ public class DatasetController {
    * whether it can be visible in the search results or not)
    * @param defaultDataset
    * @param dfso
-   * @throws NullPointerException If any of the given parameters is null.
-   * @throws io.hops.hopsworks.common.exception.AppException
-   * @throws IllegalArgumentException If the given DataSetDTO contains invalid
    * folder names, or the folder already exists.
    * @throws IOException if the creation of the dataset failed.
-   * @see FolderNameValidator.java
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDataset(Users user, Project project, String dataSetName,
       String datasetDescription, int templateId, boolean searchable,
       boolean defaultDataset, DistributedFileSystemOps dfso)
-      throws IOException, AppException {
+    throws IOException, GenericException, DatasetException {
     //Parameter checking.
-    if (user == null) {
-      throw new NullPointerException(
-          "A valid user must be passed upon DataSet creation. Received null.");
-    } else if (project == null) {
-      throw new NullPointerException(
-          "A valid project must be passed upon DataSet creation. Received null.");
-    } else if (dataSetName == null) {
-      throw new NullPointerException(
-          "A valid DataSet name must be passed upon DataSet creation. Received null.");
+    if (user == null || project == null || dataSetName == null) {
+      throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST,
+        "User, project or dataset were not provided");
     }
-    try {
-      FolderNameValidator.isValidName(dataSetName, false);
-    } catch (ValidationException e) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Invalid folder name for DataSet: " + e.getMessage());
-    }
+    FolderNameValidator.isValidName(dataSetName, false);
     //Logic
     boolean success;
     String dsPath = File.separator + Settings.DIR_ROOT + File.separator
@@ -174,9 +158,7 @@ public class DatasetController {
         HopsUtils.dataSetPartitionId(parent, dataSetName));
 
     if (ds != null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          "Invalid folder name for DataSet: "
-          + ResponseMessages.FOLDER_NAME_EXIST);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, "Dataset name: " + dataSetName);
     }
     //Permission 770
     FsAction global = FsAction.NONE;
@@ -259,7 +241,7 @@ public class DatasetController {
    */
   public void createSubDirectory(Project project, Path dirPath,
       int templateId, String description, boolean searchable,
-      DistributedFileSystemOps udfso) throws IOException, AppException {
+      DistributedFileSystemOps udfso) throws IOException, DatasetException {
 
     if (project == null) {
       throw new NullPointerException(
@@ -271,11 +253,7 @@ public class DatasetController {
 
     String folderName = dirPath.getName();
     String parentPath = dirPath.getParent().toString();
-    try {
-      FolderNameValidator.isValidName(folderName, true);
-    } catch (ValidationException e) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), e.getLocalizedMessage());
-    }
+    FolderNameValidator.isValidName(folderName, true);
 
     //Check if the given folder already exists
     if (inodes.existsPath(dirPath.toString())) {

@@ -22,14 +22,12 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 
-import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timer;
-import javax.ejb.TimerService;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -47,8 +45,6 @@ import java.util.logging.Logger;
 public class TensorBoardKillTimer {
   private final static Logger LOG = Logger.getLogger(TensorBoardKillTimer.class.getName());
 
-  @Resource
-  private TimerService timerService;
   @EJB
   private Settings settings;
   @EJB

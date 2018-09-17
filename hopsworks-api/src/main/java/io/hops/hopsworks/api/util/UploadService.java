@@ -63,6 +63,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.hops.hopsworks.common.exception.DatasetException;
 import io.hops.hopsworks.common.exception.GenericException;
 import io.hops.hopsworks.common.exception.TemplateException;
 import org.apache.hadoop.fs.Path;
@@ -139,7 +140,7 @@ public class UploadService {
    * is not valid
    */
   public void confFileUpload(DsPath dsPath, String username,
-                             int templateId, String role) {
+                             int templateId, String role) throws DatasetException {
     if (dsPath.getDsRelativePath() != null) {
       // We need to validate that each component of the path, either it exists
       // or it is a valid directory name
