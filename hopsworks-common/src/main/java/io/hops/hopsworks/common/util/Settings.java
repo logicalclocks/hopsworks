@@ -1055,6 +1055,16 @@ public class Settings implements Serializable {
     return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
 
+  private String AIRFLOW_WEB_UI_IP = "127.0.0.1";
+  private int AIRFLOW_WEB_UI_PORT = 12358;
+
+  public synchronized String getAirflowWebUIAddress() {
+    checkCache();
+    return AIRFLOW_WEB_UI_IP + ":" + AIRFLOW_WEB_UI_PORT;
+  }
+  
+  
+  
   private String MAX_NUM_PROJ_PER_USER = "5";
 
   public synchronized Integer getMaxNumProjPerUser() {

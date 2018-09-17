@@ -460,7 +460,7 @@ public class ProjectController {
     //proceed to all the verifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
-    //  verify that Quota for this project name does not already exist in YARN
+    //  verify that Quota for this project name does not already exists in YARN
     //  verify that There is no logs folders corresponding to this project name
     //  verify that There is no certificates corresponding to this project name in the certificate generator
     final String severity = "Possible inconsistency,  Please contact the administrator.";
