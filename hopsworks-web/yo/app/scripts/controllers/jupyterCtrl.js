@@ -61,7 +61,7 @@ angular.module('hopsWorksApp')
             self.ui = "";
             self.sparkStatic = false;
             self.sparkDynamic = false;
-            self.tensorflow = false;
+            self.experiment = false;
             self.condaEnabled = true;
             $scope.sessions = null;
             self.val = {};
@@ -159,7 +159,7 @@ angular.module('hopsWorksApp')
                 if ('shutdownLevel' in self.val) {
                   var d = new Date();
                   var currentTimeMs = d.getTime();
-                  var lastTimeMs = new Date(self.config.lastAccessed)
+                  var lastTimeMs = new Date(self.config.lastAccessed);
                   var timeSinceLastAccess = currentTimeMs - lastTimeMs.valueOf();
                   if (timeSinceLastAccess < 0) {
                     timeSinceLastAccess = 0;
@@ -212,6 +212,33 @@ angular.module('hopsWorksApp')
 
             };
 
+            self.setNormalSpark = function () {
+              self.val.executorMemory = 2048;
+              self.val.appmasterMemory = 1024;
+              self.val.numExecutorGpus = 0;
+              self.val.numDriverGpus = 0;
+            }
+
+            self.setTfExecutor = function () {
+              // If leaving TF Driver mode, change default executor memory to 4096
+              self.val.executorMemory = 4096;
+              self.val.appmasterMemory = 1024;
+              self.val.numExecutorGpus = 0;
+              self.val.numDriverGpus = 0;
+            };
+
+            self.setTfDriver = function () {
+              // For TF in Driver mode, we set the minimal number of executors and
+              // minimal amount of memory and fix a single core for the Driver.
+              self.val.appmasterMemory = 4096;
+              self.val.appmasterCores = 1;
+              self.val.numExecutorCores = 1;
+              self.val.numExecutorGpus = 0;
+              self.val.numDriverGpus = 0;
+              self.val.numExecutors = 1;
+              // 128MB is hard-coded in hops-hadoop/templates/../yarn-site.xml
+              self.val.executorMemory = 1024;
+            };
             self.showLivyUI = function (appId) {
               self.job.type = "TENSORFLOW";
               self.job.appId = appId;
@@ -235,7 +262,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                         self.opsStatus = success.data;
                         self.tempEnvs = 0;
-                        for (var i = 0; i < self.opsStatus.length; i++) {
+                        var i = 0;
+                        for (i = 0; i < self.opsStatus.length; i++) {
                           if (self.opsStatus[i].op === "CREATE" && (self.opsStatus[i].status === "NEW" || self.opsStatus[i].status === "ONGOING")) {
                             self.tempEnvs += 1;
                             break;
@@ -261,30 +289,6 @@ angular.module('hopsWorksApp')
 
             self.sliderVisible = false;
 
-            self.sliderOptions = {
-              min: 1,
-              max: 10,
-              options: {
-                floor: 0,
-                ceil: 1500
-              },
-              getPointerColor: function (value) {
-                return '#4b91ea';
-              }
-            };
-
-            self.refreshSlider = function () {
-              $timeout(function () {
-                $scope.$broadcast('rzSliderForceRender');
-              });
-            };
-
-            self.toggleSlider = function () {
-              self.sliderVisible = !self.sliderVisible;
-              if (self.sliderVisible)
-                self.refreshSlider();
-            };
-
             self.setInitExecs = function () {
               if (self.sliderOptions.min >
                       self.val.dynamicInitialExecutors) {
@@ -299,6 +303,34 @@ angular.module('hopsWorksApp')
               self.val.dynamicMaxExecutors = self.sliderOptions.max;
             };
 
+            self.dynExecChangeListener = function() {
+              self.setInitExecs();
+            };
+
+            self.sliderOptions = {
+              min: 1,
+              max: 10,
+              options: {
+                floor: 0,
+                ceil: 1000,
+                onChange: self.dynExecChangeListener,
+                getPointerColor: function (value) {
+                  return '#4b91ea';
+                }
+              }
+            };
+
+            self.refreshSlider = function () {
+              $timeout(function () {
+                $scope.$broadcast('rzSliderForceRender');
+              });
+            };
+
+            self.toggleSlider = function () {
+              self.sliderVisible = !self.sliderVisible;
+              if (self.sliderVisible)
+                self.refreshSlider();
+            };
 
             //Set some (semi-)constants
             self.selectFileRegexes = {
@@ -327,7 +359,6 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-
 
             /**
              * Callback for when the user selected a file.
@@ -399,8 +430,8 @@ angular.module('hopsWorksApp')
               return $sce.trustAsResourceUrl(self.ui);
             };
 
-            self.tensorflow = function () {
-              $scope.mode = "tensorflow";
+            self.experiment = function () {
+              $scope.mode = "experiment";
             };
 
             self.spark = function () {
@@ -434,8 +465,8 @@ angular.module('hopsWorksApp')
                         self.sliderOptions.max = self.val.dynamicMaxExecutors;
                         self.toggleValue = true;
                         if (self.val.project.name.startsWith("demo_tensorflow")) {
-                          self.tensorflow();
-                          self.val.mode = "tensorflow";
+                          self.experiment();
+                          self.val.mode = "experiment";
                           self.advanced = true;
                           //Activate anaconda
                           PythonDepsService.enabled(self.projectId).then(

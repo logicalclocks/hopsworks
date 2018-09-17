@@ -334,6 +334,7 @@ public class Hosts implements Serializable {
     this.hostServices = hostServices;
   }
   
+  // hosts.xhtml
   @JsonIgnore
   public String getPublicOrPrivateIp() {
     // Prefer private IP, but return a public IP if the private IP is null
@@ -344,11 +345,19 @@ public class Hosts implements Serializable {
     return publicIp;
   }
   
+  // hosts.xhtml
   @JsonIgnore
   public String getDiskUsageInfo() {
     return FormatUtils.storage(diskUsed) + " / " + FormatUtils.storage(diskCapacity);
   }
   
+  // hosts.xhtml
+  @JsonIgnore
+  public String getMemoryUsageInfo() {
+    return FormatUtils.storage(memoryUsed) + " / " + FormatUtils.storage(memoryCapacity);
+  }
+  
+  // hosts.xhtml
   @JsonIgnore
   public Health getHealth() {
     int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;
@@ -360,6 +369,64 @@ public class Hosts implements Serializable {
       return Health.Good;
     }
     return Health.Bad;
+  }
+  
+  // hosts.xhtml
+  @JsonIgnore
+  public MemoryInfo getDiskInfo() {
+    return new MemoryInfo(diskCapacity, diskUsed);
+  }
+  
+  // hosts.xhtml
+  @JsonIgnore
+  public MemoryInfo getMemoryInfo() {
+    return new MemoryInfo(memoryCapacity, memoryUsed);
+  }
+  
+  // hosts.xhtml
+  @JsonIgnore
+  public String getLastHeartbeatFormatted() {
+    if (lastHeartbeat == null) {
+      return "";
+    }
+    return FormatUtils.time(((new Date()).getTime() - lastHeartbeat));
+  }
+  
+  // hosts.xhtml
+  @JsonIgnore
+  public String getDiskPriority() {
+    if (usagePercentage(diskUsed, diskCapacity) > 75) {
+      return "priorityHigh";
+    } else if (usagePercentage(diskUsed, diskCapacity) > 25) {
+      return "priorityMed";
+    }
+    return "priorityLow";
+  }
+  
+  // hosts.xhtml
+  @JsonIgnore
+  public String getMemoryPriority() {
+    if (usagePercentage(memoryUsed, memoryCapacity) > 75) {
+      return "priorityHigh";
+    } else if (usagePercentage(memoryUsed, memoryCapacity) > 25) {
+      return "priorityMed";
+    }
+    return "priorityLow";
+  }
+  // hosts.xhtml
+  @JsonIgnore
+  public String getDiskUsagePercentageString() {
+    return String.format("%1.1f", usagePercentage(diskUsed, diskCapacity)) + "%";
+  }
+
+  // hosts.xhtml
+  @JsonIgnore
+  public String getMemoryUsagePercentageString() {
+    return String.format("%1.1f", usagePercentage(memoryUsed, memoryCapacity)) + "%";
+  }
+  
+  private double usagePercentage(double used, double capacity) {
+    return (used / capacity) * 100d;
   }
   
   @Override

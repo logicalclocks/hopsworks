@@ -76,6 +76,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamPK;
 import io.hops.hopsworks.common.dao.pythonDeps.PythonDepsFacade;
+import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -187,6 +188,8 @@ public class ProjectController {
   private ActivityFacade activityFacade;
   @EJB
   private ProjectServiceFacade projectServicesFacade;
+  @EJB
+  private TensorBoardFacade tensorBoardFacade;
   @EJB
   private InodeFacade inodes;
   @EJB
@@ -432,12 +435,12 @@ public class ProjectController {
       for (ProjectServiceEnum service : projectServices) {
         try {
           addService(project, service, owner, dfso);
-        } catch (ServiceException sex) {
+        } catch (AppException ae) {
           cleanup(project, sessionId, certsGenerationFuture);
           LOGGER.log(Level.SEVERE, "Error while enabling service " + service.toString() +
-                  " for project " + projectName, sex);
+                  " for project " + projectName, ae);
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error while enabling the services");
+              getStatusCode(), "Error while enabling the service " + service.toString());
         }
       }
 
@@ -785,66 +788,56 @@ public class ProjectController {
 
   // Used only during project creation
   private boolean addService(Project project, ProjectServiceEnum service,
-      Users user, DistributedFileSystemOps dfso) throws ServiceException {
+      Users user, DistributedFileSystemOps dfso) throws AppException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public boolean addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) throws ServiceException {
+      DistributedFileSystemOps udfso) throws AppException {
     if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
       // Service already enabled fro the current project. Nothing to do
       return false;
     }
 
-    boolean toPersist;
     switch (service) {
       case JUPYTER:
-        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
-        toPersist = addElasticsearch(project, ProjectServiceEnum.JUPYTER);
+        addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
+        addElasticsearch(project, ProjectServiceEnum.JUPYTER);
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
         //HOPSWORKS-198: Enable Zeppelin at the same time as Hive
-        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
+        addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
-        toPersist= addServiceDataset(project, user,
-            Settings.ServiceDataset.SERVING, dfso, udfso);
+        addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
         break;
       case JOBS:
-        toPersist = addElasticsearch(project, ProjectServiceEnum.JOBS);
+        addElasticsearch(project, ProjectServiceEnum.JOBS);
         break;
       case EXPERIMENTS:
-        toPersist = addElasticsearch(project, ProjectServiceEnum.EXPERIMENTS);
+        addElasticsearch(project, ProjectServiceEnum.EXPERIMENTS);
         break;
       default:
-        toPersist = true;
         break;
     }
 
-    if (toPersist) {
-      // Persist enabled service in the database
-      projectServicesFacade.addServiceForProject(project, service);
-      logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
+    // Persist enabled service in the database
+    projectServicesFacade.addServiceForProject(project, service);
+    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
+        ActivityFacade.FLAG_PROJECT, user, project);
+    if (service == ProjectServiceEnum.HIVE) {
+      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
+      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
           ActivityFacade.FLAG_PROJECT, user, project);
-      if (service == ProjectServiceEnum.HIVE) {
-        projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
-        logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
-            ActivityFacade.FLAG_PROJECT, user, project);
-      }
-    } else {
-      // either addServiceZeppelin or addServiceHive failed. Throw ServiceException to
-      // signal it to the view
-      throw new ServiceException();
     }
-
     return true;
   }
 
-  private boolean addServiceDataset(Project project, Users user,
+  private void addServiceDataset(Project project, Users user,
       Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) {
+      DistributedFileSystemOps udfso) throws AppException {
     try {
       datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, true, dfso);
@@ -868,21 +861,20 @@ public class ProjectController {
       }
     } catch (IOException | GenericException | DatasetException ex) {
       LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
-      return false;
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
     }
-
-    return true;
   }
 
-  private boolean addServiceHive(Project project, Users user,
-      DistributedFileSystemOps dfso) {
+  private void addServiceHive(Project project, Users user,
+      DistributedFileSystemOps dfso) throws AppException {
     try {
       hiveController.createDatabase(project, user, dfso);
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create Hive db:", ex);
-      return false;
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
     }
-    return true;
   }
 
   /**
@@ -2502,7 +2494,7 @@ public class ProjectController {
    * @return
    */
 
-  public boolean addElasticsearch(Project project, ProjectServiceEnum serviceEnum) {
+  public void addElasticsearch(Project project, ProjectServiceEnum serviceEnum) throws AppException {
 
     if(serviceEnum.equals(ProjectServiceEnum.JOBS) || serviceEnum.equals(ProjectServiceEnum.JUPYTER) ) {
             
@@ -2516,29 +2508,24 @@ public class ProjectController {
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
       
       boolean kibanaPatternCreated = false;
-      if (resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409"))) {
-        kibanaPatternCreated = true;
-      }
-
-      if (kibanaPatternCreated == false) {
+      if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
         LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
 
-      return kibanaPatternCreated;
+      return;
     } else if(serviceEnum.equals(ProjectServiceEnum.EXPERIMENTS)) {
 
       Map<String, String> params = new HashMap<>();
 
       String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-      boolean acknowledged = false;
-      try {
-        acknowledged = elasticController.createIndex(indexName);
-        if (!acknowledged) {
-          LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
-        }
-      } catch(AppException ae) {
-        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName, ae);
+      boolean acknowledged = elasticController.createIndex(indexName);
+      if (!acknowledged) {
+        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
 
       params.clear();
@@ -2547,14 +2534,11 @@ public class ProjectController {
 
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
 
-      boolean kibanaIndexPatternCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaIndexPatternCreated = true;
-      }
-
-      if (kibanaIndexPatternCreated == false) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana index-pattern for project " +
-            project + "\n " + resp.toString(2)));
+      if (!(resp.has("updated_at"))) {
+        LOGGER.log(Level.SEVERE, "Could not create kibana index-pattern for project " +
+            project + "\n " + resp.toString(2));
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
 
       String savedSummarySearch =
@@ -2572,14 +2556,11 @@ public class ProjectController {
       params.put("data", savedSummarySearch);
       resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
 
-      boolean kibanaSearchCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaSearchCreated = true;
-      }
-
-      if (kibanaSearchCreated == false) {
+      if (!(resp.has("updated_at"))) {
         LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
             + "\n " + resp.toString(2));
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
 
       String savedSummaryDashboard =
@@ -2599,22 +2580,17 @@ public class ProjectController {
       params.put("data", savedSummaryDashboard);
       resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
 
-      boolean kibanaDashboardCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaDashboardCreated = true;
-      }
-
-      if (kibanaDashboardCreated == false) {
+      if (!(resp.has("updated_at"))) {
         LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
             project + "\n " + resp.toString(2)));
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
       }
-
-      return acknowledged && kibanaIndexPatternCreated && kibanaSearchCreated && kibanaDashboardCreated;
+      return;
     }
-    return false;
   }
 
-  public boolean removeElasticsearch(Project project) throws AppException {
+  public void removeElasticsearch(Project project) throws AppException {
     Map<String, String> params = new HashMap<>();
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2650,11 +2626,7 @@ public class ProjectController {
       if(service.equals(ProjectServiceEnum.EXPERIMENTS)) {
         String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-        boolean deleted = elasticController.deleteIndex(experimentsIndex);
-
-        if (!deleted) {
-          LOGGER.log(Level.SEVERE, "Failed to remove experiments index " + experimentsIndex);
-        }
+        elasticController.deleteIndex(experimentsIndex);
 
         params.clear();
         params.put("op", "DELETE");
@@ -2667,10 +2639,8 @@ public class ProjectController {
         resp = elasticController.sendKibanaReq(params, "dashboard",
             experimentsIndex + "_summary-dashboard", false);
 
-        return deleted;
       }
     }
-    return true;
   }
 
   public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,

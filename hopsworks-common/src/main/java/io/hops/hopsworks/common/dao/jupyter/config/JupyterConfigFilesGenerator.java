@@ -411,10 +411,12 @@ public class JupyterConfigFilesGenerator {
       
       LOGGER.info("SparkProps are: " + System.lineSeparator() + sparkProps);
 
-      boolean isTensorFlow = js.getMode().compareToIgnoreCase("tensorflow") == 0;
-      boolean isTensorFlowOnSpark = js.getMode().compareToIgnoreCase("distributedtensorflow") == 0;
+      boolean isExperiment = js.getMode().compareToIgnoreCase("experiment") == 0;
+      boolean isParallelExperiment = js.getMode().compareToIgnoreCase("parallelexperiments") == 0;
+      boolean isTfOnSpark = js.getMode().compareToIgnoreCase("tfonspark") == 0;
       boolean isHorovod = js.getMode().compareToIgnoreCase("horovod") == 0;
-      boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkDynamic") == 0;
+      boolean isSparkDynamic = js.getMode().compareToIgnoreCase("sparkdynamic") == 0;
+      boolean isSparkStatic = js.getMode().compareToIgnoreCase("sparkstatic") == 0;
       String extraJavaOptions = "-D" + Settings.LOGSTASH_JOB_INFO + "=" + project.getName().toLowerCase()
           + ",jupyter,notebook,?"
           + " -D" + Settings.HOPSWORKS_JOBTYPE_PROPERTY + "=" + JobType.SPARK
@@ -434,17 +436,17 @@ public class JupyterConfigFilesGenerator {
       sparkMagicParams.put("livy_ip", new ConfigProperty("livy_ip", HopsUtils.IGNORE, settings.getLivyIp()));
       sparkMagicParams.put("jupyter_home", new ConfigProperty("jupyter_home", HopsUtils.IGNORE, this.confDirPath));
       sparkMagicParams.put("driverCores", new ConfigProperty("driver_cores", HopsUtils.IGNORE,
-          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+          (isExperiment || isTfOnSpark || isParallelExperiment || isHorovod) ? "1" :
               Integer.toString(js.getAppmasterCores())));
       sparkMagicParams.put("driverMemory", new ConfigProperty("driver_memory", HopsUtils.IGNORE,
           Integer.toString(js.getAppmasterMemory()) + "m"));
       sparkMagicParams.put("numExecutors", new ConfigProperty("num_executors", HopsUtils.IGNORE,
           (isHorovod) ? "1":
-              (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
+              (isTfOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()):
                   (isSparkDynamic) ? Integer.toString(js.getDynamicMinExecutors()):
                       Integer.toString(js.getNumExecutors())));
       sparkMagicParams.put("executorCores", new ConfigProperty("executor_cores", HopsUtils.IGNORE,
-          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "1" :
+          (isExperiment || isTfOnSpark || isParallelExperiment || isHorovod) ? "1" :
               Integer.toString(js.getNumExecutorCores())));
       sparkMagicParams.put("executorMemory", new ConfigProperty("executor_memory", HopsUtils.IGNORE,
           Integer.toString(js.getExecutorMemory()) + "m"));
@@ -636,45 +638,47 @@ public class JupyterConfigFilesGenerator {
   
       sparkMagicParams.put("spark.tensorflow.application", new ConfigProperty(
           "spark_tensorflow_application", HopsUtils.IGNORE,
-          Boolean.toString(isTensorFlow || isTensorFlowOnSpark || isHorovod)));
+          Boolean.toString(isExperiment || isParallelExperiment || isTfOnSpark || isHorovod)));
   
       sparkMagicParams.put("spark.tensorflow.num.ps", new ConfigProperty(
           "spark_tensorflow_num_ps", HopsUtils.IGNORE,
-          (isTensorFlowOnSpark) ? Integer.toString(js.getNumTfPs()) : "0"));
+          (isTfOnSpark) ? Integer.toString(js.getNumTfPs()) : "0"));
       
       sparkMagicParams.put("spark.executor.gpus", new ConfigProperty(
           "spark_executor_gpus", HopsUtils.IGNORE,
-          (isTensorFlow || isTensorFlowOnSpark) ? Integer.toString(js.getNumTfGpus()):
-              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumTfGpus()): "0"));
+          (isTfOnSpark || isParallelExperiment || isExperiment) ? Integer.toString(js.getNumExecutorGpus()):
+              (isHorovod) ? Integer.toString(js.getNumMpiNp()*js.getNumExecutorGpus()): "0"));
+
+      sparkMagicParams.put("spark.driver.gpus", new ConfigProperty( "spark_driver_gpus", HopsUtils.IGNORE,
+          (isExperiment) ? Integer.toString(js.getNumDriverGpus()) : "0"));
       
       sparkMagicParams.put("spark.dynamicAllocation.enabled", new ConfigProperty(
           "spark_dynamicAllocation_enabled", HopsUtils.OVERWRITE,
-          Boolean.toString(isSparkDynamic || isTensorFlow || isTensorFlowOnSpark || isHorovod)));
+          Boolean.toString(isSparkDynamic || isExperiment || isParallelExperiment || isHorovod || isTfOnSpark)));
       
       sparkMagicParams.put("spark.dynamicAllocation.initialExecutors", new ConfigProperty(
           "spark_dynamicAllocation_initialExecutors", HopsUtils.OVERWRITE,
-          (isTensorFlow) ? "0" :
+          (isExperiment || isParallelExperiment) ? "0" :
               (isHorovod) ? "1" :
-                  (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  (isTfOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
                   Integer.toString(js.getDynamicMinExecutors())));
       
       sparkMagicParams.put("spark.dynamicAllocation.minExecutors", new ConfigProperty(
           "spark_dynamicAllocation_minExecutors", HopsUtils.OVERWRITE,
-          (isTensorFlow || isTensorFlowOnSpark || isHorovod) ? "0" :
+          (isExperiment || isParallelExperiment || isTfOnSpark || isHorovod) ? "0" :
               Integer.toString(js.getDynamicMinExecutors())));
       
       sparkMagicParams.put("spark.dynamicAllocation.maxExecutors", new ConfigProperty(
           "spark_dynamicAllocation_maxExecutors", HopsUtils.OVERWRITE,
-          (isTensorFlow) ? Integer.toString(js.getNumExecutors()) :
+          (isExperiment || isParallelExperiment) ? Integer.toString(js.getNumExecutors()) :
               (isHorovod) ? "1" :
-                  (isTensorFlowOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
+                  (isTfOnSpark) ? Integer.toString(js.getNumExecutors() + js.getNumTfPs()) :
                   Integer.toString(js.getDynamicMaxExecutors())));
       
       sparkMagicParams.put("spark.dynamicAllocation.executorIdleTimeout", new ConfigProperty(
           "spark_dynamicAllocation_executorIdleTimeout", HopsUtils.OVERWRITE,
-          (isTensorFlowOnSpark) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
+          (isTfOnSpark) ? Integer.toString(((js.getNumExecutors() + js.getNumTfPs()) * 15) + 60 ) + "s" :
               "60s"));
-
 
       // Blacklisting behaviour for TensorFlow on Spark (e.g. Hyperparameter search) to make it robust
       // Allow many failures on a particular node before blacklisting the node
@@ -682,7 +686,7 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.blacklist.enabled", new ConfigProperty(
               "spark_blacklist_enabled", HopsUtils.OVERWRITE,
-              (isTensorFlow && js.getFaultTolerant()) ? "true": "false"));
+              ((isExperiment || isParallelExperiment) && js.getFaultTolerant()) ? "true": "false"));
 
       // If any task fails on an executor - kill it instantly (need fresh working directory for each task)
       sparkMagicParams.put("spark.blacklist.task.maxTaskAttemptsPerExecutor", new ConfigProperty(
@@ -710,13 +714,13 @@ public class JupyterConfigFilesGenerator {
 
       sparkMagicParams.put("spark.task.maxFailures", new ConfigProperty(
               "spark_task_max_failures", HopsUtils.OVERWRITE,
-              (isTensorFlow && js.getFaultTolerant()) ? "3" :
-                      ((isHorovod || isTensorFlowOnSpark || isTensorFlow) ? "1" : "4")));
+              (isParallelExperiment && js.getFaultTolerant()) ? "3" :
+                      ((isHorovod || isTfOnSpark || isExperiment) ? "1" : "4")));
 
       // Always kill the blacklisted executors (further failures could be results of local files from the failed task)
       sparkMagicParams.put("spark.blacklist.killBlacklistedExecutors", new ConfigProperty(
               "spark_kill_blacklisted_executors", HopsUtils.OVERWRITE,
-              (isTensorFlow) ? "true": "false"));
+              (isParallelExperiment) ? "true": "false"));
       
       // Merge system and user defined properties
       Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkMagicParams,
