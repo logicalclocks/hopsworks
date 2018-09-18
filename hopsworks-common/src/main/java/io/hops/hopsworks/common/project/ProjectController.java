@@ -2512,8 +2512,7 @@ public class ProjectController {
     params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
   
     JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-
-    boolean kibanaPatternCreated = false;
+    
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
       LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
