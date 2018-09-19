@@ -78,6 +78,7 @@ import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
@@ -346,7 +347,19 @@ public class ElasticController {
     return acked;
   }
 
+  public boolean indexExists(String index) throws AppException {
+
+    boolean exists = getClient().admin().indices().exists(new IndicesExistsRequest(index)).actionGet().isExists();
+    if (exists) {
+      LOG.log(Level.FINE, "Elastic index found:{0}", index);
+    } else {
+      LOG.log(Level.SEVERE, "Elastic index:{0} creation could not be found", index);
+    }
+    return exists;
+  }
+
   public boolean createIndex(String index) throws AppException {
+
     boolean acked = getClient().admin().indices().create(new CreateIndexRequest(index)).actionGet().isAcknowledged();
     if (acked) {
       LOG.log(Level.INFO, "Acknowledged creation of elastic index:{0}", index);
