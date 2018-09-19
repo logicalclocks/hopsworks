@@ -150,7 +150,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.validation.ValidationException;
 import javax.ws.rs.client.ClientBuilder;
-import javax.xml.rpc.ServiceException;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import org.apache.commons.codec.binary.Base64;
@@ -441,12 +440,12 @@ public class ProjectController {
       for (ProjectServiceEnum service : projectServices) {
         try {
           addService(project, service, owner, dfso);
-        } catch (ServiceException sex) {
+        } catch (AppException ae) {
           cleanup(project, sessionId, certsGenerationFuture);
           LOGGER.log(Level.SEVERE, "Error while enabling service " + service.toString() +
-                  " for project " + projectName, sex);
+                  " for project " + projectName, ae);
           throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error while enabling the services");
+              getStatusCode(), "Error while enabling the service " + service.toString());
         }
       }
 
@@ -793,66 +792,59 @@ public class ProjectController {
 
   // Used only during project creation
   private boolean addService(Project project, ProjectServiceEnum service,
-      Users user, DistributedFileSystemOps dfso) throws ServiceException {
+      Users user, DistributedFileSystemOps dfso) throws AppException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public boolean addService(Project project, ProjectServiceEnum service,
       Users user, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) throws ServiceException {
+      DistributedFileSystemOps udfso) throws AppException {
     if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
       // Service already enabled fro the current project. Nothing to do
       return false;
     }
 
-    boolean toPersist;
     switch (service) {
       case JUPYTER:
-        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
-        toPersist = addElasticsearch(project, ProjectServiceEnum.JUPYTER);
+        addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
+        addElasticsearch(project);
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+        }
         break;
       case HIVE:
         addServiceHive(project, user, dfso);
         //HOPSWORKS-198: Enable Zeppelin at the same time as Hive
-        toPersist = addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
+        addServiceDataset(project, user, Settings.ServiceDataset.ZEPPELIN, dfso, udfso);
         break;
       case SERVING:
-        toPersist= addServiceDataset(project, user,
-            Settings.ServiceDataset.SERVING, dfso, udfso);
+        addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
         break;
       case JOBS:
-        toPersist = addElasticsearch(project, ProjectServiceEnum.JOBS);
-        break;
-      case EXPERIMENTS:
-        toPersist = addElasticsearch(project, ProjectServiceEnum.EXPERIMENTS);
+        addElasticsearch(project);
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
+        }
         break;
       default:
-        toPersist = true;
         break;
     }
 
-    if (toPersist) {
-      // Persist enabled service in the database
-      projectServicesFacade.addServiceForProject(project, service);
-      logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
+    // Persist enabled service in the database
+    projectServicesFacade.addServiceForProject(project, service);
+    logActivity(ActivityFacade.ADDED_SERVICE + service.toString(),
+        ActivityFacade.FLAG_PROJECT, user, project);
+    if (service == ProjectServiceEnum.HIVE) {
+      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
+      logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
           ActivityFacade.FLAG_PROJECT, user, project);
-      if (service == ProjectServiceEnum.HIVE) {
-        projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.ZEPPELIN);
-        logActivity(ActivityFacade.ADDED_SERVICE + ProjectServiceEnum.ZEPPELIN.toString(),
-            ActivityFacade.FLAG_PROJECT, user, project);
-      }
-    } else {
-      // either addServiceZeppelin or addServiceHive failed. Throw ServiceException to
-      // signal it to the view
-      throw new ServiceException();
     }
-
     return true;
   }
 
-  private boolean addServiceDataset(Project project, Users user,
+  private void addServiceDataset(Project project, Users user,
       Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso) {
+      DistributedFileSystemOps udfso) throws AppException {
     try {
       datasetController.createDataset(user, project, ds.getName(), ds.
           getDescription(), -1, false, true, dfso);
@@ -874,23 +866,22 @@ public class ProjectController {
         Path readmePath = new Path(dsPath, Settings.README_FILE);
         dfso.setOwner(readmePath, fstatus.getOwner(), fstatus.getGroup());
       }
-    } catch (IOException | AppException ex) {
+    } catch (IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create dir: " + ds.getName(), ex);
-      return false;
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
     }
-
-    return true;
   }
 
-  private boolean addServiceHive(Project project, Users user,
-      DistributedFileSystemOps dfso) {
+  private void addServiceHive(Project project, Users user,
+      DistributedFileSystemOps dfso) throws AppException {
     try {
       hiveController.createDatabase(project, user, dfso);
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, "Could not create Hive db:", ex);
-      return false;
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
     }
-    return true;
   }
 
   /**
@@ -2510,119 +2501,96 @@ public class ProjectController {
    * @return
    */
 
-  public boolean addElasticsearch(Project project, ProjectServiceEnum serviceEnum) {
-
-    if(serviceEnum.equals(ProjectServiceEnum.JOBS) || serviceEnum.equals(ProjectServiceEnum.JUPYTER) ) {
+  public void addElasticsearch(Project project) throws AppException {
             
-      String projectName = project.getName().toLowerCase();
-      Map<String, String> params = new HashMap<>();
-      params.put("op", "POST");
-      params.put("project", projectName + "_logs");
-      params.put("resource", "");
-      params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
+    String projectName = project.getName().toLowerCase();
+    Map<String, String> params = new HashMap<>();
+    params.put("op", "POST");
+    params.put("project", projectName + "_logs");
+    params.put("resource", "");
+    params.put("data", "{\"attributes\": {\"title\": \"" + projectName + "_logs-*"  + "\"}}");
   
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
-      
-      boolean kibanaPatternCreated = false;
-      if (resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409"))) {
-        kibanaPatternCreated = true;
-      }
-
-      if (kibanaPatternCreated == false) {
-        LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
-      }
-
-      return kibanaPatternCreated;
-    } else if(serviceEnum.equals(ProjectServiceEnum.EXPERIMENTS)) {
-
-      Map<String, String> params = new HashMap<>();
-
-      String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-
-      boolean acknowledged = false;
-      try {
-        acknowledged = elasticController.createIndex(indexName);
-        if (!acknowledged) {
-          LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
-        }
-      } catch(AppException ae) {
-        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName, ae);
-      }
-
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
-
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
-
-      boolean kibanaIndexPatternCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaIndexPatternCreated = true;
-      }
-
-      if (kibanaIndexPatternCreated == false) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana index-pattern for project " +
-            project + "\n " + resp.toString(2)));
-      }
-
-      String savedSummarySearch =
-              "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
-                      ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
-                      ",\"hyperparameter\"" +
-                      ",\"metric\"],\"sort\":[\"start\"" +
-                      ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
-                      "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
-                      ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
-                      "[]}\"}}}";
-
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", savedSummarySearch);
-      resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
-
-      boolean kibanaSearchCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaSearchCreated = true;
-      }
-
-      if (kibanaSearchCreated == false) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
-            + "\n " + resp.toString(2));
-      }
-
-      String savedSummaryDashboard =
-              "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
-                      "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
-                      ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
-                      ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
-                      ",\\\"type\\\":\\\"search\\\"" +
-                      ",\\\"version\\\":\\\"6.2.3\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
-                      ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
-                      "false" +
-                      ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
-                      ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
-                      "true,\\\"version\\\":true}\"}}}";
-      params.clear();
-      params.put("op", "POST");
-      params.put("data", savedSummaryDashboard);
-      resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
-
-      boolean kibanaDashboardCreated = false;
-      if (resp.has("updated_at")) {
-        kibanaDashboardCreated = true;
-      }
-
-      if (kibanaDashboardCreated == false) {
-        LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
-            project + "\n " + resp.toString(2)));
-      }
-
-      return acknowledged && kibanaIndexPatternCreated && kibanaSearchCreated && kibanaDashboardCreated;
+    JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+    
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, "Could not create logs index for project {0}", projectName);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
     }
-    return false;
+
+    params.clear();
+
+    String indexName = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
+
+    if(!elasticController.indexExists(indexName)) {
+      boolean acknowledged = elasticController.createIndex(indexName);
+      if (!acknowledged) {
+        LOGGER.log(Level.SEVERE, "Could not create elastic index " + indexName);
+        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+      }
+    }
+
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", "{\"attributes\": {\"title\": \"" + indexName  + "\"}}");
+    resp = elasticController.sendKibanaReq(params, "index-pattern", indexName, true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, "Could not create kibana index-pattern for project " +
+          project + "\n " + resp.toString(2));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+
+    String savedSummarySearch =
+            "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
+                    ":[\"_id\",\"user\",\"name\",\"start\",\"finished\",\"status\",\"module\",\"function\"" +
+                    ",\"hyperparameter\"" +
+                    ",\"metric\"],\"sort\":[\"start\"" +
+                    ",\"desc\"],\"version\":1,\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"" +
+                    "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
+                    ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
+                    "[]}\"}}}";
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", savedSummarySearch);
+    resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, ("Could not create kibana search for project " + project)
+          + "\n " + resp.toString(2));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+
+    String savedSummaryDashboard =
+            "{\"attributes\":{\"title\":\"Experiments summary dashboard\",\"hits\":0,\"description\":\"" +
+                    "A summary of all experiments run in this project\",\"panelsJSON\":\"[{\\\"gridData\\\"" +
+                    ":{\\\"h\\\":9,\\\"i\\\":\\\"1\\\",\\\"w\\\":12,\\\"x\\\":0,\\\"y\\\":0},\\\"id\\\"" +
+                    ":\\\"" + indexName + "_summary-search" + "\\\",\\\"panelIndex\\\":\\\"1\\\"" +
+                    ",\\\"type\\\":\\\"search\\\"" +
+                    ",\\\"version\\\":\\\"6.2.3\\\"}]\",\"optionsJSON\":\"{\\\"darkTheme\\\":false" +
+                    ",\\\"hidePanelTitles\\\":false,\\\"useMargins\\\":true}\",\"version\":1,\"timeRestore\":" +
+                    "false" +
+                    ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
+                    ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
+                    "true,\\\"version\\\":true}\"}}}";
+    params.clear();
+    params.put("op", "POST");
+    params.put("data", savedSummaryDashboard);
+    resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
+
+    if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
+      LOGGER.log(Level.SEVERE, ("Could not create kibana dashboard for project " +
+          project + "\n " + resp.toString(2)));
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          ResponseMessages.PROJECT_SERVICE_ADD_FAILURE);
+    }
+    return;
   }
 
-  public boolean removeElasticsearch(Project project) throws AppException {
+  public void removeElasticsearch(Project project) throws AppException {
     Map<String, String> params = new HashMap<>();
 
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
@@ -2646,27 +2614,19 @@ public class ProjectController {
         params.put("resource", "");
         JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
         LOGGER.log(Level.FINE, resp.toString(4));
-        
-        LOGGER.log(Level.INFO, "removeElasticsearch-1:"+service);
+
         //3. Delete Elasticsearch Index
         elasticController.deleteProjectIndices(project);
-        removedElastic = true;
-      }
-    }
 
-    for(ProjectServiceEnum service: projectServices) {
-      if(service.equals(ProjectServiceEnum.EXPERIMENTS)) {
         String experimentsIndex = project.getName().toLowerCase() + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
 
-        boolean deleted = elasticController.deleteIndex(experimentsIndex);
-
-        if (!deleted) {
-          LOGGER.log(Level.SEVERE, "Failed to remove experiments index " + experimentsIndex);
+        if(elasticController.indexExists(experimentsIndex)) {
+          elasticController.deleteIndex(experimentsIndex);
         }
 
         params.clear();
         params.put("op", "DELETE");
-        JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
+        resp = elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
         params.clear();
         params.put("op", "DELETE");
         resp = elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
@@ -2674,11 +2634,10 @@ public class ProjectController {
         params.put("op", "DELETE");
         resp = elasticController.sendKibanaReq(params, "dashboard",
             experimentsIndex + "_summary-dashboard", false);
-
-        return deleted;
+        LOGGER.log(Level.INFO, "removeElasticsearch-1:" +service);
+        removedElastic = true;
       }
     }
-    return true;
   }
 
   public CertPwDTO getProjectSpecificCertPw(Users user, String projectName,

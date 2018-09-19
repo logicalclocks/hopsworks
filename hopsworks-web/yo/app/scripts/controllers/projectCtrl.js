@@ -508,7 +508,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showExperiments = function () {
-              return showService("Experiments");
+              return (showService("Jobs") || showService("Jupyter"));
             };
 
             self.showSsh = function () {

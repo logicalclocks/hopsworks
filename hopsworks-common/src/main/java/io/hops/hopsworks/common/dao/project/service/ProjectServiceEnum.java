@@ -52,6 +52,7 @@ public enum ProjectServiceEnum {
   AIRFLOW("Airflow"),
   PYTHON("Python"),
   EXPERIMENTS("Experiments");
+  PYTHON("Python");
 
   private final String readable;
 
