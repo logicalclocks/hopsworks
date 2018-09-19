@@ -53,11 +53,9 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Stateless
 public class UserFacade extends AbstractFacade<Users> {
-  private final static Logger LOGGER = Logger.getLogger(UserFacade.class.getName());
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -78,13 +76,7 @@ public class UserFacade extends AbstractFacade<Users> {
     return query.getResultList();
   }
 
-  public List<Users> findAllByName() {
-    TypedQuery<Users> query = em.createNamedQuery("Users.findAllByName",
-            Users.class);
-    return query.getResultList();
-  }
-
-  public List<Users> findAllUsers() {
+  public List findAllUsers() {
     Query query = em.createNativeQuery("SELECT * FROM hopsworks.users",
             Users.class);
     return query.getResultList();
@@ -162,9 +154,13 @@ public class UserFacade extends AbstractFacade<Users> {
    * @return The user with given email, or null if no such user exists.
    */
   public Users findByEmail(String email) {
-    return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
-      "email", email)
-      .getSingleResult();
+    try {
+      return em.createNamedQuery("Users.findByEmail", Users.class).setParameter(
+        "email", email)
+        .getSingleResult();
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public void detach(Users user) {

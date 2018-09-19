@@ -257,9 +257,8 @@ public class KafkaFacade {
           "maximum: " + brokerEndpoints.size());
       }
     } catch (InterruptedException | IOException | KeeperException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR.toString(), ex);
       throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, "project: " + project.getName(),
-        ex.getMessage());
+        ex.getMessage(), ex);
     }
     
 
@@ -865,9 +864,8 @@ public class KafkaFacade {
           partitionDetails.add(new PartitionDetailsDTO(id, leaders.get(id), replicas.get(id), replicas.get(id)));
         }
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR.toString(), ex);
         throw new KafkaException(RESTCodes.KafkaErrorCode.BROKER_METADATA_ERROR, "Broker: " + brokerAddress,
-          ex.getMessage());
+          ex.getMessage(), ex);
       }
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());

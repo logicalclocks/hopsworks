@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 @Provider
 public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   
-  private final static Logger LOGGER = Logger.getLogger(ThrowableExceptionMapper.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ThrowableExceptionMapper.class.getName());
   
   @Override
   @Produces(MediaType.APPLICATION_JSON)
@@ -85,11 +85,10 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
           return handleRESTException(new GenericException(RESTCodes.GenericErrorCode.PERSISTENCE_ERROR, null,
             e.getMessage()));
         }
-      } else if (ex instanceof IOException) {
-        if (ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
-          return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, null,
-            ex.getMessage()));
-        }
+      } else if (ex instanceof IOException &&
+        ex.getMessage().contains("Requested storage index 0 isn't initialized, repository count is 0")) {
+        return handleRESTException(new ServiceException(RESTCodes.ServiceErrorCode.ZEPPELIN_ADD_FAILURE, null,
+          ex.getMessage()));
       }
     }
     LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
@@ -135,7 +134,11 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
   }
   
   private Response handleRESTException(Response.Status status, RESTException ex) {
-    LOGGER.log(Level.INFO, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    if(ex.getCause() != null){
+      LOGGER.log(Level.SEVERE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    } else {
+      LOGGER.log(Level.FINE, "ThrowableExceptionMapper: " + ex.getClass(), ex);
+    }
     return Response.status(status).entity(ex.getJson().toString()).type(MediaType.APPLICATION_JSON).build();
   }
   

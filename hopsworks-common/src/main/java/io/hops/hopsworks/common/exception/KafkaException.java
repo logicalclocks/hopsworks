@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.exception;
 
 public class KafkaException extends RESTException {
   
-  public KafkaException() {
-  }
-  
   public KafkaException(RESTCodes.KafkaErrorCode code) {
     super(code);
   }
@@ -30,6 +27,10 @@ public class KafkaException extends RESTException {
   
   public KafkaException(RESTCodes.KafkaErrorCode code, String usrMsg, String devMsg) {
     super(code, usrMsg, devMsg);
+  }
+  
+  public KafkaException(RESTCodes.KafkaErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
   }
   
 }

@@ -136,9 +136,8 @@ public class FlinkController {
         LOGGER.log(Level.SEVERE, null, ex);
       }
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.PROXY_ERROR.toString(), ex);
       throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR,
-        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage());
+        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
     if (flinkjob == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
@@ -243,25 +242,22 @@ public class FlinkController {
     }
     LOGGER.log(Level.INFO, "Really executing Flink job by {0} at path: {1}",
         new Object[]{username, path});
-    JarInputStream jis;
-    try {
-      jis = new JarInputStream(udfso.open(path));
+  
+    try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
+      Manifest mf = jis.getManifest();
+      Attributes atts = mf.getMainAttributes();
+      FlinkJobConfiguration config = new FlinkJobConfiguration();
+      if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
+        config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+      }
+      //Set Flink config params
+      config.setFlinkConfDir(settings.getFlinkConfDir());
+      config.setFlinkConfFile(settings.getFlinkConfFile());
+      config.setJarPath(path);
+      return config;
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR.toString(), ex);
       throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR,
-        "Failed to inspect jar at:" + path, ex.getMessage());
+        "Failed to inspect jar at:" + path, ex.getMessage(), ex);
     }
-    Manifest mf = jis.getManifest();
-    Attributes atts = mf.getMainAttributes();
-    FlinkJobConfiguration config = new FlinkJobConfiguration();
-    if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
-      config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
-    }
-    //Set Flink config params
-    config.setFlinkConfDir(settings.getFlinkConfDir());
-    config.setFlinkConfFile(settings.getFlinkConfFile());
-
-    config.setJarPath(path);
-    return config;
   }
 }

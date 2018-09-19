@@ -33,4 +33,8 @@ public class ProjectException extends RESTException {
     super(code, usrMsg, devMsg);
   }
   
+  public ProjectException(RESTCodes.ProjectErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+  }
+  
 }

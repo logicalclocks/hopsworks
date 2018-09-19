@@ -15,9 +15,6 @@
  */
 package io.hops.hopsworks.common.exception;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class DatasetException extends RESTException {
   
   
@@ -33,6 +30,10 @@ public class DatasetException extends RESTException {
   }
   
   public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg, String devMsg) {
+    super(code, usrMsg, devMsg);
+  }
+  
+  public DatasetException(RESTCodes.DatasetErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
     super(code, usrMsg, devMsg);
   }
   

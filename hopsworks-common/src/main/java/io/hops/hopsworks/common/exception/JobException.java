@@ -16,9 +16,6 @@
 
 package io.hops.hopsworks.common.exception;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class JobException extends RESTException {
   
   public JobException() {
@@ -35,4 +32,9 @@ public class JobException extends RESTException {
   public JobException(RESTCodes.JobErrorCode code, String usrMsg, String devMsg) {
     super(code, usrMsg, devMsg);
   }
+  
+  public JobException(RESTCodes.JobErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+  }
+  
 }

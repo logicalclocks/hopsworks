@@ -225,7 +225,6 @@ public class DatasetController {
    * @param udfso
    * @throws java.io.IOException If something goes wrong upon the creation of
    * the directory.
-   * @throws io.hops.hopsworks.common.exception.AppException
    * @throws IllegalArgumentException If:
    * <ul>
    * <li>Any of the folder names on the given path does not have a valid name or

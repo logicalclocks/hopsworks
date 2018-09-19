@@ -43,6 +43,8 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.exception.AppException;
+import io.hops.hopsworks.common.exception.RESTCodes;
+import io.hops.hopsworks.common.exception.ServiceException;
 import io.hops.hopsworks.common.util.HopsUtils;
 
 import java.util.List;
@@ -80,7 +82,7 @@ import javax.ws.rs.core.Response;
 @Stateless
 public class PythonDepsFacade {
 
-  private final static Logger logger = Logger.getLogger(PythonDepsFacade.class.
+  private static final Logger LOGGER = Logger.getLogger(PythonDepsFacade.class.
       getName());
   
   @PersistenceContext(unitName = "kthfsPU")
@@ -233,22 +235,13 @@ public class PythonDepsFacade {
   public PythonDepsFacade() throws Exception {
   }
 
-  public PythonDep findPythonDeps(String lib, String version, boolean pythonKernelEnable) {
-    TypedQuery<PythonDep> query = em.createNamedQuery(
-        "findByDependencyAndVersion",
-        PythonDep.class);
-    query.setParameter("lib", lib);
-    query.setParameter("version", version);
-    return query.getSingleResult();
-  }
-
   public Collection<PythonDep> createProjectInDb(Project project, Map<String, String> libs,
       String pythonVersion, boolean enablePythonKernel, MachineType machineType,
-      String environmentYml) throws AppException {
+      String environmentYml) throws AppException, ServiceException {
 
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
         compareToIgnoreCase("3.5") != 0 && pythonVersion.
-        compareToIgnoreCase("3.6") != 0 && pythonVersion.contains("X") == false) {
+        compareToIgnoreCase("3.6") != 0 && !pythonVersion.contains("X")) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "Invalid version of python " + pythonVersion
           + " (valid: '2.7', and '3.5', and '3.6'");
@@ -503,7 +496,7 @@ public class PythonDepsFacade {
    * @param proj
    * @throws AppException
    */
-  public void removeProject(Project proj) throws AppException {
+  public void removeProject(Project proj) throws ServiceException {
     deleteCommandsForProject(proj);
     if (proj.getConda()) {
       condaEnvironmentRemove(proj);
@@ -515,8 +508,7 @@ public class PythonDepsFacade {
    * @param srcProject
    * @throws AppException
    */
-  public void cloneProject(Project srcProject, Project destProj) throws
-      AppException {
+  public void cloneProject(Project srcProject, Project destProj) throws ServiceException {
     condaEnvironmentClone(srcProject, destProj);
   }
 
@@ -530,10 +522,10 @@ public class PythonDepsFacade {
    * @throws AppException
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj,
-      String arg, MachineType machineType, String environmentYml) throws AppException {
+      String arg, MachineType machineType, String environmentYml) throws ServiceException {
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.size() == 0) {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR, "No conda machine enabled. Contact the admin.");
+    if (hosts.isEmpty()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE);
     }
 
     for (Hosts h : hosts) {
@@ -545,11 +537,11 @@ public class PythonDepsFacade {
     }
   }
 
-  private void condaEnvironmentRemove(Project proj) throws AppException {
+  private void condaEnvironmentRemove(Project proj) throws ServiceException {
     condaEnvironmentOp(CondaOp.REMOVE, "", proj, "", MachineType.ALL, null);
   }
 
-  private void condaEnvironmentClone(Project srcProj, Project destProj) throws AppException {
+  private void condaEnvironmentClone(Project srcProj, Project destProj) throws ServiceException {
     condaEnvironmentOp(CondaOp.CLONE, "", srcProj, destProj.getName(), MachineType.ALL, null);
   }
 
@@ -564,10 +556,10 @@ public class PythonDepsFacade {
    * @param hosts
    * @throws AppException
    */
-  public void blockingCondaEnvironmentOp(CondaOp op, String proj, String arg, List<Hosts> hosts) throws AppException {
+  public void blockingCondaEnvironmentOp(CondaOp op, String proj, String arg, List<Hosts> hosts) {
     List<Future> waiters = new ArrayList<>();
     for (Hosts h : hosts) {
-      logger.log(Level.INFO, "Create anaconda enviornment for {0} on {1}",
+      LOGGER.log(Level.INFO, "Create anaconda enviornment for {0} on {1}",
           new Object[]{proj, h.getHostIp()});
       Future<?> f = kagentExecutorService.submit(
           new AnacondaTask(this.web, proj, h, op, arg));
@@ -584,8 +576,7 @@ public class PythonDepsFacade {
 
   }
 
-  public List<OpStatus> opStatus(Project proj)
-      throws AppException {
+  public List<OpStatus> opStatus(Project proj) {
     Collection<CondaCommands> commands = proj.getCondaCommandsCollection();
     List<OpStatus> ops = new ArrayList<>();
     Set<CondaOp> uniqueOps = new HashSet<>();
@@ -653,7 +644,7 @@ public class PythonDepsFacade {
   }
 
   public void clearCondaOps(Project proj, String channelUrl,
-      String dependency, String version) throws AppException {
+      String dependency, String version) {
     List<CondaCommands> commands = getCommandsForProject(proj);
     for (CondaCommands cc : commands) {
       // delete the conda library command if it has the same name as the input library name
@@ -678,7 +669,7 @@ public class PythonDepsFacade {
       String channelUrl, String lib, String version) throws AppException {
 
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.size() == 0) {
+    if (hosts.isEmpty()) {
       throw new AppException(Response.Status.NOT_FOUND,
           "No hosts with the desired capability: " + machineType.name());
     }
@@ -759,7 +750,7 @@ public class PythonDepsFacade {
       em.remove(cc);
       em.flush();
     } else {
-      logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
+      LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
           commandId);
     }
   }
@@ -832,14 +823,14 @@ public class PythonDepsFacade {
         em.merge(cc);
       }
     } else {
-      logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
+      LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
           commandId);
     }
   }
 
-  public void cleanupConda() throws AppException {
+  public void cleanupConda() throws AppException, ServiceException {
     List<Project> projects = projectFacade.findAll();
-    if (projects == null || projects.size() == 0) {
+    if (projects == null || projects.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
           "There are no projects in the system. You must have a project first before you can cleanup conda.");
     }

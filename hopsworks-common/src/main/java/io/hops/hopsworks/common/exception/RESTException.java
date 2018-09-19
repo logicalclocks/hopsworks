@@ -18,31 +18,35 @@ package io.hops.hopsworks.common.exception;
 
 import org.json.JSONObject;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public abstract class RESTException extends Exception {
   
   //Optional messages
-  private String usrMsg;
-  private String devMsg;
-  private RESTCodes.RESTErrorCode errorCode;
+  private final String usrMsg;
+  private final String devMsg;
+  private final RESTCodes.RESTErrorCode errorCode;
   
   //TODO(Theofilos): Check that error code belongs to resource.
   
   RESTException() {
+    this(null, null, null);
   }
   
   RESTException(RESTCodes.RESTErrorCode errorCode) {
-    this.errorCode = errorCode;
+    this(errorCode, null, null);
   }
   
   RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg) {
-    this.errorCode = errorCode;
-    this.usrMsg = usrMsg;
+    this(errorCode, usrMsg, null);
   }
   
   RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg) {
+    this.errorCode = errorCode;
+    this.usrMsg = usrMsg;
+    this.devMsg = devMsg;
+  }
+  
+  RESTException(RESTCodes.RESTErrorCode errorCode, String usrMsg, String devMsg, Throwable throwable) {
+    super(throwable);
     this.errorCode = errorCode;
     this.usrMsg = usrMsg;
     this.devMsg = devMsg;
@@ -52,27 +56,15 @@ public abstract class RESTException extends Exception {
     return usrMsg;
   }
   
-  public void setUsrMsg(String usrMsg) {
-    this.usrMsg = usrMsg;
-  }
-  
   public String getDevMsg() {
     return devMsg;
-  }
-  
-  public void setDevMsg(String devMsg) {
-    this.devMsg = devMsg;
   }
   
   public RESTCodes.RESTErrorCode getErrorCode() {
     return errorCode;
   }
   
-  public void setErrorCode(RESTCodes.RESTErrorCode errorCode) {
-    this.errorCode = errorCode;
-  }
-  
-  public JSONObject getJson(){
+  public JSONObject getJson() {
     return new JSONObject()
       .put("code", errorCode.getCode())
       .put("message", errorCode.getMessage())

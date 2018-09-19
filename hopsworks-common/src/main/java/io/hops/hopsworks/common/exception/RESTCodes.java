@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class RESTCodes {
   
   public interface RESTErrorCode {
+  
     Response.Status getRespStatus();
     
     Integer getCode();
@@ -47,7 +48,6 @@ public class RESTCodes {
   }
   
   public enum ProjectErrorCode implements RESTErrorCode {
-    
     //project error response
     NO_ROLE_FOUND(150000, "No valid role found for this user", Response.Status.BAD_REQUEST),
     PROJECT_EXISTS(150001, "Project with the same name already exists.", Response.Status.BAD_REQUEST),
@@ -56,9 +56,9 @@ public class RESTCodes {
     INVALID_PROJECT_NAME(150003, "Invalid project name, valid characters: [a-z,0-9].", Response.Status.BAD_REQUEST),
     PROJECT_NOT_FOUND(150004, "Project wasn't found.", Response.Status.BAD_REQUEST),
     PROJECT_NOT_REMOVED(150005, "Project wasn't removed.", Response.Status.BAD_REQUEST),
-    PROJECT_NAME_EXIST(150006, "A Project with the same name already exists in the system!",
-      Response.Status.BAD_REQUEST),
-    PROJECT_FOLDER_NOT_CREATED(150007, "Project folder could not be created in HDFS.", Response.Status.BAD_REQUEST),
+    PROJECT_NAME_EXISTS(150006, "A Project with the same name already exists.", Response.Status.CONFLICT),
+    PROJECT_FOLDER_NOT_CREATED(150007, "Project folder could not be created in HDFS.",
+      Response.Status.INTERNAL_SERVER_ERROR),
     STARTER_PROJECT_BAD_REQUEST(150008, "Type of starter project is not valid", Response.Status.BAD_REQUEST),
     PROJECT_FOLDER_NOT_REMOVED(150009, "Project folder could not be removed from HDFS.", Response.Status.BAD_REQUEST),
     PROJECT_REMOVAL_NOT_ALLOWED(150010, "Project can only be deleted by its owner.", Response.Status.BAD_REQUEST),
@@ -91,7 +91,7 @@ public class RESTCodes {
     QUOTA_REQUEST_NOT_COMPLETE(150028, "Please specify both " + "namespace and space quota.",
       Response.Status.BAD_REQUEST),
     QUOTA_ERROR(150028, "Quota update error.", Response.Status.BAD_REQUEST),
-    PROJECT_QUOTA_ERROR(150029, "This project is out of credits.", Response.Status.BAD_REQUEST),
+    PROJECT_QUOTA_ERROR(150029, "This project is out of credits.", Response.Status.PRECONDITION_FAILED),
     
     //project success messages
     PROJECT_CREATED(150030, "Project created successfully.", Response.Status.CREATED),
@@ -107,12 +107,35 @@ public class RESTCodes {
     PROJECT_MEMBERS_ADDED(150038, "Members added successfully", Response.Status.OK),
     PROJECT_MEMBER_ADDED(150039, "One member added successfully", Response.Status.OK),
     MEMBER_ROLE_UPDATED(150040, "Role updated successfully.", Response.Status.OK),
-    MEMBER_REMOVED_FROM_TEAM(150041, "Member removed from team.", Response.Status.OK);
+    MEMBER_REMOVED_FROM_TEAM(150041, "Member removed from team.", Response.Status.OK),
+    PROJECT_INODE_CREATION_ERROR(150042, "Could not create dummy Inode", Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_FOLDER_EXISTS(150043,  "A folder with same name as the project already exists in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_USER_EXISTS(150044, "Filesystem user(s) already exists in the system.", Response.Status.CONFLICT),
+    PROJECT_GROUP_EXISTS(150045, "Filesystem group(s) already exists in the system.", Response.Status.CONFLICT),
+    PROJECT_CERTIFICATES_EXISTS(150046, "Certificates for this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_QUOTA_EXISTS(150047, "Quotas corresponding to this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_LOGS_EXIST(150048, "Logs corresponding to this project already exist in the system.",
+      Response.Status.CONFLICT),
+    PROJECT_VERIFICATIONS_FAILED(150049, "Error occurred while running verifications",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_SET_PERMISSIONS_ERROR(150050, "Error occurred while setting permissions for project folders.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_PRECREATE_ERROR(150051, "Error occurred during project precreate handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_POSTCREATE_ERROR(150052, "Error occurred during project postcreate handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_PREDELETE_ERROR(150053, "Error occurred during project predelete handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_HANDLER_POSTDELETE_ERROR(150054, "Error occurred during project postdelete handler.",
+      Response.Status.INTERNAL_SERVER_ERROR);
     
     private Integer code;
     private String message;
     private Response.Status respStatus;
-    
+  
     ProjectErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = code;
       this.message = message;
@@ -132,18 +155,6 @@ public class RESTCodes {
     @Override
     public Response.Status getRespStatus() {
       return respStatus;
-    }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
     }
     
   }
@@ -219,18 +230,6 @@ public class RESTCodes {
       return respStatus;
     }
     
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
-    }
-    
   }
   
   public enum MetadataErrorCode implements RESTErrorCode {
@@ -267,18 +266,6 @@ public class RESTCodes {
     @Override
     public Response.Status getRespStatus() {
       return respStatus;
-    }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
     }
     
   }
@@ -340,18 +327,6 @@ public class RESTCodes {
       return respStatus;
     }
     
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
-    }
-    
   }
   
   public enum RequestErrorCode implements RESTErrorCode {
@@ -389,18 +364,6 @@ public class RESTCodes {
       return respStatus;
     }
     
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
-    }
-    
   }
   
   public enum ServiceErrorCode implements RESTErrorCode {
@@ -427,7 +390,10 @@ public class RESTCodes {
       Response.Status.SERVICE_UNAVAILABLE),
     
     TENSORBOARD_CLEANUP_ERROR(100009, "Could not delete tensorboard", Response.Status.INTERNAL_SERVER_ERROR),
-    ZOOKEEPER_SERVICE_UNAVAILABLE(100010, "ZooKeeper service unavailable", Response.Status.SERVICE_UNAVAILABLE);
+    ZOOKEEPER_SERVICE_UNAVAILABLE(100010, "ZooKeeper service unavailable", Response.Status.SERVICE_UNAVAILABLE),
+    
+    ANACONDA_NODES_UNAVAILABLE(100011, "No conda machine is enabled. Contact the administrator.",
+      Response.Status.SERVICE_UNAVAILABLE);
     private Integer code;
     private String message;
     private Response.Status respStatus;
@@ -451,18 +417,6 @@ public class RESTCodes {
     @Override
     public Response.Status getRespStatus() {
       return respStatus;
-    }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
     }
     
   }
@@ -516,18 +470,6 @@ public class RESTCodes {
       return respStatus;
     }
     
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
-    }
-    
   }
   
   public enum GenericErrorCode implements RESTErrorCode {
@@ -566,18 +508,6 @@ public class RESTCodes {
     @Override
     public Response.Status getRespStatus() {
       return respStatus;
-    }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
     }
     
   }
@@ -631,7 +561,8 @@ public class RESTCodes {
     HDFS_ACCESS_CONTROL(160031, "Access error while trying to access hdfs resource", Response.Status.FORBIDDEN),
     EJB_ACCESS_LOCAL(160032, "EJB access local error", Response.Status.UNAUTHORIZED),
     AUTHORIZATION_FAILURE(160033, "Authorization failed", Response.Status.UNAUTHORIZED),
-    CREATE_USER_ERROR(160034, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR);
+    CREATE_USER_ERROR(160034, "Error while creating user", Response.Status.INTERNAL_SERVER_ERROR),
+    CERT_CREATION_ERROR(160035, "Error while generating certificates", Response.Status.INTERNAL_SERVER_ERROR);
   
   
     private Integer code;
@@ -659,18 +590,6 @@ public class RESTCodes {
     
     public Response.Status getRespStatus() {
       return respStatus;
-    }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
     }
     
   }
@@ -707,19 +626,6 @@ public class RESTCodes {
     public Response.Status getRespStatus() {
       return respStatus;
     }
-    
-    public void setCode(Integer code) {
-      this.code = code;
-    }
-    
-    public void setMessage(String message) {
-      this.message = message;
-    }
-    
-    public void setRespStatus(Response.Status respStatus) {
-      this.respStatus = respStatus;
-    }
-    
     
   }
   

@@ -91,7 +91,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectsAdmin {
-  private final Logger LOG = Logger.getLogger(ProjectsAdmin.class.getName());
+  private final Logger LOGGER = Logger.getLogger(ProjectsAdmin.class.getName());
   
   @EJB
   private ProjectFacade projectFacade;
@@ -108,16 +108,15 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
   public Response deleteProject(@Context SecurityContext sc, @Context HttpServletRequest req,
-      @PathParam("id") Integer id) throws AppException {
+      @PathParam("id") Integer id) throws ProjectException, GenericException {
     Project project = projectFacade.find(id);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + id);
     }
     
     String sessionId = req.getSession().getId();
     projectController.removeProject(project.getOwner().getEmail(), id, sessionId);
-    LOG.log(Level.INFO, "Deleted project with id: " + id);
+    LOGGER.log(Level.INFO, "Deleted project with id: " + id);
   
     JsonResponse response = new JsonResponse();
     response.setStatus(Response.Status.OK.toString());
@@ -131,24 +130,24 @@ public class ProjectsAdmin {
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context SecurityContext sc, @Context HttpServletRequest request,
       ProjectDTO projectDTO)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, AppException {
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException {
     String userEmail = sc.getUserPrincipal().getName();
     Users user = userFacade.findByEmail(userEmail);
     if (user == null || !user.getEmail().equals(Settings.SITE_EMAIL)) {
-      LOG.log(Level.WARNING, "");
+      LOGGER.log(Level.WARNING, "");
       throw new UserException(RESTCodes.SecurityErrorCode.AUTHORIZATION_FAILURE,
         "Unauthorized or unknown user tried to create a Project as another user");
     }
 
     String ownerEmail = projectDTO.getOwner();
     if (ownerEmail == null) {
-      LOG.log(Level.WARNING, "Owner username is null");
+      LOGGER.log(Level.WARNING, "Owner username is null");
       throw new IllegalArgumentException("Owner email cannot be null");
     }
 
     Users owner = userFacade.findByEmail(ownerEmail);
     if (owner == null) {
-      LOG.log(Level.WARNING, "Owner is not in the database");
+      LOGGER.log(Level.WARNING, "Owner is not in the database");
       throw new UserException(RESTCodes.SecurityErrorCode.USER_DOES_NOT_EXIST, "user:" + ownerEmail);
     }
 
@@ -203,11 +202,10 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
   public Response getProjectAdminInfo(@Context SecurityContext sc, @Context HttpServletRequest req,
-                                      @PathParam("id") Integer projectId) throws AppException {
+                                      @PathParam("id") Integer projectId) throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
     }
     ProjectAdminInfoDTO projectAdminInfoDTO = new ProjectAdminInfoDTO(project,
         projectController.getQuotasInternal(project));
@@ -248,7 +246,7 @@ public class ProjectsAdmin {
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
   public Response forceDeleteProject(@Context SecurityContext sc, @Context HttpServletRequest request,
-      @PathParam("name") String projectName) throws AppException {
+      @PathParam("name") String projectName) throws ProjectException {
     String userEmail = sc.getUserPrincipal().getName();
     String[] logs = projectController.forceCleanup(projectName, userEmail, request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);

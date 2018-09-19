@@ -120,9 +120,8 @@ public class SparkController {
       }
     
     } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.PROXY_ERROR.toString(), ex);
       throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR,
-        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage());
+        "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
     if (sparkjob == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
@@ -165,20 +164,17 @@ public class SparkController {
     SparkJobConfiguration config = new SparkJobConfiguration();
     //If the main program is in a jar, try to set main class from it
     if (path.endsWith(".jar")) {
-      JarInputStream jis = null;
-      try {
-        jis = new JarInputStream(dfso.open(path));
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR.toString(), ex);
-        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR,
-          "Failed to inspect jar at:" + path, ex.getMessage());
-      }
-      Manifest mf = jis.getManifest();
-      if (mf != null) {
-        Attributes atts = mf.getMainAttributes();
-        if (atts.containsKey(Name.MAIN_CLASS)) {
-          config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+      try (JarInputStream jis = new JarInputStream(dfso.open(path))) {
+        Manifest mf = jis.getManifest();
+        if (mf != null) {
+          Attributes atts = mf.getMainAttributes();
+          if (atts.containsKey(Name.MAIN_CLASS)) {
+            config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+          }
         }
+      } catch (IOException ex) {
+        throw new JobException(RESTCodes.JobErrorCode.JAR_INSEPCTION_ERROR,
+          "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
       config.setMainClass(Settings.SPARK_PY_MAINCLASS);

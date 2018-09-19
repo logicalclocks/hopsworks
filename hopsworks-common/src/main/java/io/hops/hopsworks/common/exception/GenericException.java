@@ -32,4 +32,8 @@ public class GenericException extends RESTException {
     super(code, usrMsg, devMsg);
   }
   
+  public GenericException(RESTCodes.GenericErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+  }
+  
 }

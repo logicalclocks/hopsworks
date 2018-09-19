@@ -32,5 +32,9 @@ public class RequestException extends RESTException {
     super(code, usrMsg, devMsg);
   }
   
+  public RequestException(RESTCodes.RequestErrorCode code, String usrMsg, String devMsg, Throwable throwable) {
+    super(code, usrMsg, devMsg, throwable);
+  }
+  
   
 }

@@ -263,18 +263,13 @@ public class ProjectController {
    * @param failedMembers
    * @param sessionId
    * @return
-   * @throws IllegalArgumentException if the project name already exists.
-   * @throws io.hops.hopsworks.common.exception.AppException
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
       List<String> failedMembers, String sessionId)
-    throws AppException, DatasetException, GenericException, KafkaException, ProjectException, UserException {
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException {
 
     Long startTime = System.currentTimeMillis();
     
-//    String pluginClassname = settings.getPluginClassname();
-//    Class<ProjectPlugin> plugin = Class.forName(pluginClassname);
-
     //check that the project name is ok
     String projectName = projectDTO.getProjectName();
     FolderNameValidator.isValidProjectName(projectName, false);
@@ -282,19 +277,11 @@ public class ProjectController {
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
     if (projectDTO.getServices() != null) {
       for (String s : projectDTO.getServices()) {
-        try {
           ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
-          se.toString();
           projectServices.add(se);
-        } catch (IllegalArgumentException iex) {
-          LOGGER.log(Level.SEVERE,
-              ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), s
-              + ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
-        }
       }
     }
-    LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 1: " + (System.currentTimeMillis() - startTime));
+    LOGGER.log(Level.FINE, () -> "PROJECT CREATION TIME. Step 1: " + (System.currentTimeMillis() - startTime));
 
     DistributedFileSystemOps dfso = null;
     Project project = null;
@@ -308,23 +295,18 @@ public class ProjectController {
        * with the same name
        * until this project is removed from the database
        */
-      try {
         try {
           project = createProject(projectName, owner, projectDTO.getDescription(), dfso);
         } catch (EJBException ex) {
           LOGGER.log(Level.WARNING, null, ex);
           Path dummy = new Path("/tmp/" + projectName);
-          dfso.rm(dummy, true);
-          throw new AppException(Response.Status.CONFLICT.
-              getStatusCode(), "A project with this name already exist");
+          try {
+            dfso.rm(dummy, true);
+          } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, null, e);
+          }
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_EXISTS, "project: " + projectName);
         }
-      } catch (AppException ex) {
-        throw ex;
-      } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "An error occured when creating the project");
-      }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 2 (hdfs): {0}", System.currentTimeMillis() - startTime);
 
       verifyProject(project, dfso, sessionId);
@@ -337,9 +319,8 @@ public class ProjectController {
         try {
           projectHandler.preCreate(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "An error occured when creating the project");
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR,
+            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
 
@@ -351,52 +332,37 @@ public class ProjectController {
       try {
         certsGenerationFuture = certificatesController.generateCertificates(project, owner, true);
       } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Error while creating certificates: "
-            + ex.getMessage(), ex);
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR
-            .getStatusCode(), "Error while generating certificates");
+        throw new UserException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, "project: " + project.getName() +
+          "owner: " + owner.getUsername(), ex.getMessage(), ex);
       }
 
       String username = hdfsUsersBean.getHdfsUserName(project, owner);
       if (username == null || username.isEmpty()) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "wrong user name");
+        throw new UserException(RESTCodes.SecurityErrorCode.USER_WAS_NOT_FOUND, "project: " + project.getName() +
+          "owner: " + owner.getUsername());
       }
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 4 (certs): {0}", System.currentTimeMillis() - startTime);
 
       //all the verifications have passed, we can now create the project  
       //create the project folder
-      String projectPath;
       try {
-        projectPath = mkProjectDIR(projectName, dfso);
+        mkProjectDIR(projectName, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        LOGGER.log(Level.SEVERE, "Error while creating project folder for project " +
-                " for project " + projectName, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "problem creating project folder");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_NOT_CREATED, "project: " + projectName,
+          ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 5 (folders): {0}", System.currentTimeMillis() - startTime);
-      if (projectPath == null) {
-        cleanup(project, sessionId, certsGenerationFuture);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "problem creating project folder");
-      }
       //update the project with the project folder inode
       try {
         setProjectInode(project, dfso);
-      } catch (AppException | EJBException ex) {
+      } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        throw ex;
-      } catch (IOException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
-        LOGGER.log(Level.SEVERE, "An error occured when creating the project: "
-            + ex.getMessage(), ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "An error occured when creating the project");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, "project: " + projectName,
+          ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): {0}", System.currentTimeMillis() - startTime);
 
@@ -406,10 +372,8 @@ public class ProjectController {
             dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, certsGenerationFuture);
-        LOGGER.log(Level.SEVERE, "Error while setting quotas for project " +
-                " for project " + projectName, ex);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "could not set folder quota");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, "project: " + project.getName(),
+          ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
 
@@ -417,14 +381,9 @@ public class ProjectController {
         hdfsUsersBean.addProjectFolderOwner(project, dfso);
         createProjectLogResources(owner, project, dfso);
       } catch (IOException | EJBException ex) {
-        LOGGER.log(Level.SEVERE, "Error while creating project sub folders: "
-            + ex.getMessage(), ex);
         cleanup(project, sessionId, certsGenerationFuture);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Error while creating project sub folders");
-      } catch (GenericException ex) {
-        cleanup(project, sessionId, certsGenerationFuture);
-        throw ex;
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SET_PERMISSIONS_ERROR,
+          "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
 
@@ -468,8 +427,9 @@ public class ProjectController {
         try {
           projectHandler.postCreate(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
           cleanup(project, sessionId, certsGenerationFuture);
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR,
+            "project: " + projectName, e.getMessage(), e);
         }
       }
 
@@ -487,104 +447,67 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private void verifyProject(Project project, DistributedFileSystemOps dfso,
       String sessionId)
-      throws AppException {
-    //proceed to all the verrifications and set up local variable
+    throws ProjectException, GenericException {
+    //proceed to all the verifications and set up local variable
     //  verify that the project folder does not exist
     //  verify that users and groups corresponding to this project name does not already exist in HDFS
     //  verify that Quota for this project name does not already exist in YARN
     //  verify that There is no logs folders corresponding to this project name
     //  verify that There is no certificates corresponding to this project name in the certificate generator
+    final String severity = "Possible inconsistency,  Please contact the administrator.";
     try {
       if (existingProjectFolder(project)) {
-        LOGGER.log(Level.WARNING,
-            "a folder with name corresponding to project {0} already exists in the system "
-            + "Possible inconsistency!", project.getName());
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "a Project folder with name corresponding to this project already exists in the system "
-            + "Possible inconsistency! Please contact the admin");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_FOLDER_EXISTS, severity, project.getName());
       } else if (!noExistingUser(project.getName())) {
-        LOGGER.log(Level.WARNING,
-            "a user with name corresponding to this project already exists in the system "
-            + "Possible inconsistency!", project.getName());
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "a user with name corresponding to this project already exists in the system "
-            + "Possible inconsistency! Please contact the admin");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_USER_EXISTS, severity, project.getName());
       } else if (!noExistingGroup(project.getName())) {
-        LOGGER.log(Level.WARNING,
-            "a group with name corresponding to project {0} already exists in the system "
-            + "Possible inconsistency! Please contact the admin", project.getName());
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "a group with name corresponding to this project already exists in the system "
-            + "Possible inconsistency! Please contact the admin");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_GROUP_EXISTS, severity, project.getName());
       } else if (!noExistingCertificates(project.getName())) {
-        LOGGER.log(Level.WARNING,
-            "Certificates corresponding to project {0} already exist in the system "
-            + "Possible inconsistency!", project.getName());
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Certificates corresponding to this project already exist in the system "
-            + "Possible inconsistency! Please contact the admin");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_CERTIFICATES_EXISTS, severity, project.getName());
       } else if (!verifyQuota(project.getName())) {
-        LOGGER.log(Level.WARNING,
-            "Quotas corresponding to this project already exist in the system "
-            + "Possible inconsistency! Retry.", project.getName());
         cleanup(project, sessionId, true);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Quotas corresponding to this project already exist in the system "
-            + "Possible inconsistency!");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_EXISTS, project.getName());
       } else if (!verifyLogs(dfso, project.getName())) {
-        LOGGER.log(Level.WARNING,
-            "Logs corresponding to this project already exist in the system "
-            + "Possible inconsistency!", project.getName());
         cleanup(project, sessionId, true);
-        throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-            getStatusCode(), "Logs corresponding to this project already exist in the system "
-            + "Possible inconsistency! Retry");
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_LOGS_EXIST, severity, project.getName());
       }
     } catch (IOException | EJBException ex) {
+      LOGGER.log(Level.SEVERE, RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED.toString(), ex);
       cleanup(project, sessionId, true);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "error while running verifications");
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_VERIFICATIONS_FAILED);
     }
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Project createProject(String projectName, Users user,
-      String projectDescription, DistributedFileSystemOps dfso) throws
-      AppException, IOException {
+      String projectDescription, DistributedFileSystemOps dfso) throws ProjectException {
     if (projectFacade.numProjectsLimitReached(user)) {
-      LOGGER.log(Level.SEVERE,
-          "You have reached the maximum number of projects that you could create. Please contact "
-          + "your system administrator to request an increase in the number of projects you were allowed to create.");
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.NUM_PROJECTS_LIMIT_REACHED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.NUM_PROJECTS_LIMIT_REACHED, "user: " + user.getUsername());
     } else if (projectFacade.projectExists(projectName)) {
-      LOGGER.log(Level.INFO, "Project with name {0} already exists!",
-          projectName);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_EXISTS);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_EXISTS, projectName);
     }
     //Create a new project object
     Date now = new Date();
     Project project = new Project(projectName, user, now, PaymentType.PREPAID);
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
-
+  
     // set retention period to next 10 years by default
     Calendar cal = Calendar.getInstance();
     cal.setTime(now);
     cal.add(Calendar.YEAR, 10);
     project.setRetentionPeriod(cal.getTime());
-
+  
     //set a dumy node in the project until the creation of the project folder
-    Path dumy = new Path("/tmp/" + projectName);
-    dfso.touchz(dumy);
-    Inode dumyInode = this.inodes.getInodeAtPath(dumy.toString());
-    if (dumyInode == null) {
-      LOGGER.log(Level.SEVERE, "Couldn't get the dumy Inode");
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "Couldn't create project properly");
+    Path dummy = new Path("/tmp/" + projectName);
+    try {
+      dfso.touchz(dummy);
+      project.setInode(inodes.getInodeAtPath(dummy.toString()));
+    } catch (IOException ex) {
+      LOGGER.log(Level.SEVERE, "Couldn't get the dummy Inode at: /tmp/" + projectName, ex);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
+        "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage());
     }
-    project.setInode(dumyInode);
 
     //Persist project object
     this.projectFacade.persistProject(project);
@@ -594,16 +517,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void setProjectInode(Project project, DistributedFileSystemOps dfso)
-      throws AppException, IOException {
-    Inode projectInode = this.inodes.getProjectRoot(project.getName());
-    if (projectInode == null) {
-      LOGGER.log(Level.SEVERE, "Couldn't get Inode for the project: {0}",
-          project.getName());
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-          getStatusCode(), "Couldn't get Inode for the project: " + project.
-              getName());
-    }
+  private void setProjectInode(Project project, DistributedFileSystemOps dfso) throws IOException {
+    Inode projectInode = inodes.getProjectRoot(project.getName());
     project.setInode(projectInode);
     this.projectFacade.mergeProject(project);
     this.projectFacade.flushEm();
@@ -612,7 +527,7 @@ public class ProjectController {
   }
 
   private boolean existingProjectFolder(Project project) {
-    Inode projectInode = this.inodes.getProjectRoot(project.getName());
+    Inode projectInode = inodes.getProjectRoot(project.getName());
     if (projectInode != null) {
       LOGGER.log(Level.WARNING, "project folder existing for project {0}",
           project.getName());
@@ -626,7 +541,7 @@ public class ProjectController {
     List<HdfsUsers> hdfsUsers = hdfsUsersBean.
         getAllProjectHdfsUsers(projectName);
     if (hdfsUsers != null && !hdfsUsers.isEmpty()) {
-      LOGGER.log(Level.WARNING, "hdfs user existing for project {0}",
+      LOGGER.log(Level.WARNING, "hdfs users exist for project {0}",
           projectName);
       return false;
     }
@@ -638,8 +553,8 @@ public class ProjectController {
     List<HdfsGroups> hdfsGroups = hdfsUsersBean.
         getAllProjectHdfsGroups(projectName);
     if (hdfsGroups != null && !hdfsGroups.isEmpty()) {
-      LOGGER.log(Level.WARNING, "hdfs group existing for project {0}",
-          projectName);
+      LOGGER.log(Level.WARNING, () -> "hdfs group(s) exist for project: " + projectName + ", group(s): "
+          + Arrays.toString(hdfsGroups.toArray()));
       return false;
     }
     return true;
@@ -702,11 +617,10 @@ public class ProjectController {
    * @param user
    * @param project
    * @param dfso
-   * @throws io.hops.hopsworks.common.exception.AppException
    * @throws java.io.IOException
    */
   public void createProjectLogResources(Users user, Project project,
-      DistributedFileSystemOps dfso) throws IOException, DatasetException, GenericException {
+      DistributedFileSystemOps dfso) throws IOException, DatasetException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
@@ -971,21 +885,18 @@ public class ProjectController {
    * @param userMail
    * @param projectId
    * @param sessionId
-   * @throws AppException if the project could not be found.
    */
-  public void removeProject(String userMail, int projectId, String sessionId)
-      throws AppException {
+  public void removeProject(String userMail, int projectId, String sessionId) throws ProjectException,
+    GenericException {
 
     Project project = projectFacade.find(projectId);
     if (project == null) {
-      throw new AppException(Response.Status.FORBIDDEN.getStatusCode(),
-          ResponseMessages.PROJECT_NOT_FOUND);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, "projectId: " + projectId);
     }
     //Only project owner is able to delete a project
     Users user = userFacade.findByEmail(userMail);
     if (!project.getOwner().equals(user)) {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-          ResponseMessages.PROJECT_REMOVAL_NOT_ALLOWED);
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED);
     }
     
     cleanup(project, sessionId);
@@ -994,7 +905,6 @@ public class ProjectController {
     if (settings.isPythonKernelEnabled()) {
       jupyterProcessFacade.removePythonKernelsForProject(project.getName());
     }
-//    projectFacade.decrementNumProjectsCreated(user);
   }
 
   public String[] forceCleanup(String projectName, String userEmail, String sessionId) {
@@ -1507,23 +1417,22 @@ public class ProjectController {
     }
   }
 
-  public void cleanup(Project project, String sessionId) throws AppException {
+  public void cleanup(Project project, String sessionId) throws GenericException {
     cleanup(project, sessionId, false);
   }
   
-  public void cleanup(Project project, String sessionId, boolean decreaseCreatedProj) throws AppException {
+  public void cleanup(Project project, String sessionId, boolean decreaseCreatedProj) throws GenericException {
     cleanup(project, sessionId, null, decreaseCreatedProj);
   }
 
   public void cleanup(Project project, String sessionId,
-      Future<CertificatesController.CertsResult> certsGenerationFuture)
-      throws AppException {
+      Future<CertificatesController.CertsResult> certsGenerationFuture) throws GenericException {
     cleanup(project, sessionId, certsGenerationFuture, true);
   }
   
   public void cleanup(Project project, String sessionId,
       Future<CertificatesController.CertsResult> certsGenerationFuture, boolean decreaseCreatedProj)
-      throws AppException {
+    throws GenericException {
     if (project == null) {
       return;
     }
@@ -1563,11 +1472,7 @@ public class ProjectController {
         // try and close all the jupyter jobs
         jupyterProcessFacade.stopProject(project);
 
-        try {
-          removeAnacondaEnv(project);
-        } catch (AppException ex) {
-          LOGGER.log(Level.SEVERE, "Problem removing Anaconda Environment:{0}", project.getName());
-        }
+        removeAnacondaEnv(project);
 
         //kill jobs
         killYarnJobs(project);
@@ -1577,7 +1482,6 @@ public class ProjectController {
         List<HdfsUsers> usersToClean = getUsersToClean(project);
         List<HdfsGroups> groupsToClean = getGroupsToClean(project);
         removeProjectInt(project, usersToClean, groupsToClean, certsGenerationFuture, decreaseCreatedProj);
-        return;
       } catch (Exception ex) {
         if (nbTry < 3) {
           try {
@@ -1586,8 +1490,7 @@ public class ProjectController {
             LOGGER.log(Level.SEVERE, null, ex1);
           }
         } else {
-          throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), ex.getMessage());
+          throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, ex.getMessage());
         }
       } finally {
         ycs.closeYarnClient(yarnClientWrapper);
@@ -1599,7 +1502,7 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, Future<CertificatesController.CertsResult> certsGenerationFuture,
       boolean decreaseCreatedProj)
     throws IOException, InterruptedException, ExecutionException,
-    AppException, CAException, io.hops.hopsworks.common.exception.ServiceException {
+    AppException, CAException, ServiceException, ProjectException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1609,7 +1512,8 @@ public class ProjectController {
         try {
           projectHandler.preDelete(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PREDELETE_ERROR,
+            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
 
@@ -1696,7 +1600,8 @@ public class ProjectController {
         try {
           projectHandler.postDelete(project);
         } catch (Exception e) {
-          LOGGER.log(Level.SEVERE, "Error running handler: " + projectHandler.getClassName(), e);
+          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTDELETE_ERROR,
+            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
       }
 
@@ -2454,7 +2359,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeAnacondaEnv(Project project) throws AppException {
+  public void removeAnacondaEnv(Project project) throws ServiceException {
     pythonDepsFacade.removeProject(project);
   }
 
@@ -2469,8 +2374,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void cloneAnacondaEnv(Project srcProj, Project destProj) throws
-      AppException {
+  public void cloneAnacondaEnv(Project srcProj, Project destProj) throws ServiceException {
     pythonDepsFacade.cloneProject(srcProj, destProj);
   }
 

@@ -83,9 +83,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-//import org.apache.avro.Schema;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -235,9 +233,8 @@ public class KafkaService {
     try {
       values = kafkaFacade.topicDefaultValues();
     } catch (InterruptedException | IOException | KeeperException ex) {
-      LOGGER.log(Level.SEVERE, RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR.toString(), ex);
       throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, "project: " + project.getName(),
-        ex.getMessage());
+        ex.getMessage(), ex);
     }
   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

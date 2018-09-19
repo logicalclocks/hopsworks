@@ -456,8 +456,7 @@ public class JobService {
         }
       }
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while getting job ui " + e.getMessage(), e);
-      throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, null, e.getMessage());
+      throw new JobException(RESTCodes.JobErrorCode.TENSORBOARD_ERROR, null, e.getMessage(), e);
     } finally {
       if (client != null) {
         dfs.closeDfsClient(client);
@@ -1164,9 +1163,8 @@ public class JobService {
     try {
       date = sdf.parse(submissionTime);
     } catch (ParseException ex) {
-      LOGGER.log(Level.SEVERE, "Can not get log. Incorrect submission time. ", ex);
       throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, "Cannot get log. Incorrect submission" +
-        " time. Error offset:"+ex.getErrorOffset(), ex.getMessage());
+        " time. Error offset:"+ex.getErrorOffset(), ex.getMessage(), ex);
     }
     Execution execution = exeFacade.findByJobIdAndSubmissionTime(date, job);
     if (execution == null) {
@@ -1252,9 +1250,8 @@ public class JobService {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsLogPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
-              LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR.toString(), ex);
               throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, "Something went wrong during the " +
-                "log aggregation", ex.getMessage());
+                "log aggregation", ex.getMessage(), ex);
             } finally {
               monitor.close();
             }
@@ -1279,9 +1276,8 @@ public class JobService {
               YarnLogUtil.copyAggregatedYarnLogs(udfso, aggregatedLogPath,
                   hdfsErrPath, desiredLogTypes, monitor);
             } catch (IOException | InterruptedException | YarnException ex) {
-              LOGGER.log(Level.SEVERE, RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR.toString(), ex);
               throw new JobException(RESTCodes.JobErrorCode.LOG_RETRIEVAL_ERROR, "Something went wrong during the " +
-              "log aggregation", ex.getMessage());
+              "log aggregation", ex.getMessage(), ex);
             } finally {
               monitor.close();
             }

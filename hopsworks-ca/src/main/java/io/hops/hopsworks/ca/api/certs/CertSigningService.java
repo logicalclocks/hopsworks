@@ -41,7 +41,6 @@ package io.hops.hopsworks.ca.api.certs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import io.hops.hopsworks.ca.api.annotation.AllowCORS;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kafka.CsrDTO;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.security.CAException;
@@ -54,16 +53,10 @@ import io.hops.hopsworks.common.security.PKI;
 import io.hops.hopsworks.common.security.ServiceCertificateRotationTimer;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.io.FileExistsException;
+import org.apache.commons.io.FileUtils;
+import org.json.JSONObject;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -78,10 +71,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.io.FileExistsException;
-import org.apache.commons.io.FileUtils;
-import org.json.JSONObject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.security.CertificateType.APP;
 
@@ -91,14 +90,12 @@ import static io.hops.hopsworks.common.security.CertificateType.APP;
     description = "Sign certificates for hosts or clusters")
 public class CertSigningService {
 
-  final static Logger logger = Logger.getLogger(CertSigningService.class.getName());
+  final static Logger LOGGER = Logger.getLogger(CertSigningService.class.getName());
 
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
-  @EJB
-  private HostsFacade hostsFacade;
   @EJB
   private OpensslOperations opensslOperations;
   @EJB
@@ -114,18 +111,16 @@ public class CertSigningService {
   public Response keyRotate(@Context HttpServletRequest request, String jsonString) throws AppException {
     JSONObject json = new JSONObject(jsonString);
     String hostId = json.getString("host-id");
-    CsrDTO responseDto = null;
-    if (json.has("csr")) {
-      String csr = json.getString("csr");
-      String commandId = "-1";
-      if (json.has("id")) {
-        commandId = json.getString("id");
-      }
-      responseDto = signCSR(hostId, commandId, csr, true, CertificateType.HOST);
-    } else {
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Requested to sign CSR but no CSR"
-          + " provided");
+    CsrDTO responseDto;
+    if(!json.has("csr")){
+      throw new IllegalArgumentException("Requested to sign CSR but no CSR provided");
     }
+    String csr = json.getString("csr");
+    String commandId = "-1";
+    if (json.has("id")) {
+      commandId = json.getString("id");
+    }
+    responseDto = signCSR(hostId, commandId, csr, true, CertificateType.HOST);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(responseDto).build();
   }
   
@@ -165,7 +160,7 @@ public class CertSigningService {
       return new CsrDTO(caCert, agentCert, settings.getHadoopVersionedDir());
     } catch (IOException ex) {
       String errorMsg = "Error while signing CSR for host " + hostId + " Reason: " + ex.getMessage();
-      logger.log(Level.SEVERE, errorMsg, ex);
+      LOGGER.log(Level.SEVERE, errorMsg, ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), errorMsg);
     }
   }
@@ -188,7 +183,7 @@ public class CertSigningService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "Error while revoking application certificate, check the logs");
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Error revoking certificate with id: " + certificateID, e);
+      LOGGER.log(Level.SEVERE, "Error revoking certificate with id: " + certificateID, e);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
           "Error while revoking application certificate, check the logs");
     }
@@ -219,7 +214,7 @@ public class CertSigningService {
             new File(settings.getIntermediateCaDir() + "/certs/intermediate.cert.pem"), Charsets.UTF_8);
 
       } catch (IOException | DelaCSRCheckException ex) {
-        logger.log(Level.SEVERE, null, ex);
+        LOGGER.log(Level.SEVERE, null, ex);
         throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), ex.toString());
       }
     }
@@ -237,7 +232,7 @@ public class CertSigningService {
       String crl = opensslOperations.createAndReadCRL(PKI.CAType.INTERMEDIATE);
       FileUtils.writeStringToFile(certFile, crl);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      LOGGER.log(Level.SEVERE, null, ex);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(ex.getMessage()).build();
     }
     InputStream stream = new FileInputStream(certFile);
