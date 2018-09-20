@@ -471,7 +471,6 @@ public class PythonDepsFacade {
   }
 
   private void removePythonForProject(Project proj) {
-    Collection<PythonDep> deps = proj.getPythonDepCollection();
     proj.setPythonDepCollection(new ArrayList<PythonDep>());
     proj.setPythonVersion("");
     proj.setConda(false);
@@ -781,9 +780,9 @@ public class PythonDepsFacade {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, CondaInstallType installType,
-      MachineType machineType, String arg, String proj, CondaOp opType, String lib, String version,
-      String channel) throws AppException {
+  public CondaCommands updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
+      String arg, String proj, CondaOp opType, String lib, String version, String channel)
+      throws AppException {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -803,9 +802,9 @@ public class PythonDepsFacade {
             if (c.getOp().compareTo(opType) == 0
                 && c.getLib().compareTo(lib) == 0
                 && c.getVersion().compareTo(version) == 0
-                && c.getInstallType().name().compareTo(installType.name()) == 0
+                && c.getInstallType().name().compareTo(cc.getInstallType().name()) == 0
                 && c.getChannelUrl().compareTo(channel) == 0
-                && c.getMachineType().name().compareTo(machineType.name()) == 0) {
+                && c.getMachineType().name().compareTo(cc.getMachineType().name()) == 0) {
               finished = false;
               break;
             }
@@ -816,9 +815,9 @@ public class PythonDepsFacade {
             for (PythonDep pd : deps) {
               if (pd.getDependency().compareTo(lib) == 0
                   && pd.getVersion().compareTo(version) == 0
-                  && pd.getInstallType().name().compareTo(installType.name()) == 0
+                  && pd.getInstallType().name().compareTo(cc.getInstallType().name()) == 0
                   && pd.getRepoUrl().getUrl().compareTo(channel) == 0
-                  && pd.getMachineType().name().compareTo(machineType.name()) == 0) {
+                  && pd.getMachineType().name().compareTo(cc.getMachineType().name()) == 0) {
                 pd.setStatus(condaStatus);
                 em.merge(pd);
                 break;
@@ -835,6 +834,7 @@ public class PythonDepsFacade {
       logger.log(Level.FINE, "Could not remove CondaCommand with id: {0}",
           commandId);
     }
+    return cc;
   }
 
   public void cleanupConda() throws AppException {

@@ -41,6 +41,8 @@ import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.mail.MessagingException;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
@@ -56,6 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class AgentController {
   private static final Logger LOG = Logger.getLogger(AgentController.class.getName());
   private static final Comparator ASC_COMPARATOR = new CommandsComparator();
@@ -105,7 +108,7 @@ public class AgentController {
     }
     
     updateHostMetrics(host, heartbeat);
-    updateServices(host, heartbeat);
+    updateServices(heartbeat);
     processCondaCommands(heartbeat);
     processSystemCommands(heartbeat);
     return constructResponse(host);
@@ -167,67 +170,25 @@ public class AgentController {
     hostsFacade.storeHost(host);
   }
   
-  private void updateServices(Hosts host, AgentHeartbeatDTO heartbeat) {
-    final String hostname = heartbeat.hostId;
-    for (final AgentServiceDTO service : heartbeat.services) {
-      final String cluster = service.cluster;
-      final String name = service.service;
-      final String group = service.group;
-      HostServices hostService = null;
-      try {
-        hostService = hostServicesFacade.find(hostname, cluster, group, name);
-      } catch (Exception ex) {
-        LOG.log(Level.FINE, "Could not find service for " + hostname + "/"
-          + cluster + "/" + group + "/" + name);
-        continue;
-      }
-      if (hostService == null) {
-        hostService = new HostServices();
-        hostService.setHost(host);
-        hostService.setCluster(cluster);
-        hostService.setGroup(group);
-        hostService.setService(name);
-        hostService.setStartTime(heartbeat.agentTime);
-      }
-      
-      final Integer pid = service.pid != null ? service.pid : -1;
-      hostService.setPid(pid);
-      if (service.status != null) {
-        if ((hostService.getStatus() == null || !hostService.getStatus().equals(Status.Started))
-            && service.status.equals(Status.Started)) {
-          hostService.setStartTime(heartbeat.agentTime);
-        }
-        hostService.setStatus(service.status);
-      } else {
-        hostService.setStatus(Status.None);
-      }
-      
-      if (service.status.equals(Status.Started)) {
-        hostService.setStopTime(heartbeat.agentTime);
-      }
-      final Long startTime = hostService.getStartTime();
-      final Long stopTime = hostService.getStopTime();
-      if (startTime != null && stopTime != null) {
-        hostService.setUptime(stopTime - startTime);
-      } else {
-        hostService.setUptime(0L);
-      }
-      hostServicesFacade.store(hostService);
+  private void updateServices(AgentHeartbeatDTO heartbeat) throws AppException {
+    List<HostServices> updatedHostServices = hostServicesFacade.updateHostServices(heartbeat);
+    updatedHostServices.stream()
+        .forEach(this::notifyHostServiceHealth);
+  }
   
-      final Health previousHealthReport = hostService.getHealth();
-      if (!hostService.getHealth().equals(previousHealthReport)
-          && hostService.getHealth().equals(Health.Bad)) {
-        final String subject = "alert: " + hostService.getGroup() + "." + hostService.getService() + "@" + hostService.
-            getHost().getHostname();
-        final String body = hostService.getGroup() + "." + hostService.getService() + "@" + hostService.getHost().
-            getHostname() + " transitioned from state " + previousHealthReport + " to " + hostService.getHealth();
-        emailAlert(subject, body);
-      }
+  private void notifyHostServiceHealth(HostServices hostService) {
+    final Health previousHealthReport = hostService.getHealth();
+    if (!hostService.getHealth().equals(previousHealthReport)
+        && hostService.getHealth().equals(Health.Bad)) {
+      final String subject = "alert: " + hostService.getGroup() + "." + hostService.getService() + "@" + hostService.
+          getHost().getHostname();
+      final String body = hostService.getGroup() + "." + hostService.getService() + "@" + hostService.getHost().
+          getHostname() + " transitioned from state " + previousHealthReport + " to " + hostService.getHealth();
+      emailAlert(subject, body);
     }
   }
   
-  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO)
-    throws AppException {
+  private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws AppException {
     if (heartbeatDTO.condaCommands == null) {
       return;
     }
@@ -241,57 +202,56 @@ public class AgentController {
       final PythonDepsFacade.CondaStatus status = cc.getStatus();
       Integer commandId = cc.getId();
       
-      CondaCommands command = pythonDepsFacade.findCondaCommand(commandId);
       // If the command object does not exist, then the project
       // has probably been removed. We needed to send a compensating action if
       // this action was successful.
-  
+      
       // Command would be null when we are deleting a Project and kagent reports that the
       // REMOVE operation has changed state from ONGOING to SUCCESS
-      if (command != null) {
-        pythonDepsFacade.updateCondaCommandStatus(
-            commandId, status, command.getInstallType(), command.getMachineType(),
-            args, projectName, opType, lib, version, channelUrl);
-        
-        if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
-            || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
-          // Sync only on Hopsworks server
-          if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-            final Project projectId = command.getProjectId();
-            final String envStr = listCondaEnvironment(projectName);
-            final Collection<PythonDep> pythonDeps = synchronizeDependencies(
-                projectId, envStr, projectId.getPythonDepCollection());
-            // Remove existing deps
-            pythonDepsFacade.removePythonDepsForProject(projectId);
-            // Insert all deps in current listing
-            pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
-          }
+      
+      CondaCommands command = pythonDepsFacade.updateCondaCommandStatus(commandId, status,
+          args, projectName, opType, lib, version, channelUrl);
+      
+      if (command == null) {
+        continue;
+      }
+      
+      if (command.getOp().equals(PythonDepsFacade.CondaOp.CREATE)
+          || command.getOp().equals(PythonDepsFacade.CondaOp.YML)) {
+        // Sync only on Hopsworks server
+        if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
+          final Project projectId = command.getProjectId();
+          final String envStr = listCondaEnvironment(projectName);
+          final Collection<PythonDep> pythonDeps = synchronizeDependencies(
+              projectId, envStr, projectId.getPythonDepCollection());
+          // Insert all deps in current listing
+          pythonDepsFacade.addPythonDepsForProject(projectId, pythonDeps);
         }
-        
-        // An upgrade results in an unknown version installed, query local conda
-        // env to figure it out
-        if (command.getOp().equals(PythonDepsFacade.CondaOp.UPGRADE)) {
-          command.setVersion(getLocalLibraryVersion(command.getLib(),
-              command.getVersion(), projectName));
-          if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
-            final Project projectId = command.getProjectId();
-            for (final PythonDep pythonDep : projectId.getPythonDepCollection()) {
-              if (pythonDep.getDependency().equals(command.getLib())
-                  && pythonDep.getVersion().equals(command.getVersion())) {
-                final String localVersion = getLocalLibraryVersion(command.getLib(),
-                    command.getVersion(), projectName);
-                if (!localVersion.equals(command.getVersion())) {
-                  final Collection<PythonDep> deps = projectId.getPythonDepCollection();
-                  
-                  for (final PythonDep dep : deps) {
-                    if (dep.getDependency().equals(command.getLib())) {
-                      PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
-                          command.getInstallType(), command.getLib(), localVersion, true, false);
-                      deps.remove(dep);
-                      deps.add(newDep);
-                      projectFacade.update(projectId);
-                      break;
-                    }
+      }
+      
+      // An upgrade results in an unknown version installed, query local conda
+      // env to figure it out
+      if (command.getOp().equals(PythonDepsFacade.CondaOp.UPGRADE)) {
+        command.setVersion(getLocalLibraryVersion(command.getLib(),
+            command.getVersion(), projectName));
+        if (settings.getHopsworksIp().equals(command.getHostId().getHostIp())) {
+          final Project projectId = command.getProjectId();
+          for (final PythonDep pythonDep : projectId.getPythonDepCollection()) {
+            if (pythonDep.getDependency().equals(command.getLib())
+                && pythonDep.getVersion().equals(command.getVersion())) {
+              final String localVersion = getLocalLibraryVersion(command.getLib(),
+                  command.getVersion(), projectName);
+              if (!localVersion.equals(command.getVersion())) {
+                final Collection<PythonDep> deps = projectId.getPythonDepCollection();
+                
+                for (final PythonDep dep : deps) {
+                  if (dep.getDependency().equals(command.getLib())) {
+                    PythonDep newDep = pythonDepsFacade.getDep(dep.getRepoUrl(), dep.getMachineType(),
+                        command.getInstallType(), command.getLib(), localVersion, true, false);
+                    deps.remove(dep);
+                    deps.add(newDep);
+                    projectFacade.update(projectId);
+                    break;
                   }
                 }
               }
@@ -513,6 +473,66 @@ public class AgentController {
       this.systemCommands = systemCommands;
       this.condaCommands = condaCommands;
     }
+  
+    public String getHostId() {
+      return hostId;
+    }
+  
+    public Long getAgentTime() {
+      return agentTime;
+    }
+  
+    public Double getLoad1() {
+      return load1;
+    }
+  
+    public Double getLoad5() {
+      return load5;
+    }
+  
+    public Double getLoad15() {
+      return load15;
+    }
+  
+    public Integer getNumGpus() {
+      return numGpus;
+    }
+  
+    public Long getDiskUsed() {
+      return diskUsed;
+    }
+  
+    public Long getDiskCapacity() {
+      return diskCapacity;
+    }
+  
+    public Long getMemoryUsed() {
+      return memoryUsed;
+    }
+  
+    public Long getMemoryCapacity() {
+      return memoryCapacity;
+    }
+  
+    public Integer getCores() {
+      return cores;
+    }
+  
+    public String getPrivateIp() {
+      return privateIp;
+    }
+  
+    public List<AgentServiceDTO> getServices() {
+      return services;
+    }
+  
+    public List<SystemCommand> getSystemCommands() {
+      return systemCommands;
+    }
+  
+    public List<CondaCommands> getCondaCommands() {
+      return condaCommands;
+    }
   }
   
   public static class AgentServiceDTO {
@@ -531,6 +551,30 @@ public class AgentController {
       this.webPort = webPort;
       this.pid = pid;
       this.status = status;
+    }
+  
+    public String getCluster() {
+      return cluster;
+    }
+  
+    public String getService() {
+      return service;
+    }
+  
+    public String getGroup() {
+      return group;
+    }
+  
+    public String getWebPort() {
+      return webPort;
+    }
+  
+    public Integer getPid() {
+      return pid;
+    }
+  
+    public Status getStatus() {
+      return status;
     }
   }
   
