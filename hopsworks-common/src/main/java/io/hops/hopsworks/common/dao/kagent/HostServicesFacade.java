@@ -39,10 +39,14 @@
 
 package io.hops.hopsworks.common.dao.kagent;
 
+import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.exception.AppException;
 import io.hops.hopsworks.common.util.WebCommunication;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -50,6 +54,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.persistence.NonUniqueResultException;
@@ -333,4 +338,61 @@ public class HostServicesFacade {
     return host;
   }
 
+  public List<HostServices> updateHostServices(AgentController.AgentHeartbeatDTO heartbeat) throws AppException {
+    Hosts host = hostEJB.findByHostname(heartbeat.getHostId());
+    if (host == null) {
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+          "Host with ID <" + heartbeat.getHostId() + "> does not exist");
+    }
+    final List<HostServices> hostServices = new ArrayList<>(heartbeat.getServices().size());
+    for (final AgentController.AgentServiceDTO service : heartbeat.getServices()) {
+      final String cluster = service.getCluster();
+      final String name = service.getService();
+      final String group = service.getGroup();
+      HostServices hostService = null;
+      try {
+        hostService = find(heartbeat.getHostId(), cluster, group, name);
+      } catch (Exception ex) {
+        logger.log(Level.WARNING, "Could not find service for " + heartbeat.getHostId() + "/"
+            + cluster + "/" + group + "/" + name);
+        continue;
+      }
+      
+      if (hostService == null) {
+        hostService = new HostServices();
+        hostService.setHost(host);
+        hostService.setCluster(cluster);
+        hostService.setGroup(group);
+        hostService.setService(name);
+        hostService.setStartTime(heartbeat.getAgentTime());
+      }
+  
+      final Integer pid = service.getPid() != null ? service.getPid(): -1;
+      hostService.setPid(pid);
+      if (service.getStatus() != null) {
+        if ((hostService.getStatus() == null || !hostService.getStatus().equals(Status.Started))
+            && service.getStatus().equals(Status.Started)) {
+          hostService.setStartTime(heartbeat.getAgentTime());
+        }
+        hostService.setStatus(service.getStatus());
+      } else {
+        hostService.setStatus(Status.None);
+      }
+  
+      if (service.getStatus().equals(Status.Started)) {
+        hostService.setStopTime(heartbeat.getAgentTime());
+      }
+      final Long startTime = hostService.getStartTime();
+      final Long stopTime = hostService.getStopTime();
+      if (startTime != null && stopTime != null) {
+        hostService.setUptime(stopTime - startTime);
+      } else {
+        hostService.setUptime(0L);
+      }
+      
+      store(hostService);
+      hostServices.add(hostService);
+    }
+    return hostServices;
+  }
 }
