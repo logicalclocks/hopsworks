@@ -707,8 +707,8 @@ public class HdfsUsersController {
    */
   private void removeHdfsUser(HdfsUsers user) throws IOException {
     if (user != null) {
-      dfsService.getDfsOps().flushCachedUser(user.getName());
       hdfsUsersFacade.removeHdfsUser(user);
+      dfsService.getDfsOps().flushCachedUser(user.getName());
     }
   }
 
@@ -720,8 +720,8 @@ public class HdfsUsersController {
    */
   private void removeHdfsGroup(HdfsGroups group) throws IOException {
     if (group != null) {
-      dfsService.getDfsOps().flushCachedGroup(group.getName());
       hdfsGroupsFacade.remove(group);
+      dfsService.getDfsOps().flushCachedGroup(group.getName());
     }
   }
 }

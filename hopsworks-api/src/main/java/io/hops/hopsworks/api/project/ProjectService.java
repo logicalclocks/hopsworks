@@ -523,9 +523,6 @@ public class ProjectService {
             case JOBS:
               error = ResponseMessages.JOBS_ADD_FAILURE;
               break;
-            case EXPERIMENTS:
-              error = ResponseMessages.EXPERIMENTS_ADD_FAILURE;
-              break;
             default:
               error = ResponseMessages.PROJECT_SERVICE_ADD_FAILURE;
               break;
