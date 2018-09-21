@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.util;
 
+import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
@@ -268,7 +269,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
-
+  
   /* -------------------- TfServing  --------------- */
   private static final String VARIABLE_TF_SERVING_MONITOR_INT = "tf_serving_monitor_int";
 
@@ -509,6 +510,8 @@ public class Settings implements Serializable {
       applicationCertificateValidityPeriod = setStrVar(APPLICATION_CERTIFICATE_VALIDITY_PERIOD_KEY,
           applicationCertificateValidityPeriod);
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
+      sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
+
       populateDelaCache();
       populateLDAPCache();
       //Set Zeppelin Default Interpreter
@@ -538,6 +541,11 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
+      PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES),",");
+      PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
+          ",");
 
       TF_SERVING_MONITOR_INT = setStrVar(VARIABLE_TF_SERVING_MONITOR_INT, TF_SERVING_MONITOR_INT);
 
@@ -1819,7 +1827,8 @@ public class Settings implements Serializable {
   public static enum ServiceDataset {
     ZEPPELIN("notebook", "Contains Zeppelin notebooks."),
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
-    SERVING("Models", "Contains models to be used for serving.");
+    SERVING("Models", "Contains models to be used for serving."),
+    EXPERIMENTS("Experiments", "Contains experiments from using the hops python api");
 
     private final String name;
     private final String description;
@@ -2666,6 +2675,15 @@ public class Settings implements Serializable {
     return tensorBoardMaxLastAccessed;
   }
 
+  // TensorBoard kill rotation interval in milliseconds
+  private static final String SPARK_UI_LOGS_OFFSET = "spark_ui_logs_offset";
+  private int sparkUILogsOffset = 512000;
+
+  public synchronized int getSparkUILogsOffset() {
+    checkCache();
+    return sparkUILogsOffset;
+  }
+
   public static Long getConfTimeValue(String configurationTime) {
     Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
     if (!matcher.matches()) {
@@ -2686,6 +2704,32 @@ public class Settings implements Serializable {
     return timeUnitStr == null ? TimeUnit.MINUTES : TIME_SUFFIXES.get(timeUnitStr.toLowerCase());
   }
 
+  private Set<String> toSetFromCsv(String csv, String separator) {
+    return new HashSet<>(Splitter.on(separator).trimResults().splitToList(csv));
+  }
+  
+  // User upgradable libraries we installed for them
+  private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
+  private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
+      "hops, tfspark, pandas, tensorflow-serving-api, horovod, hopsfacets, mmlspark, numpy";
+  
+  public synchronized Set<String> getProvidedPythonLibraryNames() {
+    checkCache();
+    return PROVIDED_PYTHON_LIBRARY_NAMES;
+  }
+  
+  // Libraries we preinstalled users should not mess with
+  private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
+  private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
+      "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
+  
+  public synchronized Set<String> getPreinstalledPythonLibraryNames() {
+    checkCache();
+    return PREINSTALLED_PYTHON_LIBRARY_NAMES;
+  }
+  
   private String HOPSWORKS_VERSION;
 
   public synchronized String getHopsworksVersion() {
@@ -2853,7 +2897,7 @@ public class Settings implements Serializable {
     checkCache();
     return ZOOKEEPER_VERSION;
   }
-
+  
   // -------------------------------- Kubernetes ----------------------------------------------//
   private String KUBE_USER = "hopsworks";
   public synchronized String getKubeUser() {

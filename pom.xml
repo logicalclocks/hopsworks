@@ -58,6 +58,7 @@
     <module>hopsworks-ear</module>
     <module>hopsworks-ca</module>
     <module>hopsworks-dela</module>
+    <module>hopsworks-jwt</module>
   </modules>
 
   <profiles>

@@ -799,8 +799,11 @@ public class JobService {
       for (Header header : method.getResponseHeaders()) {
         responseBuilder.header(header.getName(), header.getValue());
       }
+      //method.getPath().contains("/allexecutors") is needed to replace the links under Executors tab
+      //which are in a json response object
       if (method.getResponseHeader("Content-Type") == null || method.
-          getResponseHeader("Content-Type").getValue().contains("html")) {
+          getResponseHeader("Content-Type").getValue().contains("html")
+          || method.getPath().contains("/allexecutors")) {
         final String source = "http://" + method.getURI().getHost() + ":"
             + method.getURI().getPort();
         if (method.getResponseHeader("Content-Length") == null) {
@@ -897,8 +900,13 @@ public class JobService {
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
         "/hopsworks-api/api/project/"
         + project.getId() + "/jobs/" + appId + "/prox/" + param);
+    ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",
+        "/hopsworks-api/api/project/"
+        + project.getId() + "/jobs/" + appId + "/prox/");
+    ui = ui.replaceAll("here</a>\\s+for full log", "here</a> for latest " + settings.getSparkUILogsOffset()
+        + " bytes of logs");
+    ui = ui.replaceAll("/@hwqmstart=0", "/@hwqmstart=-" + settings.getSparkUILogsOffset());
     return ui;
-
   }
 
   private boolean hasAppAccessRight(String trackingUrl) {
