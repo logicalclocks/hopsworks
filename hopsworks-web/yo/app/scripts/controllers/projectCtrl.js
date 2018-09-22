@@ -44,9 +44,9 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
+          'growl', 'ProjectService', 'AuthService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService', 'EndpointService',
           'UserService', 'TourService', 'PythonDepsService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
-          function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService,
+          function ($scope, $rootScope, $location, $routeParams, $route, $timeout, UtilsService, growl, ProjectService, AuthService,
                   ModalService, ActivityService, $cookies, DataSetService, EndpointService, UserService, TourService, PythonDepsService,
                   StorageService, CertService, VariablesService, FileSaver, Blob) {
 
@@ -535,7 +535,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showAirflow = function () {
-              return showService("Airflow");
+              return showService("Airflow") && self.isAdmin();
             };
 
             self.showRStudio = function () {
@@ -732,5 +732,20 @@ angular.module('hopsWorksApp')
               }
             };
             getVersions();
+
+           var checkeIsAdmin = function () {
+              AuthService.isAdmin().then(
+                      function (success) {
+                        $cookies.put("isAdmin", success.data === 'true');
+                      }, function (error) {
+                $cookies.put("isAdmin", false);
+              });
+            };
+            checkeIsAdmin();
+            self.isAdmin = function () {
+              return $cookies.get('isAdmin');
+            };
+
+
 
           }]);

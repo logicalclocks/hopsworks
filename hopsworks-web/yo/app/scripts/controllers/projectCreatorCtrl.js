@@ -66,7 +66,7 @@ angular.module('hopsWorksApp')
               self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'DELA', 'SERVING', 'EXPERIMENTS'];
             } else {
               self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE','AIRFLOW', 'SERVING', 'EXPERIMENTS'];
-              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE','AIRFLOW', 'SERVING', 'EXPERIMENTS'];
+              self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'AIRFLOW', 'SERVING', 'EXPERIMENTS'];
             }
 
             self.projectName = '';

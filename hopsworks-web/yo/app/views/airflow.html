@@ -20,7 +20,7 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled" ng-controller="JobsCtrl as jobsCtrl">
+  <div id="wrapper" class="toggled">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
@@ -29,16 +29,33 @@
     </div>
     <div class="">
       <!-- Page Content -->
-      <div class="content" style="height:100%; overflow: hidden; margin-top: 50px;" >
+      <div class="content" style="overflow: hidden; margin-top: 50px;" >
 
-        <div class="row">
-          <img class="pull-left" style="margin-left:20px;" height="40" width="40" src="images/airflow-200x198.png"/>
+        <div class="row" style="margin-top: 40px">
+          <div class="col-sm-2 col-md-2 col-lg-2" >
+            <img class="pull-left" style="margin-left:20px;" height="40" width="40" src="images/airflow-200x198.png"/>
+          </div>
+
+          <div class="col-sm-6 col-md-2 col-md-offset-1">
+            <button class="btn btn-success active" ng-click="mainCtrl.connectToAirflow()" type="button" id="newAirflow">
+              Connect to Airflow
+            </button>
+          </div>
+          <div class="col-sm-6 col-md-2 col-md-offset-1">
+            <button class="btn btn-primary active" ng-click="mainCtrl.copyToHdfs()" type="button" id="cpAirflowToHdfs">
+              Copy Airflow -> HDFS
+            </button>
+          </div>
+          <div class="col-sm-6 col-md-2 col-md-offset-1">
+            <button class="btn btn-primary active" ng-click="mainCtrl.copyfromHdfs()" type="button" id="cpAirflowToHdfs">
+              Copy HDFS -> Airflow 
+            </button>
+          </div>
         </div>
-        <p>AIRFLOW</p>
-
-
-
       </div>
+
+
     </div>
-    <!-- /#wrapper -->
   </div>
+  <!-- /#wrapper -->
+</div>

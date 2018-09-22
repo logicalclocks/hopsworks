@@ -43,16 +43,20 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$interval', '$cookies', '$location', '$scope', '$rootScope',
+        .controller('MainCtrl', ['$interval', '$http', '$cookies', '$location', '$scope', '$rootScope',
           'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          function ($interval, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
-                  ElasticService, DelaProjectService, DelaService, md5, ModalService, 
+          function ($interval, $http, $cookies, $location, $scope, $rootScope, AuthService, UtilsService,
+                  ElasticService, DelaProjectService, DelaService, md5, ModalService,
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService) {
             const MIN_SEARCH_TERM_LEN = 2;
             var self = this;
+
+
+            self.ui = "/hopsworks-api/airflow/login?q=username=";
+
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
             var elasticService = ElasticService();
@@ -64,13 +68,13 @@ angular.module('hopsWorksApp')
             } else {
               self.searchType = "global";
             }
-            
+
             var checkeIsAdmin = function () {
               AuthService.isAdmin().then(
-                  function (success) {
-                    $cookies.put("isAdmin", success.data === 'true');
-                },function (error) {
-                    $cookies.put("isAdmin", false);
+                      function (success) {
+                        $cookies.put("isAdmin", success.data === 'true');
+                      }, function (error) {
+                $cookies.put("isAdmin", false);
               });
             };
             checkeIsAdmin();
@@ -98,12 +102,12 @@ angular.module('hopsWorksApp')
                 self.errorMessage = error.data.msg;
               });
             };
-            
+
             var checkDelaEnabled = function () {
               HopssiteService.getServiceInfo("dela").then(function (success) {
                 console.log("isDelaEnabled", success);
                 self.delaServiceInfo = success.data;
-                if (self.delaServiceInfo.status === 1 ) {
+                if (self.delaServiceInfo.status === 1) {
                   $rootScope['isDelaEnabled'] = true;
                 } else {
                   $rootScope['isDelaEnabled'] = false;
@@ -114,19 +118,19 @@ angular.module('hopsWorksApp')
               });
             };
             checkDelaEnabled(); // check 
-            
+
             self.userNotification = '';
             var getUserNotification = function () {
               self.userNotification = '';
               BannerService.findUserBanner().then(
-                function (success) {
-                  console.log(success);
-                  if (success.data.successMessage) {
-                    self.userNotification = success.data.successMessage;
-                  }
-                }, function (error) {
-                  console.log(error);
-                  self.userNotification = '';
+                      function (success) {
+                        console.log(success);
+                        if (success.data.successMessage) {
+                          self.userNotification = success.data.successMessage;
+                        }
+                      }, function (error) {
+                console.log(error);
+                self.userNotification = '';
               });
             };
             getUserNotification();
@@ -288,7 +292,7 @@ angular.module('hopsWorksApp')
                           }
                           self.searching = false;
                           self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;                          
+                          self.resultItems = self.searchResult.length;
                         }, function (error) {
                           self.searching = false;
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -448,4 +452,39 @@ angular.module('hopsWorksApp')
                 ModalService.viewSearchResult('lg', result, result, null);
               }
             };
+
+
+            self.openWindow = function () {
+              $window.open(self.ui, '_blank');
+            }
+
+            self.connectToAirflow = function () {
+
+//              $http.get('http://localhost:12358/hopsworks-api/airflow').then(function (response) {
+                // store the token in the local storage for further use
+//                var _csrf_token = response.headers('X-CSRFToken');
+//              var _csrf_token = csrf_token();
+                var username = 'admin';
+                var password = 'admin';
+                self.ui = "/hopsworks-api/airflow/";
+//                login?q=username=" + username +
+//                        "&password=" + password;
+//                + "&_csrf_token=" + _csrf_token;
+                
+//                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+                self.openWindow();
+
+//              });
+            };
+
+
+            self.copyFromHdfs = function () {
+              
+            };
+            
+            self.copyToHdfs = function () {
+              
+            };
+
+
           }]);

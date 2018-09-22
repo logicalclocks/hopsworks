@@ -36,32 +36,20 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.common.dao.project.service;
 
-public enum ProjectServiceEnum {
+/*global angular: false */
 
-  ZEPPELIN("Zeppelin"),
-  KAFKA("Kafka"),
-  HISTORY("History"),
-  DELA("Dela"),
-  JUPYTER("Jupyter"),
-  JOBS("Jobs"),
-  HIVE("Hive"),
-  SERVING("Serving"),
-  RSTUDIO("RStudio"),
-  AIRFLOW("Airflow"),
-  EXPERIMENTS("Experiments"),
-  PYTHON("Python");
+'use strict';
 
-  private final String readable;
-
-  private ProjectServiceEnum(String readable) {
-    this.readable = readable;
-  }
-
-  @Override
-  public String toString() {
-    return readable;
-  }
-
-}
+angular.module('hopsWorksApp')
+    .factory('AirflowService', ['$http', function ($http) {
+        var service = {
+            copyFromAirflowToHdfs: function () {
+                return $http.get('/api/banner/cpFromAirflowToHdfs');
+            },
+            copyToAirflowFromHdfs: function () {
+                return $http.get('/api/banner/cpToAirflowFromHdfs');
+            }
+        };
+        return service;
+    }]);

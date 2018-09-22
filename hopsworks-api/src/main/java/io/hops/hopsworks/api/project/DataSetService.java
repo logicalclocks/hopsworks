@@ -155,7 +155,7 @@ public class DataSetService {
   @EJB
   private JobController jobcontroller;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -209,7 +209,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     List<String> commands = new ArrayList<>();
 
@@ -271,7 +271,7 @@ public class DataSetService {
 
     // HDFS_USERNAME is the next param to the bash script
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String hdfsUser = hdfsUsersBean.getHdfsUserName(project, user);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
 
     List<String> commands = new ArrayList<>();
 
@@ -369,7 +369,7 @@ public class DataSetService {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
       if (dsPath.getDs().isShared()) {
         //Get project of project__user the inode is owned by
-        inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
+        inodeView.setOwningProjectName(hdfsUsersController.getProjectName(i.getHdfsUser().getName()));
       }
       inodeView.setZipState(settings.getZipState(
               fullPath + "/" + i.getInodePK().getName()));
@@ -453,7 +453,7 @@ public class DataSetService {
             AllowedProjectRoles.DATA_SCIENTIST)) {
       newDS.setStatus(Dataset.PENDING);
     } else {
-      hdfsUsersBean.shareDataset(proj, ds);
+      hdfsUsersController.shareDataset(proj, ds);
     }
 
     datasetFacade.persistDataset(newDS);
@@ -498,7 +498,7 @@ public class DataSetService {
                 "Dataset not shared with " + proj.getName());
       }
 
-      hdfsUsersBean.unshareDataset(proj, ds);
+      hdfsUsersController.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
       activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.
               getName() + " with project " + proj.getName(), project, user);
@@ -607,7 +607,7 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NOT_FOUND);
     }
-    hdfsUsersBean.shareDataset(this.project, ds);
+    hdfsUsersController.shareDataset(this.project, ds);
     ds.setStatus(Dataset.ACCEPTED);
     datasetFacade.merge(ds);
     json.setSuccessMessage("The Dataset is now accessable.");
@@ -657,7 +657,7 @@ public class DataSetService {
 
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     DistributedFileSystemOps dfso = dfs.getDfsOps();
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     if (username == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(), "User not found");
     }
@@ -713,7 +713,7 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     try {
       dfso = dfs.getDfsOps();
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
@@ -772,7 +772,7 @@ public class DataSetService {
     if (ds.isShared()) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
-      hdfsUsersBean.unShareDataset(project, ds);
+      hdfsUsersController.unShareDataset(project, ds);
       datasetFacade.removeDataset(ds);
       json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -782,7 +782,7 @@ public class DataSetService {
     DistributedFileSystemOps dfso = null;
     try {
       Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -815,7 +815,7 @@ public class DataSetService {
 
     //remove the group associated with this dataset as it is a toplevel ds
     try {
-      hdfsUsersBean.deleteDatasetGroup(ds);
+      hdfsUsersController.deleteDatasetGroup(ds);
     } catch (IOException ex) {
       //FIXME: take an action?
       logger.log(Level.WARNING,
@@ -936,7 +936,7 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -989,7 +989,7 @@ public class DataSetService {
           MoveDTO dto) throws
           AppException, AccessControlException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
     if (sourceInode == null) {
@@ -1093,7 +1093,7 @@ public class DataSetService {
           MoveDTO dto) throws
           AppException, AccessControlException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     Inode sourceInode = inodes.findById(dto.getInodeId());
     if (sourceInode == null) {
@@ -1168,7 +1168,7 @@ public class DataSetService {
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes, false);
@@ -1235,7 +1235,7 @@ public class DataSetService {
           @Context SecurityContext sc) throws
           AppException, AccessControlException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     dsPath.validatePathExists(inodes,false);
@@ -1379,7 +1379,7 @@ public class DataSetService {
   public DownloadService downloadDS(@Context SecurityContext sc) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
     this.downloader.setProject(project);
-    this.downloader.setProjectUsername(hdfsUsersBean.getHdfsUserName(project, user));
+    this.downloader.setProjectUsername(hdfsUsersController.getHdfsUserName(project, user));
     return downloader;
   }
   
@@ -1445,7 +1445,7 @@ public class DataSetService {
           @PathParam("path") String path, @Context SecurityContext sc,
           @QueryParam("templateId") int templateId) throws AppException {
     Users user = userFacade.findByEmail(sc.getUserPrincipal().getName());
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
 
     DsPath dsPath = pathValidator.validatePath(this.project, path);
     Project owning = datasetController.getOwningProject(dsPath.getDs());
