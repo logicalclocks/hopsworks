@@ -468,7 +468,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showAirflow = function () {
-              return showService("Airflow");
+              return showService("Airflow") && self.isAdmin();
             };
 
             self.showRStudio = function () {
@@ -655,5 +655,20 @@ angular.module('hopsWorksApp')
               var idx = self.projectTypes.indexOf(service);
               return idx === -1;
             };            
+
+           var checkeIsAdmin = function () {
+              AuthService.isAdmin().then(
+                      function (success) {
+                        $cookies.put("isAdmin", success.data === 'true');
+                      }, function (error) {
+                $cookies.put("isAdmin", false);
+              });
+            };
+            checkeIsAdmin();
+            self.isAdmin = function () {
+              return $cookies.get('isAdmin');
+            };
+
+
 
           }]);

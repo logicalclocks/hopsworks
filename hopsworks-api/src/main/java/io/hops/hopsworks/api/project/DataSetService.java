@@ -161,7 +161,7 @@ public class DataSetService {
   @EJB
   private JobController jobcontroller;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -349,7 +349,7 @@ public class DataSetService {
       InodeView inodeView = new InodeView(i, fullPath + "/" + i.getInodePK().getName());
       if (dsPath.getDs().isShared()) {
         //Get project of project__user the inode is owned by
-        inodeView.setOwningProjectName(hdfsUsersBean.getProjectName(i.getHdfsUser().getName()));
+        inodeView.setOwningProjectName(hdfsUsersController.getProjectName(i.getHdfsUser().getName()));
       }
       inodeView.setZipState(settings.getZipState(
               fullPath + "/" + i.getInodePK().getName()));
@@ -425,7 +425,7 @@ public class DataSetService {
             AllowedProjectRoles.DATA_SCIENTIST)) {
       newDS.setStatus(Dataset.PENDING);
     } else {
-      hdfsUsersBean.shareDataset(proj, ds);
+      hdfsUsersController.shareDataset(proj, ds);
     }
 
     datasetFacade.persistDataset(newDS);
@@ -462,7 +462,7 @@ public class DataSetService {
           "project: " + proj.getName());
       }
 
-      hdfsUsersBean.unshareDataset(proj, ds);
+      hdfsUsersController.unshareDataset(proj, ds);
       datasetFacade.removeDataset(dst);
       activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataSet.
               getName() + " with project " + proj.getName(), project, user);
@@ -632,7 +632,7 @@ public class DataSetService {
     DistributedFileSystemOps udfso = null;
     try {
       dfso = dfs.getDfsOps();
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       if (username != null) {
         udfso = dfs.getDfsOps(username);
       }
@@ -678,7 +678,7 @@ public class DataSetService {
     if (ds.isShared()) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
-      hdfsUsersBean.unShareDataset(project, ds);
+      hdfsUsersController.unShareDataset(project, ds);
       datasetFacade.removeDataset(ds);
       json.setSuccessMessage(ResponseMessages.SHARED_DATASET_REMOVED);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
@@ -718,7 +718,7 @@ public class DataSetService {
 
     //remove the group associated with this dataset as it is a toplevel ds
     try {
-      hdfsUsersBean.deleteDatasetGroup(ds);
+      hdfsUsersController.deleteDatasetGroup(ds);
     } catch (IOException ex) {
       //FIXME: take an action?
       LOGGER.log(Level.WARNING,
@@ -823,7 +823,7 @@ public class DataSetService {
 
     DistributedFileSystemOps dfso = null;
     try {
-      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      String username = hdfsUsersController.getHdfsUserName(project, user);
       //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
       //Find project of dataset as it might be shared
       Project owning = datasetController.getOwningProject(ds);
@@ -964,7 +964,6 @@ public class DataSetService {
   public Response copyFile(@Context SecurityContext sc, MoveDTO dto) throws DatasetException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
-
     Inode sourceInode = inodes.findById(dto.getInodeId());
     String sourcePathStr = inodes.getPath(sourceInode);
 

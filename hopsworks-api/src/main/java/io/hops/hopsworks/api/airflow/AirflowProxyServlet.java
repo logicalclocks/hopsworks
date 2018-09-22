@@ -40,52 +40,35 @@ package io.hops.hopsworks.api.airflow;
 
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
-import org.apache.commons.httpclient.HostConfiguration;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
-import org.apache.http.client.utils.URIUtils;
 
 public class AirflowProxyServlet extends ProxyServlet {
 
   @EJB
   private UserFacade userFacade;
-//  @EJB
-//  private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectController projectController;
   @EJB
@@ -110,26 +93,59 @@ public class AirflowProxyServlet extends ProxyServlet {
                   "Accept-Charset", "accept-charset"));
 
   protected void initTarget() throws ServletException {
-    targetUri = settings.getAirflowWebUIAddress();
-    if (!targetUri.contains("http://")) {
-      targetUri = "http://" + targetUri;
-    }
-    if (targetUri == null) {
-      throw new ServletException(P_TARGET_URI + " is required.");
-    }
-    //test it's valid
-    try {
-      targetUriObj = new URI(targetUri);
-    } catch (Exception e) {
-      throw new ServletException("Trying to process targetUri init parameter: "
-          + e, e);
-    }
-    targetHost = URIUtils.extractHost(targetUriObj);
+//    targetUri = settings.getAirflowWebUIAddress();
+    super.initTarget();
+//    if (!targetUri.contains("http://")) {
+//      targetUri = "http://" + targetUri;
+//    }
+//    if (targetUri == null) {
+//      throw new ServletException(P_TARGET_URI + " is required.");
+//    }
+//    //test it's valid
+//    try {
+//      targetUriObj = new URI(targetUri);
+//    } catch (Exception e) {
+//      throw new ServletException("Trying to process targetUri init parameter: "
+//          + e, e);
+//    }
+//    targetHost = URIUtils.extractHost(targetUriObj);
   }
 
-  // A request will come in with the format: 
-  // http://127.0.0.1:8080/hopsworks-api/airflow/
-  // 
+  /**
+   * A request will come in with the format:
+   * http://127.0.0.1:8080/hopsworks-api/airflow/
+   * and be sent to:
+   * http://localhost:12358/admin/airflow/login?next=%2Fadmin%2F
+   * <p>
+   * <p>
+   * A 2-step process is needed. First you load the
+   * http://localhost:12358/admin
+   * page to get the csrf token.
+   * http://localhost:12358/admin/airflow/login?username=admin&password=admin&
+   * _csrf_token=.eJw9zEELgjAUAOC_Eu_coQleBA_BQDq8B4tt8rwIaaVbK6jAOfG_5ym--7dAO_ZQLLC7QAGN9oJ
+   * 1d0B3j5RUToncZsDM5CT7B1UcSVtP6VjCuofu876135e_Pv8FShVRngRWPFPAmZ0duVai0UpwjQldM2AyEwUb2BlB2Tn
+   * gVG7d-gNbGi3A.DoTYbQ.Cls2s0eODEuWxAWTogoTuWoOyM0
+   * <p>
+   * <p>
+   * Reference:
+   * https://flask-wtf.readthedocs.io/en/latest/csrf.html
+   * <p>
+   * <p>
+   * <script type="text/javascript">
+   * var csrf_token = "{{ csrf_token() }}";
+   * <p>
+   * $.ajaxSetup({
+   * beforeSend: function(xhr, settings) {
+   * if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+   * xhr.setRequestHeader("X-CSRFToken", csrf_token);
+   * }
+   * }
+   * });
+   * </script>
+   * <p>
+   * <p>
+   *
+   */
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
       throws ServletException, IOException {
@@ -140,130 +156,132 @@ public class AirflowProxyServlet extends ProxyServlet {
     }
     String email = servletRequest.getUserPrincipal().getName();
 
-    ProjectDTO projectDTO = null;
-    if (servletRequest.getParameterMap().containsKey("projectId")) {
-      String projectId = servletRequest.getParameterMap().get("projectId")[0];
-      try {
-        projectDTO = projectController.getProjectByID(Integer.parseInt(projectId));
-        currentProjects.put(email, projectDTO.getProjectName());
-      } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        servletResponse.sendError(403,
-            "Airflow was not accessed from Hopsworks, no current project information is available.");
-        return;
-      }
-    } else {
-      servletResponse.sendError(403,
-          "Airflow was not accessed with a projectId, no current project information is available.");
+    if (servletRequest.getUserPrincipal() == null || (!servletRequest.isUserInRole("HOPS_ADMIN"))) {
+      servletResponse.sendError(403, "User needs to made an admin (HOPS_ADMIN role)");
       return;
     }
 
-    if (email.equals(Settings.AGENT_EMAIL)) {
-      super.service(servletRequest, servletResponse);
-      return;
-    }
+//    ProjectDTO projectDTO = null;
+//    if (servletRequest.getParameterMap().containsKey("projectId")) {
+//      String projectId = servletRequest.getParameterMap().get("projectId")[0];
+//      try {
+//        projectDTO = projectController.getProjectByID(Integer.parseInt(projectId));
+//        currentProjects.put(email, projectDTO.getProjectName());
+//      } catch (Exception ex) {
+//        LOGGER.log(Level.SEVERE, null, ex);
+//        servletResponse.sendError(403,
+//            "Airflow was not accessed from Hopsworks, no current project information is available.");
+//        return;
+//      }
+//    } else {
+//      servletResponse.sendError(403,
+//          "Airflow was not accessed with a projectId, no current project information is available.");
+//      return;
+//    }
+//
+//    if (email.equals(Settings.AGENT_EMAIL)) {
+//      super.service(servletRequest, servletResponse);
+//      return;
+//    }
     Users user = userFacade.findByEmail(email);
 
-    boolean inTeam = false;
-    for (ProjectTeam pt : projectDTO.getProjectTeam()) {
-      if (pt.getUser().equals(user)) {
-        inTeam = true;
-        break;
-      }
-    }
-    if (!inTeam) {
-      LOGGER.log(Level.SEVERE, "Not allowed access airflow - not a member of the project.");
-      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-          "You don't have the access right for this application");
-      return;
-    }
+//    boolean inTeam = false;
+//    for (ProjectTeam pt : projectDTO.getProjectTeam()) {
+//      if (pt.getUser().equals(user)) {
+//        inTeam = true;
+//        break;
+//      }
+//    }
+//    if (!inTeam) {
+//      LOGGER.log(Level.SEVERE, "Not allowed access airflow - not a member of the project.");
+//      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+//          "You don't have the access right for this application");
+//      return;
+//    }
 
-    if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
-      servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
-    }
-    if (servletRequest.getAttribute(ATTR_TARGET_HOST) == null) {
-      servletRequest.setAttribute(ATTR_TARGET_HOST, targetHost);
-    }
+//    if (servletRequest.getAttribute(ATTR_TARGET_URI) == null) {
+//      servletRequest.setAttribute(ATTR_TARGET_URI, targetUri);
+//    }
+//    if (servletRequest.getAttribute(ATTR_TARGET_HOST) == null) {
+//      servletRequest.setAttribute(ATTR_TARGET_HOST, targetHost);
+//    }
 
-    // Make the Request
-    // note: we won't transfer the protocol version because I'm not 
-    // sure it would truly be compatible
-    String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
-
-    try {
-      // Execute the request
-
-      HttpClientParams params = new HttpClientParams();
-      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-          true);
-      HttpClient client = new HttpClient(params);
-      HostConfiguration config = new HostConfiguration();
-      InetAddress localAddress = InetAddress.getLocalHost();
-      config.setLocalAddress(localAddress);
-
-      String method = servletRequest.getMethod();
-      HttpMethod m;
-      if (method.equalsIgnoreCase("PUT")) {
-        m = new PutMethod(proxyRequestUri);
-        RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
-            getContentType());
-        ((PutMethod) m).setRequestEntity(requestEntity);
-      } else {
-        m = new GetMethod(proxyRequestUri);
-      }
-      Enumeration<String> names = servletRequest.getHeaderNames();
-      while (names.hasMoreElements()) {
-        String headerName = names.nextElement();
-        String value = servletRequest.getHeader(headerName);
-        if (PASS_THROUGH_HEADERS.contains(headerName)) {
-          //yarn does not send back the js if encoding is not accepted
-          //but we don't want to accept encoding for the html because we
-          //need to be able to parse it
-          if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null
-              || !servletRequest.getPathInfo().contains(".js"))) {
-            continue;
-          } else {
-            m.setRequestHeader(headerName, value);
-          }
-        }
-      }
-
+//    String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
+//    try {
+//      // Execute the request
+//
+//      HttpClientParams params = new HttpClientParams();
+//      params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+//      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
+//          true);
+//      HttpClient client = new HttpClient(params);
+//      HostConfiguration config = new HostConfiguration();
+//      InetAddress localAddress = InetAddress.getLocalHost();
+//      config.setLocalAddress(localAddress);
+//
+//      String method = servletRequest.getMethod();
+//      HttpMethod m;
+//      if (method.equalsIgnoreCase("PUT")) {
+//        m = new PutMethod(proxyRequestUri);
+//        RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
+//            getContentType());
+//        ((PutMethod) m).setRequestEntity(requestEntity);
+//      } else {
+//        m = new GetMethod(proxyRequestUri);
+//      }
+//      Enumeration<String> names = servletRequest.getHeaderNames();
+//      while (names.hasMoreElements()) {
+//        String headerName = names.nextElement();
+//        String value = servletRequest.getHeader(headerName);
+//        if (PASS_THROUGH_HEADERS.contains(headerName)) {
+//          //yarn does not send back the js if encoding is not accepted
+//          //but we don't want to accept encoding for the html because we
+//          //need to be able to parse it
+//          if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null
+//              || !servletRequest.getPathInfo().contains(".js"))) {
+//            continue;
+//          } else {
+//            m.setRequestHeader(headerName, value);
+//          }
+//        }
+//      }
 //      String user = servletRequest.getRemoteUser();
 //      if (user != null && !user.isEmpty()) {
 //        m.setRequestHeader("Cookie", "proxy-user" + "="
 //            + URLEncoder.encode(user, "ASCII"));
 //      }
-      client.executeMethod(config, m);
+//client.executeMethod(config, m);
+//
+//      // Process the response
+//      int statusCode = m.getStatusCode();
+//
+//      // Pass the response code. This method with the "reason phrase" is 
+//      //deprecated but it's the only way to pass the reason along too.
+//      //noinspection deprecation
+//      servletResponse.setStatus(statusCode, m.getStatusLine().
+//          getReasonPhrase());
+//
+//      copyResponseHeaders(m, servletRequest, servletResponse);
+//
+//      // Send the content to the client
+//      copyResponseEntity(m, servletResponse);
+//
+//    } catch (Exception e) {
+//      if (e instanceof RuntimeException) {
+//        throw (RuntimeException) e;
+//      }
+//      if (e instanceof ServletException) {
+//        throw (ServletException) e;
+//      }
+//      //noinspection ConstantConditions
+//      if (e instanceof IOException) {
+//        throw (IOException) e;
+//      }
+//      throw new RuntimeException(e);
+//
+//    }
+    super.service(servletRequest, servletResponse);
 
-      // Process the response
-      int statusCode = m.getStatusCode();
-
-      // Pass the response code. This method with the "reason phrase" is 
-      //deprecated but it's the only way to pass the reason along too.
-      //noinspection deprecation
-      servletResponse.setStatus(statusCode, m.getStatusLine().
-          getReasonPhrase());
-
-      copyResponseHeaders(m, servletRequest, servletResponse);
-
-      // Send the content to the client
-      copyResponseEntity(m, servletResponse);
-
-    } catch (Exception e) {
-      if (e instanceof RuntimeException) {
-        throw (RuntimeException) e;
-      }
-      if (e instanceof ServletException) {
-        throw (ServletException) e;
-      }
-      //noinspection ConstantConditions
-      if (e instanceof IOException) {
-        throw (IOException) e;
-      }
-      throw new RuntimeException(e);
-
-    }
   }
 
   protected void copyResponseEntity(HttpMethod method,

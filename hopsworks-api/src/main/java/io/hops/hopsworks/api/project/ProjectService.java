@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.project;
 
+import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -149,6 +150,8 @@ public class ProjectService {
   private KafkaService kafka;
   @Inject
   private JupyterService jupyter;
+  @Inject
+  private AirflowService airflow;
   @Inject
   private TensorBoardService tensorboard;
   @Inject
@@ -763,6 +766,11 @@ public class ProjectService {
   public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
+  }
+  @Path("{id}/airflow")
+  public AirflowService airflow(@PathParam("id") Integer id)  {
+    this.airflow.setProjectId(id);
+    return this.airflow;
   }
 
   @Path("{projectId}/serving")

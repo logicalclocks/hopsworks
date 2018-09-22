@@ -245,7 +245,7 @@
     <servlet-class>io.hops.hopsworks.api.airflow.AirflowProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
-      <param-value>http://localhost:8088/</param-value>
+      <param-value>http://localhost:12358/hopsworks-api/airflow</param-value>
     </init-param>
     <init-param>
       <param-name>log</param-name>
@@ -253,12 +253,12 @@
     </init-param>
   </servlet>
   <servlet-mapping>
-    <servlet-name>YarnUIProxyServlet</servlet-name>
-    <url-pattern>/yarnui/*</url-pattern>
+    <servlet-name>AirflowProxyServlet</servlet-name>
+    <url-pattern>/airflow/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>YarnUIProxyServlet</servlet-name>
-    <url-pattern>/yarnui</url-pattern>
+    <servlet-name>AirflowProxyServlet</servlet-name>
+    <url-pattern>/airflow</url-pattern>
   </servlet-mapping>
 
 <!-- Other servlets -->
